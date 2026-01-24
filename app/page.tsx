@@ -25,6 +25,19 @@ export default function Home() {
           </p>
         </div>
 
+        {/* Events Link */}
+        <a
+          href="https://luma.com/cursor-boston"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors text-sm font-medium"
+        >
+          View Past Events
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M7 17l9.2-9.2M17 17V7H7"/>
+          </svg>
+        </a>
+
         {/* Divider */}
         <div className="w-16 h-px bg-neutral-700" />
 
