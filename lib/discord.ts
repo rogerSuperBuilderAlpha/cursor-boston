@@ -1,3 +1,6 @@
+/**
+ * Discord webhook integration for sending notifications
+ */
 import { logger } from "./logger";
 
 const DISCORD_WEBHOOK_URL_PR = process.env.DISCORD_WEBHOOK_URL_PR;
