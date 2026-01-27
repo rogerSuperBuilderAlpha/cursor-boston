@@ -18,11 +18,22 @@ export default function LumaCheckoutTracker() {
   useEffect(() => {
     // Listen for Luma checkout completion via postMessage
     const handleMessage = async (event: MessageEvent) => {
-      // Luma sends messages from lu.ma or luma.com domains
-      if (
-        !event.origin.includes("lu.ma") &&
-        !event.origin.includes("luma.com")
-      ) {
+      // Validate origin using proper URL parsing to prevent spoofing
+      // e.g., an attacker could use "evil-lu.ma.attacker.com" with substring matching
+      try {
+        const originUrl = new URL(event.origin);
+        const hostname = originUrl.hostname;
+        // Check for exact domain match or subdomain of allowed domains
+        const isValidLumaOrigin =
+          hostname === "lu.ma" ||
+          hostname.endsWith(".lu.ma") ||
+          hostname === "luma.com" ||
+          hostname.endsWith(".luma.com");
+        if (!isValidLumaOrigin) {
+          return;
+        }
+      } catch {
+        // Invalid URL, reject the message
         return;
       }
 
