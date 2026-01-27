@@ -10,6 +10,10 @@
  *   node scripts/validate-env.ts
  */
 
+// Load .env.local file (Next.js doesn't load it for standalone scripts)
+import { loadEnvConfig } from '@next/env';
+loadEnvConfig(process.cwd());
+
 interface EnvVar {
   name: string;
   required: boolean;

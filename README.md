@@ -1,7 +1,7 @@
 # Cursor Boston
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Contributing](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](docs/CONTRIBUTING.md)
+[![Contributing](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](.github/CONTRIBUTING.md)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-14.2-black)](https://nextjs.org/)
 
@@ -25,9 +25,9 @@
 ## Documentation
 
 - [README.md](README.md) - This file, main project documentation
-- [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) - Contribution guidelines
-- [docs/CODE_OF_CONDUCT.md](docs/CODE_OF_CONDUCT.md) - Community code of conduct
-- [docs/SECURITY.md](docs/SECURITY.md) - Security policy
+- [CONTRIBUTING.md](.github/CONTRIBUTING.md) - Contribution guidelines
+- [CODE_OF_CONDUCT.md](.github/CODE_OF_CONDUCT.md) - Community code of conduct
+- [SECURITY.md](.github/SECURITY.md) - Security policy
 
 ## Features
 
@@ -323,7 +323,13 @@ Used by Trigger Email extension (auto-processed).
 
 ### Pre-Deployment Checklist
 
-Before deploying to production, ensure all environment variables are configured and security rules are properly set up.
+Before deploying to production:
+
+- [ ] All environment variables configured
+- [ ] Firebase security rules properly set up
+- [ ] OAuth redirect URIs updated for production domain
+- [ ] CI/CD pipeline passing (lint, type-check, tests, build)
+- [ ] Review SBOM for unexpected dependencies
 
 ### Vercel (Recommended)
 
@@ -332,6 +338,36 @@ Before deploying to production, ensure all environment variables are configured 
 3. Add environment variables in Vercel dashboard
 4. Configure custom domain (if applicable)
 5. Deploy
+
+### Docker Deployment
+
+Build and run with Docker:
+
+```bash
+# Build the image
+docker build \
+  --build-arg NEXT_PUBLIC_FIREBASE_API_KEY=your-api-key \
+  --build-arg NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com \
+  --build-arg NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id \
+  --build-arg NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project.appspot.com \
+  --build-arg NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-sender-id \
+  --build-arg NEXT_PUBLIC_FIREBASE_APP_ID=your-app-id \
+  --build-arg NEXT_PUBLIC_FIREBASE_DATABASE_URL=https://your-project.firebaseio.com \
+  -t cursor-boston .
+
+# Run the container
+docker run -p 3000:3000 cursor-boston
+```
+
+Or use Docker Compose:
+
+```bash
+# Copy environment file
+cp .env.local.example .env
+
+# Start services
+docker compose up -d
+```
 
 ### Other Platforms
 
@@ -346,6 +382,40 @@ The application can be deployed to any platform that supports Next.js:
 
 Ensure all environment variables from `.env.local` are set in your deployment platform's environment variable settings.
 
+### Rollback Procedures
+
+If a deployment causes issues:
+
+1. **Vercel**: Use the Vercel dashboard to instantly rollback to a previous deployment
+2. **Docker**: Keep previous image tags and switch back:
+   ```bash
+   docker stop cursor-boston
+   docker run -p 3000:3000 cursor-boston:previous-tag
+   ```
+3. **Git-based**: Revert to a previous commit and redeploy:
+   ```bash
+   git revert HEAD
+   git push origin main
+   ```
+
+### Monitoring & Observability
+
+Recommended monitoring setup:
+
+- **Health Check Endpoint**: `/api/health` returns application status
+- **Firebase Analytics**: Built-in usage analytics
+- **Error Tracking**: Consider adding [Sentry](https://sentry.io) for error monitoring
+- **Uptime Monitoring**: Use [UptimeRobot](https://uptimerobot.com) or similar for availability alerts
+- **Log Aggregation**: Docker logs are JSON-formatted for easy parsing by tools like ELK stack
+
+Example health check monitoring:
+
+```bash
+# Verify application is healthy
+curl -s http://localhost:3000/api/health | jq .
+# {"status":"healthy","timestamp":"2024-01-15T10:30:00.000Z","version":"0.1.0"}
+```
+
 ## Project Structure
 
 See [Architecture](#architecture) section above for detailed structure.
@@ -357,12 +427,11 @@ Key directories:
 - `lib/` - Utility functions and helpers
 - `content/` - Static content (blog posts, JSON data)
 - `public/` - Static assets (images, icons)
-- `docs/` - Documentation (contributing, security, code of conduct)
-- `.github/` - GitHub issue and PR templates
+- `.github/` - GitHub templates, workflows, and documentation (CONTRIBUTING, SECURITY, CODE_OF_CONDUCT)
 
 ## Contributing
 
-We welcome contributions! Please see our [Contributing Guidelines](docs/CONTRIBUTING.md) for details.
+We welcome contributions! Please see our [Contributing Guidelines](.github/CONTRIBUTING.md) for details.
 
 Quick start for contributors:
 
@@ -373,7 +442,7 @@ Quick start for contributors:
 5. Push to your branch (`git push origin feature/amazing-feature`)
 6. Open a Pull Request
 
-Please read our [Code of Conduct](docs/CODE_OF_CONDUCT.md) before contributing.
+Please read our [Code of Conduct](.github/CODE_OF_CONDUCT.md) before contributing.
 
 ## Community
 
@@ -415,7 +484,7 @@ See `.env.local.example` for all configuration points.
 
 ## Security
 
-We take security seriously. Please review our [Security Policy](docs/SECURITY.md) before reporting vulnerabilities.
+We take security seriously. Please review our [Security Policy](.github/SECURITY.md) before reporting vulnerabilities.
 
 **Important**: Never commit `.env.local` or any files containing secrets to version control.
 

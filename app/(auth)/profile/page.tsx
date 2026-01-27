@@ -93,7 +93,7 @@ function ProfilePageContent() {
   const hasGoogleProvider = !wasGoogleDisconnected && providerIds.includes("google.com");
   const hasPasswordProvider = providerIds.includes("password");
   const canDisconnectGoogle = hasGoogleProvider && providerIds.length > 1;
-  const enrolledFactors = user?.multiFactor?.enrolledFactors || [];
+  const enrolledFactors = user ? multiFactor(user).enrolledFactors : [];
   const hasPhoneMfa = enrolledFactors.some(
     (factor) => factor.factorId === PhoneMultiFactorGenerator.FACTOR_ID
   );
@@ -113,7 +113,6 @@ function ProfilePageContent() {
   const [mfaError, setMfaError] = useState<string | null>(null);
   const [mfaSuccess, setMfaSuccess] = useState<string | null>(null);
   const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
-  const hasGithubConnection = Boolean(githubInfo || userProfile?.provider === "github");
 
   // Public profile settings state
   const [profileSettings, setProfileSettings] = useState({

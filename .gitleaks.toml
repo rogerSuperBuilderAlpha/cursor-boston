@@ -1,0 +1,31 @@
+# Gitleaks configuration for Cursor Boston
+# https://github.com/gitleaks/gitleaks
+
+title = "Cursor Boston Gitleaks Config"
+
+# Use the default rules
+[extend]
+useDefault = true
+
+# Allow specific patterns that are false positives
+[[rules]]
+id = "firebase-placeholder"
+description = "Firebase placeholder values used in CI"
+regex = '''(test-api-key|test-project|build-placeholder|release-build)'''
+allowlist = true
+
+# Paths to ignore
+[allowlist]
+paths = [
+  '''\.env\.local\.example''',
+  '''__tests__/''',
+  '''\.github/workflows/''',
+  '''docs/''',
+]
+
+# Regexes to ignore (common false positives)
+regexes = [
+  '''test-api-key''',
+  '''your-.*-key''',
+  '''placeholder''',
+]
