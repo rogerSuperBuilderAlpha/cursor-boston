@@ -344,8 +344,6 @@ Ensure all environment variables from `.env.local` are set in your deployment pl
 
 See [Architecture](#architecture) section above for detailed structure.
 
-For a complete overview of the project organization, see [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md).
-
 Key directories:
 
 - `app/` - Next.js App Router pages and API routes
@@ -353,7 +351,7 @@ Key directories:
 - `lib/` - Utility functions and helpers
 - `content/` - Static content (blog posts, JSON data)
 - `public/` - Static assets (images, icons)
-- `.cursor/rules/` - Internal development guidelines
+- `docs/` - Documentation (contributing, security, code of conduct)
 - `.github/` - GitHub issue and PR templates
 
 ## Contributing
@@ -383,7 +381,7 @@ Please read our [Code of Conduct](docs/CODE_OF_CONDUCT.md) before contributing.
 
 **Current Version**: 0.1.0
 
-This project is actively maintained and open to contributions.
+This project is actively maintained and open to contributions. We welcome bug reports, feature requests, and pull requests!
 
 ### Roadmap
 
@@ -399,8 +397,11 @@ This project is actively maintained and open to contributions.
 When forking this project for your own community:
 
 1. **Update branding**: Replace logo, colors, and content
-2. **Configure domain**: Update all references to `cursorboston.com`
-3. **Update contact info**: Replace email addresses throughout
+2. **Configure domain**: Update all references to `cursorboston.com` in:
+   - `app/layout.tsx` (metadata URLs)
+   - `.env.local.example` (OAuth redirect URIs)
+   - `README.md` (community links)
+3. **Update contact info**: Replace email addresses throughout the codebase
 4. **Set up services**: Configure Firebase, Discord, GitHub OAuth apps
 5. **Customize content**: Update events, talks, and blog content
 
