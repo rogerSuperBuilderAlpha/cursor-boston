@@ -40,6 +40,8 @@ export async function findUserByGitHubLogin(
     return null;
   }
 
+  logger.info("Looking up user by GitHub login", { githubLogin });
+
   try {
     const snapshot = await db
       .collection("users")
@@ -48,11 +50,15 @@ export async function findUserByGitHubLogin(
       .get();
 
     if (!snapshot.empty) {
-      return snapshot.docs[0].id; // Return the user's UID
+      const userId = snapshot.docs[0].id;
+      logger.info("Found user by GitHub login", { githubLogin, userId });
+      return userId;
     }
+    
+    logger.warn("No user found with GitHub login", { githubLogin });
     return null;
   } catch (error) {
-    logger.error("Error finding user by GitHub login", { error });
+    logger.error("Error finding user by GitHub login", { error, githubLogin });
     return null;
   }
 }
