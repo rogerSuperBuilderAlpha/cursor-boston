@@ -50,6 +50,12 @@ interface SocialLinks {
   substack?: string;
 }
 
+interface AdditionalEmail {
+  email: string;
+  verified: boolean;
+  addedAt: Date;
+}
+
 interface UserProfile {
   uid: string;
   email: string | null;
@@ -57,6 +63,7 @@ interface UserProfile {
   photoURL: string | null;
   createdAt?: Date;
   provider?: string;
+  additionalEmails?: AdditionalEmail[];
   discord?: {
     id: string;
     username: string;
@@ -81,7 +88,7 @@ interface UserProfile {
   pullRequestsCount?: number;
 }
 
-export type { UserProfile, ProfileVisibility, SocialLinks };
+export type { UserProfile, ProfileVisibility, SocialLinks, AdditionalEmail };
 
 interface AuthContextType {
   user: User | null;
@@ -94,6 +101,10 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateUserProfile: (displayName?: string, photoFile?: File) => Promise<void>;
+  refreshUserProfile: () => Promise<void>;
+  sendAddEmailVerification: (newEmail: string) => Promise<void>;
+  removeAdditionalEmail: (emailToRemove: string) => Promise<void>;
+  changePrimaryEmail: (newPrimaryEmail: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -264,6 +275,75 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(Object.assign(Object.create(Object.getPrototypeOf(updatedUser)), updatedUser, updates));
   };
 
+  const refreshUserProfile = async () => {
+    if (!auth?.currentUser || !db) return;
+    
+    const userRef = doc(db, "users", auth.currentUser.uid);
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+      setUserProfile(userSnap.data() as UserProfile);
+    }
+  };
+
+  const sendAddEmailVerification = async (newEmail: string) => {
+    if (!auth?.currentUser) throw new Error("Not authenticated");
+    
+    const idToken = await auth.currentUser.getIdToken();
+    const response = await fetch("/api/auth/send-email-verification", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${idToken}`,
+      },
+      body: JSON.stringify({ email: newEmail.toLowerCase().trim() }),
+    });
+    
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error || "Failed to send verification email");
+    }
+  };
+
+  const removeAdditionalEmail = async (emailToRemove: string) => {
+    if (!auth?.currentUser) throw new Error("Not authenticated");
+    
+    const idToken = await auth.currentUser.getIdToken();
+    const response = await fetch("/api/auth/remove-email", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${idToken}`,
+      },
+      body: JSON.stringify({ email: emailToRemove.toLowerCase().trim() }),
+    });
+    
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error || "Failed to remove email");
+    }
+    
+    await refreshUserProfile();
+  };
+
+  const changePrimaryEmail = async (newPrimaryEmail: string) => {
+    if (!auth?.currentUser) throw new Error("Not authenticated");
+    
+    const idToken = await auth.currentUser.getIdToken();
+    const response = await fetch("/api/auth/change-primary-email", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${idToken}`,
+      },
+      body: JSON.stringify({ newPrimaryEmail: newPrimaryEmail.toLowerCase().trim() }),
+    });
+    
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error || "Failed to change primary email");
+    }
+  };
+
   const value = {
     user,
     userProfile,
@@ -275,6 +355,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signOut,
     resetPassword,
     updateUserProfile,
+    refreshUserProfile,
+    sendAddEmailVerification,
+    removeAdditionalEmail,
+    changePrimaryEmail,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

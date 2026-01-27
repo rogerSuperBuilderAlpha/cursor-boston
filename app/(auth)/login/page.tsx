@@ -37,12 +37,35 @@ function getErrorMessage(error: unknown): string {
   return "Something went wrong. Please try again.";
 }
 
+// Resolve email to primary email (handles aliases)
+async function resolveEmail(email: string): Promise<string> {
+  try {
+    const response = await fetch("/api/auth/resolve-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email.toLowerCase().trim() }),
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data.primaryEmail) {
+        return data.primaryEmail;
+      }
+    }
+  } catch (error) {
+    // If resolution fails, use the original email
+    console.error("Email resolution failed:", error);
+  }
+  return email;
+}
+
 function LoginPageContent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [emailAlias, setEmailAlias] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, loading: authLoading, signIn, signInWithGoogle, signInWithGithub, resetPassword } = useAuth();
@@ -61,10 +84,19 @@ function LoginPageContent() {
     e.preventDefault();
     setError("");
     setResetSent(false);
+    setEmailAlias(null);
     setLoading(true);
 
     try {
-      await signIn(email, password);
+      // Resolve email to primary (handles login with additional emails)
+      const resolvedEmail = await resolveEmail(email);
+      
+      // If the resolved email is different, show a message
+      if (resolvedEmail.toLowerCase() !== email.toLowerCase().trim()) {
+        setEmailAlias(email);
+      }
+      
+      await signIn(resolvedEmail, password);
       router.push(redirectUrl);
     } catch (err: unknown) {
       setError(getErrorMessage(err));
@@ -114,7 +146,9 @@ function LoginPageContent() {
     setLoading(true);
 
     try {
-      await resetPassword(email);
+      // Resolve email to primary for password reset
+      const resolvedEmail = await resolveEmail(email);
+      await resetPassword(resolvedEmail);
       setResetSent(true);
     } catch (err: unknown) {
       setError(getErrorMessage(err));
@@ -166,6 +200,16 @@ function LoginPageContent() {
               className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 text-sm"
             >
               Password reset email sent! Check your inbox.
+            </div>
+          )}
+
+          {emailAlias && (
+            <div 
+              role="status"
+              aria-live="polite"
+              className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg text-blue-400 text-sm"
+            >
+              Signed in using your alternate email ({emailAlias}).
             </div>
           )}
 

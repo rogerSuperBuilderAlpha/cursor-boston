@@ -1,12 +1,17 @@
+const path = require('path')
 const nextJest = require('next/jest')
+
+// Root directory is the parent of config/
+const rootDir = path.join(__dirname, '..')
 
 const createJestConfig = nextJest({
   // Provide the path to your Next.js app to load next.config.js and .env files in your test environment
-  dir: './',
+  dir: rootDir,
 })
 
 // Add any custom config to be passed to Jest
 const customJestConfig = {
+  rootDir,
   setupFilesAfterEnv: ['<rootDir>/config/jest.setup.js'],
   testEnvironment: 'jest-environment-jsdom',
   moduleNameMapper: {

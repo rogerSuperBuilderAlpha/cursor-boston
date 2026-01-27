@@ -45,12 +45,12 @@ interface TalkSubmission {
 }
 
 function ProfilePageContent() {
-  const { user, userProfile, loading, signOut, updateUserProfile } = useAuth();
+  const { user, userProfile, loading, signOut, updateUserProfile, sendAddEmailVerification, removeAdditionalEmail, changePrimaryEmail, refreshUserProfile } = useAuth();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [signOutError, setSignOutError] = useState<string | null>(null);
   const [isSigningOut, setIsSigningOut] = useState(false);
-  const [activeTab, setActiveTab] = useState<"overview" | "events" | "talks" | "settings">(
+  const [activeTab, setActiveTab] = useState<"overview" | "events" | "talks" | "security" | "settings">(
     "overview"
   );
   const [stats, setStats] = useState<UserStats | null>(null);
@@ -150,6 +150,18 @@ function ProfilePageContent() {
   const [settingsError, setSettingsError] = useState<string | null>(null);
   const [settingsSuccess, setSettingsSuccess] = useState(false);
 
+  // Email management state
+  const [newEmail, setNewEmail] = useState("");
+  const [emailAddLoading, setEmailAddLoading] = useState(false);
+  const [emailAddError, setEmailAddError] = useState<string | null>(null);
+  const [emailAddSuccess, setEmailAddSuccess] = useState<string | null>(null);
+  const [emailRemoveLoading, setEmailRemoveLoading] = useState<string | null>(null);
+  const [primaryEmailLoading, setPrimaryEmailLoading] = useState<string | null>(null);
+  const [emailVerificationStatus, setEmailVerificationStatus] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
+
   useEffect(() => {
     if (!loading && !user) {
       router.push("/login?redirect=/profile");
@@ -223,6 +235,41 @@ function ProfilePageContent() {
       router.replace("/profile");
     }
   }, [searchParams, user, router, loading]);
+
+  // Handle email verification callback
+  useEffect(() => {
+    if (loading) return;
+    const emailVerification = searchParams.get("emailVerification");
+    const message = searchParams.get("message");
+    const tab = searchParams.get("tab");
+
+    if (emailVerification === "success") {
+      setEmailVerificationStatus({
+        type: "success",
+        message: "Email verified and added to your account successfully!",
+      });
+      refreshUserProfile();
+      if (tab === "security") {
+        setActiveTab("security");
+      }
+      // Clear URL params
+      router.replace("/profile", { scroll: false });
+    } else if (emailVerification === "error") {
+      const errorMessages: Record<string, string> = {
+        missing_token: "Invalid verification link.",
+        invalid_token: "This verification link is invalid or has already been used.",
+        token_expired: "This verification link has expired. Please request a new one.",
+        email_taken: "This email is already associated with another account.",
+        server_error: "An error occurred. Please try again.",
+      };
+      setEmailVerificationStatus({
+        type: "error",
+        message: errorMessages[message || ""] || "Failed to verify email.",
+      });
+      setActiveTab("security");
+      router.replace("/profile", { scroll: false });
+    }
+  }, [searchParams, loading, router, refreshUserProfile]);
 
   // Handle GitHub OAuth callback
   useEffect(() => {
@@ -447,6 +494,51 @@ function ProfilePageContent() {
         showMemberSince: show,
       },
     }));
+  };
+
+  const handleAddEmail = async () => {
+    if (!newEmail.trim()) {
+      setEmailAddError("Please enter an email address");
+      return;
+    }
+
+    setEmailAddLoading(true);
+    setEmailAddError(null);
+    setEmailAddSuccess(null);
+
+    try {
+      await sendAddEmailVerification(newEmail);
+      setEmailAddSuccess("Verification email sent! Check your inbox.");
+      setNewEmail("");
+    } catch (error) {
+      setEmailAddError(error instanceof Error ? error.message : "Failed to send verification email");
+    } finally {
+      setEmailAddLoading(false);
+    }
+  };
+
+  const handleRemoveEmail = async (emailToRemove: string) => {
+    setEmailRemoveLoading(emailToRemove);
+    try {
+      await removeAdditionalEmail(emailToRemove);
+    } catch (error) {
+      console.error("Error removing email:", error);
+    } finally {
+      setEmailRemoveLoading(null);
+    }
+  };
+
+  const handleMakePrimary = async (email: string) => {
+    setPrimaryEmailLoading(email);
+    try {
+      await changePrimaryEmail(email);
+      // Reload the page to refresh auth state
+      window.location.reload();
+    } catch (error) {
+      console.error("Error changing primary email:", error);
+    } finally {
+      setPrimaryEmailLoading(null);
+    }
   };
 
   const handleSetPassword = async () => {
@@ -930,10 +1022,10 @@ function ProfilePageContent() {
 
         {/* Tabs */}
         <div className="border-b border-neutral-800 mb-6">
-          <nav className="flex gap-6" aria-label="Profile sections">
+          <nav className="flex gap-6 overflow-x-auto" aria-label="Profile sections">
             <button
               onClick={() => setActiveTab("overview")}
-              className={`pb-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:text-white ${
+              className={`pb-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:text-white whitespace-nowrap ${
                 activeTab === "overview"
                   ? "text-white border-b-2 border-emerald-500"
                   : "text-neutral-400 hover:text-white"
@@ -943,7 +1035,7 @@ function ProfilePageContent() {
             </button>
             <button
               onClick={() => setActiveTab("events")}
-              className={`pb-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:text-white ${
+              className={`pb-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:text-white whitespace-nowrap ${
                 activeTab === "events"
                   ? "text-white border-b-2 border-emerald-500"
                   : "text-neutral-400 hover:text-white"
@@ -953,7 +1045,7 @@ function ProfilePageContent() {
             </button>
             <button
               onClick={() => setActiveTab("talks")}
-              className={`pb-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:text-white ${
+              className={`pb-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:text-white whitespace-nowrap ${
                 activeTab === "talks"
                   ? "text-white border-b-2 border-emerald-500"
                   : "text-neutral-400 hover:text-white"
@@ -962,8 +1054,18 @@ function ProfilePageContent() {
               My Talks
             </button>
             <button
+              onClick={() => setActiveTab("security")}
+              className={`pb-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:text-white whitespace-nowrap ${
+                activeTab === "security"
+                  ? "text-white border-b-2 border-emerald-500"
+                  : "text-neutral-400 hover:text-white"
+              }`}
+            >
+              Security
+            </button>
+            <button
               onClick={() => setActiveTab("settings")}
-              className={`pb-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:text-white ${
+              className={`pb-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:text-white whitespace-nowrap ${
                 activeTab === "settings"
                   ? "text-white border-b-2 border-emerald-500"
                   : "text-neutral-400 hover:text-white"
@@ -1418,9 +1520,150 @@ function ProfilePageContent() {
           </div>
         )}
 
-        {/* Settings Tab */}
-        {activeTab === "settings" && (
+        {/* Security Tab */}
+        {activeTab === "security" && (
           <div className="space-y-6">
+            {/* Email Verification Status */}
+            {emailVerificationStatus && (
+              <div
+                className={`p-4 rounded-lg ${
+                  emailVerificationStatus.type === "success"
+                    ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
+                    : "bg-red-500/10 border border-red-500/20 text-red-400"
+                }`}
+              >
+                {emailVerificationStatus.message}
+                <button
+                  onClick={() => setEmailVerificationStatus(null)}
+                  className="ml-2 text-sm underline hover:no-underline"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
+
+            {/* Email Management */}
+            <div className="bg-neutral-900 rounded-2xl p-6 border border-neutral-800">
+              <h2 className="text-lg font-semibold text-white mb-4">
+                Email Addresses
+              </h2>
+              <p className="text-neutral-400 text-sm mb-4">
+                Manage the email addresses associated with your account. You can use any verified email to sign in.
+              </p>
+
+              {/* Primary Email */}
+              <div className="space-y-3 mb-6">
+                <div className="flex items-center justify-between p-3 bg-neutral-800/50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-emerald-500/10 rounded-full flex items-center justify-center">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        className="text-emerald-400"
+                        aria-hidden="true"
+                      >
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                        <polyline points="22,6 12,13 2,6" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-white text-sm">{user.email}</p>
+                      <p className="text-neutral-500 text-xs">Primary email</p>
+                    </div>
+                  </div>
+                  <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 text-xs rounded-full">
+                    Primary
+                  </span>
+                </div>
+
+                {/* Additional Emails */}
+                {userProfile?.additionalEmails?.map((emailEntry) => (
+                  <div
+                    key={emailEntry.email}
+                    className="flex items-center justify-between p-3 bg-neutral-800/50 rounded-lg"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-neutral-700 rounded-full flex items-center justify-center">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          className="text-neutral-400"
+                          aria-hidden="true"
+                        >
+                          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                          <polyline points="22,6 12,13 2,6" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-white text-sm">{emailEntry.email}</p>
+                        <p className="text-neutral-500 text-xs">
+                          {emailEntry.verified ? "Verified" : "Pending verification"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {emailEntry.verified && (
+                        <button
+                          onClick={() => handleMakePrimary(emailEntry.email)}
+                          disabled={primaryEmailLoading === emailEntry.email}
+                          className="px-3 py-1.5 text-xs font-medium text-emerald-400 hover:text-emerald-300 transition-colors disabled:opacity-50"
+                        >
+                          {primaryEmailLoading === emailEntry.email ? "..." : "Make Primary"}
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleRemoveEmail(emailEntry.email)}
+                        disabled={emailRemoveLoading === emailEntry.email}
+                        className="px-3 py-1.5 text-xs font-medium text-red-400 hover:text-red-300 transition-colors disabled:opacity-50"
+                      >
+                        {emailRemoveLoading === emailEntry.email ? "..." : "Remove"}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Add New Email */}
+              <div>
+                <label htmlFor="new-email" className="block text-sm font-medium text-neutral-300 mb-2">
+                  Add another email
+                </label>
+                <div className="flex gap-3">
+                  <input
+                    id="new-email"
+                    type="email"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    placeholder="Enter email address"
+                    className="flex-1 px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                  />
+                  <button
+                    onClick={handleAddEmail}
+                    disabled={emailAddLoading || !newEmail.trim()}
+                    className="px-4 py-3 bg-emerald-500 text-white rounded-lg text-sm font-medium hover:bg-emerald-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                  >
+                    {emailAddLoading ? "Sending..." : "Add Email"}
+                  </button>
+                </div>
+                {emailAddError && (
+                  <p className="text-red-400 text-sm mt-2">{emailAddError}</p>
+                )}
+                {emailAddSuccess && (
+                  <p className="text-emerald-400 text-sm mt-2">{emailAddSuccess}</p>
+                )}
+              </div>
+            </div>
+
             {/* Account Security */}
             <div className="bg-neutral-900 rounded-2xl p-6 border border-neutral-800">
               <h2 className="text-lg font-semibold text-white mb-4">
@@ -1603,7 +1846,12 @@ function ProfilePageContent() {
                 </div>
               </div>
             </div>
+          </div>
+        )}
 
+        {/* Settings Tab */}
+        {activeTab === "settings" && (
+          <div className="space-y-6">
             {/* Profile Visibility Toggle */}
             <div className="bg-neutral-900 rounded-2xl p-6 border border-neutral-800">
               <div className="flex items-center justify-between mb-2">
