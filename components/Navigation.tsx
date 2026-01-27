@@ -13,7 +13,27 @@ export default function Navigation() {
   return (
     <header className="sticky top-0 z-50 bg-black border-b border-neutral-800">
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-        
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-2 flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded-lg">
+          <div className="w-8 h-8 bg-black border border-neutral-700 rounded-md flex items-center justify-center">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              style={{ transform: "rotate(-45deg)" }}
+            >
+              <path
+                d="M5 3l14 9-6 2-3 6-5-17z"
+                fill="#10b981"
+                stroke="#10b981"
+                strokeWidth="1"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+          <span className="text-white font-semibold text-lg hidden sm:block">Cursor Boston</span>
+        </Link>
 
         {/* Desktop Nav */}
         <nav className="hidden lg:flex items-center space-x-8 ml-12">
