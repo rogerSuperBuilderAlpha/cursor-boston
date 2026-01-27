@@ -3,6 +3,7 @@ import {
   verifyWebhookSignature,
   processPullRequest,
 } from "@/lib/github";
+import { notifyPROpened, notifyPRMerged } from "@/lib/discord";
 import { withMiddleware, rateLimitConfigs } from "@/lib/middleware";
 import { logger } from "@/lib/logger";
 import { getClientIdentifier } from "@/lib/rate-limit";
@@ -86,6 +87,28 @@ async function handleWebhook(request: NextRequest) {
           merged_at: pr.merged_at,
           repository: payload.repository,
         });
+
+        // Send Discord notifications for PR events
+        const repository = `${payload.repository.owner.login}/${payload.repository.name}`;
+        const notificationData = {
+          number: pr.number,
+          title: pr.title || "Untitled",
+          authorLogin: pr.user.login,
+          authorAvatarUrl: pr.user.avatar_url,
+          url: pr.html_url,
+          repository,
+        };
+
+        if (action === "opened") {
+          // Notify Discord when a new PR is opened
+          await notifyPROpened(notificationData);
+        } else if (action === "closed" && pr.merged) {
+          // Notify Discord when a PR is merged
+          await notifyPRMerged({
+            ...notificationData,
+            mergedAt: pr.merged_at,
+          });
+        }
       } catch (processError) {
         logger.logError(processError, {
           endpoint: "/api/github/webhook",
