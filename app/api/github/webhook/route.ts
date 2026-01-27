@@ -74,6 +74,29 @@ async function handleWebhook(request: NextRequest) {
       action === "synchronize" ||
       action === "reopened"
     ) {
+      // Send Discord notifications FIRST (independent of Firestore processing)
+      const repository = `${payload.repository.owner.login}/${payload.repository.name}`;
+      const notificationData = {
+        number: pr.number,
+        title: pr.title || "Untitled",
+        authorLogin: pr.user.login,
+        authorAvatarUrl: pr.user.avatar_url,
+        url: pr.html_url,
+        repository,
+      };
+
+      if (action === "opened") {
+        // Notify Discord when a new PR is opened
+        await notifyPROpened(notificationData);
+      } else if (action === "closed" && pr.merged) {
+        // Notify Discord when a PR is merged
+        await notifyPRMerged({
+          ...notificationData,
+          mergedAt: pr.merged_at,
+        });
+      }
+
+      // Process PR in Firestore (for user stats tracking)
       try {
         await processPullRequest({
           number: pr.number,
@@ -87,28 +110,6 @@ async function handleWebhook(request: NextRequest) {
           merged_at: pr.merged_at,
           repository: payload.repository,
         });
-
-        // Send Discord notifications for PR events
-        const repository = `${payload.repository.owner.login}/${payload.repository.name}`;
-        const notificationData = {
-          number: pr.number,
-          title: pr.title || "Untitled",
-          authorLogin: pr.user.login,
-          authorAvatarUrl: pr.user.avatar_url,
-          url: pr.html_url,
-          repository,
-        };
-
-        if (action === "opened") {
-          // Notify Discord when a new PR is opened
-          await notifyPROpened(notificationData);
-        } else if (action === "closed" && pr.merged) {
-          // Notify Discord when a PR is merged
-          await notifyPRMerged({
-            ...notificationData,
-            mergedAt: pr.merged_at,
-          });
-        }
       } catch (processError) {
         logger.logError(processError, {
           endpoint: "/api/github/webhook",
@@ -116,10 +117,7 @@ async function handleWebhook(request: NextRequest) {
           prNumber: pr.number,
         });
         // Don't fail the webhook, but log the error
-        return NextResponse.json(
-          { received: true, action, error: "Failed to process PR" },
-          { status: 500 }
-        );
+        // Discord notification already sent above
       }
     }
 

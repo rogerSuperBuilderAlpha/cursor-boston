@@ -40,6 +40,8 @@ export async function findUserByGitHubLogin(
     return null;
   }
 
+  logger.info("Looking up user by GitHub login", { githubLogin });
+
   try {
     const snapshot = await db
       .collection("users")
@@ -48,11 +50,15 @@ export async function findUserByGitHubLogin(
       .get();
 
     if (!snapshot.empty) {
-      return snapshot.docs[0].id; // Return the user's UID
+      const userId = snapshot.docs[0].id;
+      logger.info("Found user by GitHub login", { githubLogin, userId });
+      return userId;
     }
+    
+    logger.warn("No user found with GitHub login", { githubLogin });
     return null;
   } catch (error) {
-    logger.error("Error finding user by GitHub login", { error });
+    logger.error("Error finding user by GitHub login", { error, githubLogin });
     return null;
   }
 }
@@ -96,9 +102,11 @@ export async function processPullRequest(
       prData.repository.name
     )
   ) {
-    logger.debug("Skipping PR from different repository", {
+    logger.warn("Skipping PR from different repository", {
       owner: prData.repository.owner.login,
       repo: prData.repository.name,
+      expectedOwner: REPOSITORY_OWNER,
+      expectedRepo: REPOSITORY_NAME,
     });
     return;
   }
@@ -108,12 +116,21 @@ export async function processPullRequest(
 
   // Only process PRs from users with connected GitHub accounts
   if (!userId) {
-    logger.debug("Skipping PR from user without connected GitHub account", {
+    logger.warn("Skipping PR from user without connected GitHub account", {
       prNumber: prData.number,
       authorLogin,
+      hint: "User needs to connect GitHub on their profile",
     });
     return;
   }
+
+  logger.info("Processing PR for user", {
+    prNumber: prData.number,
+    authorLogin,
+    userId,
+    state: prData.state,
+    merged: prData.merged,
+  });
 
   const prId = `pr-${prData.number}`;
   const prRef = db.collection("pullRequests").doc(prId);

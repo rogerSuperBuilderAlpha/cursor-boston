@@ -27,6 +27,7 @@ function getAdminApp(): App | null {
   const serviceAccount = parseServiceAccount();
 
   if (serviceAccount) {
+    console.log("[Firebase Admin] Initializing with service account for project:", serviceAccount.project_id);
     return initializeApp({
       credential: cert(serviceAccount),
       projectId: serviceAccount.project_id,
@@ -34,9 +35,11 @@ function getAdminApp(): App | null {
   }
 
   if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+    console.log("[Firebase Admin] Initializing with GOOGLE_APPLICATION_CREDENTIALS");
     return initializeApp();
   }
 
+  console.warn("[Firebase Admin] No credentials found - FIREBASE_SERVICE_ACCOUNT_JSON not set");
   return null;
 }
 
