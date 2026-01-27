@@ -1,0 +1,164 @@
+# Cursor Boston UI/UX Guidelines
+
+## Design System
+
+### Color Palette
+
+**Brand Colors:**
+- Primary: `emerald-500` (#10b981) - CTAs, badges, accents
+- Primary Hover: `emerald-400` (#34d399)
+- Discord: `#5865F2` (hover: `#4752C4`)
+
+**Neutral Colors:**
+- Background: `black` (#000000)
+- Surface: `neutral-900` (#171717)
+- Surface Alt: `neutral-950` (#0a0a0a) - alternate section backgrounds
+- Border: `neutral-800` (#262626)
+- Border Hover: `neutral-700` (#404040)
+
+**Text Hierarchy:**
+- Primary text: `text-white` - headings, important content
+- Secondary text: `text-neutral-300` - body text, descriptions
+- Tertiary text: `text-neutral-400` - labels, metadata
+- Muted text: `text-neutral-500` - placeholders, less important info
+
+**Status Colors:**
+- Success: `emerald-500/10` bg, `emerald-400` text
+- Error: `red-500/10` bg, `red-400` text
+
+### Typography
+
+**Headings:**
+- Page titles (h1): `text-4xl md:text-5xl font-bold text-white`
+- Section headings (h2): `text-2xl md:text-3xl font-bold text-white`
+- Card titles (h3): `text-lg md:text-xl font-semibold text-white`
+
+**Body Text:**
+- Large: `text-lg md:text-xl text-neutral-300 leading-relaxed`
+- Regular: `text-base text-neutral-300 leading-relaxed`
+- Small: `text-sm text-neutral-400`
+
+### Spacing
+
+**Section Padding:**
+- Hero sections: `py-16 md:py-24 px-6`
+- Standard sections: `py-16 md:py-20 px-6`
+- Compact sections: `py-12 px-6`
+
+**Container Widths:**
+- Max content: `max-w-6xl mx-auto`
+- Narrow content: `max-w-4xl mx-auto`
+- Form/card content: `max-w-3xl mx-auto` or `max-w-md`
+
+### Components
+
+**Buttons:**
+
+Primary (emerald):
+```
+px-6 py-3 md:px-8 md:py-4 bg-emerald-500 text-white rounded-lg text-base font-semibold 
+hover:bg-emerald-400 transition-colors 
+focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black
+```
+
+Secondary (white):
+```
+px-6 py-3 bg-white text-black rounded-lg text-sm font-semibold 
+hover:bg-neutral-200 transition-colors 
+focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black
+```
+
+Outline:
+```
+px-6 py-3 border border-neutral-700 text-white rounded-lg text-base font-semibold 
+hover:bg-neutral-800 transition-colors 
+focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black
+```
+
+Discord:
+```
+px-6 py-3 md:px-8 md:py-4 bg-[#5865F2] text-white rounded-lg text-base font-semibold 
+hover:bg-[#4752C4] transition-colors 
+focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5865F2] focus-visible:ring-offset-2 focus-visible:ring-offset-black
+```
+
+**Cards:**
+```
+bg-neutral-900 rounded-xl md:rounded-2xl p-6 md:p-8 border border-neutral-800 
+hover:border-neutral-700 transition-colors
+```
+
+**Badges:**
+```
+inline-block px-3 py-1 bg-emerald-500/10 text-emerald-400 text-sm font-medium rounded-full
+```
+
+**Form Inputs:**
+```
+w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-base 
+placeholder-neutral-500 
+focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent
+```
+
+**Links:**
+
+Navigation/footer links:
+```
+text-neutral-300 hover:text-white text-sm font-medium transition-colors 
+focus-visible:outline-none focus-visible:text-white focus-visible:underline
+```
+
+### Accessibility
+
+**Focus States:**
+- All interactive elements MUST have visible focus states
+- Use `focus-visible:` prefix (not `focus:`) to only show on keyboard navigation
+- Standard pattern: `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-{color} focus-visible:ring-offset-2 focus-visible:ring-offset-{background}`
+
+**ARIA Attributes:**
+- External links: Add `aria-label="{link text} (opens in new tab)"`
+- Mobile menu button: Include `aria-expanded`, `aria-controls`, and dynamic `aria-label`
+- Form inputs with errors: Add `aria-invalid="true"` and `aria-describedby`
+
+**Images:**
+- Always include descriptive `alt` text
+- Use `aria-hidden="true"` on decorative icons
+
+### External Links
+
+Always include on external links:
+- `target="_blank"`
+- `rel="noopener noreferrer"`
+- `aria-label="... (opens in new tab)"`
+- External link icon (arrow pointing up-right)
+
+### Firebase Error Messages
+
+Map Firebase error codes to user-friendly messages:
+
+| Error Code | User Message |
+|------------|--------------|
+| `auth/invalid-credential` | "Invalid email or password. Please try again." |
+| `auth/user-not-found` | "No account found with this email. Please sign up." |
+| `auth/email-already-in-use` | "An account with this email already exists. Please sign in instead." |
+| `auth/weak-password` | "Password is too weak. Please use at least 6 characters." |
+| `auth/too-many-requests` | "Too many failed attempts. Please try again later." |
+| `auth/popup-closed-by-user` | "Sign-in was cancelled. Please try again." |
+| `auth/popup-blocked` | "Pop-up was blocked. Please allow pop-ups and try again." |
+| `auth/network-request-failed` | "Network error. Please check your connection and try again." |
+
+### Form Best Practices
+
+1. **Pre-fill data** from authenticated user (email, name)
+2. **Trim inputs** before submission
+3. **Clear all messages** when user takes a new action
+4. **Show loading states** on buttons during submission
+5. **Warn about unsaved changes** with `beforeunload` event
+6. **Redirect authenticated users** away from login/signup pages
+7. **Pass userId** with form submissions for tracking
+
+### Security
+
+1. **XSS Prevention**: Use `escapeHtml()` on all user input in email templates
+2. **Firestore Rules**: Require authentication for create operations
+3. **Input Validation**: Validate on both client and server (Firestore rules)
