@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Scan for secrets in staged files (if gitleaks is installed)
+if command -v gitleaks &> /dev/null; then
+  echo "🔍 Scanning for secrets..."
+  gitleaks protect --staged --verbose
+  if [ $? -ne 0 ]; then
+    echo "❌ Secrets detected! Please remove sensitive data before committing."
+    exit 1
+  fi
+  echo "✅ No secrets detected"
+fi
+
+# Run lint-staged
+npx lint-staged

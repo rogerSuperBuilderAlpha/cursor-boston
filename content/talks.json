@@ -1,0 +1,25 @@
+{
+  "talks": [],
+  "categories": [
+    {
+      "id": "academic",
+      "name": "Academic Writing & Research",
+      "description": "Using AI for literature synthesis, fact-checking, and academic work"
+    },
+    {
+      "id": "career",
+      "name": "Career & First Job Success",
+      "description": "Excel, automation, and professional deliverables with AI"
+    },
+    {
+      "id": "development",
+      "name": "Software Development",
+      "description": "Full-stack development, debugging, and production code with Cursor"
+    },
+    {
+      "id": "startup",
+      "name": "Startup Building",
+      "description": "MVPs, landing pages, and rapid prototyping for founders"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+# CODEOWNERS - Defines code owners for automatic review requests
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owners for everything in the repo
+* @rogerSuperBuilderAlpha
+
+# Frontend components
+/app/ @rogerSuperBuilderAlpha
+/components/ @rogerSuperBuilderAlpha
+
+# Core library code
+/lib/ @rogerSuperBuilderAlpha
+
+# Configuration and infrastructure
+/config/ @rogerSuperBuilderAlpha
+/.github/ @rogerSuperBuilderAlpha
+/Dockerfile @rogerSuperBuilderAlpha
+/docker-compose.yml @rogerSuperBuilderAlpha
+
+# Documentation
+*.md @rogerSuperBuilderAlpha
+/docs/ @rogerSuperBuilderAlpha

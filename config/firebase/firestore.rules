@@ -1,0 +1,59 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Talk submissions - authenticated users can create, only owners can read/update/delete
+    match /talkSubmissions/{submissionId} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
+    }
+    
+    // Event requests - authenticated users can create, only owners can read/update/delete
+    match /eventRequests/{requestId} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
+    }
+    
+    // Mail collection - authenticated users can create (for email notifications)
+    match /mail/{mailId} {
+      allow create: if request.auth != null;
+    }
+    
+    // Users collection - users can read/write their own data
+    // Anyone can read public profiles, users can read their own full profile
+    match /users/{userId} {
+      allow read: if resource.data.visibility.isPublic == true 
+                  || (request.auth != null && request.auth.uid == userId);
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Event registrations - users can create and read their own registrations
+    match /eventRegistrations/{registrationId} {
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow update: if request.auth != null && request.auth.uid == resource.data.userId;
+    }
+    
+    // Community messages - anyone can read, authenticated users can create, only owners can delete
+    match /communityMessages/{messageId} {
+      allow read: if true;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.authorId;
+      // No client-side updates (counters updated via server)
+      allow update: if false;
+      allow delete: if request.auth != null && request.auth.uid == resource.data.authorId;
+    }
+    
+    // Message reactions - read-only for authenticated clients
+    match /messageReactions/{reactionId} {
+      allow read: if request.auth != null;
+      allow create, delete, update: if false;
+    }
+    
+    // Pull requests - read-only for authenticated users, server-side writes only
+    match /pullRequests/{prId} {
+      allow read: if request.auth != null;
+      allow write: if false; // Only server-side writes via webhook
+    }
+  }
+}

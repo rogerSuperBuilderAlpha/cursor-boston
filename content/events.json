@@ -1,0 +1,23 @@
+{
+  "upcoming": [
+    {
+      "id": "hult-workshop-2026",
+      "title": "Cursor Workshop at Hult",
+      "date": "2026-02-01",
+      "time": "TBD",
+      "location": "Hult International Business School, Boston",
+      "type": "workshop",
+      "description": "Your powered edge in Business & Tech. Learn AI-powered development for academic writing, job success, software development, and startup acceleration.",
+      "image": "/Gemini_Generated_Image_lc032wlc032wlc03.png",
+      "lumaUrl": "https://lu.ma/lpki2hd6",
+      "lumaEventId": "evt-JygYtduLJkyFgd7",
+      "topics": [
+        "Deep Research for Academic Writing",
+        "First Job Success",
+        "Professional Software Development",
+        "Startup Acceleration"
+      ]
+    }
+  ],
+  "past": []
+}

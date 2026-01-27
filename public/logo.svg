@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 320" fill="none">
+  <!-- Cursor logo mark - 3D cube with cursor arrow cutout -->
+  <g transform="translate(60, 20)">
+    <!-- Outer hexagonal cube shape -->
+    <polygon points="60,0 120,35 120,105 60,140 0,105 0,35" fill="#d4d4d4"/>
+    <!-- Dark triangular cutout - the cursor/arrow -->
+    <polygon points="60,35 100,58 60,120 20,58" fill="#1a1a1a"/>
+    <!-- Right shadow to create 3D depth -->
+    <polygon points="100,58 120,70 120,105 60,140 60,120" fill="#1a1a1a"/>
+    <!-- Left face subtle shade -->
+    <polygon points="20,58 0,70 0,105 60,140 60,120" fill="#1a1a1a"/>
+  </g>
+
+  <!-- CURSOR text -->
+  <text x="120" y="220" text-anchor="middle" font-family="'Helvetica Neue', Arial, sans-serif" font-weight="700" font-size="40" fill="#d4d4d4" letter-spacing="3">CURSOR</text>
+
+  <!-- Boston text -->
+  <text x="120" y="268" text-anchor="middle" font-family="'Helvetica Neue', Arial, sans-serif" font-weight="300" font-size="32" fill="#d4d4d4">Boston</text>
+</svg>

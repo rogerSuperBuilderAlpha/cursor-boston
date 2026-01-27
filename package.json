@@ -1,0 +1,84 @@
+{
+  "name": "cursor-boston",
+  "version": "0.1.0",
+  "description": "A modern community platform for Cursor users in the Boston area. Built with Next.js, TypeScript, and Firebase.",
+  "license": "GPL-3.0",
+  "homepage": "https://github.com/rogerSuperBuilderAlpha/cursor-boston#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rogerSuperBuilderAlpha/cursor-boston.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "keywords": [
+    "cursor",
+    "boston",
+    "community",
+    "nextjs",
+    "next.js",
+    "firebase",
+    "typescript",
+    "react",
+    "tailwindcss",
+    "community-platform",
+    "meetup",
+    "events",
+    "blog",
+    "authentication",
+    "firestore"
+  ],
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "test": "jest --config config/jest.config.js",
+    "test:watch": "jest --watch --config config/jest.config.js",
+    "test:coverage": "jest --coverage --config config/jest.config.js",
+    "validate-env": "tsx scripts/validate-env.ts",
+    "prebuild": "npm run validate-env",
+    "prepare": "husky install"
+  },
+  "dependencies": {
+    "firebase": "^12.8.0",
+    "firebase-admin": "^13.6.0",
+    "gray-matter": "^4.0.3",
+    "next": "^14.2.0",
+    "qrcode": "^1.5.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.1.5",
+    "@testing-library/react": "^14.1.2",
+    "@testing-library/user-event": "^14.5.1",
+    "@types/jest": "^29.5.11",
+    "@types/node": "^20.11.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "autoprefixer": "^10.4.17",
+    "husky": "^8.0.3",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "lint-staged": "^15.2.0",
+    "postcss": "^8.4.33",
+    "tailwindcss": "^3.4.1",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0"
+  },
+  "lint-staged": {
+    "**/*.{ts,tsx}": [
+      "npm run type-check -- --noEmit",
+      "npm run lint -- --fix"
+    ],
+    "**/*.{js,jsx,ts,tsx}": [
+      "npm run lint -- --fix"
+    ]
+  }
+}

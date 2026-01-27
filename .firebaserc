@@ -1,0 +1,6 @@
+{
+  "projects": {
+    "default": "cursor-boston"
+  }
+}
+// NOTE: Replace "cursor-boston" with your Firebase project ID when deploying
