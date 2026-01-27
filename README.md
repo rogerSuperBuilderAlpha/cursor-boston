@@ -28,10 +28,6 @@
 - [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) - Contribution guidelines
 - [docs/CODE_OF_CONDUCT.md](docs/CODE_OF_CONDUCT.md) - Community code of conduct
 - [docs/SECURITY.md](docs/SECURITY.md) - Security policy
-- [docs/CHANGELOG.md](docs/CHANGELOG.md) - Version history
-- [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md) - Detailed project organization
-- [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) - Development guide
-- [docs/PRODUCTION_READINESS.md](docs/PRODUCTION_READINESS.md) - Production deployment checklist
 
 ## Features
 
@@ -321,7 +317,7 @@ Used by Trigger Email extension (auto-processed).
 
 ### Pre-Deployment Checklist
 
-Before deploying to production, review the comprehensive [Production Readiness Checklist](docs/PRODUCTION_READINESS.md) to ensure all security, configuration, and content items are properly set up.
+Before deploying to production, ensure all environment variables are configured and security rules are properly set up.
 
 ### Vercel (Recommended)
 
@@ -342,7 +338,7 @@ The application can be deployed to any platform that supports Next.js:
 
 ### Environment Variables in Production
 
-Ensure all environment variables from `.env.local` are set in your deployment platform's environment variable settings. See [Production Readiness Checklist](docs/PRODUCTION_READINESS.md) for detailed configuration steps.
+Ensure all environment variables from `.env.local` are set in your deployment platform's environment variable settings.
 
 ## Project Structure
 
@@ -387,7 +383,7 @@ Please read our [Code of Conduct](docs/CODE_OF_CONDUCT.md) before contributing.
 
 **Current Version**: 0.1.0
 
-This project is actively maintained and open to contributions. See [docs/CHANGELOG.md](docs/CHANGELOG.md) for version history.
+This project is actively maintained and open to contributions.
 
 ### Roadmap
 
