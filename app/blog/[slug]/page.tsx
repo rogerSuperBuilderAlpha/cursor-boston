@@ -114,6 +114,26 @@ export default async function BlogPostPage({ params }: Props) {
       });
   };
 
+  // Sanitize URL to prevent XSS via javascript: protocol
+  const sanitizeUrl = (url: string): string => {
+    try {
+      const trimmedUrl = url.trim();
+      // Only allow http, https, and mailto protocols
+      if (
+        trimmedUrl.startsWith("http://") ||
+        trimmedUrl.startsWith("https://") ||
+        trimmedUrl.startsWith("mailto:") ||
+        trimmedUrl.startsWith("/")
+      ) {
+        return trimmedUrl;
+      }
+      // Block javascript:, data:, vbscript:, and other dangerous protocols
+      return "#";
+    } catch {
+      return "#";
+    }
+  };
+
   // Format inline text (bold, italic, links, code)
   const formatInlineText = (text: string) => {
     // Split by patterns and reconstruct with React elements
@@ -158,10 +178,11 @@ export default async function BlogPostPage({ params }: Props) {
           </strong>
         );
       } else if (earliest.type === "link") {
+        const safeUrl = sanitizeUrl(earliest.match[2]);
         parts.push(
           <a
             key={key++}
-            href={earliest.match[2]}
+            href={safeUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="text-white underline hover:text-neutral-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded"

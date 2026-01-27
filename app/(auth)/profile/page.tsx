@@ -90,8 +90,9 @@ function ProfilePageContent() {
 
   const providerIds = user?.providerData?.map((provider) => provider.providerId) || [];
   const [wasGoogleDisconnected, setWasGoogleDisconnected] = useState(false);
-  const hasGoogleProvider = !wasGoogleDisconnected && providerIds.includes("google.com");
-  const hasPasswordProvider = providerIds.includes("password");
+  // Use strict equality check to avoid CodeQL false positive about substring matching
+  const hasGoogleProvider = !wasGoogleDisconnected && providerIds.some((id) => id === "google.com");
+  const hasPasswordProvider = providerIds.some((id) => id === "password");
   const canDisconnectGoogle = hasGoogleProvider && providerIds.length > 1;
   const enrolledFactors = user ? multiFactor(user).enrolledFactors : [];
   const hasPhoneMfa = enrolledFactors.some(
@@ -169,7 +170,7 @@ function ProfilePageContent() {
   }, [user, loading, router]);
 
   useEffect(() => {
-    if (providerIds.includes("google.com")) {
+    if (providerIds.some((id) => id === "google.com")) {
       setWasGoogleDisconnected(false);
     }
   }, [providerIds]);

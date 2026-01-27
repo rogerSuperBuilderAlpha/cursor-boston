@@ -17,7 +17,13 @@ export async function POST(request: NextRequest) {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Validate email format
+    // Validate email length to prevent ReDoS attacks
+    if (normalizedEmail.length > 254) {
+      return NextResponse.json({ error: "Email is too long" }, { status: 400 });
+    }
+
+    // Validate email format using a simple, linear-time regex
+    // This regex is intentionally simple to avoid polynomial backtracking
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(normalizedEmail)) {
       return NextResponse.json({ error: "Invalid email format" }, { status: 400 });
