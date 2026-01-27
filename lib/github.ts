@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from "crypto";
-import { collection, query, where, getDocs, doc, setDoc, getDoc, updateDoc, serverTimestamp, increment } from "firebase/firestore";
-import { db } from "./firebase";
+import { FieldValue } from "firebase-admin/firestore";
+import { getAdminDb } from "./firebase-admin";
 import { logger } from "./logger";
 
 const GITHUB_WEBHOOK_SECRET = process.env.GITHUB_WEBHOOK_SECRET;
@@ -34,12 +34,18 @@ export function verifyWebhookSignature(
 export async function findUserByGitHubLogin(
   githubLogin: string
 ): Promise<string | null> {
-  if (!db) return null;
+  const db = getAdminDb();
+  if (!db) {
+    logger.error("Firebase Admin is not configured for GitHub webhook processing");
+    return null;
+  }
 
   try {
-    const usersRef = collection(db, "users");
-    const q = query(usersRef, where("github.login", "==", githubLogin));
-    const snapshot = await getDocs(q);
+    const snapshot = await db
+      .collection("users")
+      .where("github.login", "==", githubLogin)
+      .limit(1)
+      .get();
 
     if (!snapshot.empty) {
       return snapshot.docs[0].id; // Return the user's UID
@@ -78,8 +84,9 @@ export async function processPullRequest(
     repository: { owner: { login: string }; name: string };
   }
 ): Promise<void> {
+  const db = getAdminDb();
   if (!db) {
-    throw new Error("Firebase is not configured");
+    throw new Error("Firebase Admin is not configured");
   }
 
   // Check if repository matches
@@ -109,7 +116,7 @@ export async function processPullRequest(
   }
 
   const prId = `pr-${prData.number}`;
-  const prRef = doc(db, "pullRequests", prId);
+  const prRef = db.collection("pullRequests").doc(prId);
 
   // Determine PR state - use merged boolean from GitHub payload
   let prState: "open" | "closed" | "merged" = "open";
@@ -123,13 +130,12 @@ export async function processPullRequest(
   }
 
   // Check if PR already exists
-  const existingPr = await getDoc(prRef);
-  const wasMerged = existingPr.exists() && existingPr.data()?.state === "merged";
+  const existingPr = await prRef.get();
+  const wasMerged = existingPr.exists && existingPr.data()?.state === "merged";
   const isNowMerged = prState === "merged";
 
   // Update or create PR document
-  await setDoc(
-    prRef,
+  await prRef.set(
     {
       prNumber: prData.number,
       title: prData.title,
@@ -142,7 +148,7 @@ export async function processPullRequest(
       updatedAt: new Date(prData.updated_at),
       mergedAt: prData.merged_at ? new Date(prData.merged_at) : null,
       isConnected: true,
-      lastProcessedAt: serverTimestamp(),
+      lastProcessedAt: FieldValue.serverTimestamp(),
     },
     { merge: true }
   );
@@ -150,18 +156,18 @@ export async function processPullRequest(
   // Update user's PR count
   if (isNowMerged && !wasMerged) {
     // PR was just merged - increment count
-    const userRef = doc(db, "users", userId);
-    await updateDoc(userRef, {
-      pullRequestsCount: increment(1),
+    const userRef = db.collection("users").doc(userId);
+    await userRef.update({
+      pullRequestsCount: FieldValue.increment(1),
     });
   } else if (wasMerged && prState !== "merged") {
     // PR was merged but is no longer merged (shouldn't happen, but handle it)
-    const userRef = doc(db, "users", userId);
-    const userSnap = await getDoc(userRef);
+    const userRef = db.collection("users").doc(userId);
+    const userSnap = await userRef.get();
     const currentCount = userSnap.data()?.pullRequestsCount || 0;
     if (currentCount > 0) {
-      await updateDoc(userRef, {
-        pullRequestsCount: increment(-1),
+      await userRef.update({
+        pullRequestsCount: FieldValue.increment(-1),
       });
     }
   }

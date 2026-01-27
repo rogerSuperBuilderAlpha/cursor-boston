@@ -238,6 +238,12 @@ GITHUB_REPO_OWNER=rogerSuperBuilderAlpha
 GITHUB_REPO_NAME=cursor-boston
 ```
 
+**Firebase Admin (optional, required for GitHub webhook processing):**
+
+```env
+FIREBASE_SERVICE_ACCOUNT_JSON={"type":"service_account","project_id":"your-project-id"}
+```
+
 ### Firebase Setup
 
 #### 1. Create a Firebase Project

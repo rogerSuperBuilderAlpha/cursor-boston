@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo, Suspense, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
-import { collection, query, where, getDocs, orderBy, addDoc, serverTimestamp, limit, Timestamp, deleteDoc, doc, updateDoc, increment, getDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, orderBy, addDoc, serverTimestamp, limit, Timestamp, deleteDoc, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -94,7 +94,7 @@ interface Message {
 interface Reaction {
   id: string;
   messageId: string;
-  oderId: string;
+  userId: string;
   type: ReactionType;
 }
 
@@ -229,6 +229,31 @@ function MembersPageContent() {
     fetchMessages();
   }, [activeTab, user]);
 
+  const callCommunityApi = useCallback(
+    async (endpoint: string, payload: Record<string, unknown>) => {
+      if (!user) {
+        throw new Error("Not authenticated");
+      }
+      const token = await user.getIdToken();
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Request failed");
+      }
+
+      return response.json();
+    },
+    [user]
+  );
+
   const postMessage = async () => {
     const trimmed = newMessage.trim();
     if (!user || !db || !trimmed || trimmed.length < 100 || trimmed.length > 500) return;
@@ -287,10 +312,9 @@ function MembersPageContent() {
 
   // Toggle like/dislike reaction
   const toggleReaction = useCallback(async (messageId: string, type: ReactionType) => {
-    if (!user || !db) return;
+    if (!user) return;
     
     const currentReaction = userReactions[messageId];
-    const messageRef = doc(db, "communityMessages", messageId);
     
     // Optimistic update
     const updateMessage = (updater: (msg: Message) => Message) => {
@@ -314,74 +338,50 @@ function MembersPageContent() {
         });
         updateMessage((m) => ({
           ...m,
-          [type === "like" ? "likeCount" : "dislikeCount"]: Math.max(0, (m[type === "like" ? "likeCount" : "dislikeCount"] || 0) - 1),
+          [type === "like" ? "likeCount" : "dislikeCount"]: Math.max(
+            0,
+            (m[type === "like" ? "likeCount" : "dislikeCount"] || 0) - 1
+          ),
         }));
-        
-        // Delete from Firestore
-        const reactionsRef = collection(db, "messageReactions");
-        const q = query(
-          reactionsRef,
-          where("messageId", "==", messageId),
-          where("userId", "==", user.uid)
-        );
-        const snapshot = await getDocs(q);
-        if (!snapshot.empty) {
-          await deleteDoc(snapshot.docs[0].ref);
-        }
-        await updateDoc(messageRef, {
-          [type === "like" ? "likeCount" : "dislikeCount"]: increment(-1),
-        });
       } else {
         // Add or switch reaction
         setUserReactions((prev) => ({ ...prev, [messageId]: type }));
-        
+
         if (currentReaction) {
           // Switching from one to another
           updateMessage((m) => ({
             ...m,
-            [currentReaction === "like" ? "likeCount" : "dislikeCount"]: Math.max(0, (m[currentReaction === "like" ? "likeCount" : "dislikeCount"] || 0) - 1),
-            [type === "like" ? "likeCount" : "dislikeCount"]: (m[type === "like" ? "likeCount" : "dislikeCount"] || 0) + 1,
+            [currentReaction === "like" ? "likeCount" : "dislikeCount"]: Math.max(
+              0,
+              (m[currentReaction === "like" ? "likeCount" : "dislikeCount"] || 0) -
+                1
+            ),
+            [type === "like" ? "likeCount" : "dislikeCount"]:
+              (m[type === "like" ? "likeCount" : "dislikeCount"] || 0) + 1,
           }));
-          
-          // Update Firestore - delete old, add new
-          const reactionsRef = collection(db, "messageReactions");
-          const q = query(
-            reactionsRef,
-            where("messageId", "==", messageId),
-            where("userId", "==", user.uid)
-          );
-          const snapshot = await getDocs(q);
-          if (!snapshot.empty) {
-            await deleteDoc(snapshot.docs[0].ref);
-          }
-          await addDoc(reactionsRef, {
-            messageId,
-            oderId: user.uid,
-            type,
-            createdAt: serverTimestamp(),
-          });
-          await updateDoc(messageRef, {
-            [currentReaction === "like" ? "likeCount" : "dislikeCount"]: increment(-1),
-            [type === "like" ? "likeCount" : "dislikeCount"]: increment(1),
-          });
         } else {
           // New reaction
           updateMessage((m) => ({
             ...m,
-            [type === "like" ? "likeCount" : "dislikeCount"]: (m[type === "like" ? "likeCount" : "dislikeCount"] || 0) + 1,
+            [type === "like" ? "likeCount" : "dislikeCount"]:
+              (m[type === "like" ? "likeCount" : "dislikeCount"] || 0) + 1,
           }));
-          
-          const reactionsRef = collection(db, "messageReactions");
-          await addDoc(reactionsRef, {
-            messageId,
-            oderId: user.uid,
-            type,
-            createdAt: serverTimestamp(),
-          });
-          await updateDoc(messageRef, {
-            [type === "like" ? "likeCount" : "dislikeCount"]: increment(1),
-          });
         }
+      }
+
+      const result = await callCommunityApi("/api/community/reaction", {
+        messageId,
+        type,
+      });
+
+      if (result?.action === "removed") {
+        setUserReactions((prev) => {
+          const updated = { ...prev };
+          delete updated[messageId];
+          return updated;
+        });
+      } else if (result?.action === "added" || result?.action === "switched") {
+        setUserReactions((prev) => ({ ...prev, [messageId]: result.type || type }));
       }
     } catch (error) {
       console.error("Error toggling reaction:", error);
@@ -396,7 +396,7 @@ function MembersPageContent() {
         });
       }
     }
-  }, [user, userReactions]);
+  }, [user, userReactions, callCommunityApi]);
 
   // Fetch replies for a message
   const fetchReplies = useCallback(async (parentId: string) => {
@@ -440,37 +440,29 @@ function MembersPageContent() {
   // Post a reply
   const postReply = async (parentId: string, parentAuthorName: string) => {
     const trimmed = replyContent.trim();
-    if (!user || !db || !trimmed || trimmed.length < 100 || trimmed.length > 500) return;
+    if (!user || !trimmed || trimmed.length < 100 || trimmed.length > 500) return;
     
     setPostingReply(true);
     try {
-      const messagesRef = collection(db, "communityMessages");
-      const newReply = {
+      const response = await callCommunityApi("/api/community/reply", {
+        parentId,
+        content: trimmed,
+      });
+
+      const newReplyWithId: Message = {
+        id: response.replyId,
         content: trimmed,
         authorId: user.uid,
         authorName: user.displayName || user.email?.split("@")[0] || "Anonymous",
         authorPhoto: user.photoURL,
-        createdAt: serverTimestamp(),
+        createdAt: Timestamp.now(),
         parentId,
         likeCount: 0,
         dislikeCount: 0,
         replyCount: 0,
         repostCount: 0,
       };
-      const docRef = await addDoc(messagesRef, newReply);
-      
-      // Update reply count on parent
-      const parentRef = doc(db, "communityMessages", parentId);
-      await updateDoc(parentRef, {
-        replyCount: increment(1),
-      });
-      
-      // Update local state
-      const newReplyWithId: Message = {
-        id: docRef.id,
-        ...newReply,
-        createdAt: Timestamp.now(),
-      };
+
       setMessageReplies((prev) => ({
         ...prev,
         [parentId]: [...(prev[parentId] || []), newReplyWithId],
@@ -497,17 +489,21 @@ function MembersPageContent() {
   // Repost a message
   const repostMessage = async (original: Message) => {
     const trimmed = repostComment.trim();
-    if (!user || !db || !trimmed || trimmed.length < 100 || trimmed.length > 500) return;
+    if (!user || !trimmed || trimmed.length < 100 || trimmed.length > 500) return;
     
     setPosting(true);
     try {
-      const messagesRef = collection(db, "communityMessages");
+      const response = await callCommunityApi("/api/community/repost", {
+        originalId: original.id,
+        content: trimmed,
+      });
+
       const repost = {
         content: trimmed,
         authorId: user.uid,
         authorName: user.displayName || user.email?.split("@")[0] || "Anonymous",
         authorPhoto: user.photoURL,
-        createdAt: serverTimestamp(),
+        createdAt: Timestamp.now(),
         repostOf: {
           originalId: original.id,
           originalAuthorId: original.authorId,
@@ -519,20 +515,11 @@ function MembersPageContent() {
         replyCount: 0,
         repostCount: 0,
       };
-      const docRef = await addDoc(messagesRef, repost);
-      
-      // Update repost count on original
-      const originalRef = doc(db, "communityMessages", original.id);
-      await updateDoc(originalRef, {
-        repostCount: increment(1),
-      });
-      
-      // Update local state
+
       setMessages((prev) => [
         {
-          id: docRef.id,
+          id: response.repostId,
           ...repost,
-          createdAt: Timestamp.now(),
         },
         ...prev.map((m) =>
           m.id === original.id ? { ...m, repostCount: (m.repostCount || 0) + 1 } : m

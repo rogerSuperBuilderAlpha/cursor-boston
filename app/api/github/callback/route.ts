@@ -11,10 +11,20 @@ const GITHUB_REDIRECT_URI = process.env.NEXT_PUBLIC_GITHUB_REDIRECT_URI;
 async function handleGitHubCallback(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const code = searchParams.get("code");
-  const state = searchParams.get("state"); // Contains the Firebase UID
+  const state = searchParams.get("state");
+  const expectedState = request.cookies.get("github_oauth_state")?.value;
 
   if (!code || !state) {
     return NextResponse.redirect(new URL("/profile?github=error&message=missing_params", request.url));
+  }
+
+  if (!expectedState || expectedState !== state) {
+    logger.warn("GitHub OAuth state mismatch", { endpoint: "/api/github/callback" });
+    const response = NextResponse.redirect(
+      new URL("/profile?github=error&message=invalid_state", request.url)
+    );
+    response.cookies.set("github_oauth_state", "", { maxAge: 0, path: "/" });
+    return response;
   }
 
   if (!GITHUB_CLIENT_ID || !GITHUB_CLIENT_SECRET || !GITHUB_REDIRECT_URI) {
@@ -78,15 +88,21 @@ async function handleGitHubCallback(request: NextRequest) {
       html_url: githubUser.html_url,
     }));
 
-    return NextResponse.redirect(
-      new URL(`/profile?github=success&data=${githubData}&uid=${state}`, request.url)
+    const response = NextResponse.redirect(
+      new URL(`/profile?github=success&data=${githubData}`, request.url)
     );
+    response.cookies.set("github_oauth_state", "", { maxAge: 0, path: "/" });
+    return response;
   } catch (error) {
     logger.logError(error, {
       endpoint: "/api/github/callback",
       method: "GET",
     });
-    return NextResponse.redirect(new URL("/profile?github=error&message=unknown", request.url));
+    const response = NextResponse.redirect(
+      new URL("/profile?github=error&message=unknown", request.url)
+    );
+    response.cookies.set("github_oauth_state", "", { maxAge: 0, path: "/" });
+    return response;
   }
 }
 

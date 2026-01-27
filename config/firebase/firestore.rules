@@ -35,23 +35,19 @@ service cloud.firestore {
       allow update: if request.auth != null && request.auth.uid == resource.data.userId;
     }
     
-    // Community messages - anyone can read, authenticated users can create, only owners can update/delete
+    // Community messages - anyone can read, authenticated users can create, only owners can delete
     match /communityMessages/{messageId} {
       allow read: if true;
       allow create: if request.auth != null && request.auth.uid == request.resource.data.authorId;
-      // Only allow updates to reaction counts, not message content
-      allow update: if request.auth != null 
-                    && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['content', 'authorId', 'authorName']));
+      // No client-side updates (counters updated via server)
+      allow update: if false;
       allow delete: if request.auth != null && request.auth.uid == resource.data.authorId;
     }
     
-    // Message reactions - users can create/delete their own reactions
+    // Message reactions - read-only for authenticated clients
     match /messageReactions/{reactionId} {
-      allow read: if true;
-      allow create: if request.auth != null 
-                    && request.auth.uid == request.resource.data.userId;
-      allow delete: if request.auth != null 
-                    && request.auth.uid == resource.data.userId;
+      allow read: if request.auth != null;
+      allow create, delete, update: if false;
     }
     
     // Pull requests - read-only for authenticated users, server-side writes only

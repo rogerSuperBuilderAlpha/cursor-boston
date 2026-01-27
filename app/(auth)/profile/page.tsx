@@ -13,16 +13,11 @@ import {
   UserStats,
 } from "@/lib/registrations";
 import { collection, query, where, getDocs, doc, updateDoc, serverTimestamp, deleteField } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { EmailAuthProvider, PhoneAuthProvider, PhoneMultiFactorGenerator, RecaptchaVerifier, linkWithCredential, multiFactor, unlink, updatePassword } from "firebase/auth";
+import { auth, db } from "@/lib/firebase";
 
 const DISCORD_CLIENT_ID = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
-// NOTE: Replace "cursorboston.com" with your actual domain in .env.local
-// This should match the redirect URI configured in your Discord OAuth app
-const DISCORD_REDIRECT_URI = process.env.NEXT_PUBLIC_DISCORD_REDIRECT_URI || "https://cursorboston.com/api/discord/callback";
 const GITHUB_CLIENT_ID = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID;
-// NOTE: Replace "cursorboston.com" with your actual domain in .env.local
-// This should match the redirect URI configured in your GitHub OAuth app
-const GITHUB_REDIRECT_URI = process.env.NEXT_PUBLIC_GITHUB_REDIRECT_URI || "https://cursorboston.com/api/github/callback";
 
 // Get initials from name or email
 function getInitials(
@@ -91,6 +86,34 @@ function ProfilePageContent() {
   
   // Get GitHub info: prioritize local state changes over userProfile
   const githubInfo = wasGithubDisconnected ? null : (connectedGithub || userProfile?.github);
+  const hasGithubConnection = Boolean(githubInfo || userProfile?.provider === "github");
+
+  const providerIds = user?.providerData?.map((provider) => provider.providerId) || [];
+  const [wasGoogleDisconnected, setWasGoogleDisconnected] = useState(false);
+  const hasGoogleProvider = !wasGoogleDisconnected && providerIds.includes("google.com");
+  const hasPasswordProvider = providerIds.includes("password");
+  const canDisconnectGoogle = hasGoogleProvider && providerIds.length > 1;
+  const enrolledFactors = user?.multiFactor?.enrolledFactors || [];
+  const hasPhoneMfa = enrolledFactors.some(
+    (factor) => factor.factorId === PhoneMultiFactorGenerator.FACTOR_ID
+  );
+
+  const [googleDisconnecting, setGoogleDisconnecting] = useState(false);
+  const [googleError, setGoogleError] = useState<string | null>(null);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [smsCode, setSmsCode] = useState("");
+  const [mfaVerificationId, setMfaVerificationId] = useState<string | null>(null);
+  const [mfaLoading, setMfaLoading] = useState(false);
+  const [mfaError, setMfaError] = useState<string | null>(null);
+  const [mfaSuccess, setMfaSuccess] = useState<string | null>(null);
+  const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
+  const hasGithubConnection = Boolean(githubInfo || userProfile?.provider === "github");
 
   // Public profile settings state
   const [profileSettings, setProfileSettings] = useState({
@@ -134,13 +157,33 @@ function ProfilePageContent() {
     }
   }, [user, loading, router]);
 
+  useEffect(() => {
+    if (providerIds.includes("google.com")) {
+      setWasGoogleDisconnected(false);
+    }
+  }, [providerIds]);
+
+  useEffect(() => {
+    return () => {
+      if (recaptchaVerifierRef.current) {
+        recaptchaVerifierRef.current.clear();
+        recaptchaVerifierRef.current = null;
+      }
+    };
+  }, []);
+
   // Handle Discord OAuth callback
   useEffect(() => {
+    if (loading) return;
     const discordStatus = searchParams.get("discord");
     const discordData = searchParams.get("data");
-    const uid = searchParams.get("uid");
 
-    if (discordStatus === "success" && discordData && uid && user && db) {
+    if (discordStatus === "success" && discordData) {
+      if (!user || !db) {
+        setDiscordError("Please sign in to finish connecting Discord.");
+        router.replace("/login?redirect=/profile");
+        return;
+      }
       // Save Discord data to Firestore
       const firestore = db; // Capture for TypeScript
       const saveDiscord = async () => {
@@ -151,7 +194,7 @@ function ProfilePageContent() {
             username: data.globalName || data.username,
             avatar: data.avatar,
           };
-          const userRef = doc(firestore, "users", uid);
+          const userRef = doc(firestore, "users", user.uid);
           await updateDoc(userRef, {
             discord: {
               ...discordUserInfo,
@@ -180,15 +223,20 @@ function ProfilePageContent() {
       }
       router.replace("/profile");
     }
-  }, [searchParams, user, router]);
+  }, [searchParams, user, router, loading]);
 
   // Handle GitHub OAuth callback
   useEffect(() => {
+    if (loading) return;
     const githubStatus = searchParams.get("github");
     const githubData = searchParams.get("data");
-    const uid = searchParams.get("uid");
 
-    if (githubStatus === "success" && githubData && uid && user && db) {
+    if (githubStatus === "success" && githubData) {
+      if (!user || !db) {
+        setGithubError("Please sign in to finish connecting GitHub.");
+        router.replace("/login?redirect=/profile");
+        return;
+      }
       // Save GitHub data to Firestore
       const firestore = db; // Capture for TypeScript
       const saveGithub = async () => {
@@ -201,7 +249,7 @@ function ProfilePageContent() {
             avatar_url: data.avatar_url,
             html_url: data.html_url,
           };
-          const userRef = doc(firestore, "users", uid);
+          const userRef = doc(firestore, "users", user.uid);
           await updateDoc(userRef, {
             github: {
               ...githubUserInfo,
@@ -224,7 +272,7 @@ function ProfilePageContent() {
       setGithubError("Failed to connect GitHub. Please try again.");
       router.replace("/profile");
     }
-  }, [searchParams, user, router]);
+  }, [searchParams, user, router, loading]);
 
   const connectDiscord = () => {
     if (!user || !DISCORD_CLIENT_ID) {
@@ -232,14 +280,7 @@ function ProfilePageContent() {
       return;
     }
     setDiscordConnecting(true);
-    const params = new URLSearchParams({
-      client_id: DISCORD_CLIENT_ID,
-      redirect_uri: DISCORD_REDIRECT_URI,
-      response_type: "code",
-      scope: "identify guilds",
-      state: user.uid,
-    });
-    window.location.href = `https://discord.com/api/oauth2/authorize?${params}`;
+    window.location.href = "/api/discord/authorize";
   };
 
   const disconnectDiscord = async () => {
@@ -269,13 +310,7 @@ function ProfilePageContent() {
       return;
     }
     setGithubConnecting(true);
-    const params = new URLSearchParams({
-      client_id: GITHUB_CLIENT_ID,
-      redirect_uri: GITHUB_REDIRECT_URI,
-      scope: "read:user",
-      state: user.uid,
-    });
-    window.location.href = `https://github.com/login/oauth/authorize?${params}`;
+    window.location.href = "/api/github/authorize";
   };
 
   const disconnectGithub = async () => {
@@ -296,6 +331,27 @@ function ProfilePageContent() {
       console.error("Error disconnecting GitHub:", error);
       setGithubError("Failed to disconnect GitHub. Please try again.");
       setGithubDisconnecting(false);
+    }
+  };
+
+  const disconnectGoogle = async () => {
+    if (!user || !auth) return;
+    setGoogleError(null);
+    setGoogleDisconnecting(true);
+    if (!canDisconnectGoogle) {
+      setGoogleError("You need at least one other login method before disconnecting Google.");
+      setGoogleDisconnecting(false);
+      return;
+    }
+    try {
+      await unlink(user, "google.com");
+      await user.reload();
+      setWasGoogleDisconnected(true);
+      setGoogleDisconnecting(false);
+    } catch (error) {
+      console.error("Error disconnecting Google:", error);
+      setGoogleError("Failed to disconnect Google. Please try again.");
+      setGoogleDisconnecting(false);
     }
   };
 
@@ -392,6 +448,143 @@ function ProfilePageContent() {
         showMemberSince: show,
       },
     }));
+  };
+
+  const handleSetPassword = async () => {
+    if (!user || !auth) return;
+    setPasswordError(null);
+    setPasswordSuccess(false);
+
+    if (!password || password.length < 8) {
+      setPasswordError("Password must be at least 8 characters.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setPasswordError("Passwords do not match.");
+      return;
+    }
+    if (!user.email) {
+      setPasswordError("No email is associated with this account.");
+      return;
+    }
+
+    setPasswordSaving(true);
+    try {
+      if (hasPasswordProvider) {
+        await updatePassword(user, password);
+      } else {
+        const credential = EmailAuthProvider.credential(user.email, password);
+        await linkWithCredential(user, credential);
+      }
+      setPassword("");
+      setConfirmPassword("");
+      setPasswordSuccess(true);
+      setTimeout(() => setPasswordSuccess(false), 3000);
+    } catch (error) {
+      console.error("Error setting password:", error);
+      setPasswordError("Failed to set password. Please re-authenticate and try again.");
+    } finally {
+      setPasswordSaving(false);
+    }
+  };
+
+  const initializeRecaptcha = () => {
+    if (!auth) return null;
+    if (!recaptchaVerifierRef.current) {
+      recaptchaVerifierRef.current = new RecaptchaVerifier(
+        auth,
+        "mfa-recaptcha-container",
+        {
+          size: "invisible",
+        }
+      );
+    }
+    return recaptchaVerifierRef.current;
+  };
+
+  const sendMfaCode = async () => {
+    if (!user || !auth) return;
+    setMfaError(null);
+    setMfaSuccess(null);
+    if (hasPhoneMfa) {
+      setMfaError("Phone 2FA is already enabled.");
+      return;
+    }
+    if (!phoneNumber.trim()) {
+      setMfaError("Enter a phone number in E.164 format (e.g. +15551234567).");
+      return;
+    }
+    setMfaLoading(true);
+    try {
+      const verifier = initializeRecaptcha();
+      if (!verifier) throw new Error("Recaptcha not initialized");
+      const session = await multiFactor(user).getSession();
+      const phoneInfoOptions = {
+        phoneNumber: phoneNumber.trim(),
+        session,
+      };
+      const provider = new PhoneAuthProvider(auth);
+      const verificationId = await provider.verifyPhoneNumber(phoneInfoOptions, verifier);
+      setMfaVerificationId(verificationId);
+      setMfaSuccess("Verification code sent.");
+    } catch (error) {
+      console.error("Error sending MFA code:", error);
+      setMfaError("Failed to send verification code. Please try again.");
+    } finally {
+      setMfaLoading(false);
+    }
+  };
+
+  const confirmMfaEnrollment = async () => {
+    if (!user || !auth || !mfaVerificationId) return;
+    setMfaError(null);
+    setMfaSuccess(null);
+    if (!smsCode.trim()) {
+      setMfaError("Enter the SMS code.");
+      return;
+    }
+    setMfaLoading(true);
+    try {
+      const cred = PhoneAuthProvider.credential(mfaVerificationId, smsCode.trim());
+      const multiFactorAssertion = PhoneMultiFactorGenerator.assertion(cred);
+      await multiFactor(user).enroll(multiFactorAssertion, "Phone");
+      await user.reload();
+      setMfaVerificationId(null);
+      setSmsCode("");
+      setPhoneNumber("");
+      setMfaSuccess("Two-factor authentication enabled.");
+    } catch (error) {
+      console.error("Error enrolling MFA:", error);
+      setMfaError("Failed to enable 2FA. Please try again.");
+    } finally {
+      setMfaLoading(false);
+    }
+  };
+
+  const disableMfa = async () => {
+    if (!user) return;
+    setMfaError(null);
+    setMfaSuccess(null);
+    setMfaLoading(true);
+    try {
+      const enrolled = multiFactor(user).enrolledFactors;
+      const phoneFactor = enrolled.find(
+        (factor) => factor.factorId === PhoneMultiFactorGenerator.FACTOR_ID
+      );
+      if (!phoneFactor) {
+        setMfaError("No phone-based 2FA is enabled.");
+        setMfaLoading(false);
+        return;
+      }
+      await multiFactor(user).unenroll(phoneFactor.uid);
+      await user.reload();
+      setMfaSuccess("Two-factor authentication disabled.");
+    } catch (error) {
+      console.error("Error disabling MFA:", error);
+      setMfaError("Failed to disable 2FA. Please try again.");
+    } finally {
+      setMfaLoading(false);
+    }
   };
 
   // Fetch user data
@@ -631,6 +824,36 @@ function ProfilePageContent() {
               )}
               {githubError && (
                 <p className="text-red-400 text-xs mt-2">{githubError}</p>
+              )}
+              {hasGithubConnection && (
+                <div className="mt-4 p-4 bg-neutral-800/60 rounded-xl border border-neutral-700">
+                  <h2 className="text-sm font-semibold text-white mb-2">
+                    Contribute to the Open Source
+                  </h2>
+                  <ol className="list-decimal list-inside space-y-1 text-neutral-300 text-sm">
+                    <li>Pick an issue labeled “good first issue”.</li>
+                    <li>Fork the repo, make your change, and open a PR.</li>
+                    <li>Add a short test plan to your PR.</li>
+                  </ol>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Link
+                      href="https://github.com/rogerSuperBuilderAlpha/cursor-boston"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-2 bg-neutral-700 text-white rounded-lg text-xs font-medium hover:bg-neutral-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                    >
+                      Visit GitHub Repo
+                    </Link>
+                    <Link
+                      href="https://github.com/rogerSuperBuilderAlpha/cursor-boston/blob/master/docs/CONTRIBUTING.md"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-2 bg-emerald-500 text-white rounded-lg text-xs font-medium hover:bg-emerald-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                    >
+                      Contributing Guide
+                    </Link>
+                  </div>
+                </div>
               )}
 
               <p className="text-neutral-500 text-sm mt-3">
@@ -1199,6 +1422,189 @@ function ProfilePageContent() {
         {/* Settings Tab */}
         {activeTab === "settings" && (
           <div className="space-y-6">
+            {/* Account Security */}
+            <div className="bg-neutral-900 rounded-2xl p-6 border border-neutral-800">
+              <h2 className="text-lg font-semibold text-white mb-4">
+                Account Security
+              </h2>
+              <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>
+                    <p className="text-white font-medium">Google Login</p>
+                    <p className="text-neutral-400 text-sm">
+                      {hasGoogleProvider ? "Connected" : "Not connected"}
+                    </p>
+                  </div>
+                  {hasGoogleProvider && (
+                    <button
+                      onClick={disconnectGoogle}
+                      disabled={googleDisconnecting}
+                      className="px-3 py-2 bg-neutral-800/50 text-white text-sm rounded-lg inline-flex items-center gap-2 hover:bg-neutral-700 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                    >
+                      {googleDisconnecting ? "Disconnecting..." : "Disconnect Google"}
+                    </button>
+                  )}
+                </div>
+                {googleError && (
+                  <p className="text-red-400 text-sm">{googleError}</p>
+                )}
+
+                <div>
+                  <p className="text-white font-medium mb-2">
+                    {hasPasswordProvider ? "Update Password" : "Set a Password"}
+                  </p>
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="New password"
+                      className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                    />
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Confirm password"
+                      className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                    />
+                  </div>
+                  <div className="mt-3 flex items-center gap-3">
+                    <button
+                      onClick={handleSetPassword}
+                      disabled={passwordSaving}
+                      className="px-4 py-2 bg-emerald-500 text-white rounded-lg text-sm font-medium hover:bg-emerald-400 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                    >
+                      {passwordSaving ? "Saving..." : "Save Password"}
+                    </button>
+                    {passwordSuccess && (
+                      <p className="text-emerald-400 text-sm">Password updated.</p>
+                    )}
+                  </div>
+                  {passwordError && (
+                    <p className="text-red-400 text-sm mt-2">{passwordError}</p>
+                  )}
+                </div>
+
+                <div>
+                  <p className="text-white font-medium mb-2">Two-Factor Authentication</p>
+                  <p className="text-neutral-400 text-sm mb-3">
+                    {hasPhoneMfa ? "Enabled with SMS." : "Use SMS to add an extra layer of security."}
+                  </p>
+                  <div className="space-y-3">
+                    <input
+                      type="tel"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      placeholder="+15551234567"
+                      className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                      disabled={hasPhoneMfa}
+                    />
+                    <div className="flex flex-wrap gap-3">
+                      <button
+                        onClick={sendMfaCode}
+                        disabled={mfaLoading || hasPhoneMfa}
+                        className="px-4 py-2 bg-neutral-800 text-white rounded-lg text-sm font-medium hover:bg-neutral-700 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                      >
+                        {mfaLoading ? "Sending..." : "Send Code"}
+                      </button>
+                      <button
+                        onClick={disableMfa}
+                        disabled={mfaLoading || !hasPhoneMfa}
+                        className="px-4 py-2 bg-neutral-800/50 text-white rounded-lg text-sm font-medium hover:bg-neutral-700 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                      >
+                        Disable 2FA
+                      </button>
+                    </div>
+                    {mfaVerificationId && (
+                      <div className="space-y-3">
+                        <input
+                          type="text"
+                          value={smsCode}
+                          onChange={(e) => setSmsCode(e.target.value)}
+                          placeholder="Enter SMS code"
+                          className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                        />
+                        <button
+                          onClick={confirmMfaEnrollment}
+                          disabled={mfaLoading}
+                          className="px-4 py-2 bg-emerald-500 text-white rounded-lg text-sm font-medium hover:bg-emerald-400 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                        >
+                          {mfaLoading ? "Verifying..." : "Enable 2FA"}
+                        </button>
+                      </div>
+                    )}
+                    {mfaError && (
+                      <p className="text-red-400 text-sm">{mfaError}</p>
+                    )}
+                    {mfaSuccess && (
+                      <p className="text-emerald-400 text-sm">{mfaSuccess}</p>
+                    )}
+                    <div id="mfa-recaptcha-container" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Connected Accounts */}
+            <div className="bg-neutral-900 rounded-2xl p-6 border border-neutral-800">
+              <h2 className="text-lg font-semibold text-white mb-4">
+                Connected Accounts
+              </h2>
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>
+                    <p className="text-white font-medium">Discord</p>
+                    <p className="text-neutral-400 text-sm">
+                      {discordInfo ? `Connected as ${discordInfo.username}` : "Not connected"}
+                    </p>
+                  </div>
+                  {discordInfo ? (
+                    <button
+                      onClick={disconnectDiscord}
+                      disabled={discordDisconnecting}
+                      className="px-3 py-2 bg-[#5865F2]/10 text-[#5865F2] text-sm rounded-lg inline-flex items-center gap-2 hover:bg-[#5865F2]/20 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5865F2]"
+                    >
+                      {discordDisconnecting ? "Disconnecting..." : "Disconnect Discord"}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={connectDiscord}
+                      disabled={discordConnecting}
+                      className="px-3 py-2 bg-[#5865F2] text-white text-sm rounded-lg inline-flex items-center gap-2 hover:bg-[#4752C4] transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5865F2]"
+                    >
+                      {discordConnecting ? "Connecting..." : "Connect Discord"}
+                    </button>
+                  )}
+                </div>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>
+                    <p className="text-white font-medium">GitHub</p>
+                    <p className="text-neutral-400 text-sm">
+                      {githubInfo ? `Connected as ${githubInfo.login}` : "Not connected"}
+                    </p>
+                  </div>
+                  {githubInfo ? (
+                    <button
+                      onClick={disconnectGithub}
+                      disabled={githubDisconnecting}
+                      className="px-3 py-2 bg-neutral-800/50 text-white text-sm rounded-lg inline-flex items-center gap-2 hover:bg-neutral-700 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                    >
+                      {githubDisconnecting ? "Disconnecting..." : "Disconnect GitHub"}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={connectGithub}
+                      disabled={githubConnecting}
+                      className="px-3 py-2 bg-neutral-800 text-white text-sm rounded-lg inline-flex items-center gap-2 hover:bg-neutral-700 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                    >
+                      {githubConnecting ? "Connecting..." : "Connect GitHub"}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* Profile Visibility Toggle */}
             <div className="bg-neutral-900 rounded-2xl p-6 border border-neutral-800">
               <div className="flex items-center justify-between mb-2">

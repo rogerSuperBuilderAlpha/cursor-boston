@@ -47,6 +47,7 @@
   },
   "dependencies": {
     "firebase": "^12.8.0",
+    "firebase-admin": "^13.6.0",
     "gray-matter": "^4.0.3",
     "next": "^14.2.0",
     "qrcode": "^1.5.4",

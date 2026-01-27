@@ -116,6 +116,11 @@ const optionalEnvVars: EnvVar[] = [
     required: false,
     description: "GitHub Repository Name",
   },
+  {
+    name: "FIREBASE_SERVICE_ACCOUNT_JSON",
+    required: false,
+    description: "Firebase Admin service account JSON (for webhooks)",
+  },
   // Admin Email (OPTIONAL)
   {
     name: "ADMIN_EMAIL",
