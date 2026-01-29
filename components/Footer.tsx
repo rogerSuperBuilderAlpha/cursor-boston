@@ -40,7 +40,7 @@ export default function Footer() {
 
           {/* Links columns */}
           <div className="lg:col-span-8">
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-8">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-8">
               {/* Site links */}
               <div>
                 <h3 className="text-white font-semibold text-sm mb-4">Site</h3>
@@ -100,6 +100,11 @@ export default function Footer() {
                       </svg>
                     </a>
                   </li>
+                  <li>
+                    <Link href="/code-of-conduct" className="text-neutral-400 hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-white focus-visible:underline">
+                      Code of Conduct
+                    </Link>
+                  </li>
                 </ul>
               </div>
 
@@ -148,6 +153,38 @@ export default function Footer() {
                         <path d="M7 17l9.2-9.2M17 17V7H7" />
                       </svg>
                     </a>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Legal links */}
+              <div>
+                <h3 className="text-white font-semibold text-sm mb-4">Legal</h3>
+                <ul className="space-y-3">
+                  <li>
+                    <Link href="/privacy" className="text-neutral-400 hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-white focus-visible:underline">
+                      Privacy Policy
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/terms" className="text-neutral-400 hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-white focus-visible:underline">
+                      Terms of Service
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/cookies" className="text-neutral-400 hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-white focus-visible:underline">
+                      Cookie Policy
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/disclaimer" className="text-neutral-400 hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-white focus-visible:underline">
+                      Disclaimer
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/accessibility" className="text-neutral-400 hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-white focus-visible:underline">
+                      Accessibility
+                    </Link>
                   </li>
                 </ul>
               </div>
@@ -204,16 +241,24 @@ export default function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="border-t border-neutral-800 mt-8 pt-8 flex flex-col sm:flex-row justify-between items-center">
-          <p className="text-neutral-500 text-sm">
-            © {new Date().getFullYear()} Cursor Boston
+        <div className="border-t border-neutral-800 mt-8 pt-8">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <p className="text-neutral-500 text-sm">
+              © {new Date().getFullYear()} Cursor Boston
+            </p>
+            <a
+              href="mailto:hello@cursorboston.com"
+              className="text-neutral-400 hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-white focus-visible:underline"
+            >
+              hello@cursorboston.com
+            </a>
+          </div>
+          <p className="text-neutral-600 text-xs text-center mt-4">
+            Cursor Boston is an independent community. Not affiliated with Cursor or Anysphere Inc.{" "}
+            <Link href="/disclaimer" className="hover:text-neutral-400 underline">
+              Learn more
+            </Link>
           </p>
-          <a
-            href="mailto:hello@cursorboston.com"
-            className="text-neutral-400 hover:text-white text-sm transition-colors mt-4 sm:mt-0 focus-visible:outline-none focus-visible:text-white focus-visible:underline"
-          >
-            hello@cursorboston.com
-          </a>
         </div>
       </div>
     </footer>
