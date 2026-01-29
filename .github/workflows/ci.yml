@@ -197,6 +197,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: docker/Dockerfile
           push: false
           tags: cursor-boston:${{ github.sha }}
           cache-from: type=gha

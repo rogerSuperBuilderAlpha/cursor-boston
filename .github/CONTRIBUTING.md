@@ -5,6 +5,7 @@ Thank you for your interest in contributing to Cursor Boston! This document prov
 ## Table of Contents
 
 - [Code of Conduct](#code-of-conduct)
+- [Developer Certificate of Origin](#developer-certificate-of-origin)
 - [Getting Started](#getting-started)
 - [Development Workflow](#development-workflow)
 - [Code Style and Conventions](#code-style-and-conventions)
@@ -17,6 +18,31 @@ Thank you for your interest in contributing to Cursor Boston! This document prov
 ## Code of Conduct
 
 This project adheres to a [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to hello@cursorboston.com.
+
+## Developer Certificate of Origin
+
+This project uses the [Developer Certificate of Origin (DCO)](DCO.md) to ensure that contributors have the right to submit their contributions under the project's open source license.
+
+**All commits must be signed off** to indicate your agreement with the DCO:
+
+```bash
+git commit -s -m "Your commit message"
+```
+
+The `-s` flag adds a `Signed-off-by` line to your commit message:
+
+```
+Signed-off-by: Your Name <your.email@example.com>
+```
+
+Make sure your Git name and email are configured:
+
+```bash
+git config --global user.name "Your Name"
+git config --global user.email "your.email@example.com"
+```
+
+Pull requests with unsigned commits will not be merged. See [DCO.md](DCO.md) for more details.
 
 ## Getting Started
 
@@ -220,9 +246,19 @@ Follow the [Conventional Commits](https://www.conventionalcommits.org/) format:
 ```
 feat(auth): add GitHub OAuth integration
 
+Signed-off-by: Jane Developer <jane@example.com>
+```
+
+```
 fix(members): resolve mobile navigation bug
 
+Signed-off-by: John Contributor <john@example.com>
+```
+
+```
 docs(readme): update installation instructions
+
+Signed-off-by: Alex Writer <alex@example.com>
 ```
 
 ### Commit Best Practices
@@ -231,6 +267,7 @@ docs(readme): update installation instructions
 - Keep commits focused (one logical change per commit)
 - Reference issue numbers: `fix #123: resolve navigation bug`
 - Use present tense: "Add feature" not "Added feature"
+- Always sign off your commits with `-s` flag (required for DCO)
 
 ## Testing
 

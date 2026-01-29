@@ -14,8 +14,7 @@
 # Configuration and infrastructure
 /config/ @rogerSuperBuilderAlpha
 /.github/ @rogerSuperBuilderAlpha
-/Dockerfile @rogerSuperBuilderAlpha
-/docker-compose.yml @rogerSuperBuilderAlpha
+/docker/ @rogerSuperBuilderAlpha
 
 # Documentation
 *.md @rogerSuperBuilderAlpha

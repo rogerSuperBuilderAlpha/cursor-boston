@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- GOVERNANCE.md defining maintainer roles and decision-making process
+- DCO.md (Developer Certificate of Origin) for contribution licensing clarity
+- TRADEMARK.md outlining brand usage policy
+- SUPPORT.md consolidating community resources and help channels
+
+### Planned
+> Features in this section are planned for upcoming releases but not yet implemented.
+
 - SBOM (Software Bill of Materials) generation in CI
 - Vulnerability scanning with npm audit
 - License compliance checking
@@ -23,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced CI workflow with security scanning jobs
 - Updated deployment documentation with rollback and monitoring guidance
 - Improved Jest configuration with coverage thresholds
+- CONTRIBUTING.md now requires DCO sign-off on commits
 
 ### Fixed
 - README documentation links now correctly point to `.github/` directory

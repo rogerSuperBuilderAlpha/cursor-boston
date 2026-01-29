@@ -1,15 +1,15 @@
 # Docker Compose configuration for Cursor Boston
-# Usage:
-#   Development: docker compose up
-#   Production:  docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# Usage (run from project root):
+#   Development: docker compose -f docker/docker-compose.yml up
+#   Production:  docker compose -f docker/docker-compose.yml up -d
 
 version: '3.8'
 
 services:
   app:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: docker/Dockerfile
       args:
         - NEXT_PUBLIC_FIREBASE_API_KEY=${NEXT_PUBLIC_FIREBASE_API_KEY}
         - NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}
