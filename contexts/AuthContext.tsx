@@ -171,6 +171,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // If auth is not configured, just set loading to false
     if (!auth) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- required for auth initialization
       setLoading(false);
       return;
     }
