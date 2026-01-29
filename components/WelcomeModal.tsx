@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 
 export default function WelcomeModal() {
@@ -10,8 +10,10 @@ export default function WelcomeModal() {
 
   useEffect(() => {
     // Check if user has seen the modal before
+    // This is a legitimate sync with localStorage (external system)
     const hasSeenWelcome = localStorage.getItem("cursor-boston-welcome-seen");
     if (!hasSeenWelcome) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing with localStorage on mount
       setIsOpen(true);
     }
   }, []);
@@ -31,6 +33,11 @@ export default function WelcomeModal() {
     };
   }, [isOpen]);
 
+  const handleClose = useCallback(() => {
+    localStorage.setItem("cursor-boston-welcome-seen", "true");
+    setIsOpen(false);
+  }, []);
+
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isOpen) {
@@ -40,12 +47,7 @@ export default function WelcomeModal() {
 
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
-  }, [isOpen]);
-
-  const handleClose = () => {
-    localStorage.setItem("cursor-boston-welcome-seen", "true");
-    setIsOpen(false);
-  };
+  }, [isOpen, handleClose]);
 
   if (!isOpen) return null;
 
