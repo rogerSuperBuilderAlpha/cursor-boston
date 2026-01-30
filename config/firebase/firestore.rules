@@ -85,7 +85,11 @@ service cloud.firestore {
     // Hackathons - invites: create by fromUserId; read by toUserId or team members; update (accept/decline) by toUserId
     match /hackathonInvites/{inviteId} {
       allow create: if request.auth != null && request.resource.data.fromUserId == request.auth.uid;
-      allow read: if request.auth != null && (resource.data.toUserId == request.auth.uid || request.auth.uid in get(/databases/$(database)/documents/hackathonTeams/$(resource.data.teamId)).data.memberIds);
+      allow read: if request.auth != null && (
+        resource.data.toUserId == request.auth.uid
+        || (get(/databases/$(database)/documents/hackathonTeams/$(resource.data.teamId)).data != null
+            && request.auth.uid in get(/databases/$(database)/documents/hackathonTeams/$(resource.data.teamId)).data.memberIds)
+      );
       allow update: if request.auth != null && resource.data.toUserId == request.auth.uid;
       allow delete: if request.auth != null && (resource.data.fromUserId == request.auth.uid || resource.data.toUserId == request.auth.uid);
     }
@@ -93,8 +97,16 @@ service cloud.firestore {
     // Hackathons - join requests: create by fromUserId; read by team members or requester; update/delete by team member (accept/decline) or requester (withdraw)
     match /hackathonJoinRequests/{requestId} {
       allow create: if request.auth != null && request.resource.data.fromUserId == request.auth.uid;
-      allow read: if request.auth != null && (resource.data.fromUserId == request.auth.uid || request.auth.uid in get(/databases/$(database)/documents/hackathonTeams/$(resource.data.teamId)).data.memberIds);
-      allow update, delete: if request.auth != null && (resource.data.fromUserId == request.auth.uid || request.auth.uid in get(/databases/$(database)/documents/hackathonTeams/$(resource.data.teamId)).data.memberIds);
+      allow read: if request.auth != null && (
+        resource.data.fromUserId == request.auth.uid
+        || (get(/databases/$(database)/documents/hackathonTeams/$(resource.data.teamId)).data != null
+            && request.auth.uid in get(/databases/$(database)/documents/hackathonTeams/$(resource.data.teamId)).data.memberIds)
+      );
+      allow update, delete: if request.auth != null && (
+        resource.data.fromUserId == request.auth.uid
+        || (get(/databases/$(database)/documents/hackathonTeams/$(resource.data.teamId)).data != null
+            && request.auth.uid in get(/databases/$(database)/documents/hackathonTeams/$(resource.data.teamId)).data.memberIds)
+      );
     }
 
     // Hackathons - submissions: create/update by team member; read by authenticated
