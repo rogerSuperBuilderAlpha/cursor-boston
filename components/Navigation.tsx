@@ -43,6 +43,9 @@ export default function Navigation() {
           <Link href="/talks" className="text-neutral-300 hover:text-white text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-white focus-visible:underline">
             Talks
           </Link>
+          <Link href="/hackathons" className="text-neutral-300 hover:text-white text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-white focus-visible:underline">
+            Hackathons
+          </Link>
           <Link href="/blog" className="text-neutral-300 hover:text-white text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-white focus-visible:underline">
             Blog
           </Link>
@@ -118,6 +121,9 @@ export default function Navigation() {
               </Link>
               <Link href="/talks" onClick={() => setMobileMenuOpen(false)} className="text-neutral-300 hover:text-white py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:text-white focus-visible:underline">
                 Talks
+              </Link>
+              <Link href="/hackathons" onClick={() => setMobileMenuOpen(false)} className="text-neutral-300 hover:text-white py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:text-white focus-visible:underline">
+                Hackathons
               </Link>
               <Link href="/blog" onClick={() => setMobileMenuOpen(false)} className="text-neutral-300 hover:text-white py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:text-white focus-visible:underline">
                 Blog
