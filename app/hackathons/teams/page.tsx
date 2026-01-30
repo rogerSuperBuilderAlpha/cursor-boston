@@ -315,6 +315,16 @@ function TeamsPageContent() {
                                   {slot.profile.displayName || "Anonymous"}
                                 </span>
                               </div>
+                            ) : slot.type === "placeholder" ? (
+                              <div
+                                key={idx}
+                                className="flex items-center gap-1.5 text-neutral-500 text-sm"
+                              >
+                                <div className="w-6 h-6 rounded-full bg-neutral-700 flex items-center justify-center text-white text-xs font-medium">
+                                  ?
+                                </div>
+                                <span>Member</span>
+                              </div>
                             ) : (
                               <div
                                 key={idx}
@@ -419,6 +429,13 @@ function TeamsPageContent() {
                                 <span className="truncate max-w-[90px]">
                                   {slot.profile.displayName || "Anonymous"}
                                 </span>
+                              </div>
+                            ) : slot.type === "placeholder" ? (
+                              <div key={idx} className="flex items-center gap-1.5 text-neutral-500 text-sm">
+                                <div className="w-[22px] h-[22px] rounded-full bg-neutral-700 flex items-center justify-center text-white text-xs font-medium">
+                                  ?
+                                </div>
+                                <span>Member</span>
                               </div>
                             ) : (
                               <div key={idx} className="flex items-center gap-1.5 text-neutral-500 text-sm">

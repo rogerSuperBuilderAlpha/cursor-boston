@@ -53,6 +53,24 @@ function teamDisplayName(t: HackathonTeam): string {
   return (t.wins ?? 0) >= 1 && t.name ? t.name : `Team ${t.id.slice(0, 8)}`;
 }
 
+function formatTeamCreatedAt(createdAt: unknown): string {
+  if (!createdAt) return "—";
+  const date =
+    typeof (createdAt as { toDate?: () => Date }).toDate === "function"
+      ? (createdAt as { toDate: () => Date }).toDate()
+      : createdAt instanceof Date
+        ? createdAt
+        : null;
+  if (!date) return "—";
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays < 7) return `${diffDays} days ago`;
+  return date.toLocaleDateString();
+}
+
 function isPlaceholderMemberId(id: string): boolean {
   return id.startsWith("mock-member-") || id.startsWith("mock-");
 }
@@ -95,6 +113,7 @@ function HackathonsPoolPageContent() {
   const [requestsToMyTeam, setRequestsToMyTeam] = useState<JoinRequest[]>([]);
   const [teamsWithSlots, setTeamsWithSlots] = useState<HackathonTeam[]>([]);
   const [teamMemberProfiles, setTeamMemberProfiles] = useState<Record<string, PublicUser>>({});
+  const [successfulSubmissionsByTeam, setSuccessfulSubmissionsByTeam] = useState<Record<string, number>>({});
   const [myPendingRequestTeamIds, setMyPendingRequestTeamIds] = useState<Set<string>>(new Set());
   const [inPool, setInPool] = useState(false);
   const [eligible, setEligible] = useState<boolean | null>(null);
@@ -212,6 +231,21 @@ function HackathonsPoolPageContent() {
         });
       }
       setTeamMemberProfiles(teamMembers);
+
+      const submissionsRef = collection(db, "hackathonSubmissions");
+      const subQ = query(
+        submissionsRef,
+        where("hackathonId", "==", hackathonId)
+      );
+      const subSnap = await getDocs(subQ);
+      const subCounts: Record<string, number> = {};
+      subSnap.docs.forEach((d) => {
+        const data = d.data();
+        if (data.submittedAt && data.disqualified !== true && data.teamId) {
+          subCounts[data.teamId] = (subCounts[data.teamId] ?? 0) + 1;
+        }
+      });
+      setSuccessfulSubmissionsByTeam(subCounts);
 
       const invitesRef = collection(db, "hackathonInvites");
       const invitesQ = query(
@@ -587,6 +621,14 @@ function HackathonsPoolPageContent() {
                           {teamDisplayName(t)}… ({t.memberIds.length}/3)
                         </span>
                       </div>
+                      <p className="text-neutral-500 text-xs mt-1">
+                        Created {formatTeamCreatedAt(t.createdAt)}
+                        {" · "}
+                        {(successfulSubmissionsByTeam[t.id] ?? 0)} successful submission{(successfulSubmissionsByTeam[t.id] ?? 0) !== 1 ? "s" : ""}
+                        {(t.wins ?? 0) > 0 && (
+                          <> · {(t.wins ?? 0)} win{(t.wins ?? 0) !== 1 ? "s" : ""}</>
+                        )}
+                      </p>
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
                         {slots.map((slot, idx) =>
                           slot.type === "member" ? (
@@ -610,6 +652,13 @@ function HackathonsPoolPageContent() {
                               <span className="truncate max-w-[70px]">
                                 {slot.profile.displayName || "Anonymous"}
                               </span>
+                            </div>
+                          ) : slot.type === "placeholder" ? (
+                            <div key={idx} className="flex items-center gap-1 text-neutral-500 text-xs">
+                              <div className="w-5 h-5 rounded-full bg-neutral-700 flex items-center justify-center text-white text-[10px] font-medium">
+                                ?
+                              </div>
+                              <span>Member</span>
                             </div>
                           ) : (
                             <div key={idx} className="flex items-center gap-1 text-neutral-500 text-xs">
