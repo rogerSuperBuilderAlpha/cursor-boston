@@ -41,6 +41,7 @@ async function main() {
       name: team.name,
       createdBy: team.memberIds[0],
       createdAt: FieldValue.serverTimestamp(),
+      wins: 0,
     });
     console.log("Created team:", team.name, "id:", docRef.id, "members:", team.memberIds.length + "/3");
   }

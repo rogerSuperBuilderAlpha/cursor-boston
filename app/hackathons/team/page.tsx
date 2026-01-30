@@ -23,6 +23,8 @@ interface HackathonTeam {
   hackathonId: string;
   memberIds: string[];
   name?: string;
+  logoUrl?: string;
+  wins?: number;
   createdBy: string;
   createdAt: Timestamp | { toDate: () => Date };
 }
@@ -92,6 +94,9 @@ function HackathonsTeamPageContent() {
   const [repoUrl, setRepoUrl] = useState("");
   const [registering, setRegistering] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [profileName, setProfileName] = useState("");
+  const [profileLogoUrl, setProfileLogoUrl] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!db || !user) {
@@ -112,6 +117,13 @@ function HackathonsTeamPageContent() {
         ? ({ id: teamDoc.id, ...teamDoc.data() } as HackathonTeam)
         : null;
       setMyTeam(team);
+      if (team) {
+        setProfileName(team.name ?? "");
+        setProfileLogoUrl(team.logoUrl ?? "");
+      } else {
+        setProfileName("");
+        setProfileLogoUrl("");
+      }
 
       if (team) {
         const userIds = team.memberIds;
@@ -343,6 +355,30 @@ function HackathonsTeamPageContent() {
     }
   };
 
+  const handleSaveProfile = async () => {
+    if (!user || !myTeam) return;
+    setSavingProfile(true);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch("/api/hackathons/team/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          teamId: myTeam.id,
+          name: profileName.trim() || undefined,
+          logoUrl: profileLogoUrl.trim() || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to save");
+      await fetchData();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to save profile");
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
   if (authLoading || loading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
@@ -481,6 +517,58 @@ function HackathonsTeamPageContent() {
               </button>
             </div>
           </section>
+
+          {/* Team profile (unlocked when wins >= 1) */}
+          {(myTeam.wins ?? 0) >= 1 ? (
+            <section className="bg-neutral-900 rounded-xl p-6 border border-neutral-800 mb-8">
+              <h2 className="text-lg font-semibold text-white mb-3">Team profile</h2>
+              <p className="text-neutral-400 text-sm mb-4">
+                Set a display name and logo for your team. These are shown on the teams list and pool.
+              </p>
+              <div className="space-y-3 max-w-md">
+                <div>
+                  <label htmlFor="team-name" className="block text-neutral-400 text-sm mb-1">
+                    Team name
+                  </label>
+                  <input
+                    id="team-name"
+                    type="text"
+                    value={profileName}
+                    onChange={(e) => setProfileName(e.target.value)}
+                    placeholder="e.g. Full Stack Crew"
+                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="team-logo" className="block text-neutral-400 text-sm mb-1">
+                    Logo URL
+                  </label>
+                  <input
+                    id="team-logo"
+                    type="url"
+                    value={profileLogoUrl}
+                    onChange={(e) => setProfileLogoUrl(e.target.value)}
+                    placeholder="https://…"
+                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                  />
+                </div>
+                <button
+                  onClick={handleSaveProfile}
+                  disabled={savingProfile}
+                  className="px-4 py-2 bg-emerald-500 text-white rounded-lg text-sm font-medium hover:bg-emerald-400 disabled:opacity-50"
+                >
+                  {savingProfile ? "Saving…" : "Save profile"}
+                </button>
+              </div>
+            </section>
+          ) : (
+            <section className="bg-neutral-900 rounded-xl p-6 border border-neutral-800 mb-8">
+              <h2 className="text-lg font-semibold text-white mb-3">Team profile</h2>
+              <p className="text-neutral-400 text-sm">
+                Win a hackathon to unlock a team profile and logo. Until then, your team is shown by its ID.
+              </p>
+            </section>
+          )}
 
           {/* Requests to my team */}
           {requestsToMyTeam.length > 0 && (

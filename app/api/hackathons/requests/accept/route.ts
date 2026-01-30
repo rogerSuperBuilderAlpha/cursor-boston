@@ -82,6 +82,22 @@ export async function POST(request: NextRequest) {
       tx.update(reqRef, { status: "accepted" });
     });
 
+    // Withdraw all other pending join requests from this user (they are now on a team).
+    const otherPendingSnap = await db
+      .collection("hackathonJoinRequests")
+      .where("fromUserId", "==", fromUserId)
+      .where("status", "==", "pending")
+      .get();
+    const batch = db.batch();
+    otherPendingSnap.docs.forEach((d) => {
+      if (d.id !== requestId) {
+        batch.update(d.ref, { status: "withdrawn" });
+      }
+    });
+    if (!otherPendingSnap.empty) {
+      await batch.commit();
+    }
+
     return NextResponse.json({ accepted: true }, { status: 200 });
   } catch (e) {
     console.error("[hackathons/requests/accept]", e);

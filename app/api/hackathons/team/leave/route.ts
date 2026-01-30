@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
 
     await db.runTransaction(async (tx) => {
       const newMemberIds = memberIds.filter((id) => id !== user.uid);
-      if (newMemberIds.length === 0) {
+      if (newMemberIds.length <= 1) {
         tx.delete(teamRef);
       } else {
         tx.update(teamRef, {

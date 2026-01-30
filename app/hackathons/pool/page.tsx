@@ -43,8 +43,18 @@ interface HackathonTeam {
   hackathonId: string;
   memberIds: string[];
   name?: string;
+  logoUrl?: string;
+  wins?: number;
   createdBy: string;
   createdAt: Timestamp | { toDate: () => Date };
+}
+
+function teamDisplayName(t: HackathonTeam): string {
+  return (t.wins ?? 0) >= 1 && t.name ? t.name : `Team ${t.id.slice(0, 8)}`;
+}
+
+function isPlaceholderMemberId(id: string): boolean {
+  return id.startsWith("mock-member-") || id.startsWith("mock-");
 }
 
 interface HackathonInvite {
@@ -84,6 +94,8 @@ function HackathonsPoolPageContent() {
   const [myInvites, setMyInvites] = useState<HackathonInvite[]>([]);
   const [requestsToMyTeam, setRequestsToMyTeam] = useState<JoinRequest[]>([]);
   const [teamsWithSlots, setTeamsWithSlots] = useState<HackathonTeam[]>([]);
+  const [teamMemberProfiles, setTeamMemberProfiles] = useState<Record<string, PublicUser>>({});
+  const [myPendingRequestTeamIds, setMyPendingRequestTeamIds] = useState<Set<string>>(new Set());
   const [inPool, setInPool] = useState(false);
   const [eligible, setEligible] = useState<boolean | null>(null);
   const [eligibilityReason, setEligibilityReason] = useState<string>("");
@@ -176,6 +188,31 @@ function HackathonsPoolPageContent() {
         .filter((t) => t.memberIds.length < 3);
       setTeamsWithSlots(withSlots);
 
+      const allTeamMemberIds = [...new Set(withSlots.flatMap((t) => t.memberIds))].filter(
+        (id) => !isPlaceholderMemberId(id)
+      );
+      const teamMembers: Record<string, PublicUser> = {};
+      for (let i = 0; i < allTeamMemberIds.length; i += 10) {
+        const chunk = allTeamMemberIds.slice(i, i + 10);
+        if (chunk.length === 0) continue;
+        const usersRef = collection(db, "users");
+        const usersQ = query(usersRef, where(documentId(), "in", chunk));
+        const usersSnap = await getDocs(usersQ);
+        usersSnap.docs.forEach((d) => {
+          const data = d.data();
+          if (data.visibility?.isPublic) {
+            teamMembers[d.id] = {
+              uid: d.id,
+              displayName: data.displayName ?? null,
+              photoURL: data.photoURL ?? null,
+              discord: data.discord,
+              github: data.github,
+            };
+          }
+        });
+      }
+      setTeamMemberProfiles(teamMembers);
+
       const invitesRef = collection(db, "hackathonInvites");
       const invitesQ = query(
         invitesRef,
@@ -201,6 +238,18 @@ function HackathonsPoolPageContent() {
       } else {
         setRequestsToMyTeam([]);
       }
+
+      const myRequestsRef = collection(db, "hackathonJoinRequests");
+      const myRequestsQ = query(
+        myRequestsRef,
+        where("fromUserId", "==", user.uid),
+        where("status", "==", "pending")
+      );
+      const myRequestsSnap = await getDocs(myRequestsQ);
+      const requestedTeamIds = new Set(
+        myRequestsSnap.docs.map((d) => d.data().teamId as string).filter(Boolean)
+      );
+      setMyPendingRequestTeamIds(requestedTeamIds);
 
       await fetchEligibility();
     } catch (e) {
@@ -266,6 +315,7 @@ function HackathonsPoolPageContent() {
           memberIds: [user.uid],
           createdBy: user.uid,
           createdAt: serverTimestamp(),
+          wins: 0,
         });
         teamId = teamRef.id;
       }
@@ -506,23 +556,86 @@ function HackathonsPoolPageContent() {
             {teamsWithSlots
               .filter((t) => !myTeam || t.id !== myTeam.id)
               .filter((t) => !t.memberIds.includes(user.uid))
-              .map((t) => (
-                <li
-                  key={t.id}
-                  className="flex items-center justify-between gap-4 py-2 border-b border-neutral-800 last:border-0"
-                >
-                  <span className="text-neutral-300 text-sm">
-                    Team {t.id.slice(0, 8)}… ({t.memberIds.length}/3)
-                  </span>
-                  <button
-                    onClick={() => handleRequestToJoin(t.id)}
-                    disabled={requesting === t.id}
-                    className="px-3 py-1.5 bg-neutral-700 text-white rounded-lg text-sm font-medium hover:bg-neutral-600 disabled:opacity-50"
+              .map((t) => {
+                const hasRequested = myPendingRequestTeamIds.has(t.id);
+                const slots = [0, 1, 2].map((i) => {
+                  const mid = t.memberIds[i];
+                  if (!mid) return { type: "open" as const };
+                  if (isPlaceholderMemberId(mid)) return { type: "placeholder" as const };
+                  const profile = teamMemberProfiles[mid];
+                  if (profile) return { type: "member" as const, profile };
+                  return { type: "placeholder" as const };
+                });
+                return (
+                  <li
+                    key={t.id}
+                    className="flex items-center justify-between gap-4 py-2 border-b border-neutral-800 last:border-0"
                   >
-                    {requesting === t.id ? "Sending…" : "Request to join"}
-                  </button>
-                </li>
-              ))}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        {(t.wins ?? 0) >= 1 && t.logoUrl && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={t.logoUrl}
+                            alt=""
+                            width={20}
+                            height={20}
+                            className="rounded-full object-cover w-5 h-5"
+                          />
+                        )}
+                        <span className="text-neutral-300 text-sm">
+                          {teamDisplayName(t)}… ({t.memberIds.length}/3)
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        {slots.map((slot, idx) =>
+                          slot.type === "member" ? (
+                            <div
+                              key={idx}
+                              className="flex items-center gap-1 text-neutral-400 text-xs"
+                            >
+                              {slot.profile.photoURL ? (
+                                <Image
+                                  src={slot.profile.photoURL}
+                                  alt={slot.profile.displayName || "Member"}
+                                  width={20}
+                                  height={20}
+                                  className="rounded-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-5 h-5 rounded-full bg-neutral-700 flex items-center justify-center text-white text-[10px] font-medium">
+                                  {getInitials(slot.profile.displayName)}
+                                </div>
+                              )}
+                              <span className="truncate max-w-[70px]">
+                                {slot.profile.displayName || "Anonymous"}
+                              </span>
+                            </div>
+                          ) : (
+                            <div key={idx} className="flex items-center gap-1 text-neutral-500 text-xs">
+                              <div className="w-5 h-5 rounded-full bg-neutral-800 border border-dashed border-neutral-600 flex items-center justify-center text-[10px]">
+                                +
+                              </div>
+                              <span>Open slot</span>
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </div>
+                    {hasRequested ? (
+                      <span className="text-neutral-400 text-sm font-medium shrink-0">Requested</span>
+                    ) : (
+                      <button
+                        onClick={() => handleRequestToJoin(t.id)}
+                        disabled={requesting === t.id}
+                        className="px-3 py-1.5 bg-neutral-700 text-white rounded-lg text-sm font-medium hover:bg-neutral-600 disabled:opacity-50 shrink-0"
+                      >
+                        {requesting === t.id ? "Sending…" : "Request to join"}
+                      </button>
+                    )}
+                  </li>
+                );
+              })}
           </ul>
         </section>
       )}
