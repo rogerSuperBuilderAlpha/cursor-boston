@@ -385,7 +385,36 @@ function HackathonsPoolPageContent() {
         ) : (
           <div>
             {eligible === false && (
-              <p className="text-amber-400 text-sm mb-3">{eligibilityReason}</p>
+              <div className="mb-4 p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                <p className="text-amber-400 text-sm mb-2">{eligibilityReason}</p>
+                {(eligibilityReason.includes("GitHub") ||
+                  eligibilityReason.includes("Discord") ||
+                  eligibilityReason.includes("profile") ||
+                  eligibilityReason.includes("public")) && (
+                  <>
+                    <p className="text-neutral-300 text-sm mb-3">
+                      In your profile, open the <strong className="text-white">Settings</strong> or{" "}
+                      <strong className="text-white">Public profile</strong> section. Connect your{" "}
+                      <strong className="text-white">GitHub</strong> and <strong className="text-white">Discord</strong>{" "}
+                      accounts there, make your profile public, and turn on &quot;Show Discord&quot; so others can see you in the pool.
+                    </p>
+                    <Link
+                      href="/profile"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/20 text-amber-400 rounded-lg text-sm font-medium hover:bg-amber-500/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+                    >
+                      Go to Profile
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                      </svg>
+                    </Link>
+                  </>
+                )}
+                {eligibilityReason.includes("left a team") && (
+                  <p className="text-neutral-400 text-sm mt-2">
+                    You can join a new team when the next hackathon month starts.
+                  </p>
+                )}
+              </div>
             )}
             <button
               onClick={handleJoinPool}
