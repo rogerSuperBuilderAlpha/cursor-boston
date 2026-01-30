@@ -555,9 +555,21 @@ function HackathonsPoolPageContent() {
                   )}
                   <div>
                     <p className="text-white font-medium">{u.displayName || "Anonymous"}</p>
-                    {u.discord?.username && (
-                      <p className="text-neutral-500 text-sm">Discord: {u.discord.username}</p>
-                    )}
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-neutral-500 text-sm">
+                      {u.discord?.username && (
+                        <span>Discord: {u.discord.username}</span>
+                      )}
+                      {u.github?.login && (
+                        <a
+                          href={`https://github.com/${u.github.login}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-emerald-400 hover:underline"
+                        >
+                          GitHub: @{u.github.login}
+                        </a>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
