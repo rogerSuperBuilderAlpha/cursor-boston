@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 /**
  * Seed mock hackathon teams and pool for the current virtual month.
+ * Deletes existing teams, pool entries, and submissions for this hackathon first
+ * so re-running the script does not create duplicates.
  * Creates 2 teams: one full (3/3), one with 1 open spot (2/3).
  * Per our logic, a 1-person "team" would not exist—that person would be in the pool,
  * so we add one mock pool user with a profile instead of a solo team.
@@ -12,7 +14,7 @@ import { loadEnvConfig } from "@next/env";
 loadEnvConfig(process.cwd());
 
 import { FieldValue } from "firebase-admin/firestore";
-import { getCurrentVirtualHackathonId } from "../lib/hackathons";
+import { getCurrentVirtualHackathonId, getMonthEndFromVirtualId } from "../lib/hackathons";
 import { getAdminDb } from "../lib/firebase-admin";
 
 const MOCK_PREFIX = "mock-member-";
@@ -37,19 +39,47 @@ async function main() {
   console.log("Seeding mock teams and pool for hackathon:", hackathonId);
 
   const teamsRef = db.collection("hackathonTeams");
-  const existingTeams = await teamsRef.where("hackathonId", "==", hackathonId).get();
-  for (const d of existingTeams.docs) {
-    const memberIds = (d.data().memberIds || []) as string[];
-    if (memberIds.length === 1) {
-      await d.ref.delete();
-      console.log("Removed 1-person team (per our logic they belong in the pool):", d.id);
-    }
-  }
+  const poolRef = db.collection("hackathonPool");
+  const submissionsRef = db.collection("hackathonSubmissions");
+  const invitesRef = db.collection("hackathonInvites");
+  const joinRequestsRef = db.collection("hackathonJoinRequests");
 
+  // --- Delete existing data for this hackathon so re-runs don't duplicate ---
+  const existingTeams = await teamsRef.where("hackathonId", "==", hackathonId).get();
+  const teamIds = existingTeams.docs.map((d) => d.id);
+
+  const subSnap = await submissionsRef.where("hackathonId", "==", hackathonId).get();
+  for (const d of subSnap.docs) {
+    await d.ref.delete();
+  }
+  if (subSnap.size > 0) console.log("Deleted", subSnap.size, "submission(s)");
+
+  for (const teamId of teamIds) {
+    const invSnap = await invitesRef.where("teamId", "==", teamId).get();
+    for (const d of invSnap.docs) await d.ref.delete();
+    const reqSnap = await joinRequestsRef.where("teamId", "==", teamId).get();
+    for (const d of reqSnap.docs) await d.ref.delete();
+  }
+  if (teamIds.length > 0) console.log("Deleted invites/requests for", teamIds.length, "team(s)");
+
+  for (const d of existingTeams.docs) {
+    await d.ref.delete();
+  }
+  if (existingTeams.size > 0) console.log("Deleted", existingTeams.size, "team(s)");
+
+  const poolSnap = await poolRef.where("hackathonId", "==", hackathonId).get();
+  for (const d of poolSnap.docs) {
+    await d.ref.delete();
+  }
+  if (poolSnap.size > 0) console.log("Deleted", poolSnap.size, "pool entry(ies)");
+
+  // --- Create fresh seed data ---
   const teams = [
     { name: "Full Stack Crew", memberIds: [MOCK_PREFIX + "1", MOCK_PREFIX + "2", MOCK_PREFIX + "3"], wins: 1 },
     { name: "Open Slot Squad", memberIds: [MOCK_PREFIX + "4", MOCK_PREFIX + "5"], wins: 1 },
   ];
+
+  const cutoffAt = getMonthEndFromVirtualId(hackathonId);
 
   for (const team of teams) {
     const docRef = await teamsRef.add({
@@ -61,6 +91,19 @@ async function main() {
       wins: team.wins ?? 0,
     });
     console.log("Created team:", team.name, "id:", docRef.id, "members:", team.memberIds.length + "/3", "wins:", team.wins ?? 0);
+
+    if ((team.wins ?? 0) > 0) {
+      await submissionsRef.add({
+        hackathonId,
+        teamId: docRef.id,
+        repoUrl: "https://github.com/mock/hackathon-project",
+        registeredBy: team.memberIds[0],
+        registeredAt: FieldValue.serverTimestamp(),
+        submittedAt: FieldValue.serverTimestamp(),
+        cutoffAt,
+      });
+      console.log("  -> added 1 successful submission (team has 1 win)");
+    }
   }
 
   const usersRef = db.collection("users");
@@ -77,7 +120,6 @@ async function main() {
   );
   console.log("Created mock pool user:", MOCK_POOL_PROFILE.displayName, "id:", MOCK_POOL_USER_ID);
 
-  const poolRef = db.collection("hackathonPool");
   const poolDocId = `${MOCK_POOL_USER_ID}_${hackathonId}`;
   await poolRef.doc(poolDocId).set({
     userId: MOCK_POOL_USER_ID,

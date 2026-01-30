@@ -115,6 +115,7 @@ function HackathonsPoolPageContent() {
   const [teamMemberProfiles, setTeamMemberProfiles] = useState<Record<string, PublicUser>>({});
   const [successfulSubmissionsByTeam, setSuccessfulSubmissionsByTeam] = useState<Record<string, number>>({});
   const [myPendingRequestTeamIds, setMyPendingRequestTeamIds] = useState<Set<string>>(new Set());
+  const [myInvitedUserIds, setMyInvitedUserIds] = useState<Set<string>>(new Set());
   const [inPool, setInPool] = useState(false);
   const [eligible, setEligible] = useState<boolean | null>(null);
   const [eligibilityReason, setEligibilityReason] = useState<string>("");
@@ -257,6 +258,17 @@ function HackathonsPoolPageContent() {
       setMyInvites(
         invitesSnap.docs.map((d) => ({ id: d.id, ...d.data() } as HackathonInvite))
       );
+
+      const sentInvitesQ = query(
+        invitesRef,
+        where("fromUserId", "==", user.uid),
+        where("status", "==", "pending")
+      );
+      const sentInvitesSnap = await getDocs(sentInvitesQ);
+      const invitedIds = new Set(
+        sentInvitesSnap.docs.map((d) => d.data().toUserId as string).filter(Boolean)
+      );
+      setMyInvitedUserIds(invitedIds);
 
       if (myTeamData) {
         const reqRef = collection(db, "hackathonJoinRequests");
@@ -545,6 +557,8 @@ function HackathonsPoolPageContent() {
                   <div className="shrink-0">
                     {isMe(u.uid) ? (
                       <span className="text-neutral-500 text-xs">(you)</span>
+                    ) : myInvitedUserIds.has(u.uid) ? (
+                      <span className="text-neutral-400 text-xs font-medium">Invited</span>
                     ) : canInvite ? (
                       <button
                         onClick={() => handleInvite(u.uid)}
