@@ -365,17 +365,18 @@ function HackathonsPoolPageContent() {
           wins: 0,
         });
         teamId = teamRef.id;
+        const newTeamId = teamRef.id;
         setMyTeam((prev) =>
           prev
             ? prev
-            : {
-                id: teamId,
+            : ({
+                id: newTeamId,
                 hackathonId,
                 memberIds: [user.uid],
                 createdBy: user.uid,
-                createdAt: new Date(),
+                createdAt: { toDate: () => new Date() },
                 wins: 0,
-              }
+              } as HackathonTeam)
         );
       }
       await addDoc(collection(db, "hackathonInvites"), {
