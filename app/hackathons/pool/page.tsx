@@ -90,7 +90,6 @@ function HackathonsPoolPageContent() {
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
   const [leaving, setLeaving] = useState(false);
-  const [creatingTeam, setCreatingTeam] = useState(false);
   const [inviting, setInviting] = useState<string | null>(null);
   const [requesting, setRequesting] = useState<string | null>(null);
 
@@ -255,33 +254,25 @@ function HackathonsPoolPageContent() {
     }
   };
 
-  const handleCreateTeam = async () => {
-    if (!db || !user) return;
-    setCreatingTeam(true);
-    try {
-      await addDoc(collection(db, "hackathonTeams"), {
-        hackathonId,
-        memberIds: [user.uid],
-        createdBy: user.uid,
-        createdAt: serverTimestamp(),
-      });
-      await fetchData();
-    } catch (e) {
-      console.error(e);
-      alert("Failed to create team");
-    } finally {
-      setCreatingTeam(false);
-    }
-  };
-
   const handleInvite = async (toUserId: string) => {
-    if (!db || !user || !myTeam || myTeam.memberIds.length >= 3) return;
+    if (!db || !user) return;
+    if (myTeam && myTeam.memberIds.length >= 3) return;
     setInviting(toUserId);
     try {
+      let teamId = myTeam?.id;
+      if (!teamId) {
+        const teamRef = await addDoc(collection(db, "hackathonTeams"), {
+          hackathonId,
+          memberIds: [user.uid],
+          createdBy: user.uid,
+          createdAt: serverTimestamp(),
+        });
+        teamId = teamRef.id;
+      }
       await addDoc(collection(db, "hackathonInvites"), {
         fromUserId: user.uid,
         toUserId,
-        teamId: myTeam.id,
+        teamId,
         status: "pending",
         createdAt: serverTimestamp(),
       });
@@ -341,7 +332,7 @@ function HackathonsPoolPageContent() {
   const poolList = poolEntries
     .map((e) => poolUsers[e.userId])
     .filter(Boolean) as PublicUser[];
-  const canInvite = myTeam && myTeam.memberIds.length < 3;
+  const canInvite = inPool && (myTeam ? myTeam.memberIds.length < 3 : true);
   const isMe = (uid: string) => uid === user.uid;
 
   return (
@@ -372,15 +363,6 @@ function HackathonsPoolPageContent() {
             >
               {leaving ? "Leaving…" : "Leave pool"}
             </button>
-            {!myTeam && (
-              <button
-                onClick={handleCreateTeam}
-                disabled={creatingTeam}
-                className="px-4 py-2 bg-emerald-500 text-white rounded-lg text-sm font-medium hover:bg-emerald-400 disabled:opacity-50"
-              >
-                {creatingTeam ? "Creating…" : "Create team"}
-              </button>
-            )}
           </div>
         ) : (
           <div>
@@ -503,7 +485,7 @@ function HackathonsPoolPageContent() {
                       disabled={inviting === u.uid}
                       className="px-3 py-1.5 bg-emerald-500/20 text-emerald-400 rounded-lg text-sm font-medium hover:bg-emerald-500/30 disabled:opacity-50"
                     >
-                      {inviting === u.uid ? "Sending…" : "Invite to my team"}
+                      {inviting === u.uid ? "Sending…" : myTeam ? "Invite to my team" : "Invite to form a team"}
                     </button>
                   ) : null}
                 </div>

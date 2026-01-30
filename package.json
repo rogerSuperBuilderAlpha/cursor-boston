@@ -42,6 +42,7 @@
     "test:watch": "jest --watch --config config/jest.config.js",
     "test:coverage": "jest --coverage --config config/jest.config.js",
     "validate-env": "tsx scripts/validate-env.ts",
+    "seed-hackathon-teams": "tsx scripts/seed-hackathon-teams.ts",
     "prebuild": "npm run validate-env",
     "prepare": "husky install"
   },

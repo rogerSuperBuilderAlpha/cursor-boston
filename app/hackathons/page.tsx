@@ -41,6 +41,12 @@ export default function HackathonsPage() {
               Find a team
             </Link>
             <Link
+              href="/hackathons/teams"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-neutral-800 text-white rounded-lg text-sm font-semibold hover:bg-neutral-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+            >
+              Teams
+            </Link>
+            <Link
               href="/hackathons/team"
               className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-neutral-800 text-white rounded-lg text-sm font-semibold hover:bg-neutral-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
             >
