@@ -420,8 +420,8 @@ function HackathonsPoolPageContent() {
   const isMe = (uid: string) => uid === user.uid;
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-10">
-      <div className="mb-8">
+    <div className="max-w-6xl mx-auto px-6 py-10">
+      <div className="mb-6">
         <Link
           href="/hackathons"
           className="text-neutral-400 hover:text-white text-sm font-medium"
@@ -434,171 +434,140 @@ function HackathonsPoolPageContent() {
         </p>
       </div>
 
-      {/* Join / Leave pool */}
-      <section className="bg-neutral-900 rounded-xl p-6 border border-neutral-800 mb-8">
-        <h2 className="text-lg font-semibold text-white mb-3">Pool</h2>
+      {/* Compact Pool status bar */}
+      <div className="flex flex-wrap items-center gap-3 mb-6 p-3 rounded-lg bg-neutral-900 border border-neutral-800">
+        <span className="text-neutral-400 text-sm font-medium">Pool</span>
         {inPool ? (
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="text-emerald-400">You are in the pool.</span>
+          <>
+            <span className="text-emerald-400 text-sm">You are in the pool.</span>
             <button
               onClick={handleLeavePool}
               disabled={leaving}
-              className="px-4 py-2 text-sm text-neutral-300 hover:text-white border border-neutral-600 rounded-lg disabled:opacity-50"
+              className="ml-auto px-3 py-1.5 text-sm text-neutral-300 hover:text-white border border-neutral-600 rounded-lg disabled:opacity-50"
             >
               {leaving ? "Leaving…" : "Leave pool"}
             </button>
-          </div>
+          </>
         ) : (
-          <div>
+          <>
             {eligible === false && (
-              <div className="mb-4 p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
-                <p className="text-amber-400 text-sm mb-2">{eligibilityReason}</p>
-                {(eligibilityReason.includes("GitHub") ||
-                  eligibilityReason.includes("Discord") ||
-                  eligibilityReason.includes("profile") ||
-                  eligibilityReason.includes("public")) && (
-                  <>
-                    <p className="text-neutral-300 text-sm mb-3">
-                      In your profile, open the <strong className="text-white">Settings</strong> or{" "}
-                      <strong className="text-white">Public profile</strong> section. Connect your{" "}
-                      <strong className="text-white">GitHub</strong> and <strong className="text-white">Discord</strong>{" "}
-                      accounts there, make your profile public, and turn on &quot;Show Discord&quot; so others can see you in the pool.
-                    </p>
-                    <Link
-                      href="/profile"
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/20 text-amber-400 rounded-lg text-sm font-medium hover:bg-amber-500/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
-                    >
-                      Go to Profile
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                        <path d="M5 12h14M12 5l7 7-7 7" />
-                      </svg>
-                    </Link>
-                  </>
-                )}
-                {eligibilityReason.includes("left a team") && (
-                  <p className="text-neutral-400 text-sm mt-2">
-                    You can join a new team when the next hackathon month starts.
-                  </p>
-                )}
-              </div>
+              <span className="text-amber-400 text-sm flex-1 min-w-0 truncate" title={eligibilityReason}>
+                {eligibilityReason}
+              </span>
             )}
+            <Link
+              href="/profile"
+              className={eligible === false ? "inline-flex items-center gap-1 text-amber-400 hover:text-amber-300 text-sm font-medium" : "hidden"}
+            >
+              Profile
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </Link>
             <button
               onClick={handleJoinPool}
               disabled={joining || eligible === false}
-              className="px-4 py-2 bg-emerald-500 text-white rounded-lg text-sm font-medium hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 bg-emerald-500 text-white rounded-lg text-sm font-medium hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {joining ? "Joining…" : "Join pool"}
             </button>
-          </div>
+          </>
         )}
-      </section>
+      </div>
 
-      {/* My invites */}
-      {myInvites.length > 0 && (
-        <section className="bg-neutral-900 rounded-xl p-6 border border-neutral-800 mb-8">
-          <h2 className="text-lg font-semibold text-white mb-3">Invites to you</h2>
-          <p className="text-neutral-400 text-sm mb-3">
-            Accept or decline on the <Link href="/hackathons/team" className="text-emerald-400 hover:underline">team page</Link>.
-          </p>
-          <ul className="space-y-2">
-            {myInvites.map((inv) => (
-              <li key={inv.id} className="text-neutral-300 text-sm">
-                Team <code className="bg-neutral-800 px-1 rounded">{inv.teamId.slice(0, 8)}…</code> invited you.
-              </li>
-            ))}
-          </ul>
-        </section>
+      {/* Compact invites / requests strip */}
+      {(myInvites.length > 0 || requestsToMyTeam.length > 0) && (
+        <div className="flex flex-wrap gap-3 mb-6">
+          {myInvites.length > 0 && (
+            <div className="px-3 py-2 rounded-lg bg-neutral-900 border border-neutral-800 text-sm">
+              <span className="text-neutral-400">Invites: </span>
+              <span className="text-neutral-300">{myInvites.length} team{myInvites.length !== 1 ? "s" : ""} invited you. </span>
+              <Link href="/hackathons/team" className="text-emerald-400 hover:underline">Team page →</Link>
+            </div>
+          )}
+          {requestsToMyTeam.length > 0 && (
+            <div className="px-3 py-2 rounded-lg bg-neutral-900 border border-neutral-800 text-sm">
+              <span className="text-neutral-400">Requests: </span>
+              <span className="text-neutral-300">{requestsToMyTeam.length} request{requestsToMyTeam.length !== 1 ? "s" : ""} to your team. </span>
+              <Link href="/hackathons/team" className="text-emerald-400 hover:underline">Team page →</Link>
+            </div>
+          )}
+        </div>
       )}
 
-      {/* Requests to my team */}
-      {requestsToMyTeam.length > 0 && (
-        <section className="bg-neutral-900 rounded-xl p-6 border border-neutral-800 mb-8">
-          <h2 className="text-lg font-semibold text-white mb-3">Requests to your team</h2>
-          <p className="text-neutral-400 text-sm mb-3">
-            Accept or decline on the <Link href="/hackathons/team" className="text-emerald-400 hover:underline">team page</Link>.
-          </p>
-          <ul className="space-y-2">
-            {requestsToMyTeam.map((req) => (
-              <li key={req.id} className="text-neutral-300 text-sm">
-                User <code className="bg-neutral-800 px-1 rounded">{req.fromUserId.slice(0, 8)}…</code> requested to join.
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {/* Pool members */}
-      <section className="bg-neutral-900 rounded-xl p-6 border border-neutral-800 mb-8">
-        <h2 className="text-lg font-semibold text-white mb-4">People in the pool</h2>
-        {poolList.length === 0 ? (
-          <p className="text-neutral-500">No one in the pool yet. Be the first to join.</p>
-        ) : (
-          <ul className="space-y-4">
-            {poolList.map((u) => (
-              <li
-                key={u.uid}
-                className="flex items-center justify-between gap-4 py-3 border-b border-neutral-800 last:border-0"
-              >
-                <div className="flex items-center gap-3">
-                  {u.photoURL ? (
-                    <Image
-                      src={u.photoURL}
-                      alt={u.displayName || "User"}
-                      width={40}
-                      height={40}
-                      className="rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center text-white font-semibold">
-                      {getInitials(u.displayName)}
-                    </div>
-                  )}
-                  <div>
-                    <p className="text-white font-medium">{u.displayName || "Anonymous"}</p>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-neutral-500 text-sm">
-                      {u.discord?.username && (
-                        <span>Discord: {u.discord.username}</span>
-                      )}
-                      {u.github?.login && (
-                        <a
-                          href={`https://github.com/${u.github.login}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-emerald-400 hover:underline"
-                        >
-                          GitHub: @{u.github.login}
-                        </a>
-                      )}
+      {/* Two columns: People | Teams */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left: People in the pool */}
+        <section className="bg-neutral-900 rounded-xl p-5 border border-neutral-800 min-h-[200px]">
+          <h2 className="text-base font-semibold text-white mb-3">People in the pool</h2>
+          {poolList.length === 0 ? (
+            <p className="text-neutral-500 text-sm">No one in the pool yet. Be the first to join.</p>
+          ) : (
+            <ul className="space-y-3">
+              {poolList.map((u) => (
+                <li
+                  key={u.uid}
+                  className="flex items-center justify-between gap-3 py-2 border-b border-neutral-800 last:border-0"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    {u.photoURL ? (
+                      <Image
+                        src={u.photoURL}
+                        alt={u.displayName || "User"}
+                        width={36}
+                        height={36}
+                        className="rounded-full object-cover shrink-0"
+                      />
+                    ) : (
+                      <div className="w-9 h-9 rounded-full bg-neutral-800 flex items-center justify-center text-white text-sm font-semibold shrink-0">
+                        {getInitials(u.displayName)}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-white font-medium text-sm truncate">{u.displayName || "Anonymous"}</p>
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-neutral-500 text-xs">
+                        {u.discord?.username && (
+                          <span className="truncate">Discord: {u.discord.username}</span>
+                        )}
+                        {u.github?.login && (
+                          <a
+                            href={`https://github.com/${u.github.login}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-emerald-400 hover:underline truncate"
+                          >
+                            @{u.github.login}
+                          </a>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {isMe(u.uid) ? (
-                    <span className="text-neutral-500 text-sm">(you)</span>
-                  ) : canInvite ? (
-                    <button
-                      onClick={() => handleInvite(u.uid)}
-                      disabled={inviting === u.uid}
-                      className="px-3 py-1.5 bg-emerald-500/20 text-emerald-400 rounded-lg text-sm font-medium hover:bg-emerald-500/30 disabled:opacity-50"
-                    >
-                      {inviting === u.uid ? "Sending…" : myTeam ? "Invite to my team" : "Invite to form a team"}
-                    </button>
-                  ) : null}
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+                  <div className="shrink-0">
+                    {isMe(u.uid) ? (
+                      <span className="text-neutral-500 text-xs">(you)</span>
+                    ) : canInvite ? (
+                      <button
+                        onClick={() => handleInvite(u.uid)}
+                        disabled={inviting === u.uid}
+                        className="px-2.5 py-1 bg-emerald-500/20 text-emerald-400 rounded text-xs font-medium hover:bg-emerald-500/30 disabled:opacity-50"
+                      >
+                        {inviting === u.uid ? "…" : "Invite"}
+                      </button>
+                    ) : null}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
 
-      {/* Teams with open slots */}
-      {teamsWithSlots.length > 0 && inPool && (
-        <section className="bg-neutral-900 rounded-xl p-6 border border-neutral-800">
-          <h2 className="text-lg font-semibold text-white mb-4">Teams with open slots</h2>
-          <p className="text-neutral-400 text-sm mb-4">
-            Request to join a team. You can only request one team at a time.
-          </p>
-          <ul className="space-y-3">
+        {/* Right: Teams with open slots */}
+        <section className="bg-neutral-900 rounded-xl p-5 border border-neutral-800 min-h-[200px]">
+          {teamsWithSlots.length > 0 && inPool ? (
+            <>
+              <h2 className="text-base font-semibold text-white mb-1">Teams with open slots</h2>
+              <p className="text-neutral-500 text-xs mb-3">Request one team at a time.</p>
+              <ul className="space-y-3">
             {teamsWithSlots
               .filter((t) => !myTeam || t.id !== myTeam.id)
               .filter((t) => !t.memberIds.includes(user.uid))
@@ -689,17 +658,28 @@ function HackathonsPoolPageContent() {
                       <button
                         onClick={() => handleRequestToJoin(t.id)}
                         disabled={requesting === t.id}
-                        className="px-3 py-1.5 bg-neutral-700 text-white rounded-lg text-sm font-medium hover:bg-neutral-600 disabled:opacity-50 shrink-0"
+                        className="px-2.5 py-1 bg-neutral-700 text-white rounded text-xs font-medium hover:bg-neutral-600 disabled:opacity-50 shrink-0"
                       >
-                        {requesting === t.id ? "Sending…" : "Request to join"}
+                        {requesting === t.id ? "…" : "Request"}
                       </button>
                     )}
                   </li>
                 );
               })}
-          </ul>
+              </ul>
+            </>
+          ) : (
+            <>
+              <h2 className="text-base font-semibold text-white mb-3">Teams with open slots</h2>
+              <p className="text-neutral-500 text-sm">
+                {inPool
+                  ? "No teams with open slots right now."
+                  : "Join the pool above to see and request teams with open slots."}
+              </p>
+            </>
+          )}
         </section>
-      )}
+      </div>
     </div>
   );
 }
