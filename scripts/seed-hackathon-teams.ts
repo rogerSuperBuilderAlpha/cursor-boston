@@ -29,9 +29,9 @@ async function main() {
   const teamsRef = db.collection("hackathonTeams");
 
   const teams = [
-    { name: "Full Stack Crew", memberIds: [MOCK_PREFIX + "1", MOCK_PREFIX + "2", MOCK_PREFIX + "3"] },
-    { name: "Open Slot Squad", memberIds: [MOCK_PREFIX + "4", MOCK_PREFIX + "5"] },
-    { name: "Solo Starter", memberIds: [MOCK_PREFIX + "6"] },
+    { name: "Full Stack Crew", memberIds: [MOCK_PREFIX + "1", MOCK_PREFIX + "2", MOCK_PREFIX + "3"], wins: 1 },
+    { name: "Open Slot Squad", memberIds: [MOCK_PREFIX + "4", MOCK_PREFIX + "5"], wins: 1 },
+    { name: "Solo Starter", memberIds: [MOCK_PREFIX + "6"], wins: 0 },
   ];
 
   for (const team of teams) {
@@ -41,9 +41,9 @@ async function main() {
       name: team.name,
       createdBy: team.memberIds[0],
       createdAt: FieldValue.serverTimestamp(),
-      wins: 0,
+      wins: team.wins ?? 0,
     });
-    console.log("Created team:", team.name, "id:", docRef.id, "members:", team.memberIds.length + "/3");
+    console.log("Created team:", team.name, "id:", docRef.id, "members:", team.memberIds.length + "/3", "wins:", team.wins ?? 0);
   }
 
   console.log("Done. View teams at /hackathons/teams");
