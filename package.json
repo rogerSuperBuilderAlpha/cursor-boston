@@ -51,7 +51,7 @@
     "firebase": "^12.8.0",
     "firebase-admin": "^13.6.0",
     "gray-matter": "^4.0.3",
-    "next": "^16.1.5",
+    "next": "^16.1.6",
     "qrcode": "^1.5.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
@@ -65,7 +65,7 @@
     "@types/node": "^20.11.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
-    "autoprefixer": "^10.4.17",
+    "autoprefixer": "^10.4.24",
     "eslint": "^9.0.0",
     "eslint-config-next": "^16.1.5",
     "husky": "^8.0.3",
