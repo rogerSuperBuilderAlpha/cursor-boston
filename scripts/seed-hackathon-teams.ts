@@ -28,6 +28,20 @@ const MOCK_POOL_PROFILE = {
   visibility: { isPublic: true },
 };
 
+const MOCK_PROFILE_PREFIX = "mock-profile-";
+const MOCK_MEMBER_PROFILES: Array<{ displayName: string; bio?: string; location?: string; company?: string; jobTitle?: string }> = [
+  { displayName: "Alex Chen", bio: "Building with Cursor in Boston.", location: "Boston, MA", company: "TechCo", jobTitle: "Software Engineer" },
+  { displayName: "Sam Rivera", bio: "Designer and developer.", location: "Cambridge, MA", company: "StartupXYZ", jobTitle: "Full Stack Dev" },
+  { displayName: "Jordan Lee", bio: "Hackathon enthusiast.", location: "Boston, MA", company: "DevShop", jobTitle: "Engineer" },
+  { displayName: "Morgan Taylor", bio: "AI and tooling.", location: "Somerville, MA", company: "AI Labs", jobTitle: "ML Engineer" },
+  { displayName: "Casey Kim", bio: "Cursor community member.", location: "Boston, MA", company: "Cursor Boston", jobTitle: "Developer" },
+  { displayName: "Riley Davis", bio: "Love building in the open.", location: "Cambridge, MA", company: "Open Source Co", jobTitle: "Engineer" },
+  { displayName: "Jamie Park", bio: "Product and code.", location: "Boston, MA", company: "ProductCo", jobTitle: "Product Engineer" },
+  { displayName: "Quinn Adams", bio: "Building the future with Cursor.", location: "Boston, MA", company: "FutureTech", jobTitle: "Software Dev" },
+  { displayName: "Skyler Brown", bio: "Community and code.", location: "Cambridge, MA", company: "Community Co", jobTitle: "Developer" },
+  { displayName: "Drew Wilson", bio: "Cursor Boston regular.", location: "Boston, MA", company: "Boston Dev", jobTitle: "Engineer" },
+];
+
 async function main() {
   const db = getAdminDb();
   if (!db) {
@@ -107,6 +121,7 @@ async function main() {
   }
 
   const usersRef = db.collection("users");
+  const now = FieldValue.serverTimestamp();
   await usersRef.doc(MOCK_POOL_USER_ID).set(
     {
       displayName: MOCK_POOL_PROFILE.displayName,
@@ -114,7 +129,8 @@ async function main() {
       discord: MOCK_POOL_PROFILE.discord,
       github: MOCK_POOL_PROFILE.github,
       visibility: MOCK_POOL_PROFILE.visibility,
-      updatedAt: FieldValue.serverTimestamp(),
+      createdAt: now,
+      updatedAt: now,
     },
     { merge: true }
   );
@@ -128,7 +144,47 @@ async function main() {
   });
   console.log("Added mock user to pool:", poolDocId);
 
-  console.log("Done. View teams at /hackathons/teams and pool at /hackathons/pool");
+  // --- Create 10 mock public member profiles (visible on /members) ---
+  const visibility = {
+    isPublic: true,
+    showEmail: false,
+    showBio: true,
+    showLocation: true,
+    showCompany: true,
+    showJobTitle: true,
+    showDiscord: false,
+    showGithubBadge: false,
+    showEventsAttended: true,
+    showTalksGiven: true,
+    showWebsite: false,
+    showLinkedIn: false,
+    showTwitter: false,
+    showGithub: false,
+    showSubstack: false,
+    showMemberSince: true,
+  };
+  for (let i = 0; i < MOCK_MEMBER_PROFILES.length; i++) {
+    const uid = MOCK_PROFILE_PREFIX + (i + 1);
+    const p = MOCK_MEMBER_PROFILES[i];
+    const ts = FieldValue.serverTimestamp();
+    await usersRef.doc(uid).set(
+      {
+        displayName: p.displayName,
+        photoURL: null,
+        bio: p.bio ?? "",
+        location: p.location ?? "",
+        company: p.company ?? "",
+        jobTitle: p.jobTitle ?? "",
+        visibility,
+        createdAt: ts,
+        updatedAt: ts,
+      },
+      { merge: true }
+    );
+    console.log("Created mock profile:", p.displayName, "id:", uid);
+  }
+
+  console.log("Done. View teams at /hackathons/teams, pool at /hackathons/pool, members at /members");
 }
 
 main().catch((e) => {

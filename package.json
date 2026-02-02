@@ -43,6 +43,7 @@
     "test:coverage": "jest --coverage --config config/jest.config.js",
     "validate-env": "tsx scripts/validate-env.ts",
     "seed-hackathon-teams": "tsx scripts/seed-hackathon-teams.ts",
+    "check-members-db": "tsx scripts/check-members-db.ts",
     "prebuild": "npm run validate-env",
     "prepare": "husky install"
   },
