@@ -3,9 +3,12 @@ import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { getCurrentVirtualHackathonId } from "@/lib/hackathons";
+import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const HACKATHON_RATE_LIMIT = { windowMs: 60 * 1000, maxRequests: 20 };
 
 /**
  * POST /api/hackathons/pool/join
@@ -14,6 +17,16 @@ export const dynamic = "force-dynamic";
  */
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const clientId = getClientIdentifier(request as unknown as Request);
+    const rateResult = checkRateLimit(`hackathon-pool-join:${clientId}`, HACKATHON_RATE_LIMIT);
+    if (!rateResult.success) {
+      return NextResponse.json(
+        { error: "Too many requests", retryAfterSeconds: rateResult.retryAfter },
+        { status: 429, headers: { "Retry-After": String(rateResult.retryAfter || 60) } }
+      );
+    }
+
     const user = await getVerifiedUser(request);
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

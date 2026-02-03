@@ -179,29 +179,68 @@ class Logger {
 
   /**
    * Log an error with context
+   * SECURITY: Sanitizes error details in production to prevent information disclosure
    */
   logError(
     error: Error | unknown,
     context?: Record<string, unknown>
   ): void {
     const message = error instanceof Error ? error.message : String(error);
+    
+    // Sanitize error details for production
+    const errorInfo = error instanceof Error
+      ? {
+          name: error.name,
+          message: this.sanitizeErrorMessage(error.message),
+          // Only include stack trace in development
+          ...(this.isDevelopment && { stack: error.stack }),
+        }
+      : this.sanitizeErrorMessage(String(error));
+    
     const metadata: Record<string, unknown> = {
       ...context,
-      error: error instanceof Error
-        ? {
-            name: error.name,
-            message: error.message,
-            stack: error.stack,
-          }
-        : String(error),
+      error: errorInfo,
     };
 
-    this.error(message, metadata);
+    this.error(this.sanitizeErrorMessage(message), metadata);
+  }
+
+  /**
+   * Sanitize error messages to remove potentially sensitive information
+   */
+  private sanitizeErrorMessage(message: string): string {
+    if (!message) return "Unknown error";
+    
+    // Remove potential secrets, tokens, and API keys from error messages
+    return message
+      // Remove Bearer tokens
+      .replace(/Bearer\s+[A-Za-z0-9\-_]+/gi, "Bearer [REDACTED]")
+      // Remove API keys (common patterns)
+      .replace(/[A-Za-z0-9_-]{20,}/g, (match) => {
+        // Preserve common non-sensitive identifiers
+        if (/^(firebase|google|github|discord)/i.test(match)) {
+          return match;
+        }
+        return "[REDACTED]";
+      })
+      // Remove email addresses
+      .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, "[EMAIL_REDACTED]")
+      // Remove file paths that might expose server structure
+      .replace(/\/Users\/[^\/\s]+/g, "/Users/[REDACTED]")
+      .replace(/\/home\/[^\/\s]+/g, "/home/[REDACTED]");
   }
 }
 
 // Export singleton instance
 export const logger = new Logger();
+
+/**
+ * Safe error logging function for API routes.
+ * Use this instead of console.error to ensure proper sanitization.
+ */
+export function logApiError(endpoint: string, error: unknown): void {
+  logger.logError(error, { endpoint });
+}
 
 /**
  * Middleware to add request logging to API routes

@@ -15,23 +15,29 @@ service cloud.firestore {
       allow update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
     }
     
-    // Mail collection - authenticated users can create (for email notifications)
+    // Mail collection - server-side only to prevent email spam abuse
     match /mail/{mailId} {
-      allow create: if request.auth != null;
+      allow read, write: if false; // Only server-side operations via Admin SDK
     }
     
     // Users collection - users can read/write their own data
     // Anyone can read public profiles, users can read their own full profile
+    // SECURITY: Field-level validation prevents modification of sensitive fields
     match /users/{userId} {
       allow read: if resource.data.visibility.isPublic == true 
                   || (request.auth != null && request.auth.uid == userId);
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null 
+                    && request.auth.uid == userId
+                    && !request.resource.data.diff(resource.data).affectedKeys()
+                        .hasAny(['uid', 'createdAt', 'role', 'email']);
+      allow delete: if false; // Users cannot delete their own accounts via client
     }
     
     // Email lookup collection - maps emails to user UIDs for multi-email login
-    // Public read access needed for login resolution, only server-side writes
+    // SECURITY: Restricted to authenticated users to prevent email enumeration
     match /emailLookup/{email} {
-      allow read: if true;
+      allow read: if request.auth != null;
       allow write: if false; // Only server-side writes via Admin SDK
     }
     

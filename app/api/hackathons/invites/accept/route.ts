@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
+import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { sanitizeDocId } from "@/lib/sanitize";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const HACKATHON_RATE_LIMIT = { windowMs: 60 * 1000, maxRequests: 20 };
 
 /**
  * POST /api/hackathons/invites/accept
@@ -13,6 +17,16 @@ export const dynamic = "force-dynamic";
  */
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const clientId = getClientIdentifier(request as unknown as Request);
+    const rateResult = checkRateLimit(`hackathon-invite-accept:${clientId}`, HACKATHON_RATE_LIMIT);
+    if (!rateResult.success) {
+      return NextResponse.json(
+        { error: "Too many requests", retryAfterSeconds: rateResult.retryAfter },
+        { status: 429, headers: { "Retry-After": String(rateResult.retryAfter || 60) } }
+      );
+    }
+
     const user = await getVerifiedUser(request);
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -24,11 +38,14 @@ export async function POST(request: NextRequest) {
     }
 
     const { inviteId } = await request.json().catch(() => ({}));
-    if (!inviteId) {
-      return NextResponse.json({ error: "inviteId required" }, { status: 400 });
+    
+    // Validate and sanitize inviteId
+    const sanitizedInviteId = sanitizeDocId(inviteId);
+    if (!sanitizedInviteId) {
+      return NextResponse.json({ error: "Invalid inviteId format" }, { status: 400 });
     }
 
-    const inviteRef = db.collection("hackathonInvites").doc(inviteId);
+    const inviteRef = db.collection("hackathonInvites").doc(sanitizedInviteId);
     const inviteSnap = await inviteRef.get();
     if (!inviteSnap.exists) {
       return NextResponse.json({ error: "Invite not found" }, { status: 404 });

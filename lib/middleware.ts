@@ -1,7 +1,7 @@
 /**
  * Next.js Middleware Utilities
  * 
- * Wrappers for rate limiting and logging that work with Next.js API routes
+ * Wrappers for rate limiting, logging, and CSRF protection that work with Next.js API routes
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -10,6 +10,95 @@ import { logger } from "./logger";
 
 // Re-export rateLimitConfigs for convenience
 export { rateLimitConfigs } from "./rate-limit";
+
+// Allowed origins for CSRF protection
+const ALLOWED_ORIGINS = [
+  "https://cursorboston.com",
+  "https://www.cursorboston.com",
+  "http://localhost:3000",
+  "http://localhost:3001",
+];
+
+/**
+ * Check if the request origin is allowed (CSRF protection).
+ * Returns true if the origin is valid or if no origin check is needed (GET, HEAD, OPTIONS).
+ */
+export function isOriginAllowed(request: NextRequest): boolean {
+  // Skip origin check for safe methods
+  const method = request.method.toUpperCase();
+  if (["GET", "HEAD", "OPTIONS"].includes(method)) {
+    return true;
+  }
+
+  const origin = request.headers.get("origin");
+  const referer = request.headers.get("referer");
+
+  // If no origin header, check referer (some browsers don't send origin)
+  if (!origin && !referer) {
+    // Allow requests without origin/referer in development
+    if (process.env.NODE_ENV === "development") {
+      return true;
+    }
+    // In production, requests from the same origin may not have origin header
+    // This is less restrictive but acceptable for API routes using Bearer tokens
+    return true;
+  }
+
+  // Check if origin matches allowed list
+  if (origin) {
+    if (ALLOWED_ORIGINS.includes(origin)) {
+      return true;
+    }
+    // Allow if origin matches the app URL from environment
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    if (appUrl && origin === new URL(appUrl).origin) {
+      return true;
+    }
+    return false;
+  }
+
+  // Check referer as fallback
+  if (referer) {
+    try {
+      const refererOrigin = new URL(referer).origin;
+      if (ALLOWED_ORIGINS.includes(refererOrigin)) {
+        return true;
+      }
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+      if (appUrl && refererOrigin === new URL(appUrl).origin) {
+        return true;
+      }
+    } catch {
+      return false;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * CSRF protection middleware for state-changing operations.
+ * Validates origin header against allowed origins.
+ */
+export function withCsrfProtection(
+  handler: (request: NextRequest) => Promise<NextResponse>
+) {
+  return async (request: NextRequest): Promise<NextResponse> => {
+    if (!isOriginAllowed(request)) {
+      logger.warn("CSRF protection blocked request", {
+        origin: request.headers.get("origin"),
+        referer: request.headers.get("referer"),
+        method: request.method,
+        path: new URL(request.url).pathname,
+      });
+      return NextResponse.json(
+        { error: "Forbidden: Invalid origin" },
+        { status: 403 }
+      );
+    }
+    return handler(request);
+  };
+}
 
 /**
  * Rate limit middleware for Next.js API routes
@@ -151,7 +240,7 @@ export function withLoggingMiddleware(
 }
 
 /**
- * Combine rate limiting and logging middleware
+ * Combine rate limiting, CSRF protection, and logging middleware
  */
 export function withMiddleware(
   rateLimitOptions: {
@@ -161,6 +250,19 @@ export function withMiddleware(
   handler: (request: NextRequest) => Promise<NextResponse>
 ) {
   return withLoggingMiddleware(
-    withRateLimitMiddleware(rateLimitOptions, handler)
+    withCsrfProtection(
+      withRateLimitMiddleware(rateLimitOptions, handler)
+    )
+  );
+}
+
+/**
+ * Middleware without rate limiting (for routes that already have custom rate limiting)
+ */
+export function withSecurityMiddleware(
+  handler: (request: NextRequest) => Promise<NextResponse>
+) {
+  return withLoggingMiddleware(
+    withCsrfProtection(handler)
   );
 }
