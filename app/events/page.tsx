@@ -6,7 +6,41 @@ export const metadata: Metadata = {
   title: "Events",
   description:
     "Upcoming and past Cursor Boston events. Workshops, meetups, hackathons, and more for the Boston AI development community.",
+  alternates: {
+    canonical: "https://cursorboston.com/events",
+  },
 };
+
+// Generate JSON-LD structured data for events
+function generateEventsJsonLd() {
+  const events = eventsData.upcoming.map((event) => ({
+    "@context": "https://schema.org",
+    "@type": "Event",
+    name: event.title,
+    description: event.description,
+    startDate: event.date,
+    eventStatus: "https://schema.org/EventScheduled",
+    eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+    location: {
+      "@type": "Place",
+      name: event.location,
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: "Boston",
+        addressRegion: "MA",
+        addressCountry: "US",
+      },
+    },
+    organizer: {
+      "@type": "Organization",
+      name: "Cursor Boston",
+      url: "https://cursorboston.com",
+    },
+    image: `https://cursorboston.com${event.image}`,
+    url: event.lumaUrl,
+  }));
+  return events;
+}
 
 const eventTypes = [
   {
@@ -99,8 +133,19 @@ const eventTypes = [
 ];
 
 export default function EventsPage() {
+  const eventsJsonLd = generateEventsJsonLd();
+
   return (
     <div className="flex flex-col">
+      {eventsJsonLd.map((event, index) => (
+        <script
+          key={index}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(event),
+          }}
+        />
+      ))}
       {/* Hero */}
       <section className="py-16 md:py-24 px-6 border-b border-neutral-800">
         <div className="max-w-4xl mx-auto text-center">

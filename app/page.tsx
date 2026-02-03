@@ -1,5 +1,15 @@
+import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Cursor Boston - AI Coding Community",
+  description:
+    "Boston's community for AI-assisted development with Cursor IDE. Join meetups, workshops, and hackathons for developers, founders, and students.",
+  alternates: {
+    canonical: "https://cursorboston.com",
+  },
+};
 
 const audienceCards = [
   {

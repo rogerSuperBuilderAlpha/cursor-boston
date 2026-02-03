@@ -40,6 +40,42 @@ export const metadata: Metadata = {
       "Bringing Cursor users together in Beantown. Meetups, workshops, and community for AI-powered development.",
     images: ["/twitter-image.png"],
   },
+  alternates: {
+    types: {
+      "application/rss+xml": "https://cursorboston.com/feed.xml",
+    },
+  },
+};
+
+// JSON-LD structured data for Organization
+const organizationJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Cursor Boston",
+  description:
+    "Boston's community for AI-assisted development with Cursor IDE. Meetups, workshops, and hackathons for developers, founders, and students.",
+  url: "https://cursorboston.com",
+  logo: "https://cursorboston.com/cursor-boston-logo.png",
+  sameAs: [
+    "https://discord.gg/Wsncg8YYqc",
+    "https://lu.ma/cursor-boston",
+  ],
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: "Boston",
+    addressRegion: "MA",
+    addressCountry: "US",
+  },
+};
+
+// JSON-LD structured data for WebSite with search action
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Cursor Boston",
+  url: "https://cursorboston.com",
+  description:
+    "Boston's community for AI-assisted development with Cursor IDE.",
 };
 
 export default function RootLayout({
@@ -50,6 +86,18 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationJsonLd),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(websiteJsonLd),
+          }}
+        />
         <script id="luma-checkout" src="https://embed.lu.ma/checkout-button.js" async></script>
       </head>
       <body className="antialiased bg-black text-white min-h-screen flex flex-col">

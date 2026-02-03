@@ -25,6 +25,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: post.title,
     description: post.excerpt,
+    alternates: {
+      canonical: `https://cursorboston.com/blog/${slug}`,
+    },
   };
 }
 
@@ -207,8 +210,41 @@ export default async function BlogPostPage({ params }: Props) {
     return parts;
   };
 
+  // JSON-LD structured data for BlogPosting
+  const blogPostingJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.excerpt,
+    author: {
+      "@type": "Person",
+      name: post.author,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "Cursor Boston",
+      logo: {
+        "@type": "ImageObject",
+        url: "https://cursorboston.com/cursor-boston-logo.png",
+      },
+    },
+    datePublished: post.date,
+    dateModified: post.date,
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `https://cursorboston.com/blog/${slug}`,
+    },
+    url: `https://cursorboston.com/blog/${slug}`,
+  };
+
   return (
     <div className="flex flex-col">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(blogPostingJsonLd),
+        }}
+      />
       {/* Back Link */}
       <div className="py-6 px-6 border-b border-neutral-800">
         <div className="max-w-3xl mx-auto">
