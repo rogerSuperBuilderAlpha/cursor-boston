@@ -1,9 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAgent } from "@/lib/agents";
+import { createAgent, getVerifiedAgent } from "@/lib/agents";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if agent is already registered (has valid API key)
+    const existingAgent = await getVerifiedAgent(request);
+    if (existingAgent) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Agent already registered",
+          hint: "You already have a valid API key. Use GET /api/agents/me to view your profile.",
+          agent: {
+            id: existingAgent.id,
+            name: existingAgent.name,
+            status: existingAgent.status,
+          },
+        },
+        { status: 409 }
+      );
+    }
+
     // Rate limit: 10 registrations per hour per IP
     const clientId = getClientIdentifier(request);
     const rateLimitResult = checkRateLimit(`agent-register:${clientId}`, {

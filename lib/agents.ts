@@ -243,7 +243,7 @@ export async function createAgent(
   const agent = { id: docRef.id, ...agentData } as Agent;
 
   // Construct claim URL (will be relative, caller should make absolute)
-  const claimUrl = `/api/agents/claim/${claimToken}`;
+  const claimUrl = `/agents/claim/${claimToken}`;
 
   return { agent, apiKey, claimUrl };
 }

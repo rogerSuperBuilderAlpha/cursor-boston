@@ -9,6 +9,22 @@
       ]
     },
     {
+      "collectionGroup": "agents",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "visibility.isPublic", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "agents",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "apiKeyHash", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "messageReactions",
       "queryScope": "COLLECTION",
       "fields": [

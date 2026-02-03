@@ -9,11 +9,13 @@ import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 
 type PageTab = "members" | "feed";
+type MemberType = "human" | "agent";
 
 interface PublicMember {
   uid: string;
   displayName: string | null;
   photoURL: string | null;
+  memberType: MemberType;
   bio?: string;
   location?: string;
   company?: string;
@@ -44,6 +46,7 @@ interface PublicMember {
     showGithub: boolean;
     showSubstack: boolean;
     showMemberSince: boolean;
+    showOwner?: boolean;
   };
   eventsAttended?: number;
   talksGiven?: number;
@@ -53,6 +56,11 @@ interface PublicMember {
     html_url: string;
   };
   createdAt?: { toDate: () => Date };
+  // Agent-specific fields
+  owner?: {
+    displayName?: string;
+    email?: string;
+  };
 }
 
 interface Filters {
@@ -62,6 +70,7 @@ interface Filters {
   hasGithub: boolean;
   hasSubstack: boolean;
   hasWebsite: boolean;
+  memberType: "all" | "human" | "agent";
 }
 
 type SortOption = "newest" | "oldest" | "mostTalks" | "mostEvents" | "mostPRs" | "name";
@@ -145,6 +154,7 @@ function MembersPageContent() {
     hasGithub: false,
     hasSubstack: false,
     hasWebsite: false,
+    memberType: "all",
   });
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [showFilters, setShowFilters] = useState(false);
@@ -157,18 +167,58 @@ function MembersPageContent() {
       }
 
       try {
-        const membersRef = collection(db, "users");
-        const q = query(
-          membersRef,
+        // Fetch human members
+        const usersRef = collection(db, "users");
+        const usersQuery = query(
+          usersRef,
           where("visibility.isPublic", "==", true),
           orderBy("createdAt", "desc")
         );
-        const snapshot = await getDocs(q);
-        const publicMembers = snapshot.docs.map((doc) => ({
+        const usersSnapshot = await getDocs(usersQuery);
+        const humanMembers = usersSnapshot.docs.map((doc) => ({
           uid: doc.id,
+          memberType: "human" as MemberType,
           ...doc.data(),
         })) as PublicMember[];
-        setMembers(publicMembers);
+
+        // Fetch agent members
+        const agentsRef = collection(db, "agents");
+        const agentsQuery = query(
+          agentsRef,
+          where("visibility.isPublic", "==", true),
+          where("status", "==", "claimed"),
+          orderBy("createdAt", "desc")
+        );
+        const agentsSnapshot = await getDocs(agentsQuery);
+        const agentMembers = agentsSnapshot.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            uid: doc.id,
+            memberType: "agent" as MemberType,
+            displayName: data.name,
+            photoURL: data.avatarUrl || null,
+            bio: data.description,
+            visibility: {
+              ...data.visibility,
+              showBio: true,
+              showMemberSince: true,
+            },
+            createdAt: data.createdAt,
+            owner: data.visibility?.showOwner ? {
+              displayName: data.ownerDisplayName,
+              email: data.ownerEmail,
+            } : undefined,
+          } as PublicMember;
+        });
+
+        // Combine and sort by creation date
+        const allMembers = [...humanMembers, ...agentMembers].sort((a, b) => {
+          const dateA = a.createdAt?.toDate?.()?.getTime() || 0;
+          const dateB = b.createdAt?.toDate?.()?.getTime() || 0;
+          return dateB - dateA;
+        });
+
+        setMembers(allMembers);
       } catch (error) {
         console.error("Error fetching members:", error);
       } finally {
@@ -568,7 +618,12 @@ function MembersPageContent() {
       });
     }
 
-    // Apply link filters
+    // Apply member type filter
+    if (filters.memberType !== "all") {
+      result = result.filter((m) => m.memberType === filters.memberType);
+    }
+
+    // Apply link filters (only for humans, agents don't have these)
     if (filters.hasDiscord) {
       result = result.filter((m) => m.discord?.username);
     }
@@ -625,7 +680,11 @@ function MembersPageContent() {
     return result;
   }, [members, searchQuery, filters, sortBy]);
 
-  const activeFilterCount = Object.values(filters).filter(Boolean).length;
+  const activeFilterCount = 
+    Object.entries(filters).filter(([key, value]) => {
+      if (key === "memberType") return value !== "all";
+      return Boolean(value);
+    }).length;
 
   // Switch to members tab and search for a specific user
   const viewMemberProfile = (authorName: string) => {
@@ -652,6 +711,7 @@ function MembersPageContent() {
       hasGithub: false,
       hasSubstack: false,
       hasWebsite: false,
+      memberType: "all",
     });
     setSearchQuery("");
     // Clear URL search param
@@ -1038,21 +1098,79 @@ function MembersPageContent() {
 
               {/* Filter Checkboxes */}
               {showFilters && (
-                <div className="p-4 bg-neutral-900 border border-neutral-800 rounded-lg">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-medium text-neutral-300">
+                <div className="p-4 bg-neutral-900 border border-neutral-800 rounded-lg space-y-4">
+                  {/* Member Type Filter */}
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm font-medium text-neutral-300">
+                        Member type
+                      </span>
+                      {activeFilterCount > 0 && (
+                        <button
+                          onClick={clearFilters}
+                          className="text-xs text-neutral-400 hover:text-white transition-colors"
+                        >
+                          Clear all
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => setFilters((f) => ({ ...f, memberType: "all" }))}
+                        className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg transition-colors border min-h-[44px] ${
+                          filters.memberType === "all"
+                            ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-400"
+                            : "bg-neutral-800 border-neutral-700 text-neutral-400 hover:border-neutral-600"
+                        }`}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                          <circle cx="9" cy="7" r="4" />
+                          <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                        </svg>
+                        <span className="text-sm">All</span>
+                      </button>
+                      <button
+                        onClick={() => setFilters((f) => ({ ...f, memberType: "human" }))}
+                        className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg transition-colors border min-h-[44px] ${
+                          filters.memberType === "human"
+                            ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-400"
+                            : "bg-neutral-800 border-neutral-700 text-neutral-400 hover:border-neutral-600"
+                        }`}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                          <circle cx="12" cy="7" r="4" />
+                        </svg>
+                        <span className="text-sm">Humans</span>
+                      </button>
+                      <button
+                        onClick={() => setFilters((f) => ({ ...f, memberType: "agent" }))}
+                        className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg transition-colors border min-h-[44px] ${
+                          filters.memberType === "agent"
+                            ? "bg-purple-500/10 border-purple-500/50 text-purple-400"
+                            : "bg-neutral-800 border-neutral-700 text-neutral-400 hover:border-neutral-600"
+                        }`}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                          <rect x="3" y="11" width="18" height="10" rx="2" />
+                          <circle cx="12" cy="5" r="2" />
+                          <path d="M12 7v4" />
+                          <line x1="8" y1="16" x2="8" y2="16" />
+                          <line x1="16" y1="16" x2="16" y2="16" />
+                        </svg>
+                        <span className="text-sm">Agents</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Connected Accounts Filter */}
+                  <div>
+                    <span className="text-sm font-medium text-neutral-300 block mb-3">
                       Filter by connected accounts
                     </span>
-                    {activeFilterCount > 0 && (
-                      <button
-                        onClick={clearFilters}
-                        className="text-xs text-neutral-400 hover:text-white transition-colors"
-                      >
-                        Clear all
-                      </button>
-                    )}
-                  </div>
-                  <div className="flex flex-wrap gap-3">
+                    <div className="flex flex-wrap gap-3">
                     <FilterCheckbox
                       checked={filters.hasDiscord}
                       onChange={(checked) =>
@@ -1127,6 +1245,7 @@ function MembersPageContent() {
                         </svg>
                       }
                     />
+                    </div>
                   </div>
                 </div>
               )}
@@ -1221,33 +1340,63 @@ export default function MembersPage() {
 
 function MemberCard({ member }: { member: PublicMember }) {
   const v = member.visibility;
+  const isAgent = member.memberType === "agent";
 
   return (
     <div className="bg-neutral-900 rounded-xl p-6 border border-neutral-800 hover:border-neutral-700 transition-colors">
       {/* Header */}
       <div className="flex items-start gap-4 mb-4">
-        {member.photoURL ? (
-          <Image
-            src={member.photoURL}
-            alt={member.displayName || "Member"}
-            width={56}
-            height={56}
-            className="rounded-full object-cover"
-          />
-        ) : (
-          <div className="w-14 h-14 rounded-full bg-neutral-800 flex items-center justify-center text-white font-semibold text-lg">
-            {getInitials(member.displayName)}
-          </div>
-        )}
+        <div className="relative shrink-0">
+          {member.photoURL ? (
+            <Image
+              src={member.photoURL}
+              alt={member.displayName || "Member"}
+              width={56}
+              height={56}
+              className="rounded-full object-cover"
+            />
+          ) : (
+            <div className={`w-14 h-14 rounded-full flex items-center justify-center text-white font-semibold text-lg ${
+              isAgent ? "bg-purple-900/50" : "bg-neutral-800"
+            }`}>
+              {isAgent ? (
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <rect x="3" y="11" width="18" height="10" rx="2" />
+                  <circle cx="12" cy="5" r="2" />
+                  <path d="M12 7v4" />
+                  <circle cx="8" cy="16" r="1" fill="currentColor" />
+                  <circle cx="16" cy="16" r="1" fill="currentColor" />
+                </svg>
+              ) : (
+                getInitials(member.displayName)
+              )}
+            </div>
+          )}
+        </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-white font-semibold text-lg truncate">
-            {member.displayName || "Anonymous"}
-          </h3>
-          {v?.showJobTitle && member.jobTitle && (
+          <div className="flex items-center gap-2 mb-0.5">
+            <h3 className="text-white font-semibold text-lg truncate">
+              {member.displayName || "Anonymous"}
+            </h3>
+            {/* Member Type Tag */}
+            <span className={`shrink-0 px-2 py-0.5 text-xs rounded-full font-medium ${
+              isAgent 
+                ? "bg-purple-500/10 text-purple-400 border border-purple-500/30" 
+                : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+            }`}>
+              {isAgent ? "Agent" : "Human"}
+            </span>
+          </div>
+          {!isAgent && v?.showJobTitle && member.jobTitle && (
             <p className="text-neutral-400 text-sm truncate">{member.jobTitle}</p>
           )}
-          {v?.showCompany && member.company && (
+          {!isAgent && v?.showCompany && member.company && (
             <p className="text-neutral-500 text-sm truncate">{member.company}</p>
+          )}
+          {isAgent && member.owner?.displayName && v?.showOwner && (
+            <p className="text-neutral-500 text-sm truncate">
+              Owned by {member.owner.displayName}
+            </p>
           )}
         </div>
       </div>
