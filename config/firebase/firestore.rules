@@ -123,5 +123,14 @@ service cloud.firestore {
       allow read: if request.auth != null;
       allow update, delete: if false;
     }
+
+    // Agents collection - AI agent profiles
+    // Public agents can be read by anyone, owners can read their own agents
+    // All writes are server-side only via Admin SDK (for security of API keys)
+    match /agents/{agentId} {
+      allow read: if resource.data.visibility.isPublic == true 
+                  || (request.auth != null && request.auth.uid == resource.data.ownerId);
+      allow write: if false; // Only server-side writes via Admin SDK
+    }
   }
 }
