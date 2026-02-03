@@ -21,7 +21,9 @@ export async function getVerifiedUser(request: NextRequest): Promise<VerifiedUse
     throw new Error("Firebase Admin Auth is not configured");
   }
 
-  const decoded = await adminAuth.verifyIdToken(token);
+  // SECURITY: checkRevoked=true ensures revoked tokens are rejected
+  // This catches scenarios where users have been disabled or signed out
+  const decoded = await adminAuth.verifyIdToken(token, true);
   return {
     uid: decoded.uid,
     name: decoded.name,

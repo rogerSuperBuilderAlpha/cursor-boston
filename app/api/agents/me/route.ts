@@ -4,6 +4,13 @@ import {
   updateAgentProfile,
   toPublicProfile,
 } from "@/lib/agents";
+import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+
+// Rate limit config for agent API endpoints
+const AGENT_API_RATE_LIMIT = {
+  windowMs: 60 * 1000, // 1 minute
+  maxRequests: 60, // 60 requests per minute
+};
 
 /**
  * GET /api/agents/me
@@ -11,6 +18,26 @@ import {
  */
 export async function GET(request: NextRequest) {
   try {
+    // Apply rate limiting
+    const clientId = getClientIdentifier(request as unknown as Request);
+    const rateLimitResult = checkRateLimit(`agent-me-get:${clientId}`, AGENT_API_RATE_LIMIT);
+    
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Too many requests",
+          retryAfterSeconds: rateLimitResult.retryAfter,
+        },
+        { 
+          status: 429,
+          headers: {
+            "Retry-After": String(rateLimitResult.retryAfter || 60),
+          },
+        }
+      );
+    }
+
     const agent = await getVerifiedAgent(request);
 
     if (!agent) {
@@ -67,6 +94,26 @@ export async function GET(request: NextRequest) {
  */
 export async function PATCH(request: NextRequest) {
   try {
+    // Apply rate limiting
+    const clientId = getClientIdentifier(request as unknown as Request);
+    const rateLimitResult = checkRateLimit(`agent-me-patch:${clientId}`, AGENT_API_RATE_LIMIT);
+    
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Too many requests",
+          retryAfterSeconds: rateLimitResult.retryAfter,
+        },
+        { 
+          status: 429,
+          headers: {
+            "Retry-After": String(rateLimitResult.retryAfter || 60),
+          },
+        }
+      );
+    }
+
     const agent = await getVerifiedAgent(request);
 
     if (!agent) {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
+import { logApiError } from "@/lib/logger";
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,6 +9,14 @@ export async function GET(request: NextRequest) {
     if (!token) {
       return NextResponse.redirect(
         new URL("/profile?emailVerification=error&message=missing_token", request.url)
+      );
+    }
+
+    // Validate token format (64 hex characters = 32 bytes)
+    // This prevents database queries with malformed tokens
+    if (!/^[a-f0-9]{64}$/i.test(token)) {
+      return NextResponse.redirect(
+        new URL("/profile?emailVerification=error&message=invalid_token", request.url)
       );
     }
 
@@ -82,7 +91,7 @@ export async function GET(request: NextRequest) {
       new URL("/profile?emailVerification=success&tab=security", request.url)
     );
   } catch (error) {
-    console.error("Error verifying email:", error);
+    logApiError("/api/auth/verify-email", error);
     return NextResponse.redirect(
       new URL("/profile?emailVerification=error&message=server_error", request.url)
     );

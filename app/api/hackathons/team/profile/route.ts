@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
+import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { sanitizeName, sanitizeUrl, sanitizeDocId } from "@/lib/sanitize";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const HACKATHON_RATE_LIMIT = { windowMs: 60 * 1000, maxRequests: 20 };
 
 /**
  * PATCH /api/hackathons/team/profile
@@ -13,6 +17,16 @@ export const dynamic = "force-dynamic";
  */
 export async function PATCH(request: NextRequest) {
   try {
+    // Rate limiting
+    const clientId = getClientIdentifier(request as unknown as Request);
+    const rateResult = checkRateLimit(`hackathon-team-profile:${clientId}`, HACKATHON_RATE_LIMIT);
+    if (!rateResult.success) {
+      return NextResponse.json(
+        { error: "Too many requests", retryAfterSeconds: rateResult.retryAfter },
+        { status: 429, headers: { "Retry-After": String(rateResult.retryAfter || 60) } }
+      );
+    }
+
     const user = await getVerifiedUser(request);
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -25,11 +39,14 @@ export async function PATCH(request: NextRequest) {
 
     const body = await request.json().catch(() => ({}));
     const { teamId, name, logoUrl } = body;
-    if (!teamId) {
-      return NextResponse.json({ error: "teamId required" }, { status: 400 });
+    
+    // Validate and sanitize teamId
+    const sanitizedTeamId = sanitizeDocId(teamId);
+    if (!sanitizedTeamId) {
+      return NextResponse.json({ error: "Invalid teamId format" }, { status: 400 });
     }
 
-    const teamRef = db.collection("hackathonTeams").doc(teamId);
+    const teamRef = db.collection("hackathonTeams").doc(sanitizedTeamId);
     const teamSnap = await teamRef.get();
     if (!teamSnap.exists) {
       return NextResponse.json({ error: "Team not found" }, { status: 404 });
@@ -50,12 +67,29 @@ export async function PATCH(request: NextRequest) {
     }
 
     const updates: Record<string, unknown> = { updatedAt: FieldValue.serverTimestamp() };
+    
+    // Sanitize and validate name
     if (typeof name === "string") {
-      updates.name = name.trim() || null;
+      const sanitizedName = sanitizeName(name);
+      if (sanitizedName.length > 50) {
+        return NextResponse.json({ error: "Name must be 50 characters or less" }, { status: 400 });
+      }
+      updates.name = sanitizedName || null;
     }
+    
+    // Sanitize and validate logoUrl
     if (typeof logoUrl === "string") {
-      updates.logoUrl = logoUrl.trim() || null;
+      if (logoUrl.trim()) {
+        const sanitizedUrl = sanitizeUrl(logoUrl);
+        if (!sanitizedUrl) {
+          return NextResponse.json({ error: "Invalid logoUrl format" }, { status: 400 });
+        }
+        updates.logoUrl = sanitizedUrl;
+      } else {
+        updates.logoUrl = null;
+      }
     }
+    
     if (Object.keys(updates).length <= 1) {
       return NextResponse.json({ error: "Provide name and/or logoUrl" }, { status: 400 });
     }

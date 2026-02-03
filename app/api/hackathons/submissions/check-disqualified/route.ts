@@ -7,6 +7,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const CRON_SECRET = process.env.CRON_SECRET;
 
 function parseRepoUrl(repoUrl: string): { owner: string; repo: string } | null {
   try {
@@ -24,9 +25,29 @@ function parseRepoUrl(repoUrl: string): { owner: string; repo: string } | null {
  * GET /api/hackathons/submissions/check-disqualified?hackathonId=virtual-2025-01
  * Intended for cron or manual run after the 1st of the month.
  * Fetches submissions for the hackathon that have been submitted, checks GitHub for commits after cutoff; marks disqualified if any.
+ * 
+ * SECURITY: Requires CRON_SECRET to be set and provided via x-cron-secret header or Authorization header.
  */
 export async function GET(request: NextRequest) {
   try {
+    // Verify cron secret for authentication
+    const cronSecret = request.headers.get("x-cron-secret") || 
+                       request.headers.get("authorization")?.replace("Bearer ", "");
+    
+    if (!CRON_SECRET) {
+      return NextResponse.json(
+        { error: "Server not configured: CRON_SECRET not set" },
+        { status: 500 }
+      );
+    }
+    
+    if (!cronSecret || cronSecret !== CRON_SECRET) {
+      return NextResponse.json(
+        { error: "Unauthorized: Invalid or missing cron secret" },
+        { status: 401 }
+      );
+    }
+
     const db = getAdminDb();
     if (!db) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });

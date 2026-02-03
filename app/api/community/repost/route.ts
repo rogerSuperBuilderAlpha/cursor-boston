@@ -3,12 +3,26 @@ import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { logger } from "@/lib/logger";
+import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { sanitizeText, sanitizeDocId } from "@/lib/sanitize";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const COMMUNITY_RATE_LIMIT = { windowMs: 60 * 1000, maxRequests: 20 };
+
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const clientId = getClientIdentifier(request as unknown as Request);
+    const rateResult = checkRateLimit(`community-repost:${clientId}`, COMMUNITY_RATE_LIMIT);
+    if (!rateResult.success) {
+      return NextResponse.json(
+        { error: "Too many requests", retryAfterSeconds: rateResult.retryAfter },
+        { status: 429, headers: { "Retry-After": String(rateResult.retryAfter || 60) } }
+      );
+    }
+
     const user = await getVerifiedUser(request);
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -21,12 +35,20 @@ export async function POST(request: NextRequest) {
     }
 
     const { originalId, content } = await request.json();
-    const trimmed = typeof content === "string" ? content.trim() : "";
-    if (!originalId || trimmed.length < 100 || trimmed.length > 500) {
+    
+    // Validate and sanitize originalId
+    const sanitizedOriginalId = sanitizeDocId(originalId);
+    if (!sanitizedOriginalId) {
+      return NextResponse.json({ error: "Invalid originalId format" }, { status: 400 });
+    }
+    
+    // Sanitize content to prevent XSS
+    const sanitizedContent = sanitizeText(typeof content === "string" ? content : "");
+    if (sanitizedContent.length < 100 || sanitizedContent.length > 500) {
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
     }
 
-    const originalRef = db.collection("communityMessages").doc(originalId);
+    const originalRef = db.collection("communityMessages").doc(sanitizedOriginalId);
     const repostRef = db.collection("communityMessages").doc();
 
     const authorName =
@@ -42,16 +64,16 @@ export async function POST(request: NextRequest) {
       const repostCount = Number(original.repostCount || 0);
 
       tx.set(repostRef, {
-        content: trimmed,
+        content: sanitizedContent,
         authorId: user.uid,
         authorName,
         authorPhoto: user.picture || null,
         createdAt: FieldValue.serverTimestamp(),
         repostOf: {
-          originalId,
+          originalId: sanitizedOriginalId,
           originalAuthorId: original.authorId || null,
-          originalAuthorName: original.authorName || "Unknown",
-          originalContent: original.content || "",
+          originalAuthorName: sanitizeText(original.authorName || "Unknown"),
+          originalContent: sanitizeText(original.content || ""),
         },
         likeCount: 0,
         dislikeCount: 0,

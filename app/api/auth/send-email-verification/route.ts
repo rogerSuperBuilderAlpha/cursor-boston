@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { randomBytes } from "crypto";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { getAdminDb, getAdminAuth } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
+import { logApiError } from "@/lib/logger";
 
 export async function POST(request: NextRequest) {
   try {
@@ -74,9 +76,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate a verification token
-    const verificationToken = crypto.randomUUID();
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    // Generate a cryptographically secure verification token
+    // Using 32 bytes = 256 bits of entropy, converted to 64 hex characters
+    const verificationToken = randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour (shorter for security)
 
     // Store pending verification in Firestore
     await adminDb.collection("emailVerifications").doc(verificationToken).set({
@@ -108,7 +111,7 @@ export async function POST(request: NextRequest) {
       message: "Verification email sent" 
     });
   } catch (error) {
-    console.error("Error sending email verification:", error);
+    logApiError("/api/auth/send-email-verification", error);
     return NextResponse.json(
       { error: "Failed to send verification email" },
       { status: 500 }

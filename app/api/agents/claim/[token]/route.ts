@@ -2,10 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAgentByClaimToken, claimAgent } from "@/lib/agents";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { logApiError } from "@/lib/logger";
 
 interface RouteContext {
   params: Promise<{ token: string }>;
 }
+
+// Rate limit config for claim endpoints (stricter to prevent brute-force)
+const CLAIM_RATE_LIMIT = {
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  maxRequests: 10, // 10 requests per 15 minutes per IP
+};
 
 /**
  * GET /api/agents/claim/[token]
@@ -17,6 +25,26 @@ export async function GET(
   context: RouteContext
 ) {
   try {
+    // Apply rate limiting
+    const clientId = getClientIdentifier(request as unknown as Request);
+    const rateLimitResult = checkRateLimit(`agent-claim-get:${clientId}`, CLAIM_RATE_LIMIT);
+    
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Too many requests",
+          retryAfterSeconds: rateLimitResult.retryAfter,
+        },
+        { 
+          status: 429,
+          headers: {
+            "Retry-After": String(rateLimitResult.retryAfter || 60),
+          },
+        }
+      );
+    }
+
     const { token } = await context.params;
 
     if (!token) {
@@ -101,7 +129,7 @@ export async function GET(
       message,
     });
   } catch (error) {
-    console.error("Error getting agent claim info:", error);
+    logApiError("/api/agents/claim/[token] GET", error);
     return NextResponse.json(
       {
         success: false,
@@ -122,6 +150,26 @@ export async function POST(
   context: RouteContext
 ) {
   try {
+    // Apply rate limiting (stricter for POST to prevent claim abuse)
+    const clientId = getClientIdentifier(request as unknown as Request);
+    const rateLimitResult = checkRateLimit(`agent-claim-post:${clientId}`, CLAIM_RATE_LIMIT);
+    
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Too many requests",
+          retryAfterSeconds: rateLimitResult.retryAfter,
+        },
+        { 
+          status: 429,
+          headers: {
+            "Retry-After": String(rateLimitResult.retryAfter || 60),
+          },
+        }
+      );
+    }
+
     const { token } = await context.params;
 
     if (!token) {
@@ -245,7 +293,7 @@ export async function POST(
       ],
     });
   } catch (error) {
-    console.error("Error claiming agent:", error);
+    logApiError("/api/agents/claim/[token] POST", error);
     return NextResponse.json(
       {
         success: false,

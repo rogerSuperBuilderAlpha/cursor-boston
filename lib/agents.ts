@@ -175,10 +175,17 @@ export async function getVerifiedAgent(
 
 /**
  * Get agent by claim token.
+ * SECURITY: Validates token format before database query to prevent abuse.
  */
 export async function getAgentByClaimToken(
   claimToken: string
 ): Promise<Agent | null> {
+  // Validate claim token format (32 hex characters = 16 bytes)
+  // This prevents database queries with malformed tokens
+  if (!claimToken || typeof claimToken !== "string" || !/^[a-f0-9]{32}$/i.test(claimToken)) {
+    return null;
+  }
+
   const adminDb = getAdminDb();
   if (!adminDb) {
     throw new Error("Firebase Admin is not configured");

@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { getAgentsByOwner } from "@/lib/agents";
+import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+
+// Rate limit config for user agent listing
+const USER_AGENTS_RATE_LIMIT = {
+  windowMs: 60 * 1000, // 1 minute
+  maxRequests: 30, // 30 requests per minute
+};
 
 /**
  * GET /api/agents/user
@@ -8,6 +15,26 @@ import { getAgentsByOwner } from "@/lib/agents";
  */
 export async function GET(request: NextRequest) {
   try {
+    // Apply rate limiting
+    const clientId = getClientIdentifier(request as unknown as Request);
+    const rateLimitResult = checkRateLimit(`agents-user:${clientId}`, USER_AGENTS_RATE_LIMIT);
+    
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Too many requests",
+          retryAfterSeconds: rateLimitResult.retryAfter,
+        },
+        { 
+          status: 429,
+          headers: {
+            "Retry-After": String(rateLimitResult.retryAfter || 60),
+          },
+        }
+      );
+    }
+
     // Verify user is logged in
     let user;
     try {

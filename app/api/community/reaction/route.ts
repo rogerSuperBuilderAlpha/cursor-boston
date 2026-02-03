@@ -3,14 +3,28 @@ import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { logger } from "@/lib/logger";
+import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { sanitizeDocId } from "@/lib/sanitize";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 type ReactionType = "like" | "dislike";
 
+const COMMUNITY_RATE_LIMIT = { windowMs: 60 * 1000, maxRequests: 60 };
+
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const clientId = getClientIdentifier(request as unknown as Request);
+    const rateResult = checkRateLimit(`community-reaction:${clientId}`, COMMUNITY_RATE_LIMIT);
+    if (!rateResult.success) {
+      return NextResponse.json(
+        { error: "Too many requests", retryAfterSeconds: rateResult.retryAfter },
+        { status: 429, headers: { "Retry-After": String(rateResult.retryAfter || 60) } }
+      );
+    }
+
     const user = await getVerifiedUser(request);
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -23,13 +37,16 @@ export async function POST(request: NextRequest) {
     }
 
     const { messageId, type } = await request.json();
-    if (!messageId || (type !== "like" && type !== "dislike")) {
+    
+    // Validate and sanitize messageId
+    const sanitizedMessageId = sanitizeDocId(messageId);
+    if (!sanitizedMessageId || (type !== "like" && type !== "dislike")) {
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
     }
 
     const reactionType = type as ReactionType;
-    const messageRef = db.collection("communityMessages").doc(messageId);
-    const reactionRef = db.collection("messageReactions").doc(`${messageId}_${user.uid}`);
+    const messageRef = db.collection("communityMessages").doc(sanitizedMessageId);
+    const reactionRef = db.collection("messageReactions").doc(`${sanitizedMessageId}_${user.uid}`);
 
     const result = await db.runTransaction(async (tx) => {
       const [messageSnap, reactionSnap] = await Promise.all([
@@ -84,7 +101,7 @@ export async function POST(request: NextRequest) {
 
       // Add reaction
       tx.set(reactionRef, {
-        messageId,
+        messageId: sanitizedMessageId,
         userId: user.uid,
         type: reactionType,
         createdAt: FieldValue.serverTimestamp(),

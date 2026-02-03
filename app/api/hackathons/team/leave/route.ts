@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
+import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { sanitizeDocId } from "@/lib/sanitize";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const HACKATHON_RATE_LIMIT = { windowMs: 60 * 1000, maxRequests: 10 };
 
 /**
  * POST /api/hackathons/team/leave
@@ -13,6 +17,16 @@ export const dynamic = "force-dynamic";
  */
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const clientId = getClientIdentifier(request as unknown as Request);
+    const rateResult = checkRateLimit(`hackathon-team-leave:${clientId}`, HACKATHON_RATE_LIMIT);
+    if (!rateResult.success) {
+      return NextResponse.json(
+        { error: "Too many requests", retryAfterSeconds: rateResult.retryAfter },
+        { status: 429, headers: { "Retry-After": String(rateResult.retryAfter || 60) } }
+      );
+    }
+
     const user = await getVerifiedUser(request);
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -24,11 +38,14 @@ export async function POST(request: NextRequest) {
     }
 
     const { teamId } = await request.json().catch(() => ({}));
-    if (!teamId) {
-      return NextResponse.json({ error: "teamId required" }, { status: 400 });
+    
+    // Validate and sanitize teamId
+    const sanitizedTeamId = sanitizeDocId(teamId);
+    if (!sanitizedTeamId) {
+      return NextResponse.json({ error: "Invalid teamId format" }, { status: 400 });
     }
 
-    const teamRef = db.collection("hackathonTeams").doc(teamId);
+    const teamRef = db.collection("hackathonTeams").doc(sanitizedTeamId);
     const teamSnap = await teamRef.get();
     if (!teamSnap.exists) {
       return NextResponse.json({ error: "Team not found" }, { status: 404 });
@@ -44,7 +61,7 @@ export async function POST(request: NextRequest) {
 
     const submissionSnap = await db
       .collection("hackathonSubmissions")
-      .where("teamId", "==", teamId)
+      .where("teamId", "==", sanitizedTeamId)
       .where("hackathonId", "==", hackathonId)
       .limit(1)
       .get();
