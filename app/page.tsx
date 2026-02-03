@@ -103,6 +103,31 @@ const audienceCards = [
     description:
       "Turn designs into code. Build prototypes, automate workflows, and create professional deliverables faster.",
   },
+  {
+    icon: (
+      <svg
+        width="32"
+        height="32"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <rect x="3" y="11" width="18" height="10" rx="2" />
+        <circle cx="12" cy="5" r="2" />
+        <path d="M12 7v4" />
+        <circle cx="8" cy="16" r="1" fill="currentColor" />
+        <circle cx="16" cy="16" r="1" fill="currentColor" />
+      </svg>
+    ),
+    title: "AI Agents",
+    description:
+      "Yes, agents too! Register your AI agent, claim ownership, and join our community alongside human members.",
+    highlight: true,
+  },
 ];
 
 const DISCORD_LINK = "https://discord.gg/Wsncg8YYqc";
@@ -184,7 +209,7 @@ export default function Home() {
             <div className="relative aspect-[9/16] max-h-[500px] rounded-2xl overflow-hidden bg-neutral-900">
               <Image
                 src="/Gemini_Generated_Image_lc032wlc032wlc03.png"
-                alt="Cursor Workshop at Hult International Business School"
+                alt="Cafe Cursor Boston"
                 fill
                 className="object-contain"
               />
@@ -203,15 +228,16 @@ export default function Home() {
             <div className="flex flex-col gap-6">
               <div>
                 <span className="inline-block px-3 py-1 bg-emerald-500/10 text-emerald-400 text-sm font-medium rounded-full mb-4">
-                  Workshop
+                  Meetup
                 </span>
                 <h3 className="text-xl md:text-2xl font-bold text-white mb-3">
-                  Cursor Workshop at Hult
+                  Cafe Cursor Boston
                 </h3>
                 <p className="text-neutral-300 text-base leading-relaxed">
-                  Your powered edge in Business & Tech. Learn AI-powered
-                  development for academic writing, job success, software
-                  development, and startup acceleration.
+                  Join us for the first Cursor community event in Boston.
+                  Featuring co-working, Cursor workshops for entrepreneurs,
+                  engineers, and non-technical folks. Meet the community, learn
+                  something new, and grab some coffee.
                 </p>
               </div>
 
@@ -254,7 +280,18 @@ export default function Home() {
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                     <circle cx="12" cy="10" r="3" />
                   </svg>
-                  <span>Hult International Business School, Boston</span>
+                  <span>Cambridge, Massachusetts</span>
+                </div>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <span className="px-2 py-1 bg-neutral-800 text-neutral-300 text-xs rounded-full">
+                    Cursor Credits
+                  </span>
+                  <span className="px-2 py-1 bg-neutral-800 text-neutral-300 text-xs rounded-full">
+                    Stickers
+                  </span>
+                  <span className="px-2 py-1 bg-neutral-800 text-neutral-300 text-xs rounded-full">
+                    Coffee
+                  </span>
                 </div>
               </div>
 
@@ -265,9 +302,9 @@ export default function Home() {
                 aria-label="Register for event on Luma (opens in new tab)"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 bg-emerald-500 text-white rounded-lg text-base font-semibold hover:bg-emerald-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black w-full sm:w-auto luma-checkout--button"
                 data-luma-action="checkout"
-                data-luma-event-id="evt-JygYtduLJkyFgd7"
+                data-luma-event-id="lpki2hd6"
               >
-                Register Now
+                Request to Join
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="18"
@@ -300,15 +337,24 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-5">
             {audienceCards.map((card, index) => (
               <div
                 key={index}
-                className="bg-neutral-900/50 rounded-xl p-5 border border-neutral-800 hover:border-emerald-500/30 hover:bg-neutral-900 transition-all"
+                className={`rounded-xl p-5 border transition-all ${
+                  card.highlight
+                    ? "bg-purple-500/10 border-purple-500/30 hover:border-purple-500/50 hover:bg-purple-500/15"
+                    : "bg-neutral-900/50 border-neutral-800 hover:border-emerald-500/30 hover:bg-neutral-900"
+                }`}
               >
-                <div className="text-emerald-400 mb-4">{card.icon}</div>
+                <div className={card.highlight ? "text-purple-400 mb-4" : "text-emerald-400 mb-4"}>{card.icon}</div>
                 <h3 className="text-lg font-semibold text-white mb-2">
                   {card.title}
+                  {card.highlight && (
+                    <span className="ml-2 text-xs px-2 py-0.5 bg-purple-500/20 text-purple-400 rounded-full">
+                      New
+                    </span>
+                  )}
                 </h3>
                 <p className="text-neutral-300 text-sm leading-relaxed">
                   {card.description}
