@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, use, useCallback } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import ProfileRequirementsModal from "@/components/ProfileRequirementsModal";
 
 interface AgentInfo {
   id: string;
@@ -52,7 +52,6 @@ export default function ClaimAgentPage({
 }) {
   const { token } = use(params);
   const { user, loading: authLoading } = useAuth();
-  const router = useRouter();
 
   const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState(false);
@@ -62,48 +61,56 @@ export default function ClaimAgentPage({
   const [claimMessage, setClaimMessage] = useState<string | null>(null);
   const [profileStatus, setProfileStatus] = useState<ProfileStatus | null>(null);
   const [canClaim, setCanClaim] = useState(false);
+  const [showRequirementsModal, setShowRequirementsModal] = useState(false);
 
   // Fetch agent info
-  useEffect(() => {
-    async function fetchAgentInfo() {
-      try {
-        const headers: Record<string, string> = {};
-        
-        // Include auth token if user is logged in
-        if (user) {
-          const idToken = await user.getIdToken();
-          headers["Authorization"] = `Bearer ${idToken}`;
-        }
-
-        const response = await fetch(`/api/agents/claim/${token}`, {
-          headers,
-        });
-        const data: ClaimResponse = await response.json();
-
-        if (!data.success) {
-          setError(data.hint || data.error || "Failed to load agent information");
-          return;
-        }
-
-        if (data.agent) {
-          setAgentInfo(data.agent);
-        }
-        if (data.profileStatus) {
-          setProfileStatus(data.profileStatus);
-        }
-        setCanClaim(data.canClaim ?? false);
-      } catch (err) {
-        console.error("Error fetching agent info:", err);
-        setError("Failed to load agent information. Please try again.");
-      } finally {
-        setLoading(false);
+  const fetchAgentInfo = useCallback(async () => {
+    try {
+      const headers: Record<string, string> = {};
+      
+      // Include auth token if user is logged in
+      if (user) {
+        const idToken = await user.getIdToken();
+        headers["Authorization"] = `Bearer ${idToken}`;
       }
-    }
 
+      const response = await fetch(`/api/agents/claim/${token}`, {
+        headers,
+      });
+      const data: ClaimResponse = await response.json();
+
+      if (!data.success) {
+        setError(data.hint || data.error || "Failed to load agent information");
+        return;
+      }
+
+      if (data.agent) {
+        setAgentInfo(data.agent);
+      }
+      if (data.profileStatus) {
+        setProfileStatus(data.profileStatus);
+      }
+      setCanClaim(data.canClaim ?? false);
+    } catch (err) {
+      console.error("Error fetching agent info:", err);
+      setError("Failed to load agent information. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }, [token, user]);
+
+  useEffect(() => {
     if (!authLoading) {
       fetchAgentInfo();
     }
-  }, [token, user, authLoading]);
+  }, [authLoading, fetchAgentInfo]);
+  
+  // Handle requirements completion
+  const handleRequirementsComplete = useCallback(() => {
+    setShowRequirementsModal(false);
+    // Refetch to update canClaim status
+    fetchAgentInfo();
+  }, [fetchAgentInfo]);
 
   // Handle claim
   async function handleClaim() {
@@ -318,53 +325,49 @@ export default function ClaimAgentPage({
               </p>
             </div>
 
-            {/* Profile Requirements Checklist */}
+            {/* Profile Requirements Modal */}
+            <ProfileRequirementsModal
+              isOpen={showRequirementsModal}
+              onClose={() => setShowRequirementsModal(false)}
+              onComplete={handleRequirementsComplete}
+              requirements={["hasDisplayName", "isPublic"]}
+              title="Complete Your Profile"
+              description="To claim this agent, please complete these requirements."
+            />
+
+            {/* Profile Requirements Notice */}
             {profileStatus && !canClaim && (
               <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-                <p className="text-amber-400 text-sm font-medium mb-3">
-                  Complete these requirements to claim your agent:
-                </p>
-                <ul className="space-y-2">
-                  <li className="flex items-center gap-2 text-sm">
-                    {profileStatus.hasDisplayName ? (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-emerald-400">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                        <polyline points="22 4 12 14.01 9 11.01" />
-                      </svg>
-                    ) : (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-neutral-500">
-                        <circle cx="12" cy="12" r="10" />
-                      </svg>
-                    )}
-                    <span className={profileStatus.hasDisplayName ? "text-neutral-300" : "text-neutral-400"}>
-                      Add a display name
-                    </span>
-                  </li>
-                  <li className="flex items-center gap-2 text-sm">
-                    {profileStatus.isPublic ? (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-emerald-400">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                        <polyline points="22 4 12 14.01 9 11.01" />
-                      </svg>
-                    ) : (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-neutral-500">
-                        <circle cx="12" cy="12" r="10" />
-                      </svg>
-                    )}
-                    <span className={profileStatus.isPublic ? "text-neutral-300" : "text-neutral-400"}>
-                      Set profile to public
-                    </span>
-                  </li>
-                </ul>
-                <p className="text-neutral-500 text-xs mt-3">
-                  {!profileStatus.isPublic && "Click the \"Private Profile\" badge next to your name to make it public."}
-                </p>
-                <Link
-                  href="/profile"
-                  className="mt-3 block w-full px-4 py-2 bg-amber-500/20 text-amber-400 text-sm rounded-lg font-medium hover:bg-amber-500/30 transition-colors text-center"
-                >
-                  Go to Profile Settings
-                </Link>
+                <div className="flex items-start gap-3">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-amber-400 flex-shrink-0 mt-0.5"
+                  >
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                    <line x1="12" y1="9" x2="12" y2="13" />
+                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                  </svg>
+                  <div className="flex-1">
+                    <p className="text-amber-200 font-medium">Profile Requirements</p>
+                    <p className="text-amber-300/80 text-sm mt-1">
+                      Complete your profile to claim this agent.
+                    </p>
+                    <button
+                      onClick={() => setShowRequirementsModal(true)}
+                      className="mt-3 w-full px-4 py-2 bg-amber-500/20 text-amber-200 text-sm rounded-lg font-medium hover:bg-amber-500/30 transition-colors text-center"
+                    >
+                      Complete Requirements →
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
 
