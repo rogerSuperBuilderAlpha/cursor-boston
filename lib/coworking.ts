@@ -82,16 +82,18 @@ export async function getOrCreateSessions(eventId: string): Promise<CoworkingSes
   if (!db) throw new Error("Firebase Admin not configured");
 
   const sessionsRef = db.collection("coworkingSessions");
+  // Query without orderBy to avoid composite index requirement, sort in JS
   const existingSnapshot = await sessionsRef
     .where("eventId", "==", eventId)
-    .orderBy("startTime")
     .get();
 
   if (!existingSnapshot.empty) {
-    return existingSnapshot.docs.map((doc) => ({
+    const sessions = existingSnapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     })) as CoworkingSession[];
+    // Sort by startTime in memory
+    return sessions.sort((a, b) => a.startTime.localeCompare(b.startTime));
   }
 
   // Create sessions for this event

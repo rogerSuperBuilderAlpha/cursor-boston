@@ -93,6 +93,14 @@ export default function CoworkingSlots({ eventId }: CoworkingSlotsProps) {
     loadData();
   }, [fetchSlots, fetchEligibility]);
 
+  // Must be defined before any conditional returns (React hooks rule)
+  const handleRequirementsComplete = useCallback(() => {
+    // Refetch eligibility and slots when requirements are completed
+    fetchEligibility();
+    fetchSlots();
+    setShowRequirementsModal(false);
+  }, [fetchEligibility, fetchSlots]);
+
   const handleRegister = async (sessionId: string) => {
     if (!user) {
       setError("Please sign in to register");
@@ -168,13 +176,6 @@ export default function CoworkingSlots({ eventId }: CoworkingSlotsProps) {
       </div>
     );
   }
-
-  const handleRequirementsComplete = useCallback(() => {
-    // Refetch eligibility and slots when requirements are completed
-    fetchEligibility();
-    fetchSlots();
-    setShowRequirementsModal(false);
-  }, [fetchEligibility, fetchSlots]);
 
   return (
     <div className="space-y-6">
