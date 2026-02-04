@@ -261,6 +261,26 @@ export async function registerForSession(
 
       // Create registration
       const registrationRef = registrationsRef.doc();
+      
+      // Build registration data, excluding undefined values
+      const registrationData: Record<string, unknown> = {
+        eventId,
+        sessionId,
+        userId,
+        userDisplayName: userProfile.displayName,
+        registeredAt: FieldValue.serverTimestamp(),
+      };
+      
+      // Only include optional fields if they have values
+      if (userProfile.photoUrl) {
+        registrationData.userPhotoUrl = userProfile.photoUrl;
+      }
+      if (userProfile.github) {
+        registrationData.userGithub = userProfile.github;
+      }
+
+      tx.set(registrationRef, registrationData);
+      
       const registration: Omit<CoworkingRegistration, "id"> = {
         eventId,
         sessionId,
@@ -270,11 +290,6 @@ export async function registerForSession(
         userGithub: userProfile.github,
         registeredAt: Timestamp.now(),
       };
-
-      tx.set(registrationRef, {
-        ...registration,
-        registeredAt: FieldValue.serverTimestamp(),
-      });
 
       // Update session booking count
       tx.update(sessionsRef.doc(sessionId), {
