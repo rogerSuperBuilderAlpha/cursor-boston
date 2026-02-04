@@ -2,16 +2,25 @@
   "upcoming": [
     {
       "id": "cafe-cursor-boston-2026",
+      "slug": "cafe-cursor-boston",
       "title": "Cafe Cursor Boston",
+      "subtitle": "Boston's First Cursor Community Gathering",
       "date": "TBD",
       "time": "TBD",
       "location": "Cambridge, Massachusetts",
+      "venue": {
+        "name": "TBD",
+        "address": "Cambridge, MA",
+        "mapUrl": null
+      },
       "type": "meetup",
       "description": "Join us for the first Cursor community event in Boston. Featuring co-working, Cursor workshops for entrepreneurs, engineers, and non-technical folks. Meet the community, learn something new, and grab some coffee.",
+      "longDescription": "Cafe Cursor Boston is an intimate gathering designed to bring together developers, entrepreneurs, and curious minds who want to explore the future of AI-powered development.\n\nWhether you're a seasoned engineer looking to supercharge your workflow, an entrepreneur wanting to build faster, or someone who's never written a line of code but is curious about what's possible — this event is for you.\n\nWe'll have hands-on workshops, open co-working time, and plenty of opportunities to connect with fellow community members over great coffee.",
       "image": "/Gemini_Generated_Image_lc032wlc032wlc03.png",
       "lumaUrl": "https://lu.ma/lpki2hd6",
       "lumaEventId": "lpki2hd6",
       "registrationRequired": true,
+      "capacity": 50,
       "perks": [
         "Cursor Credits",
         "Stickers",
@@ -22,7 +31,70 @@
         "Workshops for Entrepreneurs",
         "Workshops for Engineers",
         "Workshops for Non-Technical Folks"
-      ]
+      ],
+      "agenda": [
+        {
+          "time": "TBD",
+          "title": "Doors Open & Coffee",
+          "description": "Grab some coffee, settle in, and meet fellow attendees"
+        },
+        {
+          "time": "TBD",
+          "title": "Welcome & Introductions",
+          "description": "Brief overview of the day and community introductions"
+        },
+        {
+          "time": "TBD",
+          "title": "Workshop Sessions",
+          "description": "Hands-on workshops tailored to different skill levels"
+        },
+        {
+          "time": "TBD",
+          "title": "Open Co-working",
+          "description": "Work on your projects with community support"
+        },
+        {
+          "time": "TBD",
+          "title": "Networking & Close",
+          "description": "Wrap up and connect with new friends"
+        }
+      ],
+      "speakers": [],
+      "sponsors": [],
+      "faq": [
+        {
+          "question": "Do I need coding experience?",
+          "answer": "Not at all! We have workshops designed specifically for non-technical folks. Cursor makes it possible to build without writing code yourself."
+        },
+        {
+          "question": "What should I bring?",
+          "answer": "Bring your laptop with Cursor installed (we can help you set it up if needed). We'll provide coffee, snacks, and good vibes."
+        },
+        {
+          "question": "Is there parking available?",
+          "answer": "Details about parking and public transit will be shared closer to the event date."
+        },
+        {
+          "question": "Can I come for just part of the event?",
+          "answer": "Absolutely! Feel free to drop in and out as your schedule allows."
+        }
+      ],
+      "whatToBring": [
+        "Laptop with Cursor installed",
+        "Project ideas (optional)",
+        "Business cards (optional)",
+        "Curiosity and enthusiasm"
+      ],
+      "featured": true,
+      "hasCoworking": true,
+      "coworkingInfo": {
+        "description": "Reserve your spot at one of our 2-hour coworking sessions. Work on your projects alongside fellow developers with access to mentors and community support.",
+        "sessionsPerDay": 3,
+        "hoursPerSession": 2,
+        "slotsPerSession": 20,
+        "startTime": "9:00 AM",
+        "endTime": "3:00 PM"
+      }
     }
   ],
   "past": []
