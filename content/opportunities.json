@@ -1,0 +1,33 @@
+{
+  "opportunities": [
+    {
+      "id": "beatm-cto-cofounder-2026",
+      "slug": "beatm-cto-cofounder",
+      "title": "CTO / Co-Founder",
+      "company": "BeatM",
+      "type": "cofounder",
+      "compensation": "Equity + compensation after raising",
+      "location": "Boston, MA",
+      "remote": false,
+      "postedDate": "2026-02-06",
+      "description": "We're currently looking for a CTO/Co-Founder to join us in the journey. As we're raising and with 2026 being a major year for sports in the US (World Cup), our goal is to ship fast. We are offering an equity based role + additional compensation after raising.",
+      "aboutCompany": "We're building BeatM, a social native daily fantasy sports platform. From real time game chats, interest based communities, to multiplayer competitions and tournaments, our goal is to immerse fans through social experiences. We launched our MVP 2 months ago, spoke to over 250+ sports fans and experts to validate our idea, as well as our advisors from Fanatics, MGM, IGN, and Wynn Casinos.",
+      "team": [
+        {
+          "name": "Harry",
+          "role": "COO",
+          "bio": "Senior @ Bentley with a background in marketing and fintech. Previously built two of North America's largest student nonprofits, before exiting as a freshman in college. Previously worked with the Boston Celtics, crypto, and led marketing for a NYC crypto startup through their Series A. Harry currently advises startups, nonprofit boards, and leads growth for various teams."
+        },
+        {
+          "name": "Nico",
+          "role": "CEO",
+          "bio": "Previously began career in SMMAs after graduating high school, before becoming the youngest sales manager at a Swiss AI startup. Nico is from Germany and has come to Boston full time."
+        }
+      ],
+      "tags": ["Sports Tech", "Fantasy Sports", "Social Platform", "Startup", "Equity"],
+      "contactEmail": null,
+      "applyUrl": null,
+      "featured": true
+    }
+  ]
+}
