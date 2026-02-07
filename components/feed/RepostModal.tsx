@@ -28,8 +28,8 @@ export function RepostModal({
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-neutral-900 rounded-xl p-6 border border-neutral-800 max-w-lg w-full">
-        <h3 className="text-lg font-semibold text-white mb-4">Repost with comment</h3>
+      <div className="bg-neutral-900 rounded-xl p-6 border border-neutral-200 dark:border-neutral-800 max-w-lg w-full">
+        <h3 className="text-lg font-semibold text-black dark:text-white mb-4">Repost with comment</h3>
         <div className="bg-neutral-800 rounded-lg p-4 mb-4">
           <div className="flex items-center gap-2 mb-2">
             <span className="font-medium text-white">{message.authorName}</span>
@@ -43,7 +43,7 @@ export function RepostModal({
             placeholder="Add your comment..."
             rows={4}
             maxLength={maxLength}
-            className="w-full bg-neutral-800 rounded-lg p-3 text-white placeholder-neutral-500 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            className="w-full bg-neutral-200 dark:bg-neutral-800 rounded-lg p-3 text-black dark:text-white placeholder-neutral-500 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-400"
           />
           <div className="flex items-center justify-between mt-2">
             <span className={`text-xs ${
@@ -60,14 +60,14 @@ export function RepostModal({
         <div className="flex gap-3 justify-end">
           <button
             onClick={onCancel}
-            className="px-4 py-2.5 text-neutral-400 hover:text-white transition-colors min-h-[44px]"
+            className="px-4 py-2.5 text-neutral-500 dark:text-neutral-400 hover:text-white transition-colors min-h-[44px]"
           >
             Cancel
           </button>
           <button
             onClick={onSubmit}
             disabled={posting || !isValid}
-            className="px-5 py-2.5 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
+            className="px-5 py-2.5 bg-emerald-500 text-black dark:text-white rounded-lg font-medium hover:bg-emerald-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
           >
             {posting ? "Reposting..." : "Repost"}
           </button>

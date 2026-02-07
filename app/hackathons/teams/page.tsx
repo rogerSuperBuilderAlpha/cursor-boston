@@ -209,17 +209,17 @@ function TeamsPageContent() {
       <div className="mb-8">
         <Link
           href="/hackathons"
-          className="text-neutral-400 hover:text-white text-sm font-medium"
+          className="text-neutral-500 dark:text-neutral-400 hover:text-black dark:text-white text-sm font-medium"
         >
           ← Hackathons
         </Link>
-        <h1 className="text-3xl font-bold text-white mt-2">Teams</h1>
-        <p className="text-neutral-400 mt-1">
-          Hackathon: <span className="text-white font-medium">{hackathonId}</span>
+        <h1 className="text-3xl font-bold text-black dark:text-white mt-2">Teams</h1>
+        <p className="text-neutral-500 dark:text-neutral-400 mt-1">
+          Hackathon: <span className="text-black dark:text-white font-medium">{hackathonId}</span>
         </p>
       </div>
 
-      <p className="text-neutral-400 mb-6">
+      <p className="text-neutral-500 dark:text-neutral-400 mb-6">
         Teams of 3 can participate. Join the{" "}
         <Link href="/hackathons/pool" className="text-emerald-400 hover:underline">
           pool
@@ -228,14 +228,14 @@ function TeamsPageContent() {
       </p>
 
       {teams.length === 0 ? (
-        <section className="bg-neutral-900 rounded-xl p-6 border border-neutral-800">
+        <section className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-6 border border-neutral-200 dark:border-neutral-800">
           <p className="text-neutral-500">No teams yet for this hackathon.</p>
           <p className="text-neutral-500 text-sm mt-2">
             Invite someone from the pool to form a team, or they can request to join once you have a team.
           </p>
           <Link
             href="/hackathons/pool"
-            className="inline-block mt-4 px-4 py-2 bg-emerald-500 text-white rounded-lg text-sm font-medium hover:bg-emerald-400"
+            className="inline-block mt-4 px-4 py-2 bg-emerald-500 text-black dark:text-white rounded-lg text-sm font-medium hover:bg-emerald-400"
           >
             Find a team
           </Link>
@@ -243,8 +243,8 @@ function TeamsPageContent() {
       ) : (
         <>
           {teamsWithSlots.length > 0 && (
-            <section className="bg-neutral-900 rounded-xl p-6 border border-neutral-800 mb-8">
-              <h2 className="text-lg font-semibold text-white mb-4">
+            <section className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-6 border border-neutral-200 dark:border-neutral-800 mb-8">
+              <h2 className="text-lg font-semibold text-black dark:text-white mb-4">
                 Teams with open slots ({teamsWithSlots.length})
               </h2>
               <ul className="space-y-4">
@@ -264,7 +264,7 @@ function TeamsPageContent() {
                   return (
                     <li
                       key={t.id}
-                      className="flex items-center justify-between gap-4 py-3 border-b border-neutral-800 last:border-0"
+                      className="flex items-center justify-between gap-4 py-3 border-b border-neutral-200 dark:border-neutral-800 last:border-0"
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
@@ -278,7 +278,7 @@ function TeamsPageContent() {
                               className="rounded-full object-cover w-7 h-7"
                             />
                           )}
-                          <span className="text-white font-medium">
+                          <span className="text-black dark:text-white font-medium">
                             {teamDisplayName(t)}
                           </span>
                           <span className="text-neutral-500 text-sm">
@@ -301,7 +301,7 @@ function TeamsPageContent() {
                             slot.type === "member" ? (
                               <div
                                 key={idx}
-                                className="flex items-center gap-1.5 text-neutral-300 text-sm"
+                                className="flex items-center gap-1.5 text-neutral-600 dark:text-neutral-300 text-sm"
                               >
                                 {slot.profile.photoURL ? (
                                   <Image
@@ -312,7 +312,7 @@ function TeamsPageContent() {
                                     className="rounded-full object-cover"
                                   />
                                 ) : (
-                                  <div className="w-6 h-6 rounded-full bg-neutral-700 flex items-center justify-center text-white text-xs font-medium">
+                                  <div className="w-6 h-6 rounded-full bg-neutral-700 flex items-center justify-center text-black dark:text-white text-xs font-medium">
                                     {getInitials(slot.profile.displayName)}
                                   </div>
                                 )}
@@ -325,7 +325,7 @@ function TeamsPageContent() {
                                 key={idx}
                                 className="flex items-center gap-1.5 text-neutral-500 text-sm"
                               >
-                                <div className="w-6 h-6 rounded-full bg-neutral-700 flex items-center justify-center text-white text-xs font-medium">
+                                <div className="w-6 h-6 rounded-full bg-neutral-700 flex items-center justify-center text-black dark:text-white text-xs font-medium">
                                   ?
                                 </div>
                                 <span>Member</span>
@@ -335,7 +335,7 @@ function TeamsPageContent() {
                                 key={idx}
                                 className="flex items-center gap-1.5 text-neutral-500 text-sm"
                               >
-                                <div className="w-6 h-6 rounded-full bg-neutral-800 border border-dashed border-neutral-600 flex items-center justify-center text-neutral-500 text-xs">
+                                <div className="w-6 h-6 rounded-full bg-neutral-200 dark:bg-neutral-800 border border-dashed border-neutral-600 flex items-center justify-center text-neutral-500 text-xs">
                                   +
                                 </div>
                                 <span>Open slot</span>
@@ -345,7 +345,7 @@ function TeamsPageContent() {
                         </div>
                       </div>
                       {hasRequested ? (
-                        <span className="text-neutral-400 text-sm font-medium shrink-0">Requested</span>
+                        <span className="text-neutral-500 dark:text-neutral-400 text-sm font-medium shrink-0">Requested</span>
                       ) : canRequest ? (
                         <button
                           onClick={() => handleRequestToJoin(t.id)}
@@ -363,8 +363,8 @@ function TeamsPageContent() {
           )}
 
           {fullTeams.length > 0 && (
-            <section className="bg-neutral-900 rounded-xl p-6 border border-neutral-800">
-              <h2 className="text-lg font-semibold text-white mb-4">
+            <section className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-6 border border-neutral-200 dark:border-neutral-800">
+              <h2 className="text-lg font-semibold text-black dark:text-white mb-4">
                 Full teams ({fullTeams.length})
               </h2>
               <ul className="space-y-3">
@@ -381,7 +381,7 @@ function TeamsPageContent() {
                   return (
                     <li
                       key={t.id}
-                      className="flex items-center justify-between py-2 border-b border-neutral-800 last:border-0"
+                      className="flex items-center justify-between py-2 border-b border-neutral-200 dark:border-neutral-800 last:border-0"
                     >
                       <div>
                         <div className="flex items-center gap-2">
@@ -395,7 +395,7 @@ function TeamsPageContent() {
                               className="rounded-full object-cover w-6 h-6"
                             />
                           )}
-                          <span className="text-white font-medium">
+                          <span className="text-black dark:text-white font-medium">
                             {teamDisplayName(t)}
                           </span>
                         </div>
@@ -416,7 +416,7 @@ function TeamsPageContent() {
                             slot.type === "member" ? (
                               <div
                                 key={idx}
-                                className="flex items-center gap-1.5 text-neutral-400 text-sm"
+                                className="flex items-center gap-1.5 text-neutral-500 dark:text-neutral-400 text-sm"
                               >
                                 {slot.profile.photoURL ? (
                                   <Image
@@ -427,7 +427,7 @@ function TeamsPageContent() {
                                     className="rounded-full object-cover"
                                   />
                                 ) : (
-                                  <div className="w-[22px] h-[22px] rounded-full bg-neutral-700 flex items-center justify-center text-white text-xs font-medium">
+                                  <div className="w-[22px] h-[22px] rounded-full bg-neutral-700 flex items-center justify-center text-black dark:text-white text-xs font-medium">
                                     {getInitials(slot.profile.displayName)}
                                   </div>
                                 )}
@@ -437,14 +437,14 @@ function TeamsPageContent() {
                               </div>
                             ) : slot.type === "placeholder" ? (
                               <div key={idx} className="flex items-center gap-1.5 text-neutral-500 text-sm">
-                                <div className="w-[22px] h-[22px] rounded-full bg-neutral-700 flex items-center justify-center text-white text-xs font-medium">
+                                <div className="w-[22px] h-[22px] rounded-full bg-neutral-700 flex items-center justify-center text-black dark:text-white text-xs font-medium">
                                   ?
                                 </div>
                                 <span>Member</span>
                               </div>
                             ) : (
                               <div key={idx} className="flex items-center gap-1.5 text-neutral-500 text-sm">
-                                <div className="w-[22px] h-[22px] rounded-full bg-neutral-800 border border-dashed border-neutral-600 flex items-center justify-center text-xs">
+                                <div className="w-[22px] h-[22px] rounded-full bg-neutral-200 dark:bg-neutral-800 border border-dashed border-neutral-600 flex items-center justify-center text-xs">
                                   +
                                 </div>
                                 <span>Open slot</span>

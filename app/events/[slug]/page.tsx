@@ -193,16 +193,16 @@ export default async function EventPage({
       />
 
       {/* Breadcrumb */}
-      <nav className="px-6 py-4 border-b border-neutral-800" aria-label="Breadcrumb">
+      <nav className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-800" aria-label="Breadcrumb">
         <div className="max-w-6xl mx-auto">
-          <ol className="flex items-center gap-2 text-sm text-neutral-400">
+          <ol className="flex items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400">
             <li>
-              <Link href="/events" className="hover:text-white transition-colors">
+              <Link href="/events" className="hover:text-black dark:text-white transition-colors">
                 Events
               </Link>
             </li>
             <li aria-hidden="true">/</li>
-            <li className="text-white truncate">{event.title}</li>
+            <li className="text-black dark:text-white truncate">{event.title}</li>
           </ol>
         </div>
       </nav>
@@ -211,7 +211,7 @@ export default async function EventPage({
       <section className="relative">
         <div className="grid lg:grid-cols-2 gap-0">
           {/* Event Image */}
-          <div className="relative aspect-square lg:aspect-auto lg:min-h-[600px] bg-neutral-900">
+          <div className="relative aspect-square lg:aspect-auto lg:min-h-[600px] bg-neutral-100 dark:bg-neutral-900">
             <Image
               src={event.image}
               alt={event.title}
@@ -231,22 +231,22 @@ export default async function EventPage({
           </div>
 
           {/* Event Info */}
-          <div className="p-8 lg:p-12 flex flex-col justify-center bg-neutral-950">
-            <span className="inline-block px-3 py-1 bg-emerald-500/10 text-emerald-400 text-sm font-medium rounded-full mb-4 w-fit capitalize">
+          <div className="p-8 lg:p-12 flex flex-col justify-center bg-neutral-50 dark:bg-neutral-950">
+            <span className="inline-block px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-sm font-medium rounded-full mb-4 w-fit capitalize">
               {event.type}
             </span>
             
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-2">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-black dark:text-white mb-2">
               {event.title}
             </h1>
             
             {event.subtitle && (
-              <p className="text-xl text-neutral-400 mb-6">{event.subtitle}</p>
+              <p className="text-xl text-neutral-500 dark:text-neutral-400 mb-6">{event.subtitle}</p>
             )}
 
             {/* Key Details */}
             <div className="space-y-4 mb-8">
-              <div className="flex items-center gap-3 text-neutral-300">
+              <div className="flex items-center gap-3 text-neutral-600 dark:text-neutral-300">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="20"
@@ -274,7 +274,7 @@ export default async function EventPage({
                 )}
               </div>
 
-              <div className="flex items-center gap-3 text-neutral-300">
+              <div className="flex items-center gap-3 text-neutral-600 dark:text-neutral-300">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="20"
@@ -295,7 +295,7 @@ export default async function EventPage({
               </div>
 
               {event.capacity && (
-                <div className="flex items-center gap-3 text-neutral-300">
+                <div className="flex items-center gap-3 text-neutral-600 dark:text-neutral-300">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="20"
@@ -349,20 +349,20 @@ export default async function EventPage({
       </section>
 
       {/* About Section */}
-      <section className="py-16 px-6 border-b border-neutral-800">
+      <section className="py-16 px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">
+          <h2 className="text-2xl md:text-3xl font-bold text-black dark:text-white mb-6">
             About This Event
           </h2>
-          <div className="prose prose-invert prose-lg max-w-none">
+          <div className="prose dark:prose-invert prose-lg max-w-none">
             {event.longDescription ? (
               event.longDescription.split("\n\n").map((paragraph, index) => (
-                <p key={index} className="text-neutral-300 leading-relaxed mb-4">
+                <p key={index} className="text-neutral-600 dark:text-neutral-300 leading-relaxed mb-4">
                   {paragraph}
                 </p>
               ))
             ) : (
-              <p className="text-neutral-300 leading-relaxed">{event.description}</p>
+              <p className="text-neutral-600 dark:text-neutral-300 leading-relaxed">{event.description}</p>
             )}
           </div>
 
@@ -376,7 +376,7 @@ export default async function EventPage({
                 {event.topics.map((topic) => (
                   <span
                     key={topic}
-                    className="px-4 py-2 bg-neutral-800 text-neutral-300 rounded-full"
+                    className="px-4 py-2 bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 rounded-full"
                   >
                     {topic}
                   </span>
@@ -389,7 +389,7 @@ export default async function EventPage({
 
       {/* Coworking Slots Section */}
       {event.hasCoworking && (
-        <section className="py-16 px-6 bg-gradient-to-b from-neutral-900 to-neutral-950 border-b border-neutral-800">
+        <section className="py-16 px-6 bg-gradient-to-b from-neutral-900 to-neutral-950 border-b border-neutral-200 dark:border-neutral-800">
           <div className="max-w-4xl mx-auto">
             <div className="flex items-center gap-3 mb-2">
               <svg
@@ -408,12 +408,12 @@ export default async function EventPage({
                 <line x1="8" y1="21" x2="16" y2="21" />
                 <line x1="12" y1="17" x2="12" y2="21" />
               </svg>
-              <h2 className="text-2xl md:text-3xl font-bold text-white">
+              <h2 className="text-2xl md:text-3xl font-bold text-black dark:text-white">
                 Coworking Sessions
               </h2>
             </div>
             {event.coworkingInfo && (
-              <p className="text-neutral-400 mb-8 max-w-2xl">
+              <p className="text-neutral-500 dark:text-neutral-400 mb-8 max-w-2xl">
                 {event.coworkingInfo.description}
               </p>
             )}
@@ -424,23 +424,23 @@ export default async function EventPage({
 
       {/* Agenda Section */}
       {event.agenda && event.agenda.length > 0 && (
-        <section className="py-16 px-6 bg-neutral-950 border-b border-neutral-800">
+        <section className="py-16 px-6 bg-neutral-50 dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold text-black dark:text-white mb-8">
               Agenda
             </h2>
             <div className="space-y-6">
               {event.agenda.map((item, index) => (
                 <div
                   key={index}
-                  className="flex gap-6 p-6 bg-neutral-900 rounded-xl border border-neutral-800"
+                  className="flex gap-6 p-6 bg-neutral-100 dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800"
                 >
                   <div className="text-emerald-400 font-mono text-sm whitespace-nowrap">
                     {item.time}
                   </div>
                   <div>
-                    <h3 className="text-white font-semibold mb-1">{item.title}</h3>
-                    <p className="text-neutral-400">{item.description}</p>
+                    <h3 className="text-black dark:text-white font-semibold mb-1">{item.title}</h3>
+                    <p className="text-neutral-500 dark:text-neutral-400">{item.description}</p>
                   </div>
                 </div>
               ))}
@@ -451,19 +451,19 @@ export default async function EventPage({
 
       {/* Speakers Section */}
       {event.speakers && event.speakers.length > 0 && (
-        <section className="py-16 px-6 border-b border-neutral-800">
+        <section className="py-16 px-6 border-b border-neutral-200 dark:border-neutral-800">
           <div className="max-w-6xl mx-auto">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold text-black dark:text-white mb-8">
               Speakers
             </h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {event.speakers.map((speaker, index) => (
                 <div
                   key={index}
-                  className="p-6 bg-neutral-900 rounded-xl border border-neutral-800 text-center"
+                  className="p-6 bg-neutral-100 dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 text-center"
                 >
                   {speaker.image && (
-                    <div className="relative w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden bg-neutral-800">
+                    <div className="relative w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden bg-neutral-200 dark:bg-neutral-800">
                       <Image
                         src={speaker.image}
                         alt={speaker.name}
@@ -472,13 +472,13 @@ export default async function EventPage({
                       />
                     </div>
                   )}
-                  <h3 className="text-white font-semibold text-lg">{speaker.name}</h3>
-                  <p className="text-neutral-400 text-sm">{speaker.role}</p>
+                  <h3 className="text-black dark:text-white font-semibold text-lg">{speaker.name}</h3>
+                  <p className="text-neutral-500 dark:text-neutral-400 text-sm">{speaker.role}</p>
                   {speaker.company && (
                     <p className="text-neutral-500 text-sm">{speaker.company}</p>
                   )}
                   {speaker.bio && (
-                    <p className="text-neutral-400 text-sm mt-3">{speaker.bio}</p>
+                    <p className="text-neutral-500 dark:text-neutral-400 text-sm mt-3">{speaker.bio}</p>
                   )}
                 </div>
               ))}
@@ -489,16 +489,16 @@ export default async function EventPage({
 
       {/* What to Bring Section */}
       {event.whatToBring && event.whatToBring.length > 0 && (
-        <section className="py-16 px-6 bg-neutral-950 border-b border-neutral-800">
+        <section className="py-16 px-6 bg-neutral-50 dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold text-black dark:text-white mb-8">
               What to Bring
             </h2>
             <ul className="grid sm:grid-cols-2 gap-4">
               {event.whatToBring.map((item, index) => (
                 <li
                   key={index}
-                  className="flex items-center gap-3 p-4 bg-neutral-900 rounded-lg border border-neutral-800"
+                  className="flex items-center gap-3 p-4 bg-neutral-100 dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -515,7 +515,7 @@ export default async function EventPage({
                   >
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
-                  <span className="text-neutral-300">{item}</span>
+                  <span className="text-neutral-600 dark:text-neutral-300">{item}</span>
                 </li>
               ))}
             </ul>
@@ -525,9 +525,9 @@ export default async function EventPage({
 
       {/* Perks Section */}
       {event.perks && event.perks.length > 0 && (
-        <section className="py-16 px-6 border-b border-neutral-800">
+        <section className="py-16 px-6 border-b border-neutral-200 dark:border-neutral-800">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold text-black dark:text-white mb-8">
               Event Perks
             </h2>
             <div className="grid sm:grid-cols-3 gap-4">
@@ -553,7 +553,7 @@ export default async function EventPage({
                     <path d="M2 17l10 5 10-5" />
                     <path d="M2 12l10 5 10-5" />
                   </svg>
-                  <span className="text-white font-medium">{perk}</span>
+                  <span className="text-black dark:text-white font-medium">{perk}</span>
                 </div>
               ))}
             </div>
@@ -563,19 +563,19 @@ export default async function EventPage({
 
       {/* FAQ Section */}
       {event.faq && event.faq.length > 0 && (
-        <section className="py-16 px-6 bg-neutral-950 border-b border-neutral-800">
+        <section className="py-16 px-6 bg-neutral-50 dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold text-black dark:text-white mb-8">
               Frequently Asked Questions
             </h2>
             <div className="space-y-4">
               {event.faq.map((item, index) => (
                 <details
                   key={index}
-                  className="group bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden"
+                  className="group bg-neutral-100 dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden"
                 >
                   <summary className="flex items-center justify-between p-6 cursor-pointer list-none">
-                    <h3 className="text-white font-medium pr-4">{item.question}</h3>
+                    <h3 className="text-black dark:text-white font-medium pr-4">{item.question}</h3>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="20"
@@ -586,13 +586,13 @@ export default async function EventPage({
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      className="text-neutral-400 group-open:rotate-180 transition-transform flex-shrink-0"
+                      className="text-neutral-500 dark:text-neutral-400 group-open:rotate-180 transition-transform flex-shrink-0"
                       aria-hidden="true"
                     >
                       <polyline points="6 9 12 15 18 9" />
                     </svg>
                   </summary>
-                  <div className="px-6 pb-6 text-neutral-400">
+                  <div className="px-6 pb-6 text-neutral-500 dark:text-neutral-400">
                     {item.answer}
                   </div>
                 </details>
@@ -604,9 +604,9 @@ export default async function EventPage({
 
       {/* Sponsors Section */}
       {event.sponsors && event.sponsors.length > 0 && (
-        <section className="py-16 px-6 border-b border-neutral-800">
+        <section className="py-16 px-6 border-b border-neutral-200 dark:border-neutral-800">
           <div className="max-w-6xl mx-auto text-center">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold text-black dark:text-white mb-8">
               Sponsors
             </h2>
             <div className="flex flex-wrap justify-center items-center gap-8">
@@ -616,7 +616,7 @@ export default async function EventPage({
                   href={sponsor.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-4 bg-neutral-900 rounded-xl border border-neutral-800 hover:border-neutral-700 transition-colors"
+                  className="p-4 bg-neutral-100 dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:border-neutral-700 transition-colors"
                 >
                   <Image
                     src={sponsor.logo}
@@ -635,10 +635,10 @@ export default async function EventPage({
       {/* Final CTA */}
       <section className="py-20 px-6">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-black dark:text-white mb-4">
             Ready to Join Us?
           </h2>
-          <p className="text-neutral-400 text-lg mb-8">
+          <p className="text-neutral-500 dark:text-neutral-400 text-lg mb-8">
             Don&apos;t miss out on this event. Spots are limited!
           </p>
           <a

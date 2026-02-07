@@ -95,7 +95,7 @@ export function MessageCard({
               className="rounded-full object-cover hover:opacity-80 transition-opacity"
             />
           ) : (
-            <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center text-white font-semibold hover:bg-neutral-700 transition-colors">
+            <div className="w-10 h-10 rounded-full bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center text-black dark:text-white font-semibold hover:bg-neutral-700 transition-colors">
               {getInitials(message.authorName)}
             </div>
           )}
@@ -105,7 +105,7 @@ export function MessageCard({
             <div className="flex items-center gap-2 min-w-0">
               <button
                 onClick={onAuthorClick}
-                className="font-medium text-white truncate hover:text-emerald-400 transition-colors focus-visible:outline-none focus-visible:text-emerald-400"
+                className="font-medium text-black dark:text-white truncate hover:text-emerald-400 transition-colors focus-visible:outline-none focus-visible:text-emerald-400"
               >
                 {message.authorName}
               </button>
@@ -128,7 +128,7 @@ export function MessageCard({
                     </button>
                     <button
                       onClick={() => setShowDeleteConfirm(false)}
-                      className="px-3 py-2 text-sm text-neutral-400 hover:text-white min-h-[44px] flex items-center"
+                      className="px-3 py-2 text-sm text-neutral-500 dark:text-neutral-400 hover:text-white min-h-[44px] flex items-center"
                     >
                       Cancel
                     </button>
@@ -180,7 +180,7 @@ export function MessageCard({
           )}
 
           {/* Reaction Buttons */}
-          <div className="flex items-center gap-1 mt-3 pt-3 border-t border-neutral-800 -ml-2">
+          <div className="flex items-center gap-1 mt-3 pt-3 border-t border-neutral-200 dark:border-neutral-800 -ml-2">
             {/* Like */}
             <button
               onClick={onLike}
@@ -294,7 +294,7 @@ export function MessageCard({
                 placeholder={`Reply to ${message.authorName}...`}
                 rows={2}
                 maxLength={500}
-                className="w-full bg-neutral-800 rounded-lg p-3 text-white placeholder-neutral-500 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                className="w-full bg-neutral-200 dark:bg-neutral-800 rounded-lg p-3 text-black dark:text-white placeholder-neutral-500 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-400"
               />
               <div className="flex items-center justify-between mt-2">
                 <span className={`text-xs ${
@@ -309,14 +309,14 @@ export function MessageCard({
                 <div className="flex gap-2">
                   <button
                     onClick={onReply}
-                    className="px-3 py-2 text-sm text-neutral-400 hover:text-white transition-colors min-h-[44px]"
+                    className="px-3 py-2 text-sm text-neutral-500 dark:text-neutral-400 hover:text-white transition-colors min-h-[44px]"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={onSubmitReply}
                     disabled={postingReply || replyContent.trim().length < 100 || replyContent.trim().length > 500}
-                    className="px-4 py-2 bg-emerald-500 text-white rounded-lg text-sm font-medium hover:bg-emerald-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
+                    className="px-4 py-2 bg-emerald-500 text-black dark:text-white rounded-lg text-sm font-medium hover:bg-emerald-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
                   >
                     {postingReply ? "Replying..." : "Reply"}
                   </button>
@@ -329,7 +329,7 @@ export function MessageCard({
           {(message.replyCount || 0) > 0 && (
             <button
               onClick={onToggleReplies}
-              className="mt-3 text-sm text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-1"
+              className="mt-3 text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors flex items-center gap-1"
             >
               <svg
                 width="14"

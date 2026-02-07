@@ -66,7 +66,7 @@ export function MemberDirectory({ initialSearch = "" }: MemberDirectoryProps) {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search by name, location, job, bio..."
-                  className="w-full pl-11 pr-4 py-3 bg-neutral-900 border border-neutral-800 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                  className="w-full pl-11 pr-4 py-3 bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
                 />
               </div>
 
@@ -76,7 +76,7 @@ export function MemberDirectory({ initialSearch = "" }: MemberDirectoryProps) {
                 className={`px-4 py-3 border rounded-lg font-medium transition-colors flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
                   showFilters || activeFilterCount > 0
                     ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-400"
-                    : "bg-neutral-900 border-neutral-800 text-neutral-300 hover:border-neutral-700"
+                    : "bg-neutral-900 border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-300 hover:border-neutral-700"
                 }`}
               >
                 <svg
@@ -95,7 +95,7 @@ export function MemberDirectory({ initialSearch = "" }: MemberDirectoryProps) {
                 </svg>
                 Filters
                 {activeFilterCount > 0 && (
-                  <span className="bg-emerald-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                  <span className="bg-emerald-500 text-black dark:text-white text-xs px-1.5 py-0.5 rounded-full">
                     {activeFilterCount}
                   </span>
                 )}
@@ -105,7 +105,7 @@ export function MemberDirectory({ initialSearch = "" }: MemberDirectoryProps) {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="px-4 py-3 bg-neutral-900 border border-neutral-800 rounded-lg text-neutral-300 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent cursor-pointer"
+                className="px-4 py-3 bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg text-neutral-600 dark:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent cursor-pointer"
               >
                 <option value="newest">Newest Members</option>
                 <option value="oldest">Oldest Members</option>
@@ -118,7 +118,7 @@ export function MemberDirectory({ initialSearch = "" }: MemberDirectoryProps) {
 
             {/* Filter Checkboxes */}
             {showFilters && (
-              <div className="p-4 bg-neutral-900 border border-neutral-800 rounded-lg space-y-4">
+              <div className="p-4 bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg space-y-4">
                 {/* Member Type Filter */}
                 <div>
                   <div className="flex items-center justify-between mb-3">
@@ -128,7 +128,7 @@ export function MemberDirectory({ initialSearch = "" }: MemberDirectoryProps) {
                     {activeFilterCount > 0 && (
                       <button
                         onClick={handleClearFilters}
-                        className="text-xs text-neutral-400 hover:text-white transition-colors"
+                        className="text-xs text-neutral-500 dark:text-neutral-400 hover:text-white transition-colors"
                       >
                         Clear all
                       </button>
@@ -140,7 +140,7 @@ export function MemberDirectory({ initialSearch = "" }: MemberDirectoryProps) {
                       className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg transition-colors border min-h-[44px] ${
                         filters.memberType === "all"
                           ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-400"
-                          : "bg-neutral-800 border-neutral-700 text-neutral-400 hover:border-neutral-600"
+                          : "bg-neutral-800 border-neutral-300 dark:border-neutral-700 text-neutral-500 dark:text-neutral-400 hover:border-neutral-600"
                       }`}
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -156,7 +156,7 @@ export function MemberDirectory({ initialSearch = "" }: MemberDirectoryProps) {
                       className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg transition-colors border min-h-[44px] ${
                         filters.memberType === "human"
                           ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-400"
-                          : "bg-neutral-800 border-neutral-700 text-neutral-400 hover:border-neutral-600"
+                          : "bg-neutral-800 border-neutral-300 dark:border-neutral-700 text-neutral-500 dark:text-neutral-400 hover:border-neutral-600"
                       }`}
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -170,7 +170,7 @@ export function MemberDirectory({ initialSearch = "" }: MemberDirectoryProps) {
                       className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg transition-colors border min-h-[44px] ${
                         filters.memberType === "agent"
                           ? "bg-purple-500/10 border-purple-500/50 text-purple-400"
-                          : "bg-neutral-800 border-neutral-700 text-neutral-400 hover:border-neutral-600"
+                          : "bg-neutral-800 border-neutral-300 dark:border-neutral-700 text-neutral-500 dark:text-neutral-400 hover:border-neutral-600"
                       }`}
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -187,7 +187,7 @@ export function MemberDirectory({ initialSearch = "" }: MemberDirectoryProps) {
 
                 {/* Connected Accounts Filter */}
                 <div>
-                  <span className="text-sm font-medium text-neutral-300 block mb-3">
+                  <span className="text-sm font-medium text-neutral-600 dark:text-neutral-300 block mb-3">
                     Filter by connected accounts
                   </span>
                   <div className="flex flex-wrap gap-3">
@@ -288,11 +288,11 @@ export function MemberDirectory({ initialSearch = "" }: MemberDirectoryProps) {
             <p className="text-neutral-400 text-lg mb-4">
               No public profiles yet.
             </p>
-            <p className="text-neutral-500">
+            <p className="text-neutral-500 dark:text-neutral-400">
               Be the first to{" "}
               <Link
                 href="/profile"
-                className="text-emerald-400 hover:text-emerald-300 underline"
+                className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 underline"
               >
                 make your profile public
               </Link>
@@ -306,7 +306,7 @@ export function MemberDirectory({ initialSearch = "" }: MemberDirectoryProps) {
             </p>
             <button
               onClick={handleClearFilters}
-              className="text-emerald-400 hover:text-emerald-300 underline"
+              className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 underline"
             >
               Clear filters
             </button>

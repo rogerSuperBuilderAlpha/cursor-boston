@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import WelcomeModal from "@/components/WelcomeModal";
 import LumaCheckoutTracker from "@/components/LumaCheckoutTracker";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 
 export const metadata: Metadata = {
   title: {
@@ -84,8 +85,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("theme")||"dark";document.documentElement.classList.toggle("dark",t==="dark");}catch(e){document.documentElement.classList.toggle("dark",true);}})();`,
+          }}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -100,13 +106,14 @@ export default function RootLayout({
         />
         <script id="luma-checkout" src="https://embed.lu.ma/checkout-button.js" async></script>
       </head>
-      <body className="antialiased bg-black text-white min-h-screen flex flex-col">
+      <body className="antialiased bg-white dark:bg-black text-black dark:text-white min-h-screen flex flex-col">
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-white focus:text-black focus:rounded-lg focus:font-semibold"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-black focus:text-white dark:focus:bg-white dark:focus:text-black focus:rounded-lg focus:font-semibold"
         >
           Skip to main content
         </a>
+        <ThemeProvider>
         <AuthProvider>
           <Navigation />
           <main id="main-content" className="flex-1" tabIndex={-1}>{children}</main>
@@ -114,6 +121,7 @@ export default function RootLayout({
           <WelcomeModal />
           <LumaCheckoutTracker />
         </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

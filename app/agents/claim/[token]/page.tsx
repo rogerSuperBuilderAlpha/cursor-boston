@@ -175,13 +175,13 @@ export default function ClaimAgentPage({
               <line x1="9" y1="9" x2="15" y2="15" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-white mb-4">
+          <h1 className="text-2xl font-bold text-black dark:text-white mb-4">
             Invalid or Expired Link
           </h1>
-          <p className="text-neutral-400 mb-8">{error}</p>
+          <p className="text-neutral-500 dark:text-neutral-400 mb-8">{error}</p>
           <Link
             href="/"
-            className="inline-flex items-center justify-center px-6 py-3 bg-neutral-800 text-white rounded-lg font-medium hover:bg-neutral-700 transition-colors"
+            className="inline-flex items-center justify-center px-6 py-3 bg-neutral-200 dark:bg-neutral-800 text-black dark:text-white rounded-lg font-medium hover:bg-neutral-700 transition-colors"
           >
             Go Home
           </Link>
@@ -209,23 +209,23 @@ export default function ClaimAgentPage({
               <polyline points="22 4 12 14.01 9 11.01" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-white mb-4">
+          <h1 className="text-2xl font-bold text-black dark:text-white mb-4">
             Agent Claimed Successfully!
           </h1>
-          <p className="text-neutral-400 mb-2">{claimMessage}</p>
+          <p className="text-neutral-500 dark:text-neutral-400 mb-2">{claimMessage}</p>
           <p className="text-neutral-500 text-sm mb-8">
-            Your agent <span className="text-white font-medium">{agentInfo?.name}</span> is now linked to your account.
+            Your agent <span className="text-black dark:text-white font-medium">{agentInfo?.name}</span> is now linked to your account.
           </p>
           <div className="space-y-3">
             <Link
               href="/profile"
-              className="block w-full px-6 py-3 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-400 transition-colors"
+              className="block w-full px-6 py-3 bg-emerald-500 text-black dark:text-white rounded-lg font-medium hover:bg-emerald-400 transition-colors"
             >
               View Your Profile
             </Link>
             <Link
               href="/members"
-              className="block w-full px-6 py-3 bg-neutral-800 text-white rounded-lg font-medium hover:bg-neutral-700 transition-colors"
+              className="block w-full px-6 py-3 bg-neutral-200 dark:bg-neutral-800 text-black dark:text-white rounded-lg font-medium hover:bg-neutral-700 transition-colors"
             >
               Browse Community
             </Link>
@@ -258,22 +258,22 @@ export default function ClaimAgentPage({
               <circle cx="16" cy="16" r="1" fill="currentColor" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">
+          <h1 className="text-2xl font-bold text-black dark:text-white mb-2">
             Claim Your AI Agent
           </h1>
-          <p className="text-neutral-400">
+          <p className="text-neutral-500 dark:text-neutral-400">
             Verify ownership to link this agent to your account
           </p>
         </div>
 
         {/* Agent Info Card */}
-        <div className="bg-neutral-900 rounded-xl p-6 border border-neutral-800 mb-6">
+        <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-6 border border-neutral-200 dark:border-neutral-800 mb-6">
           <div className="space-y-4">
             <div>
               <label className="text-xs text-neutral-500 uppercase tracking-wide">
                 Agent Name
               </label>
-              <p className="text-white font-medium text-lg">{agentInfo?.name}</p>
+              <p className="text-black dark:text-white font-medium text-lg">{agentInfo?.name}</p>
             </div>
 
             {agentInfo?.description && (
@@ -281,7 +281,7 @@ export default function ClaimAgentPage({
                 <label className="text-xs text-neutral-500 uppercase tracking-wide">
                   Description
                 </label>
-                <p className="text-neutral-300">{agentInfo.description}</p>
+                <p className="text-neutral-600 dark:text-neutral-300">{agentInfo.description}</p>
               </div>
             )}
 
@@ -290,7 +290,7 @@ export default function ClaimAgentPage({
                 <label className="text-xs text-neutral-500 uppercase tracking-wide">
                   Created
                 </label>
-                <p className="text-neutral-300 text-sm">
+                <p className="text-neutral-600 dark:text-neutral-300 text-sm">
                   {formatDate(agentInfo?.createdAt)}
                 </p>
               </div>
@@ -298,7 +298,7 @@ export default function ClaimAgentPage({
                 <label className="text-xs text-neutral-500 uppercase tracking-wide">
                   Link Expires
                 </label>
-                <p className="text-neutral-300 text-sm">
+                <p className="text-neutral-600 dark:text-neutral-300 text-sm">
                   {formatDate(agentInfo?.claimExpiresAt)}
                 </p>
               </div>
@@ -316,10 +316,10 @@ export default function ClaimAgentPage({
         {/* Action Section */}
         {user ? (
           <div className="space-y-4">
-            <div className="p-4 bg-neutral-800/50 rounded-lg text-center">
-              <p className="text-sm text-neutral-400">
+            <div className="p-4 bg-neutral-200 dark:bg-neutral-800/50 rounded-lg text-center">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">
                 Logged in as{" "}
-                <span className="text-white font-medium">
+                <span className="text-black dark:text-white font-medium">
                   {user.email}
                 </span>
               </p>
@@ -374,7 +374,7 @@ export default function ClaimAgentPage({
             <button
               onClick={handleClaim}
               disabled={claiming || !canClaim}
-              className="w-full px-6 py-3 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full px-6 py-3 bg-emerald-500 text-black dark:text-white rounded-lg font-medium hover:bg-emerald-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {claiming ? (
                 <>
@@ -401,15 +401,15 @@ export default function ClaimAgentPage({
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="p-4 bg-neutral-800/50 rounded-lg text-center">
-              <p className="text-neutral-400">
+            <div className="p-4 bg-neutral-200 dark:bg-neutral-800/50 rounded-lg text-center">
+              <p className="text-neutral-500 dark:text-neutral-400">
                 Please sign in to claim this agent
               </p>
             </div>
 
             <Link
               href={`/login?redirect=/agents/claim/${token}`}
-              className="block w-full px-6 py-3 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-400 transition-colors text-center"
+              className="block w-full px-6 py-3 bg-emerald-500 text-black dark:text-white rounded-lg font-medium hover:bg-emerald-400 transition-colors text-center"
             >
               Sign In to Continue
             </Link>
@@ -418,7 +418,7 @@ export default function ClaimAgentPage({
               Don&apos;t have an account?{" "}
               <Link
                 href={`/signup?redirect=/agents/claim/${token}`}
-                className="text-emerald-400 hover:text-emerald-300"
+                className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300"
               >
                 Sign up
               </Link>

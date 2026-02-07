@@ -129,8 +129,8 @@ export default function SubmitTalkPage() {
   if (!user) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-6">
-        <div className="bg-neutral-900 rounded-2xl p-8 max-w-md w-full text-center border border-neutral-800">
-          <div className="w-16 h-16 bg-neutral-800 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-8 max-w-md w-full text-center border border-neutral-200 dark:border-neutral-800">
+          <div className="w-16 h-16 bg-neutral-200 dark:bg-neutral-800 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="32"
@@ -147,8 +147,8 @@ export default function SubmitTalkPage() {
               <circle cx="12" cy="7" r="4" />
             </svg>
           </div>
-          <h2 className="text-xl font-semibold text-white mb-2">Sign In Required</h2>
-          <p className="text-neutral-400 mb-6">
+          <h2 className="text-xl font-semibold text-black dark:text-white mb-2">Sign In Required</h2>
+          <p className="text-neutral-500 dark:text-neutral-400 mb-6">
             Please sign in to submit a talk proposal. This helps us keep track of submissions
             and follow up with you.
           </p>
@@ -166,7 +166,7 @@ export default function SubmitTalkPage() {
   if (isSubmitted) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-6">
-        <div className="bg-neutral-900 rounded-2xl p-8 max-w-md w-full text-center border border-neutral-800">
+        <div className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-8 max-w-md w-full text-center border border-neutral-200 dark:border-neutral-800">
           <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -184,15 +184,15 @@ export default function SubmitTalkPage() {
               <polyline points="22 4 12 14.01 9 11.01" />
             </svg>
           </div>
-          <h2 className="text-xl font-semibold text-white mb-2">Talk Submitted!</h2>
-          <p className="text-neutral-400 mb-6">
+          <h2 className="text-xl font-semibold text-black dark:text-white mb-2">Talk Submitted!</h2>
+          <p className="text-neutral-500 dark:text-neutral-400 mb-6">
             Thanks for your submission! We&apos;ll review your proposal and get back to you
-            at <span className="text-white">{formData.email}</span> soon.
+            at <span className="text-black dark:text-white">{formData.email}</span> soon.
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
             <Link
               href="/talks"
-              className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-neutral-800 text-white rounded-lg text-sm font-semibold hover:bg-neutral-700 transition-colors"
+              className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-neutral-200 dark:bg-neutral-800 text-black dark:text-white rounded-lg text-sm font-semibold hover:bg-neutral-700 transition-colors"
             >
               Back to Talks
             </Link>
@@ -226,12 +226,12 @@ export default function SubmitTalkPage() {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="py-12 md:py-24 px-4 md:px-6 border-b border-neutral-800">
+      <section className="py-12 md:py-24 px-4 md:px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 md:mb-6">
+          <h1 className="text-3xl md:text-5xl font-bold text-black dark:text-white mb-4 md:mb-6">
             Submit a Talk
           </h1>
-          <p className="text-lg md:text-xl text-neutral-400 max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl text-neutral-500 dark:text-neutral-400 max-w-2xl mx-auto">
             Share your knowledge with the Cursor Boston community. All experience levels
             and backgrounds are welcome!
           </p>
@@ -243,11 +243,11 @@ export default function SubmitTalkPage() {
         <div className="max-w-2xl mx-auto">
           <form onSubmit={handleSubmit} className="space-y-6 md:space-y-8">
             {/* Your Info */}
-            <div className="bg-neutral-900 rounded-xl md:rounded-2xl p-4 md:p-6 border border-neutral-800">
-              <h2 className="text-lg font-semibold text-white mb-4">Your Information</h2>
+            <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl md:rounded-2xl p-4 md:p-6 border border-neutral-200 dark:border-neutral-800">
+              <h2 className="text-lg font-semibold text-black dark:text-white mb-4">Your Information</h2>
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-neutral-300 mb-2">
+                  <label htmlFor="name" className="block text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-2">
                     Full Name *
                   </label>
                   <input
@@ -257,12 +257,12 @@ export default function SubmitTalkPage() {
                     value={formData.name}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
                     placeholder="Jane Doe"
                   />
                 </div>
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-neutral-300 mb-2">
+                  <label htmlFor="email" className="block text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-2">
                     Email Address *
                   </label>
                   <input
@@ -272,13 +272,13 @@ export default function SubmitTalkPage() {
                     value={formData.email}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
                     placeholder="jane@example.com"
                   />
                 </div>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="linkedIn" className="block text-sm font-medium text-neutral-300 mb-2">
+                    <label htmlFor="linkedIn" className="block text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-2">
                       LinkedIn (optional)
                     </label>
                     <input
@@ -287,12 +287,12 @@ export default function SubmitTalkPage() {
                       name="linkedIn"
                       value={formData.linkedIn}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                      className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
                       placeholder="https://linkedin.com/in/..."
                     />
                   </div>
                   <div>
-                    <label htmlFor="twitter" className="block text-sm font-medium text-neutral-300 mb-2">
+                    <label htmlFor="twitter" className="block text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-2">
                       Twitter/X (optional)
                     </label>
                     <input
@@ -301,7 +301,7 @@ export default function SubmitTalkPage() {
                       name="twitter"
                       value={formData.twitter}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                      className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
                       placeholder="@username"
                     />
                   </div>
@@ -310,11 +310,11 @@ export default function SubmitTalkPage() {
             </div>
 
             {/* Talk Details */}
-            <div className="bg-neutral-900 rounded-xl md:rounded-2xl p-4 md:p-6 border border-neutral-800">
-              <h2 className="text-lg font-semibold text-white mb-4">Talk Details</h2>
+            <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl md:rounded-2xl p-4 md:p-6 border border-neutral-200 dark:border-neutral-800">
+              <h2 className="text-lg font-semibold text-black dark:text-white mb-4">Talk Details</h2>
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="title" className="block text-sm font-medium text-neutral-300 mb-2">
+                  <label htmlFor="title" className="block text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-2">
                     Talk Title *
                   </label>
                   <input
@@ -324,12 +324,12 @@ export default function SubmitTalkPage() {
                     value={formData.title}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-base placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white text-base placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
                     placeholder="How I Built X with Cursor"
                   />
                 </div>
                 <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-neutral-300 mb-2">
+                  <label htmlFor="description" className="block text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-2">
                     Description *
                   </label>
                   <textarea
@@ -339,13 +339,13 @@ export default function SubmitTalkPage() {
                     onChange={handleChange}
                     required
                     rows={4}
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-base placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent resize-none"
+                    className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white text-base placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent resize-none"
                     placeholder="What will you cover? What will attendees learn?"
                   />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div>
-                    <label htmlFor="category" className="block text-sm font-medium text-neutral-300 mb-2">
+                    <label htmlFor="category" className="block text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-2">
                       Category *
                     </label>
                     <select
@@ -354,7 +354,7 @@ export default function SubmitTalkPage() {
                       value={formData.category}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                      className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
                     >
                       <option value="">Select...</option>
                       {categories.map((cat) => (
@@ -365,7 +365,7 @@ export default function SubmitTalkPage() {
                     </select>
                   </div>
                   <div>
-                    <label htmlFor="duration" className="block text-sm font-medium text-neutral-300 mb-2">
+                    <label htmlFor="duration" className="block text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-2">
                       Duration *
                     </label>
                     <select
@@ -374,7 +374,7 @@ export default function SubmitTalkPage() {
                       value={formData.duration}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                      className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
                     >
                       <option value="">Select...</option>
                       {durations.map((dur) => (
@@ -385,7 +385,7 @@ export default function SubmitTalkPage() {
                     </select>
                   </div>
                   <div>
-                    <label htmlFor="experience" className="block text-sm font-medium text-neutral-300 mb-2">
+                    <label htmlFor="experience" className="block text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-2">
                       Audience Level *
                     </label>
                     <select
@@ -394,7 +394,7 @@ export default function SubmitTalkPage() {
                       value={formData.experience}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                      className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
                     >
                       <option value="">Select...</option>
                       {experienceLevels.map((exp) => (
@@ -409,11 +409,11 @@ export default function SubmitTalkPage() {
             </div>
 
             {/* About You */}
-            <div className="bg-neutral-900 rounded-xl md:rounded-2xl p-4 md:p-6 border border-neutral-800">
-              <h2 className="text-lg font-semibold text-white mb-4">About You (Optional)</h2>
+            <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl md:rounded-2xl p-4 md:p-6 border border-neutral-200 dark:border-neutral-800">
+              <h2 className="text-lg font-semibold text-black dark:text-white mb-4">About You (Optional)</h2>
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="bio" className="block text-sm font-medium text-neutral-300 mb-2">
+                  <label htmlFor="bio" className="block text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-2">
                     Short Bio
                   </label>
                   <textarea
@@ -422,12 +422,12 @@ export default function SubmitTalkPage() {
                     value={formData.bio}
                     onChange={handleChange}
                     rows={3}
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent resize-none"
+                    className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent resize-none"
                     placeholder="Tell us a bit about yourself..."
                   />
                 </div>
                 <div>
-                  <label htmlFor="previousTalks" className="block text-sm font-medium text-neutral-300 mb-2">
+                  <label htmlFor="previousTalks" className="block text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-2">
                     Previous Speaking Experience
                   </label>
                   <textarea
@@ -436,7 +436,7 @@ export default function SubmitTalkPage() {
                     value={formData.previousTalks}
                     onChange={handleChange}
                     rows={2}
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent resize-none"
+                    className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent resize-none"
                     placeholder="Any previous talks or presentations (optional, first-time speakers welcome!)"
                   />
                 </div>

@@ -68,13 +68,13 @@ export default function WelcomeModal() {
       {/* Modal */}
       <div
         ref={modalRef}
-        className="relative bg-neutral-900 border border-neutral-800 rounded-2xl p-6 md:p-8 max-w-md w-full shadow-2xl"
+        className="relative bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-6 md:p-8 max-w-md w-full shadow-2xl"
       >
         {/* Close button */}
         <button
           ref={closeButtonRef}
           onClick={handleClose}
-          className="absolute top-4 right-4 text-neutral-400 hover:text-white transition-colors p-1 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          className="absolute top-4 right-4 text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white transition-colors p-1 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
           aria-label="Close welcome message"
         >
           <svg
@@ -106,7 +106,7 @@ export default function WelcomeModal() {
               strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="text-emerald-400"
+              className="text-emerald-600 dark:text-emerald-400"
               aria-hidden="true"
             >
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
@@ -116,11 +116,11 @@ export default function WelcomeModal() {
 
           <h2
             id="welcome-title"
-            className="text-2xl font-bold text-white mb-2"
+            className="text-2xl font-bold text-black dark:text-white mb-2"
           >
             Welcome to Cursor Boston!
           </h2>
-          <p className="text-neutral-400 mb-6">
+          <p className="text-neutral-500 dark:text-neutral-400 mb-6">
             Join our community of developers, founders, and students exploring AI-powered development.
           </p>
 
@@ -162,7 +162,7 @@ export default function WelcomeModal() {
             <Link
               href="/events"
               onClick={handleClose}
-              className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-neutral-800 text-white rounded-lg font-semibold hover:bg-neutral-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900"
+              className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 text-black dark:text-white rounded-lg font-semibold hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-neutral-900"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -213,7 +213,7 @@ export default function WelcomeModal() {
 
           <button
             onClick={handleClose}
-            className="mt-6 text-neutral-500 hover:text-neutral-300 text-sm transition-colors focus-visible:outline-none focus-visible:text-white focus-visible:underline"
+            className="mt-6 text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300 text-sm transition-colors focus-visible:outline-none focus-visible:text-black dark:focus-visible:text-white focus-visible:underline"
           >
             Maybe later
           </button>

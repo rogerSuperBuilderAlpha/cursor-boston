@@ -36,7 +36,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint . --max-warnings 0",
     "type-check": "tsc --noEmit",
     "test": "jest --config config/jest.config.js",
     "test:watch": "jest --watch --config config/jest.config.js",
@@ -79,11 +79,11 @@
   },
   "lint-staged": {
     "**/*.{ts,tsx}": [
-      "npm run type-check -- --noEmit",
-      "npm run lint -- --fix"
+      "npm run type-check",
+      "npm run lint"
     ],
     "**/*.{js,jsx,ts,tsx}": [
-      "npm run lint -- --fix"
+      "npm run lint"
     ]
   }
 }

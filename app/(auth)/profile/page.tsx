@@ -843,7 +843,7 @@ function ProfilePageContent() {
     <div className="min-h-[80vh] px-6 py-8 md:py-12">
       <div className="max-w-4xl mx-auto">
         {/* Header Section */}
-        <div className="bg-neutral-900 rounded-2xl p-6 md:p-8 border border-neutral-800 mb-6">
+        <div className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-6 md:p-8 border border-neutral-200 dark:border-neutral-800 mb-6">
           <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
             {/* Avatar - Clickable to edit */}
             <button
@@ -858,7 +858,7 @@ function ProfilePageContent() {
                 size="xl"
               />
               {/* Edit overlay */}
-              <div className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute inset-0 bg-white dark:bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -869,7 +869,7 @@ function ProfilePageContent() {
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="text-white"
+                  className="text-black dark:text-white"
                   aria-hidden="true"
                 >
                   <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
@@ -881,7 +881,7 @@ function ProfilePageContent() {
             {/* User Info */}
             <div className="flex-1 text-center md:text-left">
               <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 mb-1">
-                <h1 className="text-2xl md:text-3xl font-bold text-white">
+                <h1 className="text-2xl md:text-3xl font-bold text-black dark:text-white">
                   {user.displayName || "Community Member"}
                 </h1>
                 {/* Public Profile Toggle */}
@@ -933,14 +933,14 @@ function ProfilePageContent() {
                   )}
                 </button>
               </div>
-              <p className="text-neutral-400 mb-3">{user.email}</p>
+              <p className="text-neutral-500 dark:text-neutral-400 mb-3">{user.email}</p>
 
               <div className="flex flex-wrap gap-2 justify-center md:justify-start">
                 <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-sm rounded-full">
                   Community Member
                 </span>
                 {userProfile?.provider && (
-                  <span className="px-3 py-1 bg-neutral-800 text-neutral-300 text-sm rounded-full capitalize">
+                  <span className="px-3 py-1 bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 text-sm rounded-full capitalize">
                     {userProfile.provider} Account
                   </span>
                 )}
@@ -960,7 +960,7 @@ function ProfilePageContent() {
                   <button
                     onClick={connectDiscord}
                     disabled={discordConnecting}
-                    className="px-3 py-1 bg-[#5865F2] text-white text-sm rounded-full inline-flex items-center gap-1 hover:bg-[#4752C4] transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5865F2]"
+                    className="px-3 py-1 bg-[#5865F2] text-black dark:text-white text-sm rounded-full inline-flex items-center gap-1 hover:bg-[#4752C4] transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5865F2]"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                       <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
@@ -972,7 +972,7 @@ function ProfilePageContent() {
                   <button
                     onClick={disconnectGithub}
                     disabled={githubDisconnecting}
-                    className="px-3 py-1 bg-neutral-800/50 text-white text-sm rounded-full inline-flex items-center gap-1 hover:bg-neutral-700 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white group"
+                    className="px-3 py-1 bg-neutral-200 dark:bg-neutral-800/50 text-black dark:text-white text-sm rounded-full inline-flex items-center gap-1 hover:bg-neutral-700 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white group"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                       <path
@@ -988,7 +988,7 @@ function ProfilePageContent() {
                   <button
                     onClick={connectGithub}
                     disabled={githubConnecting}
-                    className="px-3 py-1 bg-neutral-800 text-white text-sm rounded-full inline-flex items-center gap-1 hover:bg-neutral-700 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                    className="px-3 py-1 bg-neutral-200 dark:bg-neutral-800 text-black dark:text-white text-sm rounded-full inline-flex items-center gap-1 hover:bg-neutral-700 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                       <path
@@ -1018,11 +1018,11 @@ function ProfilePageContent() {
                 <p className="text-red-400 text-xs mt-2">{githubError}</p>
               )}
               {hasGithubConnection && (
-                <div className="mt-4 p-4 bg-neutral-800/60 rounded-xl border border-neutral-700">
-                  <h2 className="text-sm font-semibold text-white mb-2">
+                <div className="mt-4 p-4 bg-neutral-200 dark:bg-neutral-800/60 rounded-xl border border-neutral-300 dark:border-neutral-700">
+                  <h2 className="text-sm font-semibold text-black dark:text-white mb-2">
                     Contribute to the Open Source
                   </h2>
-                  <ol className="list-decimal list-inside space-y-1 text-neutral-300 text-sm">
+                  <ol className="list-decimal list-inside space-y-1 text-neutral-600 dark:text-neutral-300 text-sm">
                     <li>Pick an issue labeled “good first issue”.</li>
                     <li>Fork the repo, make your change, and open a PR.</li>
                     <li>Add a short test plan to your PR.</li>
@@ -1032,7 +1032,7 @@ function ProfilePageContent() {
                       href="https://github.com/rogerSuperBuilderAlpha/cursor-boston"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-3 py-2 bg-neutral-700 text-white rounded-lg text-xs font-medium hover:bg-neutral-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                      className="px-3 py-2 bg-neutral-700 text-black dark:text-white rounded-lg text-xs font-medium hover:bg-neutral-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                     >
                       Visit GitHub Repo
                     </Link>
@@ -1040,7 +1040,7 @@ function ProfilePageContent() {
                       href="https://github.com/rogerSuperBuilderAlpha/cursor-boston/blob/master/docs/CONTRIBUTING.md"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-3 py-2 bg-emerald-500 text-white rounded-lg text-xs font-medium hover:bg-emerald-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                      className="px-3 py-2 bg-emerald-500 text-black dark:text-white rounded-lg text-xs font-medium hover:bg-emerald-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
                     >
                       Contributing Guide
                     </Link>
@@ -1066,14 +1066,14 @@ function ProfilePageContent() {
             <div className="shrink-0 flex flex-col gap-2">
               <button
                 onClick={openEditModal}
-                className="px-4 py-2 bg-emerald-500 text-white rounded-lg text-sm font-medium hover:bg-emerald-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900"
+                className="px-4 py-2 bg-emerald-500 text-black dark:text-white rounded-lg text-sm font-medium hover:bg-emerald-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900"
               >
                 Edit Profile
               </button>
               <button
                 onClick={handleSignOut}
                 disabled={isSigningOut}
-                className="px-4 py-2 bg-neutral-800 text-white rounded-lg text-sm font-medium hover:bg-neutral-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900"
+                className="px-4 py-2 bg-neutral-200 dark:bg-neutral-800 text-black dark:text-white rounded-lg text-sm font-medium hover:bg-neutral-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900"
               >
                 {isSigningOut ? "Signing out..." : "Sign Out"}
               </button>
@@ -1089,40 +1089,40 @@ function ProfilePageContent() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-          <div className="bg-neutral-900 rounded-xl p-4 border border-neutral-800 text-center">
-            <p className="text-3xl font-bold text-white">
+          <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 border border-neutral-200 dark:border-neutral-800 text-center">
+            <p className="text-3xl font-bold text-black dark:text-white">
               {loadingData ? "-" : stats?.eventsRegistered || 0}
             </p>
-            <p className="text-neutral-400 text-sm">Events Registered</p>
+            <p className="text-neutral-500 dark:text-neutral-400 text-sm">Events Registered</p>
           </div>
-          <div className="bg-neutral-900 rounded-xl p-4 border border-neutral-800 text-center">
-            <p className="text-3xl font-bold text-white">
+          <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 border border-neutral-200 dark:border-neutral-800 text-center">
+            <p className="text-3xl font-bold text-black dark:text-white">
               {loadingData ? "-" : stats?.eventsAttended || 0}
             </p>
-            <p className="text-neutral-400 text-sm">Events Attended</p>
+            <p className="text-neutral-500 dark:text-neutral-400 text-sm">Events Attended</p>
           </div>
-          <div className="bg-neutral-900 rounded-xl p-4 border border-neutral-800 text-center">
-            <p className="text-3xl font-bold text-white">
+          <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 border border-neutral-200 dark:border-neutral-800 text-center">
+            <p className="text-3xl font-bold text-black dark:text-white">
               {loadingData ? "-" : stats?.talksSubmitted || 0}
             </p>
-            <p className="text-neutral-400 text-sm">Talks Submitted</p>
+            <p className="text-neutral-500 dark:text-neutral-400 text-sm">Talks Submitted</p>
           </div>
-          <div className="bg-neutral-900 rounded-xl p-4 border border-neutral-800 text-center">
-            <p className="text-3xl font-bold text-white">
+          <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 border border-neutral-200 dark:border-neutral-800 text-center">
+            <p className="text-3xl font-bold text-black dark:text-white">
               {loadingData ? "-" : stats?.talksGiven || 0}
             </p>
-            <p className="text-neutral-400 text-sm">Talks Given</p>
+            <p className="text-neutral-500 dark:text-neutral-400 text-sm">Talks Given</p>
           </div>
-          <div className="bg-neutral-900 rounded-xl p-4 border border-neutral-800 text-center">
-            <p className="text-3xl font-bold text-white">
+          <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 border border-neutral-200 dark:border-neutral-800 text-center">
+            <p className="text-3xl font-bold text-black dark:text-white">
               {loadingData ? "-" : stats?.pullRequestsCount || 0}
             </p>
-            <p className="text-neutral-400 text-sm">Pull Requests</p>
+            <p className="text-neutral-500 dark:text-neutral-400 text-sm">Pull Requests</p>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="border-b border-neutral-800 mb-6">
+        <div className="border-b border-neutral-200 dark:border-neutral-800 mb-6">
           <nav className="flex gap-6 overflow-x-auto" aria-label="Profile sections">
             <button
               onClick={() => setActiveTab("overview")}
@@ -1181,14 +1181,14 @@ function ProfilePageContent() {
         {activeTab === "overview" && (
           <div className="space-y-6">
             {/* Quick Actions */}
-            <div className="bg-neutral-900 rounded-2xl p-6 border border-neutral-800">
-              <h2 className="text-lg font-semibold text-white mb-4">
+            <div className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-6 border border-neutral-200 dark:border-neutral-800">
+              <h2 className="text-lg font-semibold text-black dark:text-white mb-4">
                 Quick Actions
               </h2>
               <div className="grid sm:grid-cols-2 gap-4">
                 <Link
                   href="/events"
-                  className="flex items-center gap-3 p-4 bg-neutral-800 rounded-xl hover:bg-neutral-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                  className="flex items-center gap-3 p-4 bg-neutral-200 dark:bg-neutral-800 rounded-xl hover:bg-neutral-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                 >
                   <div className="w-10 h-10 bg-emerald-500/10 rounded-lg flex items-center justify-center">
                     <svg
@@ -1218,8 +1218,8 @@ function ProfilePageContent() {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-white font-medium">Browse Events</p>
-                    <p className="text-neutral-400 text-sm">
+                    <p className="text-black dark:text-white font-medium">Browse Events</p>
+                    <p className="text-neutral-500 dark:text-neutral-400 text-sm">
                       Find upcoming meetups & workshops
                     </p>
                   </div>
@@ -1227,7 +1227,7 @@ function ProfilePageContent() {
 
                 <Link
                   href="/talks/submit"
-                  className="flex items-center gap-3 p-4 bg-neutral-800 rounded-xl hover:bg-neutral-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                  className="flex items-center gap-3 p-4 bg-neutral-200 dark:bg-neutral-800 rounded-xl hover:bg-neutral-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                 >
                   <div className="w-10 h-10 bg-emerald-500/10 rounded-lg flex items-center justify-center">
                     <svg
@@ -1249,8 +1249,8 @@ function ProfilePageContent() {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-white font-medium">Submit a Talk</p>
-                    <p className="text-neutral-400 text-sm">
+                    <p className="text-black dark:text-white font-medium">Submit a Talk</p>
+                    <p className="text-neutral-500 dark:text-neutral-400 text-sm">
                       Share your knowledge with the community
                     </p>
                   </div>
@@ -1260,7 +1260,7 @@ function ProfilePageContent() {
                   href="https://discord.gg/Wsncg8YYqc"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-4 bg-neutral-800 rounded-xl hover:bg-neutral-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                  className="flex items-center gap-3 p-4 bg-neutral-200 dark:bg-neutral-800 rounded-xl hover:bg-neutral-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                 >
                   <div className="w-10 h-10 bg-[#5865F2]/10 rounded-lg flex items-center justify-center">
                     <svg
@@ -1275,8 +1275,8 @@ function ProfilePageContent() {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-white font-medium">Join Discord</p>
-                    <p className="text-neutral-400 text-sm">
+                    <p className="text-black dark:text-white font-medium">Join Discord</p>
+                    <p className="text-neutral-500 dark:text-neutral-400 text-sm">
                       Connect with the community
                     </p>
                   </div>
@@ -1284,7 +1284,7 @@ function ProfilePageContent() {
 
                 <Link
                   href="/events/request"
-                  className="flex items-center gap-3 p-4 bg-neutral-800 rounded-xl hover:bg-neutral-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                  className="flex items-center gap-3 p-4 bg-neutral-200 dark:bg-neutral-800 rounded-xl hover:bg-neutral-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                 >
                   <div className="w-10 h-10 bg-emerald-500/10 rounded-lg flex items-center justify-center">
                     <svg
@@ -1304,8 +1304,8 @@ function ProfilePageContent() {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-white font-medium">Request an Event</p>
-                    <p className="text-neutral-400 text-sm">
+                    <p className="text-black dark:text-white font-medium">Request an Event</p>
+                    <p className="text-neutral-500 dark:text-neutral-400 text-sm">
                       Suggest a workshop or meetup
                     </p>
                   </div>
@@ -1315,9 +1315,9 @@ function ProfilePageContent() {
 
             {/* Your AI Agents */}
             {(connectedAgents.length > 0 || loadingAgents) && (
-              <div className="bg-neutral-900 rounded-2xl p-6 border border-neutral-800">
+              <div className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-6 border border-neutral-200 dark:border-neutral-800">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                  <h2 className="text-lg font-semibold text-black dark:text-white flex items-center gap-2">
                     <svg
                       width="20"
                       height="20"
@@ -1346,7 +1346,7 @@ function ProfilePageContent() {
                     {connectedAgents.map((agent) => (
                       <div
                         key={agent.id}
-                        className="flex items-center gap-4 p-4 bg-neutral-800/50 rounded-xl"
+                        className="flex items-center gap-4 p-4 bg-neutral-200 dark:bg-neutral-800/50 rounded-xl"
                       >
                         <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0">
                           {agent.avatarUrl ? (
@@ -1374,9 +1374,9 @@ function ProfilePageContent() {
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-white font-medium">{agent.name}</p>
+                          <p className="text-black dark:text-white font-medium">{agent.name}</p>
                           {agent.description && (
-                            <p className="text-neutral-400 text-sm truncate">
+                            <p className="text-neutral-500 dark:text-neutral-400 text-sm truncate">
                               {agent.description}
                             </p>
                           )}
@@ -1394,8 +1394,8 @@ function ProfilePageContent() {
             )}
 
             {/* Recent Activity */}
-            <div className="bg-neutral-900 rounded-2xl p-6 border border-neutral-800">
-              <h2 className="text-lg font-semibold text-white mb-4">
+            <div className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-6 border border-neutral-200 dark:border-neutral-800">
+              <h2 className="text-lg font-semibold text-black dark:text-white mb-4">
                 Recent Activity
               </h2>
               {loadingData ? (
@@ -1404,7 +1404,7 @@ function ProfilePageContent() {
                 </div>
               ) : registrations.length === 0 && talkSubmissions.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-neutral-400 mb-4">No activity yet</p>
+                  <p className="text-neutral-500 dark:text-neutral-400 mb-4">No activity yet</p>
                   <Link
                     href="/events"
                     className="text-emerald-400 hover:text-emerald-300 font-medium focus-visible:outline-none focus-visible:underline"
@@ -1417,7 +1417,7 @@ function ProfilePageContent() {
                   {registrations.slice(0, 3).map((reg) => (
                     <div
                       key={reg.id}
-                      className="flex items-center gap-3 p-3 bg-neutral-800/50 rounded-lg"
+                      className="flex items-center gap-3 p-3 bg-neutral-200 dark:bg-neutral-800/50 rounded-lg"
                     >
                       <div className="w-8 h-8 bg-emerald-500/10 rounded-full flex items-center justify-center">
                         <svg
@@ -1435,7 +1435,7 @@ function ProfilePageContent() {
                         </svg>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-white text-sm truncate">
+                        <p className="text-black dark:text-white text-sm truncate">
                           Registered for {reg.eventTitle}
                         </p>
                         <p className="text-neutral-500 text-xs">
@@ -1449,7 +1449,7 @@ function ProfilePageContent() {
                   {talkSubmissions.slice(0, 3).map((talk) => (
                     <div
                       key={talk.id}
-                      className="flex items-center gap-3 p-3 bg-neutral-800/50 rounded-lg"
+                      className="flex items-center gap-3 p-3 bg-neutral-200 dark:bg-neutral-800/50 rounded-lg"
                     >
                       <div className="w-8 h-8 bg-blue-500/10 rounded-full flex items-center justify-center">
                         <svg
@@ -1467,7 +1467,7 @@ function ProfilePageContent() {
                         </svg>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-white text-sm truncate">
+                        <p className="text-black dark:text-white text-sm truncate">
                           Submitted talk: {talk.title}
                         </p>
                         <p className="text-neutral-500 text-xs capitalize">
@@ -1483,9 +1483,9 @@ function ProfilePageContent() {
         )}
 
         {activeTab === "events" && (
-          <div className="bg-neutral-900 rounded-2xl p-6 border border-neutral-800">
+          <div className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-6 border border-neutral-200 dark:border-neutral-800">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-lg font-semibold text-black dark:text-white">
                 My Event Registrations
               </h2>
               <Link
@@ -1502,7 +1502,7 @@ function ProfilePageContent() {
               </div>
             ) : registrations.length === 0 ? (
               <div className="text-center py-12">
-                <div className="w-16 h-16 bg-neutral-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-neutral-200 dark:bg-neutral-800 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="32"
@@ -1520,12 +1520,12 @@ function ProfilePageContent() {
                     <line x1="3" y1="10" x2="21" y2="10" />
                   </svg>
                 </div>
-                <p className="text-neutral-400 mb-4">
+                <p className="text-neutral-500 dark:text-neutral-400 mb-4">
                   You haven&apos;t registered for any events yet
                 </p>
                 <Link
                   href="/events"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-lg text-sm font-semibold hover:bg-emerald-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500 text-black dark:text-white rounded-lg text-sm font-semibold hover:bg-emerald-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
                 >
                   Browse Events
                 </Link>
@@ -1535,7 +1535,7 @@ function ProfilePageContent() {
                 {registrations.map((reg) => (
                   <div
                     key={reg.id}
-                    className="flex items-center justify-between p-4 bg-neutral-800/50 rounded-xl"
+                    className="flex items-center justify-between p-4 bg-neutral-200 dark:bg-neutral-800/50 rounded-xl"
                   >
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-emerald-500/10 rounded-lg flex items-center justify-center">
@@ -1564,10 +1564,10 @@ function ProfilePageContent() {
                         </svg>
                       </div>
                       <div>
-                        <p className="text-white font-medium">
+                        <p className="text-black dark:text-white font-medium">
                           {reg.eventTitle}
                         </p>
-                        <p className="text-neutral-400 text-sm">
+                        <p className="text-neutral-500 dark:text-neutral-400 text-sm">
                           {reg.eventDate || "Date TBD"}
                         </p>
                       </div>
@@ -1595,9 +1595,9 @@ function ProfilePageContent() {
         )}
 
         {activeTab === "talks" && (
-          <div className="bg-neutral-900 rounded-2xl p-6 border border-neutral-800">
+          <div className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-6 border border-neutral-200 dark:border-neutral-800">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-lg font-semibold text-black dark:text-white">
                 My Talk Submissions
               </h2>
               <Link
@@ -1614,7 +1614,7 @@ function ProfilePageContent() {
               </div>
             ) : talkSubmissions.length === 0 ? (
               <div className="text-center py-12">
-                <div className="w-16 h-16 bg-neutral-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-neutral-200 dark:bg-neutral-800 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="32"
@@ -1631,12 +1631,12 @@ function ProfilePageContent() {
                     <polyline points="2 12 12 17 22 12" />
                   </svg>
                 </div>
-                <p className="text-neutral-400 mb-4">
+                <p className="text-neutral-500 dark:text-neutral-400 mb-4">
                   You haven&apos;t submitted any talks yet
                 </p>
                 <Link
                   href="/talks/submit"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-lg text-sm font-semibold hover:bg-emerald-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500 text-black dark:text-white rounded-lg text-sm font-semibold hover:bg-emerald-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
                 >
                   Submit a Talk
                 </Link>
@@ -1646,7 +1646,7 @@ function ProfilePageContent() {
                 {talkSubmissions.map((talk) => (
                   <div
                     key={talk.id}
-                    className="flex items-center justify-between p-4 bg-neutral-800/50 rounded-xl"
+                    className="flex items-center justify-between p-4 bg-neutral-200 dark:bg-neutral-800/50 rounded-xl"
                   >
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center">
@@ -1667,8 +1667,8 @@ function ProfilePageContent() {
                         </svg>
                       </div>
                       <div>
-                        <p className="text-white font-medium">{talk.title}</p>
-                        <p className="text-neutral-400 text-sm">
+                        <p className="text-black dark:text-white font-medium">{talk.title}</p>
+                        <p className="text-neutral-500 dark:text-neutral-400 text-sm">
                           {talk.submittedAt?.toDate
                             ? talk.submittedAt
                                 .toDate()
@@ -1724,17 +1724,17 @@ function ProfilePageContent() {
             )}
 
             {/* Email Management */}
-            <div className="bg-neutral-900 rounded-2xl p-6 border border-neutral-800">
-              <h2 className="text-lg font-semibold text-white mb-4">
+            <div className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-6 border border-neutral-200 dark:border-neutral-800">
+              <h2 className="text-lg font-semibold text-black dark:text-white mb-4">
                 Email Addresses
               </h2>
-              <p className="text-neutral-400 text-sm mb-4">
+              <p className="text-neutral-500 dark:text-neutral-400 text-sm mb-4">
                 Manage the email addresses associated with your account. You can use any verified email to sign in.
               </p>
 
               {/* Primary Email */}
               <div className="space-y-3 mb-6">
-                <div className="flex items-center justify-between p-3 bg-neutral-800/50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-neutral-200 dark:bg-neutral-800/50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-emerald-500/10 rounded-full flex items-center justify-center">
                       <svg
@@ -1753,7 +1753,7 @@ function ProfilePageContent() {
                       </svg>
                     </div>
                     <div>
-                      <p className="text-white text-sm">{user.email}</p>
+                      <p className="text-black dark:text-white text-sm">{user.email}</p>
                       <p className="text-neutral-500 text-xs">Primary email</p>
                     </div>
                   </div>
@@ -1766,7 +1766,7 @@ function ProfilePageContent() {
                 {userProfile?.additionalEmails?.map((emailEntry) => (
                   <div
                     key={emailEntry.email}
-                    className="flex items-center justify-between p-3 bg-neutral-800/50 rounded-lg"
+                    className="flex items-center justify-between p-3 bg-neutral-200 dark:bg-neutral-800/50 rounded-lg"
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 bg-neutral-700 rounded-full flex items-center justify-center">
@@ -1778,7 +1778,7 @@ function ProfilePageContent() {
                           fill="none"
                           stroke="currentColor"
                           strokeWidth="2"
-                          className="text-neutral-400"
+                          className="text-neutral-500 dark:text-neutral-400"
                           aria-hidden="true"
                         >
                           <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
@@ -1786,7 +1786,7 @@ function ProfilePageContent() {
                         </svg>
                       </div>
                       <div>
-                        <p className="text-white text-sm">{emailEntry.email}</p>
+                        <p className="text-black dark:text-white text-sm">{emailEntry.email}</p>
                         <p className="text-neutral-500 text-xs">
                           {emailEntry.verified ? "Verified" : "Pending verification"}
                         </p>
@@ -1816,7 +1816,7 @@ function ProfilePageContent() {
 
               {/* Add New Email */}
               <div>
-                <label htmlFor="new-email" className="block text-sm font-medium text-neutral-300 mb-2">
+                <label htmlFor="new-email" className="block text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-2">
                   Add another email
                 </label>
                 <div className="flex gap-3">
@@ -1826,12 +1826,12 @@ function ProfilePageContent() {
                     value={newEmail}
                     onChange={(e) => setNewEmail(e.target.value)}
                     placeholder="Enter email address"
-                    className="flex-1 px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                    className="flex-1 px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
                   />
                   <button
                     onClick={handleAddEmail}
                     disabled={emailAddLoading || !newEmail.trim()}
-                    className="px-4 py-3 bg-emerald-500 text-white rounded-lg text-sm font-medium hover:bg-emerald-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                    className="px-4 py-3 bg-emerald-500 text-black dark:text-white rounded-lg text-sm font-medium hover:bg-emerald-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
                   >
                     {emailAddLoading ? "Sending..." : "Add Email"}
                   </button>
@@ -1846,15 +1846,15 @@ function ProfilePageContent() {
             </div>
 
             {/* Account Security */}
-            <div className="bg-neutral-900 rounded-2xl p-6 border border-neutral-800">
-              <h2 className="text-lg font-semibold text-white mb-4">
+            <div className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-6 border border-neutral-200 dark:border-neutral-800">
+              <h2 className="text-lg font-semibold text-black dark:text-white mb-4">
                 Account Security
               </h2>
               <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div>
-                    <p className="text-white font-medium">Google Login</p>
-                    <p className="text-neutral-400 text-sm">
+                    <p className="text-black dark:text-white font-medium">Google Login</p>
+                    <p className="text-neutral-500 dark:text-neutral-400 text-sm">
                       {hasGoogleProvider ? "Connected" : "Not connected"}
                     </p>
                   </div>
@@ -1862,7 +1862,7 @@ function ProfilePageContent() {
                     <button
                       onClick={disconnectGoogle}
                       disabled={googleDisconnecting}
-                      className="px-3 py-2 bg-neutral-800/50 text-white text-sm rounded-lg inline-flex items-center gap-2 hover:bg-neutral-700 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                      className="px-3 py-2 bg-neutral-200 dark:bg-neutral-800/50 text-black dark:text-white text-sm rounded-lg inline-flex items-center gap-2 hover:bg-neutral-700 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                     >
                       {googleDisconnecting ? "Disconnecting..." : "Disconnect Google"}
                     </button>
@@ -1873,7 +1873,7 @@ function ProfilePageContent() {
                 )}
 
                 <div>
-                  <p className="text-white font-medium mb-2">
+                  <p className="text-black dark:text-white font-medium mb-2">
                     {hasPasswordProvider ? "Update Password" : "Set a Password"}
                   </p>
                   <div className="grid sm:grid-cols-2 gap-3">
@@ -1882,21 +1882,21 @@ function ProfilePageContent() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="New password"
-                      className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                      className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
                     />
                     <input
                       type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Confirm password"
-                      className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                      className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
                     />
                   </div>
                   <div className="mt-3 flex items-center gap-3">
                     <button
                       onClick={handleSetPassword}
                       disabled={passwordSaving}
-                      className="px-4 py-2 bg-emerald-500 text-white rounded-lg text-sm font-medium hover:bg-emerald-400 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                      className="px-4 py-2 bg-emerald-500 text-black dark:text-white rounded-lg text-sm font-medium hover:bg-emerald-400 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
                     >
                       {passwordSaving ? "Saving..." : "Save Password"}
                     </button>
@@ -1910,8 +1910,8 @@ function ProfilePageContent() {
                 </div>
 
                 <div>
-                  <p className="text-white font-medium mb-2">Two-Factor Authentication</p>
-                  <p className="text-neutral-400 text-sm mb-3">
+                  <p className="text-black dark:text-white font-medium mb-2">Two-Factor Authentication</p>
+                  <p className="text-neutral-500 dark:text-neutral-400 text-sm mb-3">
                     {hasPhoneMfa ? "Enabled with SMS." : "Use SMS to add an extra layer of security."}
                   </p>
                   <div className="space-y-3">
@@ -1920,21 +1920,21 @@ function ProfilePageContent() {
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
                       placeholder="+15551234567"
-                      className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                      className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
                       disabled={hasPhoneMfa}
                     />
                     <div className="flex flex-wrap gap-3">
                       <button
                         onClick={sendMfaCode}
                         disabled={mfaLoading || hasPhoneMfa}
-                        className="px-4 py-2 bg-neutral-800 text-white rounded-lg text-sm font-medium hover:bg-neutral-700 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                        className="px-4 py-2 bg-neutral-200 dark:bg-neutral-800 text-black dark:text-white rounded-lg text-sm font-medium hover:bg-neutral-700 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                       >
                         {mfaLoading ? "Sending..." : "Send Code"}
                       </button>
                       <button
                         onClick={disableMfa}
                         disabled={mfaLoading || !hasPhoneMfa}
-                        className="px-4 py-2 bg-neutral-800/50 text-white rounded-lg text-sm font-medium hover:bg-neutral-700 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                        className="px-4 py-2 bg-neutral-200 dark:bg-neutral-800/50 text-black dark:text-white rounded-lg text-sm font-medium hover:bg-neutral-700 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                       >
                         Disable 2FA
                       </button>
@@ -1946,12 +1946,12 @@ function ProfilePageContent() {
                           value={smsCode}
                           onChange={(e) => setSmsCode(e.target.value)}
                           placeholder="Enter SMS code"
-                          className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                          className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
                         />
                         <button
                           onClick={confirmMfaEnrollment}
                           disabled={mfaLoading}
-                          className="px-4 py-2 bg-emerald-500 text-white rounded-lg text-sm font-medium hover:bg-emerald-400 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                          className="px-4 py-2 bg-emerald-500 text-black dark:text-white rounded-lg text-sm font-medium hover:bg-emerald-400 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
                         >
                           {mfaLoading ? "Verifying..." : "Enable 2FA"}
                         </button>
@@ -1970,15 +1970,15 @@ function ProfilePageContent() {
             </div>
 
             {/* Connected Accounts */}
-            <div className="bg-neutral-900 rounded-2xl p-6 border border-neutral-800">
-              <h2 className="text-lg font-semibold text-white mb-4">
+            <div className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-6 border border-neutral-200 dark:border-neutral-800">
+              <h2 className="text-lg font-semibold text-black dark:text-white mb-4">
                 Connected Accounts
               </h2>
               <div className="space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div>
-                    <p className="text-white font-medium">Discord</p>
-                    <p className="text-neutral-400 text-sm">
+                    <p className="text-black dark:text-white font-medium">Discord</p>
+                    <p className="text-neutral-500 dark:text-neutral-400 text-sm">
                       {discordInfo ? `Connected as ${discordInfo.username}` : "Not connected"}
                     </p>
                   </div>
@@ -1994,7 +1994,7 @@ function ProfilePageContent() {
                     <button
                       onClick={connectDiscord}
                       disabled={discordConnecting}
-                      className="px-3 py-2 bg-[#5865F2] text-white text-sm rounded-lg inline-flex items-center gap-2 hover:bg-[#4752C4] transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5865F2]"
+                      className="px-3 py-2 bg-[#5865F2] text-black dark:text-white text-sm rounded-lg inline-flex items-center gap-2 hover:bg-[#4752C4] transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5865F2]"
                     >
                       {discordConnecting ? "Connecting..." : "Connect Discord"}
                     </button>
@@ -2002,8 +2002,8 @@ function ProfilePageContent() {
                 </div>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div>
-                    <p className="text-white font-medium">GitHub</p>
-                    <p className="text-neutral-400 text-sm">
+                    <p className="text-black dark:text-white font-medium">GitHub</p>
+                    <p className="text-neutral-500 dark:text-neutral-400 text-sm">
                       {githubInfo ? `Connected as ${githubInfo.login}` : "Not connected"}
                     </p>
                   </div>
@@ -2011,7 +2011,7 @@ function ProfilePageContent() {
                     <button
                       onClick={disconnectGithub}
                       disabled={githubDisconnecting}
-                      className="px-3 py-2 bg-neutral-800/50 text-white text-sm rounded-lg inline-flex items-center gap-2 hover:bg-neutral-700 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                      className="px-3 py-2 bg-neutral-200 dark:bg-neutral-800/50 text-black dark:text-white text-sm rounded-lg inline-flex items-center gap-2 hover:bg-neutral-700 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                     >
                       {githubDisconnecting ? "Disconnecting..." : "Disconnect GitHub"}
                     </button>
@@ -2019,7 +2019,7 @@ function ProfilePageContent() {
                     <button
                       onClick={connectGithub}
                       disabled={githubConnecting}
-                      className="px-3 py-2 bg-neutral-800 text-white text-sm rounded-lg inline-flex items-center gap-2 hover:bg-neutral-700 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                      className="px-3 py-2 bg-neutral-200 dark:bg-neutral-800 text-black dark:text-white text-sm rounded-lg inline-flex items-center gap-2 hover:bg-neutral-700 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                     >
                       {githubConnecting ? "Connecting..." : "Connect GitHub"}
                     </button>
@@ -2027,11 +2027,11 @@ function ProfilePageContent() {
                 </div>
 
                 {/* AI Agents Section */}
-                <div className="pt-4 border-t border-neutral-800">
+                <div className="pt-4 border-t border-neutral-200 dark:border-neutral-800">
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <p className="text-white font-medium">AI Agents</p>
-                      <p className="text-neutral-400 text-sm">
+                      <p className="text-black dark:text-white font-medium">AI Agents</p>
+                      <p className="text-neutral-500 dark:text-neutral-400 text-sm">
                         {loadingAgents
                           ? "Loading..."
                           : connectedAgents.length > 0
@@ -2069,7 +2069,7 @@ function ProfilePageContent() {
                       {connectedAgents.map((agent) => (
                         <div
                           key={agent.id}
-                          className="flex items-center gap-3 p-3 bg-neutral-800/50 rounded-lg"
+                          className="flex items-center gap-3 p-3 bg-neutral-200 dark:bg-neutral-800/50 rounded-lg"
                         >
                           <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0">
                             {agent.avatarUrl ? (
@@ -2097,11 +2097,11 @@ function ProfilePageContent() {
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-white text-sm font-medium truncate">
+                            <p className="text-black dark:text-white text-sm font-medium truncate">
                               {agent.name}
                             </p>
                             {agent.description && (
-                              <p className="text-neutral-400 text-xs truncate">
+                              <p className="text-neutral-500 dark:text-neutral-400 text-xs truncate">
                                 {agent.description}
                               </p>
                             )}
@@ -2123,9 +2123,9 @@ function ProfilePageContent() {
         {activeTab === "settings" && (
           <div className="space-y-6">
             {/* Profile Visibility Toggle */}
-            <div className="bg-neutral-900 rounded-2xl p-6 border border-neutral-800">
+            <div className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-6 border border-neutral-200 dark:border-neutral-800">
               <div className="flex items-center justify-between mb-2">
-                <h2 className="text-lg font-semibold text-white">
+                <h2 className="text-lg font-semibold text-black dark:text-white">
                   Public Profile
                 </h2>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -2143,7 +2143,7 @@ function ProfilePageContent() {
                   <div className="w-11 h-6 bg-neutral-700 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-400 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
                 </label>
               </div>
-              <p className="text-neutral-400 text-sm">
+              <p className="text-neutral-500 dark:text-neutral-400 text-sm">
                 {profileSettings.visibility.isPublic
                   ? "Your profile is visible on the Members page"
                   : "Your profile is hidden from the Members page"}
@@ -2151,13 +2151,13 @@ function ProfilePageContent() {
             </div>
 
             {/* Profile Information */}
-            <div className="bg-neutral-900 rounded-2xl p-6 border border-neutral-800">
-              <h2 className="text-lg font-semibold text-white mb-4">
+            <div className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-6 border border-neutral-200 dark:border-neutral-800">
+              <h2 className="text-lg font-semibold text-black dark:text-white mb-4">
                 Profile Information
               </h2>
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="bio" className="block text-sm font-medium text-neutral-300 mb-2">
+                  <label htmlFor="bio" className="block text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-2">
                     Bio
                   </label>
                   <textarea
@@ -2168,12 +2168,12 @@ function ProfilePageContent() {
                     }
                     placeholder="Tell us about yourself..."
                     rows={3}
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent resize-none"
+                    className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent resize-none"
                   />
                 </div>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="location" className="block text-sm font-medium text-neutral-300 mb-2">
+                    <label htmlFor="location" className="block text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-2">
                       Location
                     </label>
                     <input
@@ -2184,11 +2184,11 @@ function ProfilePageContent() {
                         setProfileSettings((prev) => ({ ...prev, location: e.target.value }))
                       }
                       placeholder="Boston, MA"
-                      className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                      className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
                     />
                   </div>
                   <div>
-                    <label htmlFor="company" className="block text-sm font-medium text-neutral-300 mb-2">
+                    <label htmlFor="company" className="block text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-2">
                       Company
                     </label>
                     <input
@@ -2199,12 +2199,12 @@ function ProfilePageContent() {
                         setProfileSettings((prev) => ({ ...prev, company: e.target.value }))
                       }
                       placeholder="Acme Inc."
-                      className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                      className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
                     />
                   </div>
                 </div>
                 <div>
-                  <label htmlFor="jobTitle" className="block text-sm font-medium text-neutral-300 mb-2">
+                  <label htmlFor="jobTitle" className="block text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-2">
                     Job Title
                   </label>
                   <input
@@ -2215,20 +2215,20 @@ function ProfilePageContent() {
                       setProfileSettings((prev) => ({ ...prev, jobTitle: e.target.value }))
                     }
                     placeholder="Software Engineer"
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
                   />
                 </div>
               </div>
             </div>
 
             {/* Social Links */}
-            <div className="bg-neutral-900 rounded-2xl p-6 border border-neutral-800">
-              <h2 className="text-lg font-semibold text-white mb-4">
+            <div className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-6 border border-neutral-200 dark:border-neutral-800">
+              <h2 className="text-lg font-semibold text-black dark:text-white mb-4">
                 Social Links
               </h2>
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="website" className="block text-sm font-medium text-neutral-300 mb-2">
+                  <label htmlFor="website" className="block text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-2">
                     Website
                   </label>
                   <input
@@ -2242,11 +2242,11 @@ function ProfilePageContent() {
                       }))
                     }
                     placeholder="https://yourwebsite.com"
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
                   />
                 </div>
                 <div>
-                  <label htmlFor="linkedIn" className="block text-sm font-medium text-neutral-300 mb-2">
+                  <label htmlFor="linkedIn" className="block text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-2">
                     LinkedIn
                   </label>
                   <input
@@ -2260,11 +2260,11 @@ function ProfilePageContent() {
                       }))
                     }
                     placeholder="https://linkedin.com/in/username"
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
                   />
                 </div>
                 <div>
-                  <label htmlFor="twitter" className="block text-sm font-medium text-neutral-300 mb-2">
+                  <label htmlFor="twitter" className="block text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-2">
                     X (Twitter)
                   </label>
                   <input
@@ -2278,11 +2278,11 @@ function ProfilePageContent() {
                       }))
                     }
                     placeholder="https://x.com/username"
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
                   />
                 </div>
                 <div>
-                  <label htmlFor="github" className="block text-sm font-medium text-neutral-300 mb-2">
+                  <label htmlFor="github" className="block text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-2">
                     GitHub
                   </label>
                   <input
@@ -2296,11 +2296,11 @@ function ProfilePageContent() {
                       }))
                     }
                     placeholder="https://github.com/username"
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
                   />
                 </div>
                 <div>
-                  <label htmlFor="substack" className="block text-sm font-medium text-neutral-300 mb-2">
+                  <label htmlFor="substack" className="block text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-2">
                     Substack
                   </label>
                   <input
@@ -2314,16 +2314,16 @@ function ProfilePageContent() {
                       }))
                     }
                     placeholder="https://yourname.substack.com"
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
                   />
                 </div>
               </div>
             </div>
 
             {/* Visibility Toggles */}
-            <div className="bg-neutral-900 rounded-2xl p-6 border border-neutral-800">
+            <div className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-6 border border-neutral-200 dark:border-neutral-800">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-white">
+                <h2 className="text-lg font-semibold text-black dark:text-white">
                   What to Show on Your Public Profile
                 </h2>
                 <div className="flex gap-2">
@@ -2335,7 +2335,7 @@ function ProfilePageContent() {
                   </button>
                   <button
                     onClick={() => toggleAllVisibility(false)}
-                    className="px-4 py-2 text-sm font-medium text-neutral-400 hover:text-neutral-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white rounded min-h-[44px] flex items-center"
+                    className="px-4 py-2 text-sm font-medium text-neutral-500 dark:text-neutral-400 hover:text-neutral-600 dark:text-neutral-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white rounded min-h-[44px] flex items-center"
                   >
                     Hide All
                   </button>
@@ -2360,7 +2360,7 @@ function ProfilePageContent() {
                   { key: "showMemberSince", label: "Member Since" },
                 ].map(({ key, label }) => (
                   <div key={key} className="flex items-center justify-between py-2">
-                    <span className="text-neutral-300 text-sm">{label}</span>
+                    <span className="text-neutral-600 dark:text-neutral-300 text-sm">{label}</span>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
@@ -2392,7 +2392,7 @@ function ProfilePageContent() {
               <button
                 onClick={saveProfileSettings}
                 disabled={savingSettings}
-                className="px-6 py-3 bg-emerald-500 text-white rounded-lg font-semibold hover:bg-emerald-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900"
+                className="px-6 py-3 bg-emerald-500 text-black dark:text-white rounded-lg font-semibold hover:bg-emerald-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900"
               >
                 {savingSettings ? "Saving..." : "Save Settings"}
               </button>
@@ -2411,17 +2411,17 @@ function ProfilePageContent() {
         >
           {/* Backdrop */}
           <div
-            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            className="absolute inset-0 bg-white dark:bg-black/80 backdrop-blur-sm"
             onClick={closeEditModal}
             aria-hidden="true"
           />
 
           {/* Modal */}
-          <div className="relative bg-neutral-900 border border-neutral-800 rounded-2xl p-6 md:p-8 max-w-md w-full shadow-2xl">
+          <div className="relative bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-6 md:p-8 max-w-md w-full shadow-2xl">
             {/* Close button */}
             <button
               onClick={closeEditModal}
-              className="absolute top-4 right-4 text-neutral-400 hover:text-white transition-colors p-1 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              className="absolute top-4 right-4 text-neutral-500 dark:text-neutral-400 hover:text-black dark:text-white transition-colors p-1 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               aria-label="Close"
             >
               <svg
@@ -2442,14 +2442,14 @@ function ProfilePageContent() {
 
             <h2
               id="edit-profile-title"
-              className="text-xl font-bold text-white mb-6"
+              className="text-xl font-bold text-black dark:text-white mb-6"
             >
               Edit Profile
             </h2>
 
             {/* Photo Upload */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-neutral-400 mb-3">
+              <label className="block text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-3">
                 Profile Photo
               </label>
               <div className="flex items-center gap-4">
@@ -2486,7 +2486,7 @@ function ProfilePageContent() {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="px-4 py-2 bg-neutral-800 text-white rounded-lg text-sm font-medium hover:bg-neutral-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                    className="px-4 py-2 bg-neutral-200 dark:bg-neutral-800 text-black dark:text-white rounded-lg text-sm font-medium hover:bg-neutral-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                   >
                     Choose Photo
                   </button>
@@ -2501,7 +2501,7 @@ function ProfilePageContent() {
             <div className="mb-6">
               <label
                 htmlFor="edit-name"
-                className="block text-sm font-medium text-neutral-400 mb-2"
+                className="block text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-2"
               >
                 Display Name
               </label>
@@ -2510,7 +2510,7 @@ function ProfilePageContent() {
                 type="text"
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
-                className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 placeholder="Your name"
               />
             </div>
@@ -2526,14 +2526,14 @@ function ProfilePageContent() {
             <div className="flex gap-3">
               <button
                 onClick={closeEditModal}
-                className="flex-1 px-4 py-3 bg-neutral-800 text-white rounded-lg font-medium hover:bg-neutral-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                className="flex-1 px-4 py-3 bg-neutral-200 dark:bg-neutral-800 text-black dark:text-white rounded-lg font-medium hover:bg-neutral-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveProfile}
                 disabled={isSaving}
-                className="flex-1 px-4 py-3 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                className="flex-1 px-4 py-3 bg-emerald-500 text-black dark:text-white rounded-lg font-medium hover:bg-emerald-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
               >
                 {isSaving ? "Saving..." : "Save Changes"}
               </button>

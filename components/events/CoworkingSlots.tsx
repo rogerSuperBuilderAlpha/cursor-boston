@@ -171,7 +171,7 @@ export default function CoworkingSlots({ eventId }: CoworkingSlotsProps) {
     return (
       <div className="animate-pulse space-y-4">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-24 bg-neutral-800 rounded-xl" />
+          <div key={i} className="h-24 bg-neutral-200 dark:bg-neutral-800 rounded-xl" />
         ))}
       </div>
     );
@@ -394,7 +394,7 @@ export default function CoworkingSlots({ eventId }: CoworkingSlotsProps) {
                     {slot.attendees.map((attendee, index) => (
                       <div
                         key={index}
-                        className="flex items-center gap-2 px-3 py-1.5 bg-neutral-800 rounded-full"
+                        className="flex items-center gap-2 px-3 py-1.5 bg-neutral-200 dark:bg-neutral-800 rounded-full"
                       >
                         {attendee.photoUrl ? (
                           <Image

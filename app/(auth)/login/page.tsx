@@ -161,7 +161,7 @@ function LoginPageContent() {
   if (authLoading) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-black dark:border-white"></div>
       </div>
     );
   }
@@ -175,13 +175,13 @@ function LoginPageContent() {
     <div className="min-h-[80vh] flex items-center justify-center px-4 md:px-6 py-8 md:py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">Welcome Back</h1>
-          <p className="text-neutral-400 text-sm md:text-base">
+          <h1 className="text-2xl md:text-3xl font-bold text-black dark:text-white mb-2">Welcome Back</h1>
+          <p className="text-neutral-500 dark:text-neutral-400 text-sm md:text-base">
             Sign in to your Cursor Boston account
           </p>
         </div>
 
-        <div className="bg-neutral-900 rounded-xl md:rounded-2xl p-5 md:p-8 border border-neutral-800">
+        <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl md:rounded-2xl p-5 md:p-8 border border-neutral-200 dark:border-neutral-800">
           {error && (
             <div 
               role="alert"
@@ -197,7 +197,7 @@ function LoginPageContent() {
             <div 
               role="status"
               aria-live="polite"
-              className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 text-sm"
+              className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-600 dark:text-emerald-400 text-sm"
             >
               Password reset email sent! Check your inbox.
             </div>
@@ -207,7 +207,7 @@ function LoginPageContent() {
             <div 
               role="status"
               aria-live="polite"
-              className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg text-blue-400 text-sm"
+              className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg text-blue-600 dark:text-blue-400 text-sm"
             >
               Signed in using your alternate email ({emailAlias}).
             </div>
@@ -218,7 +218,7 @@ function LoginPageContent() {
             <button
               onClick={handleGoogleSignIn}
               disabled={loading}
-              className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white text-black rounded-lg font-medium hover:bg-neutral-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white dark:bg-neutral-800 text-black dark:text-white rounded-lg font-medium hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">
                 <path
@@ -244,7 +244,7 @@ function LoginPageContent() {
             <button
               onClick={handleGithubSignIn}
               disabled={loading}
-              className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-neutral-800 text-white rounded-lg font-medium hover:bg-neutral-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-neutral-200 dark:bg-neutral-800 text-black dark:text-white rounded-lg font-medium hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path
@@ -259,10 +259,10 @@ function LoginPageContent() {
 
           <div className="relative mb-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-neutral-700"></div>
+              <div className="w-full border-t border-neutral-300 dark:border-neutral-700"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-neutral-900 text-neutral-500">
+              <span className="px-4 bg-neutral-100 dark:bg-neutral-900 text-neutral-500">
                 or continue with email
               </span>
             </div>
@@ -273,7 +273,7 @@ function LoginPageContent() {
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-neutral-300 mb-2"
+                className="block text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-2"
               >
                 Email
               </label>
@@ -285,7 +285,7 @@ function LoginPageContent() {
                 required
                 aria-describedby={error ? "form-error" : undefined}
                 aria-invalid={error ? "true" : undefined}
-                className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-base placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white text-base placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-transparent"
                 placeholder="you@example.com"
               />
             </div>
@@ -293,7 +293,7 @@ function LoginPageContent() {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-neutral-300 mb-2"
+                className="block text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-2"
               >
                 Password
               </label>
@@ -305,7 +305,7 @@ function LoginPageContent() {
                 required
                 aria-describedby={error ? "form-error" : undefined}
                 aria-invalid={error ? "true" : undefined}
-                className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-base placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white text-base placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-transparent"
                 placeholder="Enter your password"
               />
             </div>
@@ -314,7 +314,7 @@ function LoginPageContent() {
               <button
                 type="button"
                 onClick={handleResetPassword}
-                className="text-sm text-neutral-400 hover:text-white transition-colors"
+                className="text-sm text-neutral-500 dark:text-neutral-400 hover:text-black dark:text-white transition-colors"
               >
                 Forgot password?
               </button>
@@ -330,11 +330,11 @@ function LoginPageContent() {
           </form>
         </div>
 
-        <p className="text-center mt-6 text-neutral-400">
+        <p className="text-center mt-6 text-neutral-500 dark:text-neutral-400">
           Don&apos;t have an account?{" "}
           <Link
             href="/signup"
-            className="text-white hover:underline font-medium"
+            className="text-black dark:text-white hover:underline font-medium"
           >
             Sign up
           </Link>
@@ -348,7 +348,7 @@ export default function LoginPage() {
   return (
     <Suspense fallback={
       <div className="min-h-[80vh] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-black dark:border-white"></div>
       </div>
     }>
       <LoginPageContent />

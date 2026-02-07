@@ -121,8 +121,8 @@ export default function RequestEventPage() {
   if (!user) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-6">
-        <div className="bg-neutral-900 rounded-2xl p-8 max-w-md w-full text-center border border-neutral-800">
-          <div className="w-16 h-16 bg-neutral-800 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-8 max-w-md w-full text-center border border-neutral-200 dark:border-neutral-800">
+          <div className="w-16 h-16 bg-neutral-200 dark:bg-neutral-800 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="32"
@@ -139,8 +139,8 @@ export default function RequestEventPage() {
               <circle cx="12" cy="7" r="4" />
             </svg>
           </div>
-          <h2 className="text-xl font-semibold text-white mb-2">Sign In Required</h2>
-          <p className="text-neutral-400 mb-6">
+          <h2 className="text-xl font-semibold text-black dark:text-white mb-2">Sign In Required</h2>
+          <p className="text-neutral-500 dark:text-neutral-400 mb-6">
             Please sign in to submit an event request. This helps us follow up with you
             about your event idea.
           </p>
@@ -158,7 +158,7 @@ export default function RequestEventPage() {
   if (isSubmitted) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-6">
-        <div className="bg-neutral-900 rounded-2xl p-8 max-w-md w-full text-center border border-neutral-800">
+        <div className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-8 max-w-md w-full text-center border border-neutral-200 dark:border-neutral-800">
           <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -176,15 +176,15 @@ export default function RequestEventPage() {
               <polyline points="22 4 12 14.01 9 11.01" />
             </svg>
           </div>
-          <h2 className="text-xl font-semibold text-white mb-2">Request Submitted!</h2>
-          <p className="text-neutral-400 mb-6">
+          <h2 className="text-xl font-semibold text-black dark:text-white mb-2">Request Submitted!</h2>
+          <p className="text-neutral-500 dark:text-neutral-400 mb-6">
             Thanks for your event idea! We&apos;ll review it and reach out to you at{" "}
-            <span className="text-white">{formData.email}</span> to discuss next steps.
+            <span className="text-black dark:text-white">{formData.email}</span> to discuss next steps.
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
             <Link
               href="/events"
-              className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-neutral-800 text-white rounded-lg text-sm font-semibold hover:bg-neutral-700 transition-colors"
+              className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-neutral-200 dark:bg-neutral-800 text-black dark:text-white rounded-lg text-sm font-semibold hover:bg-neutral-700 transition-colors"
             >
               Back to Events
             </Link>
@@ -217,12 +217,12 @@ export default function RequestEventPage() {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="py-12 md:py-24 px-4 md:px-6 border-b border-neutral-800">
+      <section className="py-12 md:py-24 px-4 md:px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 md:mb-6">
+          <h1 className="text-3xl md:text-5xl font-bold text-black dark:text-white mb-4 md:mb-6">
             Request an Event
           </h1>
-          <p className="text-lg md:text-xl text-neutral-400 max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl text-neutral-500 dark:text-neutral-400 max-w-2xl mx-auto">
             Have an idea for a Cursor workshop, meetup, or hackathon? Let us know and
             we&apos;ll help make it happen!
           </p>
@@ -234,11 +234,11 @@ export default function RequestEventPage() {
         <div className="max-w-2xl mx-auto">
           <form onSubmit={handleSubmit} className="space-y-6 md:space-y-8">
             {/* Your Info */}
-            <div className="bg-neutral-900 rounded-xl md:rounded-2xl p-4 md:p-6 border border-neutral-800">
-              <h2 className="text-lg font-semibold text-white mb-4">Your Information</h2>
+            <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl md:rounded-2xl p-4 md:p-6 border border-neutral-200 dark:border-neutral-800">
+              <h2 className="text-lg font-semibold text-black dark:text-white mb-4">Your Information</h2>
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-neutral-300 mb-2">
+                  <label htmlFor="name" className="block text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-2">
                     Full Name *
                   </label>
                   <input
@@ -248,12 +248,12 @@ export default function RequestEventPage() {
                     value={formData.name}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
                     placeholder="Jane Doe"
                   />
                 </div>
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-neutral-300 mb-2">
+                  <label htmlFor="email" className="block text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-2">
                     Email Address *
                   </label>
                   <input
@@ -263,12 +263,12 @@ export default function RequestEventPage() {
                     value={formData.email}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
                     placeholder="jane@example.com"
                   />
                 </div>
                 <div>
-                  <label htmlFor="organization" className="block text-sm font-medium text-neutral-300 mb-2">
+                  <label htmlFor="organization" className="block text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-2">
                     Organization / University (optional)
                   </label>
                   <input
@@ -277,7 +277,7 @@ export default function RequestEventPage() {
                     name="organization"
                     value={formData.organization}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
                     placeholder="MIT, Hult, Company name, etc."
                   />
                 </div>
@@ -285,11 +285,11 @@ export default function RequestEventPage() {
             </div>
 
             {/* Event Details */}
-            <div className="bg-neutral-900 rounded-xl md:rounded-2xl p-4 md:p-6 border border-neutral-800">
-              <h2 className="text-lg font-semibold text-white mb-4">Event Details</h2>
+            <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl md:rounded-2xl p-4 md:p-6 border border-neutral-200 dark:border-neutral-800">
+              <h2 className="text-lg font-semibold text-black dark:text-white mb-4">Event Details</h2>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-neutral-300 mb-3">
+                  <label className="block text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-3">
                     Event Type *
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -312,15 +312,15 @@ export default function RequestEventPage() {
                           className="mt-1"
                         />
                         <div>
-                          <span className="block text-white font-medium">{type.name}</span>
-                          <span className="block text-neutral-400 text-sm">{type.description}</span>
+                          <span className="block text-black dark:text-white font-medium">{type.name}</span>
+                          <span className="block text-neutral-500 dark:text-neutral-400 text-sm">{type.description}</span>
                         </div>
                       </label>
                     ))}
                   </div>
                 </div>
                 <div>
-                  <label htmlFor="title" className="block text-sm font-medium text-neutral-300 mb-2">
+                  <label htmlFor="title" className="block text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-2">
                     Event Title / Topic *
                   </label>
                   <input
@@ -330,12 +330,12 @@ export default function RequestEventPage() {
                     value={formData.title}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
                     placeholder="Cursor for Beginners, AI Hackathon, etc."
                   />
                 </div>
                 <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-neutral-300 mb-2">
+                  <label htmlFor="description" className="block text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-2">
                     Description *
                   </label>
                   <textarea
@@ -345,13 +345,13 @@ export default function RequestEventPage() {
                     onChange={handleChange}
                     required
                     rows={4}
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent resize-none"
+                    className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent resize-none"
                     placeholder="What's the event about? What would attendees learn or do?"
                   />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="proposedDate" className="block text-sm font-medium text-neutral-300 mb-2">
+                    <label htmlFor="proposedDate" className="block text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-2">
                       Proposed Date (optional)
                     </label>
                     <input
@@ -360,12 +360,12 @@ export default function RequestEventPage() {
                       name="proposedDate"
                       value={formData.proposedDate}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-base placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                      className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white text-base placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
                       placeholder="February 2026, flexible, etc."
                     />
                   </div>
                   <div>
-                    <label htmlFor="expectedAttendees" className="block text-sm font-medium text-neutral-300 mb-2">
+                    <label htmlFor="expectedAttendees" className="block text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-2">
                       Expected Attendees *
                     </label>
                     <select
@@ -374,7 +374,7 @@ export default function RequestEventPage() {
                       value={formData.expectedAttendees}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-base focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                      className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white text-base focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
                     >
                       <option value="">Select...</option>
                       {attendeeRanges.map((range) => (
@@ -386,7 +386,7 @@ export default function RequestEventPage() {
                   </div>
                 </div>
                 <div>
-                  <label htmlFor="venue" className="block text-sm font-medium text-neutral-300 mb-2">
+                  <label htmlFor="venue" className="block text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-2">
                     Venue / Location (optional)
                   </label>
                   <input
@@ -395,7 +395,7 @@ export default function RequestEventPage() {
                     name="venue"
                     value={formData.venue}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
                     placeholder="We can host at..., Need help finding a venue, etc."
                   />
                 </div>
@@ -403,10 +403,10 @@ export default function RequestEventPage() {
             </div>
 
             {/* Additional Info */}
-            <div className="bg-neutral-900 rounded-xl md:rounded-2xl p-4 md:p-6 border border-neutral-800">
-              <h2 className="text-lg font-semibold text-white mb-4">Additional Information</h2>
+            <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl md:rounded-2xl p-4 md:p-6 border border-neutral-200 dark:border-neutral-800">
+              <h2 className="text-lg font-semibold text-black dark:text-white mb-4">Additional Information</h2>
               <div>
-                <label htmlFor="additionalInfo" className="block text-sm font-medium text-neutral-300 mb-2">
+                <label htmlFor="additionalInfo" className="block text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-2">
                   Anything else we should know?
                 </label>
                 <textarea
@@ -415,7 +415,7 @@ export default function RequestEventPage() {
                   value={formData.additionalInfo}
                   onChange={handleChange}
                   rows={3}
-                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent resize-none"
+                  className="w-full px-4 py-3 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent resize-none"
                   placeholder="Special requirements, collaboration ideas, etc."
                 />
               </div>

@@ -39,7 +39,7 @@ export default function AboutPage() {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="py-16 md:py-24 px-6 border-b border-neutral-800">
+      <section className="py-16 md:py-24 px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-4xl mx-auto text-center">
           <div className="w-24 h-24 relative mx-auto mb-6">
             <Image
@@ -47,13 +47,13 @@ export default function AboutPage() {
               unoptimized
               alt="Cursor Boston"
               fill
-              className="object-contain"
+              className="object-contain invert dark:invert-0"
             />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
+          <h1 className="text-4xl md:text-5xl font-bold text-black dark:text-white mb-6">
             About Cursor Boston
           </h1>
-          <p className="text-xl text-neutral-400 max-w-2xl mx-auto">
+          <p className="text-xl text-neutral-500 dark:text-neutral-400 max-w-2xl mx-auto">
             A community for exploring and discussing AI-powered development with
             Cursor, right here in Beantown.
           </p>
@@ -63,22 +63,22 @@ export default function AboutPage() {
       {/* Mission */}
       <section className="py-16 px-6">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">
+          <h2 className="text-2xl md:text-3xl font-bold text-black dark:text-white mb-6">
             Our Mission
           </h2>
-          <div className="prose prose-invert max-w-none">
-            <p className="text-neutral-300 text-lg leading-relaxed mb-4">
+          <div className="prose dark:prose-invert max-w-none">
+            <p className="text-neutral-600 dark:text-neutral-300 text-lg leading-relaxed mb-4">
               Cursor Boston brings together developers, designers, students,
               startup founders, and anyone curious about how AI can transform
               the way we build software.
             </p>
-            <p className="text-neutral-300 text-lg leading-relaxed mb-4">
+            <p className="text-neutral-600 dark:text-neutral-300 text-lg leading-relaxed mb-4">
               We&apos;re part of the global{" "}
               <a
                 href="https://cursor.com/community"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-white underline hover:text-neutral-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded"
+                className="text-black dark:text-white underline hover:text-neutral-600 dark:hover:text-neutral-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black rounded"
               >
                 Cursor community
               </a>
@@ -86,7 +86,7 @@ export default function AboutPage() {
               area. Whether you&apos;re deep into your daily Cursor flow or just
               getting started with AI-assisted coding, our events are for you.
             </p>
-            <p className="text-neutral-300 text-lg leading-relaxed">
+            <p className="text-neutral-600 dark:text-neutral-300 text-lg leading-relaxed">
               Boston has always been a hub for innovation — from world-class
               universities to cutting-edge startups. We believe AI-powered
               development tools like Cursor are the next chapter in that story,
@@ -97,12 +97,12 @@ export default function AboutPage() {
       </section>
 
       {/* Boston Tech Ecosystem */}
-      <section className="py-16 px-6 bg-neutral-950">
+      <section className="py-16 px-6 bg-neutral-50 dark:bg-neutral-950">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-black dark:text-white mb-4">
             The Boston Tech Ecosystem
           </h2>
-          <p className="text-neutral-400 text-lg mb-8 max-w-3xl">
+          <p className="text-neutral-500 dark:text-neutral-400 text-lg mb-8 max-w-3xl">
             Boston is home to some of the world&apos;s most innovative
             institutions and companies. Cursor Boston connects with this vibrant
             ecosystem.
@@ -111,7 +111,7 @@ export default function AboutPage() {
           <div className="grid md:grid-cols-2 gap-8">
             {/* Universities */}
             <div>
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-black dark:text-white mb-4 flex items-center gap-2">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="20"
@@ -133,10 +133,10 @@ export default function AboutPage() {
                 {universities.map((uni) => (
                   <div
                     key={uni.name}
-                    className="p-4 bg-neutral-900 rounded-xl border border-neutral-800"
+                    className="p-4 bg-neutral-100 dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800"
                   >
-                    <h4 className="text-white font-medium">{uni.name}</h4>
-                    <p className="text-neutral-400 text-sm">
+                    <h4 className="text-black dark:text-white font-medium">{uni.name}</h4>
+                    <p className="text-neutral-500 dark:text-neutral-400 text-sm">
                       {uni.description}
                     </p>
                   </div>
@@ -146,7 +146,7 @@ export default function AboutPage() {
 
             {/* Accelerators */}
             <div>
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-black dark:text-white mb-4 flex items-center gap-2">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="20"
@@ -170,10 +170,10 @@ export default function AboutPage() {
                 {accelerators.map((acc) => (
                   <div
                     key={acc.name}
-                    className="p-4 bg-neutral-900 rounded-xl border border-neutral-800"
+                    className="p-4 bg-neutral-100 dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800"
                   >
-                    <h4 className="text-white font-medium">{acc.name}</h4>
-                    <p className="text-neutral-400 text-sm">
+                    <h4 className="text-black dark:text-white font-medium">{acc.name}</h4>
+                    <p className="text-neutral-500 dark:text-neutral-400 text-sm">
                       {acc.description}
                     </p>
                   </div>
@@ -187,10 +187,10 @@ export default function AboutPage() {
       {/* Cursor Programs */}
       <section className="py-16 px-6">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-black dark:text-white mb-4">
             Get Involved with Cursor
           </h2>
-          <p className="text-neutral-400 text-lg mb-8 max-w-3xl">
+          <p className="text-neutral-500 dark:text-neutral-400 text-lg mb-8 max-w-3xl">
             Beyond local events, there are opportunities to get more involved
             with the global Cursor community.
           </p>
@@ -202,10 +202,10 @@ export default function AboutPage() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Learn about Cursor Ambassadors (opens in new tab)"
-              className="bg-neutral-900 rounded-2xl p-8 border border-neutral-800 hover:border-neutral-600 transition-colors group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-8 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-600 transition-colors group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-semibold text-white">
+                <h3 className="text-xl font-semibold text-black dark:text-white">
                   Cursor Ambassadors
                 </h3>
                 <svg
@@ -218,13 +218,13 @@ export default function AboutPage() {
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="text-neutral-500 group-hover:text-white transition-colors"
+                  className="text-neutral-500 group-hover:text-black dark:text-white transition-colors"
                   aria-hidden="true"
                 >
                   <path d="M7 17l9.2-9.2M17 17V7H7" />
                 </svg>
               </div>
-              <p className="text-neutral-400 leading-relaxed">
+              <p className="text-neutral-500 dark:text-neutral-400 leading-relaxed">
                 Join us in shaping the future of development. Ambassadors
                 empower the community that makes our ecosystem vibrant and
                 collaborative.
@@ -237,10 +237,10 @@ export default function AboutPage() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Learn about Campus Leads program (opens in new tab)"
-              className="bg-neutral-900 rounded-2xl p-8 border border-neutral-800 hover:border-neutral-600 transition-colors group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-8 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-600 transition-colors group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-semibold text-white">
+                <h3 className="text-xl font-semibold text-black dark:text-white">
                   Campus Leads
                 </h3>
                 <svg
@@ -253,13 +253,13 @@ export default function AboutPage() {
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="text-neutral-500 group-hover:text-white transition-colors"
+                  className="text-neutral-500 group-hover:text-black dark:text-white transition-colors"
                   aria-hidden="true"
                 >
                   <path d="M7 17l9.2-9.2M17 17V7H7" />
                 </svg>
               </div>
-              <p className="text-neutral-400 leading-relaxed">
+              <p className="text-neutral-500 dark:text-neutral-400 leading-relaxed">
                 Represent Cursor at your school by teaching best practices,
                 organizing events, and sharing Cursor with fellow students.
                 Perfect for Boston-area students!
@@ -270,12 +270,12 @@ export default function AboutPage() {
       </section>
 
       {/* Community */}
-      <section className="py-16 px-6 bg-neutral-950">
+      <section className="py-16 px-6 bg-neutral-50 dark:bg-neutral-950">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-black dark:text-white mb-4">
             Join Our Community
           </h2>
-          <p className="text-neutral-400 text-lg mb-8">
+          <p className="text-neutral-500 dark:text-neutral-400 text-lg mb-8">
             Connect with other Cursor users in Boston. Share tips, ask questions,
             and stay updated on upcoming events.
           </p>
@@ -284,7 +284,7 @@ export default function AboutPage() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Join Cursor Boston Discord (opens in new tab)"
-            className="inline-flex items-center justify-center gap-3 px-6 py-3 md:px-8 md:py-4 bg-[#5865F2] text-white rounded-lg text-base font-semibold hover:bg-[#4752C4] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5865F2] focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950"
+            className="inline-flex items-center justify-center gap-3 px-6 py-3 md:px-8 md:py-4 bg-[#5865F2] text-black dark:text-white rounded-lg text-base font-semibold hover:bg-[#4752C4] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5865F2] focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950"
           >
             <svg
               width="24"
@@ -303,10 +303,10 @@ export default function AboutPage() {
       {/* Contact */}
       <section className="py-16 px-6">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-black dark:text-white mb-4">
             Get in Touch
           </h2>
-          <p className="text-neutral-400 mb-8">
+          <p className="text-neutral-500 dark:text-neutral-400 mb-8">
             Have questions, ideas, or want to collaborate? We&apos;d love to
             hear from you.
           </p>
@@ -337,7 +337,7 @@ export default function AboutPage() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Subscribe on Luma (opens in new tab)"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white/10 text-white rounded-lg text-sm font-semibold hover:bg-white/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-neutral-200 dark:bg-neutral-800 text-black dark:text-white rounded-lg text-sm font-semibold hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
             >
               Subscribe on Luma
               <svg

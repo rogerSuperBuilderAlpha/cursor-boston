@@ -38,13 +38,13 @@ export function ReplyCard({
             className="rounded-full object-cover shrink-0"
           />
         ) : (
-          <div className="w-7 h-7 rounded-full bg-neutral-700 flex items-center justify-center text-white text-xs font-semibold shrink-0">
+          <div className="w-7 h-7 rounded-full bg-neutral-700 flex items-center justify-center text-black dark:text-white text-xs font-semibold shrink-0">
             {getInitials(reply.authorName)}
           </div>
         )}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="font-medium text-white text-sm">{reply.authorName}</span>
+            <span className="font-medium text-black dark:text-white text-sm">{reply.authorName}</span>
             <span className="text-neutral-500 text-xs">{formatRelativeDate(reply.createdAt)}</span>
             {isOwner && (
               <>
@@ -61,7 +61,7 @@ export function ReplyCard({
                     </button>
                     <button
                       onClick={() => setShowDeleteConfirm(false)}
-                      className="text-xs text-neutral-400 hover:text-white px-2 py-1"
+                      className="text-xs text-neutral-500 dark:text-neutral-400 hover:text-white px-2 py-1"
                     >
                       Cancel
                     </button>

@@ -297,7 +297,7 @@ export default function ProfileRequirementsModal({
         return (
           <a
             href="/api/github/authorize"
-            className="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-700 text-black dark:text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -332,7 +332,7 @@ export default function ProfileRequirementsModal({
         return (
           <a
             href="/api/discord/authorize"
-            className="px-4 py-2 bg-[#5865F2] hover:bg-[#4752C4] text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-[#5865F2] hover:bg-[#4752C4] text-black dark:text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -354,7 +354,7 @@ export default function ProfileRequirementsModal({
               <span className="text-sm text-emerald-400">{profile?.displayName}</span>
               <button
                 onClick={() => setEditingDisplayName(true)}
-                className="text-neutral-400 hover:text-white transition-colors"
+                className="text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white transition-colors"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -381,7 +381,7 @@ export default function ProfileRequirementsModal({
               value={displayNameInput}
               onChange={(e) => setDisplayNameInput(e.target.value)}
               placeholder="Enter your name"
-              className="px-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-500 w-40"
+              className="px-3 py-1.5 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-sm text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-500 w-40"
               onKeyDown={(e) => {
                 if (e.key === "Enter") saveDisplayName();
                 if (e.key === "Escape") {
@@ -394,7 +394,7 @@ export default function ProfileRequirementsModal({
             <button
               onClick={saveDisplayName}
               disabled={!displayNameInput.trim() || updating === "displayName"}
-              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-neutral-700 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors"
+              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-neutral-700 disabled:cursor-not-allowed text-black dark:text-white text-sm font-medium rounded-lg transition-colors"
             >
               {updating === "displayName" ? "..." : "Save"}
             </button>
@@ -404,7 +404,7 @@ export default function ProfileRequirementsModal({
                   setEditingDisplayName(false);
                   setDisplayNameInput(profile?.displayName || "");
                 }}
-                className="text-neutral-400 hover:text-white transition-colors"
+                className="text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white transition-colors"
               >
                 Cancel
               </button>
@@ -436,9 +436,9 @@ export default function ProfileRequirementsModal({
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-lg bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl overflow-hidden">
+      <div className="relative w-full max-w-lg bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="p-6 border-b border-neutral-800">
+        <div className="p-6 border-b border-neutral-200 dark:border-neutral-800">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
               {profile?.photoURL ? (
@@ -450,7 +450,7 @@ export default function ProfileRequirementsModal({
                   className="rounded-full"
                 />
               ) : (
-                <div className="w-12 h-12 bg-neutral-800 rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 bg-neutral-200 dark:bg-neutral-800 rounded-full flex items-center justify-center">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="24"
@@ -469,13 +469,13 @@ export default function ProfileRequirementsModal({
                 </div>
               )}
               <div>
-                <h2 className="text-xl font-bold text-white">{title}</h2>
-                <p className="text-sm text-neutral-400">{description}</p>
+                <h2 className="text-xl font-bold text-black dark:text-white">{title}</h2>
+                <p className="text-sm text-neutral-600 dark:text-neutral-400">{description}</p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="text-neutral-400 hover:text-white transition-colors p-1"
+              className="text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white transition-colors p-1"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -500,7 +500,7 @@ export default function ProfileRequirementsModal({
           {loading ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-16 bg-neutral-800 rounded-lg animate-pulse" />
+                <div key={i} className="h-16 bg-neutral-200 dark:bg-neutral-800 rounded-lg animate-pulse" />
               ))}
             </div>
           ) : (
@@ -523,7 +523,7 @@ export default function ProfileRequirementsModal({
                     return (
                       <div
                         key={req}
-                        className="flex items-center justify-between p-4 bg-neutral-800/50 border border-neutral-700 rounded-xl"
+                        className="flex items-center justify-between p-4 bg-neutral-200 dark:bg-neutral-800/50 border border-neutral-300 dark:border-neutral-700 rounded-xl"
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 bg-amber-500/10 rounded-full flex items-center justify-center">
@@ -537,7 +537,7 @@ export default function ProfileRequirementsModal({
                               strokeWidth="2"
                               strokeLinecap="round"
                               strokeLinejoin="round"
-                              className="text-amber-400"
+                              className="text-amber-500 dark:text-amber-400"
                             >
                               <circle cx="12" cy="12" r="10" />
                               <line x1="12" y1="8" x2="12" y2="12" />
@@ -545,10 +545,10 @@ export default function ProfileRequirementsModal({
                             </svg>
                           </div>
                           <div>
-                            <p className="text-white font-medium text-sm">
+                            <p className="text-black dark:text-white font-medium text-sm">
                               {config.label}
                             </p>
-                            <p className="text-neutral-400 text-xs">
+                            <p className="text-neutral-600 dark:text-neutral-400 text-xs">
                               {config.description}
                             </p>
                           </div>
@@ -591,10 +591,10 @@ export default function ProfileRequirementsModal({
                             </svg>
                           </div>
                           <div>
-                            <p className="text-white font-medium text-sm">
+                            <p className="text-black dark:text-white font-medium text-sm">
                               {config.label}
                             </p>
-                            <p className="text-neutral-400 text-xs">
+                            <p className="text-neutral-600 dark:text-neutral-400 text-xs">
                               {config.description}
                             </p>
                           </div>
@@ -610,11 +610,11 @@ export default function ProfileRequirementsModal({
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-neutral-800 bg-neutral-900/50">
+        <div className="p-6 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900/50">
           <div className="flex items-center justify-between">
             <Link
               href="/profile"
-              className="text-sm text-neutral-400 hover:text-white transition-colors flex items-center gap-1"
+              className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white transition-colors flex items-center gap-1"
             >
               Go to full profile
               <svg
@@ -635,12 +635,12 @@ export default function ProfileRequirementsModal({
             {incompleteRequirements.length === 0 ? (
               <button
                 onClick={onClose}
-                className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg transition-colors"
+                className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-black dark:text-white font-medium rounded-lg transition-colors"
               >
                 Done
               </button>
             ) : (
-              <span className="text-sm text-neutral-500">
+              <span className="text-sm text-neutral-600 dark:text-neutral-500">
                 {incompleteRequirements.length} requirement{incompleteRequirements.length !== 1 ? "s" : ""} remaining
               </span>
             )}

@@ -81,7 +81,7 @@ export function CommunityFeed({ user, onViewMemberProfile }: CommunityFeedProps)
             value={feedSearchQuery}
             onChange={(e) => setFeedSearchQuery(e.target.value)}
             placeholder="Search messages..."
-            className="w-full pl-11 pr-4 py-3 bg-neutral-900 border border-neutral-800 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+            className="w-full pl-11 pr-4 py-3 bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
           />
           {feedSearchQuery && (
             <button
@@ -126,7 +126,7 @@ export function CommunityFeed({ user, onViewMemberProfile }: CommunityFeedProps)
               {feedSearchQuery ? (
                 <button
                   onClick={() => setFeedSearchQuery("")}
-                  className="text-emerald-400 hover:text-emerald-300"
+                  className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300"
                 >
                   Clear search
                 </button>

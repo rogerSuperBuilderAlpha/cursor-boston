@@ -12,30 +12,30 @@ export default function AboutCursorPage() {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="py-16 md:py-24 px-6 border-b border-neutral-800">
+      <section className="py-16 md:py-24 px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold text-black dark:text-white mb-4">
             About Cursor & Our Affiliation
           </h1>
-          <p className="text-xl text-neutral-400 max-w-2xl mx-auto">
+          <p className="text-xl text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">
             Understanding the relationship between Cursor Boston and Cursor, the AI-powered code editor
           </p>
         </div>
       </section>
 
       {/* What is Cursor */}
-      <section className="py-12 md:py-16 px-6 border-b border-neutral-800">
+      <section className="py-12 md:py-16 px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold text-white mb-6">What is Cursor?</h2>
+          <h2 className="text-3xl font-bold text-black dark:text-white mb-6">What is Cursor?</h2>
 
           <div className="grid md:grid-cols-2 gap-8 items-start">
             <div>
-              <p className="text-neutral-300 mb-4">
+              <p className="text-neutral-600 dark:text-neutral-300 mb-4">
                 <a
                   href="https://cursor.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-emerald-400 hover:text-emerald-300"
+                  className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300"
                 >
                   Cursor
                 </a>{" "}
@@ -43,21 +43,21 @@ export default function AboutCursorPage() {
                 AI models directly into the coding environment, providing developers with an intelligent
                 pair programmer that understands their codebase.
               </p>
-              <p className="text-neutral-300 mb-4">
+              <p className="text-neutral-600 dark:text-neutral-300 mb-4">
                 Cursor is developed by{" "}
-                <strong className="text-white">Anysphere Inc.</strong>, a company focused on building
+                <strong className="text-black dark:text-white">Anysphere Inc.</strong>, a company focused on building
                 AI-first development tools. The editor has gained significant popularity among developers
                 for its ability to accelerate coding workflows through AI assistance.
               </p>
-              <p className="text-neutral-300">
+              <p className="text-neutral-600 dark:text-neutral-300">
                 Key features include intelligent code completion, natural language code editing,
                 codebase-aware chat, and multi-file editing capabilities powered by frontier AI models.
               </p>
             </div>
 
-            <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Key Facts</h3>
-              <ul className="space-y-3 text-neutral-300">
+            <div className="bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-black dark:text-white mb-4">Key Facts</h3>
+              <ul className="space-y-3 text-neutral-600 dark:text-neutral-300">
                 <li className="flex items-start gap-3">
                   <svg className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -87,7 +87,7 @@ export default function AboutCursorPage() {
                 href="https://cursor.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 mt-6 text-emerald-400 hover:text-emerald-300 font-medium"
+                className="inline-flex items-center gap-2 mt-6 text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-medium"
               >
                 Visit cursor.com
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -100,7 +100,7 @@ export default function AboutCursorPage() {
       </section>
 
       {/* Cursor Ambassadors Program */}
-      <section className="py-12 md:py-16 px-6 border-b border-neutral-800 bg-neutral-950/50">
+      <section className="py-12 md:py-16 px-6 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950/50">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-12 h-12 bg-emerald-500/10 rounded-lg flex items-center justify-center">
@@ -122,16 +122,16 @@ export default function AboutCursorPage() {
                 <path d="M16 3.13a4 4 0 0 1 0 7.75" />
               </svg>
             </div>
-            <h2 className="text-3xl font-bold text-white">The Cursor Ambassadors Program</h2>
+            <h2 className="text-3xl font-bold text-black dark:text-white">The Cursor Ambassadors Program</h2>
           </div>
 
-          <p className="text-neutral-300 mb-8 text-lg">
+          <p className="text-neutral-600 dark:text-neutral-300 mb-8 text-lg">
             The{" "}
             <a
               href="https://cursor.com/ambassadors"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-emerald-400 hover:text-emerald-300"
+              className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300"
             >
               Cursor Ambassadors Program
             </a>{" "}
@@ -141,31 +141,31 @@ export default function AboutCursorPage() {
           </p>
 
           <div className="grid md:grid-cols-2 gap-6 mb-8">
-            <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">What Ambassadors Do</h3>
-              <ul className="space-y-3 text-neutral-300">
+            <div className="bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-black dark:text-white mb-4">What Ambassadors Do</h3>
+              <ul className="space-y-3 text-neutral-600 dark:text-neutral-300">
                 <li className="flex items-start gap-3">
-                  <span className="text-emerald-400 font-bold">1.</span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">1.</span>
                   <span>Help fellow developers troubleshoot and optimize their Cursor workflow</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="text-emerald-400 font-bold">2.</span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">2.</span>
                   <span>Host community meetups, hackathons, and workshops</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="text-emerald-400 font-bold">3.</span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">3.</span>
                   <span>Share expertise and insights about AI-powered development</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="text-emerald-400 font-bold">4.</span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">4.</span>
                   <span>Provide direct feedback to the Cursor team to shape the product&apos;s future</span>
                 </li>
               </ul>
             </div>
 
-            <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Ambassador Benefits</h3>
-              <ul className="space-y-3 text-neutral-300">
+            <div className="bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-black dark:text-white mb-4">Ambassador Benefits</h3>
+              <ul className="space-y-3 text-neutral-600 dark:text-neutral-300">
                 <li className="flex items-start gap-3">
                   <svg className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -194,11 +194,11 @@ export default function AboutCursorPage() {
             </div>
           </div>
 
-          <div className="bg-neutral-800/50 border border-neutral-700 rounded-xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-3">Other Community Programs</h3>
-            <p className="text-neutral-300 mb-4">
+          <div className="bg-neutral-200 dark:bg-neutral-800/50 border border-neutral-300 dark:border-neutral-700 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-black dark:text-white mb-3">Other Community Programs</h3>
+            <p className="text-neutral-600 dark:text-neutral-300 mb-4">
               In addition to the Ambassadors program, Cursor also runs a{" "}
-              <strong className="text-white">Campus Leads</strong> program for students at universities.
+              <strong className="text-black dark:text-white">Campus Leads</strong> program for students at universities.
               Campus Leads are representatives at schools who teach best practices, organize campus events,
               and share Cursor with their academic communities.
             </p>
@@ -206,7 +206,7 @@ export default function AboutCursorPage() {
               href="https://cursor.com/community"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-emerald-400 hover:text-emerald-300 font-medium"
+              className="inline-flex items-center gap-2 text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-medium"
             >
               Learn more about Cursor Community programs
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -218,7 +218,7 @@ export default function AboutCursorPage() {
       </section>
 
       {/* Cursor Boston's Relationship */}
-      <section className="py-12 md:py-16 px-6 border-b border-neutral-800">
+      <section className="py-12 md:py-16 px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-12 h-12 relative">
@@ -227,17 +227,17 @@ export default function AboutCursorPage() {
                 alt="Cursor Boston"
                 fill
                 unoptimized
-                className="object-contain"
+                className="object-contain invert dark:invert-0"
               />
             </div>
-            <h2 className="text-3xl font-bold text-white">Cursor Boston&apos;s Relationship with Cursor</h2>
+            <h2 className="text-3xl font-bold text-black dark:text-white">Cursor Boston&apos;s Relationship with Cursor</h2>
           </div>
 
           <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-6 md:p-8 mb-8">
-            <h3 className="text-xl font-bold text-emerald-400 mb-3">Our Status</h3>
-            <p className="text-neutral-200 text-lg">
+            <h3 className="text-xl font-bold text-emerald-600 dark:text-emerald-400 mb-3">Our Status</h3>
+            <p className="text-neutral-700 dark:text-neutral-300 text-lg">
               Cursor Boston is led by members of the{" "}
-              <strong className="text-white">Cursor Ambassadors Program</strong>. This means we are
+              <strong className="text-black dark:text-white">Cursor Ambassadors Program</strong>. This means we are
               officially recognized community leaders who have been vetted and supported by Cursor
               to organize local community activities in the Boston area.
             </p>
@@ -245,14 +245,14 @@ export default function AboutCursorPage() {
 
           <div className="space-y-6">
             <div>
-              <h3 className="text-xl font-semibold text-white mb-3">What This Means</h3>
-              <ul className="space-y-3 text-neutral-300">
+              <h3 className="text-xl font-semibold text-black dark:text-white mb-3">What This Means</h3>
+              <ul className="space-y-3 text-neutral-600 dark:text-neutral-300">
                 <li className="flex items-start gap-3">
                   <svg className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                   <span>
-                    <strong className="text-white">Official Recognition:</strong> We are part of Cursor&apos;s
+                    <strong className="text-black dark:text-white">Official Recognition:</strong> We are part of Cursor&apos;s
                     official community network and have permission to use the Cursor name
                   </span>
                 </li>
@@ -261,7 +261,7 @@ export default function AboutCursorPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                   <span>
-                    <strong className="text-white">Support:</strong> We receive support from Cursor to help
+                    <strong className="text-black dark:text-white">Support:</strong> We receive support from Cursor to help
                     fund and organize community events
                   </span>
                 </li>
@@ -270,7 +270,7 @@ export default function AboutCursorPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                   <span>
-                    <strong className="text-white">Feedback Channel:</strong> We have direct communication
+                    <strong className="text-black dark:text-white">Feedback Channel:</strong> We have direct communication
                     with the Cursor team and can relay community feedback
                   </span>
                 </li>
@@ -278,14 +278,14 @@ export default function AboutCursorPage() {
             </div>
 
             <div>
-              <h3 className="text-xl font-semibold text-white mb-3">What This Does NOT Mean</h3>
-              <ul className="space-y-3 text-neutral-300">
+              <h3 className="text-xl font-semibold text-black dark:text-white mb-3">What This Does NOT Mean</h3>
+              <ul className="space-y-3 text-neutral-600 dark:text-neutral-300">
                 <li className="flex items-start gap-3">
                   <svg className="w-5 h-5 text-red-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                   <span>
-                    <strong className="text-white">Not Employees:</strong> We are volunteers, not employees
+                    <strong className="text-black dark:text-white">Not Employees:</strong> We are volunteers, not employees
                     or contractors of Cursor or Anysphere Inc.
                   </span>
                 </li>
@@ -294,7 +294,7 @@ export default function AboutCursorPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                   <span>
-                    <strong className="text-white">Not Official Representatives:</strong> Our views and
+                    <strong className="text-black dark:text-white">Not Official Representatives:</strong> Our views and
                     opinions do not represent Cursor&apos;s official positions
                   </span>
                 </li>
@@ -303,7 +303,7 @@ export default function AboutCursorPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                   <span>
-                    <strong className="text-white">Independent Operations:</strong> Our day-to-day operations,
+                    <strong className="text-black dark:text-white">Independent Operations:</strong> Our day-to-day operations,
                     content, and event decisions are made independently
                   </span>
                 </li>
@@ -314,23 +314,23 @@ export default function AboutCursorPage() {
       </section>
 
       {/* About Our Partners */}
-      <section className="py-12 md:py-16 px-6 border-b border-neutral-800 bg-neutral-950/50">
+      <section className="py-12 md:py-16 px-6 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950/50">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold text-white mb-6">About Our Partners & Sponsors</h2>
+          <h2 className="text-3xl font-bold text-black dark:text-white mb-6">About Our Partners & Sponsors</h2>
 
-          <p className="text-neutral-300 mb-6">
+          <p className="text-neutral-600 dark:text-neutral-300 mb-6">
             Cursor Boston collaborates with various venues, sponsors, and community partners to bring
             events and resources to our members. It&apos;s important to understand the nature of these relationships:
           </p>
 
-          <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 md:p-8">
-            <ul className="space-y-4 text-neutral-300">
+          <div className="bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-6 md:p-8">
+            <ul className="space-y-4 text-neutral-600 dark:text-neutral-300">
               <li className="flex items-start gap-3">
                 <svg className="w-5 h-5 text-amber-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span>
-                  Event hosts and venue partners are <strong className="text-white">supporters of
+                  Event hosts and venue partners are <strong className="text-black dark:text-white">supporters of
                   the Cursor Boston community</strong>, not official partners of Cursor the company
                 </span>
               </li>
@@ -339,7 +339,7 @@ export default function AboutCursorPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span>
-                  Sponsorships and partnerships with Cursor Boston <strong className="text-white">do not
+                  Sponsorships and partnerships with Cursor Boston <strong className="text-black dark:text-white">do not
                   imply</strong> a business relationship with Cursor or Anysphere Inc.
                 </span>
               </li>
@@ -348,7 +348,7 @@ export default function AboutCursorPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span>
-                  Partner logos on our platform indicate support for <strong className="text-white">our
+                  Partner logos on our platform indicate support for <strong className="text-black dark:text-white">our
                   local community</strong>, not an endorsement by Cursor
                 </span>
               </li>
@@ -358,15 +358,15 @@ export default function AboutCursorPage() {
       </section>
 
       {/* Trademark Notice */}
-      <section className="py-12 md:py-16 px-6 border-b border-neutral-800">
+      <section className="py-12 md:py-16 px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold text-white mb-6">Trademark Notice</h2>
+          <h2 className="text-3xl font-bold text-black dark:text-white mb-6">Trademark Notice</h2>
 
-          <p className="text-neutral-300 mb-4">
+          <p className="text-neutral-600 dark:text-neutral-300 mb-4">
             &quot;Cursor&quot; is a trademark of Anysphere Inc. Our use of the Cursor name in &quot;Cursor Boston&quot;
             is to identify our community of Cursor users in the Boston area.
           </p>
-          <p className="text-neutral-300">
+          <p className="text-neutral-600 dark:text-neutral-300">
             This use is permitted through our participation in the Cursor Ambassadors Program.
             This does not imply ownership, endorsement, or official affiliation beyond the
             ambassadors program relationship described above.
@@ -377,9 +377,9 @@ export default function AboutCursorPage() {
       {/* Get Involved */}
       <section className="py-12 md:py-16 px-6">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-white mb-6">Get Involved</h2>
+          <h2 className="text-3xl font-bold text-black dark:text-white mb-6">Get Involved</h2>
 
-          <p className="text-neutral-300 mb-8 max-w-2xl mx-auto">
+          <p className="text-neutral-600 dark:text-neutral-300 mb-8 max-w-2xl mx-auto">
             Whether you&apos;re interested in joining our local community or learning more about
             Cursor&apos;s global programs, here are some ways to get started:
           </p>
@@ -400,7 +400,7 @@ export default function AboutCursorPage() {
               href="https://cursor.com/ambassadors"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-lg font-semibold hover:bg-emerald-400 transition-colors"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 text-black dark:text-white rounded-lg font-semibold hover:bg-emerald-400 transition-colors"
             >
               Apply to be an Ambassador
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -411,7 +411,7 @@ export default function AboutCursorPage() {
               href="https://cursor.com/community"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-neutral-800 text-white rounded-lg font-semibold hover:bg-neutral-700 transition-colors"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-neutral-200 dark:bg-neutral-800 text-black dark:text-white rounded-lg font-semibold hover:bg-neutral-700 transition-colors"
             >
               Explore Global Community
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -420,20 +420,20 @@ export default function AboutCursorPage() {
             </a>
           </div>
 
-          <div className="mt-12 pt-8 border-t border-neutral-800">
-            <p className="text-neutral-400 text-sm">
+          <div className="mt-12 pt-8 border-t border-neutral-200 dark:border-neutral-800">
+            <p className="text-neutral-500 dark:text-neutral-400 text-sm">
               Questions about our relationship with Cursor?{" "}
-              <a href="mailto:hello@cursorboston.com" className="text-emerald-400 hover:text-emerald-300">
+              <a href="mailto:hello@cursorboston.com" className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300">
                 Contact us
               </a>
             </p>
-            <p className="text-neutral-500 text-sm mt-2">
+            <p className="text-neutral-500 dark:text-neutral-400 text-sm mt-2">
               See also:{" "}
-              <Link href="/disclaimer" className="text-emerald-400 hover:text-emerald-300">
+              <Link href="/disclaimer" className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300">
                 Legal Disclaimer
               </Link>
               {" | "}
-              <Link href="/about" className="text-emerald-400 hover:text-emerald-300">
+              <Link href="/about" className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300">
                 About Cursor Boston
               </Link>
             </p>

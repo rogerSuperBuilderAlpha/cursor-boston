@@ -49,7 +49,7 @@ export default async function BlogPostPage({ params }: Props) {
           return (
             <h1
               key={index}
-              className="text-3xl font-bold text-white mt-8 mb-4"
+              className="text-3xl font-bold text-black dark:text-white mt-8 mb-4"
             >
               {paragraph.slice(2)}
             </h1>
@@ -59,7 +59,7 @@ export default async function BlogPostPage({ params }: Props) {
           return (
             <h2
               key={index}
-              className="text-2xl font-bold text-white mt-8 mb-4"
+              className="text-2xl font-bold text-black dark:text-white mt-8 mb-4"
             >
               {paragraph.slice(3)}
             </h2>
@@ -67,7 +67,7 @@ export default async function BlogPostPage({ params }: Props) {
         }
         if (paragraph.startsWith("### ")) {
           return (
-            <h3 key={index} className="text-xl font-bold text-white mt-6 mb-3">
+            <h3 key={index} className="text-xl font-bold text-black dark:text-white mt-6 mb-3">
               {paragraph.slice(4)}
             </h3>
           );
@@ -76,7 +76,7 @@ export default async function BlogPostPage({ params }: Props) {
         // Handle horizontal rules
         if (paragraph.trim() === "---") {
           return (
-            <hr key={index} className="border-neutral-700 my-8" />
+            <hr key={index} className="border-neutral-300 dark:border-neutral-700 my-8" />
           );
         }
 
@@ -86,7 +86,7 @@ export default async function BlogPostPage({ params }: Props) {
           return (
             <ul key={index} className="list-disc list-inside space-y-2 mb-4">
               {items.map((item, i) => (
-                <li key={i} className="text-neutral-300">
+                <li key={i} className="text-neutral-600 dark:text-neutral-300">
                   {formatInlineText(item.replace(/^- /, ""))}
                 </li>
               ))}
@@ -100,7 +100,7 @@ export default async function BlogPostPage({ params }: Props) {
           return (
             <ol key={index} className="list-decimal list-inside space-y-2 mb-4">
               {items.map((item, i) => (
-                <li key={i} className="text-neutral-300">
+                <li key={i} className="text-neutral-600 dark:text-neutral-300">
                   {formatInlineText(item.replace(/^\d+\. /, ""))}
                 </li>
               ))}
@@ -110,7 +110,7 @@ export default async function BlogPostPage({ params }: Props) {
 
         // Regular paragraphs
         return (
-          <p key={index} className="text-neutral-300 leading-relaxed mb-4">
+          <p key={index} className="text-neutral-600 dark:text-neutral-300 leading-relaxed mb-4">
             {formatInlineText(paragraph)}
           </p>
         );
@@ -176,7 +176,7 @@ export default async function BlogPostPage({ params }: Props) {
       // Add the formatted element
       if (earliest.type === "bold") {
         parts.push(
-          <strong key={key++} className="text-white font-semibold">
+          <strong key={key++} className="text-black dark:text-white font-semibold">
             {earliest.match[1]}
           </strong>
         );
@@ -188,7 +188,7 @@ export default async function BlogPostPage({ params }: Props) {
             href={safeUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-white underline hover:text-neutral-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded"
+            className="text-black dark:text-white underline hover:text-neutral-600 dark:text-neutral-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded"
           >
             {earliest.match[1]}
           </a>
@@ -197,7 +197,7 @@ export default async function BlogPostPage({ params }: Props) {
         parts.push(
           <code
             key={key++}
-            className="bg-neutral-800 text-neutral-200 px-1.5 py-0.5 rounded text-sm"
+            className="bg-neutral-200 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 px-1.5 py-0.5 rounded text-sm"
           >
             {earliest.match[1]}
           </code>
@@ -246,11 +246,11 @@ export default async function BlogPostPage({ params }: Props) {
         }}
       />
       {/* Back Link */}
-      <div className="py-6 px-6 border-b border-neutral-800">
+      <div className="py-6 px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-3xl mx-auto">
           <Link
             href="/blog"
-            className="text-neutral-400 hover:text-white transition-colors text-sm focus-visible:outline-none focus-visible:text-white focus-visible:underline"
+            className="text-neutral-500 dark:text-neutral-400 hover:text-white transition-colors text-sm focus-visible:outline-none focus-visible:text-black dark:text-white focus-visible:underline"
           >
             &larr; Back to Blog
           </Link>
@@ -262,7 +262,7 @@ export default async function BlogPostPage({ params }: Props) {
         <div className="max-w-3xl mx-auto">
           {/* Header */}
           <header className="mb-8">
-            <div className="flex items-center gap-4 text-sm text-neutral-500 mb-4">
+            <div className="flex items-center gap-4 text-sm text-neutral-600 dark:text-neutral-500 mb-4">
               <time dateTime={post.date}>
                 {new Date(post.date).toLocaleDateString("en-US", {
                   year: "numeric",
@@ -273,25 +273,25 @@ export default async function BlogPostPage({ params }: Props) {
               <span>&middot;</span>
               <span>{post.author}</span>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-white">
+            <h1 className="text-4xl md:text-5xl font-bold text-black dark:text-white">
               {post.title}
             </h1>
           </header>
 
           {/* Content */}
-          <div className="prose prose-invert max-w-none">
+          <div className="prose dark:prose-invert max-w-none">
             {renderContent(post.content)}
           </div>
         </div>
       </article>
 
       {/* CTA */}
-      <section className="py-12 px-6 bg-neutral-950 border-t border-neutral-800">
+      <section className="py-12 px-6 bg-neutral-50 dark:bg-neutral-950 border-t border-neutral-200 dark:border-neutral-800">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-xl font-bold text-white mb-4">
+          <h2 className="text-xl font-bold text-black dark:text-white mb-4">
             Want to stay updated?
           </h2>
-          <p className="text-neutral-400 mb-6">
+          <p className="text-neutral-500 dark:text-neutral-400 mb-6">
             Subscribe to our Luma calendar to get notified about upcoming
             events.
           </p>
@@ -300,7 +300,7 @@ export default async function BlogPostPage({ params }: Props) {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Subscribe on Luma (opens in new tab)"
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-black rounded-lg text-sm font-semibold hover:bg-neutral-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-black dark:bg-white text-white dark:text-black rounded-lg text-sm font-semibold hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-neutral-950"
           >
             Subscribe on Luma
             <svg

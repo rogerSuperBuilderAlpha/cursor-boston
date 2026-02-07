@@ -11,7 +11,7 @@ export function MemberCard({ member }: MemberCardProps) {
   const isAgent = member.memberType === "agent";
 
   return (
-    <div className="bg-neutral-900 rounded-xl p-6 border border-neutral-800 hover:border-neutral-700 transition-colors">
+    <div className="bg-neutral-900 rounded-xl p-6 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-700 transition-colors">
       {/* Header */}
       <div className="flex items-start gap-4 mb-4">
         <div className="relative shrink-0">
@@ -24,7 +24,7 @@ export function MemberCard({ member }: MemberCardProps) {
               className="rounded-full object-cover"
             />
           ) : (
-            <div className={`w-14 h-14 rounded-full flex items-center justify-center text-white font-semibold text-lg ${
+            <div className={`w-14 h-14 rounded-full flex items-center justify-center text-black dark:text-white font-semibold text-lg ${
               isAgent ? "bg-purple-900/50" : "bg-neutral-800"
             }`}>
               {isAgent ? (
@@ -76,7 +76,7 @@ export function MemberCard({ member }: MemberCardProps) {
 
       {/* Location */}
       {v?.showLocation && member.location && (
-        <div className="flex items-center gap-2 text-neutral-400 text-sm mb-4">
+        <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400 text-sm mb-4">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="14"
@@ -107,7 +107,7 @@ export function MemberCard({ member }: MemberCardProps) {
           </span>
         )}
         {v?.showGithubBadge && member.github && (
-          <span className="px-2 py-1 bg-neutral-800/50 text-white text-xs rounded-full inline-flex items-center gap-1">
+          <span className="px-2 py-1 bg-neutral-800/50 text-black dark:text-white text-xs rounded-full inline-flex items-center gap-1">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path
                 fillRule="evenodd"
@@ -136,7 +136,7 @@ export function MemberCard({ member }: MemberCardProps) {
       </div>
 
       {/* Social Links */}
-      <div className="flex items-center gap-1 pt-4 border-t border-neutral-800 -ml-2">
+      <div className="flex items-center gap-1 pt-4 border-t border-neutral-200 dark:border-neutral-800 -ml-2">
         {v?.showWebsite && member.socialLinks?.website && (
           <a
             href={member.socialLinks.website}

@@ -390,11 +390,11 @@ function HackathonsTeamPageContent() {
   if (!user) {
     return (
       <div className="max-w-2xl mx-auto px-6 py-16 text-center">
-        <h1 className="text-2xl font-bold text-white mb-4">My team</h1>
-        <p className="text-neutral-400 mb-6">Sign in to view and manage your team.</p>
+        <h1 className="text-2xl font-bold text-black dark:text-white mb-4">My team</h1>
+        <p className="text-neutral-500 dark:text-neutral-400 mb-6">Sign in to view and manage your team.</p>
         <Link
           href={`/login?redirect=${encodeURIComponent("/hackathons/team")}`}
-          className="inline-block px-6 py-3 bg-emerald-500 text-white rounded-lg font-semibold hover:bg-emerald-400"
+          className="inline-block px-6 py-3 bg-emerald-500 text-black dark:text-white rounded-lg font-semibold hover:bg-emerald-400"
         >
           Sign in
         </Link>
@@ -412,26 +412,26 @@ function HackathonsTeamPageContent() {
       <div className="mb-8">
         <Link
           href="/hackathons"
-          className="text-neutral-400 hover:text-white text-sm font-medium"
+          className="text-neutral-500 dark:text-neutral-400 hover:text-black dark:text-white text-sm font-medium"
         >
           ← Hackathons
         </Link>
-        <h1 className="text-3xl font-bold text-white mt-2">My team</h1>
-        <p className="text-neutral-400 mt-1">
-          Hackathon: <span className="text-white font-medium">{hackathonId}</span>
+        <h1 className="text-3xl font-bold text-black dark:text-white mt-2">My team</h1>
+        <p className="text-neutral-500 dark:text-neutral-400 mt-1">
+          Hackathon: <span className="text-black dark:text-white font-medium">{hackathonId}</span>
         </p>
       </div>
 
       {/* No team */}
       {!myTeam && (
-        <section className="bg-neutral-900 rounded-xl p-6 border border-neutral-800 mb-8">
-          <h2 className="text-lg font-semibold text-white mb-3">You are not on a team</h2>
-          <p className="text-neutral-400 mb-4">
+        <section className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-6 border border-neutral-200 dark:border-neutral-800 mb-8">
+          <h2 className="text-lg font-semibold text-black dark:text-white mb-3">You are not on a team</h2>
+          <p className="text-neutral-500 dark:text-neutral-400 mb-4">
             Join the pool to find teammates or get invited. You can also create a team from the pool (invite others to your team).
           </p>
           <Link
             href="/hackathons/pool"
-            className="inline-block px-4 py-2 bg-emerald-500 text-white rounded-lg text-sm font-medium hover:bg-emerald-400"
+            className="inline-block px-4 py-2 bg-emerald-500 text-black dark:text-white rounded-lg text-sm font-medium hover:bg-emerald-400"
           >
             Find a team
           </Link>
@@ -440,12 +440,12 @@ function HackathonsTeamPageContent() {
 
       {/* My invites (when no team or have team) */}
       {myInvites.length > 0 && (
-        <section className="bg-neutral-900 rounded-xl p-6 border border-neutral-800 mb-8">
-          <h2 className="text-lg font-semibold text-white mb-3">Invites to you</h2>
+        <section className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-6 border border-neutral-200 dark:border-neutral-800 mb-8">
+          <h2 className="text-lg font-semibold text-black dark:text-white mb-3">Invites to you</h2>
           <ul className="space-y-3">
             {myInvites.map((inv) => (
-              <li key={inv.id} className="flex items-center justify-between gap-4 py-2 border-b border-neutral-800 last:border-0">
-                <span className="text-neutral-300 text-sm">Team {inv.teamId.slice(0, 8)}… invited you.</span>
+              <li key={inv.id} className="flex items-center justify-between gap-4 py-2 border-b border-neutral-200 dark:border-neutral-800 last:border-0">
+                <span className="text-neutral-600 dark:text-neutral-300 text-sm">Team {inv.teamId.slice(0, 8)}… invited you.</span>
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleAcceptInvite(inv.id)}
@@ -457,7 +457,7 @@ function HackathonsTeamPageContent() {
                   <button
                     onClick={() => handleDeclineInvite(inv.id)}
                     disabled={decliningInvite === inv.id}
-                    className="px-3 py-1.5 text-neutral-400 hover:text-white rounded-lg text-sm disabled:opacity-50"
+                    className="px-3 py-1.5 text-neutral-500 dark:text-neutral-400 hover:text-black dark:text-white rounded-lg text-sm disabled:opacity-50"
                   >
                     {decliningInvite === inv.id ? "…" : "Decline"}
                   </button>
@@ -471,8 +471,8 @@ function HackathonsTeamPageContent() {
       {/* My team */}
       {myTeam && (
         <>
-          <section className="bg-neutral-900 rounded-xl p-6 border border-neutral-800 mb-8">
-            <h2 className="text-lg font-semibold text-white mb-4">Team members ({myTeam.memberIds.length}/3)</h2>
+          <section className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-6 border border-neutral-200 dark:border-neutral-800 mb-8">
+            <h2 className="text-lg font-semibold text-black dark:text-white mb-4">Team members ({myTeam.memberIds.length}/3)</h2>
             <ul className="space-y-3">
               {myTeam.memberIds.map((uid) => {
                 const profile = memberProfiles[uid];
@@ -487,12 +487,12 @@ function HackathonsTeamPageContent() {
                         className="rounded-full object-cover"
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center text-white font-semibold">
+                      <div className="w-10 h-10 rounded-full bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center text-black dark:text-white font-semibold">
                         {getInitials(profile?.displayName)}
                       </div>
                     )}
                     <div>
-                      <p className="text-white font-medium">{profile?.displayName || "Anonymous"}</p>
+                      <p className="text-black dark:text-white font-medium">{profile?.displayName || "Anonymous"}</p>
                       {uid === user.uid && <span className="text-neutral-500 text-sm">(you)</span>}
                     </div>
                   </li>
@@ -500,14 +500,14 @@ function HackathonsTeamPageContent() {
               })}
             </ul>
             {myTeam.memberIds.length < 3 && (
-              <p className="text-neutral-400 text-sm mt-4">
+              <p className="text-neutral-500 dark:text-neutral-400 text-sm mt-4">
                 <Link href="/hackathons/pool" className="text-emerald-400 hover:underline">
                   Invite from pool
                 </Link>{" "}
                 to fill your team.
               </p>
             )}
-            <div className="mt-4 pt-4 border-t border-neutral-800">
+            <div className="mt-4 pt-4 border-t border-neutral-200 dark:border-neutral-800">
               <button
                 onClick={handleLeaveTeam}
                 disabled={leaving}
@@ -520,14 +520,14 @@ function HackathonsTeamPageContent() {
 
           {/* Team profile (unlocked when wins >= 1) */}
           {(myTeam.wins ?? 0) >= 1 ? (
-            <section className="bg-neutral-900 rounded-xl p-6 border border-neutral-800 mb-8">
-              <h2 className="text-lg font-semibold text-white mb-3">Team profile</h2>
-              <p className="text-neutral-400 text-sm mb-4">
+            <section className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-6 border border-neutral-200 dark:border-neutral-800 mb-8">
+              <h2 className="text-lg font-semibold text-black dark:text-white mb-3">Team profile</h2>
+              <p className="text-neutral-500 dark:text-neutral-400 text-sm mb-4">
                 Set a display name and logo for your team. These are shown on the teams list and pool.
               </p>
               <div className="space-y-3 max-w-md">
                 <div>
-                  <label htmlFor="team-name" className="block text-neutral-400 text-sm mb-1">
+                  <label htmlFor="team-name" className="block text-neutral-500 dark:text-neutral-400 text-sm mb-1">
                     Team name
                   </label>
                   <input
@@ -536,11 +536,11 @@ function HackathonsTeamPageContent() {
                     value={profileName}
                     onChange={(e) => setProfileName(e.target.value)}
                     placeholder="e.g. Full Stack Crew"
-                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    className="w-full px-3 py-2 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400"
                   />
                 </div>
                 <div>
-                  <label htmlFor="team-logo" className="block text-neutral-400 text-sm mb-1">
+                  <label htmlFor="team-logo" className="block text-neutral-500 dark:text-neutral-400 text-sm mb-1">
                     Logo URL
                   </label>
                   <input
@@ -549,22 +549,22 @@ function HackathonsTeamPageContent() {
                     value={profileLogoUrl}
                     onChange={(e) => setProfileLogoUrl(e.target.value)}
                     placeholder="https://…"
-                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    className="w-full px-3 py-2 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400"
                   />
                 </div>
                 <button
                   onClick={handleSaveProfile}
                   disabled={savingProfile}
-                  className="px-4 py-2 bg-emerald-500 text-white rounded-lg text-sm font-medium hover:bg-emerald-400 disabled:opacity-50"
+                  className="px-4 py-2 bg-emerald-500 text-black dark:text-white rounded-lg text-sm font-medium hover:bg-emerald-400 disabled:opacity-50"
                 >
                   {savingProfile ? "Saving…" : "Save profile"}
                 </button>
               </div>
             </section>
           ) : (
-            <section className="bg-neutral-900 rounded-xl p-6 border border-neutral-800 mb-8">
-              <h2 className="text-lg font-semibold text-white mb-3">Team profile</h2>
-              <p className="text-neutral-400 text-sm">
+            <section className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-6 border border-neutral-200 dark:border-neutral-800 mb-8">
+              <h2 className="text-lg font-semibold text-black dark:text-white mb-3">Team profile</h2>
+              <p className="text-neutral-500 dark:text-neutral-400 text-sm">
                 Win a hackathon to unlock a team profile and logo. Until then, your team is shown by its ID.
               </p>
             </section>
@@ -572,12 +572,12 @@ function HackathonsTeamPageContent() {
 
           {/* Requests to my team */}
           {requestsToMyTeam.length > 0 && (
-            <section className="bg-neutral-900 rounded-xl p-6 border border-neutral-800 mb-8">
-              <h2 className="text-lg font-semibold text-white mb-3">Requests to join your team</h2>
+            <section className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-6 border border-neutral-200 dark:border-neutral-800 mb-8">
+              <h2 className="text-lg font-semibold text-black dark:text-white mb-3">Requests to join your team</h2>
               <ul className="space-y-3">
                 {requestsToMyTeam.map((req) => (
-                  <li key={req.id} className="flex items-center justify-between gap-4 py-2 border-b border-neutral-800 last:border-0">
-                    <span className="text-neutral-300 text-sm">User {req.fromUserId.slice(0, 8)}… requested to join.</span>
+                  <li key={req.id} className="flex items-center justify-between gap-4 py-2 border-b border-neutral-200 dark:border-neutral-800 last:border-0">
+                    <span className="text-neutral-600 dark:text-neutral-300 text-sm">User {req.fromUserId.slice(0, 8)}… requested to join.</span>
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleAcceptRequest(req.id)}
@@ -589,7 +589,7 @@ function HackathonsTeamPageContent() {
                       <button
                         onClick={() => handleDeclineRequest(req.id)}
                         disabled={decliningRequest === req.id}
-                        className="px-3 py-1.5 text-neutral-400 hover:text-white rounded-lg text-sm disabled:opacity-50"
+                        className="px-3 py-1.5 text-neutral-500 dark:text-neutral-400 hover:text-black dark:text-white rounded-lg text-sm disabled:opacity-50"
                       >
                         {decliningRequest === req.id ? "…" : "Decline"}
                       </button>
@@ -602,13 +602,13 @@ function HackathonsTeamPageContent() {
 
           {/* Virtual: register repo & submit */}
           {isVirtual && (
-            <section className="bg-neutral-900 rounded-xl p-6 border border-neutral-800 mb-8">
-              <h2 className="text-lg font-semibold text-white mb-3">Virtual hackathon – submission</h2>
-              <p className="text-neutral-400 text-sm mb-4">
+            <section className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-6 border border-neutral-200 dark:border-neutral-800 mb-8">
+              <h2 className="text-lg font-semibold text-black dark:text-white mb-3">Virtual hackathon – submission</h2>
+              <p className="text-neutral-500 dark:text-neutral-400 text-sm mb-4">
                 Repo must be public and created during this month. Period ends {monthEnd.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}.
               </p>
               {submission?.repoUrl && (
-                <p className="text-neutral-300 text-sm mb-2">
+                <p className="text-neutral-600 dark:text-neutral-300 text-sm mb-2">
                   Registered repo:{" "}
                   <a href={submission.repoUrl} target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:underline">
                     {submission.repoUrl}
@@ -624,7 +624,7 @@ function HackathonsTeamPageContent() {
               {canRegister && !submission?.submittedAt && !submission?.disqualified && (
                 <div className="flex flex-wrap items-end gap-3 mt-3">
                   <div className="flex-1 min-w-[200px]">
-                    <label htmlFor="repo-url" className="block text-neutral-400 text-sm mb-1">
+                    <label htmlFor="repo-url" className="block text-neutral-500 dark:text-neutral-400 text-sm mb-1">
                       GitHub repo URL
                     </label>
                     <input
@@ -633,13 +633,13 @@ function HackathonsTeamPageContent() {
                       value={repoUrl}
                       onChange={(e) => setRepoUrl(e.target.value)}
                       placeholder="https://github.com/owner/repo"
-                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                      className="w-full px-3 py-2 bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-black dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400"
                     />
                   </div>
                   <button
                     onClick={handleRegisterRepo}
                     disabled={registering || !repoUrl.trim()}
-                    className="px-4 py-2 bg-emerald-500 text-white rounded-lg text-sm font-medium hover:bg-emerald-400 disabled:opacity-50"
+                    className="px-4 py-2 bg-emerald-500 text-black dark:text-white rounded-lg text-sm font-medium hover:bg-emerald-400 disabled:opacity-50"
                   >
                     {registering ? "Registering…" : submission?.repoUrl ? "Update repo" : "Register repo"}
                   </button>
@@ -650,7 +650,7 @@ function HackathonsTeamPageContent() {
                   <button
                     onClick={handleSubmit}
                     disabled={submitting}
-                    className="px-4 py-2 bg-neutral-700 text-white rounded-lg text-sm font-medium hover:bg-neutral-600 disabled:opacity-50"
+                    className="px-4 py-2 bg-neutral-700 text-black dark:text-white rounded-lg text-sm font-medium hover:bg-neutral-600 disabled:opacity-50"
                   >
                     {submitting ? "Submitting…" : "Submit / lock"}
                   </button>

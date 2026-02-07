@@ -3,25 +3,25 @@ import Image from "next/image";
 
 export default function Footer() {
   return (
-    <footer className="bg-neutral-950 border-t border-neutral-800">
+    <footer className="bg-neutral-50 dark:bg-neutral-950 border-t border-neutral-200 dark:border-neutral-800">
       <div className="max-w-6xl mx-auto px-6 py-12 lg:py-16">
         {/* Main footer content */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
           {/* Brand column */}
           <div className="lg:col-span-4">
-            <Link href="/" className="inline-flex items-center mb-4 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950">
+            <Link href="/" className="inline-flex items-center mb-4 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-neutral-950">
               <div className="w-8 h-8 relative">
                 <Image
                   src="/cursor-boston-logo.png"
                   alt="Cursor Boston"
                   fill
                   unoptimized
-                  className="object-contain"
+                  className="object-contain invert dark:invert-0"
                 />
               </div>
-              <span className="font-semibold text-white ml-3">Cursor Boston</span>
+              <span className="font-semibold text-black dark:text-white ml-3">Cursor Boston</span>
             </Link>
-            <p className="text-neutral-400 text-sm leading-relaxed mb-6 max-w-xs">
+            <p className="text-neutral-500 dark:text-neutral-400 text-sm leading-relaxed mb-6 max-w-xs">
               Bringing Cursor users together in Beantown. Meetups, workshops, and community for AI-powered development.
             </p>
             <a
@@ -43,25 +43,25 @@ export default function Footer() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-8">
               {/* Site links */}
               <div>
-                <h3 className="text-white font-semibold text-sm mb-4">Site</h3>
+                <h3 className="text-black dark:text-white font-semibold text-sm mb-4">Site</h3>
                 <ul className="space-y-3">
                   <li>
-                    <Link href="/events" className="text-neutral-400 hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-white focus-visible:underline">
+                    <Link href="/events" className="text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-black dark:focus-visible:text-white focus-visible:underline">
                       Events
                     </Link>
                   </li>
                   <li>
-                    <Link href="/talks" className="text-neutral-400 hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-white focus-visible:underline">
+                    <Link href="/talks" className="text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-black dark:focus-visible:text-white focus-visible:underline">
                       Talks
                     </Link>
                   </li>
                   <li>
-                    <Link href="/blog" className="text-neutral-400 hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-white focus-visible:underline">
+                    <Link href="/blog" className="text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-black dark:focus-visible:text-white focus-visible:underline">
                       Blog
                     </Link>
                   </li>
                   <li>
-                    <Link href="/about" className="text-neutral-400 hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-white focus-visible:underline">
+                    <Link href="/about" className="text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-black dark:focus-visible:text-white focus-visible:underline">
                       About
                     </Link>
                   </li>
@@ -70,7 +70,7 @@ export default function Footer() {
 
               {/* Community links */}
               <div>
-                <h3 className="text-white font-semibold text-sm mb-4">Community</h3>
+                <h3 className="text-black dark:text-white font-semibold text-sm mb-4">Community</h3>
                 <ul className="space-y-3">
                   <li>
                     <a
@@ -78,7 +78,7 @@ export default function Footer() {
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label="Discord (opens in new tab)"
-                      className="text-neutral-400 hover:text-white text-sm transition-colors inline-flex items-center focus-visible:outline-none focus-visible:text-white focus-visible:underline"
+                      className="text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white text-sm transition-colors inline-flex items-center focus-visible:outline-none focus-visible:text-black dark:focus-visible:text-white focus-visible:underline"
                     >
                       Discord
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="ml-1" aria-hidden="true">
@@ -92,7 +92,7 @@ export default function Footer() {
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label="Luma (opens in new tab)"
-                      className="text-neutral-400 hover:text-white text-sm transition-colors inline-flex items-center focus-visible:outline-none focus-visible:text-white focus-visible:underline"
+                      className="text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white text-sm transition-colors inline-flex items-center focus-visible:outline-none focus-visible:text-black dark:focus-visible:text-white focus-visible:underline"
                     >
                       Luma
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="ml-1" aria-hidden="true">
@@ -101,7 +101,7 @@ export default function Footer() {
                     </a>
                   </li>
                   <li>
-                    <Link href="/open-source" className="text-neutral-400 hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-white focus-visible:underline">
+                    <Link href="/open-source" className="text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-black dark:focus-visible:text-white focus-visible:underline">
                       Open Source
                     </Link>
                   </li>
@@ -110,7 +110,7 @@ export default function Footer() {
 
               {/* Cursor links */}
               <div>
-                <h3 className="text-white font-semibold text-sm mb-4">Cursor</h3>
+                <h3 className="text-black dark:text-white font-semibold text-sm mb-4">Cursor</h3>
                 <ul className="space-y-3">
                   <li>
                     <a
@@ -118,7 +118,7 @@ export default function Footer() {
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label="cursor.com (opens in new tab)"
-                      className="text-neutral-400 hover:text-white text-sm transition-colors inline-flex items-center focus-visible:outline-none focus-visible:text-white focus-visible:underline"
+                      className="text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white text-sm transition-colors inline-flex items-center focus-visible:outline-none focus-visible:text-black dark:focus-visible:text-white focus-visible:underline"
                     >
                       cursor.com
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="ml-1" aria-hidden="true">
@@ -132,7 +132,7 @@ export default function Footer() {
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label="Cursor Global Community (opens in new tab)"
-                      className="text-neutral-400 hover:text-white text-sm transition-colors inline-flex items-center focus-visible:outline-none focus-visible:text-white focus-visible:underline"
+                      className="text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white text-sm transition-colors inline-flex items-center focus-visible:outline-none focus-visible:text-black dark:focus-visible:text-white focus-visible:underline"
                     >
                       Global Community
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="ml-1" aria-hidden="true">
@@ -141,7 +141,7 @@ export default function Footer() {
                     </a>
                   </li>
                   <li>
-                    <Link href="/about-cursor" className="text-neutral-400 hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-white focus-visible:underline">
+                    <Link href="/about-cursor" className="text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-black dark:focus-visible:text-white focus-visible:underline">
                       About Cursor
                     </Link>
                   </li>
@@ -150,30 +150,30 @@ export default function Footer() {
 
               {/* Legal links */}
               <div>
-                <h3 className="text-white font-semibold text-sm mb-4">Legal</h3>
+                <h3 className="text-black dark:text-white font-semibold text-sm mb-4">Legal</h3>
                 <ul className="space-y-3">
                   <li>
-                    <Link href="/privacy" className="text-neutral-400 hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-white focus-visible:underline">
+                    <Link href="/privacy" className="text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-black dark:focus-visible:text-white focus-visible:underline">
                       Privacy Policy
                     </Link>
                   </li>
                   <li>
-                    <Link href="/terms" className="text-neutral-400 hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-white focus-visible:underline">
+                    <Link href="/terms" className="text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-black dark:focus-visible:text-white focus-visible:underline">
                       Terms of Service
                     </Link>
                   </li>
                   <li>
-                    <Link href="/code-of-conduct" className="text-neutral-400 hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-white focus-visible:underline">
+                    <Link href="/code-of-conduct" className="text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-black dark:focus-visible:text-white focus-visible:underline">
                       Code of Conduct
                     </Link>
                   </li>
                   <li>
-                    <Link href="/accessibility" className="text-neutral-400 hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-white focus-visible:underline">
+                    <Link href="/accessibility" className="text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-black dark:focus-visible:text-white focus-visible:underline">
                       Accessibility
                     </Link>
                   </li>
                   <li>
-                    <Link href="/disclaimer" className="text-neutral-400 hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-white focus-visible:underline">
+                    <Link href="/disclaimer" className="text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-black dark:focus-visible:text-white focus-visible:underline">
                       Disclaimer
                     </Link>
                   </li>
@@ -184,17 +184,17 @@ export default function Footer() {
         </div>
 
         {/* Gauntlet AI Sponsor */}
-        <div className="border-t border-neutral-800 mt-12 pt-8">
+        <div className="border-t border-neutral-200 dark:border-neutral-800 mt-12 pt-8">
           <a
             href="https://referred.gauntletai.com/7fbSz2"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Learn more about Gauntlet AI (opens in new tab)"
-            className="block bg-neutral-900 border border-neutral-700 rounded-xl p-4 sm:p-5 hover:border-neutral-600 hover:bg-neutral-800/50 transition-all group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950"
+            className="block bg-neutral-100 dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 rounded-xl p-4 sm:p-5 hover:border-neutral-400 dark:hover:border-neutral-600 hover:bg-neutral-200/50 dark:hover:bg-neutral-800/50 transition-all group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-neutral-950"
           >
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center shrink-0 p-2">
+                <div className="w-12 h-12 bg-white dark:bg-neutral-800 rounded-lg flex items-center justify-center shrink-0 p-2">
                   <Image
                     src="/gauntlet-logo.png"
                     alt="Gauntlet"
@@ -204,15 +204,15 @@ export default function Footer() {
                   />
                 </div>
                 <div className="text-center sm:text-left">
-                  <p className="text-white font-semibold text-sm">
+                  <p className="text-black dark:text-white font-semibold text-sm">
                     Level up your AI engineering career with Gauntlet
                   </p>
-                  <p className="text-neutral-400 text-xs mt-0.5">
+                  <p className="text-neutral-600 dark:text-neutral-400 text-xs mt-0.5">
                     Elite training program for AI-powered development
                   </p>
                 </div>
               </div>
-              <span className="inline-flex items-center gap-1 px-4 py-2 bg-white text-black text-sm font-medium rounded-lg group-hover:bg-neutral-200 transition-colors shrink-0">
+              <span className="inline-flex items-center gap-1 px-4 py-2 bg-black dark:bg-white text-white dark:text-black text-sm font-medium rounded-lg group-hover:bg-neutral-800 dark:group-hover:bg-neutral-200 transition-colors shrink-0">
                 Learn More
                 <svg
                   width="14"
@@ -232,13 +232,13 @@ export default function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="border-t border-neutral-800 mt-8 pt-8 flex flex-col sm:flex-row justify-between items-center">
-          <p className="text-neutral-500 text-sm">
+        <div className="border-t border-neutral-200 dark:border-neutral-800 mt-8 pt-8 flex flex-col sm:flex-row justify-between items-center">
+          <p className="text-neutral-600 dark:text-neutral-500 text-sm">
             © {new Date().getFullYear()} Cursor Boston
           </p>
           <a
             href="mailto:hello@cursorboston.com"
-            className="text-neutral-400 hover:text-white text-sm transition-colors mt-4 sm:mt-0 focus-visible:outline-none focus-visible:text-white focus-visible:underline"
+            className="text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white text-sm transition-colors mt-4 sm:mt-0 focus-visible:outline-none focus-visible:text-black dark:focus-visible:text-white focus-visible:underline"
           >
             hello@cursorboston.com
           </a>

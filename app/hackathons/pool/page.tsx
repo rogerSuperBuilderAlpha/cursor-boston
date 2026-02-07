@@ -434,13 +434,13 @@ function HackathonsPoolPageContent() {
   if (!user) {
     return (
       <div className="max-w-2xl mx-auto px-6 py-16 text-center">
-        <h1 className="text-2xl font-bold text-white mb-4">Find a team</h1>
-        <p className="text-neutral-400 mb-6">
+        <h1 className="text-2xl font-bold text-black dark:text-white mb-4">Find a team</h1>
+        <p className="text-neutral-500 dark:text-neutral-400 mb-6">
           Sign in to join the pool and find teammates for the hackathon.
         </p>
         <Link
           href={`/login?redirect=${encodeURIComponent("/hackathons/pool")}`}
-          className="inline-block px-6 py-3 bg-emerald-500 text-white rounded-lg font-semibold hover:bg-emerald-400"
+          className="inline-block px-6 py-3 bg-emerald-500 text-black dark:text-white rounded-lg font-semibold hover:bg-emerald-400"
         >
           Sign in
         </Link>
@@ -459,26 +459,26 @@ function HackathonsPoolPageContent() {
       <div className="mb-6">
         <Link
           href="/hackathons"
-          className="text-neutral-400 hover:text-white text-sm font-medium"
+          className="text-neutral-500 dark:text-neutral-400 hover:text-black dark:text-white text-sm font-medium"
         >
           ← Hackathons
         </Link>
-        <h1 className="text-3xl font-bold text-white mt-2">Find a team</h1>
-        <p className="text-neutral-400 mt-1">
-          Current virtual hackathon: <span className="text-white font-medium">{hackathonId}</span>
+        <h1 className="text-3xl font-bold text-black dark:text-white mt-2">Find a team</h1>
+        <p className="text-neutral-500 dark:text-neutral-400 mt-1">
+          Current virtual hackathon: <span className="text-black dark:text-white font-medium">{hackathonId}</span>
         </p>
       </div>
 
       {/* Compact Pool status bar */}
-      <div className="flex flex-wrap items-center gap-3 mb-6 p-3 rounded-lg bg-neutral-900 border border-neutral-800">
-        <span className="text-neutral-400 text-sm font-medium">Pool</span>
+      <div className="flex flex-wrap items-center gap-3 mb-6 p-3 rounded-lg bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
+        <span className="text-neutral-500 dark:text-neutral-400 text-sm font-medium">Pool</span>
         {inPool ? (
           <>
             <span className="text-emerald-400 text-sm">You are in the pool.</span>
             <button
               onClick={handleLeavePool}
               disabled={leaving}
-              className="ml-auto px-3 py-1.5 text-sm text-neutral-300 hover:text-white border border-neutral-600 rounded-lg disabled:opacity-50"
+              className="ml-auto px-3 py-1.5 text-sm text-neutral-600 dark:text-neutral-300 hover:text-black dark:text-white border border-neutral-600 rounded-lg disabled:opacity-50"
             >
               {leaving ? "Leaving…" : "Leave pool"}
             </button>
@@ -502,7 +502,7 @@ function HackathonsPoolPageContent() {
             <button
               onClick={handleJoinPool}
               disabled={joining || eligible === false}
-              className="px-3 py-1.5 bg-emerald-500 text-white rounded-lg text-sm font-medium hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 bg-emerald-500 text-black dark:text-white rounded-lg text-sm font-medium hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {joining ? "Joining…" : "Join pool"}
             </button>
@@ -514,16 +514,16 @@ function HackathonsPoolPageContent() {
       {(myInvites.length > 0 || requestsToMyTeam.length > 0) && (
         <div className="flex flex-wrap gap-3 mb-6">
           {myInvites.length > 0 && (
-            <div className="px-3 py-2 rounded-lg bg-neutral-900 border border-neutral-800 text-sm">
-              <span className="text-neutral-400">Invites: </span>
-              <span className="text-neutral-300">{myInvites.length} team{myInvites.length !== 1 ? "s" : ""} invited you. </span>
+            <div className="px-3 py-2 rounded-lg bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-sm">
+              <span className="text-neutral-500 dark:text-neutral-400">Invites: </span>
+              <span className="text-neutral-600 dark:text-neutral-300">{myInvites.length} team{myInvites.length !== 1 ? "s" : ""} invited you. </span>
               <Link href="/hackathons/team" className="text-emerald-400 hover:underline">Team page →</Link>
             </div>
           )}
           {requestsToMyTeam.length > 0 && (
-            <div className="px-3 py-2 rounded-lg bg-neutral-900 border border-neutral-800 text-sm">
-              <span className="text-neutral-400">Requests: </span>
-              <span className="text-neutral-300">{requestsToMyTeam.length} request{requestsToMyTeam.length !== 1 ? "s" : ""} to your team. </span>
+            <div className="px-3 py-2 rounded-lg bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-sm">
+              <span className="text-neutral-500 dark:text-neutral-400">Requests: </span>
+              <span className="text-neutral-600 dark:text-neutral-300">{requestsToMyTeam.length} request{requestsToMyTeam.length !== 1 ? "s" : ""} to your team. </span>
               <Link href="/hackathons/team" className="text-emerald-400 hover:underline">Team page →</Link>
             </div>
           )}
@@ -533,8 +533,8 @@ function HackathonsPoolPageContent() {
       {/* Two columns: People | Teams */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left: People in the pool */}
-        <section className="bg-neutral-900 rounded-xl p-5 border border-neutral-800 min-h-[200px]">
-          <h2 className="text-base font-semibold text-white mb-3">People in the pool</h2>
+        <section className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-5 border border-neutral-200 dark:border-neutral-800 min-h-[200px]">
+          <h2 className="text-base font-semibold text-black dark:text-white mb-3">People in the pool</h2>
           {poolList.length === 0 ? (
             <p className="text-neutral-500 text-sm">No one in the pool yet. Be the first to join.</p>
           ) : (
@@ -542,7 +542,7 @@ function HackathonsPoolPageContent() {
               {poolList.map((u) => (
                 <li
                   key={u.uid}
-                  className="flex items-center justify-between gap-3 py-2 border-b border-neutral-800 last:border-0"
+                  className="flex items-center justify-between gap-3 py-2 border-b border-neutral-200 dark:border-neutral-800 last:border-0"
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     {u.photoURL ? (
@@ -554,12 +554,12 @@ function HackathonsPoolPageContent() {
                         className="rounded-full object-cover shrink-0"
                       />
                     ) : (
-                      <div className="w-9 h-9 rounded-full bg-neutral-800 flex items-center justify-center text-white text-sm font-semibold shrink-0">
+                      <div className="w-9 h-9 rounded-full bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center text-black dark:text-white text-sm font-semibold shrink-0">
                         {getInitials(u.displayName)}
                       </div>
                     )}
                     <div className="min-w-0">
-                      <p className="text-white font-medium text-sm truncate">{u.displayName || "Anonymous"}</p>
+                      <p className="text-black dark:text-white font-medium text-sm truncate">{u.displayName || "Anonymous"}</p>
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-neutral-500 text-xs">
                         {u.discord?.username && (
                           <span className="truncate">Discord: {u.discord.username}</span>
@@ -581,7 +581,7 @@ function HackathonsPoolPageContent() {
                     {isMe(u.uid) ? (
                       <span className="text-neutral-500 text-xs">(you)</span>
                     ) : myInvitedUserIds.has(u.uid) ? (
-                      <span className="text-neutral-400 text-xs font-medium">Invited</span>
+                      <span className="text-neutral-500 dark:text-neutral-400 text-xs font-medium">Invited</span>
                     ) : canInvite ? (
                       <button
                         onClick={() => handleInvite(u.uid)}
@@ -599,10 +599,10 @@ function HackathonsPoolPageContent() {
         </section>
 
         {/* Right: Teams with open slots */}
-        <section className="bg-neutral-900 rounded-xl p-5 border border-neutral-800 min-h-[200px]">
+        <section className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-5 border border-neutral-200 dark:border-neutral-800 min-h-[200px]">
           {teamsWithSlots.length > 0 && inPool ? (
             <>
-              <h2 className="text-base font-semibold text-white mb-1">Teams with open slots</h2>
+              <h2 className="text-base font-semibold text-black dark:text-white mb-1">Teams with open slots</h2>
               <p className="text-neutral-500 text-xs mb-3">Request one team at a time.</p>
               <ul className="space-y-3">
             {teamsWithSlots
@@ -621,7 +621,7 @@ function HackathonsPoolPageContent() {
                 return (
                   <li
                     key={t.id}
-                    className="flex items-center justify-between gap-4 py-2 border-b border-neutral-800 last:border-0"
+                    className="flex items-center justify-between gap-4 py-2 border-b border-neutral-200 dark:border-neutral-800 last:border-0"
                   >
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
@@ -635,7 +635,7 @@ function HackathonsPoolPageContent() {
                             className="rounded-full object-cover w-5 h-5"
                           />
                         )}
-                        <span className="text-neutral-300 text-sm">
+                        <span className="text-neutral-600 dark:text-neutral-300 text-sm">
                           {teamDisplayName(t)}… ({t.memberIds.length}/3)
                         </span>
                       </div>
@@ -652,7 +652,7 @@ function HackathonsPoolPageContent() {
                           slot.type === "member" ? (
                             <div
                               key={idx}
-                              className="flex items-center gap-1 text-neutral-400 text-xs"
+                              className="flex items-center gap-1 text-neutral-500 dark:text-neutral-400 text-xs"
                             >
                               {slot.profile.photoURL ? (
                                 <Image
@@ -663,7 +663,7 @@ function HackathonsPoolPageContent() {
                                   className="rounded-full object-cover"
                                 />
                               ) : (
-                                <div className="w-5 h-5 rounded-full bg-neutral-700 flex items-center justify-center text-white text-[10px] font-medium">
+                                <div className="w-5 h-5 rounded-full bg-neutral-700 flex items-center justify-center text-black dark:text-white text-[10px] font-medium">
                                   {getInitials(slot.profile.displayName)}
                                 </div>
                               )}
@@ -673,14 +673,14 @@ function HackathonsPoolPageContent() {
                             </div>
                           ) : slot.type === "placeholder" ? (
                             <div key={idx} className="flex items-center gap-1 text-neutral-500 text-xs">
-                              <div className="w-5 h-5 rounded-full bg-neutral-700 flex items-center justify-center text-white text-[10px] font-medium">
+                              <div className="w-5 h-5 rounded-full bg-neutral-700 flex items-center justify-center text-black dark:text-white text-[10px] font-medium">
                                 ?
                               </div>
                               <span>Member</span>
                             </div>
                           ) : (
                             <div key={idx} className="flex items-center gap-1 text-neutral-500 text-xs">
-                              <div className="w-5 h-5 rounded-full bg-neutral-800 border border-dashed border-neutral-600 flex items-center justify-center text-[10px]">
+                              <div className="w-5 h-5 rounded-full bg-neutral-200 dark:bg-neutral-800 border border-dashed border-neutral-600 flex items-center justify-center text-[10px]">
                                 +
                               </div>
                               <span>Open slot</span>
@@ -690,12 +690,12 @@ function HackathonsPoolPageContent() {
                       </div>
                     </div>
                     {hasRequested ? (
-                      <span className="text-neutral-400 text-sm font-medium shrink-0">Requested</span>
+                      <span className="text-neutral-500 dark:text-neutral-400 text-sm font-medium shrink-0">Requested</span>
                     ) : (
                       <button
                         onClick={() => handleRequestToJoin(t.id)}
                         disabled={requesting === t.id}
-                        className="px-2.5 py-1 bg-neutral-700 text-white rounded text-xs font-medium hover:bg-neutral-600 disabled:opacity-50 shrink-0"
+                        className="px-2.5 py-1 bg-neutral-700 text-black dark:text-white rounded text-xs font-medium hover:bg-neutral-600 disabled:opacity-50 shrink-0"
                       >
                         {requesting === t.id ? "…" : "Request"}
                       </button>
@@ -707,7 +707,7 @@ function HackathonsPoolPageContent() {
             </>
           ) : (
             <>
-              <h2 className="text-base font-semibold text-white mb-3">Teams with open slots</h2>
+              <h2 className="text-base font-semibold text-black dark:text-white mb-3">Teams with open slots</h2>
               <p className="text-neutral-500 text-sm">
                 {inPool
                   ? "No teams with open slots right now."
