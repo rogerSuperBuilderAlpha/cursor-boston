@@ -48,8 +48,8 @@
     "prepare": "husky install"
   },
   "dependencies": {
-    "firebase": "^12.8.0",
-    "firebase-admin": "^13.6.0",
+    "firebase": "^12.9.0",
+    "firebase-admin": "^13.6.1",
     "gray-matter": "^4.0.3",
     "next": "^16.1.6",
     "qrcode": "^1.5.4",
