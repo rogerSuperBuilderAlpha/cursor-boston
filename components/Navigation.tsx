@@ -55,6 +55,9 @@ export default function Navigation() {
           <Link href="/opportunities" className="text-neutral-300 hover:text-white text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-white focus-visible:underline">
             Opportunities
           </Link>
+          <Link href="/showcase" className="text-neutral-300 hover:text-white text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-white focus-visible:underline">
+            Showcase
+          </Link>
           <Link href="/about" className="text-neutral-300 hover:text-white text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-white focus-visible:underline">
             About
           </Link>
@@ -136,6 +139,9 @@ export default function Navigation() {
               </Link>
               <Link href="/opportunities" onClick={() => setMobileMenuOpen(false)} className="text-neutral-300 hover:text-white py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:text-white focus-visible:underline">
                 Opportunities
+              </Link>
+              <Link href="/showcase" onClick={() => setMobileMenuOpen(false)} className="text-neutral-300 hover:text-white py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:text-white focus-visible:underline">
+                Showcase
               </Link>
               <Link href="/about" onClick={() => setMobileMenuOpen(false)} className="text-neutral-300 hover:text-white py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:text-white focus-visible:underline">
                 About
