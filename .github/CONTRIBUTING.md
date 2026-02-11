@@ -86,7 +86,7 @@ Before you begin, ensure you have the following installed:
    cp .env.local.example .env.local
    ```
 
-   Fill in your Firebase configuration in `.env.local`. See the [README](../README.md#configuration) for detailed instructions.
+   Fill in your Firebase configuration in `.env.local`. See the [README](https://github.com/rogerSuperBuilderAlpha/cursor-boston?tab=readme-ov-file#configuration) for detailed instructions.
 
    **Quick Firebase Setup:**
    - Create a Firebase project at [Firebase Console](https://console.firebase.google.com)
@@ -398,7 +398,7 @@ We welcome contributions in these areas:
 If you have questions or need help:
 
 1. **Check Documentation**
-   - Read the [README](README.md)
+   - Read the [README](https://github.com/rogerSuperBuilderAlpha/cursor-boston?tab=readme-ov-file)
    - Review existing issues and discussions
 
 2. **Ask Questions**
