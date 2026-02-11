@@ -1,0 +1,43 @@
+{
+  "projects": [
+    {
+      "id": "cursor-boston-site",
+      "name": "Cursor Boston Community Site",
+      "description": "The open-source community platform you're looking at right now. Built with Next.js, Firebase, and Tailwind CSS by the Cursor Boston community.",
+      "image": "/showcase/cursor-boston.png",
+      "categories": ["Open Source", "Community", "Next.js"],
+      "contact": {
+        "github": "https://github.com/cursorboston/cursor-boston",
+        "website": "https://cursorboston.com"
+      },
+      "submittedBy": "Cursor Boston Team",
+      "submittedDate": "2026-02-01"
+    },
+    {
+      "id": "example-ai-assistant",
+      "name": "Local AI Assistant",
+      "description": "A privacy-first AI assistant that runs entirely on your machine. Uses local LLMs with a clean React interface for chat, code generation, and document analysis.",
+      "image": "/showcase/placeholder.png",
+      "categories": ["AI/ML", "Privacy", "React"],
+      "contact": {
+        "github": "https://github.com/example/local-ai",
+        "email": "builder@example.com"
+      },
+      "submittedBy": "Jane Developer",
+      "submittedDate": "2026-02-05"
+    },
+    {
+      "id": "example-devtool",
+      "name": "CodeFlow Analytics",
+      "description": "Track your coding habits, PR velocity, and team collaboration patterns. Integrates with GitHub and GitLab to surface actionable developer productivity insights.",
+      "image": "/showcase/placeholder.png",
+      "categories": ["Developer Tools", "Analytics", "Productivity"],
+      "contact": {
+        "website": "https://example.com",
+        "twitter": "https://twitter.com/example"
+      },
+      "submittedBy": "Alex Builder",
+      "submittedDate": "2026-02-08"
+    }
+  ]
+}
