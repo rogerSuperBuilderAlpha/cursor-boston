@@ -484,7 +484,7 @@ export default function OpenSourcePage() {
 
           <div className="mt-10 flex flex-wrap justify-center gap-4">
             <a
-              href="https://github.com/rogerSuperBuilderAlpha/cursor-boston/blob/main/.github/CONTRIBUTING.md"
+              href="https://github.com/rogerSuperBuilderAlpha/cursor-boston?tab=contributing-ov-file#readme"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-neutral-800 text-white rounded-lg font-medium hover:bg-neutral-700 transition-colors"

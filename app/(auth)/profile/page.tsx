@@ -1037,7 +1037,7 @@ function ProfilePageContent() {
                       Visit GitHub Repo
                     </Link>
                     <Link
-                      href="https://github.com/rogerSuperBuilderAlpha/cursor-boston/blob/master/docs/CONTRIBUTING.md"
+                      href="https://github.com/rogerSuperBuilderAlpha/cursor-boston?tab=contributing-ov-file#readme"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="px-3 py-2 bg-emerald-500 text-white rounded-lg text-xs font-medium hover:bg-emerald-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
