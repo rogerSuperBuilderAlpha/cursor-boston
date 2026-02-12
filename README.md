@@ -44,6 +44,15 @@ This platform is a living example of what you can build with Cursor and modern w
 
 ---
 
+## 📌 Contribution Tracking
+
+To avoid duplicate work, see:
+
+➡️ [Active Issues`](./ACTIVE_ISSUES.md)
+
+
+
+
 ## 💡 Contribution Ideas (Get Involved!)
 
 We want your PRs! Whether you're fixing a typo or building a major feature, here's what we're looking for:
