@@ -244,7 +244,7 @@ export function MemberCard({ member }: MemberCardProps) {
           </a>
         )}
         {v?.showMemberSince && member.createdAt && (
-          <span className="text-neutral-500 dark:text-neutral-500 text-xs ml-auto">
+          <span className="text-neutral-500 text-xs ml-auto">
             Member since{" "}
             {member.createdAt.toDate().toLocaleDateString("en-US", {
               month: "short",

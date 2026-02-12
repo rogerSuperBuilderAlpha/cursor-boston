@@ -19,8 +19,18 @@ export function ThemeToggle() {
       }
     };
 
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+      }
+    };
+
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, []);
 
   if (!mounted) {
@@ -31,9 +41,11 @@ export function ThemeToggle() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="rounded-md p-2 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-foreground"
+        className="rounded-md p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors focus:outline-none focus:ring-2 focus:ring-foreground"
         aria-label="Toggle theme"
+        aria-haspopup="true"
         aria-expanded={isOpen}
+        aria-controls="theme-menu"
       >
         <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
         <Moon className="absolute top-2 left-2 h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
@@ -41,9 +53,14 @@ export function ThemeToggle() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-36 rounded-md bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
-          <div className="py-1">
+        <div
+          id="theme-menu"
+          role="menu"
+          className="absolute right-0 mt-2 w-36 rounded-md bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50"
+        >
+          <div className="py-1" role="none">
             <button
+              role="menuitem"
               onClick={() => {
                 setTheme("light");
                 setIsOpen(false);
@@ -58,6 +75,7 @@ export function ThemeToggle() {
               Light
             </button>
             <button
+              role="menuitem"
               onClick={() => {
                 setTheme("dark");
                 setIsOpen(false);
@@ -72,6 +90,7 @@ export function ThemeToggle() {
               Dark
             </button>
             <button
+              role="menuitem"
               onClick={() => {
                 setTheme("system");
                 setIsOpen(false);

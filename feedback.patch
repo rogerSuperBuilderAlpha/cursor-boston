@@ -1,0 +1,228 @@
+diff --git a/app/globals.css b/app/globals.css
+index 4b42055..0ea1e89 100644
+--- a/app/globals.css
++++ b/app/globals.css
+@@ -24,6 +24,11 @@ body {
+ 
+ /* Selection color */
+ ::selection {
++  background-color: rgba(0, 0, 0, 0.1);
++  color: #000000;
++}
++
++.dark ::selection {
+   background-color: rgba(255, 255, 255, 0.2);
+   color: #ffffff;
+ }
+@@ -35,25 +40,42 @@ body {
+ }
+ 
+ ::-webkit-scrollbar-track {
++  background: #f5f5f5;
++}
++
++.dark ::-webkit-scrollbar-track {
+   background: #0a0a0a;
+ }
+ 
+ ::-webkit-scrollbar-thumb {
+-  background: #333333;
++  background: #d4d4d4;
+   border-radius: 4px;
+ }
+ 
++.dark ::-webkit-scrollbar-thumb {
++  background: #333333;
++}
++
+ ::-webkit-scrollbar-thumb:hover {
++  background: #a3a3a3;
++}
++
++.dark ::-webkit-scrollbar-thumb:hover {
+   background: #444444;
+ }
+ 
+ /* Focus styles for accessibility */
+ a:focus-visible,
+ button:focus-visible {
+-  outline: 2px solid #ffffff;
++  outline: 2px solid #000000;
+   outline-offset: 2px;
+ }
+ 
++.dark a:focus-visible,
++.dark button:focus-visible {
++  outline: 2px solid #ffffff;
++}
++
+ /* Smooth transitions */
+ a,
+ button {
+diff --git a/app/opportunities/page.tsx b/app/opportunities/page.tsx
+index e28b6a9..6c17140 100644
+--- a/app/opportunities/page.tsx
++++ b/app/opportunities/page.tsx
+@@ -134,7 +134,7 @@ export default function OpportunitiesPage() {
+       {/* Hero */}
+       <section className="py-16 md:py-24 px-6 border-b border-neutral-200 dark:border-neutral-800">
+         <div className="max-w-4xl mx-auto text-center">
+-          <h1 className="text-4xl md:text-5xl font-bold text-neutral-900 dark:text-white mb-6">
++          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+             Opportunities
+           </h1>
+           <p className="text-xl text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">
+@@ -158,7 +158,7 @@ export default function OpportunitiesPage() {
+               >
+                 <div className="text-neutral-500 dark:text-neutral-400">{type.icon}</div>
+                 <div>
+-                  <h3 className="text-neutral-900 dark:text-white font-medium mb-1">{type.name}</h3>
++                  <h3 className="text-foreground font-medium mb-1">{type.name}</h3>
+                   <p className="text-neutral-600 dark:text-neutral-400 text-sm">{type.description}</p>
+                 </div>
+               </div>
+@@ -171,7 +171,7 @@ export default function OpportunitiesPage() {
+       <section className="py-16 px-6">
+         <div className="max-w-6xl mx-auto">
+           <div className="flex items-center justify-between mb-8">
+-            <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white">
++            <h2 className="text-2xl md:text-3xl font-bold text-foreground">
+               Open Opportunities
+             </h2>
+           </div>
+@@ -199,7 +199,7 @@ export default function OpportunitiesPage() {
+                             </span>
+                           )}
+                         </div>
+-                        <h3 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white mb-1">
++                        <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-1">
+                           {opp.title}
+                         </h3>
+                         <p className="text-lg text-emerald-600 dark:text-emerald-400 font-semibold">
+@@ -298,7 +298,7 @@ export default function OpportunitiesPage() {
+                               className="p-4 bg-neutral-100 dark:bg-neutral-800/50 rounded-xl border border-neutral-200 dark:border-neutral-700/50"
+                             >
+                               <div className="flex items-center gap-2 mb-2">
+-                                <span className="text-neutral-900 dark:text-white font-semibold">
++                                <span className="text-foreground font-semibold">
+                                   {member.name}
+                                 </span>
+                                 <span className="text-neutral-500">&middot;</span>
+@@ -345,7 +345,7 @@ export default function OpportunitiesPage() {
+       {/* Post Opportunity CTA */}
+       <section className="py-16 px-6 bg-neutral-50 dark:bg-neutral-950">
+         <div className="max-w-3xl mx-auto text-center">
+-          <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white mb-4">
++          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
+             Have an Opportunity to Share?
+           </h2>
+           <p className="text-neutral-600 dark:text-neutral-400 mb-6">
+diff --git a/components/ThemeToggle.tsx b/components/ThemeToggle.tsx
+index 04cd7a9..72ca39d 100644
+--- a/components/ThemeToggle.tsx
++++ b/components/ThemeToggle.tsx
+@@ -19,8 +19,18 @@ export function ThemeToggle() {
+       }
+     };
+ 
++    const handleKeyDown = (event: KeyboardEvent) => {
++      if (event.key === "Escape") {
++        setIsOpen(false);
++      }
++    };
++
+     document.addEventListener("mousedown", handleClickOutside);
+-    return () => document.removeEventListener("mousedown", handleClickOutside);
++    document.addEventListener("keydown", handleKeyDown);
++    return () => {
++      document.removeEventListener("mousedown", handleClickOutside);
++      document.removeEventListener("keydown", handleKeyDown);
++    };
+   }, []);
+ 
+   if (!mounted) {
+@@ -31,9 +41,11 @@ export function ThemeToggle() {
+     <div className="relative" ref={dropdownRef}>
+       <button
+         onClick={() => setIsOpen(!isOpen)}
+-        className="rounded-md p-2 hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-foreground"
++        className="rounded-md p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors focus:outline-none focus:ring-2 focus:ring-foreground"
+         aria-label="Toggle theme"
++        aria-haspopup="true"
+         aria-expanded={isOpen}
++        aria-controls="theme-menu"
+       >
+         <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+         <Moon className="absolute top-2 left-2 h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+@@ -41,9 +53,14 @@ export function ThemeToggle() {
+       </button>
+ 
+       {isOpen && (
+-        <div className="absolute right-0 mt-2 w-36 rounded-md bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+-          <div className="py-1">
++        <div
++          id="theme-menu"
++          role="menu"
++          className="absolute right-0 mt-2 w-36 rounded-md bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50"
++        >
++          <div className="py-1" role="none">
+             <button
++              role="menuitem"
+               onClick={() => {
+                 setTheme("light");
+                 setIsOpen(false);
+@@ -58,6 +75,7 @@ export function ThemeToggle() {
+               Light
+             </button>
+             <button
++              role="menuitem"
+               onClick={() => {
+                 setTheme("dark");
+                 setIsOpen(false);
+@@ -72,6 +90,7 @@ export function ThemeToggle() {
+               Dark
+             </button>
+             <button
++              role="menuitem"
+               onClick={() => {
+                 setTheme("system");
+                 setIsOpen(false);
+diff --git a/components/members/MemberCard.tsx b/components/members/MemberCard.tsx
+index 3f781c9..2337859 100644
+--- a/components/members/MemberCard.tsx
++++ b/components/members/MemberCard.tsx
+@@ -244,7 +244,7 @@ export function MemberCard({ member }: MemberCardProps) {
+           </a>
+         )}
+         {v?.showMemberSince && member.createdAt && (
+-          <span className="text-neutral-500 dark:text-neutral-500 text-xs ml-auto">
++          <span className="text-neutral-500 text-xs ml-auto">
+             Member since{" "}
+             {member.createdAt.toDate().toLocaleDateString("en-US", {
+               month: "short",
+diff --git a/components/members/MemberDirectory.tsx b/components/members/MemberDirectory.tsx
+index 75860b0..ef84001 100644
+--- a/components/members/MemberDirectory.tsx
++++ b/components/members/MemberDirectory.tsx
+@@ -271,7 +271,7 @@ export function MemberDirectory({ initialSearch = "" }: MemberDirectoryProps) {
+             )}
+ 
+             {/* Results count */}
+-            <div className="text-sm text-neutral-500 dark:text-neutral-500">
++            <div className="text-sm text-neutral-500">
+               {filteredAndSortedMembers.length === members.length
+                 ? `${members.length} member${members.length !== 1 ? "s" : ""}`
+                 : `${filteredAndSortedMembers.length} of ${members.length} members`}
+diff --git a/tsconfig.json b/tsconfig.json
+index a2531cc..68739f0 100644
+--- a/tsconfig.json
++++ b/tsconfig.json
+@@ -14,7 +14,7 @@
+     "moduleResolution": "bundler",
+     "resolveJsonModule": true,
+     "isolatedModules": true,
+-    "jsx": "react-jsx",
++    "jsx": "preserve",
+     "incremental": true,
+     "plugins": [
+       {

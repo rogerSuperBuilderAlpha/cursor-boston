@@ -271,7 +271,7 @@ export function MemberDirectory({ initialSearch = "" }: MemberDirectoryProps) {
             )}
 
             {/* Results count */}
-            <div className="text-sm text-neutral-500 dark:text-neutral-500">
+            <div className="text-sm text-neutral-500">
               {filteredAndSortedMembers.length === members.length
                 ? `${members.length} member${members.length !== 1 ? "s" : ""}`
                 : `${filteredAndSortedMembers.length} of ${members.length} members`}

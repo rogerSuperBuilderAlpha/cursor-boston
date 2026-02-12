@@ -134,7 +134,7 @@ export default function OpportunitiesPage() {
       {/* Hero */}
       <section className="py-16 md:py-24 px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-neutral-900 dark:text-white mb-6">
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
             Opportunities
           </h1>
           <p className="text-xl text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">
@@ -158,7 +158,7 @@ export default function OpportunitiesPage() {
               >
                 <div className="text-neutral-500 dark:text-neutral-400">{type.icon}</div>
                 <div>
-                  <h3 className="text-neutral-900 dark:text-white font-medium mb-1">{type.name}</h3>
+                  <h3 className="text-foreground font-medium mb-1">{type.name}</h3>
                   <p className="text-neutral-600 dark:text-neutral-400 text-sm">{type.description}</p>
                 </div>
               </div>
@@ -171,7 +171,7 @@ export default function OpportunitiesPage() {
       <section className="py-16 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white">
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground">
               Open Opportunities
             </h2>
           </div>
@@ -199,7 +199,7 @@ export default function OpportunitiesPage() {
                             </span>
                           )}
                         </div>
-                        <h3 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white mb-1">
+                        <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-1">
                           {opp.title}
                         </h3>
                         <p className="text-lg text-emerald-600 dark:text-emerald-400 font-semibold">
@@ -298,7 +298,7 @@ export default function OpportunitiesPage() {
                               className="p-4 bg-neutral-100 dark:bg-neutral-800/50 rounded-xl border border-neutral-200 dark:border-neutral-700/50"
                             >
                               <div className="flex items-center gap-2 mb-2">
-                                <span className="text-neutral-900 dark:text-white font-semibold">
+                                <span className="text-foreground font-semibold">
                                   {member.name}
                                 </span>
                                 <span className="text-neutral-500">&middot;</span>
@@ -345,7 +345,7 @@ export default function OpportunitiesPage() {
       {/* Post Opportunity CTA */}
       <section className="py-16 px-6 bg-neutral-50 dark:bg-neutral-950">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white mb-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
             Have an Opportunity to Share?
           </h2>
           <p className="text-neutral-600 dark:text-neutral-400 mb-6">
