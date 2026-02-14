@@ -147,12 +147,12 @@ export default function EventsPage() {
         />
       ))}
       {/* Hero */}
-      <section className="py-16 md:py-24 px-6 border-b border-neutral-800">
+      <section className="py-16 md:py-24 px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
             Events
           </h1>
-          <p className="text-xl text-neutral-400 max-w-2xl mx-auto mb-8">
+          <p className="text-xl text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto mb-8">
             Join us for workshops, meetups, hackathons, and more. All skill
             levels welcome.
           </p>
@@ -161,7 +161,7 @@ export default function EventsPage() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Subscribe on Luma (opens in new tab)"
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-black rounded-lg text-sm font-semibold hover:bg-neutral-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-neutral-900 text-white dark:bg-white dark:text-black rounded-lg text-sm font-semibold hover:bg-neutral-700 dark:hover:bg-neutral-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black"
           >
             Subscribe on Luma
             <svg
@@ -183,7 +183,7 @@ export default function EventsPage() {
       </section>
 
       {/* Event Types */}
-      <section className="py-12 px-6 bg-neutral-950">
+      <section className="py-12 px-6 bg-neutral-50 dark:bg-neutral-950">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-sm font-semibold text-neutral-500 uppercase tracking-wider mb-6">
             Event Types
@@ -192,12 +192,12 @@ export default function EventsPage() {
             {eventTypes.map((type) => (
               <div
                 key={type.name}
-                className="flex items-start gap-4 p-4 bg-neutral-900 rounded-xl border border-neutral-800"
+                className="flex items-start gap-4 p-4 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800"
               >
-                <div className="text-neutral-400">{type.icon}</div>
+                <div className="text-neutral-500 dark:text-neutral-400">{type.icon}</div>
                 <div>
-                  <h3 className="text-white font-medium mb-1">{type.name}</h3>
-                  <p className="text-neutral-400 text-sm">{type.description}</p>
+                  <h3 className="text-foreground font-medium mb-1">{type.name}</h3>
+                  <p className="text-neutral-600 dark:text-neutral-400 text-sm">{type.description}</p>
                 </div>
               </div>
             ))}
@@ -209,7 +209,7 @@ export default function EventsPage() {
       <section className="py-16 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold text-white">
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground">
               Upcoming Events
             </h2>
           </div>
@@ -219,11 +219,11 @@ export default function EventsPage() {
               {eventsData.upcoming.map((event) => (
                 <div
                   key={event.id}
-                  className="bg-neutral-900 rounded-2xl overflow-hidden border border-neutral-800"
+                  className="bg-white dark:bg-neutral-900 rounded-2xl overflow-hidden border border-neutral-200 dark:border-neutral-800"
                 >
                   <div className="grid md:grid-cols-2 gap-0">
                     {/* Event Image */}
-                    <div className="relative aspect-[9/16] md:aspect-auto md:min-h-[400px] bg-neutral-800">
+                    <div className="relative aspect-[9/16] md:aspect-auto md:min-h-[400px] bg-neutral-100 dark:bg-neutral-800">
                       <Image
                         src={event.image}
                         alt={event.title}
@@ -243,13 +243,13 @@ export default function EventsPage() {
 
                     {/* Event Details */}
                     <div className="p-8 flex flex-col justify-center">
-                      <span className="inline-block px-3 py-1 bg-emerald-500/10 text-emerald-400 text-sm font-medium rounded-full mb-4 w-fit capitalize">
+                      <span className="inline-block px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-sm font-medium rounded-full mb-4 w-fit capitalize">
                         {event.type}
                       </span>
-                      <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">
+                      <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
                         {event.title}
                       </h3>
-                      <p className="text-neutral-400 mb-6 leading-relaxed">
+                      <p className="text-neutral-600 dark:text-neutral-400 mb-6 leading-relaxed">
                         {event.description}
                       </p>
 
@@ -262,7 +262,7 @@ export default function EventsPage() {
                             {event.topics.map((topic) => (
                               <span
                                 key={topic}
-                                className="px-3 py-1 bg-neutral-800 text-neutral-300 text-sm rounded-full"
+                                className="px-3 py-1 bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 text-sm rounded-full"
                               >
                                 {topic}
                               </span>
@@ -272,7 +272,7 @@ export default function EventsPage() {
                       )}
 
                       <div className="space-y-3 mb-6">
-                        <div className="flex items-center gap-3 text-neutral-300">
+                        <div className="flex items-center gap-3 text-neutral-700 dark:text-neutral-300">
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
                             width="20"
@@ -295,7 +295,7 @@ export default function EventsPage() {
                       <div className="flex flex-col sm:flex-row gap-3">
                         <a
                           href={`/events/${event.slug}`}
-                          className="inline-flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 bg-white text-black rounded-lg text-base font-semibold hover:bg-neutral-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black w-full sm:w-auto"
+                          className="inline-flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 bg-neutral-900 text-white dark:bg-white dark:text-black rounded-lg text-base font-semibold hover:bg-neutral-700 dark:hover:bg-neutral-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black w-full sm:w-auto"
                         >
                           View Details
                           <svg
@@ -318,7 +318,7 @@ export default function EventsPage() {
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label={`Register for ${event.title} (opens in new tab)`}
-                          className="inline-flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 border border-neutral-700 text-white rounded-lg text-base font-semibold hover:bg-neutral-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black w-full sm:w-auto luma-checkout--button"
+                          className="inline-flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 border border-neutral-300 dark:border-neutral-700 text-foreground rounded-lg text-base font-semibold hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black w-full sm:w-auto luma-checkout--button"
                           data-luma-action="checkout"
                           data-luma-event-id={event.lumaEventId}
                         >
@@ -345,15 +345,15 @@ export default function EventsPage() {
               ))}
             </div>
           ) : (
-            <div className="bg-neutral-900 rounded-2xl p-12 text-center border border-neutral-800">
-              <p className="text-neutral-400 mb-4">
+            <div className="bg-white dark:bg-neutral-900 rounded-2xl p-12 text-center border border-neutral-200 dark:border-neutral-800">
+              <p className="text-neutral-600 dark:text-neutral-400 mb-4">
                 No upcoming events scheduled yet.
               </p>
               <a
                 href="https://lu.ma/cursor-boston"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-white hover:underline focus-visible:outline-none focus-visible:underline"
+                className="text-foreground hover:underline focus-visible:outline-none focus-visible:underline"
               >
                 Subscribe on Luma to get notified &rarr;
               </a>
@@ -363,9 +363,9 @@ export default function EventsPage() {
       </section>
 
       {/* Past Events */}
-      <section className="py-16 px-6 bg-neutral-950">
+      <section className="py-16 px-6 bg-neutral-50 dark:bg-neutral-950">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-8">
             Past Events
           </h2>
 
@@ -374,8 +374,8 @@ export default function EventsPage() {
               {/* Past event cards will go here */}
             </div>
           ) : (
-            <div className="bg-neutral-900 rounded-2xl p-12 text-center border border-neutral-800">
-              <p className="text-neutral-400">
+            <div className="bg-white dark:bg-neutral-900 rounded-2xl p-12 text-center border border-neutral-200 dark:border-neutral-800">
+              <p className="text-neutral-600 dark:text-neutral-400">
                 Past events will appear here after our first event.
               </p>
             </div>
@@ -386,16 +386,16 @@ export default function EventsPage() {
       {/* Submit Event CTA */}
       <section className="py-16 px-6">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
             Want to Host an Event?
           </h2>
-          <p className="text-neutral-400 mb-6">
+          <p className="text-neutral-600 dark:text-neutral-400 mb-6">
             Have an idea for a Cursor workshop, meetup, or hackathon in Boston?
             We&apos;d love to help you make it happen.
           </p>
           <a
             href="/events/request"
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-black rounded-lg text-sm font-semibold hover:bg-neutral-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-neutral-900 text-white dark:bg-white dark:text-black rounded-lg text-sm font-semibold hover:bg-neutral-700 dark:hover:bg-neutral-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black"
           >
             Submit an Event Idea
             <svg

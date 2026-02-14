@@ -24,31 +24,31 @@ export default function HackathonsPage() {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="py-16 md:py-24 px-6 border-b border-neutral-800">
+      <section className="py-16 md:py-24 px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
             Hackathons
           </h1>
-          <p className="text-xl text-neutral-400 max-w-2xl mx-auto mb-8">
+          <p className="text-xl text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto mb-8">
             Monthly virtual hackathons and in-person events. Form teams of three,
             build with Cursor, and submit your project.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link
               href="/hackathons/pool"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-lg text-sm font-semibold hover:bg-emerald-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-lg text-sm font-semibold hover:bg-emerald-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               Find a team
             </Link>
             <Link
               href="/hackathons/teams"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-neutral-800 text-white rounded-lg text-sm font-semibold hover:bg-neutral-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-neutral-900 dark:bg-neutral-800 text-white rounded-lg text-sm font-semibold hover:bg-neutral-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               Teams
             </Link>
             <Link
               href="/hackathons/team"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-neutral-800 text-white rounded-lg text-sm font-semibold hover:bg-neutral-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-neutral-900 dark:bg-neutral-800 text-white rounded-lg text-sm font-semibold hover:bg-neutral-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               My team
             </Link>
@@ -57,12 +57,12 @@ export default function HackathonsPage() {
       </section>
 
       {/* Virtual hackathon (current month) */}
-      <section className="py-12 px-6 border-b border-neutral-800">
+      <section className="py-12 px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold text-white mb-4">
+          <h2 className="text-2xl font-bold text-foreground mb-4">
             Virtual Hackathon – {monthLabel}
           </h2>
-          <p className="text-neutral-400 mb-4">
+          <p className="text-neutral-600 dark:text-neutral-400 mb-4">
             Runs from the 1st through the last day of the month. You must be on a
             team of exactly 3 to participate. One team member registers the
             project GitHub repo to start; at the end of the month you submit and
@@ -75,15 +75,15 @@ export default function HackathonsPage() {
       </section>
 
       {/* In-person */}
-      <section className="py-12 px-6 border-b border-neutral-800">
+      <section className="py-12 px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold text-white mb-4">
+          <h2 className="text-2xl font-bold text-foreground mb-4">
             In-person hackathons
           </h2>
-          <p className="text-neutral-400">
+          <p className="text-neutral-600 dark:text-neutral-400">
             We run in-person hackathons at select events. Same team rules apply:
             teams of 3, form in advance or at the event. Check{" "}
-            <Link href="/events" className="text-emerald-400 hover:text-emerald-300 underline">
+            <Link href="/events" className="text-emerald-500 dark:text-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-300 underline">
               Events
             </Link>{" "}
             for upcoming dates.
@@ -92,20 +92,20 @@ export default function HackathonsPage() {
       </section>
 
       {/* Sponsor / host */}
-      <section className="py-12 px-6 border-b border-neutral-800">
+      <section className="py-12 px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold text-white mb-4">
+          <h2 className="text-2xl font-bold text-foreground mb-4">
             Sponsor or host
           </h2>
-          <p className="text-neutral-400 mb-4">
+          <p className="text-neutral-600 dark:text-neutral-400 mb-4">
             Interested in supporting our community? Get in touch to sponsor prizes for
             the monthly virtual hackathon or to sponsor and host an in-person hackathon.
           </p>
-          <p className="text-neutral-400">
+          <p className="text-neutral-600 dark:text-neutral-400">
             Email{" "}
             <a
               href="mailto:hello@cursorboston.com"
-              className="text-emerald-400 hover:text-emerald-300 underline"
+              className="text-emerald-500 dark:text-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-300 underline"
             >
               hello@cursorboston.com
             </a>
@@ -118,10 +118,10 @@ export default function HackathonsPage() {
       {/* Rules summary */}
       <section className="py-12 px-6">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold text-white mb-4">
+          <h2 className="text-2xl font-bold text-foreground mb-4">
             Rules at a glance
           </h2>
-          <ul className="list-disc list-inside text-neutral-400 space-y-2">
+          <ul className="list-disc list-inside text-neutral-600 dark:text-neutral-400 space-y-2">
             <li>Teams must have exactly 3 members.</li>
             <li>To join the pool you need a public profile with GitHub and Discord connected (and Discord visible).</li>
             <li>You can only be on one team per hackathon.</li>
