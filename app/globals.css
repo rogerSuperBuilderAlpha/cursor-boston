@@ -76,7 +76,10 @@ button:focus-visible {
   outline: 2px solid #ffffff;
 }
 
-/* Smooth transitions */
+/* Smooth transitions
+   Note: Section/layout backgrounds use Tailwind's `duration-300` for smooth
+   theme transitions, while interactive elements (buttons, links, cards) use
+   the default duration for snappy hover feedback. This split is intentional. */
 a,
 button {
   transition: all 0.15s ease;

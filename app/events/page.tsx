@@ -149,7 +149,7 @@ export default function EventsPage() {
       {/* Hero */}
       <section className="py-16 md:py-24 px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-neutral-900 dark:text-white mb-6">
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
             Events
           </h1>
           <p className="text-xl text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto mb-8">
@@ -196,7 +196,7 @@ export default function EventsPage() {
               >
                 <div className="text-neutral-500 dark:text-neutral-400">{type.icon}</div>
                 <div>
-                  <h3 className="text-neutral-900 dark:text-white font-medium mb-1">{type.name}</h3>
+                  <h3 className="text-foreground font-medium mb-1">{type.name}</h3>
                   <p className="text-neutral-600 dark:text-neutral-400 text-sm">{type.description}</p>
                 </div>
               </div>
@@ -209,7 +209,7 @@ export default function EventsPage() {
       <section className="py-16 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white">
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground">
               Upcoming Events
             </h2>
           </div>
@@ -246,7 +246,7 @@ export default function EventsPage() {
                       <span className="inline-block px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-sm font-medium rounded-full mb-4 w-fit capitalize">
                         {event.type}
                       </span>
-                      <h3 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white mb-4">
+                      <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
                         {event.title}
                       </h3>
                       <p className="text-neutral-600 dark:text-neutral-400 mb-6 leading-relaxed">
@@ -318,7 +318,7 @@ export default function EventsPage() {
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label={`Register for ${event.title} (opens in new tab)`}
-                          className="inline-flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white rounded-lg text-base font-semibold hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black w-full sm:w-auto luma-checkout--button"
+                          className="inline-flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 border border-neutral-300 dark:border-neutral-700 text-foreground rounded-lg text-base font-semibold hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black w-full sm:w-auto luma-checkout--button"
                           data-luma-action="checkout"
                           data-luma-event-id={event.lumaEventId}
                         >
@@ -353,7 +353,7 @@ export default function EventsPage() {
                 href="https://lu.ma/cursor-boston"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-neutral-900 dark:text-white hover:underline focus-visible:outline-none focus-visible:underline"
+                className="text-foreground hover:underline focus-visible:outline-none focus-visible:underline"
               >
                 Subscribe on Luma to get notified &rarr;
               </a>
@@ -365,7 +365,7 @@ export default function EventsPage() {
       {/* Past Events */}
       <section className="py-16 px-6 bg-neutral-50 dark:bg-neutral-950">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-8">
             Past Events
           </h2>
 
@@ -386,7 +386,7 @@ export default function EventsPage() {
       {/* Submit Event CTA */}
       <section className="py-16 px-6">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white mb-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
             Want to Host an Event?
           </h2>
           <p className="text-neutral-600 dark:text-neutral-400 mb-6">

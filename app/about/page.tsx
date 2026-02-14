@@ -337,7 +337,7 @@ export default function AboutPage() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Subscribe on Luma (opens in new tab)"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-neutral-100 dark:bg-white/10 text-neutral-900 dark:text-white rounded-lg text-sm font-semibold hover:bg-neutral-200 dark:hover:bg-white/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background border border-neutral-200 dark:border-transparent"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-neutral-100 dark:bg-white/10 text-foreground rounded-lg text-sm font-semibold hover:bg-neutral-200 dark:hover:bg-white/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background border border-neutral-200 dark:border-transparent"
             >
               Subscribe on Luma
               <svg

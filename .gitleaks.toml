@@ -12,7 +12,9 @@ useDefault = true
 id = "firebase-placeholder"
 description = "Firebase placeholder values used in CI"
 regex = '''(test-api-key|test-project|build-placeholder|release-build)'''
-allowlist = true
+[rules.allowlist]
+regexTarget = "match"
+regexes = ['''(test-api-key|test-project|build-placeholder|release-build)''']
 
 # Paths to ignore
 [allowlist]

@@ -16,7 +16,7 @@ export default function BlogPage() {
       {/* Hero */}
       <section className="py-16 md:py-24 px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-neutral-900 dark:text-white mb-6">
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
             Blog
           </h1>
           <p className="text-xl text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">
@@ -48,13 +48,13 @@ export default function BlogPage() {
                     <span>{post.author}</span>
                   </div>
                   <Link href={`/blog/${post.slug}`} className="block group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-neutral-900 rounded-lg">
-                    <h2 className="text-2xl font-bold text-neutral-900 dark:text-white mb-3 group-hover:text-neutral-600 dark:group-hover:text-neutral-300 transition-colors">
+                    <h2 className="text-2xl font-bold text-foreground mb-3 group-hover:text-neutral-600 dark:group-hover:text-neutral-300 transition-colors">
                       {post.title}
                     </h2>
                     <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed mb-4">
                       {post.excerpt}
                     </p>
-                    <span className="text-neutral-900 dark:text-white font-medium group-hover:underline">
+                    <span className="text-foreground font-medium group-hover:underline">
                       Read more<span className="sr-only">: {post.title}</span> &rarr;
                     </span>
                   </Link>

@@ -24,7 +24,7 @@ export function MemberCard({ member }: MemberCardProps) {
               className="rounded-full object-cover"
             />
           ) : (
-            <div className={`w-14 h-14 rounded-full flex items-center justify-center text-neutral-900 dark:text-white font-semibold text-lg ${
+            <div className={`w-14 h-14 rounded-full flex items-center justify-center text-foreground font-semibold text-lg ${
               isAgent ? "bg-purple-900/50" : "bg-neutral-100 dark:bg-neutral-800"
             }`}>
               {isAgent ? (
@@ -43,7 +43,7 @@ export function MemberCard({ member }: MemberCardProps) {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
-            <h3 className="text-neutral-900 dark:text-white font-semibold text-lg truncate">
+            <h3 className="text-foreground font-semibold text-lg truncate">
               {member.displayName || "Anonymous"}
             </h3>
             {/* Member Type Tag */}

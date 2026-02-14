@@ -13,7 +13,7 @@ export default function TalksPage() {
       {/* Hero */}
       <section className="py-16 md:py-24 px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-neutral-900 dark:text-white mb-6">
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
             Talks
           </h1>
           <p className="text-xl text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">
@@ -35,7 +35,7 @@ export default function TalksPage() {
                 key={category.id}
                 className="p-4 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800"
               >
-                <h3 className="text-neutral-900 dark:text-white font-medium mb-2">{category.name}</h3>
+                <h3 className="text-foreground font-medium mb-2">{category.name}</h3>
                 <p className="text-neutral-600 dark:text-neutral-400 text-sm">
                   {category.description}
                 </p>
@@ -48,7 +48,7 @@ export default function TalksPage() {
       {/* Talks List */}
       <section className="py-16 px-6">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-8">
             Featured Talks
           </h2>
 
@@ -71,7 +71,7 @@ export default function TalksPage() {
                     <span className="inline-block px-2 py-1 bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400 text-xs font-medium rounded mb-3 capitalize">
                       {talk.category}
                     </span>
-                    <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-2">
+                    <h3 className="text-lg font-semibold text-foreground mb-2">
                       {talk.title}
                     </h3>
                     <p className="text-neutral-600 dark:text-neutral-400 text-sm mb-3">
@@ -85,7 +85,7 @@ export default function TalksPage() {
                         href={talk.videoUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 text-neutral-900 dark:text-white text-sm font-medium hover:underline focus-visible:outline-none focus-visible:underline"
+                        className="inline-flex items-center gap-2 text-foreground text-sm font-medium hover:underline focus-visible:outline-none focus-visible:underline"
                       >
                         Watch Recording
                         <svg
@@ -127,7 +127,7 @@ export default function TalksPage() {
                   <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">
+              <h3 className="text-xl font-semibold text-foreground mb-2">
                 Coming Soon
               </h3>
               <p className="text-neutral-600 dark:text-neutral-400 mb-6">
@@ -142,7 +142,7 @@ export default function TalksPage() {
       {/* Submit Talk CTA */}
       <section className="py-16 px-6 bg-neutral-50 dark:bg-neutral-950">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white mb-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
             Share Your Ideas
           </h2>
           <p className="text-neutral-600 dark:text-neutral-400 mb-2">
@@ -150,13 +150,13 @@ export default function TalksPage() {
             with Cursor and AI-powered development.
           </p>
           <p className="text-neutral-600 dark:text-neutral-400 mb-8">
-            <strong className="text-neutral-900 dark:text-white">All skill levels are welcome</strong>{" "}
+            <strong className="text-foreground">All skill levels are welcome</strong>{" "}
             &ndash; whether you&apos;re a seasoned developer, a designer
             exploring AI tools, a student learning to code, or from any other
             discipline using Cursor in creative ways.
           </p>
           <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 border border-neutral-200 dark:border-neutral-800 mb-8">
-            <h3 className="text-neutral-900 dark:text-white font-medium mb-3">Talk ideas include:</h3>
+            <h3 className="text-foreground font-medium mb-3">Talk ideas include:</h3>
             <ul className="text-neutral-600 dark:text-neutral-400 text-sm space-y-2">
               <li>A workflow or technique you&apos;ve discovered</li>
               <li>A project you built with Cursor</li>

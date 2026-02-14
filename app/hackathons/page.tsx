@@ -26,7 +26,7 @@ export default function HackathonsPage() {
       {/* Hero */}
       <section className="py-16 md:py-24 px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-neutral-900 dark:text-white mb-6">
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
             Hackathons
           </h1>
           <p className="text-xl text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto mb-8">
@@ -59,7 +59,7 @@ export default function HackathonsPage() {
       {/* Virtual hackathon (current month) */}
       <section className="py-12 px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold text-neutral-900 dark:text-white mb-4">
+          <h2 className="text-2xl font-bold text-foreground mb-4">
             Virtual Hackathon – {monthLabel}
           </h2>
           <p className="text-neutral-600 dark:text-neutral-400 mb-4">
@@ -77,7 +77,7 @@ export default function HackathonsPage() {
       {/* In-person */}
       <section className="py-12 px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold text-neutral-900 dark:text-white mb-4">
+          <h2 className="text-2xl font-bold text-foreground mb-4">
             In-person hackathons
           </h2>
           <p className="text-neutral-600 dark:text-neutral-400">
@@ -94,7 +94,7 @@ export default function HackathonsPage() {
       {/* Sponsor / host */}
       <section className="py-12 px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold text-neutral-900 dark:text-white mb-4">
+          <h2 className="text-2xl font-bold text-foreground mb-4">
             Sponsor or host
           </h2>
           <p className="text-neutral-600 dark:text-neutral-400 mb-4">
@@ -118,7 +118,7 @@ export default function HackathonsPage() {
       {/* Rules summary */}
       <section className="py-12 px-6">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold text-neutral-900 dark:text-white mb-4">
+          <h2 className="text-2xl font-bold text-foreground mb-4">
             Rules at a glance
           </h2>
           <ul className="list-disc list-inside text-neutral-600 dark:text-neutral-400 space-y-2">
