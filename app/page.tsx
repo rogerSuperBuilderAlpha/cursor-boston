@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import Logo from "@/components/Logo";
 
 export const metadata: Metadata = {
   title: "Cursor Boston - AI Coding Community",
@@ -138,16 +139,7 @@ export default function Home() {
       {/* Hero Section */}
       <section className="py-16 md:py-24 px-6">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="w-32 h-32 md:w-40 md:h-40 relative mx-auto mb-6">
-            <Image
-              src="/cursor-boston-logo.png"
-              alt="Cursor Boston"
-              fill
-              priority
-              unoptimized
-              className="object-contain"
-            />
-          </div>
+          <Logo size="heroHome" className="mx-auto mb-6" priority />
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 tracking-tight">
             Boston&apos;s Cursor Community
           </h1>

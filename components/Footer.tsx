@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import Logo from "@/components/Logo";
 
 export default function Footer() {
   return (
@@ -9,16 +10,11 @@ export default function Footer() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
           {/* Brand column */}
           <div className="lg:col-span-4">
-            <Link href="/" className="inline-flex items-center mb-4 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950">
-              <div className="w-8 h-8 relative">
-                <Image
-                  src="/cursor-boston-logo.png"
-                  alt="Cursor Boston"
-                  fill
-                  unoptimized
-                  className="object-contain"
-                />
-              </div>
+            <Link
+              href="/"
+              className="inline-flex items-center min-h-[44px] min-w-[44px] mb-4 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950"
+            >
+              <Logo size="footer" />
               <span className="font-semibold text-white ml-3">Cursor Boston</span>
             </Link>
             <p className="text-neutral-400 text-sm leading-relaxed mb-6 max-w-xs">

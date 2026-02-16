@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import Avatar from "@/components/Avatar";
@@ -13,15 +12,19 @@ export default function Navigation() {
   return (
     <header className="sticky top-0 z-50 bg-black border-b border-neutral-800">
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded-lg">
-          <div className="w-8 h-8 bg-black border border-neutral-700 rounded-md flex items-center justify-center">
+        {/* Logo: 44px min touch target (WCAG 2.1) */}
+        <Link
+          href="/"
+          className="flex items-center gap-2 flex-shrink-0 min-h-[44px] min-w-[44px] py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded-lg"
+        >
+          <div className="w-8 h-8 bg-black border border-neutral-700 rounded-md flex items-center justify-center flex-shrink-0">
             <svg
               width="18"
               height="18"
               viewBox="0 0 24 24"
               fill="none"
               style={{ transform: "rotate(-45deg)" }}
+              aria-hidden
             >
               <path
                 d="M5 3l14 9-6 2-3 6-5-17z"

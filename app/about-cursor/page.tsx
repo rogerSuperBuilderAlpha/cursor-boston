@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
+import Logo from "@/components/Logo";
 
 export const metadata: Metadata = {
   title: "About Cursor & Our Affiliation",
@@ -221,15 +221,7 @@ export default function AboutCursorPage() {
       <section className="py-12 md:py-16 px-6 border-b border-neutral-800">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 relative">
-              <Image
-                src="/cursor-boston-logo.png"
-                alt="Cursor Boston"
-                fill
-                unoptimized
-                className="object-contain"
-              />
-            </div>
+            <Logo size="footer" />
             <h2 className="text-3xl font-bold text-white">Cursor Boston&apos;s Relationship with Cursor</h2>
           </div>
 

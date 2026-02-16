@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import Image from "next/image";
+import Logo from "@/components/Logo";
 
 export const metadata: Metadata = {
   title: "About",
@@ -41,15 +41,7 @@ export default function AboutPage() {
       {/* Hero */}
       <section className="py-16 md:py-24 px-6 border-b border-neutral-800">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="w-24 h-24 relative mx-auto mb-6">
-            <Image
-              src="/cursor-boston-logo.png"
-              unoptimized
-              alt="Cursor Boston"
-              fill
-              className="object-contain"
-            />
-          </div>
+          <Logo size="hero" className="mx-auto mb-6" />
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
             About Cursor Boston
           </h1>
