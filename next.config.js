@@ -4,8 +4,10 @@ const nextConfig = {
   output: 'standalone',
 
   // Use this project as the Turbopack root (fixes multi-lockfile warning)
-  turbopack: {
-    root: __dirname,
+  experimental: {
+    turbo: {
+      root: __dirname,
+    },
   },
 
   images: {
