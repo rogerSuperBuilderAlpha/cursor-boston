@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import eventsData from "@/content/events.json";
 
 export const metadata: Metadata = {
@@ -293,7 +294,7 @@ export default function EventsPage() {
                       </div>
 
                       <div className="flex flex-col sm:flex-row gap-3">
-                        <a
+                        <Link
                           href={`/events/${event.slug}`}
                           className="inline-flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 bg-neutral-900 text-white dark:bg-white dark:text-black rounded-lg text-base font-semibold hover:bg-neutral-700 dark:hover:bg-neutral-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black w-full sm:w-auto"
                         >
@@ -312,7 +313,7 @@ export default function EventsPage() {
                           >
                             <path d="M5 12h14M12 5l7 7-7 7" />
                           </svg>
-                        </a>
+                        </Link>
                         <a
                           href={event.lumaUrl}
                           target="_blank"
@@ -393,7 +394,7 @@ export default function EventsPage() {
             Have an idea for a Cursor workshop, meetup, or hackathon in Boston?
             We&apos;d love to help you make it happen.
           </p>
-          <a
+          <Link
             href="/events/request"
             className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-neutral-900 text-white dark:bg-white dark:text-black rounded-lg text-sm font-semibold hover:bg-neutral-700 dark:hover:bg-neutral-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black"
           >
@@ -412,7 +413,7 @@ export default function EventsPage() {
             >
               <path d="M5 12h14M12 5l7 7-7 7" />
             </svg>
-          </a>
+          </Link>
         </div>
       </section>
     </div>

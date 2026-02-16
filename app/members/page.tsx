@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,20 +14,10 @@ function MembersPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<PageTab>("members");
-  const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
-
-  // Handle URL search param changes
-  useEffect(() => {
-    const search = searchParams.get("search");
-    if (search) {
-      setSearchQuery(search);
-      setActiveTab("members");
-    }
-  }, [searchParams]);
+  const searchQuery = searchParams.get("search") || "";
 
   // Switch to members tab and search for a specific user
   const viewMemberProfile = (authorName: string) => {
-    setSearchQuery(authorName);
     setActiveTab("members");
     router.push(`/members?search=${encodeURIComponent(authorName)}`, { scroll: false });
   };
@@ -109,7 +99,7 @@ function MembersPageContent() {
       {activeTab === "feed" ? (
         <CommunityFeed user={user} onViewMemberProfile={viewMemberProfile} />
       ) : (
-        <MemberDirectory initialSearch={searchQuery} />
+        <MemberDirectory key={searchQuery} initialSearch={searchQuery} />
       )}
 
       {/* CTA */}
