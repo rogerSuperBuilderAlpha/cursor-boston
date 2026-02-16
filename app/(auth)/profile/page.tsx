@@ -109,9 +109,20 @@ function ProfilePageContent() {
   const hasGoogleProvider = !wasGoogleDisconnected && providerIds.some((id) => id === "google.com");
   const hasPasswordProvider = providerIds.some((id) => id === "password");
   const canDisconnectGoogle = hasGoogleProvider && providerIds.length > 1;
-  const enrolledFactors = user ? multiFactor(user).enrolledFactors : [];
+
+  // Safely get enrolled factors with error handling using useMemo
+  const enrolledFactors = useMemo(() => {
+    try {
+      if (!user) return [];
+      return multiFactor(user).enrolledFactors;
+    } catch (error) {
+      // Silently handle error - multiFactor may not be available yet
+      return [];
+    }
+  }, [user]);
+
   const hasPhoneMfa = enrolledFactors.some(
-    (factor) => factor.factorId === PhoneMultiFactorGenerator.FACTOR_ID
+    (factor) => factor?.factorId === PhoneMultiFactorGenerator.FACTOR_ID
   );
 
   const [googleDisconnecting, setGoogleDisconnecting] = useState(false);
@@ -455,34 +466,58 @@ function ProfilePageContent() {
   }, [userProfile]);
 
   const saveProfileSettings = async () => {
-    if (!user || !db) return;
+    if (!user) return;
 
     setSavingSettings(true);
     setSettingsError(null);
     setSettingsSuccess(false);
 
     try {
-      const userRef = doc(db, "users", user.uid);
-      await updateDoc(userRef, {
-        bio: profileSettings.bio.trim(),
-        location: profileSettings.location.trim(),
-        company: profileSettings.company.trim(),
-        jobTitle: profileSettings.jobTitle.trim(),
-        socialLinks: {
-          website: profileSettings.socialLinks.website.trim(),
-          linkedIn: profileSettings.socialLinks.linkedIn.trim(),
-          twitter: profileSettings.socialLinks.twitter.trim(),
-          github: profileSettings.socialLinks.github.trim(),
-          substack: profileSettings.socialLinks.substack.trim(),
+      // Use API route instead of direct Firestore update
+      const token = await user.getIdToken();
+      const response = await fetch("/api/profile/update", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-        visibility: profileSettings.visibility,
-        updatedAt: serverTimestamp(),
+        body: JSON.stringify({
+          bio: profileSettings.bio.trim(),
+          location: profileSettings.location.trim(),
+          company: profileSettings.company.trim(),
+          jobTitle: profileSettings.jobTitle.trim(),
+          socialLinks: {
+            website: profileSettings.socialLinks.website.trim(),
+            linkedIn: profileSettings.socialLinks.linkedIn.trim(),
+            twitter: profileSettings.socialLinks.twitter.trim(),
+            github: profileSettings.socialLinks.github.trim(),
+            substack: profileSettings.socialLinks.substack.trim(),
+          },
+        }),
       });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to save settings");
+      }
+
+      // Save visibility settings separately (not handled by API yet)
+      if (db) {
+        const userRef = doc(db, "users", user.uid);
+        await updateDoc(userRef, {
+          visibility: profileSettings.visibility,
+          updatedAt: serverTimestamp(),
+        });
+      }
+
+      // Refresh user profile to get updated data
+      await refreshUserProfile();
+
       setSettingsSuccess(true);
       setTimeout(() => setSettingsSuccess(false), 3000);
     } catch (error) {
       console.error("Error saving profile settings:", error);
-      setSettingsError("Failed to save settings. Please try again.");
+      setSettingsError(error instanceof Error ? error.message : "Failed to save settings. Please try again.");
     } finally {
       setSavingSettings(false);
     }
