@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, Suspense } from "react";
+import { useEffect, useMemo, useRef, Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -100,7 +100,10 @@ function ProfilePageContent() {
   const githubInfo = wasGithubDisconnected ? null : (connectedGithub || userProfile?.github);
   const hasGithubConnection = Boolean(githubInfo || userProfile?.provider === "github");
 
-  const providerIds = user?.providerData?.map((provider) => provider.providerId) || [];
+  const providerIds = useMemo(
+    () => user?.providerData?.map((provider) => provider.providerId) || [],
+    [user?.providerData]
+  );
   const [wasGoogleDisconnected, setWasGoogleDisconnected] = useState(false);
   // Use strict equality check to avoid CodeQL false positive about substring matching
   const hasGoogleProvider = !wasGoogleDisconnected && providerIds.some((id) => id === "google.com");
