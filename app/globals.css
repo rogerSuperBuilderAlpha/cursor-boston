@@ -3,6 +3,11 @@
 @tailwind utilities;
 
 :root {
+  --background: #ffffff;
+  --foreground: #000000;
+}
+
+.dark {
   --background: #000000;
   --foreground: #ffffff;
 }
@@ -19,6 +24,11 @@ body {
 
 /* Selection color */
 ::selection {
+  background-color: rgba(0, 0, 0, 0.1);
+  color: #000000;
+}
+
+.dark ::selection {
   background-color: rgba(255, 255, 255, 0.2);
   color: #ffffff;
 }
@@ -30,26 +40,46 @@ body {
 }
 
 ::-webkit-scrollbar-track {
+  background: #f5f5f5;
+}
+
+.dark ::-webkit-scrollbar-track {
   background: #0a0a0a;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #333333;
+  background: #d4d4d4;
   border-radius: 4px;
 }
 
+.dark ::-webkit-scrollbar-thumb {
+  background: #333333;
+}
+
 ::-webkit-scrollbar-thumb:hover {
+  background: #a3a3a3;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
   background: #444444;
 }
 
 /* Focus styles for accessibility */
 a:focus-visible,
 button:focus-visible {
-  outline: 2px solid #ffffff;
+  outline: 2px solid #000000;
   outline-offset: 2px;
 }
 
-/* Smooth transitions */
+.dark a:focus-visible,
+.dark button:focus-visible {
+  outline: 2px solid #ffffff;
+}
+
+/* Smooth transitions
+   Note: Section/layout backgrounds use Tailwind's `duration-300` for smooth
+   theme transitions, while interactive elements (buttons, links, cards) use
+   the default duration for snappy hover feedback. This split is intentional. */
 a,
 button {
   transition: all 0.15s ease;

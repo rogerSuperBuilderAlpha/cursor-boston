@@ -140,10 +140,10 @@ export default function Home() {
       <section className="py-16 md:py-24 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <Logo size="heroHome" className="mx-auto mb-6" priority />
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 tracking-tight">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4 tracking-tight">
             Boston&apos;s Cursor Community
           </h1>
-          <p className="text-lg md:text-xl text-neutral-300 mb-8 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg md:text-xl text-neutral-600 dark:text-neutral-300 mb-8 max-w-2xl mx-auto leading-relaxed">
             Bringing Cursor users together in Beantown. Meetups, workshops, and
             community for AI-powered development.
           </p>
@@ -153,7 +153,7 @@ export default function Home() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Subscribe to events on Luma (opens in new tab)"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 bg-emerald-500 text-white rounded-lg text-base font-semibold hover:bg-emerald-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 bg-emerald-500 text-white rounded-lg text-base font-semibold hover:bg-emerald-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               Subscribe to Events
               <svg
@@ -173,7 +173,7 @@ export default function Home() {
             </a>
             <Link
               href="/events"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 border border-neutral-700 text-white rounded-lg text-base font-semibold hover:bg-neutral-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 border border-neutral-300 dark:border-neutral-700 text-foreground rounded-lg text-base font-semibold hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               View Events
             </Link>
@@ -182,15 +182,15 @@ export default function Home() {
       </section>
 
       {/* Upcoming Event Highlight */}
-      <section className="py-16 md:py-20 px-6 bg-neutral-950">
+      <section className="py-16 md:py-20 px-6 bg-neutral-100 dark:bg-neutral-950 transition-colors duration-300">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-white">
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground">
               Upcoming Event
             </h2>
             <Link
               href="/events"
-              className="text-neutral-300 hover:text-white transition-colors text-sm font-medium focus-visible:outline-none focus-visible:text-white focus-visible:underline"
+              className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white transition-colors text-sm font-medium focus-visible:outline-none focus-visible:text-foreground focus-visible:underline"
             >
               See all events &rarr;
             </Link>
@@ -198,7 +198,7 @@ export default function Home() {
 
           <div className="grid md:grid-cols-2 gap-10 items-center">
             {/* Event Poster */}
-            <div className="relative aspect-[9/16] max-h-[500px] rounded-2xl overflow-hidden bg-neutral-900">
+            <div className="relative aspect-[9/16] max-h-[500px] rounded-2xl overflow-hidden bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-none">
               <Image
                 src="/Gemini_Generated_Image_lc032wlc032wlc03.png"
                 alt="Cafe Cursor Boston"
@@ -206,7 +206,7 @@ export default function Home() {
                 className="object-contain"
               />
               {/* QR Code Overlay */}
-              <div className="absolute bottom-[2%] right-[3%] w-[15%] aspect-square bg-white p-1 rounded">
+              <div className="absolute bottom-[2%] right-[3%] w-[15%] aspect-square bg-white p-1 rounded border border-neutral-200 dark:border-none shadow-sm">
                 <Image
                   src="/luma-qr.png"
                   alt="Scan to register"
@@ -219,13 +219,13 @@ export default function Home() {
             {/* Event Details */}
             <div className="flex flex-col gap-6">
               <div>
-                <span className="inline-block px-3 py-1 bg-emerald-500/10 text-emerald-400 text-sm font-medium rounded-full mb-4">
+                <span className="inline-block px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-sm font-medium rounded-full mb-4">
                   Meetup
                 </span>
-                <h3 className="text-xl md:text-2xl font-bold text-white mb-3">
+                <h3 className="text-xl md:text-2xl font-bold text-foreground mb-3">
                   Cafe Cursor Boston
                 </h3>
-                <p className="text-neutral-300 text-base leading-relaxed">
+                <p className="text-neutral-600 dark:text-neutral-300 text-base leading-relaxed">
                   Join us for the first Cursor community event in Boston.
                   Featuring co-working, Cursor workshops for entrepreneurs,
                   engineers, and non-technical folks. Meet the community, learn
@@ -234,7 +234,7 @@ export default function Home() {
               </div>
 
               <div className="space-y-3">
-                <div className="flex items-center gap-3 text-neutral-300">
+                <div className="flex items-center gap-3 text-neutral-600 dark:text-neutral-300">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="20"
@@ -245,7 +245,7 @@ export default function Home() {
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="text-emerald-400 shrink-0"
+                    className="text-emerald-500 dark:text-emerald-400 shrink-0"
                     aria-hidden="true"
                   >
                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
@@ -255,7 +255,7 @@ export default function Home() {
                   </svg>
                   <span>Check Luma for date & time</span>
                 </div>
-                <div className="flex items-center gap-3 text-neutral-300">
+                <div className="flex items-center gap-3 text-neutral-600 dark:text-neutral-300">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="20"
@@ -266,7 +266,7 @@ export default function Home() {
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="text-emerald-400 shrink-0"
+                    className="text-emerald-500 dark:text-emerald-400 shrink-0"
                     aria-hidden="true"
                   >
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
@@ -275,13 +275,13 @@ export default function Home() {
                   <span>Cambridge, Massachusetts</span>
                 </div>
                 <div className="flex flex-wrap gap-2 mt-2">
-                  <span className="px-2 py-1 bg-neutral-800 text-neutral-300 text-xs rounded-full">
+                  <span className="px-2 py-1 bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 text-xs rounded-full border border-neutral-200 dark:border-neutral-700">
                     Cursor Credits
                   </span>
-                  <span className="px-2 py-1 bg-neutral-800 text-neutral-300 text-xs rounded-full">
+                  <span className="px-2 py-1 bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 text-xs rounded-full border border-neutral-200 dark:border-neutral-700">
                     Stickers
                   </span>
-                  <span className="px-2 py-1 bg-neutral-800 text-neutral-300 text-xs rounded-full">
+                  <span className="px-2 py-1 bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 text-xs rounded-full border border-neutral-200 dark:border-neutral-700">
                     Coffee
                   </span>
                 </div>
@@ -292,7 +292,7 @@ export default function Home() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Register for event on Luma (opens in new tab)"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 bg-emerald-500 text-white rounded-lg text-base font-semibold hover:bg-emerald-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black w-full sm:w-auto luma-checkout--button"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 bg-emerald-500 text-white rounded-lg text-base font-semibold hover:bg-emerald-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background w-full sm:w-auto luma-checkout--button"
                 data-luma-action="checkout"
                 data-luma-event-id="lpki2hd6"
               >
@@ -320,10 +320,10 @@ export default function Home() {
       <section className="py-16 md:py-20 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
               Who&apos;s This For?
             </h2>
-            <p className="text-neutral-300 text-base md:text-lg max-w-2xl mx-auto">
+            <p className="text-neutral-600 dark:text-neutral-300 text-base md:text-lg max-w-2xl mx-auto">
               Whether you&apos;re deep into your daily Cursor flow or just
               curious about AI-powered development, our events are for everyone.
             </p>
@@ -336,19 +336,19 @@ export default function Home() {
                 className={`rounded-xl p-5 border transition-all ${
                   card.highlight
                     ? "bg-purple-500/10 border-purple-500/30 hover:border-purple-500/50 hover:bg-purple-500/15"
-                    : "bg-neutral-900/50 border-neutral-800 hover:border-emerald-500/30 hover:bg-neutral-900"
+                    : "bg-neutral-50 dark:bg-neutral-900/50 border-neutral-200 dark:border-neutral-800 hover:border-emerald-500/30 hover:bg-white dark:hover:bg-neutral-900"
                 }`}
               >
-                <div className={card.highlight ? "text-purple-400 mb-4" : "text-emerald-400 mb-4"}>{card.icon}</div>
-                <h3 className="text-lg font-semibold text-white mb-2">
+                <div className={card.highlight ? "text-purple-500 dark:text-purple-400 mb-4" : "text-emerald-600 dark:text-emerald-400 mb-4"}>{card.icon}</div>
+                <h3 className="text-lg font-semibold text-foreground mb-2">
                   {card.title}
                   {card.highlight && (
-                    <span className="ml-2 text-xs px-2 py-0.5 bg-purple-500/20 text-purple-400 rounded-full">
+                    <span className="ml-2 text-xs px-2 py-0.5 bg-purple-500/20 text-purple-600 dark:text-purple-400 rounded-full">
                       New
                     </span>
                   )}
                 </h3>
-                <p className="text-neutral-300 text-sm leading-relaxed">
+                <p className="text-neutral-600 dark:text-neutral-300 text-sm leading-relaxed">
                   {card.description}
                 </p>
               </div>
@@ -358,16 +358,16 @@ export default function Home() {
       </section>
 
       {/* Community Section */}
-      <section className="py-16 md:py-20 px-6 bg-neutral-950">
+      <section className="py-16 md:py-20 px-6 bg-neutral-100 dark:bg-neutral-950 transition-colors duration-300">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
             Join Our Community
           </h2>
-          <p className="text-neutral-300 text-base md:text-lg max-w-2xl mx-auto mb-3">
+          <p className="text-neutral-600 dark:text-neutral-300 text-base md:text-lg max-w-2xl mx-auto mb-3">
             Connect with other Cursor users in Boston. Share tips, ask questions,
             and stay updated on upcoming events.
           </p>
-          <p className="text-emerald-400 text-sm font-medium mb-8">
+          <p className="text-emerald-600 dark:text-emerald-400 text-sm font-medium mb-8">
             Growing community of developers, founders & students
           </p>
           <a
@@ -375,7 +375,7 @@ export default function Home() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Join Discord server (opens in new tab)"
-            className="inline-flex items-center justify-center gap-3 px-6 py-3 md:px-8 md:py-4 bg-[#5865F2] text-white rounded-lg text-base font-semibold hover:bg-[#4752C4] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5865F2] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+            className="inline-flex items-center justify-center gap-3 px-6 py-3 md:px-8 md:py-4 bg-[#5865F2] text-white rounded-lg text-base font-semibold hover:bg-[#4752C4] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5865F2] focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             <svg
               width="24"
@@ -394,13 +394,14 @@ export default function Home() {
       {/* CTA Section */}
       <section className="py-16 md:py-20 px-6">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
             Ready to Level Up?
           </h2>
-          <p className="text-neutral-300 text-base md:text-lg mb-8">
+          <p className="text-neutral-600 dark:text-neutral-300 text-base md:text-lg mb-8">
             Subscribe to our Luma calendar to get notified about upcoming
             meetups, workshops, and hackathons in Boston.
           </p>
+
           <a
             href="https://lu.ma/cursor-boston"
             target="_blank"

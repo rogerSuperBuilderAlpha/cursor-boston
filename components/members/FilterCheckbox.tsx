@@ -15,8 +15,8 @@ export function FilterCheckbox({
     <label
       className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg cursor-pointer transition-colors border min-h-[44px] ${
         checked
-          ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-400"
-          : "bg-neutral-800 border-neutral-700 text-neutral-400 hover:border-neutral-600"
+          ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-600 dark:text-emerald-400"
+          : "bg-neutral-100 dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:border-neutral-300 dark:hover:border-neutral-600"
       }`}
     >
       <input

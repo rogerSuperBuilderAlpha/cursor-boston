@@ -35,12 +35,12 @@ function MembersPageContent() {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="py-12 md:py-16 px-6 border-b border-neutral-800">
+      <section className="py-12 md:py-16 px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
             Community
           </h1>
-          <p className="text-lg text-neutral-400 max-w-2xl mx-auto mb-8">
+          <p className="text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto mb-8">
             Connect with developers, designers, and innovators building with Cursor in Boston.
           </p>
           
@@ -51,7 +51,7 @@ function MembersPageContent() {
               className={`px-6 py-2.5 rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
                 activeTab === "members"
                   ? "bg-emerald-500 text-white"
-                  : "bg-neutral-800 text-neutral-300 hover:bg-neutral-700"
+                  : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
               }`}
             >
               <span className="flex items-center gap-2">
@@ -80,7 +80,7 @@ function MembersPageContent() {
               className={`px-6 py-2.5 rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
                 activeTab === "feed"
                   ? "bg-emerald-500 text-white"
-                  : "bg-neutral-800 text-neutral-300 hover:bg-neutral-700"
+                  : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
               }`}
             >
               <span className="flex items-center gap-2">
@@ -113,18 +113,18 @@ function MembersPageContent() {
       )}
 
       {/* CTA */}
-      <section className="py-16 px-6 bg-neutral-950">
+      <section className="py-16 px-6 bg-neutral-50 dark:bg-neutral-950">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
             Want to be listed here?
           </h2>
-          <p className="text-neutral-400 text-lg mb-8">
+          <p className="text-neutral-600 dark:text-neutral-400 text-lg mb-8">
             Create an account and make your profile public to connect with other
             community members.
           </p>
           <Link
             href="/profile"
-            className="inline-flex items-center justify-center px-6 py-3 md:px-8 md:py-4 bg-emerald-500 text-white rounded-lg text-base font-semibold hover:bg-emerald-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950"
+            className="inline-flex items-center justify-center px-6 py-3 md:px-8 md:py-4 bg-emerald-500 text-white rounded-lg text-base font-semibold hover:bg-emerald-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-neutral-950"
           >
             Set Up Your Profile
           </Link>
@@ -139,7 +139,7 @@ export default function MembersPage() {
     <Suspense
       fallback={
         <div className="min-h-[80vh] flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-neutral-900 dark:border-white"></div>
         </div>
       }
     >
