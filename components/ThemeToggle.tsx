@@ -86,8 +86,8 @@ export function ThemeToggle() {
         break;
       }
       case "Tab": {
-        // Close menu on Tab so focus moves naturally out of the component
-        closeAndRestoreFocus();
+        // Close menu on Tab and let the browser move focus naturally.
+        setIsOpen(false);
         break;
       }
     }

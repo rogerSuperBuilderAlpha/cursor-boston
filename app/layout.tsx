@@ -110,7 +110,7 @@ export default function RootLayout({
         >
           Skip to main content
         </a>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AuthProvider>
             <Navigation />
             <main id="main-content" className="flex-1" tabIndex={-1}>{children}</main>
