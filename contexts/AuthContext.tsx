@@ -285,7 +285,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (userSnap.exists()) {
       setUserProfile(userSnap.data() as UserProfile);
     }
-  }, [setUserProfile]);
+  }, []);
 
   const sendAddEmailVerification = async (newEmail: string) => {
     if (!auth?.currentUser) throw new Error("Not authenticated");
