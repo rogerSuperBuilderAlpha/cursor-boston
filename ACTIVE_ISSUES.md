@@ -8,8 +8,8 @@ If you are working on something, please add your GitHub username under **Owner**
 ## 🧱 Features
 
 ### 🌙 Dark Mode Toggle
-- **Owner:** @riqthedev / @tday
-- **Status:** In Progress
+- **Owner:**  @davidgamero 
+- **Status:** Merged
 - **Description:** Add a theme switcher to toggle between light and dark modes across the site.
 - **Difficulty:** Beginner Friendly
 - **Skills:** React, Tailwind CSS, localStorage
