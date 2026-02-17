@@ -4,9 +4,15 @@ import { logger } from "@/lib/logger";
 
 const GITHUB_CLIENT_ID = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID;
 const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
-// NOTE: Replace with your actual domain in .env.local
-// This must match the Authorization callback URL configured in your GitHub OAuth app
-const GITHUB_REDIRECT_URI = process.env.NEXT_PUBLIC_GITHUB_REDIRECT_URI;
+const GITHUB_REDIRECT_URI_ENV = process.env.NEXT_PUBLIC_GITHUB_REDIRECT_URI;
+
+function getGitHubRedirectUri(request: NextRequest): string {
+  if (GITHUB_REDIRECT_URI_ENV) {
+    return GITHUB_REDIRECT_URI_ENV;
+  }
+  const url = new URL(request.url);
+  return `${url.origin}/api/github/callback`;
+}
 
 async function handleGitHubCallback(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -27,13 +33,16 @@ async function handleGitHubCallback(request: NextRequest) {
     return response;
   }
 
-  if (!GITHUB_CLIENT_ID || !GITHUB_CLIENT_SECRET || !GITHUB_REDIRECT_URI) {
+  if (!GITHUB_CLIENT_ID || !GITHUB_CLIENT_SECRET) {
     logger.error("GitHub OAuth not properly configured. Missing required environment variables.");
     return NextResponse.redirect(new URL("/profile?github=error&message=not_configured", request.url));
   }
 
+  const redirectUri = getGitHubRedirectUri(request);
+
   try {
     // Exchange code for access token
+    logger.info("GitHub token exchange", { redirect_uri: redirectUri });
     const tokenResponse = await fetch("https://github.com/login/oauth/access_token", {
       method: "POST",
       headers: {
@@ -44,21 +53,25 @@ async function handleGitHubCallback(request: NextRequest) {
         client_id: GITHUB_CLIENT_ID,
         client_secret: GITHUB_CLIENT_SECRET,
         code,
-        redirect_uri: GITHUB_REDIRECT_URI,
+        redirect_uri: redirectUri,
       }),
     });
 
     if (!tokenResponse.ok) {
       const errorText = await tokenResponse.text();
-      // Log error without exposing sensitive data
-      logger.error("GitHub token exchange failed", { status: tokenResponse.status });
+      logger.error("GitHub token exchange failed", { status: tokenResponse.status, body: errorText });
       return NextResponse.redirect(new URL("/profile?github=error&message=token_failed", request.url));
     }
 
     const tokenData = await tokenResponse.json();
 
     if (tokenData.error) {
-      logger.error("GitHub OAuth error", { error: tokenData.error_description || tokenData.error });
+      logger.error("GitHub OAuth error", {
+        error: tokenData.error,
+        error_description: tokenData.error_description,
+        error_uri: tokenData.error_uri,
+        redirect_uri_used: redirectUri,
+      });
       return NextResponse.redirect(new URL("/profile?github=error&message=token_failed", request.url));
     }
 

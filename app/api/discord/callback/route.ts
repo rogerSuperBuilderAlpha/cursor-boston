@@ -4,12 +4,16 @@ import { logger } from "@/lib/logger";
 
 const DISCORD_CLIENT_ID = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
 const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
-// NOTE: Replace with your actual domain in .env.local
-// This must match the redirect URI configured in your Discord OAuth app settings
-const DISCORD_REDIRECT_URI = process.env.NEXT_PUBLIC_DISCORD_REDIRECT_URI;
-// NOTE: Discord server ID must be configured in .env.local
-// This is used to verify users are members of your Discord server
+const DISCORD_REDIRECT_URI_ENV = process.env.NEXT_PUBLIC_DISCORD_REDIRECT_URI;
 const DISCORD_SERVER_ID = process.env.CURSOR_BOSTON_DISCORD_SERVER_ID;
+
+function getDiscordRedirectUri(request: NextRequest): string {
+  if (DISCORD_REDIRECT_URI_ENV) {
+    return DISCORD_REDIRECT_URI_ENV;
+  }
+  const url = new URL(request.url);
+  return `${url.origin}/api/discord/callback`;
+}
 
 async function handleDiscordCallback(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -30,13 +34,16 @@ async function handleDiscordCallback(request: NextRequest) {
     return response;
   }
 
-  if (!DISCORD_CLIENT_ID || !DISCORD_CLIENT_SECRET || !DISCORD_REDIRECT_URI || !DISCORD_SERVER_ID) {
+  if (!DISCORD_CLIENT_ID || !DISCORD_CLIENT_SECRET || !DISCORD_SERVER_ID) {
     logger.error("Discord OAuth not properly configured. Missing required environment variables.");
     return NextResponse.redirect(new URL("/profile?discord=error&message=not_configured", request.url));
   }
 
+  const redirectUri = getDiscordRedirectUri(request);
+
   try {
     // Exchange code for access token
+    logger.info("Discord token exchange", { redirect_uri: redirectUri });
     const tokenResponse = await fetch("https://discord.com/api/oauth2/token", {
       method: "POST",
       headers: {
@@ -47,13 +54,13 @@ async function handleDiscordCallback(request: NextRequest) {
         client_secret: DISCORD_CLIENT_SECRET,
         grant_type: "authorization_code",
         code,
-        redirect_uri: DISCORD_REDIRECT_URI,
+        redirect_uri: redirectUri,
       }),
     });
 
     if (!tokenResponse.ok) {
-      // Log error without exposing sensitive data
-      logger.error("Discord token exchange failed", { status: tokenResponse.status });
+      const errorText = await tokenResponse.text();
+      logger.error("Discord token exchange failed", { status: tokenResponse.status, body: errorText, redirect_uri: redirectUri });
       return NextResponse.redirect(new URL("/profile?discord=error&message=token_failed", request.url));
     }
 
