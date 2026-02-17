@@ -37,13 +37,12 @@ This platform is a living example of what you can build with Cursor and modern w
 ---
 
 ## 📚 Community
-- [Active Issues`](./ACTIVE_ISSUES.md) - Track ongoing work and claim tasks
+- [Active Issues](./ACTIVE_ISSUES.md) - Track ongoing work and claim tasks
 - [Contributing Guide](.github/CONTRIBUTING.md) - How to contribute to this project
 - [Code of Conduct](.github/CODE_OF_CONDUCT.md) - Our community standards
 - [Security Policy](.github/SECURITY.md) - How to report security vulnerabilities
 
 ---
-
 
 ## 🏃 Quick Start
 
