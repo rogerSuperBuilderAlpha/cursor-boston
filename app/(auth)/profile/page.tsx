@@ -1087,7 +1087,7 @@ function ProfilePageContent() {
                 </div>
               )}
 
-              <p className="text-neutral-500 text-sm mt-3">
+              <p className="text-neutral-400 text-sm mt-3">
                 Member since{" "}
                 {user.metadata.creationTime
                   ? new Date(user.metadata.creationTime).toLocaleDateString(
@@ -1477,7 +1477,7 @@ function ProfilePageContent() {
                         <p className="text-white text-sm truncate">
                           Registered for {reg.eventTitle}
                         </p>
-                        <p className="text-neutral-500 text-xs">
+                        <p className="text-neutral-400 text-xs">
                           {reg.registeredAt?.toDate
                             ? reg.registeredAt.toDate().toLocaleDateString()
                             : "Recently"}
@@ -1509,7 +1509,7 @@ function ProfilePageContent() {
                         <p className="text-white text-sm truncate">
                           Submitted talk: {talk.title}
                         </p>
-                        <p className="text-neutral-500 text-xs capitalize">
+                        <p className="text-neutral-400 text-xs capitalize">
                           Status: {talk.status || "pending"}
                         </p>
                       </div>
@@ -1793,7 +1793,7 @@ function ProfilePageContent() {
                     </div>
                     <div>
                       <p className="text-white text-sm">{user.email}</p>
-                      <p className="text-neutral-500 text-xs">Primary email</p>
+                      <p className="text-neutral-400 text-xs">Primary email</p>
                     </div>
                   </div>
                   <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 text-xs rounded-full">
@@ -1826,7 +1826,7 @@ function ProfilePageContent() {
                       </div>
                       <div>
                         <p className="text-white text-sm">{emailEntry.email}</p>
-                        <p className="text-neutral-500 text-xs">
+                        <p className="text-neutral-400 text-xs">
                           {emailEntry.verified ? "Verified" : "Pending verification"}
                         </p>
                       </div>
@@ -1865,7 +1865,7 @@ function ProfilePageContent() {
                     value={newEmail}
                     onChange={(e) => setNewEmail(e.target.value)}
                     placeholder="Enter email address"
-                    className="flex-1 px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                    className="flex-1 px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
                   />
                   <button
                     onClick={handleAddEmail}
@@ -2474,7 +2474,7 @@ function ProfilePageContent() {
                   >
                     Choose Photo
                   </button>
-                  <p className="text-neutral-500 text-xs mt-2">
+                  <p className="text-neutral-400 text-xs mt-2">
                     JPG, PNG or GIF. Max 5MB.
                   </p>
                 </div>

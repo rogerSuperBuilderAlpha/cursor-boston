@@ -381,7 +381,7 @@ export default function ProfileRequirementsModal({
               value={displayNameInput}
               onChange={(e) => setDisplayNameInput(e.target.value)}
               placeholder="Enter your name"
-              className="px-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-500 w-40"
+              className="px-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white placeholder-neutral-400 focus:outline-none focus:border-neutral-500 w-40"
               onKeyDown={(e) => {
                 if (e.key === "Enter") saveDisplayName();
                 if (e.key === "Escape") {

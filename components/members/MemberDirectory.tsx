@@ -66,7 +66,7 @@ export function MemberDirectory({ initialSearch = "" }: MemberDirectoryProps) {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search by name, location, job, bio..."
-                  className="w-full pl-11 pr-4 py-3 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg text-foreground placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                  className="w-full pl-11 pr-4 py-3 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg text-foreground placeholder-neutral-400 dark:placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
                 />
               </div>
 
@@ -288,7 +288,7 @@ export function MemberDirectory({ initialSearch = "" }: MemberDirectoryProps) {
             <p className="text-neutral-600 dark:text-neutral-400 text-lg mb-4">
               No public profiles yet.
             </p>
-            <p className="text-neutral-600 dark:text-neutral-500">
+            <p className="text-neutral-600 dark:text-neutral-400">
               Be the first to{" "}
               <Link
                 href="/profile"

@@ -141,7 +141,7 @@ export default function SubmitTalkPage() {
               strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="text-neutral-500"
+              className="text-neutral-400"
             >
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
               <circle cx="12" cy="7" r="4" />
@@ -257,7 +257,7 @@ export default function SubmitTalkPage() {
                     value={formData.name}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
                     placeholder="Jane Doe"
                   />
                 </div>
@@ -272,7 +272,7 @@ export default function SubmitTalkPage() {
                     value={formData.email}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
                     placeholder="jane@example.com"
                   />
                 </div>
@@ -287,7 +287,7 @@ export default function SubmitTalkPage() {
                       name="linkedIn"
                       value={formData.linkedIn}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                      className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
                       placeholder="https://linkedin.com/in/..."
                     />
                   </div>
@@ -301,7 +301,7 @@ export default function SubmitTalkPage() {
                       name="twitter"
                       value={formData.twitter}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                      className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
                       placeholder="@username"
                     />
                   </div>
@@ -324,7 +324,7 @@ export default function SubmitTalkPage() {
                     value={formData.title}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-base placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-base placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
                     placeholder="How I Built X with Cursor"
                   />
                 </div>
@@ -339,7 +339,7 @@ export default function SubmitTalkPage() {
                     onChange={handleChange}
                     required
                     rows={4}
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-base placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent resize-none"
+                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-base placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent resize-none"
                     placeholder="What will you cover? What will attendees learn?"
                   />
                 </div>
@@ -422,7 +422,7 @@ export default function SubmitTalkPage() {
                     value={formData.bio}
                     onChange={handleChange}
                     rows={3}
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent resize-none"
+                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent resize-none"
                     placeholder="Tell us a bit about yourself..."
                   />
                 </div>
@@ -436,7 +436,7 @@ export default function SubmitTalkPage() {
                     value={formData.previousTalks}
                     onChange={handleChange}
                     rows={2}
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent resize-none"
+                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent resize-none"
                     placeholder="Any previous talks or presentations (optional, first-time speakers welcome!)"
                   />
                 </div>

@@ -43,7 +43,7 @@ export function RepostModal({
             placeholder="Add your comment..."
             rows={4}
             maxLength={maxLength}
-            className="w-full bg-neutral-800 rounded-lg p-3 text-white placeholder-neutral-500 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            className="w-full bg-neutral-800 rounded-lg p-3 text-white placeholder-neutral-400 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-400"
           />
           <div className="flex items-center justify-between mt-2">
             <span className={`text-xs ${

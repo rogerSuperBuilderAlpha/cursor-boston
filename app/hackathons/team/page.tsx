@@ -536,7 +536,7 @@ function HackathonsTeamPageContent() {
                     value={profileName}
                     onChange={(e) => setProfileName(e.target.value)}
                     placeholder="e.g. Full Stack Crew"
-                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-emerald-400"
                   />
                 </div>
                 <div>
@@ -549,7 +549,7 @@ function HackathonsTeamPageContent() {
                     value={profileLogoUrl}
                     onChange={(e) => setProfileLogoUrl(e.target.value)}
                     placeholder="https://…"
-                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-emerald-400"
                   />
                 </div>
                 <button
@@ -633,7 +633,7 @@ function HackathonsTeamPageContent() {
                       value={repoUrl}
                       onChange={(e) => setRepoUrl(e.target.value)}
                       placeholder="https://github.com/owner/repo"
-                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-emerald-400"
                     />
                   </div>
                   <button

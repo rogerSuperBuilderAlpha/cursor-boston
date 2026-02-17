@@ -262,7 +262,7 @@ function LoginPageContent() {
               <div className="w-full border-t border-neutral-700"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-neutral-900 text-neutral-500">
+              <span className="px-4 bg-neutral-900 text-neutral-400">
                 or continue with email
               </span>
             </div>
@@ -285,7 +285,7 @@ function LoginPageContent() {
                 required
                 aria-describedby={error ? "form-error" : undefined}
                 aria-invalid={error ? "true" : undefined}
-                className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-base placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-base placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
                 placeholder="you@example.com"
               />
             </div>
@@ -305,7 +305,7 @@ function LoginPageContent() {
                 required
                 aria-describedby={error ? "form-error" : undefined}
                 aria-invalid={error ? "true" : undefined}
-                className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-base placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-base placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
                 placeholder="Enter your password"
               />
             </div>

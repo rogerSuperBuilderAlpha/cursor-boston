@@ -229,7 +229,7 @@ export default function Footer() {
 
         {/* Bottom bar */}
         <div className="border-t border-neutral-200 dark:border-neutral-800 mt-8 pt-8 flex flex-col sm:flex-row justify-between items-center">
-          <p className="text-neutral-600 dark:text-neutral-500 text-sm">
+          <p className="text-neutral-600 dark:text-neutral-400 text-sm">
             © {new Date().getFullYear()} Cursor Boston
           </p>
           <a

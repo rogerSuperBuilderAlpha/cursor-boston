@@ -70,7 +70,7 @@ export function PostComposer({
             placeholder={placeholder}
             rows={3}
             maxLength={maxLength}
-            className="w-full bg-transparent text-white placeholder-neutral-500 resize-none focus:outline-none"
+            className="w-full bg-transparent text-white placeholder-neutral-400 resize-none focus:outline-none"
           />
           <div className="flex items-center justify-between pt-3 border-t border-neutral-800">
             <span className={`text-xs ${
