@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import Avatar from "@/components/Avatar";
+import { FormInput, FormTextarea, ToggleSwitch } from "@/components/ui/FormField";
 import {
   getUserRegistrations,
   getUserStats,
@@ -1915,19 +1916,19 @@ function ProfilePageContent() {
                     {hasPasswordProvider ? "Update Password" : "Set a Password"}
                   </p>
                   <div className="grid sm:grid-cols-2 gap-3">
-                    <input
+                    <FormInput
+                      id="new-password"
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="New password"
-                      className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
                     />
-                    <input
+                    <FormInput
+                      id="confirm-password"
                       type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Confirm password"
-                      className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
                     />
                   </div>
                   <div className="mt-3 flex items-center gap-3">
@@ -1953,12 +1954,12 @@ function ProfilePageContent() {
                     {hasPhoneMfa ? "Enabled with SMS." : "Use SMS to add an extra layer of security."}
                   </p>
                   <div className="space-y-3">
-                    <input
+                    <FormInput
+                      id="phone-number"
                       type="tel"
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
                       placeholder="+15551234567"
-                      className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
                       disabled={hasPhoneMfa}
                     />
                     <div className="flex flex-wrap gap-3">
@@ -1979,12 +1980,12 @@ function ProfilePageContent() {
                     </div>
                     {mfaVerificationId && (
                       <div className="space-y-3">
-                        <input
+                        <FormInput
+                          id="sms-code"
                           type="text"
                           value={smsCode}
                           onChange={(e) => setSmsCode(e.target.value)}
                           placeholder="Enter SMS code"
-                          className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
                         />
                         <button
                           onClick={confirmMfaEnrollment}
@@ -2166,20 +2167,17 @@ function ProfilePageContent() {
                 <h2 className="text-lg font-semibold text-white">
                   Public Profile
                 </h2>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={profileSettings.visibility.isPublic}
-                    onChange={(e) =>
-                      setProfileSettings((prev) => ({
-                        ...prev,
-                        visibility: { ...prev.visibility, isPublic: e.target.checked },
-                      }))
-                    }
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-neutral-700 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-400 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
-                </label>
+                <ToggleSwitch
+                  size="md"
+                  label="Public profile"
+                  checked={profileSettings.visibility.isPublic}
+                  onChange={(checked) =>
+                    setProfileSettings((prev) => ({
+                      ...prev,
+                      visibility: { ...prev.visibility, isPublic: checked },
+                    }))
+                  }
+                />
               </div>
               <p className="text-neutral-400 text-sm">
                 {profileSettings.visibility.isPublic
@@ -2194,68 +2192,45 @@ function ProfilePageContent() {
                 Profile Information
               </h2>
               <div className="space-y-4">
-                <div>
-                  <label htmlFor="bio" className="block text-sm font-medium text-neutral-300 mb-2">
-                    Bio
-                  </label>
-                  <textarea
-                    id="bio"
-                    value={profileSettings.bio}
-                    onChange={(e) =>
-                      setProfileSettings((prev) => ({ ...prev, bio: e.target.value }))
-                    }
-                    placeholder="Tell us about yourself..."
-                    rows={3}
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent resize-none"
-                  />
-                </div>
+                <FormTextarea
+                  id="bio"
+                  label="Bio"
+                  value={profileSettings.bio}
+                  onChange={(e) =>
+                    setProfileSettings((prev) => ({ ...prev, bio: e.target.value }))
+                  }
+                  placeholder="Tell us about yourself..."
+                  rows={3}
+                />
                 <div className="grid sm:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="location" className="block text-sm font-medium text-neutral-300 mb-2">
-                      Location
-                    </label>
-                    <input
-                      type="text"
-                      id="location"
-                      value={profileSettings.location}
-                      onChange={(e) =>
-                        setProfileSettings((prev) => ({ ...prev, location: e.target.value }))
-                      }
-                      placeholder="Boston, MA"
-                      className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="company" className="block text-sm font-medium text-neutral-300 mb-2">
-                      Company
-                    </label>
-                    <input
-                      type="text"
-                      id="company"
-                      value={profileSettings.company}
-                      onChange={(e) =>
-                        setProfileSettings((prev) => ({ ...prev, company: e.target.value }))
-                      }
-                      placeholder="Acme Inc."
-                      className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label htmlFor="jobTitle" className="block text-sm font-medium text-neutral-300 mb-2">
-                    Job Title
-                  </label>
-                  <input
-                    type="text"
-                    id="jobTitle"
-                    value={profileSettings.jobTitle}
+                  <FormInput
+                    id="location"
+                    label="Location"
+                    value={profileSettings.location}
                     onChange={(e) =>
-                      setProfileSettings((prev) => ({ ...prev, jobTitle: e.target.value }))
+                      setProfileSettings((prev) => ({ ...prev, location: e.target.value }))
                     }
-                    placeholder="Software Engineer"
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                    placeholder="Boston, MA"
+                  />
+                  <FormInput
+                    id="company"
+                    label="Company"
+                    value={profileSettings.company}
+                    onChange={(e) =>
+                      setProfileSettings((prev) => ({ ...prev, company: e.target.value }))
+                    }
+                    placeholder="Acme Inc."
                   />
                 </div>
+                <FormInput
+                  id="jobTitle"
+                  label="Job Title"
+                  value={profileSettings.jobTitle}
+                  onChange={(e) =>
+                    setProfileSettings((prev) => ({ ...prev, jobTitle: e.target.value }))
+                  }
+                  placeholder="Software Engineer"
+                />
               </div>
             </div>
 
@@ -2265,96 +2240,71 @@ function ProfilePageContent() {
                 Social Links
               </h2>
               <div className="space-y-4">
-                <div>
-                  <label htmlFor="website" className="block text-sm font-medium text-neutral-300 mb-2">
-                    Website
-                  </label>
-                  <input
-                    type="url"
-                    id="website"
-                    value={profileSettings.socialLinks.website}
-                    onChange={(e) =>
-                      setProfileSettings((prev) => ({
-                        ...prev,
-                        socialLinks: { ...prev.socialLinks, website: e.target.value },
-                      }))
-                    }
-                    placeholder="https://yourwebsite.com"
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="linkedIn" className="block text-sm font-medium text-neutral-300 mb-2">
-                    LinkedIn
-                  </label>
-                  <input
-                    type="url"
-                    id="linkedIn"
-                    value={profileSettings.socialLinks.linkedIn}
-                    onChange={(e) =>
-                      setProfileSettings((prev) => ({
-                        ...prev,
-                        socialLinks: { ...prev.socialLinks, linkedIn: e.target.value },
-                      }))
-                    }
-                    placeholder="https://linkedin.com/in/username"
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="twitter" className="block text-sm font-medium text-neutral-300 mb-2">
-                    X (Twitter)
-                  </label>
-                  <input
-                    type="url"
-                    id="twitter"
-                    value={profileSettings.socialLinks.twitter}
-                    onChange={(e) =>
-                      setProfileSettings((prev) => ({
-                        ...prev,
-                        socialLinks: { ...prev.socialLinks, twitter: e.target.value },
-                      }))
-                    }
-                    placeholder="https://x.com/username"
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="github" className="block text-sm font-medium text-neutral-300 mb-2">
-                    GitHub
-                  </label>
-                  <input
-                    type="url"
-                    id="github"
-                    value={profileSettings.socialLinks.github}
-                    onChange={(e) =>
-                      setProfileSettings((prev) => ({
-                        ...prev,
-                        socialLinks: { ...prev.socialLinks, github: e.target.value },
-                      }))
-                    }
-                    placeholder="https://github.com/username"
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="substack" className="block text-sm font-medium text-neutral-300 mb-2">
-                    Substack
-                  </label>
-                  <input
-                    type="url"
-                    id="substack"
-                    value={profileSettings.socialLinks.substack}
-                    onChange={(e) =>
-                      setProfileSettings((prev) => ({
-                        ...prev,
-                        socialLinks: { ...prev.socialLinks, substack: e.target.value },
-                      }))
-                    }
-                    placeholder="https://yourname.substack.com"
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
-                  />
-                </div>
+                <FormInput
+                  type="url"
+                  id="website"
+                  label="Website"
+                  value={profileSettings.socialLinks.website}
+                  onChange={(e) =>
+                    setProfileSettings((prev) => ({
+                      ...prev,
+                      socialLinks: { ...prev.socialLinks, website: e.target.value },
+                    }))
+                  }
+                  placeholder="https://yourwebsite.com"
+                />
+                <FormInput
+                  type="url"
+                  id="linkedIn"
+                  label="LinkedIn"
+                  value={profileSettings.socialLinks.linkedIn}
+                  onChange={(e) =>
+                    setProfileSettings((prev) => ({
+                      ...prev,
+                      socialLinks: { ...prev.socialLinks, linkedIn: e.target.value },
+                    }))
+                  }
+                  placeholder="https://linkedin.com/in/username"
+                />
+                <FormInput
+                  type="url"
+                  id="twitter"
+                  label="X (Twitter)"
+                  value={profileSettings.socialLinks.twitter}
+                  onChange={(e) =>
+                    setProfileSettings((prev) => ({
+                      ...prev,
+                      socialLinks: { ...prev.socialLinks, twitter: e.target.value },
+                    }))
+                  }
+                  placeholder="https://x.com/username"
+                />
+                <FormInput
+                  type="url"
+                  id="github"
+                  label="GitHub"
+                  value={profileSettings.socialLinks.github}
+                  onChange={(e) =>
+                    setProfileSettings((prev) => ({
+                      ...prev,
+                      socialLinks: { ...prev.socialLinks, github: e.target.value },
+                    }))
+                  }
+                  placeholder="https://github.com/username"
+                />
+                <FormInput
+                  type="url"
+                  id="substack"
+                  label="Substack"
+                  value={profileSettings.socialLinks.substack}
+                  onChange={(e) =>
+                    setProfileSettings((prev) => ({
+                      ...prev,
+                      socialLinks: { ...prev.socialLinks, substack: e.target.value },
+                    }))
+                  }
+                  placeholder="https://yourname.substack.com"
+                />
               </div>
             </div>
 
@@ -2399,20 +2349,16 @@ function ProfilePageContent() {
                 ].map(({ key, label }) => (
                   <div key={key} className="flex items-center justify-between py-2">
                     <span className="text-neutral-300 text-sm">{label}</span>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={profileSettings.visibility[key as keyof typeof profileSettings.visibility] as boolean}
-                        onChange={(e) =>
-                          setProfileSettings((prev) => ({
-                            ...prev,
-                            visibility: { ...prev.visibility, [key]: e.target.checked },
-                          }))
-                        }
-                        className="sr-only peer"
-                      />
-                      <div className="w-9 h-5 bg-neutral-700 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-400 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
-                    </label>
+                    <ToggleSwitch
+                      label={label}
+                      checked={profileSettings.visibility[key as keyof typeof profileSettings.visibility] as boolean}
+                      onChange={(checked) =>
+                        setProfileSettings((prev) => ({
+                          ...prev,
+                          visibility: { ...prev.visibility, [key]: checked },
+                        }))
+                      }
+                    />
                   </div>
                 ))}
               </div>
@@ -2537,18 +2483,12 @@ function ProfilePageContent() {
 
             {/* Name Input */}
             <div className="mb-6">
-              <label
-                htmlFor="edit-name"
-                className="block text-sm font-medium text-neutral-400 mb-2"
-              >
-                Display Name
-              </label>
-              <input
+              <FormInput
                 id="edit-name"
+                label="Display Name"
                 type="text"
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
-                className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 placeholder="Your name"
               />
             </div>
