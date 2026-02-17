@@ -37,40 +37,10 @@ This platform is a living example of what you can build with Cursor and modern w
 ---
 
 ## 📚 Community
-
+- [Active Issues`](./ACTIVE_ISSUES.md) - Track ongoing work and claim tasks
 - [Contributing Guide](.github/CONTRIBUTING.md) - How to contribute to this project
 - [Code of Conduct](.github/CODE_OF_CONDUCT.md) - Our community standards
 - [Security Policy](.github/SECURITY.md) - How to report security vulnerabilities
-
----
-
-## 📌 Contribution Tracking
-
-To avoid duplicate work, see:
-
-➡️ [Active Issues`](./ACTIVE_ISSUES.md)
-
-
-
-
-## 💡 Contribution Ideas (Get Involved!)
-
-We want your PRs! Whether you're fixing a typo or building a major feature, here's what we're looking for:
-
-### 🚀 High-Impact Features
-- **[Hard] AI-Powered Member Search**: Implement a semantic search for the member directory using vector embeddings.
-- **[Medium] Real-time Event Chat**: Add a live chat component to event pages using Firestore listeners.
-- **[Medium] GitHub Contribution Sync**: Automatically display a member's latest GitHub activity on their profile.
-- **[Easy] Dark Mode Toggle**: A simple but essential addition for the late-night builders.
-
-### 🔧 Core Improvements
-- **Accessibility Audit**: Help us reach 100% WCAG compliance.
-- **Test Coverage**: We're aiming for 80%+ coverage with Jest and Playwright.
-- **Performance**: Optimize image delivery and server-side rendering.
-
-### 🎨 Design & UX
-- **Framer Motion Transitions**: Add smooth page transitions and micro-interactions.
-- **Component Library**: Help us extract our UI into a clean, reusable component set.
 
 ---
 
