@@ -248,7 +248,7 @@ export default function RequestEventPage() {
                     value={formData.name}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
                     placeholder="Jane Doe"
                   />
                 </div>
@@ -263,7 +263,7 @@ export default function RequestEventPage() {
                     value={formData.email}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
                     placeholder="jane@example.com"
                   />
                 </div>
@@ -277,7 +277,7 @@ export default function RequestEventPage() {
                     name="organization"
                     value={formData.organization}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
                     placeholder="MIT, Hult, Company name, etc."
                   />
                 </div>
@@ -330,7 +330,7 @@ export default function RequestEventPage() {
                     value={formData.title}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
                     placeholder="Cursor for Beginners, AI Hackathon, etc."
                   />
                 </div>
@@ -345,7 +345,7 @@ export default function RequestEventPage() {
                     onChange={handleChange}
                     required
                     rows={4}
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent resize-none"
+                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent resize-none"
                     placeholder="What's the event about? What would attendees learn or do?"
                   />
                 </div>
@@ -360,7 +360,7 @@ export default function RequestEventPage() {
                       name="proposedDate"
                       value={formData.proposedDate}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-base placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                      className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-base placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
                       placeholder="February 2026, flexible, etc."
                     />
                   </div>
@@ -395,7 +395,7 @@ export default function RequestEventPage() {
                     name="venue"
                     value={formData.venue}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
                     placeholder="We can host at..., Need help finding a venue, etc."
                   />
                 </div>
@@ -415,7 +415,7 @@ export default function RequestEventPage() {
                   value={formData.additionalInfo}
                   onChange={handleChange}
                   rows={3}
-                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent resize-none"
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent resize-none"
                   placeholder="Special requirements, collaboration ideas, etc."
                 />
               </div>

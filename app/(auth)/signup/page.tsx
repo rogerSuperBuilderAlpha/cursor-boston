@@ -194,7 +194,7 @@ function SignUpPageContent() {
               <div className="w-full border-t border-neutral-700"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-neutral-900 text-neutral-500">
+              <span className="px-4 bg-neutral-900 text-neutral-400">
                 or continue with email
               </span>
             </div>
@@ -215,7 +215,7 @@ function SignUpPageContent() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-base placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-base placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
                 placeholder="Your name"
               />
             </div>
@@ -233,7 +233,7 @@ function SignUpPageContent() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-base placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-base placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
                 placeholder="you@example.com"
               />
             </div>
@@ -251,7 +251,7 @@ function SignUpPageContent() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-base placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-base placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
                 placeholder="At least 6 characters"
               />
             </div>
@@ -269,7 +269,7 @@ function SignUpPageContent() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-base placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-base placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
                 placeholder="Confirm your password"
               />
             </div>
@@ -283,7 +283,7 @@ function SignUpPageContent() {
             </button>
           </form>
 
-          <p className="mt-6 text-xs text-neutral-500 text-center">
+          <p className="mt-6 text-xs text-neutral-400 text-center">
             By creating an account, you agree to our terms of service and
             privacy policy.
           </p>

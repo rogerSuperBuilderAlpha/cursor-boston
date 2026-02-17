@@ -59,10 +59,10 @@ export function MemberCard({ member }: MemberCardProps) {
             <p className="text-neutral-600 dark:text-neutral-400 text-sm truncate">{member.jobTitle}</p>
           )}
           {!isAgent && v?.showCompany && member.company && (
-            <p className="text-neutral-600 dark:text-neutral-500 text-sm truncate">{member.company}</p>
+            <p className="text-neutral-600 dark:text-neutral-400 text-sm truncate">{member.company}</p>
           )}
           {isAgent && member.owner?.displayName && v?.showOwner && (
-            <p className="text-neutral-600 dark:text-neutral-500 text-sm truncate">
+            <p className="text-neutral-600 dark:text-neutral-400 text-sm truncate">
               Owned by {member.owner.displayName}
             </p>
           )}
@@ -244,7 +244,7 @@ export function MemberCard({ member }: MemberCardProps) {
           </a>
         )}
         {v?.showMemberSince && member.createdAt && (
-          <span className="text-neutral-500 text-xs ml-auto">
+          <span className="text-neutral-400 text-xs ml-auto">
             Member since{" "}
             {member.createdAt.toDate().toLocaleDateString("en-US", {
               month: "short",

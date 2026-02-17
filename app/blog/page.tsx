@@ -36,7 +36,7 @@ export default function BlogPage() {
                   key={post.slug}
                   className="bg-white dark:bg-neutral-900 rounded-2xl p-8 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
                 >
-                  <div className="flex items-center gap-4 text-sm text-neutral-600 dark:text-neutral-500 mb-4">
+                  <div className="flex items-center gap-4 text-sm text-neutral-600 dark:text-neutral-400 mb-4">
                     <time dateTime={post.date}>
                       {new Date(post.date).toLocaleDateString("en-US", {
                         year: "numeric",
