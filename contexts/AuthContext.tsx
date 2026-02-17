@@ -277,7 +277,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(Object.assign(Object.create(Object.getPrototypeOf(updatedUser)), updatedUser, updates));
   };
 
- const refreshUserProfile =  useCallback(async () => {
+ const refreshUserProfile = useCallback(async () => {
     if (!auth?.currentUser || !db) return;
     
     const userRef = doc(db, "users", auth.currentUser.uid);
