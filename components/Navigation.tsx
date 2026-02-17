@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import Avatar from "@/components/Avatar";
@@ -9,6 +10,15 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 export default function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, loading } = useAuth();
+  const pathname = usePathname();
+
+  const isActive = (href: string) => pathname === href;
+
+  const desktopNavLinkClass =
+    "text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline";
+
+  const mobileNavLinkClass =
+    "text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline";
 
   return (
     <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-neutral-200 dark:border-neutral-800 transition-colors duration-300">
@@ -41,28 +51,76 @@ export default function Navigation() {
 
         {/* Desktop Nav */}
         <nav className="hidden lg:flex items-center space-x-8 ml-12">
-          <Link href="/events" className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
+          <Link
+            href="/events"
+            className={`${desktopNavLinkClass} ${
+              isActive("/events") ? "text-foreground underline underline-offset-4" : ""
+            }`}
+            aria-current={isActive("/events") ? "page" : undefined}
+          >
             Events
           </Link>
-          <Link href="/talks" className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
+          <Link
+            href="/talks"
+            className={`${desktopNavLinkClass} ${
+              isActive("/talks") ? "text-foreground underline underline-offset-4" : ""
+            }`}
+            aria-current={isActive("/talks") ? "page" : undefined}
+          >
             Talks
           </Link>
-          <Link href="/hackathons" className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
+          <Link
+            href="/hackathons"
+            className={`${desktopNavLinkClass} ${
+              isActive("/hackathons") ? "text-foreground underline underline-offset-4" : ""
+            }`}
+            aria-current={isActive("/hackathons") ? "page" : undefined}
+          >
             Hackathons
           </Link>
-          <Link href="/blog" className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
+          <Link
+            href="/blog"
+            className={`${desktopNavLinkClass} ${
+              isActive("/blog") ? "text-foreground underline underline-offset-4" : ""
+            }`}
+            aria-current={isActive("/blog") ? "page" : undefined}
+          >
             Blog
           </Link>
-          <Link href="/members" className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
+          <Link
+            href="/members"
+            className={`${desktopNavLinkClass} ${
+              isActive("/members") ? "text-foreground underline underline-offset-4" : ""
+            }`}
+            aria-current={isActive("/members") ? "page" : undefined}
+          >
             Members
           </Link>
-          <Link href="/opportunities" className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
+          <Link
+            href="/opportunities"
+            className={`${desktopNavLinkClass} ${
+              isActive("/opportunities") ? "text-foreground underline underline-offset-4" : ""
+            }`}
+            aria-current={isActive("/opportunities") ? "page" : undefined}
+          >
             Opportunities
           </Link>
-          <Link href="/showcase" className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
+          <Link
+            href="/showcase"
+            className={`${desktopNavLinkClass} ${
+              isActive("/showcase") ? "text-foreground underline underline-offset-4" : ""
+            }`}
+            aria-current={isActive("/showcase") ? "page" : undefined}
+          >
             Showcase
           </Link>
-          <Link href="/about" className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
+          <Link
+            href="/about"
+            className={`${desktopNavLinkClass} ${
+              isActive("/about") ? "text-foreground underline underline-offset-4" : ""
+            }`}
+            aria-current={isActive("/about") ? "page" : undefined}
+          >
             About
           </Link>
         </nav>
@@ -130,28 +188,84 @@ export default function Navigation() {
         <div id="mobile-menu" className="lg:hidden border-t border-neutral-200 dark:border-neutral-800 bg-background">
           <div className="max-w-6xl mx-auto px-6 py-4">
             <nav className="flex flex-col space-y-1">
-              <Link href="/events" onClick={() => setMobileMenuOpen(false)} className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
+              <Link
+                href="/events"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`${mobileNavLinkClass} ${
+                  isActive("/events") ? "text-foreground underline underline-offset-4" : ""
+                }`}
+                aria-current={isActive("/events") ? "page" : undefined}
+              >
                 Events
               </Link>
-              <Link href="/talks" onClick={() => setMobileMenuOpen(false)} className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
+              <Link
+                href="/talks"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`${mobileNavLinkClass} ${
+                  isActive("/talks") ? "text-foreground underline underline-offset-4" : ""
+                }`}
+                aria-current={isActive("/talks") ? "page" : undefined}
+              >
                 Talks
               </Link>
-              <Link href="/hackathons" onClick={() => setMobileMenuOpen(false)} className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
+              <Link
+                href="/hackathons"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`${mobileNavLinkClass} ${
+                  isActive("/hackathons") ? "text-foreground underline underline-offset-4" : ""
+                }`}
+                aria-current={isActive("/hackathons") ? "page" : undefined}
+              >
                 Hackathons
               </Link>
-              <Link href="/blog" onClick={() => setMobileMenuOpen(false)} className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
+              <Link
+                href="/blog"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`${mobileNavLinkClass} ${
+                  isActive("/blog") ? "text-foreground underline underline-offset-4" : ""
+                }`}
+                aria-current={isActive("/blog") ? "page" : undefined}
+              >
                 Blog
               </Link>
-              <Link href="/members" onClick={() => setMobileMenuOpen(false)} className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
+              <Link
+                href="/members"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`${mobileNavLinkClass} ${
+                  isActive("/members") ? "text-foreground underline underline-offset-4" : ""
+                }`}
+                aria-current={isActive("/members") ? "page" : undefined}
+              >
                 Members
               </Link>
-              <Link href="/opportunities" onClick={() => setMobileMenuOpen(false)} className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
+              <Link
+                href="/opportunities"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`${mobileNavLinkClass} ${
+                  isActive("/opportunities") ? "text-foreground underline underline-offset-4" : ""
+                }`}
+                aria-current={isActive("/opportunities") ? "page" : undefined}
+              >
                 Opportunities
               </Link>
-              <Link href="/showcase" onClick={() => setMobileMenuOpen(false)} className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
+              <Link
+                href="/showcase"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`${mobileNavLinkClass} ${
+                  isActive("/showcase") ? "text-foreground underline underline-offset-4" : ""
+                }`}
+                aria-current={isActive("/showcase") ? "page" : undefined}
+              >
                 Showcase
               </Link>
-              <Link href="/about" onClick={() => setMobileMenuOpen(false)} className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
+              <Link
+                href="/about"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`${mobileNavLinkClass} ${
+                  isActive("/about") ? "text-foreground underline underline-offset-4" : ""
+                }`}
+                aria-current={isActive("/about") ? "page" : undefined}
+              >
                 About
               </Link>
             </nav>
