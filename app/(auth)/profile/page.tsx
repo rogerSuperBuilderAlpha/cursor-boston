@@ -41,7 +41,7 @@ import { SettingsTab } from "./_components/SettingsTab";
 import { EditProfileModal } from "./_components/EditProfileModal";
 
 // Icons not yet in @/components/icons — kept local until added
-import { EyeIcon, EyeOffIcon } from "./_icons/icons";
+import { EyeIcon, EyeOffIcon } from "@/components/icons";
 
 type Tab = "overview" | "events" | "talks" | "security" | "settings";
 
