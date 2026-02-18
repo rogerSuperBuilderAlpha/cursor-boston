@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { collection, query, where, getDocs, orderBy, addDoc, serverTimestamp, limit, Timestamp, deleteDoc, doc } from "firebase/firestore";
+import { collection, query, where, getDocs, orderBy, addDoc, serverTimestamp, limit, Timestamp, deleteDoc, doc, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { User } from "firebase/auth";
 import type { Message, ReactionType } from "@/types/feed";
@@ -23,53 +23,55 @@ export function useFeed(user: User | null, isActive: boolean) {
   const [repostingMessage, setRepostingMessage] = useState<Message | null>(null);
   const [repostComment, setRepostComment] = useState("");
 
-  // Fetch messages when feed tab is active
+  // Subscribe to real-time messages when feed tab is active
   useEffect(() => {
-    if (!isActive) return;
-    
-    async function fetchMessages() {
-      if (!db) return;
-      
-      setLoading(true);
+    if (!isActive || !db) return;
+
+    setLoading(true);
+    const messagesRef = collection(db, "communityMessages");
+    const q = query(messagesRef, orderBy("createdAt", "desc"), limit(50));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedMessages = snapshot.docs
+        .map((d) => ({
+          id: d.id,
+          ...d.data(),
+        } as Message))
+        .filter((msg) => !msg.parentId);
+      setMessages(fetchedMessages);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error listening to messages:", error);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [isActive]);
+
+  // Fetch user's reactions when logged in (one-time, updated optimistically)
+  useEffect(() => {
+    if (!isActive || !db || !user) return;
+
+    async function fetchReactions() {
       try {
-        const messagesRef = collection(db, "communityMessages");
-        const q = query(
-          messagesRef,
-          orderBy("createdAt", "desc"),
-          limit(50)
+        const reactionsRef = collection(db!, "messageReactions");
+        const reactionsQuery = query(
+          reactionsRef,
+          where("userId", "==", user!.uid)
         );
-        const snapshot = await getDocs(q);
-        const fetchedMessages = snapshot.docs
-          .map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          } as Message))
-          .filter((msg) => !msg.parentId);
-        setMessages(fetchedMessages);
-        
-        // Fetch user's reactions if logged in
-        if (user) {
-          const reactionsRef = collection(db, "messageReactions");
-          const reactionsQuery = query(
-            reactionsRef,
-            where("userId", "==", user.uid)
-          );
-          const reactionsSnapshot = await getDocs(reactionsQuery);
-          const reactions: Record<string, ReactionType> = {};
-          reactionsSnapshot.docs.forEach((doc) => {
-            const data = doc.data();
-            reactions[data.messageId] = data.type;
-          });
-          setUserReactions(reactions);
-        }
+        const reactionsSnapshot = await getDocs(reactionsQuery);
+        const reactions: Record<string, ReactionType> = {};
+        reactionsSnapshot.docs.forEach((d) => {
+          const data = d.data();
+          reactions[data.messageId] = data.type;
+        });
+        setUserReactions(reactions);
       } catch (error) {
-        console.error("Error fetching messages:", error);
-      } finally {
-        setLoading(false);
+        console.error("Error fetching reactions:", error);
       }
     }
 
-    fetchMessages();
+    fetchReactions();
   }, [isActive, user]);
 
   // API helper
@@ -118,7 +120,7 @@ export function useFeed(user: User | null, isActive: boolean) {
         repostCount: 0,
       };
       const docRef = await addDoc(messagesRef, newMsg);
-      
+
       setMessages((prev) => [
         {
           id: docRef.id,
