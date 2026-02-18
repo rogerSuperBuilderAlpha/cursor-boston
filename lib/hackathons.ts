@@ -4,6 +4,17 @@
 
 const BOSTON_TZ = "America/New_York";
 
+/** Get Boston's UTC offset in hours at a given date (e.g. -5 for EST, -4 for EDT). */
+function getBostonOffsetHours(date: Date): number {
+  const fmt = new Intl.DateTimeFormat("en-US", {
+    timeZone: BOSTON_TZ,
+    timeZoneName: "shortOffset",
+  });
+  const tzPart = fmt.formatToParts(date).find((p) => p.type === "timeZoneName");
+  const match = tzPart?.value.match(/GMT([+-]\d+)/);
+  return match ? parseInt(match[1], 10) : -5;
+}
+
 /**
  * Get current date in Boston time (for virtual hackathon month).
  */
@@ -66,8 +77,11 @@ export function getVirtualMonthStartEndUtc(hackathonId: string): { start: Date; 
   const year = parseInt(match[1], 10);
   const month1 = parseInt(match[2], 10);
   const month0 = month1 - 1;
-  const start = new Date(Date.UTC(year, month0, 1, 5, 0, 0, 0));
-  const end = new Date(Date.UTC(year, month0 + 1, 0, 4, 59, 59, 999));
+  const startOffsetHrs = -getBostonOffsetHours(new Date(year, month0, 1));
+  const lastDay = new Date(year, month0 + 1, 0).getDate();
+  const endOffsetHrs = -getBostonOffsetHours(new Date(year, month0, lastDay));
+  const start = new Date(Date.UTC(year, month0, 1, startOffsetHrs, 0, 0, 0));
+  const end = new Date(Date.UTC(year, month0, lastDay, endOffsetHrs + 23, 59, 59, 999));
   return { start, end };
 }
 
@@ -95,6 +109,6 @@ export function getSubmissionCutoffForMonth(year: number, month1Based: number): 
   const nextMonth = month1Based === 12 ? 1 : month1Based + 1;
   const nextYear = month1Based === 12 ? year + 1 : year;
   const month0 = nextMonth - 1;
-  const utcHour = 5; // 00:00 EST = 05:00 UTC; EDT would be 04:00, this is conservative
+  const utcHour = -getBostonOffsetHours(new Date(nextYear, month0, 1));
   return new Date(Date.UTC(nextYear, month0, 1, utcHour, 0, 0, 0));
 }
