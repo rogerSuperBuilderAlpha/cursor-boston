@@ -1,3 +1,6 @@
+/**
+ * @jest-environment node
+ */
 import { checkRateLimit, getClientIdentifier, rateLimitConfigs } from '@/lib/rate-limit';
 
 describe('Rate Limiting', () => {
