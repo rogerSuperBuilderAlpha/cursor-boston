@@ -8,6 +8,7 @@ Thank you for your interest in contributing to Cursor Boston! This document prov
 - [Developer Certificate of Origin](#developer-certificate-of-origin)
 - [Getting Started](#getting-started)
 - [Development Workflow](#development-workflow)
+- [Claiming an Issue](#claiming-an-issue)
 - [Code Style and Conventions](#code-style-and-conventions)
 - [Making Changes](#making-changes)
 - [Testing](#testing)
@@ -106,10 +107,10 @@ Before you begin, ensure you have the following installed:
 
 ### Finding Issues to Work On
 
-- Check the [GitHub Issues](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues) for open tasks
+- Browse [GitHub Issues](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues) for open tasks
 - Look for issues labeled `good first issue` if you're new to the project
 - Issues labeled `help wanted` are actively seeking contributors
-- Comment on an issue to let others know you're working on it
+- **Feature projects** (issues [#78](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/78)–[#83](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/83)) are fully scoped, isolated features ready to build — see the [Claiming an Issue](#claiming-an-issue) section below
 
 ### Branch Naming
 
@@ -135,6 +136,69 @@ git fetch upstream
 git checkout main
 git merge upstream/main
 ```
+
+## Claiming an Issue
+
+### Step 1 — Find an issue
+
+Open issues are at [github.com/rogerSuperBuilderAlpha/cursor-boston/issues](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues).
+
+We have **6 standalone feature projects** that are great for contributors who want to build something end-to-end:
+
+| Issue | Feature |
+|-------|---------|
+| [#78](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/78) | Prompt & Rules Cookbook |
+| [#79](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/79) | Achievement Badge System |
+| [#80](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/80) | AI Pair Programming Matchmaker |
+| [#81](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/81) | Public Community Analytics Dashboard |
+| [#82](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/82) | Interactive Community Event Map |
+| [#83](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/83) | Lightning Talk Timer & Speaker Queue |
+
+Each issue contains a full spec: summary, motivation, proposed features, technical notes, and design guidance. They are fully isolated — new routes and new Firestore collections with no changes required to existing code.
+
+### Step 2 — Claim it
+
+Leave a comment on the issue saying you'd like to work on it, e.g.:
+
+> "I'd like to take this on. Planning to start this week."
+
+A maintainer will assign it to you. Only one person works on a given issue at a time — check whether someone is already assigned before commenting.
+
+### Step 3 — Build it
+
+Create a feature branch from `main`:
+
+```bash
+git checkout main && git pull upstream main
+git checkout -b feature/your-feature-name
+```
+
+Reference the issue number in your commits so GitHub links them automatically:
+
+```bash
+git commit -s -m "feat(cookbook): add browse and search page
+
+Closes #78"
+```
+
+### Step 4 — Open a PR
+
+When your work is ready, open a pull request against `main`. In the PR description:
+
+1. **Link the issue** using a closing keyword so it auto-closes on merge:
+   ```
+   Closes #78
+   ```
+2. Fill out the [PR description template](#pr-description-template) — include screenshots for any UI work.
+3. Make sure `npm run lint` and `npm run build` pass before requesting review.
+
+Maintainers will review and provide feedback. Once approved, your PR will be merged and the issue will close automatically.
+
+### Etiquette
+
+- If you claim an issue but can no longer work on it, please leave a comment so someone else can pick it up.
+- Don't open a PR for an issue that is already assigned to someone else without coordinating first.
+- Partial work is welcome — open a draft PR early to show progress and get early feedback.
 
 ## Code Style and Conventions
 
@@ -374,6 +438,17 @@ Add screenshots for UI changes.
 
 We welcome contributions in these areas:
 
+### Feature Projects (claim one and build it end-to-end)
+
+These are fully scoped, isolated features with no dependencies on existing code. See [Claiming an Issue](#claiming-an-issue) for how to get started.
+
+- [#78](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/78) **Prompt & Rules Cookbook** — share and discover Cursor workflows
+- [#79](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/79) **Achievement Badge System** — gamified milestones for community activity
+- [#80](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/80) **AI Pair Programming Matchmaker** — find your coding partner
+- [#81](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/81) **Public Community Analytics Dashboard** — visualize community growth
+- [#82](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/82) **Interactive Community Event Map** — Boston venues on a live map
+- [#83](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/83) **Lightning Talk Timer & Speaker Queue** — real-time event tool
+
 ### High Priority
 
 - **Bug Fixes** - Fix issues reported in the issue tracker
@@ -382,7 +457,6 @@ We welcome contributions in these areas:
 
 ### Medium Priority
 
-- **Features** - Implement features from the roadmap
 - **Performance** - Optimize bundle size, improve load times
 - **UI/UX** - Improve design, add animations, enhance mobile experience
 

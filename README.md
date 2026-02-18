@@ -36,8 +36,25 @@ This platform is a living example of what you can build with Cursor and modern w
 
 ---
 
+## 🚀 Build Something
+
+Want to add a major feature to the platform? We have **6 open feature projects** ready for contributors to claim and build:
+
+| # | Feature | Issue |
+|---|---------|-------|
+| 1 | **Prompt & Rules Cookbook** — share and discover Cursor workflows | [#78](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/78) |
+| 2 | **Achievement Badge System** — gamified milestones for community activity | [#79](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/79) |
+| 3 | **AI Pair Programming Matchmaker** — find your coding partner | [#80](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/80) |
+| 4 | **Public Community Analytics Dashboard** — visualize community growth | [#81](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/81) |
+| 5 | **Interactive Community Event Map** — Boston venues on a live map | [#82](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/82) |
+| 6 | **Lightning Talk Timer & Speaker Queue** — real-time event tool | [#83](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/83) |
+
+Each feature is **fully isolated** — new routes, new Firestore collections, no entanglement with existing code. Pick one, comment to claim it, and ship it. See the [Contributing Guide](.github/CONTRIBUTING.md#claiming-an-issue) for how to get started.
+
+---
+
 ## 📚 Community
-- [Active Issues](./ACTIVE_ISSUES.md) - Track ongoing work and claim tasks
+- [GitHub Issues](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues) - Browse and claim open tasks
 - [Contributing Guide](.github/CONTRIBUTING.md) - How to contribute to this project
 - [Code of Conduct](.github/CODE_OF_CONDUCT.md) - Our community standards
 - [Security Policy](.github/SECURITY.md) - How to report security vulnerabilities
