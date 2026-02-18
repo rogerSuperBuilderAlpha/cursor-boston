@@ -27,12 +27,12 @@ interface LogEntry {
 }
 
 class Logger {
-  private isProduction: boolean;
-  private isDevelopment: boolean;
+  private get isProduction(): boolean {
+    return process.env.NODE_ENV === "production";
+  }
 
-  constructor() {
-    this.isProduction = process.env.NODE_ENV === "production";
-    this.isDevelopment = process.env.NODE_ENV === "development";
+  private get isDevelopment(): boolean {
+    return process.env.NODE_ENV === "development";
   }
 
   private formatLog(entry: LogEntry): string {
