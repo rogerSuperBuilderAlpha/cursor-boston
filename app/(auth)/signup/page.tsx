@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { AuthFormSkeleton } from "@/components/skeletons/AuthFormSkeleton";
 
 // Map Firebase error codes to user-friendly messages
 function getErrorMessage(error: unknown): string {
@@ -111,11 +112,7 @@ function SignUpPageContent() {
 
   // Show loading while checking auth state
   if (authLoading) {
-    return (
-      <div className="min-h-[80vh] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white"></div>
-      </div>
-    );
+    return <AuthFormSkeleton />;
   }
 
   // Don't render if user is authenticated (will redirect)

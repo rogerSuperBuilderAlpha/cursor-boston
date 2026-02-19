@@ -1,6 +1,13 @@
 import { Timestamp } from "firebase/firestore";
 
 /**
+ * Merge class names, filtering out falsy values.
+ */
+export function cn(...classes: (string | undefined | null | false)[]): string {
+  return classes.filter(Boolean).join(" ");
+}
+
+/**
  * Get initials from a name string.
  * Returns first letter of first and last name, or single letter if only one word.
  */

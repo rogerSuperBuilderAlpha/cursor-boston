@@ -5,6 +5,7 @@ import { useFeed } from "@/hooks/useFeed";
 import { PostComposer } from "./PostComposer";
 import { MessageCard } from "./MessageCard";
 import { RepostModal } from "./RepostModal";
+import { FeedMessageSkeleton } from "@/components/skeletons/FeedMessageSkeleton";
 
 interface CommunityFeedProps {
   user: User | null;
@@ -114,8 +115,10 @@ export function CommunityFeed({ user, onViewMemberProfile }: CommunityFeedProps)
 
         {/* Messages Feed */}
         {loading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white"></div>
+          <div className="space-y-4">
+            <FeedMessageSkeleton />
+            <FeedMessageSkeleton />
+            <FeedMessageSkeleton />
           </div>
         ) : filteredMessages.length === 0 ? (
           <div className="text-center py-12">
