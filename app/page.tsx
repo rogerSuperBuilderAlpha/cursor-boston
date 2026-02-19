@@ -12,6 +12,14 @@ export const metadata: Metadata = {
   },
 };
 
+const audienceCardColors = {
+  blue: "bg-blue-500/10 border-blue-500/30 hover:border-blue-500/50 hover:bg-blue-500/15 text-blue-600 dark:text-blue-400",
+  amber: "bg-amber-500/10 border-amber-500/30 hover:border-amber-500/50 hover:bg-amber-500/15 text-amber-600 dark:text-amber-400",
+  emerald: "bg-emerald-500/10 border-emerald-500/30 hover:border-emerald-500/50 hover:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+  rose: "bg-rose-500/10 border-rose-500/30 hover:border-rose-500/50 hover:bg-rose-500/15 text-rose-600 dark:text-rose-400",
+  purple: "bg-purple-500/10 border-purple-500/30 hover:border-purple-500/50 hover:bg-purple-500/15 text-purple-600 dark:text-purple-400",
+} as const;
+
 const audienceCards = [
   {
     icon: (
@@ -34,6 +42,7 @@ const audienceCards = [
     title: "Students",
     description:
       "From MIT, Harvard, Hult, BU, Northeastern, and beyond. Learn AI-powered development skills that will set you apart.",
+    accent: "blue" as keyof typeof audienceCardColors,
   },
   {
     icon: (
@@ -58,6 +67,7 @@ const audienceCards = [
     title: "Startup Founders",
     description:
       "Prototype MVPs in hours, not weeks. Build landing pages, dashboards, and validate ideas without a technical co-founder.",
+    accent: "amber" as keyof typeof audienceCardColors,
   },
   {
     icon: (
@@ -80,6 +90,7 @@ const audienceCards = [
     title: "Developers",
     description:
       "Ship production-ready features faster. Debug, test, and build full-stack applications with AI assistance.",
+    accent: "emerald" as keyof typeof audienceCardColors,
   },
   {
     icon: (
@@ -103,6 +114,7 @@ const audienceCards = [
     title: "Designers & PMs",
     description:
       "Turn designs into code. Build prototypes, automate workflows, and create professional deliverables faster.",
+    accent: "rose" as keyof typeof audienceCardColors,
   },
   {
     icon: (
@@ -127,6 +139,7 @@ const audienceCards = [
     title: "AI Agents",
     description:
       "Yes, agents too! Register your AI agent, claim ownership, and join our community alongside human members.",
+    accent: "purple" as keyof typeof audienceCardColors,
     highlight: true,
   },
 ];
@@ -333,13 +346,9 @@ export default function Home() {
             {audienceCards.map((card, index) => (
               <div
                 key={index}
-                className={`rounded-xl p-5 border transition-all ${
-                  card.highlight
-                    ? "bg-purple-500/10 border-purple-500/30 hover:border-purple-500/50 hover:bg-purple-500/15"
-                    : "bg-neutral-50 dark:bg-neutral-900/50 border-neutral-200 dark:border-neutral-800 hover:border-emerald-500/30 hover:bg-white dark:hover:bg-neutral-900"
-                }`}
+                className={`rounded-xl p-5 border transition-all ${audienceCardColors[card.accent]}`}
               >
-                <div className={card.highlight ? "text-purple-500 dark:text-purple-400 mb-4" : "text-emerald-600 dark:text-emerald-400 mb-4"}>{card.icon}</div>
+                <div className="mb-4">{card.icon}</div>
                 <h3 className="text-lg font-semibold text-foreground mb-2">
                   {card.title}
                   {card.highlight && (
