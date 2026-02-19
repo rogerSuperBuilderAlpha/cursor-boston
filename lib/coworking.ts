@@ -18,7 +18,7 @@ export interface CoworkingSession {
   endTime: string;   // e.g., "11:00"
   label: string;     // e.g., "Morning Session (9:00 AM - 11:00 AM)"
   maxSlots: number;
-  currentBookings: number;
+  currentBookings: number; // derived from registration count, not stored in Firestore
 }
 
 export interface CoworkingRegistration {
@@ -114,7 +114,6 @@ export async function getOrCreateSessions(eventId: string): Promise<CoworkingSes
       endTime: sessionDef.endTime,
       label: sessionDef.label,
       maxSlots: sessionDef.maxSlots,
-      currentBookings: 0,
       createdAt: FieldValue.serverTimestamp(),
     });
     sessions.push(session);
@@ -253,15 +252,17 @@ export async function registerForSession(
 
     // Create registration in transaction
     const result = await db.runTransaction(async (tx) => {
-      // Re-check capacity in transaction for race condition safety
-      const currentCount = (await tx.get(sessionsRef.doc(sessionId))).data()?.currentBookings || 0;
-      if (currentCount >= session.maxSlots) {
+      // Re-check capacity in transaction using actual registration count
+      const txRegistrations = await tx.get(
+        registrationsRef.where("sessionId", "==", sessionId)
+      );
+      if (txRegistrations.size >= session.maxSlots) {
         return { success: false, error: "This session is full" };
       }
 
       // Create registration
       const registrationRef = registrationsRef.doc();
-      
+
       // Build registration data, excluding undefined values
       const registrationData: Record<string, unknown> = {
         eventId,
@@ -270,7 +271,7 @@ export async function registerForSession(
         userDisplayName: userProfile.displayName,
         registeredAt: FieldValue.serverTimestamp(),
       };
-      
+
       // Only include optional fields if they have values
       if (userProfile.photoUrl) {
         registrationData.userPhotoUrl = userProfile.photoUrl;
@@ -280,7 +281,7 @@ export async function registerForSession(
       }
 
       tx.set(registrationRef, registrationData);
-      
+
       const registration: Omit<CoworkingRegistration, "id"> = {
         eventId,
         sessionId,
@@ -290,11 +291,6 @@ export async function registerForSession(
         userGithub: userProfile.github,
         registeredAt: Timestamp.now(),
       };
-
-      // Update session booking count
-      tx.update(sessionsRef.doc(sessionId), {
-        currentBookings: FieldValue.increment(1),
-      });
 
       return {
         success: true,
@@ -323,14 +319,13 @@ export async function cancelRegistration(
   if (!db) throw new Error("Firebase Admin not configured");
 
   const registrationsRef = db.collection("coworkingRegistrations");
-  const sessionsRef = db.collection("coworkingSessions");
 
   try {
     // Use single field query to avoid composite index requirement
     const snapshot = await registrationsRef
       .where("userId", "==", userId)
       .get();
-    
+
     // Filter for this event in memory
     const regDoc = snapshot.docs.find(
       (doc) => doc.data().eventId === eventId
@@ -340,14 +335,7 @@ export async function cancelRegistration(
       return { success: false, error: "No registration found" };
     }
 
-    const regData = regDoc.data();
-
-    await db.runTransaction(async (tx) => {
-      tx.delete(regDoc.ref);
-      tx.update(sessionsRef.doc(regData.sessionId), {
-        currentBookings: FieldValue.increment(-1),
-      });
-    });
+    await regDoc.ref.delete();
 
     return { success: true };
   } catch (error) {
