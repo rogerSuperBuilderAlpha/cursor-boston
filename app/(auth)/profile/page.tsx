@@ -330,11 +330,21 @@ function ProfilePageContent() {
         }
       };
       saveGithub();
-    } else if (githubStatus === "error") {
-      const message = searchParams.get("message");
-      setGithubError("Failed to connect GitHub. Please try again.");
-      router.replace("/profile");
-    }
+   } else if (githubStatus === "error") {
+  const message = searchParams.get("message");
+  if (message === "invalid_state") {
+    setGithubError("Connection failed due to a security check. Please try again.");
+  } else if (message === "not_configured") {
+    setGithubError("GitHub connection is not configured. Please contact support.");
+  } else if (message === "token_failed") {
+    setGithubError("GitHub authorization was denied or expired. Please try again.");
+  } else if (message === "user_fetch_failed") {
+    setGithubError("Connected to GitHub but couldn't fetch your profile. Please try again.");
+  } else {
+    setGithubError("Failed to connect GitHub. Please try again.");
+  }
+  router.replace("/profile");
+   }
   }, [searchParams, user, router, loading]);
 
   const connectDiscord = () => {
