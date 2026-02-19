@@ -65,6 +65,7 @@ interface ToggleSwitchProps {
   size?: "sm" | "md";
   /** Accessible label for screen readers */
   label?: string;
+  disabled?: boolean;
 }
 
 export function ToggleSwitch({
@@ -72,6 +73,7 @@ export function ToggleSwitch({
   onChange,
   size = "sm",
   label,
+  disabled = false,
 }: ToggleSwitchProps) {
   const trackClass =
     size === "md"
@@ -79,10 +81,11 @@ export function ToggleSwitch({
       : "w-9 h-5 after:h-4 after:w-4";
 
   return (
-    <label className="relative inline-flex items-center cursor-pointer">
+    <label className={`relative inline-flex items-center ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}>
       <input
         type="checkbox"
         checked={checked}
+        disabled={disabled}
         onChange={(e) => onChange(e.target.checked)}
         className="sr-only peer"
         aria-label={label}
