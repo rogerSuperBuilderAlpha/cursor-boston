@@ -4,6 +4,7 @@ import { useState, useEffect, use, useCallback } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import ProfileRequirementsModal from "@/components/ProfileRequirementsModal";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 interface AgentInfo {
   id: string;
@@ -149,8 +150,13 @@ export default function ClaimAgentPage({
   // Loading state
   if (loading || authLoading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-500"></div>
+      <div className="min-h-[60vh] flex items-center justify-center px-6">
+        <div className="w-full max-w-md space-y-6">
+          <Skeleton className="h-16 w-16 mx-auto rounded-full" />
+          <Skeleton className="h-6 w-48 mx-auto" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-3/4 mx-auto" />
+        </div>
       </div>
     );
   }
