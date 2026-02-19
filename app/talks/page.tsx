@@ -1,10 +1,11 @@
 import { Metadata } from "next";
 import talksData from "@/content/talks.json";
+import articlesData from "@/content/articles.json";
 
 export const metadata: Metadata = {
   title: "Talks",
   description:
-    "Archive of talks and presentations from Cursor Boston events. Learn from community members about AI-powered development.",
+    "Archive of talks and presentations from Cursor Boston events. Plus curated AI research articles from Boston-area universities.",
 };
 
 export default function TalksPage() {
@@ -136,6 +137,67 @@ export default function TalksPage() {
               </p>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Featured Articles */}
+      <section className="py-16 px-6 bg-neutral-50 dark:bg-neutral-950">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+            Featured Articles
+          </h2>
+          <p className="text-neutral-600 dark:text-neutral-400 mb-8">
+            Key AI research from Boston-area universities
+          </p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {articlesData.articles.map((article: {
+              id: string;
+              title: string;
+              source: string;
+              url: string;
+              date: string;
+              description: string;
+            }) => (
+              <a
+                key={article.id}
+                href={article.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group bg-white dark:bg-neutral-900 rounded-2xl overflow-hidden border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors block"
+              >
+                <div className="p-6">
+                  <span className="inline-block px-2 py-1 bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400 text-xs font-medium rounded mb-3">
+                    {article.source}
+                  </span>
+                  <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:underline">
+                    {article.title}
+                  </h3>
+                  <p className="text-neutral-600 dark:text-neutral-400 text-sm leading-relaxed mb-4">
+                    {article.description}
+                  </p>
+                  <span className="inline-flex items-center gap-2 text-foreground text-sm font-medium">
+                    Read Article
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                      <polyline points="15 3 21 3 21 9" />
+                      <line x1="10" y1="14" x2="21" y2="3" />
+                    </svg>
+                  </span>
+                </div>
+              </a>
+            ))}
+          </div>
         </div>
       </section>
 

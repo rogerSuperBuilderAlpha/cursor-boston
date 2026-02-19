@@ -3,11 +3,6 @@ const nextConfig = {
   // Enable standalone output for Docker deployments
   output: 'standalone',
 
-  // Use this project as the Turbopack root (fixes multi-lockfile warning)
-  turbopack: {
-    root: __dirname,
-  },
-
   images: {
     remotePatterns: [
       {
