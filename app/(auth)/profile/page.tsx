@@ -27,25 +27,6 @@ import {
 
 const DISCORD_CLIENT_ID = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
 const GITHUB_CLIENT_ID = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID;
-
-// Get initials from name or email
-function getInitials(
-  name: string | null | undefined,
-  email: string | null | undefined
-): string {
-  if (name) {
-    const parts = name.trim().split(/\s+/);
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    }
-    return name[0].toUpperCase();
-  }
-  if (email) {
-    return email[0].toUpperCase();
-  }
-  return "U";
-}
-
 interface TalkSubmission {
   id: string;
   title: string;
