@@ -18,6 +18,7 @@ import {
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { getCurrentVirtualHackathonId } from "@/lib/hackathons";
+import { HackathonPageSkeleton } from "@/components/skeletons/HackathonPageSkeleton";
 
 interface HackathonTeam {
   id: string;
@@ -194,11 +195,7 @@ function TeamsPageContent() {
   };
 
   if (authLoading || loading) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white" />
-      </div>
-    );
+    return <HackathonPageSkeleton />;
   }
 
   const teamsWithSlots = teams.filter((t) => t.memberIds.length >= 2 && t.memberIds.length < 3);

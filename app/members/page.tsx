@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { MemberDirectory } from "@/components/members/MemberDirectory";
 import { CommunityFeed } from "@/components/feed/CommunityFeed";
+import { MembersPageSkeleton } from "@/components/skeletons/MembersPageSkeleton";
 
 type PageTab = "members" | "feed";
 
@@ -126,13 +127,7 @@ function MembersPageContent() {
 
 export default function MembersPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-[80vh] flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-neutral-900 dark:border-white"></div>
-        </div>
-      }
-    >
+    <Suspense fallback={<MembersPageSkeleton />}>
       <MembersPageContent />
     </Suspense>
   );

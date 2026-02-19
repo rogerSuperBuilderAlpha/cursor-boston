@@ -17,6 +17,7 @@ import {
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { getCurrentVirtualHackathonId, getMonthEndFromVirtualId, isVirtualHackathonId } from "@/lib/hackathons";
+import { HackathonPageSkeleton } from "@/components/skeletons/HackathonPageSkeleton";
 
 interface HackathonTeam {
   id: string;
@@ -380,11 +381,7 @@ function HackathonsTeamPageContent() {
   };
 
   if (authLoading || loading) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white" />
-      </div>
-    );
+    return <HackathonPageSkeleton />;
   }
 
   if (!user) {

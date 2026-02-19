@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useMembers } from "@/hooks/useMembers";
 import { MemberCard } from "./MemberCard";
 import { FilterCheckbox } from "./FilterCheckbox";
+import { MemberCardSkeleton } from "@/components/skeletons/MemberCardSkeleton";
 import type { SortOption } from "@/types/members";
 
 interface MemberDirectoryProps {
@@ -280,8 +281,10 @@ export function MemberDirectory({ initialSearch = "" }: MemberDirectoryProps) {
         )}
 
         {loading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-neutral-900 dark:border-white"></div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <MemberCardSkeleton key={i} />
+            ))}
           </div>
         ) : members.length === 0 ? (
           <div className="text-center py-12">
