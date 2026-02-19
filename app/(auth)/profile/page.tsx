@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, Suspense, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -185,6 +185,7 @@ function ProfilePageContent() {
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsError, setSettingsError] = useState<string | null>(null);
   const [settingsSuccess, setSettingsSuccess] = useState(false);
+  const [visibilitySaving, setVisibilitySaving] = useState<string | null>(null);
 
   // Email management state
   const [newEmail, setNewEmail] = useState("");
@@ -474,6 +475,26 @@ function ProfilePageContent() {
     }
   }, [userProfile]);
 
+  const saveVisibility = useCallback(
+    async (updates: Partial<typeof profileSettings.visibility>) => {
+      if (!user) return;
+      const token = await user.getIdToken();
+      const res = await fetch("/api/profile/visibility", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(updates),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || "Failed to update visibility");
+      await refreshUserProfile();
+      return data.visibility;
+    },
+    [user, refreshUserProfile]
+  );
+
   const saveProfileSettings = async () => {
     if (!user) return;
 
@@ -510,15 +531,6 @@ function ProfilePageContent() {
         throw new Error(data.error || "Failed to save settings");
       }
 
-      // Save visibility settings separately (not handled by API yet)
-      if (db) {
-        const userRef = doc(db, "users", user.uid);
-        await updateDoc(userRef, {
-          visibility: profileSettings.visibility,
-          updatedAt: serverTimestamp(),
-        });
-      }
-
       // Refresh user profile to get updated data
       await refreshUserProfile();
 
@@ -532,28 +544,42 @@ function ProfilePageContent() {
     }
   };
 
-  const toggleAllVisibility = (show: boolean) => {
+  const toggleAllVisibility = async (show: boolean) => {
+    const updates = {
+      showEmail: show,
+      showBio: show,
+      showLocation: show,
+      showCompany: show,
+      showJobTitle: show,
+      showDiscord: show,
+      showGithubBadge: show,
+      showEventsAttended: show,
+      showTalksGiven: show,
+      showWebsite: show,
+      showLinkedIn: show,
+      showTwitter: show,
+      showGithub: show,
+      showSubstack: show,
+      showMemberSince: show,
+    };
+    const prevVisibility = { ...profileSettings.visibility };
     setProfileSettings((prev) => ({
       ...prev,
-      visibility: {
-        ...prev.visibility,
-        showEmail: show,
-        showBio: show,
-        showLocation: show,
-        showCompany: show,
-        showJobTitle: show,
-        showDiscord: show,
-        showGithubBadge: show,
-        showEventsAttended: show,
-        showTalksGiven: show,
-        showWebsite: show,
-        showLinkedIn: show,
-        showTwitter: show,
-        showGithub: show,
-        showSubstack: show,
-        showMemberSince: show,
-      },
+      visibility: { ...prev.visibility, ...updates },
     }));
+    setVisibilitySaving("all");
+    try {
+      await saveVisibility(updates);
+    } catch (error) {
+      console.error("Error updating visibility:", error);
+      setProfileSettings((prev) => ({
+        ...prev,
+        visibility: { ...prevVisibility },
+      }));
+      setSettingsError(error instanceof Error ? error.message : "Failed to update visibility");
+    } finally {
+      setVisibilitySaving(null);
+    }
   };
 
   const handleAddEmail = async () => {
@@ -934,28 +960,28 @@ function ProfilePageContent() {
                 {/* Public Profile Toggle */}
                 <button
                   onClick={async () => {
-                    if (!db || !user) return;
+                    if (!user) return;
+                    if (visibilitySaving) return;
                     const newIsPublic = !profileSettings.visibility.isPublic;
                     setProfileSettings((prev) => ({
                       ...prev,
                       visibility: { ...prev.visibility, isPublic: newIsPublic },
                     }));
+                    setVisibilitySaving("isPublic");
                     try {
-                      const userRef = doc(db, "users", user.uid);
-                      await updateDoc(userRef, {
-                        "visibility.isPublic": newIsPublic,
-                        updatedAt: serverTimestamp(),
-                      });
+                      await saveVisibility({ isPublic: newIsPublic });
                     } catch (error) {
                       console.error("Error updating visibility:", error);
-                      // Revert on error
                       setProfileSettings((prev) => ({
                         ...prev,
                         visibility: { ...prev.visibility, isPublic: !newIsPublic },
                       }));
+                    } finally {
+                      setVisibilitySaving(null);
                     }
                   }}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1 text-sm rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 ${
+                  disabled={!!visibilitySaving}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 text-sm rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed ${
                     profileSettings.visibility.isPublic
                       ? "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 focus-visible:ring-emerald-400"
                       : "bg-neutral-700 text-neutral-400 hover:bg-neutral-600 focus-visible:ring-neutral-400"
@@ -2048,12 +2074,26 @@ function ProfilePageContent() {
                   size="md"
                   label="Public profile"
                   checked={profileSettings.visibility.isPublic}
-                  onChange={(checked) =>
+                  disabled={visibilitySaving === "isPublic"}
+                  onChange={async (checked) => {
                     setProfileSettings((prev) => ({
                       ...prev,
                       visibility: { ...prev.visibility, isPublic: checked },
-                    }))
-                  }
+                    }));
+                    setVisibilitySaving("isPublic");
+                    try {
+                      await saveVisibility({ isPublic: checked });
+                    } catch (error) {
+                      console.error("Error updating visibility:", error);
+                      setProfileSettings((prev) => ({
+                        ...prev,
+                        visibility: { ...prev.visibility, isPublic: !checked },
+                      }));
+                      setSettingsError(error instanceof Error ? error.message : "Failed to update visibility");
+                    } finally {
+                      setVisibilitySaving(null);
+                    }
+                  }}
                 />
               </div>
               <p className="text-neutral-400 text-sm">
@@ -2194,13 +2234,15 @@ function ProfilePageContent() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => toggleAllVisibility(true)}
-                    className="px-4 py-2 text-sm font-medium text-emerald-400 hover:text-emerald-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 rounded min-h-[44px] flex items-center"
+                    disabled={visibilitySaving === "all"}
+                    className="px-4 py-2 text-sm font-medium text-emerald-400 hover:text-emerald-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 rounded min-h-[44px] flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Show All
                   </button>
                   <button
                     onClick={() => toggleAllVisibility(false)}
-                    className="px-4 py-2 text-sm font-medium text-neutral-400 hover:text-neutral-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white rounded min-h-[44px] flex items-center"
+                    disabled={visibilitySaving === "all"}
+                    className="px-4 py-2 text-sm font-medium text-neutral-400 hover:text-neutral-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white rounded min-h-[44px] flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Hide All
                   </button>
@@ -2229,12 +2271,27 @@ function ProfilePageContent() {
                     <ToggleSwitch
                       label={label}
                       checked={profileSettings.visibility[key as keyof typeof profileSettings.visibility] as boolean}
-                      onChange={(checked) =>
+                      disabled={visibilitySaving === key}
+                      onChange={async (checked) => {
+                        const field = key as keyof typeof profileSettings.visibility;
                         setProfileSettings((prev) => ({
                           ...prev,
-                          visibility: { ...prev.visibility, [key]: checked },
-                        }))
-                      }
+                          visibility: { ...prev.visibility, [field]: checked },
+                        }));
+                        setVisibilitySaving(key);
+                        try {
+                          await saveVisibility({ [field]: checked });
+                        } catch (error) {
+                          console.error("Error updating visibility:", error);
+                          setProfileSettings((prev) => ({
+                            ...prev,
+                            visibility: { ...prev.visibility, [field]: !checked },
+                          }));
+                          setSettingsError(error instanceof Error ? error.message : "Failed to update visibility");
+                        } finally {
+                          setVisibilitySaving(null);
+                        }
+                      }}
                     />
                   </div>
                 ))}
