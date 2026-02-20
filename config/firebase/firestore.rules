@@ -150,5 +150,33 @@ service cloud.firestore {
       allow read: if request.auth != null;
       allow write: if false; // Only server-side writes for data integrity
     }
+
+    // Pair Programming - Profiles: users can create/update their own profile, read active profiles
+    match /pair_profiles/{userId} {
+      allow read: if request.auth != null && (resource.data.isActive == true || request.auth.uid == userId);
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && request.auth.uid == userId;
+      allow delete: if false; // Profiles should be deactivated, not deleted
+    }
+
+    // Pair Programming - Requests: create by fromUserId, read by participants, update by toUserId
+    match /pair_requests/{requestId} {
+      allow create: if request.auth != null && request.resource.data.fromUserId == request.auth.uid;
+      allow read: if request.auth != null && (
+        resource.data.fromUserId == request.auth.uid || resource.data.toUserId == request.auth.uid
+      );
+      allow update: if request.auth != null && resource.data.toUserId == request.auth.uid;
+      allow delete: if request.auth != null && (
+        resource.data.fromUserId == request.auth.uid || resource.data.toUserId == request.auth.uid
+      );
+    }
+
+    // Pair Programming - Sessions: read/update by participants
+    match /pair_sessions/{sessionId} {
+      allow read: if request.auth != null && request.auth.uid in resource.data.participantIds;
+      allow create: if false; // Created server-side when request is accepted
+      allow update: if request.auth != null && request.auth.uid in resource.data.participantIds;
+      allow delete: if false; // Sessions should not be deleted
+    }
   }
 }
