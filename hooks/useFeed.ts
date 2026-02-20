@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { collection, query, where, getDocs, orderBy, addDoc, serverTimestamp, limit, Timestamp, deleteDoc, doc, onSnapshot } from "firebase/firestore";
+import { collection, query, where, getDocs, orderBy, limit, Timestamp, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { User } from "firebase/auth";
 import type { Message, ReactionType } from "@/types/feed";
@@ -100,32 +100,29 @@ export function useFeed(user: User | null, isActive: boolean) {
     [user]
   );
 
-  // Post a new message
+  // Post a new message (routed through API for server-side validation)
   const postMessage = async () => {
     const trimmed = newMessage.trim();
-    if (!user || !db || !trimmed || trimmed.length < 100 || trimmed.length > 500) return;
-    
+    if (!user || !trimmed || trimmed.length < 100 || trimmed.length > 500) return;
+
     setPosting(true);
     try {
-      const messagesRef = collection(db, "communityMessages");
-      const newMsg = {
+      const response = await callCommunityApi("/api/community/post", {
         content: trimmed,
-        authorId: user.uid,
-        authorName: user.displayName || user.email?.split("@")[0] || "Anonymous",
-        authorPhoto: user.photoURL,
-        createdAt: serverTimestamp(),
-        likeCount: 0,
-        dislikeCount: 0,
-        replyCount: 0,
-        repostCount: 0,
-      };
-      const docRef = await addDoc(messagesRef, newMsg);
+      });
 
       setMessages((prev) => [
         {
-          id: docRef.id,
-          ...newMsg,
+          id: response.messageId,
+          content: trimmed,
+          authorId: user.uid,
+          authorName: user.displayName || user.email?.split("@")[0] || "Anonymous",
+          authorPhoto: user.photoURL,
           createdAt: Timestamp.now(),
+          likeCount: 0,
+          dislikeCount: 0,
+          replyCount: 0,
+          repostCount: 0,
         },
         ...prev,
       ]);
@@ -137,12 +134,12 @@ export function useFeed(user: User | null, isActive: boolean) {
     }
   };
 
-  // Delete a message
+  // Delete a message (routed through API for server-side ownership verification)
   const deleteMessage = async (messageId: string) => {
-    if (!db) return;
-    
+    if (!user) return;
+
     try {
-      await deleteDoc(doc(db, "communityMessages", messageId));
+      await callCommunityApi("/api/community/delete", { messageId });
       setMessages((prev) => prev.filter((m) => m.id !== messageId));
       setMessageReplies((prev) => {
         const updated = { ...prev };

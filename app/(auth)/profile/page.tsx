@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, Suspense, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, Suspense, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth, type ProfileVisibility } from "@/contexts/AuthContext";
 import Avatar from "@/components/Avatar";
 import { FormInput, FormTextarea, ToggleSwitch } from "@/components/ui/FormField";
 import {
@@ -467,7 +468,7 @@ function ProfilePageContent() {
   }, [userProfile]);
 
   const saveVisibility = useCallback(
-    async (updates: Partial<typeof profileSettings.visibility>) => {
+    async (updates: Partial<ProfileVisibility>) => {
       if (!user) return;
       const token = await user.getIdToken();
       const res = await fetch("/api/profile/visibility", {
@@ -2317,6 +2318,28 @@ function ProfilePageContent() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="edit-profile-title"
+          onKeyDown={(e: ReactKeyboardEvent) => {
+            if (e.key === "Escape") {
+              closeEditModal();
+            }
+            if (e.key === "Tab") {
+              const modal = e.currentTarget.querySelector("[data-modal-content]");
+              if (!modal) return;
+              const focusable = modal.querySelectorAll<HTMLElement>(
+                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+              );
+              if (focusable.length === 0) return;
+              const first = focusable[0];
+              const last = focusable[focusable.length - 1];
+              if (e.shiftKey && document.activeElement === first) {
+                e.preventDefault();
+                last.focus();
+              } else if (!e.shiftKey && document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+              }
+            }
+          }}
         >
           {/* Backdrop */}
           <div
@@ -2326,7 +2349,7 @@ function ProfilePageContent() {
           />
 
           {/* Modal */}
-          <div className="relative bg-neutral-900 border border-neutral-800 rounded-2xl p-6 md:p-8 max-w-md w-full shadow-2xl">
+          <div data-modal-content className="relative bg-neutral-900 border border-neutral-800 rounded-2xl p-6 md:p-8 max-w-md w-full shadow-2xl">
             {/* Close button */}
             <button
               onClick={closeEditModal}
@@ -2450,14 +2473,16 @@ function ProfilePageContent() {
 
 export default function ProfilePage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-[80vh] flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white"></div>
-        </div>
-      }
-    >
-      <ProfilePageContent />
-    </Suspense>
+    <ErrorBoundary>
+      <Suspense
+        fallback={
+          <div className="min-h-[80vh] flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white"></div>
+          </div>
+        }
+      >
+        <ProfilePageContent />
+      </Suspense>
+    </ErrorBoundary>
   );
 }

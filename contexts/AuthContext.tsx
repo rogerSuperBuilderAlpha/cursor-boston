@@ -2,8 +2,10 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
   ReactNode,
 } from "react";
@@ -171,7 +173,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // If auth is not configured, just set loading to false
     if (!auth) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- required for auth initialization
       setLoading(false);
       return;
     }
@@ -276,15 +277,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(Object.assign(Object.create(Object.getPrototypeOf(updatedUser)), updatedUser, updates));
   };
 
-  const refreshUserProfile = async () => {
+  // auth and db are stable module-level singletons; auth.currentUser is read at call time
+  const refreshUserProfile = useCallback(async () => {
     if (!auth?.currentUser || !db) return;
-    
+
     const userRef = doc(db, "users", auth.currentUser.uid);
     const userSnap = await getDoc(userRef);
     if (userSnap.exists()) {
       setUserProfile(userSnap.data() as UserProfile);
     }
-  };
+  }, []);
 
   const sendAddEmailVerification = async (newEmail: string) => {
     if (!auth?.currentUser) throw new Error("Not authenticated");
@@ -345,22 +347,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const value = {
-    user,
-    userProfile,
-    loading,
-    signIn,
-    signUp,
-    signInWithGoogle,
-    signInWithGithub,
-    signOut,
-    resetPassword,
-    updateUserProfile,
-    refreshUserProfile,
-    sendAddEmailVerification,
-    removeAdditionalEmail,
-    changePrimaryEmail,
-  };
+  const value = useMemo(
+    () => ({
+      user,
+      userProfile,
+      loading,
+      signIn,
+      signUp,
+      signInWithGoogle,
+      signInWithGithub,
+      signOut,
+      resetPassword,
+      updateUserProfile,
+      refreshUserProfile,
+      sendAddEmailVerification,
+      removeAdditionalEmail,
+      changePrimaryEmail,
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- auth functions use module-level singletons and are stable
+    [user, userProfile, loading, refreshUserProfile]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
