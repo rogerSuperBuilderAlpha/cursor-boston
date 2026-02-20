@@ -62,6 +62,9 @@ export default function Navigation() {
           <Link href="/showcase" className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
             Showcase
           </Link>
+          <Link href="/pair" className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
+            Pair Programming
+          </Link>
           <Link href="/about" className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
             About
           </Link>
@@ -150,6 +153,9 @@ export default function Navigation() {
               </Link>
               <Link href="/showcase" onClick={() => setMobileMenuOpen(false)} className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
                 Showcase
+              </Link>
+              <Link href="/pair" onClick={() => setMobileMenuOpen(false)} className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
+                Pair Programming
               </Link>
               <Link href="/about" onClick={() => setMobileMenuOpen(false)} className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
                 About
