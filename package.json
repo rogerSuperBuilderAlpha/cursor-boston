@@ -33,7 +33,8 @@
     "firestore"
   ],
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack -H localhost",
+    "dev:turbo": "next dev -H localhost",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
