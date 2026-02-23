@@ -224,7 +224,7 @@ export default function EventsPage() {
                 >
                   <div className="grid md:grid-cols-2 gap-0">
                     {/* Event Image */}
-                    <div className="relative aspect-[9/16] md:aspect-auto md:min-h-[400px] bg-neutral-100 dark:bg-neutral-800">
+                    <div className="relative aspect-9/16 md:aspect-auto md:min-h-[400px] bg-neutral-100 dark:bg-neutral-800">
                       <Image
                         src={event.image}
                         alt={event.title}

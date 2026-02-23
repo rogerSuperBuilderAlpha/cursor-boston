@@ -389,7 +389,7 @@ export default async function EventPage({
 
       {/* Coworking Slots Section */}
       {event.hasCoworking && (
-        <section className="py-16 px-6 bg-gradient-to-b from-neutral-900 to-neutral-950 border-b border-neutral-800">
+        <section className="py-16 px-6 bg-linear-to-b from-neutral-900 to-neutral-950 border-b border-neutral-800">
           <div className="max-w-4xl mx-auto">
             <div className="flex items-center gap-3 mb-2">
               <svg
@@ -510,7 +510,7 @@ export default async function EventPage({
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="text-emerald-400 flex-shrink-0"
+                    className="text-emerald-400 shrink-0"
                     aria-hidden="true"
                   >
                     <polyline points="20 6 9 17 4 12" />
@@ -534,7 +534,7 @@ export default async function EventPage({
               {event.perks.map((perk, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-center gap-3 p-6 bg-gradient-to-br from-emerald-500/10 to-transparent rounded-xl border border-emerald-500/20 text-center"
+                  className="flex items-center justify-center gap-3 p-6 bg-linear-to-br from-emerald-500/10 to-transparent rounded-xl border border-emerald-500/20 text-center"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -586,7 +586,7 @@ export default async function EventPage({
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      className="text-neutral-400 group-open:rotate-180 transition-transform flex-shrink-0"
+                      className="text-neutral-400 group-open:rotate-180 transition-transform shrink-0"
                       aria-hidden="true"
                     >
                       <polyline points="6 9 12 15 18 9" />

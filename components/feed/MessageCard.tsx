@@ -161,7 +161,7 @@ export function MessageCard({
             )}
           </div>
           {/* Reposter's comment */}
-          <p className="text-neutral-300 mt-1 whitespace-pre-wrap break-words">
+          <p className="text-neutral-300 mt-1 whitespace-pre-wrap wrap-break-word">
             {message.content}
           </p>
           
@@ -173,7 +173,7 @@ export function MessageCard({
                   {message.repostOf!.originalAuthorName}
                 </span>
               </div>
-              <p className="text-neutral-300 text-sm whitespace-pre-wrap break-words">
+              <p className="text-neutral-300 text-sm whitespace-pre-wrap wrap-break-word">
                 {message.repostOf!.originalContent}
               </p>
             </div>

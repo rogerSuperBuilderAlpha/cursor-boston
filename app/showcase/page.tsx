@@ -146,7 +146,7 @@ export default function ShowcasePage() {
               className="w-full flex items-center justify-between p-6 md:p-8 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded-2xl"
             >
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 5v14M5 12h14" />
                   </svg>
@@ -167,7 +167,7 @@ export default function ShowcasePage() {
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
-                className={`text-neutral-400 transition-transform flex-shrink-0 ${instructionsOpen ? "rotate-180" : ""}`}
+                className={`text-neutral-400 transition-transform shrink-0 ${instructionsOpen ? "rotate-180" : ""}`}
               >
                 <path d="M6 9l6 6 6-6" />
               </svg>
@@ -179,7 +179,7 @@ export default function ShowcasePage() {
                   {/* Step 1 */}
                   <div className="space-y-3">
                     <div className="flex items-center gap-3">
-                      <span className="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-400 text-sm font-bold flex items-center justify-center flex-shrink-0">
+                      <span className="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-400 text-sm font-bold flex items-center justify-center shrink-0">
                         1
                       </span>
                       <h3 className="text-white font-semibold">Set Up Your Profile</h3>
@@ -197,7 +197,7 @@ export default function ShowcasePage() {
                   {/* Step 2 */}
                   <div className="space-y-3">
                     <div className="flex items-center gap-3">
-                      <span className="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-400 text-sm font-bold flex items-center justify-center flex-shrink-0">
+                      <span className="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-400 text-sm font-bold flex items-center justify-center shrink-0">
                         2
                       </span>
                       <h3 className="text-white font-semibold">Fork &amp; Edit</h3>
@@ -218,7 +218,7 @@ export default function ShowcasePage() {
                   {/* Step 3 */}
                   <div className="space-y-3">
                     <div className="flex items-center gap-3">
-                      <span className="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-400 text-sm font-bold flex items-center justify-center flex-shrink-0">
+                      <span className="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-400 text-sm font-bold flex items-center justify-center shrink-0">
                         3
                       </span>
                       <h3 className="text-white font-semibold">Submit a PR</h3>
@@ -461,7 +461,7 @@ function ProjectCard({
 
             {/* Net score */}
             <span
-              className={`text-sm font-semibold min-w-[2rem] text-center ${
+              className={`text-sm font-semibold min-w-8 text-center ${
                 netScore > 0
                   ? "text-emerald-400"
                   : netScore < 0
