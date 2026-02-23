@@ -99,6 +99,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (proposedTime) {
+      const parsedTime = new Date(proposedTime);
+      if (isNaN(parsedTime.getTime())) {
+        return NextResponse.json(
+          { success: false, error: "Invalid proposed time format" },
+          { status: 400 }
+        );
+      }
+      if (parsedTime.getTime() < Date.now()) {
+        return NextResponse.json(
+          { success: false, error: "Proposed time must be in the future" },
+          { status: 400 }
+        );
+      }
+    }
+
     const requestId = await createPairRequestServer({
       fromUserId: user.uid,
       toUserId,
