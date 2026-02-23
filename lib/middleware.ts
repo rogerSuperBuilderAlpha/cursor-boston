@@ -35,13 +35,8 @@ export function isOriginAllowed(request: NextRequest): boolean {
 
   // If no origin header, check referer (some browsers don't send origin)
   if (!origin && !referer) {
-    // Allow requests without origin/referer in development
-    if (process.env.NODE_ENV === "development") {
-      return true;
-    }
-    // In production, requests from the same origin may not have origin header
-    // This is less restrictive but acceptable for API routes using Bearer tokens
-    return true;
+    // Allow requests without origin/referer in development only
+    return process.env.NODE_ENV === "development";
   }
 
   // Check if origin matches allowed list
