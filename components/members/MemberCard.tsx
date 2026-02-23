@@ -243,7 +243,7 @@ export function MemberCard({ member }: MemberCardProps) {
             </svg>
           </a>
         )}
-        {v?.showMemberSince && member.createdAt && (
+        {v?.showMemberSince && member.createdAt && typeof member.createdAt.toDate === "function" && (
           <span className="text-neutral-400 text-xs ml-auto">
             Member since{" "}
             {member.createdAt.toDate().toLocaleDateString("en-US", {
