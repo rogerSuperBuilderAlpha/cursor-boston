@@ -31,13 +31,13 @@ const customJestConfig = {
     '**/__tests__/**/*.[jt]s?(x)',
     '**/?(*.)+(spec|test).[jt]s?(x)',
   ],
-  // Coverage thresholds - set to current baseline; increase as tests are added
+  // Coverage thresholds - enforce a minimum baseline; increase as tests are added
   coverageThreshold: {
     global: {
-      branches: 0,
-      functions: 0,
-      lines: 0,
-      statements: 0,
+      branches: 5,
+      functions: 5,
+      lines: 5,
+      statements: 5,
     },
   },
   // Generate JSON summary for CI coverage checks
