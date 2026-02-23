@@ -23,6 +23,9 @@ export function useFeed(user: User | null, isActive: boolean) {
   const [repostingMessage, setRepostingMessage] = useState<Message | null>(null);
   const [repostComment, setRepostComment] = useState("");
 
+  const [error, setError] = useState<string | null>(null);
+  const clearError = useCallback(() => setError(null), []);
+
   // Subscribe to real-time messages when feed tab is active
   useEffect(() => {
     if (!isActive || !db) return;
@@ -128,6 +131,7 @@ export function useFeed(user: User | null, isActive: boolean) {
       ]);
       setNewMessage("");
     } catch (error) {
+      setError("Failed to post message. Please try again.");
       console.error("Error posting message:", error);
     } finally {
       setPosting(false);
@@ -149,6 +153,7 @@ export function useFeed(user: User | null, isActive: boolean) {
         return updated;
       });
     } catch (error) {
+      setError("Failed to delete message. Please try again.");
       console.error("Error deleting message:", error);
     }
   };
@@ -312,6 +317,7 @@ export function useFeed(user: User | null, isActive: boolean) {
       setReplyingTo(null);
       setExpandedReplies((prev) => new Set([...Array.from(prev), parentId]));
     } catch (error) {
+      setError("Failed to post reply. Please try again.");
       console.error("Error posting reply:", error);
     } finally {
       setPostingReply(false);
@@ -361,6 +367,7 @@ export function useFeed(user: User | null, isActive: boolean) {
       setRepostingMessage(null);
       setRepostComment("");
     } catch (error) {
+      setError("Failed to repost. Please try again.");
       console.error("Error reposting:", error);
     } finally {
       setPosting(false);
@@ -382,6 +389,8 @@ export function useFeed(user: User | null, isActive: boolean) {
   return {
     messages,
     loading,
+    error,
+    clearError,
     newMessage,
     setNewMessage,
     posting,
