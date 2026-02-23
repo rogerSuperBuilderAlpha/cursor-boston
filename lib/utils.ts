@@ -12,14 +12,13 @@ export function cn(...classes: (string | undefined | null | false)[]): string {
  * Returns first letter of first and last name, or single letter if only one word.
  */
 export function getInitials(name: string | null | undefined): string {
-  if (name) {
-    const parts = name.trim().split(/\s+/);
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    }
-    return name[0].toUpperCase();
+  const trimmed = name?.trim();
+  if (!trimmed) return "?";
+  const parts = trimmed.split(/\s+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
-  return "?";
+  return trimmed[0].toUpperCase();
 }
 
 /**
