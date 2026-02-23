@@ -48,25 +48,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update Firebase Auth email
+    // Update Firebase Auth email first, then Firestore — rollback Auth if Firestore fails
+    const originalEmail = currentPrimaryEmail;
     await adminAuth.updateUser(user.uid, {
       email: normalizedEmail,
     });
 
-    // Update Firestore: swap primary and additional emails
-    const updatedAdditionalEmails = additionalEmails
-      .filter((e: { email: string }) => e.email.toLowerCase() !== normalizedEmail)
-      .concat(currentPrimaryEmail ? [{
-        email: currentPrimaryEmail,
-        verified: true,
-        addedAt: new Date(),
-      }] : []);
+    try {
+      // Update Firestore: swap primary and additional emails
+      const updatedAdditionalEmails = additionalEmails
+        .filter((e: { email: string }) => e.email.toLowerCase() !== normalizedEmail)
+        .concat(currentPrimaryEmail ? [{
+          email: currentPrimaryEmail,
+          verified: true,
+          addedAt: new Date(),
+        }] : []);
 
-    await userRef.update({
-      email: normalizedEmail,
-      additionalEmails: updatedAdditionalEmails,
-      updatedAt: FieldValue.serverTimestamp(),
-    });
+      await userRef.update({
+        email: normalizedEmail,
+        additionalEmails: updatedAdditionalEmails,
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+    } catch (firestoreError) {
+      // Rollback Firebase Auth email to maintain consistency
+      if (originalEmail) {
+        await adminAuth.updateUser(user.uid, { email: originalEmail });
+      }
+      throw firestoreError;
+    }
 
     // Update emailLookup entries
     // Remove old primary lookup if it exists
