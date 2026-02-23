@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 
 interface AvatarProps {
@@ -68,11 +69,12 @@ export default function Avatar({
   size = "xl",
   className = "",
 }: AvatarProps) {
+  const [imgError, setImgError] = useState(false);
   const identifier = email || name || "user";
   const initials = getInitials(name, email);
   const gradient = getGradient(identifier);
 
-  if (src) {
+  if (src && !imgError) {
     return (
       <Image
         src={src}
@@ -80,6 +82,7 @@ export default function Avatar({
         width={imageSizes[size]}
         height={imageSizes[size]}
         className={`rounded-full object-cover ${sizeClasses[size].split(" ").slice(0, 2).join(" ")} ${className}`}
+        onError={() => setImgError(true)}
       />
     );
   }
