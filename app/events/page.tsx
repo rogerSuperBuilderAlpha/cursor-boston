@@ -2,6 +2,9 @@ import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import eventsData from "@/content/events.json";
+import { EventsData } from "@/types/events";
+
+const typedEventsData = eventsData as unknown as EventsData;
 
 export const metadata: Metadata = {
   title: "Events",
@@ -14,7 +17,7 @@ export const metadata: Metadata = {
 
 // Generate JSON-LD structured data for events
 function generateEventsJsonLd() {
-  const events = eventsData.upcoming.map((event) => ({
+  const events = typedEventsData.upcoming.map((event) => ({
     "@context": "https://schema.org",
     "@type": "Event",
     name: event.title,
@@ -180,6 +183,27 @@ export default function EventsPage() {
               <path d="M7 17l9.2-9.2M17 17V7H7" />
             </svg>
           </a>
+          <Link
+            href="/map"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-neutral-300 dark:border-neutral-700 text-foreground rounded-lg text-sm font-semibold hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black ml-3"
+          >
+            View Event Map
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+          </Link>
         </div>
       </section>
 
@@ -215,9 +239,9 @@ export default function EventsPage() {
             </h2>
           </div>
 
-          {eventsData.upcoming.length > 0 ? (
+          {typedEventsData.upcoming.length > 0 ? (
             <div className="grid gap-8">
-              {eventsData.upcoming.map((event) => (
+              {typedEventsData.upcoming.map((event) => (
                 <div
                   key={event.id}
                   className="bg-white dark:bg-neutral-900 rounded-2xl overflow-hidden border border-neutral-200 dark:border-neutral-800"
@@ -370,9 +394,37 @@ export default function EventsPage() {
             Past Events
           </h2>
 
-          {eventsData.past.length > 0 ? (
+          {typedEventsData.past.length > 0 ? (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* Past event cards will go here */}
+              {typedEventsData.past.map((event) => (
+                <Link
+                  key={event.id}
+                  href={`/events/${event.slug}`}
+                  className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-6 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors group"
+                >
+                  <span className="inline-block px-2.5 py-0.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-medium rounded-full mb-3 capitalize">
+                    {event.type}
+                  </span>
+                  <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                    {event.title}
+                  </h3>
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-1">
+                    {event.date === "TBD"
+                      ? "Date TBD"
+                      : new Date(event.date).toLocaleDateString("en-US", {
+                          month: "long",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                  </p>
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-3">
+                    {event.location}
+                  </p>
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400 line-clamp-2">
+                    {event.description}
+                  </p>
+                </Link>
+              ))}
             </div>
           ) : (
             <div className="bg-white dark:bg-neutral-900 rounded-2xl p-12 text-center border border-neutral-200 dark:border-neutral-800">
