@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getVerifiedUser } from "@/lib/server-auth";
-import { respondToPairRequestServer } from "@/lib/pair-programming/data-server";
+import {
+  respondToPairRequestServer,
+  PairRequestNotFoundError,
+  PairRequestUnauthorizedError,
+  PairRequestAlreadyRespondedError,
+} from "@/lib/pair-programming/data-server";
 
 /**
  * POST /api/pair/respond
@@ -42,19 +47,17 @@ export async function POST(request: NextRequest) {
       message: action === "accept" ? "Request accepted - session created" : "Request declined",
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to respond to request";
-
-    if (message === "Request not found") {
-      return NextResponse.json({ success: false, error: message }, { status: 404 });
+    if (error instanceof PairRequestNotFoundError) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 404 });
     }
-    if (message === "Unauthorized") {
+    if (error instanceof PairRequestUnauthorizedError) {
       return NextResponse.json(
         { success: false, error: "You can only respond to requests sent to you" },
         { status: 403 }
       );
     }
-    if (message === "Request has already been responded to") {
-      return NextResponse.json({ success: false, error: message }, { status: 400 });
+    if (error instanceof PairRequestAlreadyRespondedError) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 400 });
     }
 
     console.error("Error responding to pair request:", error);
