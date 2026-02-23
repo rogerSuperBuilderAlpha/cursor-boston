@@ -44,6 +44,9 @@ export default function Navigation() {
           <Link href="/events" className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
             Events
           </Link>
+          <Link href="/map" className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
+            Map
+          </Link>
           <Link href="/talks" className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
             Talks
           </Link>
@@ -135,6 +138,9 @@ export default function Navigation() {
             <nav className="flex flex-col space-y-1">
               <Link href="/events" onClick={() => setMobileMenuOpen(false)} className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
                 Events
+              </Link>
+              <Link href="/map" onClick={() => setMobileMenuOpen(false)} className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
+                Map
               </Link>
               <Link href="/talks" onClick={() => setMobileMenuOpen(false)} className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
                 Talks
