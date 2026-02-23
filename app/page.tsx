@@ -211,7 +211,7 @@ export default function Home() {
 
           <div className="grid md:grid-cols-2 gap-10 items-center">
             {/* Event Poster */}
-            <div className="relative aspect-[9/16] max-h-[500px] rounded-2xl overflow-hidden bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-none">
+            <div className="relative aspect-9/16 max-h-[500px] rounded-2xl overflow-hidden bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-none">
               <Image
                 src="/Gemini_Generated_Image_lc032wlc032wlc03.png"
                 alt="Cafe Cursor Boston"
