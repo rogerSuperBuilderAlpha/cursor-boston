@@ -61,8 +61,13 @@ export function checkRateLimit(
     };
   }
 
-  if (entry.count >= maxRequests) {
-    // Rate limit exceeded
+  // Increment first, then check (prevents race condition where concurrent
+  // requests read the same count before either increments)
+  entry.count++;
+
+  if (entry.count > maxRequests) {
+    // Rate limit exceeded — undo increment so count stays at max
+    entry.count--;
     const retryAfter = Math.ceil((entry.resetTime - now) / 1000);
     return {
       success: false,
@@ -72,8 +77,6 @@ export function checkRateLimit(
     };
   }
 
-  // Increment count
-  entry.count++;
   return {
     success: true,
     remaining: maxRequests - entry.count,
