@@ -103,6 +103,15 @@ export function calculateMatchScore(
     reasons.push("Overlapping availability windows");
   }
 
+  // Penalize empty profiles — profiles with no skills listed get reduced scores
+  const profile2SkillCount = profile2.skillsCanTeach.length + profile2.skillsWantToLearn.length;
+  if (profile2SkillCount === 0) {
+    score = Math.round(score * 0.3); // 70% penalty for completely empty skill profiles
+    reasons.push("Limited profile — fewer skills listed");
+  } else if (profile2SkillCount < 2) {
+    score = Math.round(score * 0.6); // 40% penalty for very sparse profiles
+  }
+
   // Cap at 100
   score = Math.min(100, Math.round(score));
 
