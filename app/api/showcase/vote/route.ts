@@ -160,8 +160,26 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ votes: {}, userVotes: {} });
     }
 
-    // Get all project vote counts
-    const projectsSnap = await db.collection("showcaseProjects").get();
+    // Get project vote counts with pagination
+    const limitParam = Math.min(
+      Number(request.nextUrl.searchParams.get("limit")) || 50,
+      200
+    );
+    const startAfterParam = request.nextUrl.searchParams.get("startAfter");
+
+    let projectsQuery = db
+      .collection("showcaseProjects")
+      .orderBy("lastVoteAt", "desc")
+      .limit(limitParam);
+
+    if (startAfterParam) {
+      const cursorDoc = await db.collection("showcaseProjects").doc(startAfterParam).get();
+      if (cursorDoc.exists) {
+        projectsQuery = projectsQuery.startAfter(cursorDoc);
+      }
+    }
+
+    const projectsSnap = await projectsQuery.get();
     const votes: Record<string, { upCount: number; downCount: number }> = {};
     projectsSnap.forEach((doc) => {
       const data = doc.data();
