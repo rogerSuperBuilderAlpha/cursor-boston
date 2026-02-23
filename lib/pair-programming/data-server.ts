@@ -5,6 +5,17 @@ import type {
   RequestStatus,
 } from "./types";
 
+/** Custom error classes for typed error handling in API routes */
+export class PairRequestNotFoundError extends Error {
+  constructor() { super("Request not found"); this.name = "PairRequestNotFoundError"; }
+}
+export class PairRequestUnauthorizedError extends Error {
+  constructor() { super("Unauthorized"); this.name = "PairRequestUnauthorizedError"; }
+}
+export class PairRequestAlreadyRespondedError extends Error {
+  constructor() { super("Request has already been responded to"); this.name = "PairRequestAlreadyRespondedError"; }
+}
+
 // Collection names
 const COLLECTIONS = {
   PROFILES: "pair_profiles",
@@ -108,17 +119,17 @@ export async function respondToPairRequestServer(
     const requestDoc = await transaction.get(requestRef);
 
     if (!requestDoc.exists) {
-      throw new Error("Request not found");
+      throw new PairRequestNotFoundError();
     }
 
     const requestData = requestDoc.data()!;
 
     if (requestData.toUserId !== userId) {
-      throw new Error("Unauthorized");
+      throw new PairRequestUnauthorizedError();
     }
 
     if (requestData.status !== "pending") {
-      throw new Error("Request has already been responded to");
+      throw new PairRequestAlreadyRespondedError();
     }
 
     const newStatus: RequestStatus = action === "accept" ? "accepted" : "declined";
