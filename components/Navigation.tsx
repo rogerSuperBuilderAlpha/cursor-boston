@@ -16,9 +16,9 @@ export default function Navigation() {
         {/* Logo: 44px min touch target (WCAG 2.1) */}
         <Link
           href="/"
-          className="flex items-center gap-2 flex-shrink-0 min-h-[44px] min-w-[44px] py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-lg"
+          className="flex items-center gap-2 shrink-0 min-h-[44px] min-w-[44px] py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-lg"
         >
-          <div className="w-8 h-8 bg-neutral-100 dark:bg-black border border-neutral-200 dark:border-neutral-700 rounded-md flex items-center justify-center flex-shrink-0">
+          <div className="w-8 h-8 bg-neutral-100 dark:bg-black border border-neutral-200 dark:border-neutral-700 rounded-md flex items-center justify-center shrink-0">
             <svg
               width="18"
               height="18"
@@ -74,7 +74,7 @@ export default function Navigation() {
         <div className="hidden lg:block flex-1" />
 
         {/* Desktop Auth */}
-        <div className="hidden lg:flex items-center flex-shrink-0 gap-4">
+        <div className="hidden lg:flex items-center shrink-0 gap-4">
           <ThemeToggle />
           {loading ? (
             <div className="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-800 animate-pulse" />
@@ -110,7 +110,7 @@ export default function Navigation() {
           <ThemeToggle />
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white p-2 flex-shrink-0 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-lg"
+            className="text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white p-2 shrink-0 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-lg"
             aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
             aria-expanded={mobileMenuOpen}
             aria-controls="mobile-menu"

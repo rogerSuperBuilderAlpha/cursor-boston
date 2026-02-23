@@ -116,7 +116,7 @@ export function OverviewTab({
             <div className="space-y-3">
               {connectedAgents.map((agent) => (
                 <div key={agent.id} className="flex items-center gap-4 p-4 bg-neutral-800/50 rounded-xl">
-                  <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                  <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center shrink-0">
                     {agent.avatarUrl ? (
                       <Image src={agent.avatarUrl} alt={agent.name} width={48} height={48} className="rounded-full" />
                     ) : (
