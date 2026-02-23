@@ -38,6 +38,7 @@ export interface Venue {
   address: string;
   mapUrl?: string | null;
   accessibilityInfo?: string;
+  coordinates?: { lat: number; lng: number };
 }
 
 export interface CoworkingInfo {
