@@ -214,14 +214,20 @@ class Logger {
     // Remove potential secrets, tokens, and API keys from error messages
     return message
       // Remove Bearer tokens
-      .replace(/Bearer\s+[A-Za-z0-9\-_]+/gi, "Bearer [REDACTED]")
-      // Remove API keys (common patterns)
-      .replace(/[A-Za-z0-9_-]{20,}/g, (match) => {
+      .replace(/Bearer\s+[A-Za-z0-9\-_.]+/gi, "Bearer [REDACTED]")
+      // Remove common API key patterns (prefixed keys like sk_, ghp_, etc.)
+      .replace(/\b(sk_live_|sk_test_|ghp_|gho_|github_pat_|xox[bpas]-|AIza)[A-Za-z0-9_-]+/g, "[REDACTED]")
+      // Remove base64-encoded strings that look like tokens (40+ chars, no spaces/underscores in middle)
+      .replace(/\b[A-Za-z0-9+/]{40,}={0,2}\b/g, (match) => {
         // Preserve common non-sensitive identifiers
         if (/^(firebase|google|github|discord)/i.test(match)) {
           return match;
         }
-        return "[REDACTED]";
+        // Only redact if it looks like base64 (has mixed case and/or digits)
+        if (/[a-z]/.test(match) && /[A-Z]/.test(match) && /[0-9]/.test(match)) {
+          return "[REDACTED]";
+        }
+        return match;
       })
       // Remove email addresses
       .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, "[EMAIL_REDACTED]")
