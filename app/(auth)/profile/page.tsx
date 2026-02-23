@@ -17,11 +17,8 @@ import {
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import {
-  CalendarIcon,
   DiscordIcon,
   GitHubIcon,
-  LayersIcon,
-  PlusIcon,
   UserCardIcon,
   EyeIcon,
   EyeOffIcon,

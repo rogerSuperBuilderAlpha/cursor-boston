@@ -84,7 +84,6 @@ async function handleGitHubCallback(request: NextRequest) {
     });
 
     if (!userResponse.ok) {
-      const errorText = await userResponse.text();
       logger.error("GitHub user fetch failed", { status: userResponse.status });
       return NextResponse.redirect(new URL("/profile?github=error&message=user_fetch_failed", request.url));
     }

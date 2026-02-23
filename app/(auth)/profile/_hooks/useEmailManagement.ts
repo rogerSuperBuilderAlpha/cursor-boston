@@ -9,7 +9,8 @@ interface UseEmailManagementProps {
 }
 
 export function useEmailManagement({
-  user,
+   
+  user: _user,
   sendAddEmailVerification,
   removeAdditionalEmail,
   changePrimaryEmail,

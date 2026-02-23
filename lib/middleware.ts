@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { checkRateLimit, rateLimitConfigs, getClientIdentifier } from "./rate-limit";
+import { checkRateLimit, getClientIdentifier } from "./rate-limit";
 import { logger } from "./logger";
 
 // Re-export rateLimitConfigs for convenience
