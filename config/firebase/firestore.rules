@@ -178,5 +178,14 @@ service cloud.firestore {
       allow update: if request.auth != null && request.auth.uid in resource.data.participantIds;
       allow delete: if false; // Sessions should not be deleted
     }
+
+    // Cookbook - entries and votes: single collection; entries readable, writes via Admin SDK only
+    match /cookbook_entries/{entryId} {
+      allow read: if true;
+      allow write: if false;
+      match /votes/{voteId} {
+        allow read, write: if false;
+      }
+    }
   }
 }

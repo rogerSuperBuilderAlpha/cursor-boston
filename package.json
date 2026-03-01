@@ -33,7 +33,7 @@
     "firestore"
   ],
   "scripts": {
-    "dev": "next dev --webpack -H localhost",
+    "dev": "next dev --webpack -H 0.0.0.0",
     "dev:turbo": "next dev -H localhost",
     "build": "next build",
     "start": "next start",
@@ -50,6 +50,7 @@
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.2.1",
+    "@types/react-syntax-highlighter": "^15.5.13",
     "firebase": "^12.9.0",
     "firebase-admin": "^13.6.1",
     "gray-matter": "^4.0.3",
@@ -61,7 +62,10 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-leaflet": "^5.0.0",
-    "react-leaflet-cluster": "^4.0.0"
+    "react-leaflet-cluster": "^4.0.0",
+    "react-markdown": "^10.1.0",
+    "react-syntax-highlighter": "^16.1.1",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "@eslint/compat": "^2.0.2",
@@ -94,18 +98,45 @@
     "typescript-eslint": "^8.56.0"
   },
   "overrides": {
-    "eslint-plugin-import": { "eslint": "$eslint" },
-    "eslint-plugin-jsx-a11y": { "eslint": "$eslint" },
-    "eslint-plugin-react": { "eslint": "$eslint" },
-    "eslint-plugin-react-hooks": { "eslint": "$eslint" },
-    "typescript-eslint": { "eslint": "$eslint" },
-    "@typescript-eslint/eslint-plugin": { "eslint": "$eslint" },
-    "@typescript-eslint/parser": { "eslint": "$eslint" },
-    "@typescript-eslint/utils": { "eslint": "$eslint" },
-    "@typescript-eslint/type-utils": { "eslint": "$eslint" },
-    "react-leaflet": { "react": "$react", "react-dom": "$react-dom" },
-    "@react-leaflet/core": { "react": "$react", "react-dom": "$react-dom" },
-    "react-leaflet-cluster": { "react": "$react", "react-dom": "$react-dom" }
+    "eslint-plugin-import": {
+      "eslint": "$eslint"
+    },
+    "eslint-plugin-jsx-a11y": {
+      "eslint": "$eslint"
+    },
+    "eslint-plugin-react": {
+      "eslint": "$eslint"
+    },
+    "eslint-plugin-react-hooks": {
+      "eslint": "$eslint"
+    },
+    "typescript-eslint": {
+      "eslint": "$eslint"
+    },
+    "@typescript-eslint/eslint-plugin": {
+      "eslint": "$eslint"
+    },
+    "@typescript-eslint/parser": {
+      "eslint": "$eslint"
+    },
+    "@typescript-eslint/utils": {
+      "eslint": "$eslint"
+    },
+    "@typescript-eslint/type-utils": {
+      "eslint": "$eslint"
+    },
+    "react-leaflet": {
+      "react": "$react",
+      "react-dom": "$react-dom"
+    },
+    "@react-leaflet/core": {
+      "react": "$react",
+      "react-dom": "$react-dom"
+    },
+    "react-leaflet-cluster": {
+      "react": "$react",
+      "react-dom": "$react-dom"
+    }
   },
   "lint-staged": {
     "**/*.{ts,tsx}": [
