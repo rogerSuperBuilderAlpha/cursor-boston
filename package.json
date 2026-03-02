@@ -86,7 +86,7 @@
     "husky": "^8.0.3",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
-    "lint-staged": "^15.2.0",
+    "lint-staged": "^16.3.1",
     "postcss": "^8.4.33",
     "tailwindcss": "^4.2.1",
     "tsx": "^4.7.0",
