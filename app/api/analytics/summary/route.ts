@@ -3,12 +3,21 @@ import { getAdminDb } from "@/lib/firebase-admin";
 import { logger } from "@/lib/logger";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 import showcaseData from "@/content/showcase.json";
-
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+import eventsData from "@/content/events.json";
 
 const RATE_LIMIT = { windowMs: 60 * 1000, maxRequests: 60 };
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+// Build a lookup map from eventId → event title using the static events JSON
+const eventNameMap: Record<string, string> = {};
+[
+  ...(eventsData.upcoming ?? []),
+  ...(eventsData.past ?? []),
+].forEach((event: { id?: string; title?: string }) => {
+  if (event.id && event.title) {
+    eventNameMap[event.id] = event.title;
+  }
+});
 
 export interface AnalyticsSummary {
   totalMembers: number;
@@ -16,12 +25,15 @@ export interface AnalyticsSummary {
   totalShowcaseVotes: number;
   totalShowcaseProjects: number;
   memberGrowth: { month: string; count: number }[];
-  eventAttendance: { eventId: string; count: number }[];
+  eventAttendance: { eventId: string; name: string; count: number }[];
   skillDistribution: { skill: string; count: number }[];
   hackathonStats: { teamsFormed: number; projectsSubmitted: number; participationRate: number };
   communityActivity: { week: string; posts: number; replies: number }[];
   platformHealth: { activeThisMonth: number; returningMembers: number };
   showcaseOverTime: { month: string; count: number }[];
+  // Top contributors are opt-in: only users with score > 0 and a displayName are included.
+  // A future improvement is to add an explicit `analyticsOptIn: boolean` field on the user
+  // document so members can consciously choose to appear on this leaderboard.
   topContributors: { name: string; score: number }[];
   generatedAt: string;
 }
@@ -52,12 +64,19 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  let db;
   try {
-    const db = getAdminDb();
-    if (!db) {
-      return NextResponse.json({ ...EMPTY_SUMMARY, generatedAt: new Date().toISOString() });
-    }
+    db = getAdminDb();
+  } catch (initError) {
+    logger.logError(initError, { endpoint: "/api/analytics/summary", phase: "init" });
+    return NextResponse.json({ ...EMPTY_SUMMARY, generatedAt: new Date().toISOString() });
+  }
 
+  if (!db) {
+    return NextResponse.json({ ...EMPTY_SUMMARY, generatedAt: new Date().toISOString() });
+  }
+
+  try {
     // --- Check analytics_snapshots cache (1-hour TTL) ---
     const cacheRef = db.collection("analytics_snapshots").doc("latest");
     try {
@@ -94,14 +113,18 @@ export async function GET(request: NextRequest) {
       db.collection("communityMessages").orderBy("createdAt", "desc").limit(500).get(),
     ]);
 
-    // --- Event attendance per event (top 10) ---
+    // --- Event attendance per event (top 10), with human-readable names ---
     const attendanceCounts: Record<string, number> = {};
     eventRegsSnap.forEach((doc) => {
       const eventId = doc.data().eventId as string | undefined;
       if (eventId) attendanceCounts[eventId] = (attendanceCounts[eventId] || 0) + 1;
     });
     const eventAttendance = Object.entries(attendanceCounts)
-      .map(([eventId, count]) => ({ eventId, count }))
+      .map(([eventId, count]) => ({
+        eventId,
+        name: eventNameMap[eventId] ?? eventId,
+        count,
+      }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);
 
@@ -260,6 +283,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(summary);
   } catch (error) {
     logger.logError(error, { endpoint: "/api/analytics/summary" });
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    // Return empty data rather than a 500 so the page still renders gracefully
+    return NextResponse.json({ ...EMPTY_SUMMARY, generatedAt: new Date().toISOString() });
   }
 }

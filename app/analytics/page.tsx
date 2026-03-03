@@ -17,7 +17,7 @@ export default function AnalyticsPage() {
           </span>
           <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">Analytics</h1>
           <p className="text-lg md:text-xl text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">
-            Track Cursor Boston&apos;s growth, engagement, and community momentum in real time.
+            Track Cursor Boston&apos;s growth, engagement, and community momentum — updated hourly.
           </p>
         </div>
       </section>

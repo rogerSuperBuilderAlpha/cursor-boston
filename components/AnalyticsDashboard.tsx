@@ -264,7 +264,7 @@ export default function AnalyticsDashboard() {
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={data.eventAttendance} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
-                  <XAxis dataKey="eventId" tick={{ fill: axisColor, fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={(v: string) => v.slice(0, 6)} />
+                  <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={(v: string) => v.length > 14 ? v.slice(0, 14) + "…" : v} />
                   <YAxis tick={{ fill: axisColor, fontSize: 11 }} tickLine={false} axisLine={false} allowDecimals={false} />
                   <Tooltip {...tooltipStyle} cursor={barCursor} />
                   <Bar dataKey="count" fill="#10b981" radius={[4, 4, 0, 0]} name="Registrations" />
