@@ -83,7 +83,7 @@ export default function EventMap({ events }: EventMapProps) {
     // @ts-expect-error -- CSS module has no type declarations
     import("leaflet/dist/leaflet.css");
     import("leaflet").then((L) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       delete (L.Icon.Default.prototype as any)._getIconUrl;
       L.Icon.Default.mergeOptions({
         iconRetinaUrl:
