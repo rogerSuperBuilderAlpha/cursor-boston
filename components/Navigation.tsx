@@ -19,11 +19,10 @@ export default function Navigation() {
     return () => cancelAnimationFrame(rafRef.current);
   }, [pathname]);
 
-  const navClass = (href: string) =>
-    `${pathname === href ? "text-foreground font-semibold" : "text-neutral-600 dark:text-neutral-300 font-medium"} hover:text-black dark:hover:text-white text-sm whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline`;
-
-  const mobileNavClass = (href: string) =>
-    `${pathname === href ? "text-foreground font-semibold" : "text-neutral-600 dark:text-neutral-300 font-medium"} hover:text-black dark:hover:text-white py-3 text-base transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline`;
+  // Shared active/inactive class logic — mobile adds py-3 text-base, desktop adds text-sm whitespace-nowrap
+  // /login intentionally highlights when on the login page for consistency with other nav links
+  const buildNavClass = (href: string, mobile = false) =>
+    `${pathname === href ? "text-foreground font-semibold" : "text-neutral-600 dark:text-neutral-300 font-medium"} hover:text-black dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline ${mobile ? "py-3 text-base" : "text-sm whitespace-nowrap"}`;
 
   return (
     <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-neutral-200 dark:border-neutral-800 transition-colors duration-300">
@@ -56,14 +55,14 @@ export default function Navigation() {
 
         {/* Desktop Nav */}
         <nav aria-label="Main" className="hidden lg:flex items-center space-x-8 ml-12">
-          <Link href="/events" className={navClass("/events")}>Events</Link>
-          <Link href="/talks" className={navClass("/talks")}>Talks</Link>
-          <Link href="/hackathons" className={navClass("/hackathons")}>Hackathons</Link>
-          <Link href="/blog" className={navClass("/blog")}>Blog</Link>
-          <Link href="/members" className={navClass("/members")}>Members</Link>
-          <Link href="/opportunities" className={navClass("/opportunities")}>Opportunities</Link>
-          <Link href="/showcase" className={navClass("/showcase")}>Showcase</Link>
-          <Link href="/about" className={navClass("/about")}>About</Link>
+          <Link href="/events" className={buildNavClass("/events")}>Events</Link>
+          <Link href="/talks" className={buildNavClass("/talks")}>Talks</Link>
+          <Link href="/hackathons" className={buildNavClass("/hackathons")}>Hackathons</Link>
+          <Link href="/blog" className={buildNavClass("/blog")}>Blog</Link>
+          <Link href="/members" className={buildNavClass("/members")}>Members</Link>
+          <Link href="/opportunities" className={buildNavClass("/opportunities")}>Opportunities</Link>
+          <Link href="/showcase" className={buildNavClass("/showcase")}>Showcase</Link>
+          <Link href="/about" className={buildNavClass("/about")}>About</Link>
         </nav>
 
         {/* Spacer */}
@@ -88,7 +87,7 @@ export default function Navigation() {
             </Link>
           ) : (
             <div className="flex items-center">
-              <Link href="/login" className={`${navClass("/login")} mr-6`}>
+              <Link href="/login" className={`${buildNavClass("/login")} mr-6`}>
                 Sign In
               </Link>
               <Link
@@ -128,15 +127,16 @@ export default function Navigation() {
       {mobileMenuOpen && (
         <div id="mobile-menu" className="lg:hidden border-t border-neutral-200 dark:border-neutral-800 bg-background">
           <div className="max-w-6xl mx-auto px-6 py-4">
+            {/* Menu closes via the pathname useEffect — onClick handlers not needed on nav links */}
             <nav aria-label="Mobile" className="flex flex-col space-y-1">
-              <Link href="/events" onClick={() => setMobileMenuOpen(false)} className={mobileNavClass("/events")}>Events</Link>
-              <Link href="/talks" onClick={() => setMobileMenuOpen(false)} className={mobileNavClass("/talks")}>Talks</Link>
-              <Link href="/hackathons" onClick={() => setMobileMenuOpen(false)} className={mobileNavClass("/hackathons")}>Hackathons</Link>
-              <Link href="/blog" onClick={() => setMobileMenuOpen(false)} className={mobileNavClass("/blog")}>Blog</Link>
-              <Link href="/members" onClick={() => setMobileMenuOpen(false)} className={mobileNavClass("/members")}>Members</Link>
-              <Link href="/opportunities" onClick={() => setMobileMenuOpen(false)} className={mobileNavClass("/opportunities")}>Opportunities</Link>
-              <Link href="/showcase" onClick={() => setMobileMenuOpen(false)} className={mobileNavClass("/showcase")}>Showcase</Link>
-              <Link href="/about" onClick={() => setMobileMenuOpen(false)} className={mobileNavClass("/about")}>About</Link>
+              <Link href="/events" className={buildNavClass("/events", true)}>Events</Link>
+              <Link href="/talks" className={buildNavClass("/talks", true)}>Talks</Link>
+              <Link href="/hackathons" className={buildNavClass("/hackathons", true)}>Hackathons</Link>
+              <Link href="/blog" className={buildNavClass("/blog", true)}>Blog</Link>
+              <Link href="/members" className={buildNavClass("/members", true)}>Members</Link>
+              <Link href="/opportunities" className={buildNavClass("/opportunities", true)}>Opportunities</Link>
+              <Link href="/showcase" className={buildNavClass("/showcase", true)}>Showcase</Link>
+              <Link href="/about" className={buildNavClass("/about", true)}>About</Link>
             </nav>
 
             <div className="border-t border-neutral-200 dark:border-neutral-800 mt-4 pt-4">
