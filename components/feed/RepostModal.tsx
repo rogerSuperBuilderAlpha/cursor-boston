@@ -1,5 +1,6 @@
 "use client";
 
+import { type KeyboardEvent as ReactKeyboardEvent } from "react";
 import type { Message } from "@/types/feed";
 
 interface RepostModalProps {
@@ -27,8 +28,34 @@ export function RepostModal({
   const isValid = trimmed.length >= minLength && trimmed.length <= maxLength;
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-neutral-900 rounded-xl p-6 border border-neutral-800 max-w-lg w-full">
+    <div
+      className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+      role="dialog"
+      aria-modal="true"
+      onKeyDown={(e: ReactKeyboardEvent) => {
+        if (e.key === "Escape") {
+          onCancel();
+        }
+        if (e.key === "Tab") {
+          const modal = e.currentTarget.querySelector("[data-modal-content]");
+          if (!modal) return;
+          const focusable = modal.querySelectorAll<HTMLElement>(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          );
+          if (focusable.length === 0) return;
+          const first = focusable[0];
+          const last = focusable[focusable.length - 1];
+          if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }}
+    >
+      <div data-modal-content className="bg-neutral-900 rounded-xl p-6 border border-neutral-800 max-w-lg w-full">
         <h3 className="text-lg font-semibold text-white mb-4">Repost with comment</h3>
         <div className="bg-neutral-800 rounded-lg p-4 mb-4">
           <div className="flex items-center gap-2 mb-2">

@@ -33,6 +33,19 @@ let rtdb: Database | undefined;
 let storage: FirebaseStorage | undefined;
 let analytics: Analytics | undefined;
 
+// Promise that resolves when analytics is ready (or resolves to undefined if not supported)
+const analyticsReady: Promise<Analytics | undefined> = (async () => {
+  if (!isConfigured || typeof window === "undefined" || isPlaceholderKey) {
+    return undefined;
+  }
+  const supported = await isSupported();
+  if (supported && app) {
+    analytics = getAnalytics(app);
+    return analytics;
+  }
+  return undefined;
+})();
+
 if (isConfigured && typeof window !== "undefined") {
   // Only initialize on client side with valid config
   app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
@@ -40,15 +53,6 @@ if (isConfigured && typeof window !== "undefined") {
   db = getFirestore(app);
   rtdb = getDatabase(app);
   storage = getStorage(app);
-
-  // Initialize analytics only when we have real credentials (not .env.example placeholders)
-  if (!isPlaceholderKey) {
-    isSupported().then((supported) => {
-      if (supported && app) {
-        analytics = getAnalytics(app);
-      }
-    });
-  }
 }
 
-export { app, auth, db, rtdb, storage, analytics };
+export { app, auth, db, rtdb, storage, analytics, analyticsReady };

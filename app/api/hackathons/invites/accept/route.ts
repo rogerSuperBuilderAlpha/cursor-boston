@@ -76,20 +76,27 @@ export async function POST(request: NextRequest) {
     }
 
     const hackathonId = team.hackathonId;
-    const existingTeamSnap = await db
-      .collection("hackathonTeams")
-      .where("hackathonId", "==", hackathonId)
-      .where("memberIds", "array-contains", user.uid)
-      .limit(1)
-      .get();
-    if (!existingTeamSnap.empty) {
-      return NextResponse.json(
-        { error: "You are already on a team for this hackathon" },
-        { status: 400 }
-      );
-    }
 
     await db.runTransaction(async (tx) => {
+      // Check inside transaction to prevent race condition where user
+      // accepts two invites concurrently and joins multiple teams
+      const existingTeamSnap = await db
+        .collection("hackathonTeams")
+        .where("hackathonId", "==", hackathonId)
+        .where("memberIds", "array-contains", user.uid)
+        .limit(1)
+        .get();
+      if (!existingTeamSnap.empty) {
+        throw new Error("ALREADY_ON_TEAM");
+      }
+
+      // Re-check team size inside transaction
+      const freshTeamSnap = await tx.get(teamRef);
+      const freshTeam = freshTeamSnap.data();
+      if (!freshTeam || (freshTeam.memberIds || []).length >= 3) {
+        throw new Error("TEAM_FULL");
+      }
+
       tx.update(teamRef, {
         memberIds: FieldValue.arrayUnion(user.uid),
         updatedAt: FieldValue.serverTimestamp(),
@@ -99,6 +106,16 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ accepted: true }, { status: 200 });
   } catch (e) {
+    const message = e instanceof Error ? e.message : "";
+    if (message === "ALREADY_ON_TEAM") {
+      return NextResponse.json(
+        { error: "You are already on a team for this hackathon" },
+        { status: 400 }
+      );
+    }
+    if (message === "TEAM_FULL") {
+      return NextResponse.json({ error: "Team is full" }, { status: 400 });
+    }
     console.error("[hackathons/invites/accept]", e);
     return NextResponse.json({ error: "Failed to accept invite" }, { status: 500 });
   }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 
 interface AvatarProps {
@@ -32,15 +33,17 @@ function getInitials(
   name: string | null | undefined,
   email: string | null | undefined
 ): string {
-  if (name) {
-    const parts = name.trim().split(/\s+/);
+  const trimmedName = name?.trim();
+  if (trimmedName) {
+    const parts = trimmedName.split(/\s+/);
     if (parts.length >= 2) {
       return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
     }
-    return name[0].toUpperCase();
+    return trimmedName[0].toUpperCase();
   }
-  if (email) {
-    return email[0].toUpperCase();
+  const trimmedEmail = email?.trim();
+  if (trimmedEmail) {
+    return trimmedEmail[0].toUpperCase();
   }
   return "?";
 }
@@ -66,11 +69,12 @@ export default function Avatar({
   size = "xl",
   className = "",
 }: AvatarProps) {
+  const [imgError, setImgError] = useState(false);
   const identifier = email || name || "user";
   const initials = getInitials(name, email);
   const gradient = getGradient(identifier);
 
-  if (src) {
+  if (src && !imgError) {
     return (
       <Image
         src={src}
@@ -78,6 +82,7 @@ export default function Avatar({
         width={imageSizes[size]}
         height={imageSizes[size]}
         className={`rounded-full object-cover ${sizeClasses[size].split(" ").slice(0, 2).join(" ")} ${className}`}
+        onError={() => setImgError(true)}
       />
     );
   }

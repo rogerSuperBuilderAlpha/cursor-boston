@@ -7,6 +7,14 @@ const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
 const DISCORD_REDIRECT_URI_ENV = process.env.NEXT_PUBLIC_DISCORD_REDIRECT_URI;
 const DISCORD_SERVER_ID = process.env.CURSOR_BOSTON_DISCORD_SERVER_ID;
 
+const DISCORD_API_TIMEOUT_MS = 10_000; // 10 second timeout for Discord API calls
+
+function fetchWithTimeout(url: string, options: RequestInit = {}): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), DISCORD_API_TIMEOUT_MS);
+  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timeout));
+}
+
 function getDiscordRedirectUri(request: NextRequest): string {
   if (DISCORD_REDIRECT_URI_ENV) {
     return DISCORD_REDIRECT_URI_ENV;
@@ -44,7 +52,7 @@ async function handleDiscordCallback(request: NextRequest) {
   try {
     // Exchange code for access token
     logger.info("Discord token exchange", { redirect_uri: redirectUri });
-    const tokenResponse = await fetch("https://discord.com/api/oauth2/token", {
+    const tokenResponse = await fetchWithTimeout("https://discord.com/api/oauth2/token", {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -67,7 +75,7 @@ async function handleDiscordCallback(request: NextRequest) {
     const tokenData = await tokenResponse.json();
 
     // Get user info from Discord
-    const userResponse = await fetch("https://discord.com/api/users/@me", {
+    const userResponse = await fetchWithTimeout("https://discord.com/api/users/@me", {
       headers: {
         Authorization: `Bearer ${tokenData.access_token}`,
       },
@@ -81,7 +89,7 @@ async function handleDiscordCallback(request: NextRequest) {
     const discordUser = await userResponse.json();
 
     // Check if user is a member of the Cursor Boston Discord server
-    const guildsResponse = await fetch("https://discord.com/api/users/@me/guilds", {
+    const guildsResponse = await fetchWithTimeout("https://discord.com/api/users/@me/guilds", {
       headers: {
         Authorization: `Bearer ${tokenData.access_token}`,
       },

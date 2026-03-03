@@ -4,6 +4,7 @@ import { useState, useEffect, use, useCallback } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import ProfileRequirementsModal from "@/components/ProfileRequirementsModal";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 interface AgentInfo {
   id: string;
@@ -149,8 +150,13 @@ export default function ClaimAgentPage({
   // Loading state
   if (loading || authLoading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-500"></div>
+      <div className="min-h-[60vh] flex items-center justify-center px-6">
+        <div className="w-full max-w-md space-y-6">
+          <Skeleton className="h-16 w-16 mx-auto rounded-full" />
+          <Skeleton className="h-6 w-48 mx-auto" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-3/4 mx-auto" />
+        </div>
       </div>
     );
   }
@@ -349,7 +355,7 @@ export default function ClaimAgentPage({
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="text-amber-400 flex-shrink-0 mt-0.5"
+                    className="text-amber-400 shrink-0 mt-0.5"
                   >
                     <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
                     <line x1="12" y1="9" x2="12" y2="13" />

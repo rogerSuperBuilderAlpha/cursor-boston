@@ -43,7 +43,7 @@ export default function CoworkingSlots({ eventId }: CoworkingSlotsProps) {
   const [expandedSession, setExpandedSession] = useState<string | null>(null);
   const [showRequirementsModal, setShowRequirementsModal] = useState(false);
 
-  const fetchSlots = useCallback(async () => {
+  const fetchSlots = useCallback(async (signal?: AbortSignal) => {
     try {
       const token = user ? await user.getIdToken() : null;
       const headers: Record<string, string> = {};
@@ -51,7 +51,7 @@ export default function CoworkingSlots({ eventId }: CoworkingSlotsProps) {
         headers["Authorization"] = `Bearer ${token}`;
       }
 
-      const res = await fetch(`/api/events/${eventId}/coworking/slots`, { headers });
+      const res = await fetch(`/api/events/${eventId}/coworking/slots`, { headers, signal });
       const data = await res.json();
 
       if (data.success) {
@@ -65,7 +65,7 @@ export default function CoworkingSlots({ eventId }: CoworkingSlotsProps) {
     }
   }, [eventId, user]);
 
-  const fetchEligibility = useCallback(async () => {
+  const fetchEligibility = useCallback(async (signal?: AbortSignal) => {
     if (!user) {
       setEligibility({ eligible: false, reason: "Please sign in to register for coworking." });
       return;
@@ -75,6 +75,7 @@ export default function CoworkingSlots({ eventId }: CoworkingSlotsProps) {
       const token = await user.getIdToken();
       const res = await fetch(`/api/events/${eventId}/coworking/eligibility`, {
         headers: { Authorization: `Bearer ${token}` },
+        signal,
       });
       const data = await res.json();
       setEligibility(data);
@@ -85,12 +86,19 @@ export default function CoworkingSlots({ eventId }: CoworkingSlotsProps) {
   }, [eventId, user]);
 
   useEffect(() => {
+    const controller = new AbortController();
     const loadData = async () => {
       setLoading(true);
-      await Promise.all([fetchSlots(), fetchEligibility()]);
-      setLoading(false);
+      await Promise.all([
+        fetchSlots(controller.signal),
+        fetchEligibility(controller.signal),
+      ]);
+      if (!controller.signal.aborted) {
+        setLoading(false);
+      }
     };
     loadData();
+    return () => controller.abort();
   }, [fetchSlots, fetchEligibility]);
 
   // Must be defined before any conditional returns (React hooks rule)
@@ -203,7 +211,7 @@ export default function CoworkingSlots({ eventId }: CoworkingSlotsProps) {
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="text-amber-400 flex-shrink-0 mt-0.5"
+              className="text-amber-400 shrink-0 mt-0.5"
             >
               <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
               <line x1="12" y1="9" x2="12" y2="13" />

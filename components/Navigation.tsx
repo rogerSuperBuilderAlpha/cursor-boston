@@ -30,9 +30,9 @@ export default function Navigation() {
         {/* Logo: 44px min touch target (WCAG 2.1) */}
         <Link
           href="/"
-          className="flex items-center gap-2 flex-shrink-0 min-h-[44px] min-w-[44px] py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-lg"
+          className="flex items-center gap-2 shrink-0 min-h-[44px] min-w-[44px] py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-lg"
         >
-          <div className="w-8 h-8 bg-neutral-100 dark:bg-black border border-neutral-200 dark:border-neutral-700 rounded-md flex items-center justify-center flex-shrink-0">
+          <div className="w-8 h-8 bg-neutral-100 dark:bg-black border border-neutral-200 dark:border-neutral-700 rounded-md flex items-center justify-center shrink-0">
             <svg
               width="18"
               height="18"
@@ -56,12 +56,14 @@ export default function Navigation() {
         {/* Desktop Nav */}
         <nav aria-label="Main" className="hidden lg:flex items-center space-x-8 ml-12">
           <Link href="/events" className={buildNavClass("/events")}>Events</Link>
+          <Link href="/map" className={buildNavClass("/map")}>Map</Link>
           <Link href="/talks" className={buildNavClass("/talks")}>Talks</Link>
           <Link href="/hackathons" className={buildNavClass("/hackathons")}>Hackathons</Link>
           <Link href="/blog" className={buildNavClass("/blog")}>Blog</Link>
           <Link href="/members" className={buildNavClass("/members")}>Members</Link>
           <Link href="/opportunities" className={buildNavClass("/opportunities")}>Opportunities</Link>
           <Link href="/showcase" className={buildNavClass("/showcase")}>Showcase</Link>
+          <Link href="/pair" className={buildNavClass("/pair")}>Pair Programming</Link>
           <Link href="/about" className={buildNavClass("/about")}>About</Link>
         </nav>
 
@@ -69,7 +71,7 @@ export default function Navigation() {
         <div className="hidden lg:block flex-1" />
 
         {/* Desktop Auth */}
-        <div className="hidden lg:flex items-center flex-shrink-0 gap-4">
+        <div className="hidden lg:flex items-center shrink-0 gap-4">
           <ThemeToggle />
           {loading ? (
             <div className="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-800 animate-pulse" />
@@ -105,7 +107,7 @@ export default function Navigation() {
           <ThemeToggle />
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white p-2 flex-shrink-0 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-lg"
+            className="text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white p-2 shrink-0 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-lg"
             aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
             aria-expanded={mobileMenuOpen}
             aria-controls="mobile-menu"
@@ -130,12 +132,14 @@ export default function Navigation() {
             {/* Menu closes via the pathname useEffect — onClick handlers not needed on nav links */}
             <nav aria-label="Mobile" className="flex flex-col space-y-1">
               <Link href="/events" className={buildNavClass("/events", true)}>Events</Link>
+              <Link href="/map" className={buildNavClass("/map", true)}>Map</Link>
               <Link href="/talks" className={buildNavClass("/talks", true)}>Talks</Link>
               <Link href="/hackathons" className={buildNavClass("/hackathons", true)}>Hackathons</Link>
               <Link href="/blog" className={buildNavClass("/blog", true)}>Blog</Link>
               <Link href="/members" className={buildNavClass("/members", true)}>Members</Link>
               <Link href="/opportunities" className={buildNavClass("/opportunities", true)}>Opportunities</Link>
               <Link href="/showcase" className={buildNavClass("/showcase", true)}>Showcase</Link>
+              <Link href="/pair" className={buildNavClass("/pair", true)}>Pair Programming</Link>
               <Link href="/about" className={buildNavClass("/about", true)}>About</Link>
             </nav>
 

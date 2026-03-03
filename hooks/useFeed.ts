@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { collection, query, where, getDocs, orderBy, addDoc, serverTimestamp, limit, Timestamp, deleteDoc, doc } from "firebase/firestore";
+import { collection, query, where, getDocs, orderBy, limit, Timestamp, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { User } from "firebase/auth";
 import type { Message, ReactionType } from "@/types/feed";
@@ -23,53 +23,58 @@ export function useFeed(user: User | null, isActive: boolean) {
   const [repostingMessage, setRepostingMessage] = useState<Message | null>(null);
   const [repostComment, setRepostComment] = useState("");
 
-  // Fetch messages when feed tab is active
+  const [error, setError] = useState<string | null>(null);
+  const clearError = useCallback(() => setError(null), []);
+
+  // Subscribe to real-time messages when feed tab is active
   useEffect(() => {
-    if (!isActive) return;
-    
-    async function fetchMessages() {
-      if (!db) return;
-      
-      setLoading(true);
+    if (!isActive || !db) return;
+
+    setLoading(true);
+    const messagesRef = collection(db, "communityMessages");
+    const q = query(messagesRef, orderBy("createdAt", "desc"), limit(50));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedMessages = snapshot.docs
+        .map((d) => ({
+          id: d.id,
+          ...d.data(),
+        } as Message))
+        .filter((msg) => !msg.parentId);
+      setMessages(fetchedMessages);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error listening to messages:", error);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [isActive]);
+
+  // Fetch user's reactions when logged in (one-time, updated optimistically)
+  useEffect(() => {
+    if (!isActive || !db || !user) return;
+
+    async function fetchReactions() {
       try {
-        const messagesRef = collection(db, "communityMessages");
-        const q = query(
-          messagesRef,
-          orderBy("createdAt", "desc"),
-          limit(50)
+        const reactionsRef = collection(db!, "messageReactions");
+        const reactionsQuery = query(
+          reactionsRef,
+          where("userId", "==", user!.uid)
         );
-        const snapshot = await getDocs(q);
-        const fetchedMessages = snapshot.docs
-          .map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          } as Message))
-          .filter((msg) => !msg.parentId);
-        setMessages(fetchedMessages);
-        
-        // Fetch user's reactions if logged in
-        if (user) {
-          const reactionsRef = collection(db, "messageReactions");
-          const reactionsQuery = query(
-            reactionsRef,
-            where("userId", "==", user.uid)
-          );
-          const reactionsSnapshot = await getDocs(reactionsQuery);
-          const reactions: Record<string, ReactionType> = {};
-          reactionsSnapshot.docs.forEach((doc) => {
-            const data = doc.data();
-            reactions[data.messageId] = data.type;
-          });
-          setUserReactions(reactions);
-        }
+        const reactionsSnapshot = await getDocs(reactionsQuery);
+        const reactions: Record<string, ReactionType> = {};
+        reactionsSnapshot.docs.forEach((d) => {
+          const data = d.data();
+          reactions[data.messageId] = data.type;
+        });
+        setUserReactions(reactions);
       } catch (error) {
-        console.error("Error fetching messages:", error);
-      } finally {
-        setLoading(false);
+        console.error("Error fetching reactions:", error);
       }
     }
 
-    fetchMessages();
+    fetchReactions();
   }, [isActive, user]);
 
   // API helper
@@ -98,49 +103,47 @@ export function useFeed(user: User | null, isActive: boolean) {
     [user]
   );
 
-  // Post a new message
+  // Post a new message (routed through API for server-side validation)
   const postMessage = async () => {
     const trimmed = newMessage.trim();
-    if (!user || !db || !trimmed || trimmed.length < 100 || trimmed.length > 500) return;
-    
+    if (!user || !trimmed || trimmed.length < 100 || trimmed.length > 500) return;
+
     setPosting(true);
     try {
-      const messagesRef = collection(db, "communityMessages");
-      const newMsg = {
+      const response = await callCommunityApi("/api/community/post", {
         content: trimmed,
-        authorId: user.uid,
-        authorName: user.displayName || user.email?.split("@")[0] || "Anonymous",
-        authorPhoto: user.photoURL,
-        createdAt: serverTimestamp(),
-        likeCount: 0,
-        dislikeCount: 0,
-        replyCount: 0,
-        repostCount: 0,
-      };
-      const docRef = await addDoc(messagesRef, newMsg);
-      
+      });
+
       setMessages((prev) => [
         {
-          id: docRef.id,
-          ...newMsg,
+          id: response.messageId,
+          content: trimmed,
+          authorId: user.uid,
+          authorName: user.displayName || user.email?.split("@")[0] || "Anonymous",
+          authorPhoto: user.photoURL,
           createdAt: Timestamp.now(),
+          likeCount: 0,
+          dislikeCount: 0,
+          replyCount: 0,
+          repostCount: 0,
         },
         ...prev,
       ]);
       setNewMessage("");
     } catch (error) {
+      setError("Failed to post message. Please try again.");
       console.error("Error posting message:", error);
     } finally {
       setPosting(false);
     }
   };
 
-  // Delete a message
+  // Delete a message (routed through API for server-side ownership verification)
   const deleteMessage = async (messageId: string) => {
-    if (!db) return;
-    
+    if (!user) return;
+
     try {
-      await deleteDoc(doc(db, "communityMessages", messageId));
+      await callCommunityApi("/api/community/delete", { messageId });
       setMessages((prev) => prev.filter((m) => m.id !== messageId));
       setMessageReplies((prev) => {
         const updated = { ...prev };
@@ -150,6 +153,7 @@ export function useFeed(user: User | null, isActive: boolean) {
         return updated;
       });
     } catch (error) {
+      setError("Failed to delete message. Please try again.");
       console.error("Error deleting message:", error);
     }
   };
@@ -313,6 +317,7 @@ export function useFeed(user: User | null, isActive: boolean) {
       setReplyingTo(null);
       setExpandedReplies((prev) => new Set([...Array.from(prev), parentId]));
     } catch (error) {
+      setError("Failed to post reply. Please try again.");
       console.error("Error posting reply:", error);
     } finally {
       setPostingReply(false);
@@ -362,6 +367,7 @@ export function useFeed(user: User | null, isActive: boolean) {
       setRepostingMessage(null);
       setRepostComment("");
     } catch (error) {
+      setError("Failed to repost. Please try again.");
       console.error("Error reposting:", error);
     } finally {
       setPosting(false);
@@ -383,6 +389,8 @@ export function useFeed(user: User | null, isActive: boolean) {
   return {
     messages,
     loading,
+    error,
+    clearError,
     newMessage,
     setNewMessage,
     posting,

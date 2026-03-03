@@ -13,6 +13,9 @@ interface RateLimitStore {
 }
 
 const store: RateLimitStore = {};
+const CLEANUP_INTERVAL_MS = 60_000; // Clean up every 60 seconds
+const MAX_STORE_SIZE = 10_000; // Maximum entries before forced cleanup
+let lastCleanupTime = Date.now();
 
 interface RateLimitOptions {
   windowMs: number; // Time window in milliseconds
@@ -41,8 +44,9 @@ export function checkRateLimit(
   const key = identifier;
   const { windowMs, maxRequests } = options;
 
-  // Clean up expired entries periodically (every 1000 checks)
-  if (Math.random() < 0.001) {
+  // Clean up expired entries on a deterministic interval (every 60 seconds)
+  if (now - lastCleanupTime > CLEANUP_INTERVAL_MS) {
+    lastCleanupTime = now;
     cleanupExpiredEntries(now);
   }
 
@@ -61,8 +65,13 @@ export function checkRateLimit(
     };
   }
 
-  if (entry.count >= maxRequests) {
-    // Rate limit exceeded
+  // Increment first, then check (prevents race condition where concurrent
+  // requests read the same count before either increments)
+  entry.count++;
+
+  if (entry.count > maxRequests) {
+    // Rate limit exceeded — undo increment so count stays at max
+    entry.count--;
     const retryAfter = Math.ceil((entry.resetTime - now) / 1000);
     return {
       success: false,
@@ -72,8 +81,6 @@ export function checkRateLimit(
     };
   }
 
-  // Increment count
-  entry.count++;
   return {
     success: true,
     remaining: maxRequests - entry.count,
@@ -101,6 +108,15 @@ function cleanupExpiredEntries(now: number): void {
   const keys = Object.keys(store);
   for (const key of keys) {
     if (store[key].resetTime < now) {
+      delete store[key];
+    }
+  }
+  // If still over max size after removing expired, remove oldest entries
+  const remainingKeys = Object.keys(store);
+  if (remainingKeys.length > MAX_STORE_SIZE) {
+    const sorted = remainingKeys.sort((a, b) => store[a].resetTime - store[b].resetTime);
+    const toRemove = sorted.slice(0, remainingKeys.length - MAX_STORE_SIZE);
+    for (const key of toRemove) {
       delete store[key];
     }
   }

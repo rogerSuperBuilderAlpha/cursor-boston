@@ -1,17 +1,19 @@
 {
-  "upcoming": [
+  "upcoming": [],
+  "past": [
     {
       "id": "cafe-cursor-boston-2026",
       "slug": "cafe-cursor-boston",
       "title": "Cafe Cursor Boston",
       "subtitle": "Boston's First Cursor Community Gathering",
-      "date": "TBD",
-      "time": "TBD",
+      "date": "2026-02-17",
+      "time": "9:00 AM - 3:00 PM",
       "location": "Cambridge, Massachusetts",
       "venue": {
-        "name": "TBD",
-        "address": "Cambridge, MA",
-        "mapUrl": null
+        "name": "Caffe Nero",
+        "address": "100 Cambridgeside Pl, Cambridge, MA 02141",
+        "mapUrl": null,
+        "coordinates": { "lat": 42.3677, "lng": -71.0764 }
       },
       "type": "meetup",
       "description": "Join us for the first Cursor community event in Boston. Featuring co-working, Cursor workshops for entrepreneurs, engineers, and non-technical folks. Meet the community, learn something new, and grab some coffee.",
@@ -34,27 +36,27 @@
       ],
       "agenda": [
         {
-          "time": "TBD",
+          "time": "9:00 AM",
           "title": "Doors Open & Coffee",
           "description": "Grab some coffee, settle in, and meet fellow attendees"
         },
         {
-          "time": "TBD",
+          "time": "9:30 AM",
           "title": "Welcome & Introductions",
           "description": "Brief overview of the day and community introductions"
         },
         {
-          "time": "TBD",
+          "time": "10:00 AM",
           "title": "Workshop Sessions",
           "description": "Hands-on workshops tailored to different skill levels"
         },
         {
-          "time": "TBD",
+          "time": "12:00 PM",
           "title": "Open Co-working",
           "description": "Work on your projects with community support"
         },
         {
-          "time": "TBD",
+          "time": "2:30 PM",
           "title": "Networking & Close",
           "description": "Wrap up and connect with new friends"
         }
@@ -96,6 +98,5 @@
         "endTime": "3:00 PM"
       }
     }
-  ],
-  "past": []
+  ]
 }

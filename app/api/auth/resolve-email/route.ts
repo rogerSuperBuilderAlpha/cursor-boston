@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
 
     // First, check if this email is a primary email in Firebase Auth
     try {
-      const userRecord = await adminAuth.getUserByEmail(normalizedEmail);
+      await adminAuth.getUserByEmail(normalizedEmail);
       // Email is a primary email, return it as-is
       return NextResponse.json({
         primaryEmail: normalizedEmail,
