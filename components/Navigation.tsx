@@ -64,6 +64,7 @@ export default function Navigation() {
           <Link href="/opportunities" className={buildNavClass("/opportunities")}>Opportunities</Link>
           <Link href="/showcase" className={buildNavClass("/showcase")}>Showcase</Link>
           <Link href="/pair" className={buildNavClass("/pair")}>Pair Programming</Link>
+          <Link href="/analytics" className={buildNavClass("/analytics")}>Analytics</Link>
           <Link href="/about" className={buildNavClass("/about")}>About</Link>
         </nav>
 
@@ -140,6 +141,7 @@ export default function Navigation() {
               <Link href="/opportunities" className={buildNavClass("/opportunities", true)}>Opportunities</Link>
               <Link href="/showcase" className={buildNavClass("/showcase", true)}>Showcase</Link>
               <Link href="/pair" className={buildNavClass("/pair", true)}>Pair Programming</Link>
+              <Link href="/analytics" className={buildNavClass("/analytics", true)}>Analytics</Link>
               <Link href="/about" className={buildNavClass("/about", true)}>About</Link>
             </nav>
 
