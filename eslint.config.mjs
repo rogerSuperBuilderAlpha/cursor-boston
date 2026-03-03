@@ -5,6 +5,13 @@ const config = [
   {
     ignores: ["coverage/**"],
   },
+  {
+    settings: {
+      react: {
+        version: "18",
+      },
+    },
+  },
 ];
 
 export default config;
