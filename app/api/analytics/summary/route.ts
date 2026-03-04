@@ -22,35 +22,36 @@ const eventNameMap: Record<string, string> = {};
 export interface AnalyticsSummary {
   totalMembers: number;
   totalEventRegistrations: number;
-  totalShowcaseVotes: number;
+  // Total interactions (upvotes + downvotes) across all showcase projects
+  totalShowcaseInteractions: number;
   totalShowcaseProjects: number;
   memberGrowth: { month: string; count: number }[];
   eventAttendance: { eventId: string; name: string; count: number }[];
   skillDistribution: { skill: string; count: number }[];
-  hackathonStats: { teamsFormed: number; projectsSubmitted: number; participationRate: number };
+  hackathonStats: {
+    teamsFormed: number;
+    projectsSubmitted: number;
+    // Teams formed as a percentage of total members — not individual participation rate
+    teamsAsPercentOfMembers: number;
+  };
   communityActivity: { week: string; posts: number; replies: number }[];
   platformHealth: { activeThisMonth: number; returningMembers: number };
   showcaseOverTime: { month: string; count: number }[];
-  // Top contributors are opt-in: only users with score > 0 and a displayName are included.
-  // A future improvement is to add an explicit `analyticsOptIn: boolean` field on the user
-  // document so members can consciously choose to appear on this leaderboard.
-  topContributors: { name: string; score: number }[];
   generatedAt: string;
 }
 
 const EMPTY_SUMMARY: AnalyticsSummary = {
   totalMembers: 0,
   totalEventRegistrations: 0,
-  totalShowcaseVotes: 0,
+  totalShowcaseInteractions: 0,
   totalShowcaseProjects: 0,
   memberGrowth: [],
   eventAttendance: [],
   skillDistribution: [],
-  hackathonStats: { teamsFormed: 0, projectsSubmitted: 0, participationRate: 0 },
+  hackathonStats: { teamsFormed: 0, projectsSubmitted: 0, teamsAsPercentOfMembers: 0 },
   communityActivity: [],
   platformHealth: { activeThisMonth: 0, returningMembers: 0 },
   showcaseOverTime: [],
-  topContributors: [],
   generatedAt: new Date().toISOString(),
 };
 
@@ -95,6 +96,10 @@ export async function GET(request: NextRequest) {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
+    // Scope community messages to last 8 weeks for a deterministic feed activity window
+    const eightWeeksAgo = new Date();
+    eightWeeksAgo.setDate(eightWeeksAgo.getDate() - 56);
+
     const [
       usersSnap,
       eventRegsSnap,
@@ -110,7 +115,10 @@ export async function GET(request: NextRequest) {
       db.collection("pair_profiles").get(),
       db.collection("hackathonTeams").get(),
       db.collection("hackathonSubmissions").get(),
-      db.collection("communityMessages").orderBy("createdAt", "desc").limit(500).get(),
+      db.collection("communityMessages")
+        .where("createdAt", ">=", eightWeeksAgo)
+        .orderBy("createdAt", "desc")
+        .get(),
     ]);
 
     // --- Event attendance per event (top 10), with human-readable names ---
@@ -128,11 +136,11 @@ export async function GET(request: NextRequest) {
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);
 
-    // --- Showcase vote totals ---
-    let totalShowcaseVotes = 0;
+    // --- Showcase interactions (upvotes + downvotes = total engagement) ---
+    let totalShowcaseInteractions = 0;
     showcaseProjectsSnap.forEach((doc) => {
       const data = doc.data();
-      totalShowcaseVotes += Number(data.upCount || 0) + Number(data.downCount || 0);
+      totalShowcaseInteractions += Number(data.upCount || 0) + Number(data.downCount || 0);
     });
 
     // --- Member growth by month (last 12 months) ---
@@ -236,24 +244,10 @@ export async function GET(request: NextRequest) {
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([month, count]) => ({ month, count }));
 
-    // --- Top contributors (opt-in: only members with recorded activity) ---
-    const contributors: { name: string; score: number }[] = [];
-    usersSnap.forEach((doc) => {
-      const data = doc.data();
-      const eventsAttended = Number(data.eventsAttended || 0);
-      const talksGiven = Number(data.talksGiven || 0);
-      const pullRequestsCount = Number(data.pullRequestsCount || 0);
-      const score = eventsAttended + talksGiven * 2 + pullRequestsCount;
-      if (score > 0 && data.displayName) {
-        contributors.push({ name: data.displayName as string, score });
-      }
-    });
-    const topContributors = contributors.sort((a, b) => b.score - a.score).slice(0, 10);
-
     const summary: AnalyticsSummary = {
       totalMembers: usersSnap.size,
       totalEventRegistrations: eventRegsSnap.size,
-      totalShowcaseVotes,
+      totalShowcaseInteractions,
       totalShowcaseProjects: showcaseProjectsSnap.size,
       memberGrowth,
       eventAttendance,
@@ -261,14 +255,13 @@ export async function GET(request: NextRequest) {
       hackathonStats: {
         teamsFormed: hackathonTeamsSnap.size,
         projectsSubmitted: hackathonSubmissionsSnap.size,
-        participationRate: usersSnap.size > 0
+        teamsAsPercentOfMembers: usersSnap.size > 0
           ? Math.round((hackathonTeamsSnap.size * 100) / usersSnap.size)
           : 0,
       },
       communityActivity,
       platformHealth: { activeThisMonth: activeUserIds.size, returningMembers },
       showcaseOverTime,
-      topContributors,
       generatedAt: new Date().toISOString(),
     };
 

@@ -123,7 +123,7 @@ export default function AnalyticsDashboard() {
             ))}
           </div>
           <div className="grid lg:grid-cols-2 gap-6">
-            {[...Array(6)].map((_, i) => (
+            {[...Array(5)].map((_, i) => (
               <div key={i} className="h-72 rounded-2xl bg-neutral-100 dark:bg-neutral-900 animate-pulse" />
             ))}
           </div>
@@ -192,8 +192,8 @@ export default function AnalyticsDashboard() {
             }
           />
           <StatCard
-            label="Showcase Votes"
-            value={data.totalShowcaseVotes}
+            label="Showcase Interactions"
+            value={data.totalShowcaseInteractions}
             icon={
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z" />
@@ -230,8 +230,8 @@ export default function AnalyticsDashboard() {
               <p className="text-3xl font-bold text-foreground">{data.hackathonStats.projectsSubmitted.toLocaleString()}</p>
             </div>
             <div>
-              <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-1">Participation Rate</p>
-              <p className="text-3xl font-bold text-foreground">{data.hackathonStats.participationRate}%</p>
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-1">Teams as % of Members</p>
+              <p className="text-3xl font-bold text-foreground">{data.hackathonStats.teamsAsPercentOfMembers}%</p>
             </div>
           </div>
         </div>
@@ -323,35 +323,6 @@ export default function AnalyticsDashboard() {
                   <Bar dataKey="count" fill="#10b981" radius={[4, 4, 0, 0]} name="Submissions" />
                 </BarChart>
               </ResponsiveContainer>
-            )}
-          </ChartCard>
-
-          {/* Top Contributors */}
-          <ChartCard title="Top Contributors (Opt-in)">
-            {data.topContributors.length === 0 ? (
-              <EmptyChart message="No contributor data yet. Activity is tracked via events attended, talks given, and pull requests." />
-            ) : (
-              <div className="space-y-3">
-                {data.topContributors.map((c, i) => (
-                  <div key={c.name} className="flex items-center gap-3">
-                    <span className={`w-6 text-sm font-bold shrink-0 ${i < 3 ? "text-emerald-500" : "text-neutral-400"}`}>
-                      {i + 1}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium text-foreground truncate">{c.name}</span>
-                        <span className="text-xs text-neutral-400 ml-2 shrink-0">{c.score} pts</span>
-                      </div>
-                      <div className="h-1.5 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-emerald-500 transition-all"
-                          style={{ width: `${(c.score / (data.topContributors[0]?.score || 1)) * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
             )}
           </ChartCard>
 
