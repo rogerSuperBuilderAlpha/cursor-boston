@@ -86,7 +86,8 @@ export default function AnalyticsDashboard() {
   const [fetchError, setFetchError] = useState(false);
 
   useEffect(() => {
-    fetch("/api/analytics/summary")
+    const controller = new AbortController();
+    fetch("/api/analytics/summary", { signal: controller.signal })
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch");
         return res.json() as Promise<AnalyticsSummary>;
@@ -95,10 +96,12 @@ export default function AnalyticsDashboard() {
         setData(summary);
         setLoading(false);
       })
-      .catch(() => {
+      .catch((err: unknown) => {
+        if (err instanceof Error && err.name === "AbortError") return;
         setFetchError(true);
         setLoading(false);
       });
+    return () => controller.abort();
   }, []);
 
   const isDark = resolvedTheme === "dark";
@@ -166,7 +169,7 @@ export default function AnalyticsDashboard() {
             label="Total Members"
             value={data.totalMembers}
             icon={
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
               </svg>
@@ -176,7 +179,7 @@ export default function AnalyticsDashboard() {
             label="Event Registrations"
             value={data.totalEventRegistrations}
             icon={
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                 <line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
               </svg>
@@ -186,7 +189,7 @@ export default function AnalyticsDashboard() {
             label="Showcase Projects"
             value={data.totalShowcaseProjects}
             icon={
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
               </svg>
             }
@@ -195,7 +198,7 @@ export default function AnalyticsDashboard() {
             label="Showcase Interactions"
             value={data.totalShowcaseInteractions}
             icon={
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z" />
                 <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
               </svg>
@@ -302,7 +305,7 @@ export default function AnalyticsDashboard() {
                   <YAxis tick={{ fill: axisColor, fontSize: 11 }} tickLine={false} axisLine={false} allowDecimals={false} />
                   <Tooltip {...tooltipStyle} cursor={barCursor} />
                   <Legend wrapperStyle={{ fontSize: "12px", color: axisColor }} />
-                  <Bar dataKey="posts" fill="#10b981" radius={[4, 4, 0, 0]} name="Posts" stackId="a" />
+                  <Bar dataKey="posts" fill="#10b981" radius={[0, 0, 0, 0]} name="Posts" stackId="a" />
                   <Bar dataKey="replies" fill="#34d399" radius={[4, 4, 0, 0]} name="Replies" stackId="a" />
                 </BarChart>
               </ResponsiveContainer>

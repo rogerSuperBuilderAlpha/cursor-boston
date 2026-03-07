@@ -215,8 +215,14 @@ export async function GET(request: NextRequest) {
       const createdAt = data.createdAt;
       if (createdAt?.toDate) {
         const date = createdAt.toDate() as Date;
-        const msPerWeek = 7 * 24 * 60 * 60 * 1000;
-        const weekStart = new Date(Math.floor(date.getTime() / msPerWeek) * msPerWeek);
+        // Normalize to the Monday of this week in UTC so buckets align with calendar weeks
+        const dayOfWeek = date.getUTCDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+        const daysSinceMonday = (dayOfWeek + 6) % 7;
+        const weekStart = new Date(Date.UTC(
+          date.getUTCFullYear(),
+          date.getUTCMonth(),
+          date.getUTCDate() - daysSinceMonday,
+        ));
         const key = weekStart.toISOString().slice(0, 10);
         if (!weekData[key]) weekData[key] = { posts: 0, replies: 0 };
         // Replies have a parentId field; top-level messages do not
@@ -248,7 +254,7 @@ export async function GET(request: NextRequest) {
       totalMembers: usersSnap.size,
       totalEventRegistrations: eventRegsSnap.size,
       totalShowcaseInteractions,
-      totalShowcaseProjects: showcaseProjectsSnap.size,
+      totalShowcaseProjects: (showcaseData.projects as Array<unknown>).length,
       memberGrowth,
       eventAttendance,
       skillDistribution,

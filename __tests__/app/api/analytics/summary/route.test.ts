@@ -18,6 +18,18 @@ jest.mock("@/lib/logger", () => ({
   logger: { logError: jest.fn() },
 }));
 
+// Mock static JSON so tests are not coupled to the real file contents
+jest.mock("@/content/showcase.json", () => ({
+  projects: [
+    { id: "p1", submittedDate: "2025-01" },
+    { id: "p2", submittedDate: "2025-02" },
+  ],
+}));
+jest.mock("@/content/events.json", () => ({
+  upcoming: [{ id: "evt1", title: "Event One" }],
+  past: [],
+}));
+
 import { GET } from "@/app/api/analytics/summary/route";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -251,6 +263,43 @@ describe("GET /api/analytics/summary", () => {
     const body = await res.json();
     expect(body.platformHealth.returningMembers).toBe(1);
     expect(body.platformHealth.activeThisMonth).toBe(2);
+  });
+
+  it("derives totalShowcaseProjects from static JSON, not Firestore", async () => {
+    // Firestore has 1 showcase doc; static JSON mock has 2
+    mockGetAdminDb.mockReturnValue(makeDb({ showcaseProjects: [{ upCount: 0, downCount: 0 }] }));
+
+    const res = await GET(makeRequest());
+    const body = await res.json();
+    expect(body.totalShowcaseProjects).toBe(2);
+  });
+
+  it("buckets community activity by Monday UTC week boundaries", async () => {
+    // Monday 2025-01-06 and Tuesday 2025-01-07 → same bucket "2025-01-06"
+    // Monday 2025-01-13 → next bucket "2025-01-13"
+    const mon   = { toDate: () => new Date("2025-01-06T10:00:00Z") };
+    const tue   = { toDate: () => new Date("2025-01-07T10:00:00Z") };
+    const nextMon = { toDate: () => new Date("2025-01-13T10:00:00Z") };
+
+    mockGetAdminDb.mockReturnValue(makeDb({
+      communityMessages: [
+        { createdAt: mon, userId: "u1" },
+        { createdAt: tue, userId: "u2" },
+        { createdAt: nextMon, userId: "u3" },
+      ],
+    }));
+
+    const res = await GET(makeRequest());
+    const body = await res.json();
+
+    const weeks = body.communityActivity.map((w: { week: string }) => w.week);
+    expect(weeks).toContain("2025-01-06");
+    expect(weeks).toContain("2025-01-13");
+
+    const weekJan6 = body.communityActivity.find((w: { week: string }) => w.week === "2025-01-06");
+    // mon and tue are top-level posts (no parentId); both in same bucket
+    expect(weekJan6.posts).toBe(2);
+    expect(weekJan6.replies).toBe(0);
   });
 
   it("returns all required fields in the summary", async () => {
