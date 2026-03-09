@@ -54,7 +54,7 @@ export default function Navigation() {
         </Link>
 
         {/* Desktop Nav */}
-        <nav aria-label="Main" className="hidden lg:flex items-center space-x-8 ml-12">
+        <nav aria-label="Main" className="hidden xl:flex items-center space-x-8 ml-12">
           <Link href="/events" className={buildNavClass("/events")}>Events</Link>
           <Link href="/map" className={buildNavClass("/map")}>Map</Link>
           <Link href="/talks" className={buildNavClass("/talks")}>Talks</Link>
@@ -64,14 +64,15 @@ export default function Navigation() {
           <Link href="/opportunities" className={buildNavClass("/opportunities")}>Opportunities</Link>
           <Link href="/showcase" className={buildNavClass("/showcase")}>Showcase</Link>
           <Link href="/pair" className={buildNavClass("/pair")}>Pair Programming</Link>
+          <Link href="/analytics" className={buildNavClass("/analytics")}>Analytics</Link>
           <Link href="/about" className={buildNavClass("/about")}>About</Link>
         </nav>
 
         {/* Spacer */}
-        <div className="hidden lg:block flex-1" />
+        <div className="hidden xl:block flex-1" />
 
         {/* Desktop Auth */}
-        <div className="hidden lg:flex items-center shrink-0 gap-4">
+        <div className="hidden xl:flex items-center shrink-0 gap-4">
           <ThemeToggle />
           {loading ? (
             <div className="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-800 animate-pulse" />
@@ -103,7 +104,7 @@ export default function Navigation() {
         </div>
 
         {/* Mobile menu button */}
-        <div className="flex items-center gap-4 lg:hidden">
+        <div className="flex items-center gap-4 xl:hidden">
           <ThemeToggle />
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -127,7 +128,7 @@ export default function Navigation() {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div id="mobile-menu" className="lg:hidden border-t border-neutral-200 dark:border-neutral-800 bg-background">
+        <div id="mobile-menu" className="xl:hidden border-t border-neutral-200 dark:border-neutral-800 bg-background">
           <div className="max-w-6xl mx-auto px-6 py-4">
             {/* Menu closes via the pathname useEffect — onClick handlers not needed on nav links */}
             <nav aria-label="Mobile" className="flex flex-col space-y-1">
@@ -140,6 +141,7 @@ export default function Navigation() {
               <Link href="/opportunities" className={buildNavClass("/opportunities", true)}>Opportunities</Link>
               <Link href="/showcase" className={buildNavClass("/showcase", true)}>Showcase</Link>
               <Link href="/pair" className={buildNavClass("/pair", true)}>Pair Programming</Link>
+              <Link href="/analytics" className={buildNavClass("/analytics", true)}>Analytics</Link>
               <Link href="/about" className={buildNavClass("/about", true)}>About</Link>
             </nav>
 
