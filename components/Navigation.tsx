@@ -26,7 +26,7 @@ export default function Navigation() {
 
   return (
     <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-neutral-200 dark:border-neutral-800 transition-colors duration-300">
-      <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div className="w-full px-4 md:px-6 h-16 flex items-center">
         {/* Logo: 44px min touch target (WCAG 2.1) */}
         <Link
           href="/"
@@ -54,7 +54,7 @@ export default function Navigation() {
         </Link>
 
         {/* Desktop Nav */}
-        <nav aria-label="Main" className="hidden xl:flex items-center space-x-8 ml-12">
+        <nav aria-label="Main" className="hidden xl:flex items-center gap-6 ml-8 flex-1 min-w-0">
           <Link href="/events" className={buildNavClass("/events")}>Events</Link>
           <Link href="/map" className={buildNavClass("/map")}>Map</Link>
           <Link href="/talks" className={buildNavClass("/talks")}>Talks</Link>
@@ -68,11 +68,8 @@ export default function Navigation() {
           <Link href="/about" className={buildNavClass("/about")}>About</Link>
         </nav>
 
-        {/* Spacer */}
-        <div className="hidden xl:block flex-1" />
-
         {/* Desktop Auth */}
-        <div className="hidden xl:flex items-center shrink-0 gap-4">
+        <div className="hidden xl:flex items-center shrink-0 gap-4 pl-6">
           <ThemeToggle />
           {loading ? (
             <div className="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-800 animate-pulse" />
@@ -104,7 +101,7 @@ export default function Navigation() {
         </div>
 
         {/* Mobile menu button */}
-        <div className="flex items-center gap-4 xl:hidden">
+        <div className="ml-auto flex items-center gap-4 xl:hidden">
           <ThemeToggle />
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -129,7 +126,7 @@ export default function Navigation() {
       {/* Mobile menu */}
       {mobileMenuOpen && (
         <div id="mobile-menu" className="xl:hidden border-t border-neutral-200 dark:border-neutral-800 bg-background">
-          <div className="max-w-6xl mx-auto px-6 py-4">
+          <div className="w-full px-4 md:px-6 py-4">
             {/* Menu closes via the pathname useEffect — onClick handlers not needed on nav links */}
             <nav aria-label="Mobile" className="flex flex-col space-y-1">
               <Link href="/events" className={buildNavClass("/events", true)}>Events</Link>
