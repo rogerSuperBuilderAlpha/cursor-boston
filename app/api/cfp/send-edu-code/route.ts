@@ -14,10 +14,22 @@ function isValidEduEmail(email: string): boolean {
 }
 
 export async function POST(request: NextRequest) {
+  const authHeader = request.headers.get("authorization") || "";
+  const hasToken = authHeader.startsWith("Bearer ");
+  if (!hasToken) {
+    return NextResponse.json(
+      { error: "Sign in required. Please sign in and try again." },
+      { status: 401 }
+    );
+  }
+
   try {
     const user = await getVerifiedUser(request);
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Invalid or expired session. Please sign in again." },
+        { status: 401 }
+      );
     }
 
     const { email } = await request.json();
@@ -110,6 +122,17 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, message: "Verification code sent" });
   } catch (error) {
+    const err = error as { code?: string; message?: string };
+    const isAuthError =
+      err?.code?.startsWith?.("auth/") ||
+      err?.message?.toLowerCase().includes("unauthorized") ||
+      err?.message?.toLowerCase().includes("expired");
+    if (isAuthError) {
+      return NextResponse.json(
+        { error: "Invalid or expired session. Please sign in again." },
+        { status: 401 }
+      );
+    }
     logApiError("/api/cfp/send-edu-code", error);
     return NextResponse.json(
       { error: "Failed to send verification code" },

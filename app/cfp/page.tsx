@@ -202,7 +202,7 @@ export default function CfpPage() {
       setSendCodeLoading(true);
       setEduError(null);
       try {
-        const token = await user.getIdToken();
+        const token = await user.getIdToken(true);
         const res = await fetch("/api/cfp/send-edu-code", {
           method: "POST",
           headers: {
@@ -227,7 +227,7 @@ export default function CfpPage() {
       setVerifyCodeLoading(true);
       setEduError(null);
       try {
-        const token = await user.getIdToken();
+        const token = await user.getIdToken(true);
         const res = await fetch("/api/cfp/verify-edu-code", {
           method: "POST",
           headers: {
