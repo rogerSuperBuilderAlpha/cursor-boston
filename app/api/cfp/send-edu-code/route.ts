@@ -15,8 +15,7 @@ function isValidEduEmail(email: string): boolean {
 
 export async function POST(request: NextRequest) {
   const authHeader = request.headers.get("authorization") || "";
-  const hasToken = authHeader.startsWith("Bearer ");
-  if (!hasToken) {
+  if (!authHeader.startsWith("Bearer ") || !authHeader.slice(7).trim()) {
     return NextResponse.json(
       { error: "Sign in required. Please sign in and try again." },
       { status: 401 }
