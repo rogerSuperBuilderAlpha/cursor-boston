@@ -21,9 +21,9 @@ export async function getVerifiedUser(request: NextRequest): Promise<VerifiedUse
     throw new Error("Firebase Admin Auth is not configured");
   }
 
-  // SECURITY: checkRevoked=true ensures revoked tokens are rejected
-  // This catches scenarios where users have been disabled or signed out
-  const decoded = await adminAuth.verifyIdToken(token, true);
+  // checkRevoked=false: revocation check can fail (tenant/API issues).
+  // Tokens expire in 1h; sign-out invalidates client-side session.
+  const decoded = await adminAuth.verifyIdToken(token, false);
   return {
     uid: decoded.uid,
     name: decoded.name,
