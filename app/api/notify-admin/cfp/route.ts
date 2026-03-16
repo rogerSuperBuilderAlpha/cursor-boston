@@ -43,6 +43,19 @@ export async function POST(request: NextRequest) {
       `,
     });
 
+    await sendEmail({
+      to: email,
+      subject: `CFP Submission Received: ${escapeHtml(thesisTitle)}`,
+      text: `Hi ${escapeHtml(name)},\n\nWe've received your submission to the Cursor Boston Graduate Student Conference "What is AI?"\n\nThesis Title: ${escapeHtml(thesisTitle)}\n\nYou can edit your submission until May 1, 2026. We'll notify you at this email by June 1, 2026.\n\n— Cursor Boston`,
+      html: `
+        <p>Hi ${escapeHtml(name)},</p>
+        <p>We've received your submission to the Cursor Boston Graduate Student Conference "What is AI?"</p>
+        <p><strong>Thesis Title:</strong> ${escapeHtml(thesisTitle)}</p>
+        <p>You can edit your submission until May 1, 2026. We'll notify you at this email by June 1, 2026.</p>
+        <p>— Cursor Boston</p>
+      `,
+    });
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[notify-admin/cfp]", error);

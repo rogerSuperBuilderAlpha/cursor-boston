@@ -56,7 +56,6 @@ export default function Navigation() {
         {/* Desktop Nav */}
         <nav aria-label="Main" className="hidden xl:flex items-center gap-6 ml-8 flex-1 min-w-0">
           <Link href="/events" className={buildNavClass("/events")}>Events</Link>
-          <Link href="/cfp" className={buildNavClass("/cfp")}>CFP</Link>
           <Link href="/map" className={buildNavClass("/map")}>Map</Link>
           <Link href="/talks" className={buildNavClass("/talks")}>Talks</Link>
           <Link href="/hackathons" className={buildNavClass("/hackathons")}>Hackathons</Link>
@@ -124,14 +123,13 @@ export default function Navigation() {
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile / tablet menu */}
       {mobileMenuOpen && (
         <div id="mobile-menu" className="xl:hidden border-t border-neutral-200 dark:border-neutral-800 bg-background">
-          <div className="w-full px-4 md:px-6 py-4">
-            {/* Menu closes via the pathname useEffect — onClick handlers not needed on nav links */}
-            <nav aria-label="Mobile" className="flex flex-col space-y-1">
+          <div className="w-full px-4 md:px-6 py-6 md:py-8 max-h-[calc(100vh-4rem)] overflow-y-auto">
+            {/* Mobile: simple flat list */}
+            <nav aria-label="Mobile" className="flex flex-col md:hidden space-y-1">
               <Link href="/events" className={buildNavClass("/events", true)}>Events</Link>
-              <Link href="/cfp" className={buildNavClass("/cfp", true)}>CFP</Link>
               <Link href="/map" className={buildNavClass("/map", true)}>Map</Link>
               <Link href="/talks" className={buildNavClass("/talks", true)}>Talks</Link>
               <Link href="/hackathons" className={buildNavClass("/hackathons", true)}>Hackathons</Link>
@@ -144,28 +142,73 @@ export default function Navigation() {
               <Link href="/about" className={buildNavClass("/about", true)}>About</Link>
             </nav>
 
-            <div className="border-t border-neutral-200 dark:border-neutral-800 mt-4 pt-4">
+            {/* Tablet: 2-column grid with grouped sections */}
+            <nav aria-label="Tablet" className="hidden md:block md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-6">
+              <div className="md:col-span-2 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-6">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-2 md:mb-3">
+                    Community
+                  </p>
+                  <div className="flex flex-col space-y-2">
+                    <Link href="/events" className={buildNavClass("/events", true)}>Events</Link>
+                    <Link href="/talks" className={buildNavClass("/talks", true)}>Talks</Link>
+                    <Link href="/members" className={buildNavClass("/members", true)}>Members</Link>
+                    <Link href="/pair" className={buildNavClass("/pair", true)}>Pair Programming</Link>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-2 md:mb-3">
+                    Participate
+                  </p>
+                  <div className="flex flex-col space-y-2">
+                    <Link href="/hackathons" className={buildNavClass("/hackathons", true)}>Hackathons</Link>
+                    <Link href="/showcase" className={buildNavClass("/showcase", true)}>Showcase</Link>
+                    <Link href="/opportunities" className={buildNavClass("/opportunities", true)}>Opportunities</Link>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-2 md:mb-3">
+                    Resources
+                  </p>
+                  <div className="flex flex-col space-y-2">
+                    <Link href="/map" className={buildNavClass("/map", true)}>Map</Link>
+                    <Link href="/blog" className={buildNavClass("/blog", true)}>Blog</Link>
+                    <Link href="/analytics" className={buildNavClass("/analytics", true)}>Analytics</Link>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-2 md:mb-3">
+                    About
+                  </p>
+                  <div className="flex flex-col space-y-2">
+                    <Link href="/about" className={buildNavClass("/about", true)}>About</Link>
+                  </div>
+                </div>
+              </div>
+            </nav>
+
+            <div className="border-t border-neutral-200 dark:border-neutral-800 mt-6 pt-6 md:mt-8 md:pt-8">
               {loading ? (
-                <div className="h-12 bg-neutral-200 dark:bg-neutral-800 rounded-lg animate-pulse" />
+                <div className="h-14 rounded-xl bg-neutral-100 dark:bg-neutral-800 animate-pulse" />
               ) : user ? (
-                <Link href="/profile" onClick={() => setMobileMenuOpen(false)} className="flex items-center p-3 bg-neutral-100 dark:bg-neutral-900 rounded-lg">
+                <Link href="/profile" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 p-4 rounded-xl bg-neutral-100 dark:bg-neutral-900 hover:bg-neutral-200 dark:hover:bg-neutral-800 transition-colors">
                   <Avatar
                     src={user.photoURL}
                     name={user.displayName}
                     email={user.email}
-                    size="md"
+                    size="lg"
                   />
-                  <div className="ml-3">
-                    <p className="text-foreground font-medium">{user.displayName || "User"}</p>
-                    <p className="text-neutral-500 dark:text-neutral-400 text-sm">{user.email}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-foreground font-semibold truncate">{user.displayName || "User"}</p>
+                    <p className="text-neutral-500 dark:text-neutral-400 text-sm truncate">{user.email}</p>
                   </div>
                 </Link>
               ) : (
-                <div className="space-y-3">
-                  <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="block w-full text-center py-3 text-neutral-600 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 rounded-lg font-medium transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background">
+                <div className="grid grid-cols-2 gap-3 md:flex md:gap-4">
+                  <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="col-span-2 md:flex-1 md:col-span-1 text-center py-3 px-4 text-neutral-600 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 rounded-xl font-medium transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background">
                     Sign In
                   </Link>
-                  <Link href="/signup" onClick={() => setMobileMenuOpen(false)} className="block w-full text-center py-3 bg-emerald-500 text-white rounded-lg font-semibold transition-colors hover:bg-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background">
+                  <Link href="/signup" onClick={() => setMobileMenuOpen(false)} className="col-span-2 md:flex-1 md:col-span-1 text-center py-3 px-4 bg-emerald-500 text-white rounded-xl font-semibold transition-colors hover:bg-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background">
                     Get Started
                   </Link>
                 </div>

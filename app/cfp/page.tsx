@@ -26,6 +26,7 @@ export default function CfpPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadingSubmission, setLoadingSubmission] = useState(true);
+  const [hasExistingSubmission, setHasExistingSubmission] = useState(false);
   const [eduEmail, setEduEmail] = useState("");
   const [codeSent, setCodeSent] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
@@ -66,6 +67,7 @@ export default function CfpPage() {
       try {
         const existing = await getCfpSubmission(user.uid);
         if (existing) {
+          setHasExistingSubmission(true);
           setFormData({
             abstract: existing.abstract,
             name: existing.name,
@@ -75,6 +77,8 @@ export default function CfpPage() {
             advisor: existing.advisor,
             thesisTitle: existing.thesisTitle,
           });
+        } else {
+          setHasExistingSubmission(false);
         }
       } catch {
         // Ignore load errors
@@ -118,10 +122,11 @@ export default function CfpPage() {
     setIsSubmitting(true);
     setError(null);
 
+    const emailToUse = verifiedEduEmail || formData.email.trim();
     const trimmed: CfpSubmissionInput = {
       abstract: formData.abstract.trim(),
       name: formData.name.trim(),
-      email: formData.email.trim(),
+      email: emailToUse,
       school: formData.school.trim(),
       department: formData.department.trim(),
       advisor: formData.advisor.trim(),
@@ -504,12 +509,18 @@ export default function CfpPage() {
                       type="email"
                       id="email"
                       name="email"
-                      value={formData.email}
+                      value={verifiedEduEmail || formData.email}
                       onChange={handleChange}
                       required
+                      readOnly={!!verifiedEduEmail}
                       className={inputClass}
                       placeholder="jane@university.edu"
                     />
+                    {verifiedEduEmail && (
+                      <p className="mt-1 text-sm text-neutral-500">
+                        Using your verified .edu address
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label htmlFor="school" className={labelClass}>
@@ -588,11 +599,11 @@ export default function CfpPage() {
                 {isSubmitting ? (
                   <>
                     <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-background" />
-                    Submitting...
+                    {hasExistingSubmission ? "Updating..." : "Submitting..."}
                   </>
                 ) : (
                   <>
-                    Submit Paper
+                    {hasExistingSubmission ? "Update" : "Submit Paper"}
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="18"
