@@ -10,7 +10,10 @@ export interface VerifiedUser {
 
 export async function getVerifiedUser(request: NextRequest): Promise<VerifiedUser | null> {
   const authHeader = request.headers.get("authorization") || "";
-  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  const tokenFromAuth =
+    authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+  const tokenFromHeader = request.headers.get("x-firebase-id-token")?.trim() || "";
+  const token = tokenFromAuth || tokenFromHeader;
 
   if (!token) {
     return null;
@@ -22,7 +25,6 @@ export async function getVerifiedUser(request: NextRequest): Promise<VerifiedUse
   }
 
   // checkRevoked=false: revocation check can fail (tenant/API issues).
-  // Tokens expire in 1h; sign-out invalidates client-side session.
   const decoded = await adminAuth.verifyIdToken(token, false);
   return {
     uid: decoded.uid,

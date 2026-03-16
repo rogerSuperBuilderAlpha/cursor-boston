@@ -208,6 +208,7 @@ export default function CfpPage() {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
+            "X-Firebase-ID-Token": token,
           },
           body: JSON.stringify({ email: eduEmail.trim().toLowerCase() }),
         });
@@ -233,6 +234,7 @@ export default function CfpPage() {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
+            "X-Firebase-ID-Token": token,
           },
           body: JSON.stringify({
             email: eduEmail.trim().toLowerCase(),

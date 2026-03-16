@@ -33,10 +33,10 @@
     "firestore"
   ],
   "scripts": {
-    "dev": "next dev --webpack -H localhost",
-    "dev:turbo": "next dev -H localhost",
+    "dev": "NODE_OPTIONS='--no-deprecation' next dev --webpack -H localhost",
+    "dev:turbo": "NODE_OPTIONS='--no-deprecation' next dev -H localhost",
     "build": "next build",
-    "start": "next start",
+    "start": "NODE_OPTIONS='--no-deprecation' next start",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
     "test": "jest --config config/jest.config.js",

@@ -15,7 +15,9 @@ function isValidEduEmail(email: string): boolean {
 
 export async function POST(request: NextRequest) {
   const authHeader = request.headers.get("authorization") || "";
-  if (!authHeader.startsWith("Bearer ") || !authHeader.slice(7).trim()) {
+  const tokenFromAuth = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+  const tokenFromHeader = request.headers.get("x-firebase-id-token")?.trim() || "";
+  if (!tokenFromAuth && !tokenFromHeader) {
     return NextResponse.json(
       { error: "Sign in required. Please sign in and try again." },
       { status: 401 }
@@ -122,17 +124,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, message: "Verification code sent" });
   } catch (error) {
     const err = error as { code?: string; message?: string };
+    logApiError("/api/cfp/send-edu-code", error);
     const isAuthError =
       err?.code?.startsWith?.("auth/") ||
       err?.message?.toLowerCase().includes("unauthorized") ||
-      err?.message?.toLowerCase().includes("expired");
+      err?.message?.toLowerCase().includes("expired") ||
+      err?.message?.toLowerCase().includes("decoding");
     if (isAuthError) {
       return NextResponse.json(
         { error: "Invalid or expired session. Please sign in again." },
         { status: 401 }
       );
     }
-    logApiError("/api/cfp/send-edu-code", error);
     return NextResponse.json(
       { error: "Failed to send verification code" },
       { status: 500 }
