@@ -56,6 +56,7 @@ export default function Navigation() {
         {/* Desktop Nav */}
         <nav aria-label="Main" className="hidden xl:flex items-center gap-6 ml-8 flex-1 min-w-0">
           <Link href="/events" className={buildNavClass("/events")}>Events</Link>
+          <Link href="/cfp" className={buildNavClass("/cfp")}>CFP</Link>
           <Link href="/map" className={buildNavClass("/map")}>Map</Link>
           <Link href="/talks" className={buildNavClass("/talks")}>Talks</Link>
           <Link href="/hackathons" className={buildNavClass("/hackathons")}>Hackathons</Link>
@@ -130,6 +131,7 @@ export default function Navigation() {
             {/* Menu closes via the pathname useEffect — onClick handlers not needed on nav links */}
             <nav aria-label="Mobile" className="flex flex-col space-y-1">
               <Link href="/events" className={buildNavClass("/events", true)}>Events</Link>
+              <Link href="/cfp" className={buildNavClass("/cfp", true)}>CFP</Link>
               <Link href="/map" className={buildNavClass("/map", true)}>Map</Link>
               <Link href="/talks" className={buildNavClass("/talks", true)}>Talks</Link>
               <Link href="/hackathons" className={buildNavClass("/hackathons", true)}>Hackathons</Link>

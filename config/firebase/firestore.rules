@@ -14,6 +14,13 @@ service cloud.firestore {
       allow read: if request.auth != null && request.auth.uid == resource.data.userId;
       allow update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
     }
+
+    // CFP submissions - one doc per user (doc ID = userId), create/read/update by owner
+    match /cfpSubmissions/{userId} {
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow read, update: if request.auth != null && request.auth.uid == userId;
+      allow delete: if false;
+    }
     
     // Mail collection - server-side only to prevent email spam abuse
     match /mail/{mailId} {
