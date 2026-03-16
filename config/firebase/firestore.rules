@@ -52,6 +52,11 @@ service cloud.firestore {
     match /emailVerifications/{tokenId} {
       allow read, write: if false; // Only server-side operations via Admin SDK
     }
+
+    // CFP .edu verification codes - server-side only
+    match /eduVerificationCodes/{docId} {
+      allow read, write: if false; // Only server-side operations via Admin SDK
+    }
     
     // Event registrations - users can create and read their own registrations
     match /eventRegistrations/{registrationId} {

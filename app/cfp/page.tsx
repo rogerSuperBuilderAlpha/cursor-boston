@@ -6,7 +6,8 @@ import {
   submitCfpProposal,
   getCfpSubmission,
   countWords,
-  isValidEduEmail,
+  hasVerifiedEduEmail,
+  getVerifiedEduEmail,
   type CfpSubmissionInput,
 } from "@/lib/cfp-submissions";
 import Link from "next/link";
@@ -20,11 +21,17 @@ const inputClass =
 const labelClass = "block text-sm font-medium text-neutral-300 mb-2";
 
 export default function CfpPage() {
-  const { user, userProfile, loading: authLoading } = useAuth();
+  const { user, userProfile, loading: authLoading, refreshUserProfile } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadingSubmission, setLoadingSubmission] = useState(true);
+  const [eduEmail, setEduEmail] = useState("");
+  const [codeSent, setCodeSent] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [sendCodeLoading, setSendCodeLoading] = useState(false);
+  const [verifyCodeLoading, setVerifyCodeLoading] = useState(false);
+  const [eduError, setEduError] = useState<string | null>(null);
   const [formData, setFormData] = useState<CfpSubmissionInput>({
     abstract: "",
     name: "",
@@ -36,8 +43,8 @@ export default function CfpPage() {
   });
 
   const isBeforeDeadline = new Date() < SUBMISSION_DEADLINE;
-  const userEmail = user?.email || "";
-  const hasEduEmail = isValidEduEmail(userEmail);
+  const hasEduEmail = hasVerifiedEduEmail(user?.email, userProfile);
+  const verifiedEduEmail = getVerifiedEduEmail(user?.email, userProfile);
 
   // Pre-fill from auth and load existing submission
   useEffect(() => {
@@ -49,9 +56,10 @@ export default function CfpPage() {
     const load = async () => {
       setLoadingSubmission(true);
       const userName = user.displayName || userProfile?.displayName || "";
+      const emailToUse = verifiedEduEmail || user.email || "";
       setFormData((prev) => ({
         ...prev,
-        email: prev.email || userEmail,
+        email: prev.email || emailToUse,
         name: prev.name || userName,
       }));
 
@@ -76,7 +84,7 @@ export default function CfpPage() {
     };
 
     load();
-  }, [user, userProfile, userEmail]);
+  }, [user, userProfile, verifiedEduEmail]);
 
   const hasUnsavedChanges = useCallback(() => {
     return (
@@ -189,43 +197,154 @@ export default function CfpPage() {
   }
 
   if (!hasEduEmail) {
+    const handleSendCode = async () => {
+      if (!user?.email || !eduEmail.trim()) return;
+      setSendCodeLoading(true);
+      setEduError(null);
+      try {
+        const token = await user.getIdToken();
+        const res = await fetch("/api/cfp/send-edu-code", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ email: eduEmail.trim().toLowerCase() }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to send code");
+        setCodeSent(true);
+        setVerificationCode("");
+      } catch (err) {
+        setEduError(err instanceof Error ? err.message : "Failed to send code");
+      } finally {
+        setSendCodeLoading(false);
+      }
+    };
+
+    const handleVerifyCode = async () => {
+      if (!user?.email || !eduEmail.trim() || !verificationCode.trim()) return;
+      setVerifyCodeLoading(true);
+      setEduError(null);
+      try {
+        const token = await user.getIdToken();
+        const res = await fetch("/api/cfp/verify-edu-code", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            email: eduEmail.trim().toLowerCase(),
+            code: verificationCode.trim().replace(/\s/g, ""),
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to verify");
+        await refreshUserProfile();
+      } catch (err) {
+        setEduError(err instanceof Error ? err.message : "Failed to verify code");
+      } finally {
+        setVerifyCodeLoading(false);
+      }
+    };
+
     return (
       <div className="flex flex-col">
         <CfpHero />
         <section className="py-12 md:py-16 px-4 md:px-6">
           <div className="max-w-2xl mx-auto">
-            <div className="bg-neutral-900 dark:bg-neutral-900 rounded-2xl p-8 text-center border border-neutral-800">
-              <div className="w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="32"
-                  height="32"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="text-amber-500"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="8" x2="12" y2="12" />
-                  <line x1="12" y1="16" x2="12.01" y2="16" />
-                </svg>
-              </div>
+            <div className="bg-neutral-900 dark:bg-neutral-900 rounded-2xl p-8 border border-neutral-800">
               <h2 className="text-xl font-semibold text-foreground mb-2">
-                .edu Email Required
+                Verify your .edu email
               </h2>
               <p className="text-neutral-400 mb-6">
-                Submissions are limited to students with .edu email addresses.
-                Please sign in with your institutional email to submit a paper.
+                Submissions require a verified .edu email. Add your institutional
+                email below—we&apos;ll send a 6-digit code to confirm. Conference
+                communications will go to this address.
               </p>
-              <Link
-                href="/profile"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-neutral-800 text-foreground rounded-lg text-sm font-semibold hover:bg-neutral-700 transition-colors"
-              >
-                Account Settings
-              </Link>
+
+              {!codeSent ? (
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="edu-email" className={labelClass}>
+                      .edu Email address
+                    </label>
+                    <input
+                      id="edu-email"
+                      type="email"
+                      value={eduEmail}
+                      onChange={(e) => {
+                        setEduEmail(e.target.value);
+                        setEduError(null);
+                      }}
+                      placeholder="you@university.edu"
+                      className={inputClass}
+                      disabled={sendCodeLoading}
+                    />
+                  </div>
+                  {eduError && (
+                    <p className="text-red-400 text-sm">{eduError}</p>
+                  )}
+                  <button
+                    onClick={handleSendCode}
+                    disabled={sendCodeLoading || !eduEmail.trim().toLowerCase().endsWith(".edu")}
+                    className="w-full py-3 bg-foreground text-background rounded-lg font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {sendCodeLoading ? "Sending..." : "Send verification code"}
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-neutral-400 text-sm">
+                    Enter the 6-digit code sent to{" "}
+                    <span className="text-foreground font-medium">{eduEmail}</span>
+                  </p>
+                  <div>
+                    <label htmlFor="edu-code" className={labelClass}>
+                      Verification code
+                    </label>
+                    <input
+                      id="edu-code"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={6}
+                      value={verificationCode}
+                      onChange={(e) => {
+                        setVerificationCode(e.target.value.replace(/\D/g, ""));
+                        setEduError(null);
+                      }}
+                      placeholder="000000"
+                      className={inputClass}
+                      disabled={verifyCodeLoading}
+                    />
+                  </div>
+                  {eduError && (
+                    <p className="text-red-400 text-sm">{eduError}</p>
+                  )}
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => {
+                        setCodeSent(false);
+                        setVerificationCode("");
+                        setEduError(null);
+                      }}
+                      disabled={verifyCodeLoading}
+                      className="flex-1 py-3 bg-neutral-800 text-foreground rounded-lg font-semibold hover:bg-neutral-700 transition-colors disabled:opacity-50"
+                    >
+                      Use different email
+                    </button>
+                    <button
+                      onClick={handleVerifyCode}
+                      disabled={verifyCodeLoading || verificationCode.length !== 6}
+                      className="flex-1 py-3 bg-foreground text-background rounded-lg font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {verifyCodeLoading ? "Verifying..." : "Verify"}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </section>

@@ -28,6 +28,38 @@ export function isValidEduEmail(email: string): boolean {
   return email.toLowerCase().trim().endsWith(".edu");
 }
 
+export interface UserProfileForEdu {
+  email?: string | null;
+  additionalEmails?: Array<{ email: string; verified: boolean }>;
+}
+
+/**
+ * Check if user has a verified .edu email (primary or additional)
+ */
+export function hasVerifiedEduEmail(
+  userEmail: string | null | undefined,
+  userProfile: UserProfileForEdu | null | undefined
+): boolean {
+  if (isValidEduEmail(userEmail || "")) return true;
+  const additional = userProfile?.additionalEmails || [];
+  return additional.some(
+    (e) => e.verified && isValidEduEmail(e.email)
+  );
+}
+
+/**
+ * Get the verified .edu email to use for CFP (primary first, then first verified additional)
+ */
+export function getVerifiedEduEmail(
+  userEmail: string | null | undefined,
+  userProfile: UserProfileForEdu | null | undefined
+): string | null {
+  if (isValidEduEmail(userEmail || "")) return (userEmail || "").toLowerCase().trim();
+  const additional = userProfile?.additionalEmails || [];
+  const edu = additional.find((e) => e.verified && isValidEduEmail(e.email));
+  return edu ? edu.email.toLowerCase().trim() : null;
+}
+
 export interface CfpSubmission {
   abstract: string;
   name: string;
