@@ -186,12 +186,12 @@ export default function WelcomeModal() {
 
             {/* Luma Link */}
             <a
-              href="https://lu.ma/lpki2hd6"
+              href="https://luma.com/u43ar9pi"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-emerald-500 text-white rounded-lg font-semibold hover:bg-emerald-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 luma-checkout--button"
               data-luma-action="checkout"
-              data-luma-event-id="evt-JygYtduLJkyFgd7"
+              data-luma-event-id="u43ar9pi"
             >
               Register for Event
               <svg
