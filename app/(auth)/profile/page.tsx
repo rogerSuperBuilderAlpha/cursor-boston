@@ -365,6 +365,15 @@ function ProfilePageContent() {
                     {connectedAgents.length} Agent{connectedAgents.length > 1 ? "s" : ""}
                   </span>
                 )}
+                {/* .edu badge - verified institutional email */}
+                {(userProfile?.eduBadge ||
+                  userProfile?.additionalEmails?.some(
+                    (e) => e.verified && e.email.toLowerCase().endsWith(".edu")
+                  )) && (
+                  <span className="px-3 py-1 bg-amber-500/10 text-amber-400 text-sm rounded-full">
+                    .edu
+                  </span>
+                )}
               </div>
 
               {discord.error && <p className="text-red-400 text-xs mt-2">{discord.error}</p>}
