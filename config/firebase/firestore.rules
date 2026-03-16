@@ -22,11 +22,6 @@ service cloud.firestore {
       allow delete: if false;
     }
     
-    // Mail collection - server-side only to prevent email spam abuse
-    match /mail/{mailId} {
-      allow read, write: if false; // Only server-side operations via Admin SDK
-    }
-    
     // Users collection - users can read/write their own data
     // Anyone can read public profiles, users can read their own full profile
     // SECURITY: Field-level validation prevents modification of sensitive fields

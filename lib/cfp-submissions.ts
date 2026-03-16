@@ -2,19 +2,6 @@ import { doc, setDoc, getDoc, serverTimestamp, Timestamp } from "firebase/firest
 import { db } from "./firebase";
 import { sanitizeText, sanitizeName } from "./sanitize";
 
-/**
- * Escape HTML entities to prevent XSS in email templates
- */
-function escapeHtml(text: string | undefined): string {
-  if (!text) return "";
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
 const ABSTRACT_MIN_WORDS = 1500;
 const ABSTRACT_MAX_WORDS = 2500;
 
@@ -83,8 +70,6 @@ export interface CfpSubmissionInput {
   thesisTitle: string;
 }
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || process.env.NEXT_PUBLIC_ADMIN_EMAIL || "hello@cursorboston.com";
-
 /**
  * Validate CFP submission data
  */
@@ -150,37 +135,14 @@ export async function submitCfpProposal(
 
   await setDoc(docRef, payload, { merge: true });
 
-  // Admin notification (mail collection may be server-only; submission still succeeds)
   try {
-    const { addDoc, collection } = await import("firebase/firestore");
-    await addDoc(collection(db, "mail"), {
-      to: ADMIN_EMAIL,
-      message: {
-        subject: `CFP Submission: ${escapeHtml(sanitized.thesisTitle)}`,
-        html: `
-          <h2>New CFP Submission</h2>
-          <p>A graduate student has submitted to the "What is AI?" conference.</p>
-          
-          <h3>Submitter Info</h3>
-          <ul>
-            <li><strong>Name:</strong> ${escapeHtml(sanitized.name)}</li>
-            <li><strong>Email:</strong> ${escapeHtml(sanitized.email)}</li>
-            <li><strong>School:</strong> ${escapeHtml(sanitized.school)}</li>
-            <li><strong>Department:</strong> ${escapeHtml(sanitized.department)}</li>
-            <li><strong>Advisor:</strong> ${escapeHtml(sanitized.advisor)}</li>
-            <li><strong>Thesis Title:</strong> ${escapeHtml(sanitized.thesisTitle)}</li>
-          </ul>
-          
-          <h3>Abstract</h3>
-          <p>${escapeHtml(sanitized.abstract)}</p>
-          
-          <hr>
-          <p><small>User ID: ${userId}</small></p>
-        `,
-      },
+    await fetch("/api/notify-admin/cfp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...sanitized, userId }),
     });
   } catch {
-    // Ignore mail errors; submission is already saved
+    // Ignore; submission is saved
   }
 }
 

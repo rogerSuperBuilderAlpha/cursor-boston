@@ -52,9 +52,11 @@
     "@tailwindcss/postcss": "^4.2.1",
     "firebase": "^12.10.0",
     "firebase-admin": "^13.7.0",
+    "form-data": "^4.0.5",
     "gray-matter": "^4.0.3",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.577.0",
+    "mailgun.js": "^12.7.1",
     "next": "^16.1.6",
     "next-themes": "^0.4.6",
     "qrcode": "^1.5.4",
@@ -95,18 +97,45 @@
     "typescript-eslint": "^8.56.0"
   },
   "overrides": {
-    "eslint-plugin-import": { "eslint": "$eslint" },
-    "eslint-plugin-jsx-a11y": { "eslint": "$eslint" },
-    "eslint-plugin-react": { "eslint": "$eslint" },
-    "eslint-plugin-react-hooks": { "eslint": "$eslint" },
-    "typescript-eslint": { "eslint": "$eslint" },
-    "@typescript-eslint/eslint-plugin": { "eslint": "$eslint" },
-    "@typescript-eslint/parser": { "eslint": "$eslint" },
-    "@typescript-eslint/utils": { "eslint": "$eslint" },
-    "@typescript-eslint/type-utils": { "eslint": "$eslint" },
-    "react-leaflet": { "react": "$react", "react-dom": "$react-dom" },
-    "@react-leaflet/core": { "react": "$react", "react-dom": "$react-dom" },
-    "react-leaflet-cluster": { "react": "$react", "react-dom": "$react-dom" }
+    "eslint-plugin-import": {
+      "eslint": "$eslint"
+    },
+    "eslint-plugin-jsx-a11y": {
+      "eslint": "$eslint"
+    },
+    "eslint-plugin-react": {
+      "eslint": "$eslint"
+    },
+    "eslint-plugin-react-hooks": {
+      "eslint": "$eslint"
+    },
+    "typescript-eslint": {
+      "eslint": "$eslint"
+    },
+    "@typescript-eslint/eslint-plugin": {
+      "eslint": "$eslint"
+    },
+    "@typescript-eslint/parser": {
+      "eslint": "$eslint"
+    },
+    "@typescript-eslint/utils": {
+      "eslint": "$eslint"
+    },
+    "@typescript-eslint/type-utils": {
+      "eslint": "$eslint"
+    },
+    "react-leaflet": {
+      "react": "$react",
+      "react-dom": "$react-dom"
+    },
+    "@react-leaflet/core": {
+      "react": "$react",
+      "react-dom": "$react-dom"
+    },
+    "react-leaflet-cluster": {
+      "react": "$react",
+      "react-dom": "$react-dom"
+    }
   },
   "lint-staged": {
     "**/*.{ts,tsx}": [

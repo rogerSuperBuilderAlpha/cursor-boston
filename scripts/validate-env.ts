@@ -131,6 +131,17 @@ const optionalEnvVars: EnvVar[] = [
     required: false,
     description: "Admin Email for notifications",
   },
+  // Mailgun (OPTIONAL - for sending emails)
+  {
+    name: "MAILGUN_API_KEY",
+    required: false,
+    description: "Mailgun API key for sending emails",
+  },
+  {
+    name: "MAILGUN_DOMAIN",
+    required: false,
+    description: "Mailgun sending domain (e.g. mg.example.com)",
+  },
 ];
 
 function validateEnvVar(envVar: EnvVar): { valid: boolean; error?: string } {

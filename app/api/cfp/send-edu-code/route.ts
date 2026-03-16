@@ -4,6 +4,7 @@ import { getVerifiedUser } from "@/lib/server-auth";
 import { getAdminDb, getAdminAuth } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 import { logApiError } from "@/lib/logger";
+import { sendEmail } from "@/lib/mailgun";
 
 const CODE_LENGTH = 6;
 const CODE_EXPIRY_MINUTES = 15;
@@ -100,18 +101,11 @@ export async function POST(request: NextRequest) {
       expiresAt,
     });
 
-    // Send email with code
-    await adminDb.collection("mail").add({
+    await sendEmail({
       to: normalizedEmail,
-      message: {
-        subject: "Your CFP verification code",
-        html: `
-          <p>Your verification code for the Cursor Boston Graduate Student Conference CFP is:</p>
-          <p style="font-size: 24px; font-weight: bold; letter-spacing: 4px;">${code}</p>
-          <p>This code expires in ${CODE_EXPIRY_MINUTES} minutes.</p>
-          <p>If you didn't request this, you can ignore this email.</p>
-        `,
-      },
+      subject: "Your CFP verification code",
+      text: `Your verification code for the Cursor Boston Graduate Student Conference CFP is: ${code}. This code expires in ${CODE_EXPIRY_MINUTES} minutes.`,
+      html: `<p>Your verification code for the Cursor Boston Graduate Student Conference CFP is:</p><p style="font-size: 24px; font-weight: bold; letter-spacing: 4px;">${code}</p><p>This code expires in ${CODE_EXPIRY_MINUTES} minutes.</p><p>If you didn't request this, you can ignore this email.</p>`,
     });
 
     return NextResponse.json({ success: true, message: "Verification code sent" });
