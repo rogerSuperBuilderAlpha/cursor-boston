@@ -1,5 +1,63 @@
 {
-  "upcoming": [],
+  "upcoming": [
+    {
+      "id": "cursor-boston-spring-hackathon-2026",
+      "slug": "cursor-boston-spring-hackathon-2026",
+      "title": "Cursor Boston Spring Hackathon",
+      "subtitle": "A one-day build sprint for developers and builders across Boston and Cambridge",
+      "date": "2026-04-11",
+      "time": "10am-6pm",
+      "location": "Boston / Cambridge, Massachusetts",
+      "venue": {
+        "name": "Venue to be announced",
+        "address": "Final venue details coming soon",
+        "mapUrl": null
+      },
+      "type": "hackathon",
+      "description": "Join a group of developers and builders from across the Boston and Cambridge ecosystem for a one-day hackathon focused on shipping autonomous AI agents with Cursor. Cursor credits available for participants and winners.",
+      "longDescription": "Cursor Boston Spring Hackathon brings together a strong mix of builders, engineers, and developers from across the local tech community for a focused day of building.\n\nParticipants will spend the day forming teams, exploring ideas, and shipping real projects with support from the community and hands-on exposure to modern AI development stack.\n\nThe day will culminate in team demos and community-driven judging, with prizes for standout projects and a chance to connect with other ambitious builders across Boston and Cambridge.",
+      "image": "/cursor-boston-logo.png",
+      "lumaUrl": "https://lu.ma/cursor-boston",
+      "lumaEventId": "",
+      "registrationRequired": true,
+      "perks": [
+        "Cursor credits for participants",
+        "Prizes for top teams",
+        "Breakfast and lunch",
+        "Builder-focused community"
+      ],
+      "topics": [
+        "AI-powered development",
+        "Rapid prototyping",
+        "Autonamous AI agents",
+        "Team demos"
+      ],
+      "faq": [
+        {
+          "question": "Who should apply?",
+          "answer": "This hackathon is designed for developers, students, and technical builders across the Boston and Cambridge ecosystem who want to spend a day shipping meaningful projects."
+        },
+        {
+          "question": "Do I need to be part of a school to attend?",
+          "answer": "No. We expect a mix of students and builders from the broader Boston tech community."
+        },
+        {
+          "question": "Will food be provided?",
+          "answer": "Yes. We plan to provide breakfast and lunch for participants."
+        },
+        {
+          "question": "Is the date and venue final?",
+          "answer": "Final venue and schedule details will be confirmed soon. This page will be updated as details are locked in."
+        }
+      ],
+      "whatToBring": [
+        "Laptop and charger",
+        "A project idea or problem you want to explore",
+        "A willingness to build with new tools"
+      ],
+      "featured": true
+    }
+  ],
   "past": [
     {
       "id": "cafe-cursor-boston-2026",
