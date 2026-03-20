@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import Avatar from "@/components/Avatar";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -9,10 +10,23 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 export default function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, loading } = useAuth();
+  const pathname = usePathname();
+  const rafRef = useRef<number>(0);
+
+  // Close mobile menu on route change (handles browser back/forward too)
+  useEffect(() => {
+    rafRef.current = requestAnimationFrame(() => setMobileMenuOpen(false));
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [pathname]);
+
+  // Shared active/inactive class logic — mobile adds py-3 text-base, desktop adds text-sm whitespace-nowrap
+  // /login intentionally highlights when on the login page for consistency with other nav links
+  const buildNavClass = (href: string, mobile = false) =>
+    `${pathname === href ? "text-foreground font-semibold" : "text-neutral-600 dark:text-neutral-300 font-medium"} hover:text-black dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline ${mobile ? "py-3 text-base" : "text-sm whitespace-nowrap"}`;
 
   return (
     <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-neutral-200 dark:border-neutral-800 transition-colors duration-300">
-      <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div className="w-full px-4 md:px-6 h-16 flex items-center">
         {/* Logo: 44px min touch target (WCAG 2.1) */}
         <Link
           href="/"
@@ -40,47 +54,23 @@ export default function Navigation() {
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden lg:flex items-center space-x-8 ml-12">
-          <Link href="/events" className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
-            Events
-          </Link>
-          <Link href="/map" className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
-            Map
-          </Link>
-          <Link href="/talks" className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
-            Talks
-          </Link>
-          <Link href="/hackathons" className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
-            Hackathons
-          </Link>
-          <Link href="/blog" className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
-            Blog
-          </Link>
-          <Link href="/members" className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
-            Members
-          </Link>
-          <Link href="/opportunities" className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
-            Opportunities
-          </Link>
-          <Link href="/showcase" className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
-            Showcase
-          </Link>
-          <Link href="/cookbook" className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
-            Cookbook
-          </Link>
-          <Link href="/pair" className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
-            Pair Programming
-          </Link>
-          <Link href="/about" className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
-            About
-          </Link>
+        <nav aria-label="Main" className="hidden xl:flex items-center gap-6 ml-8 flex-1 min-w-0">
+          <Link href="/events" className={buildNavClass("/events")}>Events</Link>
+          <Link href="/map" className={buildNavClass("/map")}>Map</Link>
+          <Link href="/talks" className={buildNavClass("/talks")}>Talks</Link>
+          <Link href="/hackathons" className={buildNavClass("/hackathons")}>Hackathons</Link>
+          <Link href="/blog" className={buildNavClass("/blog")}>Blog</Link>
+          <Link href="/members" className={buildNavClass("/members")}>Members</Link>
+          <Link href="/opportunities" className={buildNavClass("/opportunities")}>Opportunities</Link>
+          <Link href="/showcase" className={buildNavClass("/showcase")}>Showcase</Link>
+          <Link href="/cookbook" className={buildNavClass("/cookbook")}>Cookbook</Link>
+          <Link href="/pair" className={buildNavClass("/pair")}>Pair Programming</Link>
+          <Link href="/analytics" className={buildNavClass("/analytics")}>Analytics</Link>
+          <Link href="/about" className={buildNavClass("/about")}>About</Link>
         </nav>
 
-        {/* Spacer */}
-        <div className="hidden lg:block flex-1" />
-
         {/* Desktop Auth */}
-        <div className="hidden lg:flex items-center shrink-0 gap-4">
+        <div className="hidden xl:flex items-center shrink-0 gap-4 pl-6">
           <ThemeToggle />
           {loading ? (
             <div className="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-800 animate-pulse" />
@@ -98,7 +88,7 @@ export default function Navigation() {
             </Link>
           ) : (
             <div className="flex items-center">
-              <Link href="/login" className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white text-sm font-medium mr-6 whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
+              <Link href="/login" className={`${buildNavClass("/login")} mr-6`}>
                 Sign In
               </Link>
               <Link
@@ -112,7 +102,7 @@ export default function Navigation() {
         </div>
 
         {/* Mobile menu button */}
-        <div className="flex items-center gap-4 lg:hidden">
+        <div className="ml-auto flex items-center gap-4 xl:hidden">
           <ThemeToggle />
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -134,68 +124,94 @@ export default function Navigation() {
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile / tablet menu */}
       {mobileMenuOpen && (
-        <div id="mobile-menu" className="lg:hidden border-t border-neutral-200 dark:border-neutral-800 bg-background">
-          <div className="max-w-6xl mx-auto px-6 py-4">
-            <nav className="flex flex-col space-y-1">
-              <Link href="/events" onClick={() => setMobileMenuOpen(false)} className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
-                Events
-              </Link>
-              <Link href="/map" onClick={() => setMobileMenuOpen(false)} className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
-                Map
-              </Link>
-              <Link href="/talks" onClick={() => setMobileMenuOpen(false)} className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
-                Talks
-              </Link>
-              <Link href="/hackathons" onClick={() => setMobileMenuOpen(false)} className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
-                Hackathons
-              </Link>
-              <Link href="/blog" onClick={() => setMobileMenuOpen(false)} className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
-                Blog
-              </Link>
-              <Link href="/members" onClick={() => setMobileMenuOpen(false)} className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
-                Members
-              </Link>
-              <Link href="/opportunities" onClick={() => setMobileMenuOpen(false)} className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
-                Opportunities
-              </Link>
-              <Link href="/showcase" onClick={() => setMobileMenuOpen(false)} className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
-                Showcase
-              </Link>
-              <Link href="/cookbook" onClick={() => setMobileMenuOpen(false)} className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
-                Cookbook
-              </Link>
-              <Link href="/pair" onClick={() => setMobileMenuOpen(false)} className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
-                Pair Programming
-              </Link>
-              <Link href="/about" onClick={() => setMobileMenuOpen(false)} className="text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
-                About
-              </Link>
+        <div id="mobile-menu" className="xl:hidden border-t border-neutral-200 dark:border-neutral-800 bg-background">
+          <div className="w-full px-4 md:px-6 py-6 md:py-8 max-h-[calc(100vh-4rem)] overflow-y-auto">
+            {/* Mobile: simple flat list */}
+            <nav aria-label="Mobile" className="flex flex-col md:hidden space-y-1">
+              <Link href="/events" className={buildNavClass("/events", true)}>Events</Link>
+              <Link href="/map" className={buildNavClass("/map", true)}>Map</Link>
+              <Link href="/talks" className={buildNavClass("/talks", true)}>Talks</Link>
+              <Link href="/hackathons" className={buildNavClass("/hackathons", true)}>Hackathons</Link>
+              <Link href="/blog" className={buildNavClass("/blog", true)}>Blog</Link>
+              <Link href="/members" className={buildNavClass("/members", true)}>Members</Link>
+              <Link href="/opportunities" className={buildNavClass("/opportunities", true)}>Opportunities</Link>
+              <Link href="/showcase" className={buildNavClass("/showcase", true)}>Showcase</Link>
+              <Link href="/cookbook" className={buildNavClass("/cookbook", true)}>Cookbook</Link>
+              <Link href="/pair" className={buildNavClass("/pair", true)}>Pair Programming</Link>
+              <Link href="/analytics" className={buildNavClass("/analytics", true)}>Analytics</Link>
+              <Link href="/about" className={buildNavClass("/about", true)}>About</Link>
             </nav>
 
-            <div className="border-t border-neutral-200 dark:border-neutral-800 mt-4 pt-4">
+            {/* Tablet: 2-column grid with grouped sections */}
+            <nav aria-label="Tablet" className="hidden md:block md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-6">
+              <div className="md:col-span-2 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-6">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-2 md:mb-3">
+                    Community
+                  </p>
+                  <div className="flex flex-col space-y-2">
+                    <Link href="/events" className={buildNavClass("/events", true)}>Events</Link>
+                    <Link href="/talks" className={buildNavClass("/talks", true)}>Talks</Link>
+                    <Link href="/members" className={buildNavClass("/members", true)}>Members</Link>
+                    <Link href="/pair" className={buildNavClass("/pair", true)}>Pair Programming</Link>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-2 md:mb-3">
+                    Participate
+                  </p>
+                  <div className="flex flex-col space-y-2">
+                    <Link href="/hackathons" className={buildNavClass("/hackathons", true)}>Hackathons</Link>
+                    <Link href="/showcase" className={buildNavClass("/showcase", true)}>Showcase</Link>
+                    <Link href="/cookbook" className={buildNavClass("/cookbook", true)}>Cookbook</Link>
+                    <Link href="/opportunities" className={buildNavClass("/opportunities", true)}>Opportunities</Link>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-2 md:mb-3">
+                    Resources
+                  </p>
+                  <div className="flex flex-col space-y-2">
+                    <Link href="/map" className={buildNavClass("/map", true)}>Map</Link>
+                    <Link href="/blog" className={buildNavClass("/blog", true)}>Blog</Link>
+                    <Link href="/analytics" className={buildNavClass("/analytics", true)}>Analytics</Link>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-2 md:mb-3">
+                    About
+                  </p>
+                  <div className="flex flex-col space-y-2">
+                    <Link href="/about" className={buildNavClass("/about", true)}>About</Link>
+                  </div>
+                </div>
+              </div>
+            </nav>
+
+            <div className="border-t border-neutral-200 dark:border-neutral-800 mt-6 pt-6 md:mt-8 md:pt-8">
               {loading ? (
-                <div className="h-12 bg-neutral-200 dark:bg-neutral-800 rounded-lg animate-pulse" />
+                <div className="h-14 rounded-xl bg-neutral-100 dark:bg-neutral-800 animate-pulse" />
               ) : user ? (
-                <Link href="/profile" onClick={() => setMobileMenuOpen(false)} className="flex items-center p-3 bg-neutral-100 dark:bg-neutral-900 rounded-lg">
+                <Link href="/profile" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 p-4 rounded-xl bg-neutral-100 dark:bg-neutral-900 hover:bg-neutral-200 dark:hover:bg-neutral-800 transition-colors">
                   <Avatar
                     src={user.photoURL}
                     name={user.displayName}
                     email={user.email}
-                    size="md"
+                    size="lg"
                   />
-                  <div className="ml-3">
-                    <p className="text-foreground font-medium">{user.displayName || "User"}</p>
-                    <p className="text-neutral-500 dark:text-neutral-400 text-sm">{user.email}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-foreground font-semibold truncate">{user.displayName || "User"}</p>
+                    <p className="text-neutral-500 dark:text-neutral-400 text-sm truncate">{user.email}</p>
                   </div>
                 </Link>
               ) : (
-                <div className="space-y-3">
-                  <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="block w-full text-center py-3 text-neutral-600 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 rounded-lg font-medium transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background">
+                <div className="grid grid-cols-2 gap-3 md:flex md:gap-4">
+                  <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="col-span-2 md:flex-1 md:col-span-1 text-center py-3 px-4 text-neutral-600 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 rounded-xl font-medium transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background">
                     Sign In
                   </Link>
-                  <Link href="/signup" onClick={() => setMobileMenuOpen(false)} className="block w-full text-center py-3 bg-emerald-500 text-white rounded-lg font-semibold transition-colors hover:bg-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background">
+                  <Link href="/signup" onClick={() => setMobileMenuOpen(false)} className="col-span-2 md:flex-1 md:col-span-1 text-center py-3 px-4 bg-emerald-500 text-white rounded-xl font-semibold transition-colors hover:bg-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background">
                     Get Started
                   </Link>
                 </div>

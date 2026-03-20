@@ -29,7 +29,7 @@ const config = tseslint.config(
       },
     },
     settings: {
-      react: { version: "detect" },
+      react: { version: "18" },
       "import/parsers": {
         "@typescript-eslint/parser": [".ts", ".mts", ".cts", ".tsx", ".d.ts"],
       },

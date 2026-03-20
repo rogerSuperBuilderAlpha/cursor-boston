@@ -80,6 +80,7 @@ interface UserProfile {
     html_url: string;
     connectedAt: Date;
   };
+  eduBadge?: boolean;
   // Public profile fields
   bio?: string;
   location?: string;

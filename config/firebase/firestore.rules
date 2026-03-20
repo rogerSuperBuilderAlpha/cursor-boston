@@ -14,10 +14,12 @@ service cloud.firestore {
       allow read: if request.auth != null && request.auth.uid == resource.data.userId;
       allow update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
     }
-    
-    // Mail collection - server-side only to prevent email spam abuse
-    match /mail/{mailId} {
-      allow read, write: if false; // Only server-side operations via Admin SDK
+
+    // CFP submissions - one doc per user (doc ID = userId), create/read/update by owner
+    match /cfpSubmissions/{userId} {
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow read, update: if request.auth != null && request.auth.uid == userId;
+      allow delete: if false;
     }
     
     // Users collection - users can read/write their own data
@@ -43,6 +45,11 @@ service cloud.firestore {
     
     // Email verifications - server-side only for security
     match /emailVerifications/{tokenId} {
+      allow read, write: if false; // Only server-side operations via Admin SDK
+    }
+
+    // CFP .edu verification codes - server-side only
+    match /eduVerificationCodes/{docId} {
       allow read, write: if false; // Only server-side operations via Admin SDK
     }
     
