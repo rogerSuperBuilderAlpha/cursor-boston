@@ -4,6 +4,7 @@ import { getVerifiedUser } from "@/lib/server-auth";
 import { getAdminDb, getAdminAuth } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 import { logApiError } from "@/lib/logger";
+import { sendEmail } from "@/lib/mailgun";
 
 export async function POST(request: NextRequest) {
   try {
@@ -89,21 +90,15 @@ export async function POST(request: NextRequest) {
       expiresAt,
     });
 
-    // Create verification URL
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
     const verificationUrl = `${baseUrl}/api/auth/verify-email?token=${verificationToken}`;
+    const userName = userData?.displayName || "there";
 
-    // Send verification email using Firebase's mail extension or similar
-    // For now, we'll use the mail collection (assuming Firebase Extension for email)
-    await adminDb.collection("mail").add({
+    await sendEmail({
       to: normalizedEmail,
-      template: {
-        name: "email-verification",
-        data: {
-          verificationUrl,
-          userName: userData?.displayName || "there",
-        },
-      },
+      subject: "Verify your email address",
+      text: `Hi ${userName}, click the link below to verify your email: ${verificationUrl}`,
+      html: `<p>Hi ${userName},</p><p>Click the link below to verify your email address:</p><p><a href="${verificationUrl}">${verificationUrl}</a></p>`,
     });
 
     return NextResponse.json({ 

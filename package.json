@@ -33,10 +33,10 @@
     "firestore"
   ],
   "scripts": {
-    "dev": "next dev --webpack -H localhost",
-    "dev:turbo": "next dev -H localhost",
+    "dev": "NODE_OPTIONS='--no-deprecation' next dev --webpack -H localhost",
+    "dev:turbo": "NODE_OPTIONS='--no-deprecation' next dev -H localhost",
     "build": "next build",
-    "start": "next start",
+    "start": "NODE_OPTIONS='--no-deprecation' next start",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
     "test": "jest --config config/jest.config.js",
@@ -50,12 +50,14 @@
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.2.1",
-    "firebase": "^12.9.0",
-    "firebase-admin": "^13.6.1",
+    "firebase": "^12.10.0",
+    "firebase-admin": "^13.7.0",
+    "form-data": "^4.0.5",
     "gray-matter": "^4.0.3",
     "leaflet": "^1.9.4",
-    "lucide-react": "^0.575.0",
-    "next": "^16.1.6",
+    "lucide-react": "^0.577.0",
+    "mailgun.js": "^12.7.1",
+    "next": "^16.1.7",
     "next-themes": "^0.4.6",
     "qrcode": "^1.5.4",
     "react": "^18.2.0",
@@ -64,53 +66,81 @@
     "react-leaflet-cluster": "^4.0.0",
     "react-markdown": "^10.1.0",
     "react-syntax-highlighter": "^16.1.1",
+    "recharts": "^3.8.0",
     "rehype-sanitize": "^6.0.0",
     "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
-    "@eslint/compat": "^2.0.2",
-    "@eslint/eslintrc": "^3.3.3",
+    "@eslint/compat": "^2.0.3",
+    "@eslint/eslintrc": "^3.3.5",
     "@next/eslint-plugin-next": "^16.1.6",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.1.5",
     "@testing-library/react": "^14.1.2",
     "@testing-library/user-event": "^14.5.1",
-    "@types/jest": "^29.5.11",
+    "@types/jest": "^30.0.0",
     "@types/leaflet": "^1.9.21",
-    "@types/node": "^25.3.0",
+    "@types/node": "^25.5.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@types/react-syntax-highlighter": "^15.5.13",
-    "eslint": "^10.0.1",
-    "eslint-config-next": "^16.1.5",
+    "eslint": "^10.0.3",
+    "eslint-config-next": "^16.2.0",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
-    "globals": "^17.3.0",
+    "globals": "^17.4.0",
     "husky": "^8.0.3",
-    "jest": "^29.7.0",
+    "jest": "^30.3.0",
     "jest-environment-jsdom": "^29.7.0",
-    "lint-staged": "^15.2.0",
-    "postcss": "^8.4.33",
+    "lint-staged": "^16.4.0",
+    "postcss": "^8.5.8",
     "tailwindcss": "^4.2.1",
     "tsx": "^4.7.0",
     "typescript": "^5.3.0",
-    "typescript-eslint": "^8.56.0"
+    "typescript-eslint": "^8.57.1"
   },
   "overrides": {
-    "eslint-plugin-import": { "eslint": "$eslint" },
-    "eslint-plugin-jsx-a11y": { "eslint": "$eslint" },
-    "eslint-plugin-react": { "eslint": "$eslint" },
-    "eslint-plugin-react-hooks": { "eslint": "$eslint" },
-    "typescript-eslint": { "eslint": "$eslint" },
-    "@typescript-eslint/eslint-plugin": { "eslint": "$eslint" },
-    "@typescript-eslint/parser": { "eslint": "$eslint" },
-    "@typescript-eslint/utils": { "eslint": "$eslint" },
-    "@typescript-eslint/type-utils": { "eslint": "$eslint" },
-    "react-leaflet": { "react": "$react", "react-dom": "$react-dom" },
-    "@react-leaflet/core": { "react": "$react", "react-dom": "$react-dom" },
-    "react-leaflet-cluster": { "react": "$react", "react-dom": "$react-dom" }
+    "eslint-plugin-import": {
+      "eslint": "$eslint"
+    },
+    "eslint-plugin-jsx-a11y": {
+      "eslint": "$eslint"
+    },
+    "eslint-plugin-react": {
+      "eslint": "$eslint"
+    },
+    "eslint-plugin-react-hooks": {
+      "eslint": "$eslint"
+    },
+    "typescript-eslint": {
+      "eslint": "$eslint"
+    },
+    "@typescript-eslint/eslint-plugin": {
+      "eslint": "$eslint"
+    },
+    "@typescript-eslint/parser": {
+      "eslint": "$eslint"
+    },
+    "@typescript-eslint/utils": {
+      "eslint": "$eslint"
+    },
+    "@typescript-eslint/type-utils": {
+      "eslint": "$eslint"
+    },
+    "react-leaflet": {
+      "react": "$react",
+      "react-dom": "$react-dom"
+    },
+    "@react-leaflet/core": {
+      "react": "$react",
+      "react-dom": "$react-dom"
+    },
+    "react-leaflet-cluster": {
+      "react": "$react",
+      "react-dom": "$react-dom"
+    }
   },
   "lint-staged": {
     "**/*.{ts,tsx}": [

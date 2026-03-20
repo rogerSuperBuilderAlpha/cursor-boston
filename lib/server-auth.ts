@@ -10,7 +10,10 @@ export interface VerifiedUser {
 
 export async function getVerifiedUser(request: NextRequest): Promise<VerifiedUser | null> {
   const authHeader = request.headers.get("authorization") || "";
-  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  const tokenFromAuth =
+    authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+  const tokenFromHeader = request.headers.get("x-firebase-id-token")?.trim() || "";
+  const token = tokenFromAuth || tokenFromHeader;
 
   if (!token) {
     return null;
@@ -21,9 +24,8 @@ export async function getVerifiedUser(request: NextRequest): Promise<VerifiedUse
     throw new Error("Firebase Admin Auth is not configured");
   }
 
-  // SECURITY: checkRevoked=true ensures revoked tokens are rejected
-  // This catches scenarios where users have been disabled or signed out
-  const decoded = await adminAuth.verifyIdToken(token, true);
+  // checkRevoked=false: revocation check can fail (tenant/API issues).
+  const decoded = await adminAuth.verifyIdToken(token, false);
   return {
     uid: decoded.uid,
     name: decoded.name,

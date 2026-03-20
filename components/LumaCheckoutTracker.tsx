@@ -10,6 +10,10 @@ const EVENT_DATA: Record<string, { title: string; date?: string }> = {
     title: "Cursor Ambassadors - Boston at Hult",
     date: "2026-02-01",
   },
+  "u43ar9pi": {
+    title: "Cafe Cursor Boston",
+    date: "2026-02-17",
+  },
 };
 
 export default function LumaCheckoutTracker() {

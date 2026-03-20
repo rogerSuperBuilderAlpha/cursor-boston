@@ -301,13 +301,13 @@ export default function Home() {
               </div>
 
               <a
-                href="https://lu.ma/lpki2hd6"
+                href="https://luma.com/u43ar9pi"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Register for event on Luma (opens in new tab)"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 bg-emerald-500 text-white rounded-lg text-base font-semibold hover:bg-emerald-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background w-full sm:w-auto luma-checkout--button"
                 data-luma-action="checkout"
-                data-luma-event-id="lpki2hd6"
+                data-luma-event-id="u43ar9pi"
               >
                 Request to Join
                 <svg
