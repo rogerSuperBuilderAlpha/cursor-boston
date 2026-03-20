@@ -8,6 +8,7 @@ import { oneDark, oneLight } from "react-syntax-highlighter/dist/esm/styles/pris
 import { useTheme } from "next-themes";
 import type { Components } from "react-markdown";
 
+/** Renders sanitized markdown content with syntax highlighting and theme-aware styling. */
 export function PromptMarkdown({
   content,
   className,

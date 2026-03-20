@@ -3,6 +3,7 @@
 import type { CookbookEntry } from "@/types/cookbook";
 import { CookbookEntryCard } from "./CookbookEntryCard";
 
+/** Renders a responsive grid of cookbook entry cards with vote and tag interaction. */
 export function CookbookEntries({
   entries,
   voteState,

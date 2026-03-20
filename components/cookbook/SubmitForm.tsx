@@ -11,6 +11,7 @@ import {
   type WorksWithTag,
 } from "@/types/cookbook";
 
+/** Authenticated form for submitting new cookbook entries with title, description, prompt, category, and tags. */
 export function SubmitForm({
   user,
   onSuccess,

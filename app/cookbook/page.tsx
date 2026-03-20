@@ -18,6 +18,7 @@ interface EntryVoteState {
   userVote?: "up" | "down";
 }
 
+/** Main cookbook page for browsing, filtering, and submitting community prompts and rules. */
 export default function CookbookPage() {
   const { user } = useAuth();
   const [entries, setEntries] = useState<CookbookEntry[]>([]);
@@ -355,6 +356,7 @@ export default function CookbookPage() {
                     id="cookbook-sort"
                     value={sortBy}
                     disabled={!!search}
+                    aria-disabled={!!search}
                     onChange={(e) => setSortBy(e.target.value as CookbookSort)}
                     className="px-3 py-2 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed"
                   >

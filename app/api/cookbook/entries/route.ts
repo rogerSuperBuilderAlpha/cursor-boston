@@ -127,6 +127,7 @@ function buildFilteredQuery(
   return q;
 }
 
+/** Fetches paginated cookbook entries with optional category, worksWith, search, and sort filters. */
 export async function GET(request: NextRequest) {
   try {
     const db = getAdminDb();
@@ -271,6 +272,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
+/** Creates a new cookbook entry after validating, sanitizing, and rate-limiting the request. */
 export async function POST(request: NextRequest) {
   try {
     const clientId = getClientIdentifier(request as unknown as Request);

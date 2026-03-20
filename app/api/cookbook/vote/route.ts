@@ -26,6 +26,7 @@ function userVoteIndexDocId(uid: string, entryId: string) {
   return `${uid}_${entryId}`;
 }
 
+/** Processes a vote (add, switch, or remove) on a cookbook entry within a Firestore transaction. */
 export async function POST(request: NextRequest) {
   try {
     const clientId = getClientIdentifier(request as unknown as Request);
@@ -199,6 +200,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
+/** Returns the authenticated user's vote history for all cookbook entries. */
 export async function GET(request: NextRequest) {
   try {
     const db = getAdminDb();

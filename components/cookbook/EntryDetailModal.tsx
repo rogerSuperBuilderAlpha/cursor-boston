@@ -7,6 +7,7 @@ import { formatCookbookDate } from "@/lib/format-cookbook-date";
 import type { CookbookCategory, CookbookEntry } from "@/types/cookbook";
 import { PromptMarkdown } from "./PromptMarkdown";
 
+/** Full-screen modal displaying complete entry content with copy, vote, and keyboard navigation support. */
 export function EntryDetailModal({
   entry,
   votes,
@@ -186,6 +187,7 @@ export function EntryDetailModal({
               onClick={() => onVote(entry.id, "up")}
               disabled={!isLoggedIn || isVoting}
               title={isLoggedIn ? "Upvote" : "Sign in to vote"}
+              aria-label={`Upvote ${entry.title}, ${upCount} upvotes`}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${
                 userVote === "up"
                   ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
@@ -214,6 +216,7 @@ export function EntryDetailModal({
               onClick={() => onVote(entry.id, "down")}
               disabled={!isLoggedIn || isVoting}
               title={isLoggedIn ? "Downvote" : "Sign in to vote"}
+              aria-label={`Downvote ${entry.title}, ${downCount} downvotes`}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${
                 userVote === "down"
                   ? "bg-red-500/10 text-red-500"

@@ -7,6 +7,7 @@ import { formatCookbookDate } from "@/lib/format-cookbook-date";
 import type { CookbookCategory, CookbookEntry } from "@/types/cookbook";
 import { PromptMarkdown } from "./PromptMarkdown";
 
+/** Displays a single cookbook entry with prompt preview, metadata, tags, and voting controls. */
 export function CookbookEntryCard({
   entry,
   votes,
@@ -139,6 +140,7 @@ export function CookbookEntryCard({
                         e.stopPropagation();
                         onTagClick(tag);
                       }}
+                      aria-label={`Filter by tag: ${tag}`}
                       className="px-2.5 py-1 bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700 hover:text-neutral-800 dark:hover:text-neutral-200 text-xs font-medium rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
                     >
                       {tag}
@@ -183,6 +185,7 @@ export function CookbookEntryCard({
               onClick={() => onVote(entry.id, "up")}
               disabled={!isLoggedIn || isVoting}
               title={isLoggedIn ? "Upvote" : "Sign in to vote"}
+              aria-label={`Upvote ${entry.title}, ${upCount} upvotes`}
               className={`flex items-center gap-1 px-2 py-1 rounded-lg text-sm transition-colors ${
                 userVote === "up"
                   ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
@@ -222,6 +225,7 @@ export function CookbookEntryCard({
               onClick={() => onVote(entry.id, "down")}
               disabled={!isLoggedIn || isVoting}
               title={isLoggedIn ? "Downvote" : "Sign in to vote"}
+              aria-label={`Downvote ${entry.title}, ${downCount} downvotes`}
               className={`flex items-center gap-1 px-2 py-1 rounded-lg text-sm transition-colors ${
                 userVote === "down"
                   ? "bg-red-500/10 text-red-500"

@@ -1,3 +1,4 @@
+/** Returns true if any search term matches the entry's title, description, or tags (case-insensitive). */
 export function matchesCookbookSearchTerms(
   title: string,
   description: string,
