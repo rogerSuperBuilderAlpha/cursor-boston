@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+import type {
+  DocumentSnapshot,
+  Firestore,
+  Query,
+  QueryDocumentSnapshot,
+} from "firebase-admin/firestore";
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { logger } from "@/lib/logger";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { matchesCookbookSearchTerms } from "@/lib/cookbook-search";
 import { sanitizeText } from "@/lib/sanitize";
 import {
   COOKBOOK_CATEGORIES,
@@ -27,6 +34,10 @@ function isValidWorksWith(v: string): v is WorksWithTag {
 
 const PAGE_SIZE = 12;
 const MAX_PAGE_SIZE = 24;
+const SEARCH_SCAN_BATCH = 40;
+const MAX_SEARCH_SCAN = 30;
+
+export type CookbookSort = "newest" | "oldest" | "top";
 
 interface CreateEntryBody {
   title?: string;
@@ -37,8 +48,83 @@ interface CreateEntryBody {
   worksWith?: unknown[];
 }
 
-function isCreateEntryBody(value: unknown): value is CreateEntryBody {
+function isNonNullObject(value: unknown): value is CreateEntryBody {
   return typeof value === "object" && value !== null;
+}
+
+function parseSort(raw: string | null): CookbookSort {
+  if (raw === "oldest" || raw === "top" || raw === "newest") return raw;
+  return "newest";
+}
+
+function isFirestoreIndexError(err: unknown): boolean {
+  if (err === null || typeof err !== "object") return false;
+  const code = (err as { code?: number }).code;
+  const message = String((err as Error).message ?? "");
+  return (
+    code === 9 ||
+    (message.includes("FAILED_PRECONDITION") && message.includes("index"))
+  );
+}
+
+interface CookbookEntryRow {
+  id: string;
+  title: string;
+  description: string;
+  promptContent: string;
+  category: string;
+  tags: string[];
+  worksWith: string[];
+  authorId: string;
+  authorDisplayName: string;
+  createdAt: string;
+  upCount: number;
+  downCount: number;
+}
+
+function mapDocToEntry(doc: QueryDocumentSnapshot): CookbookEntryRow {
+  const d = doc.data();
+  const upCount = Number(d.upCount ?? 0);
+  const downCount = Number(d.downCount ?? 0);
+  return {
+    id: doc.id,
+    title: d.title || "",
+    description: d.description || "",
+    promptContent: d.promptContent || "",
+    category: d.category || "other",
+    tags: Array.isArray(d.tags) ? d.tags : [],
+    worksWith: Array.isArray(d.worksWith) ? d.worksWith : [],
+    authorId: d.authorId || "",
+    authorDisplayName: d.authorDisplayName || "",
+    createdAt: d.createdAt?.toMillis?.()
+      ? new Date(d.createdAt.toMillis()).toISOString()
+      : "",
+    upCount,
+    downCount,
+  };
+}
+
+function buildFilteredQuery(
+  db: Firestore,
+  sort: CookbookSort,
+  category: string | null,
+  worksWith: string | null
+): Query {
+  let q: Query = db.collection("cookbook_entries");
+  if (category && isValidCategory(category)) {
+    q = q.where("category", "==", category);
+  }
+  if (worksWith && isValidWorksWith(worksWith)) {
+    q = q.where("worksWith", "array-contains", worksWith);
+  }
+  if (sort === "top") {
+    q = q.orderBy("netScore", "desc").orderBy("createdAt", "desc");
+  } else if (sort === "oldest") {
+    q = q.orderBy("createdAt", "asc");
+  } else {
+    q = q.orderBy("createdAt", "desc");
+  }
+  return q;
 }
 
 export async function GET(request: NextRequest) {
@@ -51,82 +137,133 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const category = searchParams.get("category");
     const worksWith = searchParams.get("worksWith");
-    const search = searchParams.get("search")?.trim().toLowerCase();
+    const searchRaw = searchParams.get("search")?.trim().toLowerCase() || "";
     const limit = Math.min(
       Number(searchParams.get("limit")) || PAGE_SIZE,
       MAX_PAGE_SIZE
     );
     const cursor = searchParams.get("cursor")?.trim() || null;
+    const sortParam = parseSort(searchParams.get("sort"));
+    const hasSearch = searchRaw.length > 0;
+    const sort: CookbookSort = hasSearch ? "newest" : sortParam;
+    const searchTerms = hasSearch ? searchRaw.split(/\s+/).filter(Boolean) : [];
 
-    const hasFilters = !!(category && isValidCategory(category)) ||
-      !!(worksWith && isValidWorksWith(worksWith)) ||
-      !!search;
-    const fetchSize = hasFilters ? Math.min(limit * 4, 80) : limit + 1;
-
-    let query = db
-      .collection("cookbook_entries")
-      .orderBy("createdAt", "desc")
-      .limit(fetchSize);
-
-    if (cursor) {
-      const cursorDoc = await db.collection("cookbook_entries").doc(cursor).get();
-      if (cursorDoc.exists) {
-        query = query.startAfter(cursorDoc);
+    if (hasSearch) {
+      const results: CookbookEntryRow[] = [];
+      let resumeAfter: DocumentSnapshot | null = null;
+      if (cursor) {
+        const cdoc = await db.collection("cookbook_entries").doc(cursor).get();
+        if (cdoc.exists) {
+          resumeAfter = cdoc;
+        }
       }
-    }
 
-    const snap = await query.get();
+      let iterations = 0;
+      let lastSnapSize = 0;
+      let exhausted = false;
 
-    let entries = snap.docs.map((doc) => {
-      const d = doc.data();
-      return {
-        id: doc.id,
-        title: d.title || "",
-        description: d.description || "",
-        promptContent: d.promptContent || "",
-        category: d.category || "other",
-        tags: Array.isArray(d.tags) ? d.tags : [],
-        worksWith: Array.isArray(d.worksWith) ? d.worksWith : [],
-        authorId: d.authorId || "",
-        authorDisplayName: d.authorDisplayName || "",
-        createdAt: d.createdAt?.toMillis?.()
-          ? new Date(d.createdAt.toMillis()).toISOString()
-          : "",
-        upCount: Number(d.upCount ?? 0),
-        downCount: Number(d.downCount ?? 0),
-      };
-    });
-
-    if (category && isValidCategory(category)) {
-      entries = entries.filter((e) => e.category === category);
-    }
-    if (worksWith && isValidWorksWith(worksWith)) {
-      entries = entries.filter((e) =>
-        e.worksWith.some((w) => w.toLowerCase() === worksWith.toLowerCase())
-      );
-    }
-    if (search) {
-      const terms = search.split(/\s+/).filter(Boolean);
-      entries = entries.filter((e) => {
-        const titleL = e.title.toLowerCase();
-        const descL = e.description.toLowerCase();
-        const tagStr = e.tags.join(" ").toLowerCase();
-        return terms.some((term) =>
-          titleL.includes(term) ||
-          descL.includes(term) ||
-          tagStr.includes(term)
+      while (results.length < limit && !exhausted && iterations < MAX_SEARCH_SCAN) {
+        iterations += 1;
+        let q = buildFilteredQuery(db, "newest", category, worksWith).limit(
+          SEARCH_SCAN_BATCH
         );
+        if (resumeAfter) {
+          q = q.startAfter(resumeAfter);
+        }
+        const snap = await q.get();
+        lastSnapSize = snap.size;
+        if (snap.empty) {
+          exhausted = true;
+          break;
+        }
+
+        for (const doc of snap.docs) {
+          resumeAfter = doc;
+          const entry = mapDocToEntry(doc);
+          if (
+            !matchesCookbookSearchTerms(
+              entry.title,
+              entry.description,
+              entry.tags,
+              searchTerms
+            )
+          ) {
+            continue;
+          }
+          results.push(entry);
+          if (results.length >= limit) break;
+        }
+
+        if (results.length >= limit) {
+          break;
+        }
+
+        if (snap.size < SEARCH_SCAN_BATCH) {
+          exhausted = true;
+        }
+      }
+
+      const page = results.slice(0, limit);
+      const hitScanCap = iterations >= MAX_SEARCH_SCAN;
+      const hasMore =
+        (page.length === limit &&
+          !!resumeAfter?.id &&
+          (!exhausted || lastSnapSize === SEARCH_SCAN_BATCH)) ||
+        (!exhausted && hitScanCap && lastSnapSize === SEARCH_SCAN_BATCH);
+
+      const nextCursor = hasMore && resumeAfter?.id ? resumeAfter.id : null;
+
+      return NextResponse.json({
+        entries: page,
+        nextCursor,
+        hasMore: !!hasMore,
       });
     }
 
-    const page = entries.slice(0, limit);
-    const hasMore = entries.length > limit || snap.docs.length === fetchSize;
-    const nextCursor = page.length > 0 ? page[page.length - 1].id : null;
+    const runPagedQuery = async (sortMode: CookbookSort) => {
+      let q = buildFilteredQuery(db, sortMode, category, worksWith).limit(
+        limit + 1
+      );
+      if (cursor) {
+        const cursorDoc = await db
+          .collection("cookbook_entries")
+          .doc(cursor)
+          .get();
+        if (cursorDoc.exists) {
+          q = q.startAfter(cursorDoc);
+        }
+      }
+      return q.get();
+    };
+
+    let snap;
+    try {
+      snap = await runPagedQuery(sort);
+    } catch (err) {
+      if (sort === "top" && isFirestoreIndexError(err)) {
+        logger.warn(
+          "Cookbook entries: top-sort index missing or building; served in newest order",
+          {
+            endpoint: "/api/cookbook/entries GET",
+            detail: err instanceof Error ? err.message : String(err),
+          }
+        );
+        snap = await runPagedQuery("newest");
+      } else {
+        throw err;
+      }
+    }
+
+    const docs = snap.docs.slice(0, limit);
+    const entries = docs.map(mapDocToEntry);
+    const hasMore = snap.docs.length > limit;
+    const nextCursor =
+      hasMore && entries.length > 0 ? entries[entries.length - 1].id : null;
 
     return NextResponse.json({
-      entries: page,
-      nextCursor: hasMore && nextCursor ? nextCursor : null,
-      hasMore: hasMore && page.length === limit,
+      entries,
+      nextCursor,
+      hasMore,
     });
   } catch (error) {
     logger.logError(error, { endpoint: "/api/cookbook/entries GET" });
@@ -168,7 +305,7 @@ export async function POST(request: NextRequest) {
     }
 
     const rawBody = await request.json();
-    if (!isCreateEntryBody(rawBody)) {
+    if (!isNonNullObject(rawBody)) {
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
     }
     const body = rawBody;
@@ -210,6 +347,7 @@ export async function POST(request: NextRequest) {
       createdAt: FieldValue.serverTimestamp(),
       upCount: 0,
       downCount: 0,
+      netScore: 0,
     };
 
     const docRef = await db.collection("cookbook_entries").add(entry);

@@ -16,11 +16,15 @@ interface VoteBody {
   type?: unknown;
 }
 
-function isVoteBody(value: unknown): value is VoteBody {
+function isNonNullObject(value: unknown): value is VoteBody {
   return typeof value === "object" && value !== null;
 }
 
 const COOKBOOK_VOTE_RATE_LIMIT = { windowMs: 60 * 1000, maxRequests: 60 };
+
+function userVoteIndexDocId(uid: string, entryId: string) {
+  return `${uid}_${entryId}`;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -56,7 +60,7 @@ export async function POST(request: NextRequest) {
     }
 
     const rawBody = await request.json();
-    if (!isVoteBody(rawBody)) {
+    if (!isNonNullObject(rawBody)) {
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
     }
     const entryId = typeof rawBody.entryId === "string" ? rawBody.entryId : undefined;
@@ -73,6 +77,9 @@ export async function POST(request: NextRequest) {
     const voteType = type as VoteType;
     const entryRef = db.collection("cookbook_entries").doc(sanitizedEntryId);
     const voteRef = entryRef.collection("votes").doc(user.uid);
+    const indexRef = db
+      .collection("cookbook_user_votes")
+      .doc(userVoteIndexDocId(user.uid, sanitizedEntryId));
 
     const result = await db.runTransaction(async (tx) => {
       const [entrySnap, voteSnap] = await Promise.all([
@@ -92,10 +99,14 @@ export async function POST(request: NextRequest) {
         const existingType = voteSnap.data()?.type as VoteType | undefined;
         if (existingType === voteType) {
           tx.delete(voteRef);
+          tx.delete(indexRef);
           const updates = {
             upCount: voteType === "up" ? Math.max(0, upCount - 1) : upCount,
             downCount:
               voteType === "down" ? Math.max(0, downCount - 1) : downCount,
+            netScore:
+              (voteType === "up" ? Math.max(0, upCount - 1) : upCount) -
+              (voteType === "down" ? Math.max(0, downCount - 1) : downCount),
           };
           tx.update(entryRef, updates);
           return {
@@ -113,6 +124,16 @@ export async function POST(request: NextRequest) {
           type: voteType,
           updatedAt: FieldValue.serverTimestamp(),
         });
+        tx.set(
+          indexRef,
+          {
+            userId: user.uid,
+            entryId: sanitizedEntryId,
+            type: voteType,
+            updatedAt: FieldValue.serverTimestamp(),
+          },
+          { merge: true }
+        );
         const nextUpCount =
           (existingType === "up" ? Math.max(0, upCount - 1) : upCount) +
           (voteType === "up" ? 1 : 0);
@@ -122,6 +143,7 @@ export async function POST(request: NextRequest) {
         tx.update(entryRef, {
           upCount: nextUpCount,
           downCount: nextDownCount,
+          netScore: nextUpCount - nextDownCount,
         });
         return {
           status: 200 as const,
@@ -140,11 +162,18 @@ export async function POST(request: NextRequest) {
         type: voteType,
         createdAt: FieldValue.serverTimestamp(),
       });
+      tx.set(indexRef, {
+        userId: user.uid,
+        entryId: sanitizedEntryId,
+        type: voteType,
+        updatedAt: FieldValue.serverTimestamp(),
+      });
       const newUpCount = voteType === "up" ? upCount + 1 : upCount;
       const newDownCount = voteType === "down" ? downCount + 1 : downCount;
       tx.update(entryRef, {
         upCount: newUpCount,
         downCount: newDownCount,
+        netScore: newUpCount - newDownCount,
       });
       return {
         status: 200 as const,
@@ -177,24 +206,25 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ userVotes: {} });
     }
 
-    let userVotes: Record<string, string> = {};
+    const userVotes: Record<string, string> = {};
     try {
       const user = await getVerifiedUser(request);
       if (user) {
         const userVotesSnap = await db
-          .collectionGroup("votes")
+          .collection("cookbook_user_votes")
           .where("userId", "==", user.uid)
           .get();
         userVotesSnap.forEach((doc) => {
-          const entryId = doc.ref.parent.parent?.id;
-          const type = doc.data().type;
-          if (entryId && (type === "up" || type === "down")) {
-            userVotes[entryId] = type;
+          const d = doc.data();
+          const eid = typeof d.entryId === "string" ? d.entryId : undefined;
+          const t = d.type;
+          if (eid && (t === "up" || t === "down")) {
+            userVotes[eid] = t;
           }
         });
       }
     } catch {
-      // Not authenticated
+      // unauthenticated
     }
 
     return NextResponse.json({ userVotes });
