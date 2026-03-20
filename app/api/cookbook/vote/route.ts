@@ -98,6 +98,8 @@ export async function POST(request: NextRequest) {
 
       if (voteSnap.exists) {
         const existingType = voteSnap.data()?.type as VoteType | undefined;
+
+        // Toggle off: user clicked the same vote type again, so remove the vote entirely
         if (existingType === voteType) {
           tx.delete(voteRef);
           tx.delete(indexRef);
@@ -121,6 +123,7 @@ export async function POST(request: NextRequest) {
           };
         }
 
+        // Switch: user changed their vote (e.g. up→down), so decrement the old type and increment the new
         tx.update(voteRef, {
           type: voteType,
           updatedAt: FieldValue.serverTimestamp(),
@@ -158,6 +161,7 @@ export async function POST(request: NextRequest) {
         };
       }
 
+      // New vote: no prior vote exists, so create the vote doc and increment the matching count
       tx.set(voteRef, {
         userId: user.uid,
         type: voteType,
