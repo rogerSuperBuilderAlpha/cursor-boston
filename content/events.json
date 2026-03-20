@@ -1,53 +1,73 @@
 {
   "upcoming": [
     {
-      "id": "cursor-boston-spring-hackathon-2026",
-      "slug": "cursor-boston-spring-hackathon-2026",
-      "title": "Cursor Boston Spring Hackathon",
-      "subtitle": "A one-day build sprint for developers and builders across Boston and Cambridge",
-      "date": "2026-04-11",
-      "time": "10am-6pm",
-      "location": "Boston / Cambridge, Massachusetts",
+      "id": "cursor-boston-hack-a-sprint-2026",
+      "slug": "cursor-boston-hack-a-sprint-2026",
+      "title": "Cursor Boston Hack-a-Sprint",
+      "subtitle": "First-ever Cursor Boston Hack-a-Sprint: 50 developers, solo-team competition",
+      "date": "2026-04-13",
+      "time": "4pm–8pm",
+      "location": "TBD",
       "venue": {
-        "name": "Venue to be announced",
-        "address": "Final venue details coming soon",
+        "name": "TBD",
+        "address": "Venue details coming soon",
         "mapUrl": null
       },
       "type": "hackathon",
-      "description": "Join a group of developers and builders from across the Boston and Cambridge ecosystem for a one-day hackathon focused on shipping autonomous AI agents with Cursor. Cursor credits available for participants and winners.",
-      "longDescription": "Cursor Boston Spring Hackathon brings together a strong mix of builders, engineers, and developers from across the local tech community for a focused day of building.\n\nParticipants will spend the day forming teams, exploring ideas, and shipping real projects with support from the community and hands-on exposure to modern AI development stack.\n\nThe day will culminate in team demos and community-driven judging, with prizes for standout projects and a chance to connect with other ambitious builders across Boston and Cambridge.",
+      "description": "Get ready for the first-ever Cursor Boston Hack-a-Sprint! We're bringing together 50 developers for a fast-paced, solo-team competition. Fully fed and watered. $50 Cursor credits guaranteed for every participant, $1,200 prize pool.",
+      "longDescription": "We are thrilled to announce our inaugural Hack-a-Sprint! We're bringing together 50 developers for a fast-paced, solo-team competition.\n\nWhether you're building something brand new or pushing the limits of your current project, this is your chance to code, compete, and connect with the Boston Cursor community. Oh, and you will be fully fed and watered!\n\nThe Perks & Prizes\n\nGuaranteed Bounty: Every selected participant automatically receives $50 in Cursor Credits.\nThe Prize Pool: We have a $1,200 total prize pool on the line, divided into six $200 Cursor Credit winning spots!\n\nWhen & Where\n\nDate: Monday 4/13 or Tuesday 4/14 (We are shooting for Monday—final date coming soon!)\nLocation: TBD (We are currently finalizing details with a few great venue vendors.)\n\nThe Schedule\n\n4:00 PM: Meet, greet, and get set up.\n5:00 PM – 7:00 PM: The Hack-a-Sprint begins!\n7:00 PM – 8:00 PM: Scoring and Judging. Results will be calculated by participants, judges, and AI (a detailed weighting rubric will be publicized soon).\n\nHow to Secure Your Spot\n\nWe have exactly 50 spots, and everyone will compete individually. We are selecting participants one week before the event. To climb the ranks and guarantee your spot, we will be prioritizing developers based on the following criteria:\n\n1. Open Source Contributions: Whoever has merged the most PRs to cursorboston.com gets top priority. Get to work!\n2. Community Profile: You must have a completed profile on cursorboston.com.\n3. Discord Member: You must be in the Cursor Boston Discord server.\n4. Sign-Up Order: Early birds get the worm.\n\nNote: We will be rigorously qualifying participants. If selected participants don't meet the criteria or drop out, we will aggressively pull from the waitlist to ensure everyone gets an opportunity.\n\nGet Involved\n\nDidn't make the top 50 or want to participate in a different way?\n\nJoin the Waitlist: Drop-outs happen, and you could be next in line.\nBecome a Judge: Contact us if you'd rather evaluate the projects and help crown the winners!\n\nMore info is coming soon, but don't wait to secure your place.",
       "image": "/cursor-boston-logo.png",
-      "lumaUrl": "https://lu.ma/cursor-boston",
-      "lumaEventId": "",
+      "lumaUrl": "https://luma.com/uixo8hl6",
+      "lumaEventId": "uixo8hl6",
       "registrationRequired": true,
+      "capacity": 50,
       "perks": [
-        "Cursor credits for participants",
-        "Prizes for top teams",
-        "Breakfast and lunch",
-        "Builder-focused community"
+        "$50 Cursor credits (guaranteed for every participant)",
+        "$1,200 prize pool (six $200 winning spots)",
+        "Food and drinks"
       ],
       "topics": [
-        "AI-powered development",
-        "Rapid prototyping",
-        "Autonomous AI agents",
-        "Team demos"
+        "Solo competition",
+        "Cursor Credits",
+        "Judging (participants + judges + AI)"
+      ],
+      "agenda": [
+        {
+          "time": "4:00 PM",
+          "title": "Meet, greet, and get set up",
+          "description": "Arrive, connect with fellow developers, and get ready to build"
+        },
+        {
+          "time": "5:00 PM – 7:00 PM",
+          "title": "Hack-a-Sprint",
+          "description": "The main build period—code, compete, and ship"
+        },
+        {
+          "time": "7:00 PM – 8:00 PM",
+          "title": "Scoring and Judging",
+          "description": "Results calculated by participants, judges, and AI"
+        }
       ],
       "faq": [
         {
           "question": "Who should apply?",
-          "answer": "This hackathon is designed for developers, students, and technical builders across the Boston and Cambridge ecosystem who want to spend a day shipping meaningful projects."
+          "answer": "Developers and builders who want to compete individually in a fast-paced hackathon. You must have a completed profile on cursorboston.com and be in the Cursor Boston Discord server."
         },
         {
-          "question": "Do I need to be part of a school to attend?",
-          "answer": "No. We expect a mix of students and builders from the broader Boston tech community."
+          "question": "Is this a team or solo competition?",
+          "answer": "Solo! Everyone competes individually. We have exactly 50 spots."
         },
         {
           "question": "Will food be provided?",
-          "answer": "Yes. We plan to provide breakfast and lunch for participants."
+          "answer": "Yes. You will be fully fed and watered."
         },
         {
           "question": "Is the date and venue final?",
-          "answer": "Final venue and schedule details will be confirmed soon. This page will be updated as details are locked in."
+          "answer": "We are shooting for Monday 4/13—final date coming soon. Venue is TBD; we are finalizing details with venue vendors."
+        },
+        {
+          "question": "What if I don't make the top 50?",
+          "answer": "Join the waitlist! Drop-outs happen, and you could be next in line. You can also contact us to become a judge."
         }
       ],
       "whatToBring": [
