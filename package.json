@@ -93,7 +93,7 @@
     "globals": "^17.4.0",
     "husky": "^8.0.3",
     "jest": "^30.3.0",
-    "jest-environment-jsdom": "^29.7.0",
+    "jest-environment-jsdom": "^30.3.0",
     "lint-staged": "^16.4.0",
     "postcss": "^8.5.8",
     "tailwindcss": "^4.2.1",
