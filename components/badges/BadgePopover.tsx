@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import type { BadgeDefinition, BadgeEligibilityResult } from "@/lib/badges/types";
 import { cn } from "@/lib/utils";
 
@@ -7,6 +8,7 @@ interface BadgePopoverProps {
   isOpen: boolean;
   onClose: () => void;
   anchorLabel?: string;
+  showcaseApprovalNote?: string;
 }
 
 export function BadgePopover({
@@ -15,16 +17,61 @@ export function BadgePopover({
   isOpen,
   onClose,
   anchorLabel,
+  showcaseApprovalNote,
 }: BadgePopoverProps) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    closeButtonRef.current?.focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+
+      if (event.key !== "Tab") return;
+
+      const container = dialogRef.current;
+      if (!container) return;
+
+      const focusable = container.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+
+      if (event.shiftKey && active === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const isEarned = eligibility?.isEligible ?? false;
+  const headingId = `badge-popover-title-${definition.id}`;
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
+      aria-labelledby={headingId}
       aria-label={anchorLabel || `${definition.name} details`}
     >
       <button
@@ -34,10 +81,13 @@ export function BadgePopover({
         onClick={onClose}
       />
 
-      <div className="relative w-full max-w-sm rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xl">
+      <div
+        ref={dialogRef}
+        className="relative w-full max-w-sm rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xl"
+      >
         <div className="flex items-start justify-between gap-3 p-4 border-b border-neutral-200 dark:border-neutral-800">
           <div className="min-w-0">
-            <h3 className="text-base font-semibold text-foreground truncate">
+            <h3 id={headingId} className="text-base font-semibold text-foreground truncate">
               {definition.name}
             </h3>
             <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
@@ -111,10 +161,22 @@ export function BadgePopover({
               </p>
             </div>
           )}
+
+          {showcaseApprovalNote && (
+            <div className="rounded-lg border border-emerald-300/40 dark:border-emerald-500/30 bg-emerald-50/80 dark:bg-emerald-500/10 p-3">
+              <p className="text-xs uppercase tracking-wide text-emerald-700 dark:text-emerald-300 mb-1">
+                Verification
+              </p>
+              <p className="text-sm text-emerald-800 dark:text-emerald-200">
+                {showcaseApprovalNote}
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="p-4 pt-0">
           <button
+            ref={closeButtonRef}
             type="button"
             onClick={onClose}
             className="w-full px-3 py-2 rounded-lg bg-neutral-100 text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"

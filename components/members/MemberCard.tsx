@@ -3,7 +3,9 @@ import type { PublicMember } from "@/types/members";
 import { getInitials } from "@/lib/utils";
 import { BADGE_DEFINITIONS } from "@/lib/badges/definitions";
 import { evaluateBadgeEligibility } from "@/lib/badges/eligibility";
-import type { BadgeEligibilityInput } from "@/lib/badges/types";
+import type { BadgeEligibilityInput, BadgeId } from "@/lib/badges/types";
+import { getBaseBadgeEligibilityInput } from "@/lib/badges/getBadgeEligibilityInput";
+import { getEarnedBadgeIds } from "@/lib/badges/utils";
 import { BadgeGrid } from "@/components/badges/BadgeGrid";
 
 interface MemberCardProps {
@@ -14,23 +16,35 @@ export function MemberCard({ member }: MemberCardProps) {
   const v = member.visibility;
   const isAgent = member.memberType === "agent";
   const badgeInput = {
-    hasDisplayName: Boolean(member.displayName?.trim()),
-    isPublicProfile: false,
-    hasDiscordConnected: Boolean(member.discord),
-    hasGithubConnected: Boolean(member.github),
+    ...getBaseBadgeEligibilityInput({
+      displayName: member.displayName,
+      bio: member.bio ?? null,
+      photoURL: member.photoURL,
+      discord: member.discord,
+      github: member.github,
+    }),
     eventsAttendedCount: member.eventsAttended ?? 0,
     talksGivenCount: member.talksGiven ?? 0,
     pullRequestsCount: member.pullRequestsCount ?? 0,
-    communityPostsCount: 0,
-    hackathonParticipationCount: 0,
-    showcaseSubmissionsCount: 0,
-    mentorMatchesCount: 0,
   } satisfies BadgeEligibilityInput;
 
   const badgeEligibilityMap = evaluateBadgeEligibility(badgeInput);
-  const earnedBadgeIds = BADGE_DEFINITIONS
-    .filter((definition) => badgeEligibilityMap[definition.id].isEligible)
-    .map((definition) => definition.id);
+  const persistedBadgeOverlay = (member.earnedBadgeIds || []).reduce<
+    Partial<Record<BadgeId, true>>
+  >((acc, badgeId) => {
+    const matchingDefinition = BADGE_DEFINITIONS.find(
+      (definition) => definition.id === badgeId
+    );
+    if (matchingDefinition) {
+      acc[matchingDefinition.id] = true;
+    }
+    return acc;
+  }, {});
+  const earnedBadgeIds = getEarnedBadgeIds(
+    BADGE_DEFINITIONS,
+    badgeEligibilityMap,
+    persistedBadgeOverlay
+  );
   const previewDefinitions = [
     ...BADGE_DEFINITIONS.filter((definition) => earnedBadgeIds.includes(definition.id)),
     ...BADGE_DEFINITIONS.filter((definition) => !earnedBadgeIds.includes(definition.id)),
@@ -162,6 +176,9 @@ export function MemberCard({ member }: MemberCardProps) {
       </div>
 
       <div className="mb-4">
+        <p className="mb-2 text-xs text-neutral-500 dark:text-neutral-400">
+          Preview only. Final badge status appears on profile.
+        </p>
         <BadgeGrid
           definitions={previewDefinitions}
           eligibilityMap={badgeEligibilityMap}

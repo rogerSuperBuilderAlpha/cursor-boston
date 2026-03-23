@@ -40,12 +40,16 @@ export interface UserBadge {
 export interface BadgeEligibilityInput {
   hasDisplayName?: boolean;
   isPublicProfile?: boolean;
+  hasBio?: boolean;
+  hasAvatar?: boolean;
   hasDiscordConnected?: boolean;
   hasGithubConnected?: boolean;
   eventsAttendedCount?: number;
+  talksSubmittedCount?: number;
   talksGivenCount?: number;
   pullRequestsCount?: number;
   communityPostsCount?: number;
+  communityMessagesCount?: number;
   hackathonParticipationCount?: number;
   showcaseSubmissionsCount?: number;
   mentorMatchesCount?: number;

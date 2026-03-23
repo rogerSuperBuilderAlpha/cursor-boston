@@ -40,6 +40,7 @@ export interface PublicMember {
   eventsAttended?: number;
   talksGiven?: number;
   pullRequestsCount?: number;
+  earnedBadgeIds?: string[];
   github?: {
     login: string;
     html_url: string;

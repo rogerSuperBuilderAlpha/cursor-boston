@@ -1,11 +1,14 @@
-import type { SVGProps } from "react";
+import { useRef, useState, type KeyboardEvent, type SVGProps } from "react";
 import type { BadgeDefinition, BadgeEligibilityResult } from "@/lib/badges/types";
 import { cn } from "@/lib/utils";
+import { BadgePopover } from "./BadgePopover";
 
 interface BadgeCardProps {
   definition: BadgeDefinition;
   eligibility?: BadgeEligibilityResult;
   earned?: boolean;
+  awardedAt?: string;
+  isAuthoritative?: boolean;
   compact?: boolean;
   className?: string;
 }
@@ -137,101 +140,182 @@ export function BadgeCard({
   definition,
   eligibility,
   earned,
+  awardedAt,
+  isAuthoritative = true,
   compact = false,
   className,
 }: BadgeCardProps) {
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const triggerRef = useRef<HTMLElement>(null);
   const isEarned = earned ?? eligibility?.isEligible ?? false;
+  const showcaseApprovalNote =
+    definition.id === "showcase-star" && isEarned
+      ? "Showcase Star is only awarded after at least one showcase submission is approved."
+      : undefined;
   const statusText = isEarned
     ? "Earned"
-    : eligibility?.reason || "Not earned yet";
+    : isAuthoritative
+    ? eligibility?.reason || "Not earned yet"
+    : "Badge data is partially unavailable. Some badge statuses may be unverified.";
+  const earnedDate = awardedAt ? new Date(awardedAt) : null;
+  const earnedDateLabel =
+    isEarned && earnedDate && !Number.isNaN(earnedDate.getTime())
+      ? earnedDate.toLocaleDateString("en-US", {
+          month: "short",
+          year: "numeric",
+        })
+      : null;
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      setIsPopoverOpen(true);
+    }
+  };
+
+  const closePopover = () => {
+    setIsPopoverOpen(false);
+    requestAnimationFrame(() => {
+      triggerRef.current?.focus();
+    });
+  };
 
   return (
-    <article
-      className={cn(
-        "rounded-xl border transition-colors",
-        "bg-white dark:bg-neutral-900",
-        isEarned
-          ? "border-emerald-300/70 dark:border-emerald-500/40"
-          : "border-neutral-200 dark:border-neutral-800",
-        !compact && "hover:border-neutral-300 dark:hover:border-neutral-700",
-        compact ? "p-3" : "p-4",
-        className
-      )}
-      aria-label={definition.name}
-    >
-      <div className={cn("flex items-start", compact ? "gap-3" : "gap-4")}>
-        <div
-          className={cn(
-            "shrink-0 rounded-lg border flex items-center justify-center",
-            compact ? "h-9 w-9" : "h-11 w-11",
-            isEarned
-              ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
-              : "bg-neutral-100 dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 text-neutral-500 dark:text-neutral-400"
-          )}
-        >
-          <BadgeIcon
-            iconKey={definition.iconKey}
-            width={compact ? 16 : 18}
-            height={compact ? 16 : 18}
-            aria-hidden="true"
-          />
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <h3
-              className={cn(
-                "font-semibold text-foreground truncate",
-                compact ? "text-sm" : "text-base"
-              )}
-            >
-              {definition.name}
-            </h3>
-            <span
-              className={cn(
-                "shrink-0 px-2 py-0.5 rounded-full text-xs font-medium",
-                isEarned
-                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                  : "bg-neutral-200/80 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400"
-              )}
-            >
-              {isEarned ? "Earned" : "Locked"}
-            </span>
-          </div>
-
-          <p
+    <>
+      <article
+        ref={triggerRef}
+        className={cn(
+          "rounded-xl border transition-colors cursor-pointer",
+          "bg-white dark:bg-neutral-900",
+          isEarned
+            ? "border-emerald-300/70 dark:border-emerald-500/40"
+            : "border-neutral-200 dark:border-neutral-800",
+          !compact && "hover:border-neutral-300 dark:hover:border-neutral-700",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400",
+          compact ? "p-3" : "p-4",
+          className
+        )}
+        aria-label={definition.name}
+        aria-haspopup="dialog"
+        aria-expanded={isPopoverOpen}
+        role="button"
+        tabIndex={0}
+        onClick={() => setIsPopoverOpen(true)}
+        onKeyDown={handleKeyDown}
+      >
+        <div className={cn("flex items-start", compact ? "gap-3" : "gap-4")}>
+          <div
             className={cn(
-              "text-neutral-600 dark:text-neutral-400",
-              compact ? "text-xs" : "text-sm"
+              "shrink-0 rounded-full border flex items-center justify-center",
+              compact ? "h-9 w-9" : "h-11 w-11",
+              isEarned
+                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
+                : "bg-neutral-100 dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 text-neutral-500 dark:text-neutral-400"
             )}
           >
-            {isEarned ? definition.description : statusText}
-          </p>
+            <BadgeIcon
+              iconKey={definition.iconKey}
+              width={compact ? 16 : 18}
+              height={compact ? 16 : 18}
+              aria-hidden="true"
+            />
+          </div>
 
-          {eligibility?.progress && (
-            <div className={cn("mt-2", compact ? "text-xs" : "text-sm")}>
-              <p className="text-neutral-500 dark:text-neutral-400 mb-1">
-                Progress: {eligibility.progress.current}/{eligibility.progress.target}
-                {eligibility.progress.unit ? ` ${eligibility.progress.unit}` : ""}
-              </p>
-              <div className="h-1.5 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
-                <div
-                  className={cn(
-                    "h-full rounded-full",
-                    isEarned ? "bg-emerald-500" : "bg-neutral-500 dark:bg-neutral-500"
-                  )}
-                  style={{
-                    width: `${Math.min(
-                      100,
-                      (eligibility.progress.current / eligibility.progress.target) * 100
-                    )}%`,
-                  }}
-                />
-              </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <h3
+                className={cn(
+                  "font-semibold text-foreground truncate",
+                  compact ? "text-sm" : "text-base"
+                )}
+              >
+                {definition.name}
+              </h3>
+              <span
+                className={cn(
+                  "shrink-0 px-2 py-0.5 rounded-full text-xs font-medium",
+                  isEarned
+                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                    : "bg-neutral-200/80 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400"
+                )}
+              >
+                {isEarned ? "Earned" : isAuthoritative ? "Locked" : "Unverified data"}
+              </span>
             </div>
-          )}
+
+            <p
+              className={cn(
+                "text-neutral-600 dark:text-neutral-400",
+                compact ? "text-xs" : "text-sm"
+              )}
+            >
+              {definition.description}
+            </p>
+
+            {!isEarned && (
+              <p
+                className={cn(
+                  "text-neutral-500 dark:text-neutral-400 mt-1",
+                  compact ? "text-xs" : "text-sm"
+                )}
+              >
+                {statusText}
+              </p>
+            )}
+
+            {isEarned && earnedDateLabel && (
+              <p
+                className={cn(
+                  "text-neutral-500 dark:text-neutral-400 mt-1",
+                  compact ? "text-xs" : "text-sm"
+                )}
+              >
+                Earned {earnedDateLabel}
+              </p>
+            )}
+
+            {eligibility?.progress && (
+              <div className={cn("mt-2", compact ? "text-xs" : "text-sm")}>
+                <p className="text-neutral-500 dark:text-neutral-400 mb-1">
+                  Progress: {eligibility.progress.current}/{eligibility.progress.target}
+                  {eligibility.progress.unit ? ` ${eligibility.progress.unit}` : ""}
+                </p>
+                <div className="h-1.5 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
+                  <div
+                    className={cn(
+                      "h-full rounded-full",
+                      isEarned ? "bg-emerald-500" : "bg-neutral-500 dark:bg-neutral-500"
+                    )}
+                    style={{
+                      width: `${Math.min(
+                        100,
+                        (eligibility.progress.current / eligibility.progress.target) * 100
+                      )}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
+            <p
+              className={cn(
+                "mt-2 text-neutral-500 dark:text-neutral-400",
+                compact ? "text-[11px]" : "text-xs"
+              )}
+            >
+              Click for details
+            </p>
+          </div>
         </div>
-      </div>
-    </article>
+      </article>
+
+      <BadgePopover
+        definition={definition}
+        eligibility={eligibility}
+        isOpen={isPopoverOpen}
+        onClose={closePopover}
+        showcaseApprovalNote={showcaseApprovalNote}
+      />
+    </>
   );
 }

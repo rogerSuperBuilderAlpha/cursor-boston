@@ -23,10 +23,20 @@ import {
   EyeIcon,
   EyeOffIcon,
 } from "@/components/icons";
-import { getBadgeEligibilityInput } from "@/lib/badges/getBadgeEligibilityInput";
+import {
+  getBadgeEligibilityData,
+  type BadgeEligibilityDataStatus,
+} from "@/lib/badges/getBadgeEligibilityInput";
 import { evaluateBadgeEligibility } from "@/lib/badges/eligibility";
 import { BADGE_DEFINITIONS } from "@/lib/badges/definitions";
-import type { BadgeEligibilityMap } from "@/lib/badges/types";
+import {
+  ensureUserBadgesForEligibleWithStatus,
+  getUserBadgeMap,
+  type BadgeAwardPersistenceStatus,
+  type UserBadgeMap,
+} from "@/lib/badges/data";
+import type { BadgeDefinition, BadgeEligibilityMap } from "@/lib/badges/types";
+import { getEarnedBadgeIds } from "@/lib/badges/utils";
 import { BadgeGrid } from "@/components/badges/BadgeGrid";
 
 // Hooks
@@ -99,7 +109,17 @@ function ProfilePageContent() {
   const [connectedAgents, setConnectedAgents] = useState<ConnectedAgent[]>([]);
   const [loadingAgents, setLoadingAgents] = useState(false);
   const [badgeEligibilityMap, setBadgeEligibilityMap] = useState<BadgeEligibilityMap | undefined>(undefined);
+  const [userBadgeMap, setUserBadgeMap] = useState<UserBadgeMap>({});
   const [loadingBadges, setLoadingBadges] = useState(false);
+  const [badgeDefinitions, setBadgeDefinitions] = useState<BadgeDefinition[]>(BADGE_DEFINITIONS);
+  const [usingFallbackDefinitions, setUsingFallbackDefinitions] = useState(false);
+  const [badgeDataStatus, setBadgeDataStatus] = useState<BadgeEligibilityDataStatus>({
+    state: "failed",
+    isAuthoritative: false,
+    failedSources: [],
+  });
+  const [badgePersistenceStatus, setBadgePersistenceStatus] =
+    useState<BadgeAwardPersistenceStatus>({ state: "complete" });
 
   // ── Password state (kept here because it needs user from auth context) ────
   const [passwordSaving, setPasswordSaving] = useState(false);
@@ -221,27 +241,81 @@ function ProfilePageContent() {
     })();
   }, [user]);
 
+  // ── Fetch Firestore-backed badge definitions ──────────────────────────────
+  useEffect(() => {
+    (async () => {
+      try {
+        const response = await fetch("/api/badges/definitions", { cache: "no-store" });
+        if (!response.ok) {
+          setUsingFallbackDefinitions(true);
+          return;
+        }
+        const data = (await response.json()) as {
+          definitions?: BadgeDefinition[];
+          source?: "firestore" | "seeded-fallback" | "local-fallback";
+        };
+        if (Array.isArray(data.definitions) && data.definitions.length > 0) {
+          setBadgeDefinitions(data.definitions);
+        }
+        setUsingFallbackDefinitions(data.source !== "firestore");
+      } catch {
+        // Keep local fallback definitions
+        setUsingFallbackDefinitions(true);
+      }
+    })();
+  }, []);
+
   // ── Fetch badge eligibility input and evaluate badges ─────────────────────
   useEffect(() => {
     if (!user) {
       setBadgeEligibilityMap(undefined);
+      setUserBadgeMap({});
+      setBadgeDataStatus({
+        state: "failed",
+        isAuthoritative: false,
+        failedSources: [],
+      });
+      setBadgePersistenceStatus({ state: "complete" });
       return;
     }
 
     setLoadingBadges(true);
     (async () => {
       try {
-        const input = await getBadgeEligibilityInput({
+        const badgeData = await getBadgeEligibilityData({
           uid: user.uid,
           displayName: userProfile?.displayName ?? user.displayName ?? null,
           visibility: userProfile?.visibility ?? null,
+          bio: userProfile?.bio ?? null,
+          photoURL: userProfile?.photoURL ?? user.photoURL ?? null,
           discord: userProfile?.discord,
           github: userProfile?.github,
         });
-        setBadgeEligibilityMap(evaluateBadgeEligibility(input));
+        const evaluated = evaluateBadgeEligibility(badgeData.input);
+        const persisted = await getUserBadgeMap(user.uid);
+        const persistenceResult = await ensureUserBadgesForEligibleWithStatus(
+          user.uid,
+          evaluated,
+          persisted
+        );
+        setBadgeEligibilityMap(evaluated);
+        setUserBadgeMap(persistenceResult.userBadgeMap);
+        setBadgeDataStatus(badgeData.status);
+        setBadgePersistenceStatus(persistenceResult.status);
       } catch (err) {
         console.error("Error evaluating badge eligibility:", err);
         setBadgeEligibilityMap(evaluateBadgeEligibility({}));
+        setUserBadgeMap({});
+        setBadgeDataStatus({
+          state: "failed",
+          isAuthoritative: false,
+          failedSources: [],
+          message: "Badge data could not be loaded right now.",
+        });
+        setBadgePersistenceStatus({
+          state: "failed",
+          message: "Badge awards could not be saved right now.",
+        });
       } finally {
         setLoadingBadges(false);
       }
@@ -295,6 +369,14 @@ function ProfilePageContent() {
 
   const discordInfo = discord.discordInfo;
   const githubInfo = github.githubInfo;
+  const earnedBadgeIds = getEarnedBadgeIds(
+    badgeDefinitions,
+    badgeEligibilityMap,
+    userBadgeMap
+  );
+  const earnedBadgeDefinitions = badgeDefinitions.filter((definition) =>
+    earnedBadgeIds.includes(definition.id)
+  );
 
   return (
     <div className="min-h-[80vh] px-6 py-8 md:py-12">
@@ -481,20 +563,79 @@ function ProfilePageContent() {
             </div>
           ))}
         </div>
+        <p className="text-xs text-neutral-500 mb-6">
+          Contributor badge progress is based on merged pull requests in this repository.
+        </p>
 
         {/* ── Achievement Badges ───────────────────────────────────── */}
         <div className="bg-neutral-900 rounded-2xl p-6 border border-neutral-800 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-white">Achievement Badges</h2>
-            {loadingBadges && (
-              <span className="text-xs text-neutral-400">Updating...</span>
-            )}
+            <h2 className="text-lg font-semibold text-white">Earned Badges</h2>
+            <Link
+              href="/badges"
+              className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors"
+            >
+              View all badges
+            </Link>
           </div>
-          <BadgeGrid
-            definitions={BADGE_DEFINITIONS}
-            eligibilityMap={badgeEligibilityMap}
-            compact
-          />
+
+          {loadingBadges ? (
+            <span className="text-xs text-neutral-400">Updating...</span>
+          ) : earnedBadgeDefinitions.length === 0 ? (
+            <div className="text-sm text-neutral-400">
+              No badges earned yet. Complete milestones to unlock your first one.
+            </div>
+          ) : (
+            <BadgeGrid
+              definitions={earnedBadgeDefinitions}
+              eligibilityMap={badgeEligibilityMap}
+              earnedBadgeIds={earnedBadgeIds}
+              userBadgeMap={userBadgeMap}
+              compact
+              layout="horizontal"
+              isAuthoritative={badgeDataStatus.isAuthoritative}
+            />
+          )}
+
+          {badgeDataStatus.state !== "complete" && (
+            <div
+              className={`mt-4 rounded-lg border px-3 py-2 text-xs ${
+                badgeDataStatus.state === "failed"
+                  ? "border-red-500/30 bg-red-500/10 text-red-300"
+                  : "border-amber-500/30 bg-amber-500/10 text-amber-300"
+              }`}
+            >
+              {badgeDataStatus.message ||
+                "Badge data is partially unavailable. Some badge statuses may be unverified."}
+              {process.env.NODE_ENV !== "production" &&
+                badgeDataStatus.failedSources.length > 0 && (
+                  <p className="mt-1 text-[11px] opacity-80">
+                    Debug: failed badge sources: {badgeDataStatus.failedSources.join(", ")}
+                  </p>
+                )}
+            </div>
+          )}
+
+          {badgePersistenceStatus.state !== "complete" && (
+            <div
+              className={`mt-3 rounded-lg border px-3 py-2 text-xs ${
+                badgePersistenceStatus.state === "failed"
+                  ? "border-red-500/30 bg-red-500/10 text-red-300"
+                  : "border-amber-500/30 bg-amber-500/10 text-amber-300"
+              }`}
+            >
+              {badgePersistenceStatus.message ||
+                (badgePersistenceStatus.state === "failed"
+                  ? "We couldn’t save some badge updates. Earned dates may be missing. Please refresh or try again."
+                  : "Some badge updates are still syncing. Earned dates may appear shortly.")}
+            </div>
+          )}
+
+          {usingFallbackDefinitions && (
+            <div className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
+              Badge definitions are using fallback data right now.
+            </div>
+          )}
         </div>
 
         {/* ── Tabs ──────────────────────────────────────────────────────── */}
