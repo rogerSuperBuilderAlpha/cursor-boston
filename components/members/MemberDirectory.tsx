@@ -279,9 +279,24 @@ export function MemberDirectory({ initialSearch = "" }: MemberDirectoryProps) {
           </div>
         )}
 
-        {loading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-neutral-900 dark:border-white"></div>
+{loading ? (
+          /* Skeleton grid — mimics the real member card layout */
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="rounded-xl border border-neutral-200 dark:border-neutral-800 p-5 space-y-3 animate-pulse">
+                {/* Avatar + name row */}
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 rounded-full bg-neutral-200 dark:bg-neutral-700" />
+                  <div className="space-y-2 flex-1">
+                    <div className="h-4 w-32 bg-neutral-200 dark:bg-neutral-700 rounded" />
+                    <div className="h-3 w-24 bg-neutral-200 dark:bg-neutral-700 rounded" />
+                  </div>
+                </div>
+                {/* Bio lines */}
+                <div className="h-3 w-full bg-neutral-200 dark:bg-neutral-700 rounded" />
+                <div className="h-3 w-4/5 bg-neutral-200 dark:bg-neutral-700 rounded" />
+              </div>
+            ))}
           </div>
         ) : members.length === 0 ? (
           <div className="text-center py-12">

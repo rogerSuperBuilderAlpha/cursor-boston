@@ -127,11 +127,45 @@ function MembersPageContent() {
 export default function MembersPage() {
   return (
     <Suspense
-      fallback={
-        <div className="min-h-[80vh] flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-neutral-900 dark:border-white"></div>
-        </div>
-      }
+    fallback={
+      <div className="flex flex-col">
+        {/* Hero skeleton */}
+        <section className="py-12 md:py-16 px-6 border-b border-neutral-200 dark:border-neutral-800">
+          <div className="max-w-4xl mx-auto text-center space-y-4">
+            {/* Title bar */}
+            <div className="h-10 w-48 bg-neutral-200 dark:bg-neutral-700 rounded-lg mx-auto animate-pulse" />
+            {/* Subtitle bar */}
+            <div className="h-5 w-80 bg-neutral-200 dark:bg-neutral-700 rounded mx-auto animate-pulse" />
+            {/* Tab buttons */}
+            <div className="flex justify-center gap-2 pt-2">
+              <div className="h-10 w-28 bg-neutral-200 dark:bg-neutral-700 rounded-lg animate-pulse" />
+              <div className="h-10 w-28 bg-neutral-200 dark:bg-neutral-700 rounded-lg animate-pulse" />
+            </div>
+          </div>
+        </section>
+
+        {/* Member card grid skeleton */}
+        <section className="py-10 px-6">
+          <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="rounded-xl border border-neutral-200 dark:border-neutral-800 p-5 space-y-3 animate-pulse">
+                {/* Avatar + name row */}
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 rounded-full bg-neutral-200 dark:bg-neutral-700" />
+                  <div className="space-y-2 flex-1">
+                    <div className="h-4 w-32 bg-neutral-200 dark:bg-neutral-700 rounded" />
+                    <div className="h-3 w-24 bg-neutral-200 dark:bg-neutral-700 rounded" />
+                  </div>
+                </div>
+                {/* Bio lines */}
+                <div className="h-3 w-full bg-neutral-200 dark:bg-neutral-700 rounded" />
+                <div className="h-3 w-4/5 bg-neutral-200 dark:bg-neutral-700 rounded" />
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    }
     >
       <MembersPageContent />
     </Suspense>
