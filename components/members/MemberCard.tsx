@@ -1,6 +1,10 @@
 import Image from "next/image";
 import type { PublicMember } from "@/types/members";
 import { getInitials } from "@/lib/utils";
+import { BADGE_DEFINITIONS } from "@/lib/badges/definitions";
+import { evaluateBadgeEligibility } from "@/lib/badges/eligibility";
+import type { BadgeEligibilityInput } from "@/lib/badges/types";
+import { BadgeGrid } from "@/components/badges/BadgeGrid";
 
 interface MemberCardProps {
   member: PublicMember;
@@ -9,6 +13,28 @@ interface MemberCardProps {
 export function MemberCard({ member }: MemberCardProps) {
   const v = member.visibility;
   const isAgent = member.memberType === "agent";
+  const badgeInput = {
+    hasDisplayName: Boolean(member.displayName?.trim()),
+    isPublicProfile: false,
+    hasDiscordConnected: Boolean(member.discord),
+    hasGithubConnected: Boolean(member.github),
+    eventsAttendedCount: member.eventsAttended ?? 0,
+    talksGivenCount: member.talksGiven ?? 0,
+    pullRequestsCount: member.pullRequestsCount ?? 0,
+    communityPostsCount: 0,
+    hackathonParticipationCount: 0,
+    showcaseSubmissionsCount: 0,
+    mentorMatchesCount: 0,
+  } satisfies BadgeEligibilityInput;
+
+  const badgeEligibilityMap = evaluateBadgeEligibility(badgeInput);
+  const earnedBadgeIds = BADGE_DEFINITIONS
+    .filter((definition) => badgeEligibilityMap[definition.id].isEligible)
+    .map((definition) => definition.id);
+  const previewDefinitions = [
+    ...BADGE_DEFINITIONS.filter((definition) => earnedBadgeIds.includes(definition.id)),
+    ...BADGE_DEFINITIONS.filter((definition) => !earnedBadgeIds.includes(definition.id)),
+  ].slice(0, 3);
 
   return (
     <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors">
@@ -133,6 +159,15 @@ export function MemberCard({ member }: MemberCardProps) {
             {member.pullRequestsCount} PR{member.pullRequestsCount !== 1 ? "s" : ""}
           </span>
         )}
+      </div>
+
+      <div className="mb-4">
+        <BadgeGrid
+          definitions={previewDefinitions}
+          eligibilityMap={badgeEligibilityMap}
+          earnedBadgeIds={earnedBadgeIds}
+          compact
+        />
       </div>
 
       {/* Social Links */}

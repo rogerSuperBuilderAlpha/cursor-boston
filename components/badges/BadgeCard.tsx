@@ -1,5 +1,5 @@
 import type { SVGProps } from "react";
-import type { BadgeDefinition, BadgeEligibilityResult } from "../../lib/badges/types";
+import type { BadgeDefinition, BadgeEligibilityResult } from "@/lib/badges/types";
 import { cn } from "@/lib/utils";
 
 interface BadgeCardProps {

@@ -23,6 +23,11 @@ import {
   EyeIcon,
   EyeOffIcon,
 } from "@/components/icons";
+import { getBadgeEligibilityInput } from "@/lib/badges/getBadgeEligibilityInput";
+import { evaluateBadgeEligibility } from "@/lib/badges/eligibility";
+import { BADGE_DEFINITIONS } from "@/lib/badges/definitions";
+import type { BadgeEligibilityMap } from "@/lib/badges/types";
+import { BadgeGrid } from "@/components/badges/BadgeGrid";
 
 // Hooks
 import { useDiscordConnection } from "./_hooks/useDiscordConnection";
@@ -93,6 +98,8 @@ function ProfilePageContent() {
   const [loadingData, setLoadingData] = useState(true);
   const [connectedAgents, setConnectedAgents] = useState<ConnectedAgent[]>([]);
   const [loadingAgents, setLoadingAgents] = useState(false);
+  const [badgeEligibilityMap, setBadgeEligibilityMap] = useState<BadgeEligibilityMap | undefined>(undefined);
+  const [loadingBadges, setLoadingBadges] = useState(false);
 
   // ── Password state (kept here because it needs user from auth context) ────
   const [passwordSaving, setPasswordSaving] = useState(false);
@@ -213,6 +220,33 @@ function ProfilePageContent() {
       }
     })();
   }, [user]);
+
+  // ── Fetch badge eligibility input and evaluate badges ─────────────────────
+  useEffect(() => {
+    if (!user) {
+      setBadgeEligibilityMap(undefined);
+      return;
+    }
+
+    setLoadingBadges(true);
+    (async () => {
+      try {
+        const input = await getBadgeEligibilityInput({
+          uid: user.uid,
+          displayName: userProfile?.displayName ?? user.displayName ?? null,
+          visibility: userProfile?.visibility ?? null,
+          discord: userProfile?.discord,
+          github: userProfile?.github,
+        });
+        setBadgeEligibilityMap(evaluateBadgeEligibility(input));
+      } catch (err) {
+        console.error("Error evaluating badge eligibility:", err);
+        setBadgeEligibilityMap(evaluateBadgeEligibility({}));
+      } finally {
+        setLoadingBadges(false);
+      }
+    })();
+  }, [user, userProfile]);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
   const handleSignOut = async () => {
@@ -446,6 +480,21 @@ function ProfilePageContent() {
               <p className="text-neutral-400 text-sm">{label}</p>
             </div>
           ))}
+        </div>
+
+        {/* ── Achievement Badges ───────────────────────────────────── */}
+        <div className="bg-neutral-900 rounded-2xl p-6 border border-neutral-800 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-white">Achievement Badges</h2>
+            {loadingBadges && (
+              <span className="text-xs text-neutral-400">Updating...</span>
+            )}
+          </div>
+          <BadgeGrid
+            definitions={BADGE_DEFINITIONS}
+            eligibilityMap={badgeEligibilityMap}
+            compact
+          />
         </div>
 
         {/* ── Tabs ──────────────────────────────────────────────────────── */}
