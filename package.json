@@ -40,7 +40,7 @@
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
     "test": "jest --config config/jest.config.js",
-    "test:rules": "firebase emulators:exec --only firestore \"npm test -- --runTestsByPath __tests__/config/firebase/firestore.rules.test.ts\"",
+    "test:rules": "firebase emulators:exec --only firestore \"npm test -- --runTestsByPath __tests__/config/firebase/firestore.rules.test.ts --testPathIgnorePatterns='^$'\"",
     "test:watch": "jest --watch --config config/jest.config.js",
     "test:coverage": "jest --coverage --config config/jest.config.js",
     "validate-env": "tsx scripts/validate-env.ts",
