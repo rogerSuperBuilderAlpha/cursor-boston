@@ -34,8 +34,7 @@
   ],
   "scripts": {
     "dev": "NODE_OPTIONS='--no-deprecation' next dev --webpack -H localhost",
-    "dev:turbo": "NODE_OPTIONS='--no-deprecation' next dev -H localhost",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "NODE_OPTIONS='--no-deprecation' next start",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
