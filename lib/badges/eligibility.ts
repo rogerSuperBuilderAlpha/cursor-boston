@@ -8,12 +8,16 @@ export function normalizeBadgeEligibilityInput(
   return {
     hasDisplayName: input.hasDisplayName ?? false,
     isPublicProfile: input.isPublicProfile ?? false,
+    hasBio: input.hasBio ?? false,
+    hasAvatar: input.hasAvatar ?? false,
     hasDiscordConnected: input.hasDiscordConnected ?? false,
     hasGithubConnected: input.hasGithubConnected ?? false,
     eventsAttendedCount: input.eventsAttendedCount ?? 0,
+    talksSubmittedCount: input.talksSubmittedCount ?? 0,
     talksGivenCount: input.talksGivenCount ?? 0,
     pullRequestsCount: input.pullRequestsCount ?? 0,
     communityPostsCount: input.communityPostsCount ?? 0,
+    communityMessagesCount: input.communityMessagesCount ?? 0,
     hackathonParticipationCount: input.hackathonParticipationCount ?? 0,
     showcaseSubmissionsCount: input.showcaseSubmissionsCount ?? 0,
     mentorMatchesCount: input.mentorMatchesCount ?? 0,
@@ -29,7 +33,7 @@ export function evaluateBadgeEligibility(
 ): BadgeEligibilityMap {
   const n = normalizeBadgeEligibilityInput(input);
 
-  const firstStepsCurrent = Number(n.hasDisplayName) + Number(n.isPublicProfile);
+  const firstStepsCurrent = Number(n.hasBio) + Number(n.hasAvatar);
   const firstStepsEligible = firstStepsCurrent >= 2;
 
   const connectedCurrent = Number(n.hasDiscordConnected) + Number(n.hasGithubConnected);
@@ -38,7 +42,7 @@ export function evaluateBadgeEligibility(
   const speakerEligible = n.talksGivenCount >= 1;
   const hackerEligible = n.hackathonParticipationCount >= 1;
   const showcaseStarEligible = n.showcaseSubmissionsCount >= 1;
-  const conversationStarterEligible = n.communityPostsCount >= 1;
+  const conversationStarterEligible = n.communityMessagesCount >= 5;
   const regularEligible = n.eventsAttendedCount >= 3;
   const mentorEligible = n.mentorMatchesCount >= 1;
   const contributorEligible = n.pullRequestsCount >= 1;
@@ -54,7 +58,7 @@ export function evaluateBadgeEligibility(
       },
       reason: firstStepsEligible
         ? undefined
-        : "Add a display name and make your profile public.",
+        : "Add a bio and profile photo.",
     },
     connected: {
       badgeId: "connected",
@@ -74,7 +78,7 @@ export function evaluateBadgeEligibility(
         target: 1,
         unit: "talks",
       },
-      reason: speakerEligible ? undefined : "Give at least 1 talk.",
+      reason: speakerEligible ? undefined : "Deliver at least 1 talk.",
     },
     hacker: {
       badgeId: "hacker",
@@ -102,13 +106,13 @@ export function evaluateBadgeEligibility(
       badgeId: "conversation-starter",
       isEligible: conversationStarterEligible,
       progress: {
-        current: cap(n.communityPostsCount, 1),
-        target: 1,
-        unit: "posts",
+        current: cap(n.communityMessagesCount, 5),
+        target: 5,
+        unit: "messages",
       },
       reason: conversationStarterEligible
         ? undefined
-        : "Create at least 1 community post.",
+        : "Post at least 5 community messages.",
     },
     regular: {
       badgeId: "regular",
@@ -140,7 +144,7 @@ export function evaluateBadgeEligibility(
       },
       reason: contributorEligible
         ? undefined
-        : "Have at least 1 counted pull request.",
+        : "Get at least 1 pull request merged to this repo.",
     },
   };
 }
