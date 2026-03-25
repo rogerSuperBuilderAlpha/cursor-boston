@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import {
   verifyWebhookSignature,
   processPullRequest,
+  isTargetRepository,
 } from "@/lib/github";
+import { HACK_A_SPRINT_2026_SUBMISSIONS_PATH } from "@/lib/hackathon-showcase";
 import { notifyPROpened, notifyPRMerged } from "@/lib/discord";
 import { withMiddleware, rateLimitConfigs } from "@/lib/middleware";
 import { logger } from "@/lib/logger";
@@ -118,6 +121,48 @@ async function handleWebhook(request: NextRequest) {
         });
         // Don't fail the webhook, but log the error
         // Discord notification already sent above
+      }
+
+      // Refresh Hack-a-Sprint showcase when a PR merges (submission list may change)
+      if (
+        action === "closed" &&
+        pr.merged &&
+        payload.repository &&
+        isTargetRepository(
+          payload.repository.owner.login,
+          payload.repository.name
+        )
+      ) {
+        try {
+          const filesRes = await fetch(
+            `https://api.github.com/repos/${payload.repository.owner.login}/${payload.repository.name}/pulls/${pr.number}/files`,
+            {
+              headers: {
+                Accept: "application/vnd.github+json",
+                "X-GitHub-Api-Version": "2022-11-28",
+                ...(process.env.GITHUB_TOKEN
+                  ? {
+                      Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+                    }
+                  : {}),
+              },
+            }
+          );
+          if (filesRes.ok) {
+            const files = (await filesRes.json()) as { filename?: string }[];
+            const touchesShowcase =
+              Array.isArray(files) &&
+              files.some((f) =>
+                typeof f.filename === "string" &&
+                f.filename.startsWith(HACK_A_SPRINT_2026_SUBMISSIONS_PATH)
+              );
+            if (touchesShowcase) {
+              revalidatePath("/hackathons/hack-a-sprint-2026");
+            }
+          }
+        } catch {
+          // non-fatal
+        }
       }
     }
 

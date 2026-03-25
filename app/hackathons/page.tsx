@@ -217,6 +217,15 @@ export default function HackathonsPage() {
                     >
                       Open on Luma
                     </a>
+                    {featuredInPersonHackathon.slug ===
+                      "cursor-boston-hack-a-sprint-2026" && (
+                      <Link
+                        href="/hackathons/hack-a-sprint-2026"
+                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-500/50 bg-emerald-500/10 px-5 py-3 text-sm font-semibold text-emerald-700 dark:text-emerald-300 transition-colors hover:bg-emerald-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                      >
+                        Showcase &amp; voting
+                      </Link>
+                    )}
                   </div>
                 </div>
 

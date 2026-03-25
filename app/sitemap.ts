@@ -43,6 +43,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
+      url: `${baseUrl}/hackathons/hack-a-sprint-2026`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 0.75,
+    },
+    {
       url: `${baseUrl}/talks`,
       lastModified: new Date(),
       changeFrequency: 'weekly',

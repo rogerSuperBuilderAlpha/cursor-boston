@@ -10,7 +10,7 @@ import {
   initializeTestEnvironment,
   type RulesTestEnvironment,
 } from "@firebase/rules-unit-testing";
-import { doc, setDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 
 const PROJECT_ID = "demo-cursor-boston-rules";
 const RULES_PATH = resolve(process.cwd(), "config/firebase/firestore.rules");
@@ -172,5 +172,37 @@ describe("Firestore rules: badge trust boundaries", () => {
         pullRequestsCount: 999,
       })
     );
+  });
+
+  it("hackathonShowcaseVotes: authenticated read allowed, client write denied", async () => {
+    if (!testEnv) {
+      throw new Error(
+        "Firestore rules test environment was not initialized. Run via firebase emulators:exec."
+      );
+    }
+    const uid = "vote-reader";
+    const ownerDb = testEnv.authenticatedContext(uid).firestore();
+    const voteRef = doc(ownerDb, "hackathonShowcaseVotes", "doc-showcase-1");
+    await assertSucceeds(getDoc(voteRef));
+    await assertFails(
+      setDoc(voteRef, {
+        eventId: "hack-a-sprint-2026",
+        channel: "community",
+        submissionId: "octocat",
+        userId: uid,
+        value: 1,
+      })
+    );
+  });
+
+  it("hackathonShowcaseVotes: unauthenticated read denied", async () => {
+    if (!testEnv) {
+      throw new Error(
+        "Firestore rules test environment was not initialized. Run via firebase emulators:exec."
+      );
+    }
+    const guestDb = testEnv.unauthenticatedContext().firestore();
+    const voteRef = doc(guestDb, "hackathonShowcaseVotes", "doc-showcase-2");
+    await assertFails(getDoc(voteRef));
   });
 });
