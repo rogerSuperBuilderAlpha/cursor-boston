@@ -324,52 +324,127 @@ export default async function EventPage({
               )}
             </div>
 
-            {/* CTA Button */}
-            <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
-              <a
-                href={getLumaCheckoutHref(event)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-black rounded-lg text-base font-semibold hover:bg-neutral-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black w-full sm:w-auto luma-checkout--button"
-                data-luma-action="checkout"
-                data-luma-event-id={getLumaCheckoutEventId(event)}
-              >
-                Register on Luma
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
+            {/* CTA Buttons */}
+            {event.slug === "cursor-boston-hack-a-sprint-2026" ? (
+              <div className="flex flex-col gap-4">
+                <Link
+                  href="/hackathons/hack-a-sprint-2026/signup"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-emerald-500 text-white rounded-lg text-base font-semibold hover:bg-emerald-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black w-full sm:w-auto"
                 >
-                  <path d="M7 17l9.2-9.2M17 17V7H7" />
-                </svg>
-              </a>
-              {event.slug === "cursor-boston-hack-a-sprint-2026" && (
-                <>
-                  <Link
-                    href="/hackathons/hack-a-sprint-2026/signup"
-                    className="inline-flex items-center justify-center gap-2 px-8 py-4 border-2 border-white/30 text-white rounded-lg text-base font-semibold hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black w-full sm:w-auto"
+                  Register for the Hackathon
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+                </Link>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <a
+                    href={getLumaCheckoutHref(event)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/20 text-white/80 rounded-lg text-sm font-medium hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black w-full sm:w-auto luma-checkout--button"
+                    data-luma-action="checkout"
+                    data-luma-event-id={getLumaCheckoutEventId(event)}
                   >
-                    Website signup &amp; ranking
-                  </Link>
+                    RSVP on Luma (for event entry)
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 17l9.2-9.2M17 17V7H7" /></svg>
+                  </a>
                   <Link
                     href="/hackathons/hack-a-sprint-2026"
-                    className="inline-flex items-center justify-center gap-2 px-8 py-4 border-2 border-white/30 text-white rounded-lg text-base font-semibold hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black w-full sm:w-auto"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/20 text-white/80 rounded-lg text-sm font-medium hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black w-full sm:w-auto"
                   >
                     Showcase &amp; voting
                   </Link>
-                </>
-              )}
-            </div>
+                </div>
+                <p className="text-sm text-neutral-500 mt-1">
+                  You need both: Luma RSVP for door entry + website registration for hackathon ranking &amp; prizes.
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
+                <a
+                  href={getLumaCheckoutHref(event)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-black rounded-lg text-base font-semibold hover:bg-neutral-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black w-full sm:w-auto luma-checkout--button"
+                  data-luma-action="checkout"
+                  data-luma-event-id={getLumaCheckoutEventId(event)}
+                >
+                  Register on Luma
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 17l9.2-9.2M17 17V7H7" /></svg>
+                </a>
+              </div>
+            )}
           </div>
         </div>
       </section>
+
+      {/* How to Participate — hack-a-sprint only */}
+      {event.slug === "cursor-boston-hack-a-sprint-2026" && (
+        <section className="py-12 px-6 bg-emerald-500/5 border-b border-emerald-500/20">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
+              How to participate
+            </h2>
+            <p className="text-neutral-400 mb-8">
+              Two quick registrations, then you&apos;re in.
+            </p>
+            <div className="grid sm:grid-cols-3 gap-6">
+              <div className="relative p-6 bg-neutral-900 rounded-xl border border-neutral-800">
+                <span className="absolute -top-3 left-4 px-2 py-0.5 bg-emerald-500 text-white text-xs font-bold rounded-full">
+                  Step 1
+                </span>
+                <h3 className="text-white font-semibold mt-2 mb-2">RSVP on Luma</h3>
+                <p className="text-neutral-400 text-sm mb-4">
+                  Luma handles door entry and event logistics. You must RSVP there to attend.
+                </p>
+                <a
+                  href={getLumaCheckoutHref(event)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-400 hover:text-emerald-300 transition-colors luma-checkout--button"
+                  data-luma-action="checkout"
+                  data-luma-event-id={getLumaCheckoutEventId(event)}
+                >
+                  Open Luma
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 17l9.2-9.2M17 17V7H7" /></svg>
+                </a>
+              </div>
+              <div className="relative p-6 bg-neutral-900 rounded-xl border border-emerald-500/30">
+                <span className="absolute -top-3 left-4 px-2 py-0.5 bg-emerald-500 text-white text-xs font-bold rounded-full">
+                  Step 2
+                </span>
+                <h3 className="text-white font-semibold mt-2 mb-2">Register on the website</h3>
+                <p className="text-neutral-400 text-sm mb-4">
+                  Sign up here to join the hackathon leaderboard. Requires a Cursor Boston account with GitHub &amp; Discord connected.
+                </p>
+                <Link
+                  href="/hackathons/hack-a-sprint-2026/signup"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-400 hover:text-emerald-300 transition-colors"
+                >
+                  Go to website signup
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+                </Link>
+              </div>
+              <div className="relative p-6 bg-neutral-900 rounded-xl border border-neutral-800">
+                <span className="absolute -top-3 left-4 px-2 py-0.5 bg-neutral-600 text-white text-xs font-bold rounded-full">
+                  Step 3
+                </span>
+                <h3 className="text-white font-semibold mt-2 mb-2">Climb the leaderboard</h3>
+                <p className="text-neutral-400 text-sm mb-4">
+                  Merge PRs to the cursor-boston repo before the event to climb the rankings. Top 50 are eligible for $50 Cursor credit.
+                </p>
+                <a
+                  href="https://github.com/rogerSuperBuilderAlpha/cursor-boston"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-neutral-400 hover:text-white transition-colors"
+                >
+                  View repo on GitHub
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 17l9.2-9.2M17 17V7H7" /></svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* About Section */}
       <section className="py-16 px-6 border-b border-neutral-800">
@@ -658,36 +733,56 @@ export default async function EventPage({
       {/* Final CTA */}
       <section className="py-20 px-6">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Ready to Join Us?
-          </h2>
-          <p className="text-neutral-400 text-lg mb-8">
-            Don&apos;t miss out on this event. Spots are limited!
-          </p>
-          <a
-            href={getLumaCheckoutHref(event)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-black rounded-lg text-lg font-semibold hover:bg-neutral-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black luma-checkout--button"
-            data-luma-action="checkout"
-            data-luma-event-id={getLumaCheckoutEventId(event)}
-          >
-            Register Now on Luma
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M7 17l9.2-9.2M17 17V7H7" />
-            </svg>
-          </a>
+          {event.slug === "cursor-boston-hack-a-sprint-2026" ? (
+            <>
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                Ready to compete?
+              </h2>
+              <p className="text-neutral-400 text-lg mb-8">
+                Register on the website to lock in your leaderboard spot, then RSVP on Luma so you can get through the door.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Link
+                  href="/hackathons/hack-a-sprint-2026/signup"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-emerald-500 text-white rounded-lg text-lg font-semibold hover:bg-emerald-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                >
+                  Register for the Hackathon
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+                </Link>
+                <a
+                  href={getLumaCheckoutHref(event)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 border border-white/20 text-white/80 rounded-lg text-base font-medium hover:bg-white/10 transition-colors luma-checkout--button"
+                  data-luma-action="checkout"
+                  data-luma-event-id={getLumaCheckoutEventId(event)}
+                >
+                  RSVP on Luma
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 17l9.2-9.2M17 17V7H7" /></svg>
+                </a>
+              </div>
+            </>
+          ) : (
+            <>
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                Ready to Join Us?
+              </h2>
+              <p className="text-neutral-400 text-lg mb-8">
+                Don&apos;t miss out on this event. Spots are limited!
+              </p>
+              <a
+                href={getLumaCheckoutHref(event)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-black rounded-lg text-lg font-semibold hover:bg-neutral-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black luma-checkout--button"
+                data-luma-action="checkout"
+                data-luma-event-id={getLumaCheckoutEventId(event)}
+              >
+                Register Now on Luma
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 17l9.2-9.2M17 17V7H7" /></svg>
+              </a>
+            </>
+          )}
         </div>
       </section>
     </div>
