@@ -44,10 +44,28 @@ type ProfileStatus = {
   };
 };
 
+function profileFromContext(up: {
+  github?: { login: string } | null;
+  discord?: { username: string } | null;
+  visibility?: { isPublic?: boolean; showDiscord?: boolean } | null;
+} | null): ProfileStatus | null {
+  if (!up) return null;
+  return {
+    hasGithub: Boolean(up.github),
+    githubUsername: up.github?.login ?? null,
+    hasDiscord: Boolean(up.discord),
+    discordUsername: up.discord?.username ?? null,
+    visibility: {
+      isPublic: up.visibility?.isPublic,
+      showDiscord: up.visibility?.showDiscord,
+    },
+  };
+}
+
 export default function HackASprint2026SignupPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, userProfile, loading: authLoading } = useAuth();
   const [data, setData] = useState<LeaderboardResponse | null>(null);
-  const [profile, setProfile] = useState<ProfileStatus | null>(null);
+  const [profile, setProfile] = useState<ProfileStatus | null>(profileFromContext(userProfile));
   const [profileLoading, setProfileLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -56,6 +74,12 @@ export default function HackASprint2026SignupPage() {
 
   const eventId = HACK_A_SPRINT_2026_EVENT_ID;
   const apiUrl = `/api/hackathons/events/${eventId}/signup`;
+
+  // Seed from auth context as soon as userProfile arrives (instant, no API call)
+  useEffect(() => {
+    const fromCtx = profileFromContext(userProfile);
+    if (fromCtx) setProfile(fromCtx);
+  }, [userProfile]);
 
   const loadProfile = useCallback(async () => {
     if (!user) return;
@@ -70,7 +94,7 @@ export default function HackASprint2026SignupPage() {
         setProfile(json.profile);
       }
     } catch {
-      // Profile fetch is non-critical; requirements just won't show
+      // Non-critical — context data is already shown
     } finally {
       setProfileLoading(false);
     }
@@ -329,7 +353,7 @@ export default function HackASprint2026SignupPage() {
                 All four requirements must be met before you can claim your spot.
               </p>
 
-              {profileLoading ? (
+              {!profile && profileLoading ? (
                 <div className="space-y-3">
                   {[1, 2, 3, 4].map((i) => (
                     <div key={i} className="h-14 rounded-xl bg-neutral-100 dark:bg-neutral-800 animate-pulse" />
@@ -454,16 +478,19 @@ export default function HackASprint2026SignupPage() {
                   </div>
 
                   {/* Show Discord on profile */}
+                  {(() => {
+                    const discordVisible = profile.hasDiscord && profile.visibility?.showDiscord === true;
+                    return (
                   <div className={`flex items-center justify-between p-4 rounded-xl border ${
-                    profile.visibility?.showDiscord
+                    discordVisible
                       ? "border-emerald-500/20 bg-emerald-500/5 dark:bg-emerald-500/10"
                       : "border-neutral-200 bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800/50"
                   }`}>
                     <div className="flex items-center gap-3">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        profile.visibility?.showDiscord ? "bg-emerald-500/20" : "bg-amber-500/10"
+                        discordVisible ? "bg-emerald-500/20" : "bg-amber-500/10"
                       }`}>
-                        {profile.visibility?.showDiscord ? (
+                        {discordVisible ? (
                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><polyline points="20 6 9 17 4 12" /></svg>
                         ) : (
                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-400"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
@@ -480,14 +507,16 @@ export default function HackASprint2026SignupPage() {
                       onClick={() => void toggleVisibility("showDiscord")}
                       disabled={togglingDiscord || !profile.hasDiscord}
                       className={`relative w-11 h-6 rounded-full transition-colors ${
-                        profile.visibility?.showDiscord ? "bg-emerald-500" : "bg-neutral-300 dark:bg-neutral-600"
+                        discordVisible ? "bg-emerald-500" : "bg-neutral-300 dark:bg-neutral-600"
                       } ${togglingDiscord || !profile.hasDiscord ? "opacity-50" : ""}`}
                     >
                       <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                        profile.visibility?.showDiscord ? "left-6" : "left-1"
+                        discordVisible ? "left-6" : "left-1"
                       }`} />
                     </button>
                   </div>
+                    );
+                  })()}
 
                   {/* Progress + CTA */}
                   <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -506,9 +535,8 @@ export default function HackASprint2026SignupPage() {
                         disabled={busy || !isProfileReady}
                         onClick={() => void handleSignup()}
                         className="inline-flex items-center justify-center rounded-lg bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed"
-                        title={!isProfileReady ? "Complete all requirements first" : undefined}
                       >
-                        {busy ? "Working…" : "Claim my spot"}
+                        {busy ? "Working…" : isProfileReady ? "Claim my spot" : "Complete requirements to sign up"}
                       </button>
                       <button
                         type="button"
