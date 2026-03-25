@@ -133,7 +133,7 @@ export default function HackASprint2026SignupPage() {
           Hack-a-Sprint 2026 — website signup
         </h1>
         <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400">
-          This is <strong>in addition to</strong>{" "}
+          This page is the on-site signup list for Hack-a-Sprint 2026. It does not replace{" "}
           <a
             href="https://luma.com/uixo8hl6"
             target="_blank"
@@ -142,7 +142,9 @@ export default function HackASprint2026SignupPage() {
           >
             Luma registration
           </a>
-          . Claim your spot here so we can rank everyone for invitations and perks.
+          —you still need Luma for event admission. After that, claim a spot below so we
+          can rank builders by merged PRs to cursor-boston, then by signup time, for
+          invitations and the top-{CURSOR_CREDIT_TOP_N} Cursor credit band.
         </p>
 
         <div className="mt-8 rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
