@@ -1,6 +1,10 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { getCurrentVirtualHackathonId, getMonthEndFromVirtualId } from "@/lib/hackathons";
+import {
+  getLumaCheckoutEventId,
+  getLumaCheckoutHref,
+} from "@/lib/luma-event";
 import eventsData from "@/content/events.json";
 import { Event, EventsData } from "@/types/events";
 
@@ -33,6 +37,11 @@ export default function HackathonsPage() {
       return new Date(a.date).getTime() - new Date(b.date).getTime();
     });
   const featuredInPersonHackathon = inPersonHackathons[0];
+  const featuredEmbedSrc =
+    featuredInPersonHackathon?.lumaEmbedSrc ??
+    (featuredInPersonHackathon?.lumaCheckoutEventId
+      ? `https://luma.com/embed/event/${featuredInPersonHackathon.lumaCheckoutEventId}/simple`
+      : null);
 
   return (
     <div className="flex flex-col">
@@ -77,47 +86,162 @@ export default function HackathonsPage() {
           </h2>
 
           {featuredInPersonHackathon ? (
-            <div className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
-              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                <div className="max-w-2xl">
-                  <h3 className="text-xl font-semibold text-foreground mb-2">
-                    {featuredInPersonHackathon.title}
-                  </h3>
-                  {featuredInPersonHackathon.subtitle && (
-                    <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-3">
-                      {featuredInPersonHackathon.subtitle}
-                    </p>
-                  )}
-                  <p className="text-neutral-600 dark:text-neutral-400 mb-4">
+            <div className="space-y-10 rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900 md:p-8">
+              <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+                <div className="max-w-2xl space-y-4">
+                  <div>
+                    <h3 className="text-xl font-semibold text-foreground md:text-2xl">
+                      {featuredInPersonHackathon.title}
+                    </h3>
+                    {featuredInPersonHackathon.subtitle && (
+                      <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
+                        {featuredInPersonHackathon.subtitle}
+                      </p>
+                    )}
+                  </div>
+                  <p className="text-neutral-600 dark:text-neutral-400">
                     {featuredInPersonHackathon.description}
                   </p>
                   <div className="space-y-1 text-sm text-neutral-500 dark:text-neutral-400">
                     <p>
-                      {featuredInPersonHackathon.date}
-                      {featuredInPersonHackathon.time && featuredInPersonHackathon.time !== "TBD"
+                      <span className="font-medium text-foreground">When:</span>{" "}
+                      {new Date(
+                        `${featuredInPersonHackathon.date}T12:00:00`
+                      ).toLocaleDateString("en-US", {
+                        weekday: "long",
+                        month: "long",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                      {featuredInPersonHackathon.time &&
+                      featuredInPersonHackathon.time !== "TBD"
                         ? ` • ${featuredInPersonHackathon.time}`
                         : ""}
                     </p>
-                    <p>{featuredInPersonHackathon.venue?.name || featuredInPersonHackathon.location}</p>
+                    <p>
+                      <span className="font-medium text-foreground">Where:</span>{" "}
+                      {featuredInPersonHackathon.venue?.name ||
+                        featuredInPersonHackathon.location}
+                    </p>
+                    <p className="text-xs text-neutral-500 dark:text-neutral-500">
+                      Registration is approval-required on{" "}
+                      <a
+                        href={featuredInPersonHackathon.lumaUrl}
+                        className="text-emerald-600 underline hover:text-emerald-500 dark:text-emerald-400"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Luma
+                      </a>
+                      . You may be asked to verify token ownership with your wallet during checkout.
+                    </p>
+                  </div>
+                  {featuredInPersonHackathon.perks &&
+                    featuredInPersonHackathon.perks.length > 0 && (
+                      <div>
+                        <h4 className="mb-2 text-sm font-semibold text-foreground">
+                          Perks &amp; prizes
+                        </h4>
+                        <ul className="list-inside list-disc text-sm text-neutral-600 dark:text-neutral-400">
+                          {featuredInPersonHackathon.perks.map((perk) => (
+                            <li key={perk}>{perk}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  {featuredInPersonHackathon.agenda &&
+                    featuredInPersonHackathon.agenda.length > 0 && (
+                      <div>
+                        <h4 className="mb-2 text-sm font-semibold text-foreground">
+                          Schedule
+                        </h4>
+                        <ul className="space-y-2 text-sm text-neutral-600 dark:text-neutral-400">
+                          {featuredInPersonHackathon.agenda.map((item) => (
+                            <li key={`${item.time}-${item.title}`}>
+                              <span className="font-medium text-foreground">
+                                {item.time}
+                              </span>
+                              {" — "}
+                              {item.title}
+                              {item.description ? `. ${item.description}` : ""}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  <div>
+                    <h4 className="mb-2 text-sm font-semibold text-foreground">
+                      How spots are prioritized
+                    </h4>
+                    <ol className="list-inside list-decimal space-y-1 text-sm text-neutral-600 dark:text-neutral-400">
+                      <li>
+                        Open source: merged PRs to{" "}
+                        <a
+                          href="https://github.com/rogerSuperBuilderAlpha/cursor-boston"
+                          className="text-emerald-600 underline hover:text-emerald-500 dark:text-emerald-400"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          cursor-boston on GitHub
+                        </a>
+                      </li>
+                      <li>Completed profile on cursorboston.com</li>
+                      <li>Member of the Cursor Boston Discord</li>
+                      <li>Earlier sign-ups rank higher</li>
+                    </ol>
+                  </div>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                    <a
+                      href={getLumaCheckoutHref(featuredInPersonHackathon)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-500 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background luma-checkout--button"
+                      data-luma-action="checkout"
+                      data-luma-event-id={getLumaCheckoutEventId(
+                        featuredInPersonHackathon
+                      )}
+                    >
+                      Register for event
+                    </a>
+                    <Link
+                      href={`/events/${featuredInPersonHackathon.slug}`}
+                      className="inline-flex items-center justify-center gap-2 rounded-lg border border-neutral-300 px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:border-neutral-700 dark:hover:bg-neutral-800"
+                    >
+                      Full event page
+                    </Link>
+                    <a
+                      href={featuredInPersonHackathon.lumaUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-2 rounded-lg border border-neutral-300 px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:border-neutral-700 dark:hover:bg-neutral-800"
+                    >
+                      Open on Luma
+                    </a>
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-3 md:min-w-[180px]">
-                  <Link
-                    href={`/events/${featuredInPersonHackathon.slug}`}
-                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                  >
-                    View details
-                  </Link>
-                  <a
-                    href={featuredInPersonHackathon.lumaUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-neutral-300 px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:border-neutral-700 dark:hover:bg-neutral-800"
-                  >
-                    Register on Luma
-                  </a>
-                </div>
+                {featuredEmbedSrc ? (
+                  <div className="w-full shrink-0 lg:max-w-[min(100%,600px)]">
+                    <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+                      Register on Luma
+                    </p>
+                    <div className="overflow-hidden rounded-[4px]">
+                      <iframe
+                        src={featuredEmbedSrc}
+                        title={`${featuredInPersonHackathon.title} — Luma`}
+                        width={600}
+                        height={450}
+                        className="h-[min(450px,70vh)] w-full max-w-full bg-white"
+                        style={{
+                          border: "1px solid #bfcbda88",
+                          borderRadius: 4,
+                        }}
+                        allow="fullscreen; payment"
+                        frameBorder={0}
+                      />
+                    </div>
+                  </div>
+                ) : null}
               </div>
             </div>
           ) : (
@@ -191,10 +315,12 @@ export default function HackathonsPage() {
                         View details
                       </Link>
                       <a
-                        href={event.lumaUrl}
+                        href={getLumaCheckoutHref(event)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-neutral-300 px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:border-neutral-700 dark:hover:bg-neutral-800"
+                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-neutral-300 px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:border-neutral-700 dark:hover:bg-neutral-800 luma-checkout--button"
+                        data-luma-action="checkout"
+                        data-luma-event-id={getLumaCheckoutEventId(event)}
                       >
                         Register on Luma
                       </a>

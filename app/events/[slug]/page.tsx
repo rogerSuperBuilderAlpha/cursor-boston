@@ -4,6 +4,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import eventsData from "@/content/events.json";
 import CoworkingSlots from "@/components/events/CoworkingSlots";
+import {
+  getLumaCheckoutEventId,
+  getLumaCheckoutHref,
+} from "@/lib/luma-event";
 
 // Type definitions for event data
 interface AgendaItem {
@@ -62,6 +66,7 @@ interface Event {
   image: string;
   lumaUrl: string;
   lumaEventId: string;
+  lumaCheckoutEventId?: string;
   registrationRequired: boolean;
   capacity?: number;
   perks?: string[];
@@ -321,12 +326,12 @@ export default async function EventPage({
 
             {/* CTA Button */}
             <a
-              href={event.lumaUrl}
+              href={getLumaCheckoutHref(event)}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-black rounded-lg text-base font-semibold hover:bg-neutral-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black w-full sm:w-auto luma-checkout--button"
               data-luma-action="checkout"
-              data-luma-event-id={event.lumaEventId}
+              data-luma-event-id={getLumaCheckoutEventId(event)}
             >
               Register on Luma
               <svg
@@ -642,12 +647,12 @@ export default async function EventPage({
             Don&apos;t miss out on this event. Spots are limited!
           </p>
           <a
-            href={event.lumaUrl}
+            href={getLumaCheckoutHref(event)}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-black rounded-lg text-lg font-semibold hover:bg-neutral-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black luma-checkout--button"
             data-luma-action="checkout"
-            data-luma-event-id={event.lumaEventId}
+            data-luma-event-id={getLumaCheckoutEventId(event)}
           >
             Register Now on Luma
             <svg
