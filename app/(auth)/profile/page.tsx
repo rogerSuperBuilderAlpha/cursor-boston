@@ -374,6 +374,11 @@ function ProfilePageContent() {
                     .edu
                   </span>
                 )}
+                {userProfile?.hackASprint2026ShowcaseBadge && (
+                  <span className="px-3 py-1 bg-cyan-500/10 text-cyan-400 text-sm rounded-full">
+                    Hack-a-Sprint &apos;26 showcase
+                  </span>
+                )}
               </div>
 
               {discord.error && <p className="text-red-400 text-xs mt-2">{discord.error}</p>}

@@ -5,9 +5,9 @@ import { getVerifiedUser } from "@/lib/server-auth";
 import {
   HACK_A_SPRINT_2026_EVENT_ID,
   fetchShowcaseSubmissionsFromGitHub,
-  getJudgeUidSet,
   githubUserHasMergedLabeledShowcasePr,
 } from "@/lib/hackathon-showcase";
+import { userIsHackASprint2026Judge } from "@/lib/hackathon-showcase-admin";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -68,7 +68,12 @@ export async function POST(request: NextRequest) {
     if (channel === "community") {
       // any authenticated user
     } else if (channel === "judge") {
-      if (!getJudgeUidSet().has(user.uid)) {
+      const okJudge = await userIsHackASprint2026Judge(
+        db,
+        user.uid,
+        user.email
+      );
+      if (!okJudge) {
         return NextResponse.json({ error: "Not a judge" }, { status: 403 });
       }
     } else {

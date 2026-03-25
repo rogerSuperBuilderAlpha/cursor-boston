@@ -81,6 +81,8 @@ interface UserProfile {
     connectedAt: Date;
   };
   eduBadge?: boolean;
+  /** Server-set when a merged PR adds the user's Hack-a-Sprint 2026 showcase submission. */
+  hackASprint2026ShowcaseBadge?: boolean;
   // Public profile fields
   bio?: string;
   location?: string;

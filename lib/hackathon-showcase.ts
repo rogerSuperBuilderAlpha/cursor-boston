@@ -118,6 +118,17 @@ export function getJudgeUidSet(): Set<string> {
   );
 }
 
+/** Comma-separated list, case-insensitive (e.g. judge@org.com,judge2@org.com). */
+export function getJudgeEmailSet(): Set<string> {
+  const raw = process.env.HACK_A_SPRINT_2026_JUDGE_EMAILS || "";
+  return new Set(
+    raw
+      .split(",")
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean)
+  );
+}
+
 /**
  * Whether the GitHub user has a merged PR with the showcase label in the community repo.
  */

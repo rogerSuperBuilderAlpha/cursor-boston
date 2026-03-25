@@ -192,7 +192,11 @@ export default function HackASprint2026ShowcasePage() {
             >
               Sign in to continue
             </Link>
-            <p className="mt-6 text-sm text-neutral-500">
+            <p className="mt-6 text-sm text-neutral-500 space-x-3">
+              <Link href="/hackathons/hack-a-sprint-2026/signup" className="text-emerald-600 dark:text-emerald-400 hover:underline">
+                Website signup &amp; ranking
+              </Link>
+              <span aria-hidden="true">·</span>
               <Link href="/hackathons" className="text-emerald-600 dark:text-emerald-400 hover:underline">
                 ← Back to Hackathons
               </Link>
@@ -232,6 +236,12 @@ export default function HackASprint2026ShowcasePage() {
             >
               Event on Luma
             </a>
+            <Link
+              href="/hackathons/hack-a-sprint-2026/signup"
+              className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
+            >
+              Website signup &amp; ranking
+            </Link>
             <Link
               href="/hackathons"
               className="text-sm font-semibold text-neutral-600 dark:text-neutral-400 hover:underline"

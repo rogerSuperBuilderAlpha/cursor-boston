@@ -90,3 +90,48 @@ export async function getVerifiedUser(request: NextRequest): Promise<VerifiedUse
     roles,
   };
 }
+
+/**
+ * Like getVerifiedUser, but returns null if the token is missing or invalid.
+ * For public API handlers that optionally personalize the response.
+ */
+export async function getOptionalVerifiedUser(
+  request: NextRequest
+): Promise<VerifiedUser | null> {
+  const authHeader = request.headers.get("authorization") || "";
+  const tokenFromAuth =
+    authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+  const tokenFromHeader = request.headers.get("x-firebase-id-token")?.trim() || "";
+  const token = tokenFromAuth || tokenFromHeader;
+
+  if (!token) {
+    return null;
+  }
+
+  const adminAuth = getAdminAuth();
+  if (!adminAuth) {
+    return null;
+  }
+
+  try {
+    const decoded = await adminAuth.verifyIdToken(token, false);
+    const role = typeof decoded.role === "string" ? decoded.role : undefined;
+    const roles = toStringArray(decoded.roles);
+    const hasExplicitAdminClaims = hasExplicitAdminClaimFields(decoded);
+    const claimAdmin = hasAdminClaim(decoded);
+    const isAdmin =
+      claimAdmin || (!hasExplicitAdminClaims && isLegacyAdminEmail(decoded.email));
+
+    return {
+      uid: decoded.uid,
+      name: decoded.name,
+      email: decoded.email,
+      picture: decoded.picture,
+      isAdmin,
+      role,
+      roles,
+    };
+  } catch {
+    return null;
+  }
+}
