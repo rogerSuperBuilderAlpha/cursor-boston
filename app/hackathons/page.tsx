@@ -187,7 +187,23 @@ export default function HackathonsPage() {
                       </li>
                       <li>Completed profile on cursorboston.com</li>
                       <li>Member of the Cursor Boston Discord</li>
-                      <li>Earlier sign-ups rank higher</li>
+                      {featuredInPersonHackathon.slug ===
+                      "cursor-boston-hack-a-sprint-2026" ? (
+                        <>
+                          <li>
+                            <Link
+                              href="/hackathons/hack-a-sprint-2026/signup"
+                              className="text-emerald-600 underline hover:text-emerald-500 dark:text-emerald-400"
+                            >
+                              Website signup
+                            </Link>{" "}
+                            ranks you by PR count (ties broken by earlier signup)
+                          </li>
+                          <li>Luma registration (approval required)</li>
+                        </>
+                      ) : (
+                        <li>Earlier sign-ups rank higher</li>
+                      )}
                     </ol>
                   </div>
                   <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -219,12 +235,20 @@ export default function HackathonsPage() {
                     </a>
                     {featuredInPersonHackathon.slug ===
                       "cursor-boston-hack-a-sprint-2026" && (
-                      <Link
-                        href="/hackathons/hack-a-sprint-2026"
-                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-500/50 bg-emerald-500/10 px-5 py-3 text-sm font-semibold text-emerald-700 dark:text-emerald-300 transition-colors hover:bg-emerald-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                      >
-                        Showcase &amp; voting
-                      </Link>
+                      <>
+                        <Link
+                          href="/hackathons/hack-a-sprint-2026/signup"
+                          className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-500/50 bg-emerald-500/10 px-5 py-3 text-sm font-semibold text-emerald-700 dark:text-emerald-300 transition-colors hover:bg-emerald-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                        >
+                          Website signup &amp; ranking
+                        </Link>
+                        <Link
+                          href="/hackathons/hack-a-sprint-2026"
+                          className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-500/50 bg-emerald-500/10 px-5 py-3 text-sm font-semibold text-emerald-700 dark:text-emerald-300 transition-colors hover:bg-emerald-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                        >
+                          Showcase &amp; voting
+                        </Link>
+                      </>
                     )}
                   </div>
                 </div>

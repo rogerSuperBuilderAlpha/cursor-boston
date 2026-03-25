@@ -351,12 +351,20 @@ export default async function EventPage({
                 </svg>
               </a>
               {event.slug === "cursor-boston-hack-a-sprint-2026" && (
-                <Link
-                  href="/hackathons/hack-a-sprint-2026"
-                  className="inline-flex items-center justify-center gap-2 px-8 py-4 border-2 border-white/30 text-white rounded-lg text-base font-semibold hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black w-full sm:w-auto"
-                >
-                  Showcase &amp; voting
-                </Link>
+                <>
+                  <Link
+                    href="/hackathons/hack-a-sprint-2026/signup"
+                    className="inline-flex items-center justify-center gap-2 px-8 py-4 border-2 border-white/30 text-white rounded-lg text-base font-semibold hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black w-full sm:w-auto"
+                  >
+                    Website signup &amp; ranking
+                  </Link>
+                  <Link
+                    href="/hackathons/hack-a-sprint-2026"
+                    className="inline-flex items-center justify-center gap-2 px-8 py-4 border-2 border-white/30 text-white rounded-lg text-base font-semibold hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black w-full sm:w-auto"
+                  >
+                    Showcase &amp; voting
+                  </Link>
+                </>
               )}
             </div>
           </div>

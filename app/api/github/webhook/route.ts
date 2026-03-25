@@ -4,8 +4,10 @@ import {
   verifyWebhookSignature,
   processPullRequest,
   isTargetRepository,
+  fetchPullRequestChangedFilenames,
 } from "@/lib/github";
 import { HACK_A_SPRINT_2026_SUBMISSIONS_PATH } from "@/lib/hackathon-showcase";
+import { awardHackASprint2026ShowcaseBadge } from "@/lib/hackathon-showcase-admin";
 import { notifyPROpened, notifyPRMerged } from "@/lib/discord";
 import { withMiddleware, rateLimitConfigs } from "@/lib/middleware";
 import { logger } from "@/lib/logger";
@@ -123,7 +125,7 @@ async function handleWebhook(request: NextRequest) {
         // Discord notification already sent above
       }
 
-      // Refresh Hack-a-Sprint showcase when a PR merges (submission list may change)
+      // Showcase: revalidate + profile badge when a merged PR touches submissions
       if (
         action === "closed" &&
         pr.merged &&
@@ -134,31 +136,17 @@ async function handleWebhook(request: NextRequest) {
         )
       ) {
         try {
-          const filesRes = await fetch(
-            `https://api.github.com/repos/${payload.repository.owner.login}/${payload.repository.name}/pulls/${pr.number}/files`,
-            {
-              headers: {
-                Accept: "application/vnd.github+json",
-                "X-GitHub-Api-Version": "2022-11-28",
-                ...(process.env.GITHUB_TOKEN
-                  ? {
-                      Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-                    }
-                  : {}),
-              },
-            }
+          const filenames = await fetchPullRequestChangedFilenames(
+            payload.repository.owner.login,
+            payload.repository.name,
+            pr.number
           );
-          if (filesRes.ok) {
-            const files = (await filesRes.json()) as { filename?: string }[];
-            const touchesShowcase =
-              Array.isArray(files) &&
-              files.some((f) =>
-                typeof f.filename === "string" &&
-                f.filename.startsWith(HACK_A_SPRINT_2026_SUBMISSIONS_PATH)
-              );
-            if (touchesShowcase) {
-              revalidatePath("/hackathons/hack-a-sprint-2026");
-            }
+          const touchesShowcase = filenames.some((name) =>
+            name.startsWith(HACK_A_SPRINT_2026_SUBMISSIONS_PATH)
+          );
+          if (touchesShowcase) {
+            await awardHackASprint2026ShowcaseBadge(pr.user.login);
+            revalidatePath("/hackathons/hack-a-sprint-2026");
           }
         } catch {
           // non-fatal

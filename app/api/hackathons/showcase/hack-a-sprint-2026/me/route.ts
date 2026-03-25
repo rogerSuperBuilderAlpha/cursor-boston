@@ -5,6 +5,7 @@ import {
   getJudgeUidSet,
   githubUserHasMergedLabeledShowcasePr,
 } from "@/lib/hackathon-showcase";
+import { userIsHackASprint2026Judge } from "@/lib/hackathon-showcase-admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,10 +17,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const judgeEligible = getJudgeUidSet().has(user.uid);
-
     let githubLogin: string | null = null;
     const db = getAdminDb();
+    const judgeEligible = db
+      ? await userIsHackASprint2026Judge(db, user.uid, user.email)
+      : getJudgeUidSet().has(user.uid);
+
     if (db) {
       const doc = await db.collection("users").doc(user.uid).get();
       const login = doc.data()?.github?.login;

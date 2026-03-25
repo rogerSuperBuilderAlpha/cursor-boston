@@ -159,6 +159,12 @@ describe("Firestore rules: badge trust boundaries", () => {
       })
     );
 
+    await assertFails(
+      updateDoc(userRef, {
+        hackASprint2026ShowcaseBadge: true,
+      })
+    );
+
     const userWithCounterRef = doc(
       testEnv.authenticatedContext("user-contributor-2").firestore(),
       "users",
@@ -191,6 +197,25 @@ describe("Firestore rules: badge trust boundaries", () => {
         submissionId: "octocat",
         userId: uid,
         value: 1,
+      })
+    );
+  });
+
+  it("hackathonEventSignups: client read/write denied", async () => {
+    if (!testEnv) {
+      throw new Error(
+        "Firestore rules test environment was not initialized. Run via firebase emulators:exec."
+      );
+    }
+    const uid = "signup-user";
+    const ownerDb = testEnv.authenticatedContext(uid).firestore();
+    const ref = doc(ownerDb, "hackathonEventSignups", "hack-a-sprint-2026__user-1");
+    await assertFails(getDoc(ref));
+    await assertFails(
+      setDoc(ref, {
+        eventId: "hack-a-sprint-2026",
+        userId: uid,
+        signedUpAt: new Date(),
       })
     );
   });
