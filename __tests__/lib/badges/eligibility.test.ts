@@ -9,12 +9,16 @@ describe("badge eligibility", () => {
       expect(normalizeBadgeEligibilityInput({})).toEqual({
         hasDisplayName: false,
         isPublicProfile: false,
+        hasBio: false,
+        hasAvatar: false,
         hasDiscordConnected: false,
         hasGithubConnected: false,
         eventsAttendedCount: 0,
+        talksSubmittedCount: 0,
         talksGivenCount: 0,
         pullRequestsCount: 0,
         communityPostsCount: 0,
+        communityMessagesCount: 0,
         hackathonParticipationCount: 0,
         showcaseSubmissionsCount: 0,
         mentorMatchesCount: 0,
@@ -23,10 +27,10 @@ describe("badge eligibility", () => {
   });
 
   describe("first-steps", () => {
-    it("is eligible when display name and public profile are both true", () => {
+    it("is eligible when bio and avatar are both present", () => {
       const result = evaluateBadgeEligibility({
-        hasDisplayName: true,
-        isPublicProfile: true,
+        hasBio: true,
+        hasAvatar: true,
       });
 
       expect(result["first-steps"].isEligible).toBe(true);
@@ -34,8 +38,8 @@ describe("badge eligibility", () => {
 
     it("is ineligible with partial completion and reports 1/2 progress + reason", () => {
       const result = evaluateBadgeEligibility({
-        hasDisplayName: true,
-        isPublicProfile: false,
+        hasBio: true,
+        hasAvatar: false,
       });
 
       expect(result["first-steps"].isEligible).toBe(false);
@@ -45,7 +49,7 @@ describe("badge eligibility", () => {
         unit: "steps",
       });
       expect(result["first-steps"].reason).toBe(
-        "Add a display name and make your profile public."
+        "Add a bio and profile photo."
       );
     });
   });
