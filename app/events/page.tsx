@@ -2,6 +2,10 @@ import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import eventsData from "@/content/events.json";
+import {
+  getLumaCheckoutEventId,
+  getLumaCheckoutHref,
+} from "@/lib/luma-event";
 import { EventsData } from "@/types/events";
 
 const typedEventsData = eventsData as unknown as EventsData;
@@ -339,13 +343,13 @@ export default function EventsPage() {
                           </svg>
                         </Link>
                         <a
-                          href={event.lumaUrl}
+                          href={getLumaCheckoutHref(event)}
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label={`Register for ${event.title} (opens in new tab)`}
                           className="inline-flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 border border-neutral-300 dark:border-neutral-700 text-foreground rounded-lg text-base font-semibold hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black w-full sm:w-auto luma-checkout--button"
                           data-luma-action="checkout"
-                          data-luma-event-id={event.lumaEventId}
+                          data-luma-event-id={getLumaCheckoutEventId(event)}
                         >
                           Register on Luma
                           <svg

@@ -65,9 +65,10 @@ Each feature is **fully isolated** — new routes, new Firestore collections, no
 
 1. **Clone the repo**
    ```bash
-   git clone https://github.com/rogerSuperBuilderAlpha/cursor-boston.git
+   git clone https://github.com/your-username/cursor-boston.git
    cd cursor-boston
    ```
+   Fork the repository first if you plan to open a pull request, then use your fork URL above (replace `your-username`). To clone read-only without a fork, use `https://github.com/rogerSuperBuilderAlpha/cursor-boston.git`.
 
 2. **Install & Setup**
    ```bash

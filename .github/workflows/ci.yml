@@ -133,10 +133,39 @@ jobs:
           fi
         continue-on-error: true
 
+  firestore-rules:
+    name: Firestore rules tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Firestore rules tests (emulator)
+        run: npm run test:rules
+        env:
+          CI: true
+
   build:
     name: Build
     runs-on: ubuntu-latest
-    needs: [lint-and-typecheck, test]
+    needs: [lint-and-typecheck, test, firestore-rules]
     permissions:
       contents: read
     
@@ -180,7 +209,7 @@ jobs:
   docker:
     name: Docker Build
     runs-on: ubuntu-latest
-    needs: [lint-and-typecheck, test]
+    needs: [lint-and-typecheck, test, firestore-rules]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
       contents: read

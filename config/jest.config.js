@@ -31,6 +31,10 @@ const customJestConfig = {
     '**/__tests__/**/*.[jt]s?(x)',
     '**/?(*.)+(spec|test).[jt]s?(x)',
   ],
+  // Emulator-backed; run via `npm run test:rules` (see CI).
+  testPathIgnorePatterns: [
+    '<rootDir>/__tests__/config/firebase/firestore.rules.test.ts',
+  ],
   // Coverage thresholds - enforce a minimum baseline; increase as tests are added
   coverageThreshold: {
     global: {

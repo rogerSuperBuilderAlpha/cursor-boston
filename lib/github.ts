@@ -74,6 +74,36 @@ export function isTargetRepository(
 }
 
 /**
+ * List changed file paths for a PR (GitHub REST). Returns [] on failure.
+ */
+export async function fetchPullRequestChangedFilenames(
+  owner: string,
+  repo: string,
+  prNumber: number
+): Promise<string[]> {
+  const url = `https://api.github.com/repos/${owner}/${repo}/pulls/${prNumber}/files`;
+  const headers: Record<string, string> = {
+    Accept: "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28",
+  };
+  const token = process.env.GITHUB_TOKEN;
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  try {
+    const res = await fetch(url, { headers });
+    if (!res.ok) return [];
+    const files = (await res.json()) as { filename?: string }[];
+    if (!Array.isArray(files)) return [];
+    return files
+      .map((f) => f.filename)
+      .filter((f): f is string => typeof f === "string");
+  } catch {
+    return [];
+  }
+}
+
+/**
  * Process and store pull request
  */
 export async function processPullRequest(

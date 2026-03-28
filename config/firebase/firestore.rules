@@ -1,11 +1,25 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Talk submissions - authenticated users can create, only owners can read/update/delete
+    // Talk submissions - owners can create/read and edit safe proposal fields.
+    // Moderation fields are server-authoritative to protect Speaker badge integrity.
     match /talkSubmissions/{submissionId} {
-      allow create: if request.auth != null;
+      allow create: if request.auth != null
+                    && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.status == "pending"
+                    && !request.resource.data.keys().hasAny([
+                      'approvedAt',
+                      'approvedBy',
+                      'completedAt',
+                      'completedBy'
+                    ]);
       allow read: if request.auth != null && request.auth.uid == resource.data.userId;
-      allow update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow update: if request.auth != null
+                    && request.auth.uid == resource.data.userId
+                    && request.resource.data.userId == resource.data.userId
+                    && !request.resource.data.diff(resource.data).affectedKeys()
+                        .hasAny(['status', 'approvedAt', 'approvedBy', 'completedAt', 'completedBy']);
+      allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
     }
     
     // Event requests - authenticated users can create, only owners can read/update/delete
@@ -28,11 +42,13 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if resource.data.visibility.isPublic == true 
                   || (request.auth != null && request.auth.uid == userId);
-      allow create: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null
+                    && request.auth.uid == userId
+                    && !request.resource.data.keys().hasAny(['earnedBadgeIds', 'pullRequestsCount', 'hackASprint2026ShowcaseBadge']);
       allow update: if request.auth != null 
                     && request.auth.uid == userId
                     && !request.resource.data.diff(resource.data).affectedKeys()
-                        .hasAny(['uid', 'createdAt', 'role', 'email']);
+                        .hasAny(['uid', 'createdAt', 'role', 'email', 'earnedBadgeIds', 'pullRequestsCount', 'hackASprint2026ShowcaseBadge']);
       allow delete: if false; // Users cannot delete their own accounts via client
     }
     
@@ -53,11 +69,27 @@ service cloud.firestore {
       allow read, write: if false; // Only server-side operations via Admin SDK
     }
     
-    // Event registrations - users can create and read their own registrations
+    // Event registrations - owners can create/read and edit safe registration fields.
+    // Attendance status is server-authoritative to protect badge trust boundaries.
     match /eventRegistrations/{registrationId} {
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      allow create: if request.auth != null
+                    && request.auth.uid == request.resource.data.userId
+                    && request.resource.data.status == "registered";
       allow read: if request.auth != null && request.auth.uid == resource.data.userId;
-      allow update: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow update: if request.auth != null
+                    && request.auth.uid == resource.data.userId
+                    && request.resource.data.userId == resource.data.userId
+                    && (
+                      request.resource.data.status == resource.data.status
+                      || (
+                        resource.data.status == "registered"
+                        && request.resource.data.status == "cancelled"
+                      )
+                      || (
+                        resource.data.status == "cancelled"
+                        && request.resource.data.status == "registered"
+                      )
+                    );
     }
     
     // Community messages - anyone can read, authenticated users can create, only owners can delete
@@ -79,6 +111,33 @@ service cloud.firestore {
     match /pullRequests/{prId} {
       allow read: if request.auth != null;
       allow write: if false; // Only server-side writes via webhook
+    }
+
+    // API rate limiter buckets - server-side only
+    match /apiRateLimits/{docId} {
+      allow read, write: if false;
+    }
+
+    // Badge definitions - readable by authenticated users, server-side writes only
+    match /badges/{badgeId} {
+      allow read: if request.auth != null;
+      allow write: if false; // Seeded and managed server-side
+    }
+
+    // User awarded badges - users can read their own records, writes are server-only
+    match /user_badges/{userBadgeId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      // Server-authoritative only (writes via Admin SDK routes)
+      allow create, update: if false;
+      allow delete: if false;
+    }
+
+    // Showcase submissions - reads are user-scoped; writes are server-side only
+    match /showcaseSubmissions/{submissionId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
     }
 
     // Hackathons - pool: user can create/delete own doc; anyone authenticated can read pool for listing
@@ -196,6 +255,17 @@ service cloud.firestore {
     }
 
     match /cookbook_user_votes/{docId} {
+      allow read, write: if false;
+    }
+
+    // Hack-a-Sprint showcase votes — authenticated read; API (Admin SDK) writes only
+    match /hackathonShowcaseVotes/{voteId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if false;
+    }
+
+    // In-person hackathon website signups — Admin SDK only (leaderboard + integrity)
+    match /hackathonEventSignups/{docId} {
       allow read, write: if false;
     }
   }
