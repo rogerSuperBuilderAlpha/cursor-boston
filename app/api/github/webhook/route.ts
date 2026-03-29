@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import {
   verifyWebhookSignature,
   processPullRequest,
+  isTargetRepository,
+  fetchPullRequestChangedFilenames,
 } from "@/lib/github";
+import { HACK_A_SPRINT_2026_SUBMISSIONS_PATH } from "@/lib/hackathon-showcase";
+import { awardHackASprint2026ShowcaseBadge } from "@/lib/hackathon-showcase-admin";
 import { notifyPROpened, notifyPRMerged } from "@/lib/discord";
 import { withMiddleware, rateLimitConfigs } from "@/lib/middleware";
 import { logger } from "@/lib/logger";
@@ -118,6 +123,34 @@ async function handleWebhook(request: NextRequest) {
         });
         // Don't fail the webhook, but log the error
         // Discord notification already sent above
+      }
+
+      // Showcase: revalidate + profile badge when a merged PR touches submissions
+      if (
+        action === "closed" &&
+        pr.merged &&
+        payload.repository &&
+        isTargetRepository(
+          payload.repository.owner.login,
+          payload.repository.name
+        )
+      ) {
+        try {
+          const filenames = await fetchPullRequestChangedFilenames(
+            payload.repository.owner.login,
+            payload.repository.name,
+            pr.number
+          );
+          const touchesShowcase = filenames.some((name) =>
+            name.startsWith(HACK_A_SPRINT_2026_SUBMISSIONS_PATH)
+          );
+          if (touchesShowcase) {
+            await awardHackASprint2026ShowcaseBadge(pr.user.login);
+            revalidatePath("/hackathons/hack-a-sprint-2026");
+          }
+        } catch {
+          // non-fatal
+        }
       }
     }
 

@@ -2,8 +2,15 @@
 
 Thank you for your interest in contributing to Cursor Boston! This document provides guidelines and instructions for contributing to the project.
 
+## Contribution policy (fork and pull request only)
+
+**If you are contributing code or content, you must use the fork workflow.** Fork this repo on GitHub, set **`origin` to your fork**, push branches there, and open a **pull request** into `rogerSuperBuilderAlpha/cursor-boston`. Do **not** push feature branches directly to the upstream repository (you typically will not have permission; if you do, that path is still not the supported contribution model). Maintainers merge approved PRs; contributors do not self-merge unless [GOVERNANCE](GOVERNANCE.md) explicitly allows it.
+
+A read-only clone of upstream is fine for browsing or local experimentation, but anything you intend to merge must go through **fork → branch on your fork → PR**.
+
 ## Table of Contents
 
+- [Contribution policy (fork and pull request only)](#contribution-policy-fork-and-pull-request-only)
 - [Code of Conduct](#code-of-conduct)
 - [Developer Certificate of Origin](#developer-certificate-of-origin)
 - [Getting Started](#getting-started)

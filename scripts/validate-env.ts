@@ -121,6 +121,18 @@ const optionalEnvVars: EnvVar[] = [
     description: "GitHub Repository Name",
   },
   {
+    name: "HACK_A_SPRINT_2026_JUDGE_UIDS",
+    required: false,
+    description:
+      "Comma-separated Firebase UIDs allowed to vote in judge channel for Hack-a-Sprint 2026 showcase",
+  },
+  {
+    name: "HACK_A_SPRINT_2026_JUDGE_EMAILS",
+    required: false,
+    description:
+      "Comma-separated judge emails (lowercase) for Hack-a-Sprint 2026 judge votes; matched to auth + profile emails",
+  },
+  {
     name: "FIREBASE_SERVICE_ACCOUNT_JSON",
     required: false,
     description: "Firebase Admin service account JSON (for webhooks)",

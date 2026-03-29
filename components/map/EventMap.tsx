@@ -80,7 +80,6 @@ export default function EventMap({ events }: EventMapProps) {
     useState<typeof import("leaflet") | null>(null);
 
   useEffect(() => {
-    // @ts-expect-error -- CSS module has no type declarations
     import("leaflet/dist/leaflet.css");
     import("leaflet").then((L) => {
        

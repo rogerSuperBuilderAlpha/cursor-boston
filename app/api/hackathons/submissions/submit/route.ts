@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
     if (sub.submittedAt) {
       return NextResponse.json(
         { error: "Already submitted", submittedAt: sub.submittedAt },
-        { status: 200 }
+        { status: 409 }
       );
     }
 

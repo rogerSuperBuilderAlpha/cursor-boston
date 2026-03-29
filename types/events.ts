@@ -62,7 +62,12 @@ export interface Event {
   description: string;
   image: string;
   lumaUrl: string;
+  /** Short Luma slug id (e.g. for share URLs). */
   lumaEventId: string;
+  /** Luma checkout widget id (evt-…) when different from lumaEventId. */
+  lumaCheckoutEventId?: string;
+  /** Simple embed iframe src from Luma (…/embed/event/evt-…/simple). */
+  lumaEmbedSrc?: string;
   registrationRequired: boolean;
 
   // Optional fields
