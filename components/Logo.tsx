@@ -27,7 +27,7 @@ export default function Logo({ size, className = "", priority = false }: LogoPro
         src={LOGO_SRC}
         alt={ALT}
         fill
-        className="object-contain"
+        className="object-contain dark:brightness-100 brightness-0"
         priority={priority}
         sizes={
           size === "heroHome"
