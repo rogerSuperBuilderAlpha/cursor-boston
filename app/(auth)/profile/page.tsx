@@ -446,24 +446,24 @@ function ProfilePageContent() {
             { label: "Talks Given", value: stats?.talksGiven },
             { label: "Pull Requests", value: stats?.pullRequestsCount },
           ].map(({ label, value }) => (
-            <div key={label} className="bg-neutral-900 rounded-xl p-4 border border-neutral-800 text-center">
-              <p className="text-3xl font-bold text-white">{loadingData ? "-" : value || 0}</p>
-              <p className="text-neutral-400 text-sm">{label}</p>
+            <div key={label} className="bg-white dark:bg-neutral-900 rounded-xl p-4 border border-neutral-200 dark:border-neutral-800 text-center">
+              <p className="text-3xl font-bold text-foreground">{loadingData ? "-" : value || 0}</p>
+              <p className="text-neutral-500 dark:text-neutral-400 text-sm">{label}</p>
             </div>
           ))}
         </div>
 
         {/* ── Tabs ──────────────────────────────────────────────────────── */}
-        <div className="border-b border-neutral-800 mb-6">
+        <div className="border-b border-neutral-200 dark:border-neutral-800 mb-6">
           <nav className="flex gap-6 overflow-x-auto" aria-label="Profile sections">
             {TAB_LABELS.map(({ id, label }) => (
               <button
                 key={id}
                 onClick={() => setActiveTab(id)}
-                className={`pb-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:text-white whitespace-nowrap ${
+                className={`pb-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:text-foreground whitespace-nowrap ${
                   activeTab === id
-                    ? "text-white border-b-2 border-emerald-500"
-                    : "text-neutral-400 hover:text-white"
+                    ? "text-foreground border-b-2 border-emerald-500"
+                    : "text-neutral-500 dark:text-neutral-400 hover:text-foreground"
                 }`}
               >
                 {label}
