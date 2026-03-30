@@ -101,10 +101,11 @@
     "postcss": "^8.5.8",
     "tailwindcss": "^4.2.1",
     "tsx": "^4.7.0",
-    "typescript": "^5.3.0",
-    "typescript-eslint": "^8.57.2"
+    "typescript": "^6.0.2",
+    "typescript-eslint": "8.57.3-alpha.4"
   },
   "overrides": {
+    "typescript-eslint": "8.57.3-alpha.4",
     "eslint-plugin-import": {
       "eslint": "$eslint"
     },
@@ -115,9 +116,6 @@
       "eslint": "$eslint"
     },
     "eslint-plugin-react-hooks": {
-      "eslint": "$eslint"
-    },
-    "typescript-eslint": {
       "eslint": "$eslint"
     },
     "@typescript-eslint/eslint-plugin": {
