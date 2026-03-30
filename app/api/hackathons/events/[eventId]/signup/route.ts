@@ -12,6 +12,7 @@ import {
   hackathonEventSignupDocId,
   isHackathonEventSignupId,
 } from "@/lib/hackathon-event-signup";
+import { fetchMergedPrCountsForLogins } from "@/lib/github-merged-pr-count";
 import { getGithubRepoPair } from "@/lib/github-recent-merged-prs";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 
@@ -138,25 +139,41 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     const userIds = snap.docs.map((d) => d.data().userId as string).filter(Boolean);
     const userMap = await fetchUserDataMap(db, userIds);
-    const mergedPrCounts = await countMergedCommunityPrsByUserIds(db, userIds);
+    const firestoreMergedCounts = await countMergedCommunityPrsByUserIds(db, userIds);
+
+    const githubLogins: string[] = [];
+    for (const uid of userIds) {
+      const profile = userMap.get(uid);
+      const login =
+        profile?.github && typeof profile.github === "object"
+          ? (profile.github as { login?: string }).login
+          : undefined;
+      if (typeof login === "string" && login.trim()) githubLogins.push(login.trim());
+    }
+    const githubMergedByLogin = await fetchMergedPrCountsForLogins(githubLogins);
 
     for (const doc of snap.docs) {
       const data = doc.data();
       const userId = data.userId as string;
       if (!userId) continue;
       const profile = userMap.get(userId);
-      const pr = mergedPrCounts.get(userId) ?? 0;
       const gh =
         profile?.github && typeof profile.github === "object"
           ? (profile.github as { login?: string }).login
           : undefined;
+      const githubLogin = typeof gh === "string" ? gh : null;
+      let pr = firestoreMergedCounts.get(userId) ?? 0;
+      if (githubLogin) {
+        const fromApi = githubMergedByLogin.get(githubLogin.toLowerCase());
+        if (fromApi !== undefined) pr = fromApi;
+      }
       rows.push({
         userId,
         signedUpAtMs: signedUpAtToMs(data.signedUpAt),
         mergedPrCount: pr,
         displayName:
           typeof profile?.displayName === "string" ? profile.displayName : null,
-        githubLogin: typeof gh === "string" ? gh : null,
+        githubLogin,
       });
     }
 
