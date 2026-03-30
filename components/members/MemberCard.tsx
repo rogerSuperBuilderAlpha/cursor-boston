@@ -2,6 +2,12 @@ import Image from "next/image";
 import type { PublicMember } from "@/types/members";
 import { getInitials } from "@/lib/utils";
 import { DiscordIcon, GitHubIcon } from "@/components/icons";
+import { BADGE_DEFINITIONS } from "@/lib/badges/definitions";
+import { evaluateBadgeEligibility } from "@/lib/badges/eligibility";
+import type { BadgeEligibilityInput, BadgeId } from "@/lib/badges/types";
+import { getBaseBadgeEligibilityInput } from "@/lib/badges/getBadgeEligibilityInput";
+import { getEarnedBadgeIds } from "@/lib/badges/utils";
+import { BadgeGrid } from "@/components/badges/BadgeGrid";
 
 interface MemberCardProps {
   member: PublicMember;
@@ -10,6 +16,40 @@ interface MemberCardProps {
 export function MemberCard({ member }: MemberCardProps) {
   const v = member.visibility;
   const isAgent = member.memberType === "agent";
+  const badgeInput = {
+    ...getBaseBadgeEligibilityInput({
+      displayName: member.displayName,
+      bio: member.bio ?? null,
+      photoURL: member.photoURL,
+      discord: member.discord,
+      github: member.github,
+    }),
+    eventsAttendedCount: member.eventsAttended ?? 0,
+    talksGivenCount: member.talksGiven ?? 0,
+    pullRequestsCount: member.pullRequestsCount ?? 0,
+  } satisfies BadgeEligibilityInput;
+
+  const badgeEligibilityMap = evaluateBadgeEligibility(badgeInput);
+  const persistedBadgeOverlay = (member.earnedBadgeIds || []).reduce<
+    Partial<Record<BadgeId, true>>
+  >((acc, badgeId) => {
+    const matchingDefinition = BADGE_DEFINITIONS.find(
+      (definition) => definition.id === badgeId
+    );
+    if (matchingDefinition) {
+      acc[matchingDefinition.id] = true;
+    }
+    return acc;
+  }, {});
+  const earnedBadgeIds = getEarnedBadgeIds(
+    BADGE_DEFINITIONS,
+    badgeEligibilityMap,
+    persistedBadgeOverlay
+  );
+  const previewDefinitions = [
+    ...BADGE_DEFINITIONS.filter((definition) => earnedBadgeIds.includes(definition.id)),
+    ...BADGE_DEFINITIONS.filter((definition) => !earnedBadgeIds.includes(definition.id)),
+  ].slice(0, 3);
 
   return (
     <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors">
@@ -131,6 +171,18 @@ export function MemberCard({ member }: MemberCardProps) {
             Hack-a-Sprint &apos;26
           </span>
         )}
+      </div>
+
+      <div className="mb-4">
+        <p className="mb-2 text-xs text-neutral-500 dark:text-neutral-400">
+          Preview only. Final badge status appears on profile.
+        </p>
+        <BadgeGrid
+          definitions={previewDefinitions}
+          eligibilityMap={badgeEligibilityMap}
+          earnedBadgeIds={earnedBadgeIds}
+          compact
+        />
       </div>
 
       {/* Social Links */}
