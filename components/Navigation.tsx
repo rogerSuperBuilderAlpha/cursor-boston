@@ -7,27 +7,99 @@ import { useAuth } from "@/contexts/AuthContext";
 import Avatar from "@/components/Avatar";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
+interface NavItem {
+  label: string;
+  href: string;
+}
+
+interface NavGroup {
+  label: string;
+  items: NavItem[];
+}
+
+const navGroups: NavGroup[] = [
+  {
+    label: "Community",
+    items: [
+      { label: "Events", href: "/events" },
+      { label: "Talks", href: "/talks" },
+      { label: "Members", href: "/members" },
+      { label: "Pair Programming", href: "/pair" },
+    ],
+  },
+  {
+    label: "Participate",
+    items: [
+      { label: "Hackathons", href: "/hackathons" },
+      { label: "Showcase", href: "/showcase" },
+      { label: "Cookbook", href: "/cookbook" },
+      { label: "Opportunities", href: "/opportunities" },
+    ],
+  },
+  {
+    label: "Resources",
+    items: [
+      { label: "Map", href: "/map" },
+      { label: "Blog", href: "/blog" },
+      { label: "Analytics", href: "/analytics" },
+    ],
+  },
+  {
+    label: "About",
+    items: [{ label: "About", href: "/about" }],
+  },
+];
+
+function isGroupActive(group: NavGroup, pathname: string): boolean {
+  return group.items.some((item) => pathname === item.href);
+}
+
 export default function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [mobileOpenGroups, setMobileOpenGroups] = useState<string[]>([]);
   const { user, loading } = useAuth();
   const pathname = usePathname();
   const rafRef = useRef<number>(0);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close mobile menu on route change (handles browser back/forward too)
+  // Close mobile menu on route change
   useEffect(() => {
-    rafRef.current = requestAnimationFrame(() => setMobileMenuOpen(false));
+    rafRef.current = requestAnimationFrame(() => {
+      setMobileMenuOpen(false);
+      setOpenDropdown(null);
+      setMobileOpenGroups([]);
+    });
     return () => cancelAnimationFrame(rafRef.current);
   }, [pathname]);
 
-  // Shared active/inactive class logic — mobile adds py-3 text-base, desktop adds text-sm whitespace-nowrap
-  // /login intentionally highlights when on the login page for consistency with other nav links
-  const buildNavClass = (href: string, mobile = false) =>
-    `${pathname === href ? "text-foreground font-semibold" : "text-neutral-600 dark:text-neutral-300 font-medium"} hover:text-black dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline ${mobile ? "py-3 text-base" : "text-sm whitespace-nowrap"}`;
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setOpenDropdown(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const buildNavClass = (href: string, mobile = false, inDropdown = false) =>
+    `${pathname === href ? "text-foreground font-semibold" : "text-neutral-600 dark:text-neutral-300 font-medium"} hover:text-black dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline ${mobile ? (inDropdown ? "py-2 pl-4 text-sm" : "py-3 text-base") : inDropdown ? "block py-2 px-4 text-sm" : "text-sm whitespace-nowrap"}`;
+
+  const toggleMobileGroup = (label: string) => {
+    setMobileOpenGroups((prev) =>
+      prev.includes(label) ? prev.filter((g) => g !== label) : [...prev, label]
+    );
+  };
 
   return (
     <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-neutral-200 dark:border-neutral-800 transition-colors duration-300">
       <div className="w-full px-4 md:px-6 h-16 flex items-center">
-        {/* Logo: 44px min touch target (WCAG 2.1) */}
+        {/* Logo */}
         <Link
           href="/"
           className="flex items-center gap-2 shrink-0 min-h-[44px] min-w-[44px] py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-lg"
@@ -50,23 +122,82 @@ export default function Navigation() {
               />
             </svg>
           </div>
-          <span className="text-foreground font-semibold text-lg hidden sm:block">Cursor Boston</span>
+          <span className="text-foreground font-semibold text-lg hidden sm:block">
+            Cursor Boston
+          </span>
         </Link>
 
-        {/* Desktop Nav */}
-        <nav aria-label="Main" className="hidden xl:flex items-center gap-6 ml-8 flex-1 min-w-0">
-          <Link href="/events" className={buildNavClass("/events")}>Events</Link>
-          <Link href="/map" className={buildNavClass("/map")}>Map</Link>
-          <Link href="/talks" className={buildNavClass("/talks")}>Talks</Link>
-          <Link href="/hackathons" className={buildNavClass("/hackathons")}>Hackathons</Link>
-          <Link href="/blog" className={buildNavClass("/blog")}>Blog</Link>
-          <Link href="/members" className={buildNavClass("/members")}>Members</Link>
-          <Link href="/opportunities" className={buildNavClass("/opportunities")}>Opportunities</Link>
-          <Link href="/showcase" className={buildNavClass("/showcase")}>Showcase</Link>
-          <Link href="/cookbook" className={buildNavClass("/cookbook")}>Cookbook</Link>
-          <Link href="/pair" className={buildNavClass("/pair")}>Pair Programming</Link>
-          <Link href="/analytics" className={buildNavClass("/analytics")}>Analytics</Link>
-          <Link href="/about" className={buildNavClass("/about")}>About</Link>
+        {/* Desktop Nav with Dropdowns */}
+        <nav
+          aria-label="Main"
+          className="hidden xl:flex items-center gap-1 ml-8 flex-1 min-w-0"
+          ref={dropdownRef}
+        >
+          {navGroups.map((group) => {
+            const isActive = isGroupActive(group, pathname);
+            const isOpen = openDropdown === group.label;
+            const hasMultipleItems = group.items.length > 1;
+
+            return (
+              <div key={group.label} className="relative">
+                {hasMultipleItems ? (
+                  <>
+                    <button
+                      onClick={() =>
+                        setOpenDropdown(isOpen ? null : group.label)
+                      }
+                      onMouseEnter={() => setOpenDropdown(group.label)}
+                      className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+                        isActive
+                          ? "text-foreground font-semibold"
+                          : "text-neutral-600 dark:text-neutral-300 hover:text-black dark:hover:text-white"
+                      }`}
+                      aria-expanded={isOpen}
+                      aria-haspopup="menu"
+                    >
+                      {group.label}
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        className={`transition-transform ${isOpen ? "rotate-180" : ""}`}
+                      >
+                        <path d="M6 9l6 6 6-6" />
+                      </svg>
+                    </button>
+                    {isOpen && (
+                      <div
+                        className="absolute top-full left-0 mt-1 w-48 bg-background border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg py-2 z-50"
+                        onMouseLeave={() => setOpenDropdown(null)}
+                        role="menu"
+                      >
+                        {group.items.map((item) => (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            className={buildNavClass(item.href, false, true)}
+                            role="menuitem"
+                          >
+                            {item.label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <Link
+                    href={group.items[0].href}
+                    className={buildNavClass(group.items[0].href)}
+                  >
+                    {group.items[0].label}
+                  </Link>
+                )}
+              </div>
+            );
+          })}
         </nav>
 
         {/* Desktop Auth */}
@@ -75,7 +206,10 @@ export default function Navigation() {
           {loading ? (
             <div className="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-800 animate-pulse" />
           ) : user ? (
-            <Link href="/profile" className="flex items-center hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-lg">
+            <Link
+              href="/profile"
+              className="flex items-center hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-lg"
+            >
               <Avatar
                 src={user.photoURL}
                 name={user.displayName}
@@ -112,11 +246,25 @@ export default function Navigation() {
             aria-controls="mobile-menu"
           >
             {mobileMenuOpen ? (
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <path d="M18 6L6 18M6 6l12 12" />
               </svg>
             ) : (
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <path d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             )}
@@ -126,75 +274,79 @@ export default function Navigation() {
 
       {/* Mobile / tablet menu */}
       {mobileMenuOpen && (
-        <div id="mobile-menu" className="xl:hidden border-t border-neutral-200 dark:border-neutral-800 bg-background">
-          <div className="w-full px-4 md:px-6 py-6 md:py-8 max-h-[calc(100vh-4rem)] overflow-y-auto">
-            {/* Mobile: simple flat list */}
-            <nav aria-label="Mobile" className="flex flex-col md:hidden space-y-1">
-              <Link href="/events" className={buildNavClass("/events", true)}>Events</Link>
-              <Link href="/map" className={buildNavClass("/map", true)}>Map</Link>
-              <Link href="/talks" className={buildNavClass("/talks", true)}>Talks</Link>
-              <Link href="/hackathons" className={buildNavClass("/hackathons", true)}>Hackathons</Link>
-              <Link href="/blog" className={buildNavClass("/blog", true)}>Blog</Link>
-              <Link href="/members" className={buildNavClass("/members", true)}>Members</Link>
-              <Link href="/opportunities" className={buildNavClass("/opportunities", true)}>Opportunities</Link>
-              <Link href="/showcase" className={buildNavClass("/showcase", true)}>Showcase</Link>
-              <Link href="/cookbook" className={buildNavClass("/cookbook", true)}>Cookbook</Link>
-              <Link href="/pair" className={buildNavClass("/pair", true)}>Pair Programming</Link>
-              <Link href="/analytics" className={buildNavClass("/analytics", true)}>Analytics</Link>
-              <Link href="/about" className={buildNavClass("/about", true)}>About</Link>
+        <div
+          id="mobile-menu"
+          className="xl:hidden border-t border-neutral-200 dark:border-neutral-800 bg-background"
+        >
+          <div className="w-full px-4 md:px-6 py-6 max-h-[calc(100vh-4rem)] overflow-y-auto">
+            {/* Mobile nested navigation */}
+            <nav aria-label="Mobile" className="flex flex-col space-y-1">
+              {navGroups.map((group) => {
+                const isOpen = mobileOpenGroups.includes(group.label);
+                const hasMultipleItems = group.items.length > 1;
+
+                return (
+                  <div key={group.label}>
+                    {hasMultipleItems ? (
+                      <>
+                        <button
+                          onClick={() => toggleMobileGroup(group.label)}
+                          className={`flex items-center justify-between w-full py-3 text-base font-medium transition-colors ${
+                            isGroupActive(group, pathname)
+                              ? "text-foreground font-semibold"
+                              : "text-neutral-600 dark:text-neutral-300"
+                          }`}
+                          aria-expanded={isOpen}
+                        >
+                          {group.label}
+                          <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            className={`transition-transform ${isOpen ? "rotate-180" : ""}`}
+                          >
+                            <path d="M6 9l6 6 6-6" />
+                          </svg>
+                        </button>
+                        {isOpen && (
+                          <div className="flex flex-col border-l-2 border-neutral-200 dark:border-neutral-800 ml-2">
+                            {group.items.map((item) => (
+                              <Link
+                                key={item.href}
+                                href={item.href}
+                                className={buildNavClass(item.href, true, true)}
+                              >
+                                {item.label}
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <Link
+                        href={group.items[0].href}
+                        className={buildNavClass(group.items[0].href, true)}
+                      >
+                        {group.items[0].label}
+                      </Link>
+                    )}
+                  </div>
+                );
+              })}
             </nav>
 
-            {/* Tablet: 2-column grid with grouped sections */}
-            <nav aria-label="Tablet" className="hidden md:block md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-6">
-              <div className="md:col-span-2 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-6">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-2 md:mb-3">
-                    Community
-                  </p>
-                  <div className="flex flex-col space-y-2">
-                    <Link href="/events" className={buildNavClass("/events", true)}>Events</Link>
-                    <Link href="/talks" className={buildNavClass("/talks", true)}>Talks</Link>
-                    <Link href="/members" className={buildNavClass("/members", true)}>Members</Link>
-                    <Link href="/pair" className={buildNavClass("/pair", true)}>Pair Programming</Link>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-2 md:mb-3">
-                    Participate
-                  </p>
-                  <div className="flex flex-col space-y-2">
-                    <Link href="/hackathons" className={buildNavClass("/hackathons", true)}>Hackathons</Link>
-                    <Link href="/showcase" className={buildNavClass("/showcase", true)}>Showcase</Link>
-                    <Link href="/cookbook" className={buildNavClass("/cookbook", true)}>Cookbook</Link>
-                    <Link href="/opportunities" className={buildNavClass("/opportunities", true)}>Opportunities</Link>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-2 md:mb-3">
-                    Resources
-                  </p>
-                  <div className="flex flex-col space-y-2">
-                    <Link href="/map" className={buildNavClass("/map", true)}>Map</Link>
-                    <Link href="/blog" className={buildNavClass("/blog", true)}>Blog</Link>
-                    <Link href="/analytics" className={buildNavClass("/analytics", true)}>Analytics</Link>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-2 md:mb-3">
-                    About
-                  </p>
-                  <div className="flex flex-col space-y-2">
-                    <Link href="/about" className={buildNavClass("/about", true)}>About</Link>
-                  </div>
-                </div>
-              </div>
-            </nav>
-
-            <div className="border-t border-neutral-200 dark:border-neutral-800 mt-6 pt-6 md:mt-8 md:pt-8">
+            <div className="border-t border-neutral-200 dark:border-neutral-800 mt-6 pt-6">
               {loading ? (
                 <div className="h-14 rounded-xl bg-neutral-100 dark:bg-neutral-800 animate-pulse" />
               ) : user ? (
-                <Link href="/profile" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 p-4 rounded-xl bg-neutral-100 dark:bg-neutral-900 hover:bg-neutral-200 dark:hover:bg-neutral-800 transition-colors">
+                <Link
+                  href="/profile"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-4 p-4 rounded-xl bg-neutral-100 dark:bg-neutral-900 hover:bg-neutral-200 dark:hover:bg-neutral-800 transition-colors"
+                >
                   <Avatar
                     src={user.photoURL}
                     name={user.displayName}
@@ -202,16 +354,28 @@ export default function Navigation() {
                     size="lg"
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="text-foreground font-semibold truncate">{user.displayName || "User"}</p>
-                    <p className="text-neutral-500 dark:text-neutral-400 text-sm truncate">{user.email}</p>
+                    <p className="text-foreground font-semibold truncate">
+                      {user.displayName || "User"}
+                    </p>
+                    <p className="text-neutral-500 dark:text-neutral-400 text-sm truncate">
+                      {user.email}
+                    </p>
                   </div>
                 </Link>
               ) : (
-                <div className="grid grid-cols-2 gap-3 md:flex md:gap-4">
-                  <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="col-span-2 md:flex-1 md:col-span-1 text-center py-3 px-4 text-neutral-600 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 rounded-xl font-medium transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background">
+                <div className="grid grid-cols-2 gap-3">
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="text-center py-3 px-4 text-neutral-600 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 rounded-xl font-medium transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  >
                     Sign In
                   </Link>
-                  <Link href="/signup" onClick={() => setMobileMenuOpen(false)} className="col-span-2 md:flex-1 md:col-span-1 text-center py-3 px-4 bg-emerald-500 text-white rounded-xl font-semibold transition-colors hover:bg-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background">
+                  <Link
+                    href="/signup"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="text-center py-3 px-4 bg-emerald-500 text-white rounded-xl font-semibold transition-colors hover:bg-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  >
                     Get Started
                   </Link>
                 </div>
