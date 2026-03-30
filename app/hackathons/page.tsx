@@ -78,17 +78,17 @@ export default function HackathonsPage() {
         </div>
       </section>
 
-      {/* Featured in-person */}
+      {/* Featured in-person — wide layout so copy + Luma embed share space evenly */}
       <section className="py-12 px-6 border-b border-neutral-200 dark:border-neutral-800">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <h2 className="text-2xl font-bold text-foreground mb-4">
             Featured in-person hackathon
           </h2>
 
           {featuredInPersonHackathon ? (
-            <div className="space-y-10 rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900 md:p-8">
-              <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-                <div className="max-w-2xl space-y-4">
+            <div className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900 md:p-8 lg:p-10">
+              <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-10 lg:items-start">
+                <div className="min-w-0 space-y-4 lg:col-span-7">
                   <div>
                     <h3 className="text-xl font-semibold text-foreground md:text-2xl">
                       {featuredInPersonHackathon.title}
@@ -99,7 +99,7 @@ export default function HackathonsPage() {
                       </p>
                     )}
                   </div>
-                  <p className="text-neutral-600 dark:text-neutral-400">
+                  <p className="text-neutral-600 dark:text-neutral-400 text-base leading-relaxed lg:max-w-none">
                     {featuredInPersonHackathon.description}
                   </p>
                   <div className="space-y-1 text-sm text-neutral-500 dark:text-neutral-400">
@@ -254,17 +254,15 @@ export default function HackathonsPage() {
                 </div>
 
                 {featuredEmbedSrc ? (
-                  <div className="w-full shrink-0 lg:max-w-[min(100%,600px)]">
+                  <div className="min-w-0 w-full lg:col-span-5">
                     <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
                       Register on Luma
                     </p>
-                    <div className="overflow-hidden rounded-[4px]">
+                    <div className="overflow-hidden rounded-lg">
                       <iframe
                         src={featuredEmbedSrc}
                         title={`${featuredInPersonHackathon.title} — Luma`}
-                        width={600}
-                        height={450}
-                        className="h-[min(450px,70vh)] w-full max-w-full bg-white"
+                        className="h-[min(440px,58vh)] w-full bg-white sm:h-[min(480px,62vh)]"
                         style={{
                           border: "1px solid #bfcbda88",
                           borderRadius: 4,
