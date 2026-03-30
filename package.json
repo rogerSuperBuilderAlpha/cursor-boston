@@ -67,7 +67,7 @@
     "react-leaflet-cluster": "^4.0.0",
     "react-markdown": "^10.1.0",
     "react-syntax-highlighter": "^16.1.1",
-    "recharts": "^3.8.0",
+    "recharts": "^3.8.1",
     "rehype-sanitize": "^6.0.0",
     "remark-gfm": "^4.0.1"
   },
@@ -92,7 +92,7 @@
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
-    "firebase-tools": "^15.11.0",
+    "firebase-tools": "^15.12.0",
     "globals": "^17.4.0",
     "husky": "^8.0.3",
     "jest": "^30.3.0",
