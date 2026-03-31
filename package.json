@@ -46,6 +46,7 @@
     "seed-hackathon-teams": "tsx scripts/seed-hackathon-teams.ts",
     "check-members-db": "tsx scripts/check-members-db.ts",
     "rate-limit-cleanup": "tsx scripts/run-rate-limit-cleanup.ts",
+    "backfill-merge-credit": "tsx scripts/backfill-merge-credit.ts",
     "prebuild": "npm run validate-env",
     "prepare": "husky install"
   },
