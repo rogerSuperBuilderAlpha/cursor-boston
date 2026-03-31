@@ -1,12 +1,10 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import { FieldValue } from "firebase-admin/firestore";
+import { getGithubRepoPair } from "./github-recent-merged-prs";
 import { getAdminDb } from "./firebase-admin";
 import { logger } from "./logger";
 
 const GITHUB_WEBHOOK_SECRET = process.env.GITHUB_WEBHOOK_SECRET;
-// This is used to filter webhook events to only process PRs from this repository
-const REPOSITORY_OWNER = process.env.GITHUB_REPO_OWNER;
-const REPOSITORY_NAME = process.env.GITHUB_REPO_NAME
 
 /**
  * Verify GitHub webhook signature
@@ -64,13 +62,12 @@ export async function findUserByGitHubLogin(
 }
 
 /**
- * Check if repository matches our target repository
+ * Check if repository matches our target repository.
+ * Uses the same owner/repo resolution as the rest of the app (env with defaults).
  */
-export function isTargetRepository(
-  owner: string,
-  repo: string
-): boolean {
-  return owner === REPOSITORY_OWNER && repo === REPOSITORY_NAME;
+export function isTargetRepository(owner: string, repo: string): boolean {
+  const expected = getGithubRepoPair();
+  return owner === expected.owner && repo === expected.repo;
 }
 
 /**
@@ -132,11 +129,12 @@ export async function processPullRequest(
       prData.repository.name
     )
   ) {
+    const expected = getGithubRepoPair();
     logger.warn("Skipping PR from different repository", {
       owner: prData.repository.owner.login,
       repo: prData.repository.name,
-      expectedOwner: REPOSITORY_OWNER,
-      expectedRepo: REPOSITORY_NAME,
+      expectedOwner: expected.owner,
+      expectedRepo: expected.repo,
     });
     return;
   }
