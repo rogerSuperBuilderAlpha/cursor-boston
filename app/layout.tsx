@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Navigation from "@/components/Navigation";
-import Footer from "@/components/Footer";
+import AppShell from "@/components/AppShell";
 import WelcomeModal from "@/components/WelcomeModal";
 import LumaCheckoutTracker from "@/components/LumaCheckoutTracker";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -112,9 +111,7 @@ export default function RootLayout({
         </a>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AuthProvider>
-            <Navigation />
-            <main id="main-content" className="flex-1" tabIndex={-1}>{children}</main>
-            <Footer />
+            <AppShell>{children}</AppShell>
             <WelcomeModal />
             <LumaCheckoutTracker />
           </AuthProvider>
