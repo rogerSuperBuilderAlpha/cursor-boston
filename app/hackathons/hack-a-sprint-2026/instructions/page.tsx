@@ -14,7 +14,10 @@ const ideas: { text: string; link?: { href: string; label: string } }[] = [
     link: { href: "https://youtu.be/8jIH8cX9ako?si=s2VH7Lb4K0OSwfOe", label: "See it in action" },
   },
   { text: "An agent that manages your calendar and schedules meetings over email" },
-  { text: "An agent that does social media management, posting and replying on its own" },
+  {
+    text: "An agent that does social media management, posting and replying on its own",
+    link: { href: "https://youtu.be/HAutlM_K_xs?si=k5CdHlTMGLdPNFfB", label: "See it in action" },
+  },
   { text: "An agent that looks for job postings and applies via email follow-ups" },
 ];
 
