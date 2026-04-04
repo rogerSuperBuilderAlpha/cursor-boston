@@ -4,7 +4,7 @@
   "title": "Hack-a-Sprint 2026 submission",
   "type": "object",
   "additionalProperties": false,
-  "required": ["projectRepoUrl", "deployedUrl", "title", "description"],
+  "required": ["projectRepoUrl", "deployedUrl", "title", "description", "loomVideoUrl"],
   "properties": {
     "projectRepoUrl": {
       "type": "string",
@@ -25,6 +25,11 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 8000
+    },
+    "loomVideoUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "Loom (or similar) URL of you explaining the project"
     },
     "demoVideoUrl": {
       "type": "string",

@@ -83,6 +83,9 @@ interface UserProfile {
   eduBadge?: boolean;
   /** Server-set when a merged PR adds the user's Hack-a-Sprint 2026 showcase submission. */
   hackASprint2026ShowcaseBadge?: boolean;
+  /** Server-set after correct event passcode (website signup required). */
+  hackASprint2026Unlocked?: boolean;
+  hackASprint2026UnlockedAt?: Date;
   // Public profile fields
   bio?: string;
   location?: string;

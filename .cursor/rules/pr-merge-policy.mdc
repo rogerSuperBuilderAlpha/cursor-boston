@@ -1,0 +1,15 @@
+---
+description: Always merge pull requests through GitHub; never skip or simulate merge by closing PRs
+alwaysApply: true
+---
+
+# Pull requests — always merge, never skip
+
+When integrating a contributor’s pull request:
+
+1. **Merge through GitHub** — Use `gh pr merge` (or the repository’s **Merge pull request** / squash / rebase flow) so the PR ends in a **merged** state and history reflects the merge.
+2. **Do not substitute with “close + push”** — Do not land the same work by pushing to `main` alone and then **closing** the PR without merging. That skips attribution, bypasses branch protection semantics, and hides the PR from merged metrics.
+3. **If the PR branch is conflicted or behind** — Update the PR branch (rebase/merge from base, resolve conflicts, push to the PR head), then **merge the PR**.
+4. **If automated merge is blocked** — Fix required checks, use allowed override paths, or coordinate with a maintainer. Do **not** treat “I pushed to main” as finishing the PR unless the PR was also merged on GitHub.
+
+**Summary:** **ALWAYS MERGE** the PR on GitHub when its changes are accepted. **NEVER SKIP** the merge step by closing the PR after a side-channel push to `main`.
