@@ -5,31 +5,30 @@ import { getVerifiedUser } from "@/lib/server-auth";
 import {
   HACK_A_SPRINT_2026_EVENT_ID,
   fetchShowcaseSubmissionsFromGitHub,
-  githubUserHasMergedLabeledShowcasePr,
 } from "@/lib/hackathon-showcase";
-import { userIsHackASprint2026Judge } from "@/lib/hackathon-showcase-admin";
+import { getHackASprint2026Phase } from "@/lib/hackathon-asprint-2026-schedule";
+import {
+  hackASprint2026PeerVoteDocId,
+  hackASprint2026ScoreDocId,
+  userHasHackASprint2026Signup,
+} from "@/lib/hackathon-asprint-2026-state";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const VOTE_RATE = { windowMs: 60 * 1000, maxRequests: 40 };
+const VOTE_RATE = { windowMs: 60 * 1000, maxRequests: 30 };
 
-type Channel = "participant" | "community" | "judge";
-
-function voteDocId(
-  eventId: string,
-  channel: Channel,
-  submissionId: string,
-  userId: string
-): string {
-  return `${eventId}__${channel}__${submissionId}__${userId}`;
+function normalizeIds(raw: unknown): string[] | null {
+  if (!Array.isArray(raw)) return null;
+  const out = raw.map((x) => String(x).trim().toLowerCase()).filter(Boolean);
+  return out;
 }
 
 export async function POST(request: NextRequest) {
   try {
     const clientId = getClientIdentifier(request as unknown as Request);
-    const rate = checkRateLimit(`showcase-vote:${clientId}`, VOTE_RATE);
+    const rate = checkRateLimit(`hack-asprint-peer-vote:${clientId}`, VOTE_RATE);
     if (!rate.success) {
       return NextResponse.json(
         { error: "Too many requests", retryAfterSeconds: rate.retryAfter },
@@ -42,22 +41,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await request.json().catch(() => ({}));
-    const submissionId = (body.submissionId as string)?.trim().toLowerCase();
-    const channel = body.channel as Channel;
-    const value = body.value as number;
-
-    if (!submissionId || !["participant", "community", "judge"].includes(channel)) {
-      return NextResponse.json({ error: "Invalid submissionId or channel" }, { status: 400 });
-    }
-    if (value !== 1 && value !== -1 && value !== 0) {
-      return NextResponse.json({ error: "value must be 1, -1, or 0" }, { status: 400 });
-    }
-
-    const submissions = await fetchShowcaseSubmissionsFromGitHub();
-    const allowed = new Set(submissions.map((s) => s.submissionId));
-    if (!allowed.has(submissionId)) {
-      return NextResponse.json({ error: "Unknown submission" }, { status: 400 });
+    const phase = getHackASprint2026Phase();
+    if (phase !== "peerVotingOpen") {
+      return NextResponse.json(
+        { error: "Peer voting is not open." },
+        { status: 403 }
+      );
     }
 
     const db = getAdminDb();
@@ -65,40 +54,59 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    if (channel === "community") {
-      // any authenticated user
-    } else if (channel === "judge") {
-      const okJudge = await userIsHackASprint2026Judge(
-        db,
-        user.uid,
-        user.email
+    const userSnap = await db.collection("users").doc(user.uid).get();
+    if (userSnap.data()?.hackASprint2026Unlocked !== true) {
+      return NextResponse.json(
+        { error: "Enter the event passcode first." },
+        { status: 403 }
       );
-      if (!okJudge) {
-        return NextResponse.json({ error: "Not a judge" }, { status: 403 });
-      }
-    } else {
-      const userDoc = await db.collection("users").doc(user.uid).get();
-      const login = userDoc.data()?.github?.login;
-      const ghLogin = typeof login === "string" ? login.trim() : "";
-      if (!ghLogin) {
-        return NextResponse.json(
-          { error: "Connect GitHub on your profile to use participant voting" },
-          { status: 403 }
-        );
-      }
-      const ok = await githubUserHasMergedLabeledShowcasePr(ghLogin);
-      if (!ok) {
-        return NextResponse.json(
-          {
-            error:
-              "Participant voting requires a merged PR with label hack-a-sprint-2026 that adds your submission",
-          },
-          { status: 403 }
-        );
+    }
+
+    const signedUp = await userHasHackASprint2026Signup(db, user.uid);
+    if (!signedUp) {
+      return NextResponse.json(
+        { error: "Website event signup required." },
+        { status: 403 }
+      );
+    }
+
+    const body = await request.json().catch(() => ({}));
+    const ids = normalizeIds((body as { submissionIds?: unknown }).submissionIds);
+    if (!ids || ids.length !== 6) {
+      return NextResponse.json(
+        { error: "Submit exactly 6 distinct project picks." },
+        { status: 400 }
+      );
+    }
+
+    const unique = new Set(ids);
+    if (unique.size !== 6) {
+      return NextResponse.json(
+        { error: "Picks must be 6 different projects." },
+        { status: 400 }
+      );
+    }
+
+    const submissions = await fetchShowcaseSubmissionsFromGitHub();
+    const allowed = new Set(submissions.map((s) => s.submissionId));
+    for (const id of ids) {
+      if (!allowed.has(id)) {
+        return NextResponse.json({ error: `Unknown submission: ${id}` }, { status: 400 });
       }
     }
 
-    const uidRate = checkRateLimit(`showcase-vote-uid:${user.uid}`, VOTE_RATE);
+    const ghLogin =
+      typeof userSnap.data()?.github?.login === "string"
+        ? userSnap.data()!.github!.login.trim().toLowerCase()
+        : "";
+    if (ghLogin && ids.some((id) => id === ghLogin)) {
+      return NextResponse.json(
+        { error: "You cannot pick your own submission." },
+        { status: 400 }
+      );
+    }
+
+    const uidRate = checkRateLimit(`hack-asprint-peer-vote-uid:${user.uid}`, VOTE_RATE);
     if (!uidRate.success) {
       return NextResponse.json(
         { error: "Too many requests", retryAfterSeconds: uidRate.retryAfter },
@@ -106,25 +114,65 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const docId = voteDocId(HACK_A_SPRINT_2026_EVENT_ID, channel, submissionId, user.uid);
-    const ref = db.collection("hackathonShowcaseVotes").doc(docId);
+    const voteRef = db
+      .collection("hackathonASprint2026PeerVotes")
+      .doc(hackASprint2026PeerVoteDocId(user.uid));
+    await db.runTransaction(async (tx) => {
+      const prevSnap = await tx.get(voteRef);
+      const oldIds: string[] = Array.isArray(prevSnap.data()?.submissionIds)
+        ? (prevSnap.data()!.submissionIds as string[]).map((x) =>
+            String(x).toLowerCase()
+          )
+        : [];
 
-    if (value === 0) {
-      await ref.delete().catch(() => undefined);
-    } else {
-      await ref.set({
+      const oldSet = new Set(oldIds);
+      const newSet = new Set(ids);
+
+      for (const sid of oldSet) {
+        if (!newSet.has(sid)) {
+          const scoreRef = db
+            .collection("hackathonShowcaseScores")
+            .doc(hackASprint2026ScoreDocId(sid));
+          tx.set(
+            scoreRef,
+            {
+              peerVoteCount: FieldValue.increment(-1),
+              updatedAt: FieldValue.serverTimestamp(),
+            },
+            { merge: true }
+          );
+        }
+      }
+
+      for (const sid of newSet) {
+        if (!oldSet.has(sid)) {
+          const scoreRef = db
+            .collection("hackathonShowcaseScores")
+            .doc(hackASprint2026ScoreDocId(sid));
+          tx.set(
+            scoreRef,
+            {
+              eventId: HACK_A_SPRINT_2026_EVENT_ID,
+              submissionId: sid,
+              peerVoteCount: FieldValue.increment(1),
+              updatedAt: FieldValue.serverTimestamp(),
+            },
+            { merge: true }
+          );
+        }
+      }
+
+      tx.set(voteRef, {
         eventId: HACK_A_SPRINT_2026_EVENT_ID,
-        channel,
-        submissionId,
         userId: user.uid,
-        value,
+        submissionIds: ids,
         updatedAt: FieldValue.serverTimestamp(),
       });
-    }
+    });
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, submissionIds: ids });
   } catch (e) {
-    console.error("[showcase vote]", e);
+    console.error("[hack-a-sprint peer vote]", e);
     return NextResponse.json({ error: "Vote failed" }, { status: 500 });
   }
 }

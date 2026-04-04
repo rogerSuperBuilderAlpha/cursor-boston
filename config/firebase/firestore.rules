@@ -44,11 +44,11 @@ service cloud.firestore {
                   || (request.auth != null && request.auth.uid == userId);
       allow create: if request.auth != null
                     && request.auth.uid == userId
-                    && !request.resource.data.keys().hasAny(['earnedBadgeIds', 'pullRequestsCount', 'hackASprint2026ShowcaseBadge']);
+                    && !request.resource.data.keys().hasAny(['earnedBadgeIds', 'pullRequestsCount', 'hackASprint2026ShowcaseBadge', 'hackASprint2026Unlocked', 'hackASprint2026UnlockedAt']);
       allow update: if request.auth != null 
                     && request.auth.uid == userId
                     && !request.resource.data.diff(resource.data).affectedKeys()
-                        .hasAny(['uid', 'createdAt', 'role', 'email', 'earnedBadgeIds', 'pullRequestsCount', 'hackASprint2026ShowcaseBadge']);
+                        .hasAny(['uid', 'createdAt', 'role', 'email', 'earnedBadgeIds', 'pullRequestsCount', 'hackASprint2026ShowcaseBadge', 'hackASprint2026Unlocked', 'hackASprint2026UnlockedAt']);
       allow delete: if false; // Users cannot delete their own accounts via client
     }
     
@@ -262,6 +262,16 @@ service cloud.firestore {
     match /hackathonShowcaseVotes/{voteId} {
       allow read: if request.auth != null;
       allow create, update, delete: if false;
+    }
+
+    // Hack-a-Sprint 2026 per-submission scores (AI + judges) — Admin SDK only
+    match /hackathonShowcaseScores/{docId} {
+      allow read, write: if false;
+    }
+
+    // Hack-a-Sprint 2026 peer picks (exactly 6) — Admin SDK only
+    match /hackathonASprint2026PeerVotes/{docId} {
+      allow read, write: if false;
     }
 
     // In-person hackathon website signups — Admin SDK only (leaderboard + integrity)
