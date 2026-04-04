@@ -256,6 +256,13 @@ export default function HackASprint2026ShowcasePage() {
               </Link>
               <span aria-hidden="true">·</span>
               <Link
+                href="/hackathons/hack-a-sprint-2026/instructions"
+                className="text-emerald-600 dark:text-emerald-400 hover:underline"
+              >
+                Pre-event instructions
+              </Link>
+              <span aria-hidden="true">·</span>
+              <Link
                 href="/hackathons"
                 className="text-emerald-600 dark:text-emerald-400 hover:underline"
               >
@@ -316,6 +323,12 @@ export default function HackASprint2026ShowcasePage() {
               className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
             >
               Website signup
+            </Link>
+            <Link
+              href="/hackathons/hack-a-sprint-2026/instructions"
+              className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
+            >
+              Pre-event instructions
             </Link>
             <Link
               href="/hackathons"

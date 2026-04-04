@@ -243,10 +243,10 @@ export default function HackathonsPage() {
                           Website signup &amp; ranking
                         </Link>
                         <Link
-                          href="/hackathons/hack-a-sprint-2026"
+                          href="/hackathons/hack-a-sprint-2026/instructions"
                           className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-500/50 bg-emerald-500/10 px-5 py-3 text-sm font-semibold text-emerald-700 dark:text-emerald-300 transition-colors hover:bg-emerald-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                         >
-                          Showcase &amp; voting
+                          Pre-event instructions
                         </Link>
                       </>
                     )}

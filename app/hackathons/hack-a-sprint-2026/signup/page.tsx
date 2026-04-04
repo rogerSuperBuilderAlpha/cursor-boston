@@ -249,6 +249,16 @@ export default function HackASprint2026SignupPage() {
           can rank builders by merged PRs to cursor-boston, then by signup time, for
           invitations and the top-{CURSOR_CREDIT_TOP_N} Cursor credit band.
         </p>
+        <p className="mt-3 text-sm text-neutral-500 dark:text-neutral-400">
+          New here?{" "}
+          <Link
+            href="/hackathons/hack-a-sprint-2026/instructions"
+            className="text-emerald-600 underline hover:text-emerald-500 dark:text-emerald-400"
+          >
+            Read the pre-event instructions
+          </Link>{" "}
+          to get set up with the Inkbox SDK before the event.
+        </p>
 
         <div className="mt-8 rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
           <h2 className="text-lg font-semibold text-foreground">How ranking works</h2>
