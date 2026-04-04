@@ -3,6 +3,9 @@
     "rules": "config/firebase/firestore.rules",
     "indexes": "config/firebase/firestore.indexes.json"
   },
+  "database": {
+    "rules": "config/firebase/database.rules.json"
+  },
   "storage": {
     "rules": "config/firebase/storage.rules"
   }
