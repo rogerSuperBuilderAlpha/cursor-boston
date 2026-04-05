@@ -68,6 +68,7 @@ export function PostComposer({
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
+            aria-label={placeholder}
             rows={3}
             maxLength={maxLength}
             className="w-full bg-transparent text-white placeholder-neutral-400 resize-none focus:outline-none"
