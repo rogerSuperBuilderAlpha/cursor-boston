@@ -132,7 +132,7 @@ export function ThemeToggle() {
           role="menu"
           aria-label="Theme selection"
           onKeyDown={handleMenuKeyDown}
-          className="absolute right-0 mt-2 w-36 rounded-md bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-lg ring-1 ring-black ring-opacity-5 z-50"
+          className="absolute left-full bottom-0 ml-2 w-36 rounded-md bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-lg ring-1 ring-black ring-opacity-5 z-50"
         >
           <div className="py-1" role="none">
             {themeOptions.map((option, index) => {
