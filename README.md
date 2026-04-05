@@ -16,6 +16,25 @@
 
 ---
 
+<table>
+<tr>
+<td width="60" align="center">
+<h1>🚀</h1>
+</td>
+<td>
+
+### New here? Never coded before? Start here.
+
+**You don't need to know how to code.** AI tools like Cursor, Claude Code, and Codex can do the technical work for you. We wrote a step-by-step guide in plain, simple language — no jargon, no experience required.
+
+**[Read the Get Started Guide →](docs/GET_STARTED.md)**
+
+</td>
+</tr>
+</table>
+
+---
+
 ## 🏙️ What is Cursor Boston?
 
 Cursor Boston is a community-led platform designed to bring together the most ambitious developers, students, and founders in the Boston area. We focus on **AI-native development workflows**—leveraging tools like Cursor to ship production code at the speed of thought.
@@ -29,8 +48,6 @@ Cursor Boston is a community-led platform designed to bring together the most am
 - **🎨 Designers & PMs**: Bridge the gap between design and production code.
 
 Whether you're writing your first line of code or your ten-thousandth — if you care enough to open Cursor and do some work, you belong here.
-
-> **Never coded before?** No problem. Our **[Get Started guide](docs/GET_STARTED.md)** walks you through everything in plain language — from setting up your computer to making your first contribution using AI tools like Cursor, Claude Code, or Codex. No jargon, no experience required.
 
 ---
 
