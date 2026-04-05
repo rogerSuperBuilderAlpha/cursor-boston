@@ -46,6 +46,8 @@
     "seed-hackathon-teams": "tsx scripts/seed-hackathon-teams.ts",
     "check-members-db": "tsx scripts/check-members-db.ts",
     "rate-limit-cleanup": "tsx scripts/run-rate-limit-cleanup.ts",
+    "backfill-merge-credit": "tsx scripts/backfill-merge-credit.ts",
+    "send-hack-a-sprint-emails": "tsx scripts/send-hack-a-sprint-emails.ts",
     "prebuild": "npm run validate-env",
     "prepare": "husky install"
   },
@@ -56,7 +58,7 @@
     "form-data": "^4.0.5",
     "gray-matter": "^4.0.3",
     "leaflet": "^1.9.4",
-    "lucide-react": "^0.577.0",
+    "lucide-react": "^1.7.0",
     "mailgun.js": "^12.7.1",
     "next": "^16.2.1",
     "next-themes": "^0.4.6",
@@ -67,7 +69,7 @@
     "react-leaflet-cluster": "^4.0.0",
     "react-markdown": "^10.1.0",
     "react-syntax-highlighter": "^16.1.1",
-    "recharts": "^3.8.0",
+    "recharts": "^3.8.1",
     "rehype-sanitize": "^6.0.0",
     "remark-gfm": "^4.0.1"
   },
@@ -92,7 +94,7 @@
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
-    "firebase-tools": "^15.11.0",
+    "firebase-tools": "^15.12.0",
     "globals": "^17.4.0",
     "husky": "^8.0.3",
     "jest": "^30.3.0",
@@ -101,10 +103,11 @@
     "postcss": "^8.5.8",
     "tailwindcss": "^4.2.1",
     "tsx": "^4.7.0",
-    "typescript": "^5.3.0",
-    "typescript-eslint": "^8.57.2"
+    "typescript": "^6.0.2",
+    "typescript-eslint": "8.57.3-alpha.4"
   },
   "overrides": {
+    "typescript-eslint": "8.57.3-alpha.4",
     "eslint-plugin-import": {
       "eslint": "$eslint"
     },
@@ -115,9 +118,6 @@
       "eslint": "$eslint"
     },
     "eslint-plugin-react-hooks": {
-      "eslint": "$eslint"
-    },
-    "typescript-eslint": {
       "eslint": "$eslint"
     },
     "@typescript-eslint/eslint-plugin": {

@@ -10,6 +10,8 @@ export type ShowcaseSubmissionPayload = {
   deployedUrl: string;
   title: string;
   description: string;
+  /** Required Loom (or other) walkthrough URL for Hack-a-Sprint 2026. */
+  loomVideoUrl: string;
   demoVideoUrl?: string;
 };
 
@@ -81,7 +83,8 @@ export async function fetchShowcaseSubmissionsFromGitHub(): Promise<
         typeof payload?.projectRepoUrl !== "string" ||
         typeof payload?.deployedUrl !== "string" ||
         typeof payload?.title !== "string" ||
-        typeof payload?.description !== "string"
+        typeof payload?.description !== "string" ||
+        typeof payload?.loomVideoUrl !== "string"
       ) {
         continue;
       }
@@ -93,6 +96,7 @@ export async function fetchShowcaseSubmissionsFromGitHub(): Promise<
           deployedUrl: payload.deployedUrl,
           title: payload.title,
           description: payload.description,
+          loomVideoUrl: payload.loomVideoUrl,
           demoVideoUrl:
             typeof payload.demoVideoUrl === "string"
               ? payload.demoVideoUrl

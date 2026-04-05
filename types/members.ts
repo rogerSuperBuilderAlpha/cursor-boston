@@ -41,6 +41,7 @@ export interface PublicMember {
   talksGiven?: number;
   pullRequestsCount?: number;
   hackASprint2026ShowcaseBadge?: boolean;
+  earnedBadgeIds?: string[];
   github?: {
     login: string;
     html_url: string;

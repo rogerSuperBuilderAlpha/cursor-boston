@@ -1,0 +1,32 @@
+{
+  "$comment": "Audited cases where contributor work landed without a GitHub merge on the original PR. See docs/CONTRIBUTOR_MERGE_CREDIT_BACKFILL.md. Extend cases[] after running: npx tsx scripts/backfill-merge-credit.ts --audit",
+  "cases": [
+    {
+      "classification": "landedDirectly",
+      "prNumber": 211,
+      "authorLogin": "randytorres",
+      "notes": "PR #211 closed without merge; same change exists on main (feat(nav) nested dropdown)."
+    },
+    {
+      "classification": "landedViaIntegrationPr",
+      "prNumber": 189,
+      "authorLogin": "Sikes1112",
+      "integrationMergedPrNumber": 190,
+      "notes": "Work merged via maintainer integration PR #190; original PR #189 closed unmerged."
+    },
+    {
+      "classification": "landedViaIntegrationPr",
+      "prNumber": 99,
+      "authorLogin": "nebullii",
+      "integrationMergedPrNumber": 105,
+      "notes": "Contributor PR #99 closed unmerged; equivalent merged as #105."
+    },
+    {
+      "classification": "landedViaIntegrationPr",
+      "prNumber": 95,
+      "authorLogin": "joaquinmoyanorugby-png",
+      "integrationMergedPrNumber": 98,
+      "notes": "Contributor PR #95 closed unmerged; rework merged as #98 (maintainer PR with attribution in message)."
+    }
+  ]
+}

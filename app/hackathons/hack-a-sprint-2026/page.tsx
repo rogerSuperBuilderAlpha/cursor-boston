@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ThumbsDown, ThumbsUp } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getGithubRepoWebBaseUrl } from "@/lib/github-recent-merged-prs";
 import {
@@ -10,21 +9,35 @@ import {
   HACK_A_SPRINT_2026_SUBMISSIONS_PATH,
 } from "@/lib/hackathon-showcase";
 import type { ShowcaseSubmission } from "@/lib/hackathon-showcase";
-
-type Channel = "participant" | "community" | "judge";
-
-type VoteAgg = { up: number; down: number; net: number };
+import type { HackASprint2026Phase } from "@/lib/hackathon-asprint-2026-schedule";
 
 type MeResponse = {
+  phase: HackASprint2026Phase;
+  signedUp: boolean;
+  unlocked: boolean;
+  hasCompletedPeerVoting: boolean;
   participantEligible: boolean;
   judgeEligible: boolean;
   githubLogin: string | null;
 };
 
+type SubmissionRow = ShowcaseSubmission & {
+  peerVoteCount: number | null;
+  aiScore: number | null;
+  judgeAverage: number | null;
+  rawScore: number | null;
+};
+
 type SubmissionsResponse = {
-  submissions: ShowcaseSubmission[];
-  aggregates: Record<string, Record<Channel, VoteAgg>>;
-  myVotes: Record<string, Partial<Record<Channel, number>>>;
+  phase: HackASprint2026Phase;
+  viewer: {
+    unlocked: boolean;
+    signedUp: boolean;
+    hasCompletedPeerVoting: boolean;
+    judgeEligible: boolean;
+    myPeerPicks: string[];
+  };
+  submissions: SubmissionRow[];
 };
 
 const JSON_TEMPLATE = `{
@@ -32,68 +45,27 @@ const JSON_TEMPLATE = `{
   "deployedUrl": "https://your-app.example.com",
   "title": "Short title for your build",
   "description": "What you built, stack, and learnings.",
-  "demoVideoUrl": "https://www.youtube.com/watch?v=optional"
+  "loomVideoUrl": "https://www.loom.com/share/your-recording"
 }`;
 
-function VoteButtons({
-  disabled,
-  disabledReason,
-  current,
-  onVote,
-  busy,
-}: {
-  disabled: boolean;
-  disabledReason?: string;
-  current?: number;
-  onVote: (value: 1 | -1 | 0) => void;
-  busy: boolean;
-}) {
-  const activeUp = current === 1;
-  const activeDown = current === -1;
-
-  return (
-    <div
-      className="flex flex-col gap-1"
-      title={disabled ? disabledReason : undefined}
-    >
-      <div className="flex items-center gap-1">
-        <button
-          type="button"
-          disabled={disabled || busy}
-          onClick={() => onVote(activeUp ? 0 : 1)}
-          className={`inline-flex items-center justify-center rounded-md p-1.5 transition-colors disabled:opacity-40 ${
-            activeUp
-              ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400"
-              : "text-neutral-500 hover:bg-neutral-200 dark:hover:bg-neutral-800"
-          }`}
-          aria-label="Thumbs up"
-        >
-          <ThumbsUp className="h-4 w-4" />
-        </button>
-        <button
-          type="button"
-          disabled={disabled || busy}
-          onClick={() => onVote(activeDown ? 0 : -1)}
-          className={`inline-flex items-center justify-center rounded-md p-1.5 transition-colors disabled:opacity-40 ${
-            activeDown
-              ? "bg-rose-500/20 text-rose-600 dark:text-rose-400"
-              : "text-neutral-500 hover:bg-neutral-200 dark:hover:bg-neutral-800"
-          }`}
-          aria-label="Thumbs down"
-        >
-          <ThumbsDown className="h-4 w-4" />
-        </button>
-      </div>
-    </div>
-  );
-}
+const PHASE_LABEL: Record<HackASprint2026Phase, string> = {
+  preUnlock: "Before passcode window (opens 5:00 PM ET)",
+  passcodeUnlock: "Passcode & prompt",
+  submissionOpen: "Submission instructions",
+  peerVotingOpen: "Peer voting & judging",
+  resultsOpen: "Final results",
+};
 
 export default function HackASprint2026ShowcasePage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, refreshUserProfile } = useAuth();
   const [me, setMe] = useState<MeResponse | null>(null);
   const [data, setData] = useState<SubmissionsResponse | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [voteBusy, setVoteBusy] = useState<string | null>(null);
+  const [passcode, setPasscode] = useState("");
+  const [unlockBusy, setUnlockBusy] = useState(false);
+  const [peerSelected, setPeerSelected] = useState<Set<string>>(new Set());
+  const [peerBusy, setPeerBusy] = useState(false);
+  const [judgeBusy, setJudgeBusy] = useState<string | null>(null);
 
   const repoBase = getGithubRepoWebBaseUrl();
   const submissionsPath = HACK_A_SPRINT_2026_SUBMISSIONS_PATH;
@@ -116,8 +88,11 @@ export default function HackASprint2026ShowcasePage() {
       if (!subRes.ok) {
         throw new Error("Could not load submissions");
       }
-      setMe((await meRes.json()) as MeResponse);
-      setData((await subRes.json()) as SubmissionsResponse);
+      const meJson = (await meRes.json()) as MeResponse;
+      const subJson = (await subRes.json()) as SubmissionsResponse;
+      setMe(meJson);
+      setData(subJson);
+      setPeerSelected(new Set(subJson.viewer.myPeerPicks ?? []));
     } catch (e) {
       setLoadError(e instanceof Error ? e.message : "Failed to load");
     }
@@ -132,14 +107,64 @@ export default function HackASprint2026ShowcasePage() {
     }
   }, [user, loadAll]);
 
-  const handleVote = async (
-    submissionId: string,
-    channel: Channel,
-    value: 1 | -1 | 0
-  ) => {
-    if (!user) return;
-    const key = `${submissionId}-${channel}`;
-    setVoteBusy(key);
+  useEffect(() => {
+    if (!user || !me) return;
+    const t = window.setInterval(() => void loadAll(), 45_000);
+    return () => window.clearInterval(t);
+  }, [user, me, loadAll]);
+
+  const handleUnlock = async () => {
+    if (!user || !passcode.trim()) return;
+    setUnlockBusy(true);
+    setLoadError(null);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch(
+        "/api/hackathons/showcase/hack-a-sprint-2026/unlock",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ passcode: passcode.trim() }),
+        }
+      );
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error((j as { error?: string }).error || "Unlock failed");
+      }
+      try {
+        localStorage.setItem(`hackASprint2026_unlocked_${user.uid}`, "1");
+      } catch {
+        // ignore
+      }
+      await refreshUserProfile();
+      setPasscode("");
+      await loadAll();
+    } catch (e) {
+      setLoadError(e instanceof Error ? e.message : "Unlock failed");
+    } finally {
+      setUnlockBusy(false);
+    }
+  };
+
+  const togglePeerPick = (submissionId: string) => {
+    setPeerSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(submissionId)) {
+        next.delete(submissionId);
+      } else if (next.size < 6) {
+        next.add(submissionId);
+      }
+      return next;
+    });
+  };
+
+  const submitPeerPicks = async () => {
+    if (!user || peerSelected.size !== 6) return;
+    setPeerBusy(true);
+    setLoadError(null);
     try {
       const token = await user.getIdToken();
       const res = await fetch(
@@ -150,18 +175,47 @@ export default function HackASprint2026ShowcasePage() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ submissionId, channel, value }),
+          body: JSON.stringify({ submissionIds: [...peerSelected] }),
         }
       );
+      const j = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        throw new Error((j as { error?: string }).error || res.statusText);
+        throw new Error((j as { error?: string }).error || "Could not save picks");
       }
       await loadAll();
     } catch (e) {
-      setLoadError(e instanceof Error ? e.message : "Vote failed");
+      setLoadError(e instanceof Error ? e.message : "Could not save picks");
     } finally {
-      setVoteBusy(null);
+      setPeerBusy(false);
+    }
+  };
+
+  const submitJudgeScore = async (submissionId: string, score: number) => {
+    if (!user) return;
+    setJudgeBusy(submissionId);
+    setLoadError(null);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch(
+        "/api/hackathons/showcase/hack-a-sprint-2026/judge-score",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ submissionId, score }),
+        }
+      );
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error((j as { error?: string }).error || "Judge save failed");
+      }
+      await loadAll();
+    } catch (e) {
+      setLoadError(e instanceof Error ? e.message : "Judge save failed");
+    } finally {
+      setJudgeBusy(null);
     }
   };
 
@@ -180,11 +234,12 @@ export default function HackASprint2026ShowcasePage() {
         <section className="py-16 md:py-20 px-6 border-b border-neutral-200 dark:border-neutral-800">
           <div className="max-w-2xl mx-auto text-center">
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Hack-a-Sprint 2026 — Showcase
+              Hack-a-Sprint 2026
             </h1>
             <p className="text-neutral-600 dark:text-neutral-400 mb-8">
-              Sign in to view submissions, voting, and full instructions for
-              submitting your project via GitHub.
+              Sign in for the live schedule, event passcode, submission
+              instructions, and voting — all on this page during the event on April
+              13, 2026.
             </p>
             <Link
               href="/login?redirect=/hackathons/hack-a-sprint-2026"
@@ -193,12 +248,25 @@ export default function HackASprint2026ShowcasePage() {
               Sign in to continue
             </Link>
             <p className="mt-6 text-sm text-neutral-500 space-x-3">
-              <Link href="/hackathons/hack-a-sprint-2026/signup" className="text-emerald-600 dark:text-emerald-400 hover:underline">
+              <Link
+                href="/hackathons/hack-a-sprint-2026/signup"
+                className="text-emerald-600 dark:text-emerald-400 hover:underline"
+              >
                 Website signup &amp; ranking
               </Link>
               <span aria-hidden="true">·</span>
-              <Link href="/hackathons" className="text-emerald-600 dark:text-emerald-400 hover:underline">
-                ← Back to Hackathons
+              <Link
+                href="/hackathons/hack-a-sprint-2026/instructions"
+                className="text-emerald-600 dark:text-emerald-400 hover:underline"
+              >
+                Pre-event instructions
+              </Link>
+              <span aria-hidden="true">·</span>
+              <Link
+                href="/hackathons"
+                className="text-emerald-600 dark:text-emerald-400 hover:underline"
+              >
+                ← Hackathons
               </Link>
             </p>
           </div>
@@ -206,6 +274,13 @@ export default function HackASprint2026ShowcasePage() {
       </div>
     );
   }
+
+  const phase = me?.phase ?? data?.phase;
+  const signedUp = me?.signedUp ?? data?.viewer.signedUp;
+  const unlocked = me?.unlocked ?? data?.viewer.unlocked;
+
+  const viewer = data?.viewer;
+  const judgeEligible = me?.judgeEligible ?? viewer?.judgeEligible;
 
   return (
     <div className="flex flex-col">
@@ -215,17 +290,24 @@ export default function HackASprint2026ShowcasePage() {
             April 13, 2026 · Back Bay, Boston
           </p>
           <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Hack-a-Sprint 2026 — Showcase &amp; voting
+            Hack-a-Sprint 2026 — Live hub
           </h1>
+          {phase && (
+            <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-4">
+              Current phase: {PHASE_LABEL[phase]}
+            </p>
+          )}
           <p className="text-neutral-600 dark:text-neutral-400 mb-4">
-            Build at the event, then submit your entry by opening a pull request
-            to this site&apos;s repo. After your submission is merged, your card
-            appears below. Three separate scores:{" "}
-            <strong className="text-foreground">Participants</strong> (fellow
-            builders with a merged submission PR),{" "}
-            <strong className="text-foreground">Community</strong> (any signed-in
-            member), and <strong className="text-foreground">Judges</strong>{" "}
-            (designated reviewers).
+            Complete{" "}
+            <Link
+              href="/hackathons/hack-a-sprint-2026/signup"
+              className="text-emerald-600 dark:text-emerald-400 font-medium hover:underline"
+            >
+              website signup
+            </Link>{" "}
+            first. After 5:00 PM ET, enter the passcode given at the door. The
+            prompt and submission steps unlock for attendees only; voting and
+            results follow the posted schedule.
           </p>
           <div className="flex flex-wrap gap-3">
             <a
@@ -234,13 +316,19 @@ export default function HackASprint2026ShowcasePage() {
               rel="noopener noreferrer"
               className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
             >
-              Event on Luma
+              Luma (admission)
             </a>
             <Link
               href="/hackathons/hack-a-sprint-2026/signup"
               className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
             >
-              Website signup &amp; ranking
+              Website signup
+            </Link>
+            <Link
+              href="/hackathons/hack-a-sprint-2026/instructions"
+              className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
+            >
+              Pre-event instructions
             </Link>
             <Link
               href="/hackathons"
@@ -249,226 +337,333 @@ export default function HackASprint2026ShowcasePage() {
               Hackathons overview
             </Link>
           </div>
+          {!signedUp && phase && phase !== "preUnlock" && (
+            <p className="mt-4 text-sm text-amber-700 dark:text-amber-400">
+              You are not on the website signup list yet —{" "}
+              <Link href="/hackathons/hack-a-sprint-2026/signup" className="underline">
+                claim your spot
+              </Link>{" "}
+              to use the passcode and voting features.
+            </p>
+          )}
         </div>
       </section>
 
-      <section className="py-10 px-6 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950/50">
-        <div className="max-w-4xl mx-auto space-y-6">
-          <h2 className="text-xl font-bold text-foreground">
-            How to submit (GitHub PR)
-          </h2>
-          <ol className="list-decimal list-inside space-y-3 text-neutral-600 dark:text-neutral-400 text-sm md:text-base">
-            <li>
-              <a
-                href={`${repoBase}/fork`}
-                className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Fork
-              </a>{" "}
-              <code className="text-xs bg-neutral-200 dark:bg-neutral-800 px-1 rounded">{repoBase}</code> on GitHub.
-            </li>
-            <li>
-              Create a branch (e.g.{" "}
-              <code className="text-xs bg-neutral-200 dark:bg-neutral-800 px-1 rounded">
-                hack-a-sprint-submission
-              </code>
-              ).
-            </li>
-            <li>
-              Add exactly one file:{" "}
-              <code className="text-xs bg-neutral-200 dark:bg-neutral-800 px-1 rounded break-all">
-                {submissionsPath}/&lt;your-github-login&gt;.json
-              </code>{" "}
-              — the filename must match your GitHub username (the PR author).
-            </li>
-            <li>
-              Copy the template below. Required fields:{" "}
-              <code className="text-xs bg-neutral-200 dark:bg-neutral-800 px-1 rounded">
-                projectRepoUrl
-              </code>
-              ,{" "}
-              <code className="text-xs bg-neutral-200 dark:bg-neutral-800 px-1 rounded">
-                deployedUrl
-              </code>
-              ,{" "}
-              <code className="text-xs bg-neutral-200 dark:bg-neutral-800 px-1 rounded">
-                title
-              </code>
-              ,{" "}
-              <code className="text-xs bg-neutral-200 dark:bg-neutral-800 px-1 rounded">
-                description
-              </code>
-              . Optional:{" "}
-              <code className="text-xs bg-neutral-200 dark:bg-neutral-800 px-1 rounded">
-                demoVideoUrl
-              </code>
-              .
-            </li>
-            <li>
-              Open a PR that changes <strong>only</strong> that JSON file (no
-              unrelated edits). CI will validate the schema.
-            </li>
-            <li>
-              Ask a maintainer to add the label{" "}
-              <code className="text-xs bg-neutral-200 dark:bg-neutral-800 px-1 rounded">
-                {HACK_A_SPRINT_2026_LABEL}
-              </code>{" "}
-              when merging — that label is required for{" "}
-              <strong>participant</strong> voting eligibility.
-            </li>
-            <li>
-              Connect GitHub on your{" "}
-              <Link href="/profile" className="text-emerald-600 dark:text-emerald-400 hover:underline">
-                profile
-              </Link>{" "}
-              so we can verify your merged submission PR.
-            </li>
-          </ol>
-          <div>
-            <p className="text-sm font-medium text-foreground mb-2">
-              JSON template
-            </p>
-            <pre className="text-xs md:text-sm bg-neutral-900 text-neutral-100 p-4 rounded-lg overflow-x-auto border border-neutral-700">
-              {JSON_TEMPLATE}
-            </pre>
+      {phase === "passcodeUnlock" ||
+      phase === "submissionOpen" ||
+      phase === "peerVotingOpen" ||
+      phase === "resultsOpen" ? (
+        <section className="py-8 px-6 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950/50">
+          <div className="max-w-4xl mx-auto space-y-4">
+            {signedUp && !unlocked && (
+              <>
+                <h2 className="text-lg font-bold text-foreground">
+                  Event passcode
+                </h2>
+                <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                  Enter the code announced at the venue (5:00 PM ET onward).
+                </p>
+                <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                  <input
+                    type="password"
+                    autoComplete="off"
+                    value={passcode}
+                    onChange={(e) => setPasscode(e.target.value)}
+                    className="rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 px-3 py-2 text-sm max-w-xs"
+                    placeholder="Passcode"
+                  />
+                  <button
+                    type="button"
+                    disabled={unlockBusy || !passcode.trim()}
+                    onClick={() => void handleUnlock()}
+                    className="inline-flex justify-center rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-400 disabled:opacity-50"
+                  >
+                    {unlockBusy ? "Checking…" : "Unlock"}
+                  </button>
+                </div>
+              </>
+            )}
+            {unlocked && (
+              <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-500/10 p-5">
+                <h2 className="text-lg font-bold text-foreground mb-2">
+                  Hack-a-Sprint prompt
+                </h2>
+                <p className="text-sm text-neutral-600 dark:text-neutral-400 whitespace-pre-wrap">
+                  The official build prompt for this sprint will be posted here
+                  before kickoff. You unlocked the attendee view — stay on this
+                  page; submission steps appear at 6:30 PM ET.
+                </p>
+              </div>
+            )}
           </div>
-        </div>
-      </section>
+        </section>
+      ) : null}
+
+      {unlocked &&
+        (phase === "submissionOpen" ||
+          phase === "peerVotingOpen" ||
+          phase === "resultsOpen") && (
+          <section className="py-10 px-6 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950/50">
+            <div className="max-w-4xl mx-auto space-y-6">
+              <h2 className="text-xl font-bold text-foreground">
+                How to submit (GitHub PR)
+              </h2>
+              <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                Your submission is one JSON file merged into this repo. It must
+                include a public{" "}
+                <strong className="text-foreground">GitHub repo</strong>, a{" "}
+                <strong className="text-foreground">deployed link</strong>,{" "}
+                <strong className="text-foreground">title</strong>,{" "}
+                <strong className="text-foreground">description</strong>, and a{" "}
+                <strong className="text-foreground">Loom video</strong> of you
+                explaining the project.
+              </p>
+              <ol className="list-decimal list-inside space-y-3 text-neutral-600 dark:text-neutral-400 text-sm md:text-base">
+                <li>
+                  <a
+                    href={`${repoBase}/fork`}
+                    className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Fork
+                  </a>{" "}
+                  <code className="text-xs bg-neutral-200 dark:bg-neutral-800 px-1 rounded">
+                    {repoBase}
+                  </code>
+                  .
+                </li>
+                <li>Create a branch (e.g. hack-a-sprint-submission).</li>
+                <li>
+                  Add one file:{" "}
+                  <code className="text-xs bg-neutral-200 dark:bg-neutral-800 px-1 rounded break-all">
+                    {submissionsPath}/&lt;your-github-login&gt;.json
+                  </code>{" "}
+                  (filename must match the PR author).
+                </li>
+                <li>
+                  Use the template below; <code>loomVideoUrl</code> is required.
+                </li>
+                <li>
+                  Open a PR that only changes that JSON file. CI validates the
+                  schema.
+                </li>
+                <li>
+                  Maintainers add label{" "}
+                  <code className="text-xs bg-neutral-200 dark:bg-neutral-800 px-1 rounded">
+                    {HACK_A_SPRINT_2026_LABEL}
+                  </code>{" "}
+                  when merging. Connect GitHub on your{" "}
+                  <Link href="/profile" className="text-emerald-600 dark:text-emerald-400 hover:underline">
+                    profile
+                  </Link>
+                  .
+                </li>
+              </ol>
+              <pre className="text-xs md:text-sm bg-neutral-900 text-neutral-100 p-4 rounded-lg overflow-x-auto border border-neutral-700">
+                {JSON_TEMPLATE}
+              </pre>
+            </div>
+          </section>
+        )}
 
       <section className="py-10 px-6">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-xl font-bold text-foreground mb-2">
-            Submissions
+            Submissions &amp; voting
           </h2>
-          {me && (
-            <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-6">
-              Participant voting:{" "}
-              {me.participantEligible
-                ? "You’re eligible (merged PR with label)."
-                : "Connect GitHub and merge a labeled submission PR to vote here."}{" "}
-              · Community voting: everyone signed in. · Judges:{" "}
-              {me.judgeEligible
-                ? "you’re a judge."
-                : "restricted to designated accounts."}
-            </p>
-          )}
           {loadError && (
-            <p className="text-sm text-rose-600 dark:text-rose-400 mb-4">
+            <p className="text-sm text-rose-600 dark:text-rose-400 mb-4" role="alert">
               {loadError}
             </p>
           )}
-          {!data ? (
-            <p className="text-neutral-500">Loading submissions…</p>
+          {!data || !me ? (
+            <p className="text-neutral-500">Loading…</p>
+          ) : !unlocked ? (
+            <p className="text-neutral-600 dark:text-neutral-400 text-sm">
+              Enter the event passcode (after signup) to see voting and projects.
+            </p>
+          ) : phase === "passcodeUnlock" || phase === "submissionOpen" ? (
+            <p className="text-neutral-600 dark:text-neutral-400 text-sm">
+              Project gallery opens at 7:15 PM ET for peer voting. Finish your PR
+              submission before then.
+            </p>
           ) : data.submissions.length === 0 ? (
             <p className="text-neutral-600 dark:text-neutral-400">
-              No submissions yet. Be the first to open a PR with your JSON file.
+              No merged submissions yet.
             </p>
           ) : (
-            <ul className="space-y-8">
-              {data.submissions.map((s) => {
-                const agg = data.aggregates[s.submissionId] ?? {
-                  participant: { up: 0, down: 0, net: 0 },
-                  community: { up: 0, down: 0, net: 0 },
-                  judge: { up: 0, down: 0, net: 0 },
-                };
-                const my = data.myVotes[s.submissionId] ?? {};
-                return (
-                  <li
-                    key={s.submissionId}
-                    className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-6 shadow-sm"
-                  >
-                    <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-start">
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-medium uppercase tracking-wide text-neutral-500 mb-1">
-                          @{s.githubLogin}
-                        </p>
-                        <h3 className="text-lg font-semibold text-foreground mb-2">
-                          {s.payload.title}
-                        </h3>
-                        <p className="text-sm text-neutral-600 dark:text-neutral-400 whitespace-pre-wrap mb-4">
-                          {s.payload.description}
-                        </p>
-                        <div className="flex flex-wrap gap-3 text-sm">
-                          <a
-                            href={s.payload.projectRepoUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium"
-                          >
-                            GitHub repo
-                          </a>
-                          <a
-                            href={s.payload.deployedUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium"
-                          >
-                            Live app
-                          </a>
-                          {s.payload.demoVideoUrl && (
+            <>
+              {phase === "peerVotingOpen" && (
+                <div className="mb-6 rounded-xl border border-neutral-200 dark:border-neutral-700 p-4 bg-white dark:bg-neutral-900/50">
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-3">
+                    Pick exactly <strong>6</strong> favorite projects ({peerSelected.size}
+                    /6 selected). Submit to lock in your vote and reveal AI scores.
+                    Judge scores stay hidden until 7:45 PM ET.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      disabled={peerBusy || peerSelected.size !== 6}
+                      onClick={() => void submitPeerPicks()}
+                      className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-400 disabled:opacity-50"
+                    >
+                      {peerBusy ? "Saving…" : "Submit my 6 picks"}
+                    </button>
+                    {viewer?.hasCompletedPeerVoting && (
+                      <span className="text-sm text-emerald-600 dark:text-emerald-400 self-center">
+                        Picks saved — AI scores unlocked for you below.
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+              {phase === "resultsOpen" && (
+                <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-6">
+                  Final ordering: raw score (average of judges + AI, rounded up), then
+                  peer votes as tiebreaker.
+                </p>
+              )}
+              <ul className="space-y-8">
+                {data.submissions.map((s) => {
+                  const isPicked = peerSelected.has(s.submissionId);
+                  const showScores =
+                    phase === "resultsOpen" ||
+                    (phase === "peerVotingOpen" && viewer?.hasCompletedPeerVoting);
+                  return (
+                    <li
+                      key={s.submissionId}
+                      className={`rounded-2xl border p-6 shadow-sm ${
+                        isPicked && phase === "peerVotingOpen"
+                          ? "border-emerald-500/50 bg-emerald-500/5 dark:bg-emerald-500/10"
+                          : "border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900"
+                      }`}
+                    >
+                      <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-start">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-medium uppercase tracking-wide text-neutral-500 mb-1">
+                            @{s.githubLogin}
+                          </p>
+                          <h3 className="text-lg font-semibold text-foreground mb-2">
+                            {s.payload.title}
+                          </h3>
+                          <p className="text-sm text-neutral-600 dark:text-neutral-400 whitespace-pre-wrap mb-4">
+                            {s.payload.description}
+                          </p>
+                          <div className="flex flex-wrap gap-3 text-sm">
                             <a
-                              href={s.payload.demoVideoUrl}
+                              href={s.payload.projectRepoUrl}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium"
                             >
-                              Video
+                              Repo
                             </a>
+                            <a
+                              href={s.payload.deployedUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium"
+                            >
+                              Live app
+                            </a>
+                            <a
+                              href={s.payload.loomVideoUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium"
+                            >
+                              Loom
+                            </a>
+                          </div>
+                        </div>
+                        {phase === "peerVotingOpen" && (
+                          <button
+                            type="button"
+                            onClick={() => togglePeerPick(s.submissionId)}
+                            disabled={
+                              !isPicked && peerSelected.size >= 6
+                            }
+                            className={`shrink-0 rounded-lg border px-3 py-2 text-sm font-medium ${
+                              isPicked
+                                ? "border-emerald-500 bg-emerald-500 text-white"
+                                : "border-neutral-300 dark:border-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                            } disabled:opacity-40`}
+                          >
+                            {isPicked ? "Selected" : "Pick"}
+                          </button>
+                        )}
+                      </div>
+
+                      {judgeEligible && phase === "peerVotingOpen" && (
+                        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-neutral-200 dark:border-neutral-700 pt-4">
+                          <label className="text-xs font-semibold text-neutral-500 uppercase">
+                            Your score (1–10)
+                          </label>
+                          <select
+                            defaultValue=""
+                            disabled={judgeBusy === s.submissionId}
+                            onChange={(e) => {
+                              const v = Number(e.target.value);
+                              if (v >= 1 && v <= 10) {
+                                void submitJudgeScore(s.submissionId, v);
+                              }
+                              e.target.value = "";
+                            }}
+                            className="rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 px-2 py-1 text-sm"
+                          >
+                            <option value="" disabled>
+                              Set…
+                            </option>
+                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                              <option key={n} value={n}>
+                                {n}
+                              </option>
+                            ))}
+                          </select>
+                          {judgeBusy === s.submissionId && (
+                            <span className="text-xs text-neutral-500">Saving…</span>
                           )}
                         </div>
-                      </div>
-                    </div>
+                      )}
 
-                    <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-neutral-200 dark:border-neutral-800 pt-6">
-                      {(
-                        [
-                          ["participant", "Participants", !me?.participantEligible],
-                          ["community", "Community", false],
-                          ["judge", "Judges", !me?.judgeEligible],
-                        ] as const
-                      ).map(([ch, label, disabled]) => (
-                        <div
-                          key={ch}
-                          className="rounded-xl border border-neutral-200 dark:border-neutral-700 p-4"
-                        >
-                          <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-2">
-                            {label}
-                          </p>
-                          <p className="text-2xl font-bold text-foreground mb-3">
-                            {agg[ch].net > 0 ? "+" : ""}
-                            {agg[ch].net}
-                            <span className="text-xs font-normal text-neutral-500 ml-2">
-                              ({agg[ch].up}↑ {agg[ch].down}↓)
-                            </span>
-                          </p>
-                          <VoteButtons
-                            disabled={disabled}
-                            disabledReason={
-                              ch === "participant"
-                                ? "Requires merged submission PR with label hack-a-sprint-2026"
-                                : ch === "judge"
-                                  ? "Judge-only"
-                                  : undefined
-                            }
-                            current={my[ch]}
-                            busy={voteBusy === `${s.submissionId}-${ch}`}
-                            onVote={(v) =>
-                              handleVote(
-                                s.submissionId,
-                                ch as Channel,
-                                v as 1 | -1 | 0
-                              )
-                            }
-                          />
+                      {showScores && (
+                        <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm border-t border-neutral-200 dark:border-neutral-700 pt-4">
+                          {s.aiScore != null && (
+                            <div>
+                              <p className="text-xs text-neutral-500">AI score</p>
+                              <p className="font-semibold text-foreground">{s.aiScore}</p>
+                            </div>
+                          )}
+                          {phase === "resultsOpen" && s.judgeAverage != null && (
+                            <div>
+                              <p className="text-xs text-neutral-500">Judge avg</p>
+                              <p className="font-semibold text-foreground">
+                                {s.judgeAverage.toFixed(2)}
+                              </p>
+                            </div>
+                          )}
+                          {phase === "resultsOpen" && s.rawScore != null && (
+                            <div>
+                              <p className="text-xs text-neutral-500">Raw score</p>
+                              <p className="font-semibold text-foreground">{s.rawScore}</p>
+                            </div>
+                          )}
+                          {phase === "resultsOpen" && s.peerVoteCount != null && (
+                            <div>
+                              <p className="text-xs text-neutral-500">Peer votes</p>
+                              <p className="font-semibold text-foreground">
+                                {s.peerVoteCount}
+                              </p>
+                            </div>
+                          )}
                         </div>
-                      ))}
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
           )}
         </div>
       </section>

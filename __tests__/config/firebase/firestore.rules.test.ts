@@ -178,6 +178,12 @@ describe("Firestore rules: badge trust boundaries", () => {
         pullRequestsCount: 999,
       })
     );
+
+    await assertFails(
+      updateDoc(userRef, {
+        hackASprint2026Unlocked: true,
+      })
+    );
   });
 
   it("hackathonShowcaseVotes: authenticated read allowed, client write denied", async () => {

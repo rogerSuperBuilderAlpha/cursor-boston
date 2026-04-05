@@ -133,6 +133,12 @@ const optionalEnvVars: EnvVar[] = [
       "Comma-separated judge emails (lowercase) for Hack-a-Sprint 2026 judge votes; matched to auth + profile emails",
   },
   {
+    name: "HACK_A_SPRINT_2026_EVENT_PASSCODE",
+    required: false,
+    description:
+      "In-person event passcode for Hack-a-Sprint 2026 unlock on the showcase page (server-only)",
+  },
+  {
     name: "FIREBASE_SERVICE_ACCOUNT_JSON",
     required: false,
     description: "Firebase Admin service account JSON (for webhooks)",

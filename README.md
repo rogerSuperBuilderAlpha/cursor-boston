@@ -81,6 +81,32 @@ Each feature is **fully isolated** — new routes, new Firestore collections, no
    npm run dev
    ```
 
+## 🧰 Operations
+
+### Rate-limit cleanup (internal maintenance)
+
+Run the internal `apiRateLimits` cleanup endpoint from this repo:
+
+```bash
+CRON_SECRET=your-secret npm run rate-limit-cleanup
+```
+
+Optional environment variables:
+- `RATE_LIMIT_CLEANUP_BASE_URL` (default: `http://localhost:3000`)
+- `RATE_LIMIT_CLEANUP_DRY_RUN` (`true` for no-delete simulation)
+- `RATE_LIMIT_CLEANUP_BATCH_SIZE` (clamped to `1-500`)
+- `RATE_LIMIT_CLEANUP_MAX_BATCHES` (clamped to `1-20`)
+
+Examples:
+
+```bash
+# Dry run against production URL
+CRON_SECRET=your-secret RATE_LIMIT_CLEANUP_BASE_URL=https://cursorboston.com RATE_LIMIT_CLEANUP_DRY_RUN=true npm run rate-limit-cleanup
+
+# Real cleanup with tighter bounds
+CRON_SECRET=your-secret RATE_LIMIT_CLEANUP_BATCH_SIZE=200 RATE_LIMIT_CLEANUP_MAX_BATCHES=3 npm run rate-limit-cleanup
+```
+
 ---
 
 ## 🗺️ Roadmap

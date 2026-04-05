@@ -1,9 +1,11 @@
 import { cert, getApps, initializeApp, App } from "firebase-admin/app";
 import { getAuth, Auth } from "firebase-admin/auth";
+import { getDatabase, Database } from "firebase-admin/database";
 import { getFirestore, Firestore } from "firebase-admin/firestore";
 
 let adminDb: Firestore | null = null;
 let adminAuth: Auth | null = null;
+let adminRtdb: Database | null = null;
 
 function parseServiceAccount() {
   const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
@@ -31,12 +33,17 @@ function getAdminApp(): App | null {
     return initializeApp({
       credential: cert(serviceAccount),
       projectId: serviceAccount.project_id,
+      databaseURL:
+        process.env.FIREBASE_DATABASE_URL || process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
     });
   }
 
   if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
     console.log("[Firebase Admin] Initializing with GOOGLE_APPLICATION_CREDENTIALS");
-    return initializeApp();
+    return initializeApp({
+      databaseURL:
+        process.env.FIREBASE_DATABASE_URL || process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
+    });
   }
 
   console.warn("[Firebase Admin] No credentials found - FIREBASE_SERVICE_ACCOUNT_JSON not set");
@@ -69,4 +76,18 @@ export function getAdminAuth(): Auth | null {
 
   adminAuth = getAuth(app);
   return adminAuth;
+}
+
+export function getAdminRtdb(): Database | null {
+  if (adminRtdb) {
+    return adminRtdb;
+  }
+
+  const app = getAdminApp();
+  if (!app) {
+    return null;
+  }
+
+  adminRtdb = getDatabase(app);
+  return adminRtdb;
 }

@@ -12,6 +12,8 @@ import {
   hackathonEventSignupDocId,
   isHackathonEventSignupId,
 } from "@/lib/hackathon-event-signup";
+import { fetchMergedPrCountsForLogins } from "@/lib/github-merged-pr-count";
+import { getGithubRepoPair } from "@/lib/github-recent-merged-prs";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -49,6 +51,51 @@ async function fetchUserDataMap(
     });
   }
   return map;
+}
+
+/** Firestore `in` queries are limited to 10 values. */
+const USER_ID_IN_CHUNK = 10;
+
+/**
+ * Merged PR counts from pullRequests (same source as contributor badges), not users.pullRequestsCount.
+ */
+async function countMergedCommunityPrsByUserIds(
+  db: Firestore,
+  userIds: string[]
+): Promise<Map<string, number>> {
+  const counts = new Map<string, number>();
+  const unique = [...new Set(userIds.filter(Boolean))];
+  for (const id of unique) counts.set(id, 0);
+  if (unique.length === 0) return counts;
+
+  const { owner, repo } = getGithubRepoPair();
+  const expectedRepo = `${owner}/${repo}`;
+
+  for (let i = 0; i < unique.length; i += USER_ID_IN_CHUNK) {
+    const chunk = unique.slice(i, i + USER_ID_IN_CHUNK);
+    const snap = await db
+      .collection("pullRequests")
+      .where("userId", "in", chunk)
+      .where("state", "==", "merged")
+      .get();
+
+    for (const doc of snap.docs) {
+      const data = doc.data();
+      const uid = data.userId as string | undefined;
+      if (!uid) continue;
+      const repoField = data.repository;
+      if (
+        typeof repoField === "string" &&
+        repoField.length > 0 &&
+        repoField !== expectedRepo
+      ) {
+        continue;
+      }
+      counts.set(uid, (counts.get(uid) ?? 0) + 1);
+    }
+  }
+
+  return counts;
 }
 
 type RouteContext = { params: Promise<{ eventId: string }> };
@@ -92,27 +139,41 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     const userIds = snap.docs.map((d) => d.data().userId as string).filter(Boolean);
     const userMap = await fetchUserDataMap(db, userIds);
+    const firestoreMergedCounts = await countMergedCommunityPrsByUserIds(db, userIds);
+
+    const githubLogins: string[] = [];
+    for (const uid of userIds) {
+      const profile = userMap.get(uid);
+      const login =
+        profile?.github && typeof profile.github === "object"
+          ? (profile.github as { login?: string }).login
+          : undefined;
+      if (typeof login === "string" && login.trim()) githubLogins.push(login.trim());
+    }
+    const githubMergedByLogin = await fetchMergedPrCountsForLogins(githubLogins);
 
     for (const doc of snap.docs) {
       const data = doc.data();
       const userId = data.userId as string;
       if (!userId) continue;
       const profile = userMap.get(userId);
-      const pr =
-        typeof profile?.pullRequestsCount === "number"
-          ? profile.pullRequestsCount
-          : 0;
       const gh =
         profile?.github && typeof profile.github === "object"
           ? (profile.github as { login?: string }).login
           : undefined;
+      const githubLogin = typeof gh === "string" ? gh : null;
+      let pr = firestoreMergedCounts.get(userId) ?? 0;
+      if (githubLogin) {
+        const fromApi = githubMergedByLogin.get(githubLogin.toLowerCase());
+        if (fromApi !== undefined) pr = fromApi;
+      }
       rows.push({
         userId,
         signedUpAtMs: signedUpAtToMs(data.signedUpAt),
         mergedPrCount: pr,
         displayName:
           typeof profile?.displayName === "string" ? profile.displayName : null,
-        githubLogin: typeof gh === "string" ? gh : null,
+        githubLogin,
       });
     }
 

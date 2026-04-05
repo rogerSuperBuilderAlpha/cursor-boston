@@ -415,6 +415,7 @@ export default function Home() {
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
+              aria-hidden="true"
             >
               <path d="M7 17l9.2-9.2M17 17V7H7" />
             </svg>

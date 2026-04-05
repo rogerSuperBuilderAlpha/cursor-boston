@@ -32,6 +32,32 @@ interface UserVotes {
   [projectId: string]: string;
 }
 
+interface SubmissionFeedback {
+  type: "success" | "error";
+  message: string;
+}
+
+type SubmissionStatus = "pending" | "approved" | "rejected";
+type TalkModerationStatus = "pending" | "approved" | "completed" | "unknown";
+type ShowcaseModerationAction = "approve" | "reject";
+type TalkModerationAction = "approve" | "complete";
+
+interface PendingSubmission {
+  submissionId: string;
+  userId: string;
+  projectId: string;
+  createdAt?: string;
+  resubmittedAt?: string;
+}
+
+interface TalkModerationSubmission {
+  submissionId: string;
+  userId: string;
+  title: string;
+  status: TalkModerationStatus;
+  createdAt?: string;
+}
+
 function getNetScore(votes: VoteCounts, projectId: string): number {
   const v = votes[projectId];
   if (!v) return 0;
@@ -43,7 +69,18 @@ export default function ShowcasePage() {
   const [votes, setVotes] = useState<VoteCounts>({});
   const [userVotes, setUserVotes] = useState<UserVotes>({});
   const [votingId, setVotingId] = useState<string | null>(null);
+  const [submittingId, setSubmittingId] = useState<string | null>(null);
+  const [submittedProjects, setSubmittedProjects] = useState<Record<string, SubmissionStatus>>({});
   const [instructionsOpen, setInstructionsOpen] = useState(false);
+  const [submissionFeedback, setSubmissionFeedback] = useState<SubmissionFeedback | null>(null);
+  const [adminFeedback, setAdminFeedback] = useState<SubmissionFeedback | null>(null);
+  const [isAdminOperator, setIsAdminOperator] = useState(false);
+  const [loadingPendingSubmissions, setLoadingPendingSubmissions] = useState(false);
+  const [pendingSubmissions, setPendingSubmissions] = useState<PendingSubmission[]>([]);
+  const [talkModerationSubmissions, setTalkModerationSubmissions] = useState<
+    TalkModerationSubmission[]
+  >([]);
+  const [moderatingSubmissionId, setModeratingSubmissionId] = useState<string | null>(null);
 
   // Fetch vote data
   useEffect(() => {
@@ -113,6 +150,305 @@ export default function ShowcasePage() {
       }
     },
     [user, votingId]
+  );
+
+  const handleMarkSubmitted = useCallback(
+    async (projectId: string) => {
+      if (!user || submittingId) return;
+
+      setSubmittingId(projectId);
+      setSubmissionFeedback(null);
+      try {
+        const { getIdToken } = await import("firebase/auth");
+        const token = await getIdToken(user);
+        const res = await fetch("/api/showcase/submission", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ projectId }),
+        });
+
+        const payload = (await res.json().catch(() => ({}))) as {
+          created?: boolean;
+          resubmitted?: boolean;
+          error?: string;
+          status?: SubmissionStatus;
+        };
+
+        if (!res.ok) {
+          setSubmissionFeedback({
+            type: "error",
+            message: payload.error || "Could not record submission. Please try again.",
+          });
+          return;
+        }
+
+        const status =
+          payload.status === "approved"
+            ? "approved"
+            : payload.status === "rejected"
+            ? "rejected"
+            : "pending";
+        setSubmittedProjects((prev) => ({ ...prev, [projectId]: status }));
+        setSubmissionFeedback({
+          type: "success",
+          message: payload.resubmitted
+            ? "Submission re-sent for review. It does not count toward Showcase Star until approved."
+            : payload.created
+            ? "Submission received. It is pending review and does not count toward Showcase Star until approved."
+            : status === "approved"
+            ? "This submission is already approved."
+            : status === "rejected"
+            ? "This submission was rejected. You can resubmit after making changes."
+            : "This submission is already pending review.",
+        });
+      } catch {
+        setSubmissionFeedback({
+          type: "error",
+          message: "Could not record submission. Please try again.",
+        });
+      } finally {
+        setSubmittingId(null);
+      }
+    },
+    [user, submittingId]
+  );
+
+  useEffect(() => {
+    if (!user) {
+      setSubmittedProjects({});
+      return;
+    }
+
+    let active = true;
+    (async () => {
+      try {
+        const { getIdToken } = await import("firebase/auth");
+        const token = await getIdToken(user);
+        const res = await fetch("/api/showcase/submission", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch showcase submission state.");
+        }
+
+        const data = (await res.json()) as {
+          submissions?: Array<{ projectId: string; status: SubmissionStatus }>;
+        };
+        if (!active) return;
+
+        const submittedMap = (data.submissions || []).reduce<Record<string, SubmissionStatus>>(
+          (acc, submission) => {
+            acc[submission.projectId] = submission.status;
+            return acc;
+          },
+          {}
+        );
+        setSubmittedProjects(submittedMap);
+      } catch {
+        if (!active) return;
+        setSubmissionFeedback({
+          type: "error",
+          message: "Could not load your showcase submission statuses.",
+        });
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) {
+      setIsAdminOperator(false);
+      setPendingSubmissions([]);
+      setTalkModerationSubmissions([]);
+      setAdminFeedback(null);
+      return;
+    }
+
+    let active = true;
+    setLoadingPendingSubmissions(true);
+    (async () => {
+      try {
+        const { getIdToken } = await import("firebase/auth");
+        const token = await getIdToken(user);
+        const res = await fetch("/api/showcase/submission/approve", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (res.status === 403) {
+          if (!active) return;
+          setIsAdminOperator(false);
+          setPendingSubmissions([]);
+          setTalkModerationSubmissions([]);
+          return;
+        }
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch pending showcase submissions.");
+        }
+
+        const payload = (await res.json()) as {
+          pendingSubmissions?: PendingSubmission[];
+        };
+
+        if (!active) return;
+        setIsAdminOperator(true);
+        setPendingSubmissions(
+          Array.isArray(payload.pendingSubmissions) ? payload.pendingSubmissions : []
+        );
+
+        const talkRes = await fetch("/api/talks/submission/moderate", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (talkRes.ok) {
+          const talkPayload = (await talkRes.json()) as {
+            talkSubmissions?: TalkModerationSubmission[];
+          };
+          setTalkModerationSubmissions(
+            Array.isArray(talkPayload.talkSubmissions) ? talkPayload.talkSubmissions : []
+          );
+        } else {
+          setTalkModerationSubmissions([]);
+        }
+      } catch {
+        if (!active) return;
+        setIsAdminOperator(false);
+      } finally {
+        if (active) {
+          setLoadingPendingSubmissions(false);
+        }
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [user]);
+
+  const handleModerationAction = useCallback(
+    async (submissionId: string, action: ShowcaseModerationAction) => {
+      if (!user || !isAdminOperator || moderatingSubmissionId) return;
+
+      setModeratingSubmissionId(submissionId);
+      setAdminFeedback(null);
+
+      try {
+        const { getIdToken } = await import("firebase/auth");
+        const token = await getIdToken(user);
+        const res = await fetch("/api/showcase/submission/approve", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ submissionId, action }),
+        });
+
+        const payload = (await res.json().catch(() => ({}))) as {
+          error?: string;
+        };
+
+        if (!res.ok) {
+          setAdminFeedback({
+            type: "error",
+            message: payload.error || "Could not update submission status. Please try again.",
+          });
+          return;
+        }
+
+        setPendingSubmissions((prev) =>
+          prev.filter((submission) => submission.submissionId !== submissionId)
+        );
+        setAdminFeedback({
+          type: "success",
+          message: action === "approve"
+            ? "Submission approved."
+            : "Submission rejected.",
+        });
+      } catch {
+        setAdminFeedback({
+          type: "error",
+          message: "Could not update submission status. Please try again.",
+        });
+      } finally {
+        setModeratingSubmissionId(null);
+      }
+    },
+    [isAdminOperator, moderatingSubmissionId, user]
+  );
+
+  const handleTalkModerationAction = useCallback(
+    async (submissionId: string, action: TalkModerationAction) => {
+      if (!user || !isAdminOperator || moderatingSubmissionId) return;
+
+      setModeratingSubmissionId(submissionId);
+      setAdminFeedback(null);
+
+      try {
+        const { getIdToken } = await import("firebase/auth");
+        const token = await getIdToken(user);
+        const res = await fetch("/api/talks/submission/moderate", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ submissionId, action }),
+        });
+
+        const payload = (await res.json().catch(() => ({}))) as {
+          error?: string;
+        };
+
+        if (!res.ok) {
+          setAdminFeedback({
+            type: "error",
+            message: payload.error || "Could not update talk status. Please try again.",
+          });
+          return;
+        }
+
+        if (action === "approve") {
+          setTalkModerationSubmissions((prev) =>
+            prev.map((submission) =>
+              submission.submissionId === submissionId
+                ? { ...submission, status: "approved" }
+                : submission
+            )
+          );
+          setAdminFeedback({
+            type: "success",
+            message: "Talk submission approved.",
+          });
+        } else {
+          setTalkModerationSubmissions((prev) =>
+            prev.map((submission) =>
+              submission.submissionId === submissionId
+                ? { ...submission, status: "completed" }
+                : submission
+            )
+          );
+          setAdminFeedback({
+            type: "success",
+            message: "Talk marked as delivered.",
+          });
+        }
+      } catch {
+        setAdminFeedback({
+          type: "error",
+          message: "Could not update talk status. Please try again.",
+        });
+      } finally {
+        setModeratingSubmissionId(null);
+      }
+    },
+    [isAdminOperator, moderatingSubmissionId, user]
   );
 
   // Sort projects by net votes (descending)
@@ -275,6 +611,169 @@ export default function ShowcasePage() {
             </span>
           </div>
 
+          {submissionFeedback && (
+            <div
+              role={submissionFeedback.type === "error" ? "alert" : "status"}
+              className={`mb-6 rounded-xl border px-4 py-3 text-sm ${
+                submissionFeedback.type === "error"
+                  ? "border-red-500/30 bg-red-500/10 text-red-300"
+                  : "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+              }`}
+            >
+              {submissionFeedback.message}
+            </div>
+          )}
+
+          {isAdminOperator && (
+            <div className="mb-6 rounded-xl border border-neutral-800 bg-neutral-900 p-4">
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <h3 className="text-sm font-semibold text-white">Submission Moderation</h3>
+                {loadingPendingSubmissions && (
+                  <span className="text-xs text-neutral-400">Loading pending...</span>
+                )}
+              </div>
+
+              {adminFeedback && (
+                <div
+                  role={adminFeedback.type === "error" ? "alert" : "status"}
+                  className={`mb-3 rounded-lg border px-3 py-2 text-xs ${
+                    adminFeedback.type === "error"
+                      ? "border-red-500/30 bg-red-500/10 text-red-300"
+                      : "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+                  }`}
+                >
+                  {adminFeedback.message}
+                </div>
+              )}
+
+              {pendingSubmissions.length === 0 ? (
+                <p className="text-xs text-neutral-400">No pending submissions.</p>
+              ) : (
+                <div className="space-y-2">
+                  {pendingSubmissions.map((submission) => (
+                    <div
+                      key={submission.submissionId}
+                      className="rounded-lg border border-neutral-800 bg-neutral-950 p-3"
+                    >
+                      <p className="text-sm text-white mb-1">
+                        {submission.projectId || "(unknown project)"}
+                      </p>
+                      <p className="text-xs text-neutral-400 mb-2">
+                        User: {submission.userId || "(unknown user)"}
+                        {submission.resubmittedAt
+                          ? ` • Resubmitted ${new Date(
+                              submission.resubmittedAt
+                            ).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}`
+                          : submission.createdAt
+                          ? ` • Submitted ${new Date(
+                              submission.createdAt
+                            ).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}`
+                          : ""}
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleModerationAction(submission.submissionId, "approve")
+                          }
+                          disabled={moderatingSubmissionId === submission.submissionId}
+                          className="px-3 py-1.5 rounded-md text-xs font-medium bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleModerationAction(submission.submissionId, "reject")
+                          }
+                          disabled={moderatingSubmissionId === submission.submissionId}
+                          className="px-3 py-1.5 rounded-md text-xs font-medium bg-red-500/10 text-red-300 hover:bg-red-500/20 disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="mt-4 pt-4 border-t border-neutral-800">
+                <h4 className="text-xs font-semibold text-neutral-300 mb-2">Talk Moderation</h4>
+                {talkModerationSubmissions.length === 0 ? (
+                  <p className="text-xs text-neutral-400">No talks requiring moderation.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {talkModerationSubmissions.map((submission) => (
+                      <div
+                        key={submission.submissionId}
+                        className="rounded-lg border border-neutral-800 bg-neutral-950 p-3"
+                      >
+                        <p className="text-sm text-white mb-1">
+                          {submission.title || "(untitled talk)"}
+                        </p>
+                        <p className="text-xs text-neutral-400 mb-2">
+                          User: {submission.userId || "(unknown user)"}
+                          {submission.createdAt
+                            ? ` • Submitted ${new Date(submission.createdAt).toLocaleDateString(
+                                "en-US",
+                                {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                }
+                              )}`
+                            : ""}
+                          {` • ${submission.status}`}
+                        </p>
+                        <div className="flex gap-2">
+                          {submission.status === "pending" ? (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleTalkModerationAction(submission.submissionId, "approve")
+                              }
+                              disabled={moderatingSubmissionId === submission.submissionId}
+                              className="px-3 py-1.5 rounded-md text-xs font-medium bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 disabled:opacity-60 disabled:cursor-not-allowed"
+                            >
+                              Approve
+                            </button>
+                          ) : submission.status === "approved" ? (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleTalkModerationAction(submission.submissionId, "complete")
+                              }
+                              disabled={moderatingSubmissionId === submission.submissionId}
+                              className="px-3 py-1.5 rounded-md text-xs font-medium bg-blue-500/10 text-blue-300 hover:bg-blue-500/20 disabled:opacity-60 disabled:cursor-not-allowed"
+                            >
+                              Mark Delivered
+                            </button>
+                          ) : submission.status === "completed" ? (
+                            <span className="px-3 py-1.5 rounded-md text-xs font-medium bg-neutral-800 text-neutral-400">
+                              Resolved
+                            </span>
+                          ) : (
+                            <span className="px-3 py-1.5 rounded-md text-xs font-medium bg-neutral-800 text-neutral-400">
+                              No action
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {sortedProjects.length === 0 ? (
             <div className="text-center py-20">
               <p className="text-neutral-400 text-lg">
@@ -291,7 +790,10 @@ export default function ShowcasePage() {
                   userVote={userVotes[project.id]}
                   isLoggedIn={!!user}
                   isVoting={votingId === project.id}
+                  isSubmitting={submittingId === project.id}
+                  submissionStatus={submittedProjects[project.id]}
                   onVote={handleVote}
+                  onMarkSubmitted={handleMarkSubmitted}
                 />
               ))}
             </div>
@@ -308,19 +810,30 @@ function ProjectCard({
   userVote,
   isLoggedIn,
   isVoting,
+  isSubmitting,
+  submissionStatus,
   onVote,
+  onMarkSubmitted,
 }: {
   project: Project;
   votes?: { upCount: number; downCount: number };
   userVote?: string;
   isLoggedIn: boolean;
   isVoting: boolean;
+  isSubmitting: boolean;
+  submissionStatus?: SubmissionStatus;
   onVote: (projectId: string, type: "up" | "down") => void;
+  onMarkSubmitted: (projectId: string) => void;
 }) {
   const upCount = votes?.upCount || 0;
   const downCount = votes?.downCount || 0;
   const netScore = upCount - downCount;
   const [imgError, setImgError] = useState(false);
+
+  const isSubmitted = Boolean(submissionStatus);
+  const isPending = submissionStatus === "pending";
+  const isApproved = submissionStatus === "approved";
+  const isRejected = submissionStatus === "rejected";
 
   return (
     <div className="bg-neutral-900 rounded-2xl overflow-hidden border border-neutral-800 flex flex-col hover:border-neutral-700 transition-colors">
@@ -491,6 +1004,32 @@ function ProjectCard({
             </button>
           </div>
         </div>
+
+        <button
+          type="button"
+          onClick={() => onMarkSubmitted(project.id)}
+          disabled={!isLoggedIn || isSubmitting || isApproved || isPending}
+          title={isLoggedIn ? "Mark this project as your submission" : "Sign in to mark submissions"}
+          className={`mt-3 w-full px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+            isApproved
+              ? "bg-emerald-500/10 text-emerald-400"
+              : isRejected
+              ? "bg-red-500/10 text-red-300 hover:bg-red-500/20"
+              : isSubmitted
+              ? "bg-amber-500/10 text-amber-300"
+              : "bg-neutral-800 text-neutral-300 hover:bg-neutral-700"
+          } disabled:opacity-60 disabled:cursor-not-allowed`}
+        >
+          {isApproved
+            ? "Submission Approved"
+            : isRejected
+            ? "Resubmit for Review"
+            : isSubmitted
+            ? "Pending Review"
+            : isSubmitting
+            ? "Recording..."
+            : "Submit for Review"}
+        </button>
       </div>
     </div>
   );
