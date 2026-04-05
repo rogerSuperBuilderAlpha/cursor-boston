@@ -2,7 +2,9 @@
 
 Thank you for your interest in contributing to Cursor Boston! This document provides guidelines and instructions for contributing to the project.
 
-> **New contributor?** Start with the [First Contribution Guide](../docs/FIRST_CONTRIBUTION.md) for a step-by-step walkthrough, or the [Development Guide](../docs/DEVELOPMENT.md) for complete setup instructions, npm scripts, troubleshooting, and architecture overview.
+> **Never coded before?** Start with [Get Started (No Experience Needed)](../docs/GET_STARTED.md) — a plain-language guide that shows you how to use AI tools to contribute.
+>
+> **New to open source?** Follow the [First Contribution Guide](../docs/FIRST_CONTRIBUTION.md) for a step-by-step walkthrough, or the [Development Guide](../docs/DEVELOPMENT.md) for full setup, scripts, and troubleshooting.
 
 ## Contribution policy (fork and pull request only)
 
