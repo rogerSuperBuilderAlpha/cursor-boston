@@ -124,13 +124,13 @@ function SignUpPageContent() {
     <div className="min-h-[80vh] flex items-center justify-center px-4 md:px-6 py-8 md:py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">Join Cursor Boston</h1>
-          <p className="text-neutral-400 text-sm md:text-base">
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">Join Cursor Boston</h1>
+          <p className="text-neutral-600 dark:text-neutral-400 text-sm md:text-base">
             Create an account to connect with the community
           </p>
         </div>
 
-        <div className="bg-neutral-900 rounded-xl md:rounded-2xl p-5 md:p-8 border border-neutral-800">
+        <div className="bg-white dark:bg-neutral-900 rounded-xl md:rounded-2xl p-5 md:p-8 border border-neutral-200 dark:border-neutral-800">
           {error && (
             <div 
               role="alert"
@@ -173,7 +173,7 @@ function SignUpPageContent() {
             <button
               onClick={handleGithubSignIn}
               disabled={loading}
-              className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-neutral-800 text-white rounded-lg font-medium hover:bg-neutral-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-neutral-100 dark:bg-neutral-800 text-foreground rounded-lg font-medium hover:bg-neutral-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path
@@ -191,7 +191,7 @@ function SignUpPageContent() {
               <div className="w-full border-t border-neutral-700"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-neutral-900 text-neutral-400">
+              <span className="px-4 bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400">
                 or continue with email
               </span>
             </div>
@@ -212,7 +212,7 @@ function SignUpPageContent() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-base placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                className="w-full px-4 py-3 bg-neutral-100 dark:bg-neutral-800 border border-neutral-700 rounded-lg text-foreground text-base placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-foreground/20 focus:border-transparent"
                 placeholder="Your name"
               />
             </div>
@@ -230,7 +230,7 @@ function SignUpPageContent() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-base placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                className="w-full px-4 py-3 bg-neutral-100 dark:bg-neutral-800 border border-neutral-700 rounded-lg text-foreground text-base placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-foreground/20 focus:border-transparent"
                 placeholder="you@example.com"
               />
             </div>
@@ -248,7 +248,7 @@ function SignUpPageContent() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-base placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                className="w-full px-4 py-3 bg-neutral-100 dark:bg-neutral-800 border border-neutral-700 rounded-lg text-foreground text-base placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-foreground/20 focus:border-transparent"
                 placeholder="At least 8 characters"
               />
             </div>
@@ -266,7 +266,7 @@ function SignUpPageContent() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-base placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent"
+                className="w-full px-4 py-3 bg-neutral-100 dark:bg-neutral-800 border border-neutral-700 rounded-lg text-foreground text-base placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-foreground/20 focus:border-transparent"
                 placeholder="Confirm your password"
               />
             </div>
@@ -280,17 +280,17 @@ function SignUpPageContent() {
             </button>
           </form>
 
-          <p className="mt-6 text-xs text-neutral-400 text-center">
+          <p className="mt-6 text-xs text-neutral-600 dark:text-neutral-400 text-center">
             By creating an account, you agree to our terms of service and
             privacy policy.
           </p>
         </div>
 
-        <p className="text-center mt-6 text-neutral-400">
+        <p className="text-center mt-6 text-neutral-600 dark:text-neutral-400">
           Already have an account?{" "}
           <Link
             href="/login"
-            className="text-white hover:underline font-medium"
+            className="text-foreground hover:underline font-medium"
           >
             Sign in
           </Link>
