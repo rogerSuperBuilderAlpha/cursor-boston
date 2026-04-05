@@ -11,12 +11,12 @@ export default function DisclaimerPage() {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="py-16 md:py-24 px-6 border-b border-neutral-800">
+      <section className="py-16 md:py-24 px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
             Disclaimer
           </h1>
-          <p className="text-neutral-400">
+          <p className="text-neutral-600 dark:text-neutral-400">
             Important information about Cursor Boston&apos;s status and affiliations
           </p>
         </div>
@@ -26,7 +26,7 @@ export default function DisclaimerPage() {
       <section className="py-12 md:py-16 px-6">
         <div className="max-w-3xl mx-auto">
           {/* Independence Statement */}
-          <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 md:p-8 mb-8">
+          <div className="bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-6 md:p-8 mb-8">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 bg-emerald-500/10 rounded-lg flex items-center justify-center shrink-0">
                 <svg
@@ -46,11 +46,11 @@ export default function DisclaimerPage() {
                 </svg>
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white mb-2">
+                <h2 className="text-xl font-bold text-foreground mb-2">
                   Independent Community, Official Support
                 </h2>
                 <p className="text-neutral-300">
-                  Cursor Boston is an <strong className="text-white">independent, volunteer-run
+                  Cursor Boston is an <strong className="text-foreground">independent, volunteer-run
                   community</strong> that receives support through the{" "}
                   <a
                     href="https://cursor.com/ambassadors"
@@ -67,14 +67,14 @@ export default function DisclaimerPage() {
           </div>
 
           {/* Key Points */}
-          <div className="prose prose-invert prose-neutral mb-8">
-            <h2 className="text-2xl font-bold text-white mb-4">Key Points</h2>
+          <div className="prose dark:prose-invert prose-neutral mb-8">
+            <h2 className="text-2xl font-bold text-foreground mb-4">Key Points</h2>
 
             <div className="space-y-4">
               <div className="flex items-start gap-3">
                 <span className="text-emerald-400 font-bold text-lg">1.</span>
                 <p className="text-neutral-300 m-0">
-                  <strong className="text-white">We are part of the Cursor Ambassadors Program</strong> —
+                  <strong className="text-foreground">We are part of the Cursor Ambassadors Program</strong> —
                   an official initiative that supports community leaders in organizing local events and
                   helping fellow developers.
                 </p>
@@ -83,7 +83,7 @@ export default function DisclaimerPage() {
               <div className="flex items-start gap-3">
                 <span className="text-emerald-400 font-bold text-lg">2.</span>
                 <p className="text-neutral-300 m-0">
-                  <strong className="text-white">We operate independently</strong> —
+                  <strong className="text-foreground">We operate independently</strong> —
                   our content, events, and opinions are our own and do not represent official
                   positions of Cursor or Anysphere Inc.
                 </p>
@@ -92,7 +92,7 @@ export default function DisclaimerPage() {
               <div className="flex items-start gap-3">
                 <span className="text-emerald-400 font-bold text-lg">3.</span>
                 <p className="text-neutral-300 m-0">
-                  <strong className="text-white">Our partners support our community</strong> —
+                  <strong className="text-foreground">Our partners support our community</strong> —
                   event hosts, sponsors, and partners are supporters of Cursor Boston, not
                   official partners of Cursor the company.
                 </p>
@@ -101,7 +101,7 @@ export default function DisclaimerPage() {
               <div className="flex items-start gap-3">
                 <span className="text-emerald-400 font-bold text-lg">4.</span>
                 <p className="text-neutral-300 m-0">
-                  <strong className="text-white">&quot;Cursor&quot; is a trademark of Anysphere Inc.</strong> —
+                  <strong className="text-foreground">&quot;Cursor&quot; is a trademark of Anysphere Inc.</strong> —
                   our use of the name is permitted through the Ambassadors Program to identify
                   our community of Cursor users.
                 </p>
@@ -111,7 +111,7 @@ export default function DisclaimerPage() {
 
           {/* Learn More CTA */}
           <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-6 md:p-8 mb-8">
-            <h3 className="text-lg font-semibold text-white mb-3">
+            <h3 className="text-lg font-semibold text-foreground mb-3">
               Want to learn more?
             </h3>
             <p className="text-neutral-300 mb-4">
@@ -120,7 +120,7 @@ export default function DisclaimerPage() {
             </p>
             <Link
               href="/about-cursor"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 text-white rounded-lg font-semibold hover:bg-emerald-400 transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 text-foreground rounded-lg font-semibold hover:bg-emerald-400 transition-colors"
             >
               About Cursor & Our Affiliation
               <svg
@@ -141,8 +141,8 @@ export default function DisclaimerPage() {
           </div>
 
           {/* Disclaimer Text */}
-          <div className="prose prose-invert prose-neutral">
-            <h2 className="text-2xl font-bold text-white mb-4">Legal Disclaimer</h2>
+          <div className="prose dark:prose-invert prose-neutral">
+            <h2 className="text-2xl font-bold text-foreground mb-4">Legal Disclaimer</h2>
 
             <p className="text-neutral-300 mb-4">
               The information provided on this website and at our events is for general informational
@@ -166,8 +166,8 @@ export default function DisclaimerPage() {
           </div>
 
           {/* Contact */}
-          <div className="mt-12 pt-8 border-t border-neutral-800">
-            <p className="text-neutral-400 mb-4">
+          <div className="mt-12 pt-8 border-t border-neutral-200 dark:border-neutral-800">
+            <p className="text-neutral-600 dark:text-neutral-400 mb-4">
               Questions about this disclaimer or our affiliation?{" "}
               <a href="mailto:hello@cursorboston.com" className="text-emerald-400 hover:text-emerald-300">
                 Contact us
