@@ -249,7 +249,7 @@ function SignUpPageContent() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 className="w-full px-4 py-3 bg-neutral-100 dark:bg-neutral-800 border border-neutral-700 rounded-lg text-foreground text-base placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-foreground/20 focus:border-transparent"
-                placeholder="At least 6 characters"
+                placeholder="At least 8 characters"
               />
             </div>
 
