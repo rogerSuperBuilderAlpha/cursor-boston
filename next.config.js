@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Enable standalone output for Docker deployments
-  output: 'standalone',
+  // Standalone output is only for Docker builds (see docker/Dockerfile). Omit on Vercel.
+  ...(process.env.DOCKER_BUILD === '1' ? { output: 'standalone' } : {}),
 
   images: {
     remotePatterns: [
@@ -55,7 +55,7 @@ const nextConfig = {
           },
         ],
       },
-    ];
+    ]
   },
 }
 

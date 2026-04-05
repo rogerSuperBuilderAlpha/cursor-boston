@@ -4,13 +4,20 @@ Thank you for your interest in contributing to Cursor Boston! This document prov
 
 ## Contribution policy (fork and pull request only)
 
-**If you are contributing code or content, you must use the fork workflow.** Fork this repo on GitHub, set **`origin` to your fork**, push branches there, and open a **pull request** into `rogerSuperBuilderAlpha/cursor-boston`. Do **not** push feature branches directly to the upstream repository (you typically will not have permission; if you do, that path is still not the supported contribution model). Maintainers merge approved PRs; contributors do not self-merge unless [GOVERNANCE](GOVERNANCE.md) explicitly allows it.
+**If you are contributing code or content, you must use the fork workflow.** Fork this repo on GitHub, set **`origin` to your fork**, push branches there, and open a **pull request** into `rogerSuperBuilderAlpha/cursor-boston` with base branch **`develop`**. Do **not** push feature branches directly to the upstream repository (you typically will not have permission; if you do, that path is still not the supported contribution model). Maintainers merge approved PRs; contributors do not self-merge unless [GOVERNANCE](GOVERNANCE.md) explicitly allows it.
 
 A read-only clone of upstream is fine for browsing or local experimentation, but anything you intend to merge must go through **fork → branch on your fork → PR**.
+
+## Branching model (`develop` and `main`)
+
+- **`develop`** is the **default branch** on GitHub. Open **all** contributor pull requests against `develop`. That branch is the integration line: reviews, CI, and Vercel **preview** deploys (when the integration is connected).
+- **`main`** tracks **production**. Changes reach `main` only through a **release PR** from `develop` after maintainers batch and review what should ship. That keeps production history and deployments controlled.
+- After a release merge, maintainers sync **`develop`** with **`main`** so both stay aligned.
 
 ## Table of Contents
 
 - [Contribution policy (fork and pull request only)](#contribution-policy-fork-and-pull-request-only)
+- [Branching model (develop and main)](#branching-model-develop-and-main)
 - [Code of Conduct](#code-of-conduct)
 - [Developer Certificate of Origin](#developer-certificate-of-origin)
 - [Getting Started](#getting-started)
@@ -140,8 +147,8 @@ Regularly sync your fork with the upstream repository:
 
 ```bash
 git fetch upstream
-git checkout main
-git merge upstream/main
+git checkout develop
+git merge upstream/develop
 ```
 
 ## Claiming an Issue
@@ -173,10 +180,10 @@ A maintainer will assign it to you. Only one person works on a given issue at a 
 
 ### Step 3 — Build it
 
-Create a feature branch from `main`:
+Create a feature branch from `develop`:
 
 ```bash
-git checkout main && git pull upstream main
+git checkout develop && git pull upstream develop
 git checkout -b feature/your-feature-name
 ```
 
@@ -190,7 +197,7 @@ Closes #78"
 
 ### Step 4 — Open a PR
 
-When your work is ready, open a pull request against `main`. In the PR description:
+When your work is ready, open a pull request against **`develop`** (the default base branch). In the PR description:
 
 1. **Link the issue** using a closing keyword so it auto-closes on merge:
    ```
@@ -199,7 +206,7 @@ When your work is ready, open a pull request against `main`. In the PR descripti
 2. Fill out the [PR description template](#pr-description-template) — include screenshots for any UI work.
 3. Make sure `npm run lint` and `npm run build` pass before requesting review.
 
-Maintainers will review and provide feedback. Once approved, your PR will be merged and the issue will close automatically.
+Maintainers will review and provide feedback. Once approved, your PR will be merged into `develop`. The issue will close when that merge completes (if you used a closing keyword). Releases to production go through a separate maintainer PR from `develop` to `main`.
 
 ### Etiquette
 
@@ -436,9 +443,9 @@ Add screenshots for UI changes.
 
 ### Review Process
 
-1. Maintainers will review your PR
+1. Maintainers will review your PR (targeting `develop`)
 2. Address any feedback or requested changes
-3. Once approved, your PR will be merged
+3. Once approved, your PR will be merged into `develop`
 4. Thank you for contributing! 🎉
 
 ## Areas for Contribution
