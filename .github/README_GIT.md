@@ -39,7 +39,7 @@ Configure branch protection in **Settings** → **Branches** (or via GitHub API)
      - `Firestore rules tests`
      - `Build`
    - ✅ **Require conversation resolution before merging**
-   - ✅ **Do not allow bypassing** (including admins) — `enforce_admins`
+   - **Admins may bypass** — `enforce_admins` is **off** so the owner can `gh pr merge --admin` until more maintainers can review release PRs. Turn **Include administrators** back on under branch protection when ready.
    - ✅ **Require signed commits** (optional but recommended)
 
 **`develop` (integration)**
