@@ -45,6 +45,9 @@ ENV NEXT_PUBLIC_FIREBASE_DATABASE_URL=$NEXT_PUBLIC_FIREBASE_DATABASE_URL
 # Disable telemetry during build
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Emit standalone server bundle for this image (see next.config.js)
+ENV DOCKER_BUILD=1
+
 # Build the application
 RUN npm run build
 

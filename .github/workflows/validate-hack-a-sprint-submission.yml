@@ -2,6 +2,7 @@ name: Validate Hack-a-Sprint 2026 submission PRs
 
 on:
   pull_request:
+    branches: [main, develop]
     paths:
       - "content/hackathons/hack-a-sprint-2026/**"
       - "scripts/validate-hack-a-sprint-submission-pr.cjs"
