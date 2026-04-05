@@ -10,10 +10,10 @@ export default function CodeOfConductPage() {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="py-16 md:py-24 px-6 border-b border-neutral-800">
+      <section className="py-16 md:py-24 px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Code of Conduct</h1>
-          <p className="text-neutral-400">Our commitment to a welcoming, inclusive, and harassment-free community</p>
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">Code of Conduct</h1>
+          <p className="text-neutral-600 dark:text-neutral-400">Our commitment to a welcoming, inclusive, and harassment-free community</p>
         </div>
       </section>
 
@@ -31,10 +31,10 @@ export default function CodeOfConductPage() {
             </p>
           </div>
 
-          <div className="prose prose-invert prose-neutral">
-            <h2 className="text-2xl font-bold text-white mb-4">Our Standards</h2>
+          <div className="prose dark:prose-invert prose-neutral">
+            <h2 className="text-2xl font-bold text-foreground mb-4">Our Standards</h2>
 
-            <h3 className="text-xl font-semibold text-white mb-3 mt-6">Positive Behavior</h3>
+            <h3 className="text-xl font-semibold text-foreground mb-3 mt-6">Positive Behavior</h3>
             <ul className="list-disc list-inside text-neutral-300 space-y-2 mb-6">
               <li>Demonstrating empathy and kindness</li>
               <li>Being respectful of differing opinions and experiences</li>
@@ -44,7 +44,7 @@ export default function CodeOfConductPage() {
               <li>Welcoming newcomers and helping them get started</li>
             </ul>
 
-            <h3 className="text-xl font-semibold text-white mb-3 mt-6">Unacceptable Behavior</h3>
+            <h3 className="text-xl font-semibold text-foreground mb-3 mt-6">Unacceptable Behavior</h3>
             <ul className="list-disc list-inside text-neutral-300 space-y-2 mb-6">
               <li>Sexualized language or imagery, and unwelcome sexual attention</li>
               <li>Trolling, insulting comments, and personal attacks</li>
@@ -54,7 +54,7 @@ export default function CodeOfConductPage() {
               <li>Aggressive recruiting or solicitation without permission</li>
             </ul>
 
-            <h2 className="text-2xl font-bold text-white mb-4 mt-8">Event Guidelines</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4 mt-8">Event Guidelines</h2>
             <ul className="list-disc list-inside text-neutral-300 space-y-2 mb-6">
               <li>Respect the venue and its staff</li>
               <li>Follow venue-specific rules</li>
@@ -62,30 +62,30 @@ export default function CodeOfConductPage() {
               <li>Report safety concerns to organizers immediately</li>
             </ul>
 
-            <h2 className="text-2xl font-bold text-white mb-4 mt-8">Enforcement</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4 mt-8">Enforcement</h2>
             <p className="text-neutral-300 mb-4">
               Community leaders will enforce these standards. Consequences include:
             </p>
             <div className="space-y-3 mb-6">
-              <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-4">
-                <span className="text-white font-semibold">1. Correction</span>
-                <span className="text-neutral-400"> - Private warning for minor issues</span>
+              <div className="bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-4">
+                <span className="text-foreground font-semibold">1. Correction</span>
+                <span className="text-neutral-600 dark:text-neutral-400"> - Private warning for minor issues</span>
               </div>
-              <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-4">
-                <span className="text-white font-semibold">2. Warning</span>
-                <span className="text-neutral-400"> - Formal warning with consequences for continued behavior</span>
+              <div className="bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-4">
+                <span className="text-foreground font-semibold">2. Warning</span>
+                <span className="text-neutral-600 dark:text-neutral-400"> - Formal warning with consequences for continued behavior</span>
               </div>
-              <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-4">
-                <span className="text-white font-semibold">3. Temporary Ban</span>
-                <span className="text-neutral-400"> - Temporary removal for serious violations</span>
+              <div className="bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-4">
+                <span className="text-foreground font-semibold">3. Temporary Ban</span>
+                <span className="text-neutral-600 dark:text-neutral-400"> - Temporary removal for serious violations</span>
               </div>
-              <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-4">
-                <span className="text-white font-semibold">4. Permanent Ban</span>
-                <span className="text-neutral-400"> - Permanent removal for egregious behavior</span>
+              <div className="bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-4">
+                <span className="text-foreground font-semibold">4. Permanent Ban</span>
+                <span className="text-neutral-600 dark:text-neutral-400"> - Permanent removal for egregious behavior</span>
               </div>
             </div>
 
-            <h2 className="text-2xl font-bold text-white mb-4 mt-8">Reporting</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4 mt-8">Reporting</h2>
             <p className="text-neutral-300 mb-6">
               Report unacceptable behavior to{" "}
               <a href="mailto:hello@cursorboston.com" className="text-emerald-400 hover:text-emerald-300">
@@ -94,7 +94,7 @@ export default function CodeOfConductPage() {
               . At events, report to any organizer. All reports are handled confidentially.
             </p>
 
-            <h2 className="text-2xl font-bold text-white mb-4 mt-8">Attribution</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-4 mt-8">Attribution</h2>
             <p className="text-neutral-300 mb-6">
               Adapted from the{" "}
               <a href="https://www.contributor-covenant.org/version/2/1/code_of_conduct/" target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:text-emerald-300">
@@ -104,8 +104,8 @@ export default function CodeOfConductPage() {
             </p>
           </div>
 
-          <div className="mt-12 pt-8 border-t border-neutral-800">
-            <p className="text-neutral-400 text-sm">
+          <div className="mt-12 pt-8 border-t border-neutral-200 dark:border-neutral-800">
+            <p className="text-neutral-600 dark:text-neutral-400 text-sm">
               See also:{" "}
               <Link href="/terms" className="text-emerald-400 hover:text-emerald-300">Terms of Service</Link>
               {" | "}
