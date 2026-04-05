@@ -35,13 +35,13 @@ const customJestConfig = {
   testPathIgnorePatterns: [
     '<rootDir>/__tests__/config/firebase/firestore.rules.test.ts',
   ],
-  // Coverage thresholds - enforce a minimum baseline; increase as tests are added
+  // Coverage thresholds - ratchet up as tests are added (current: ~13%)
   coverageThreshold: {
     global: {
-      branches: 5,
-      functions: 5,
-      lines: 5,
-      statements: 5,
+      branches: 10,
+      functions: 12,
+      lines: 12,
+      statements: 12,
     },
   },
   // Generate JSON summary for CI coverage checks
