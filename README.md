@@ -30,6 +30,8 @@ Cursor Boston is a community-led platform designed to bring together the most am
 
 Whether you're writing your first line of code or your ten-thousandth — if you care enough to open Cursor and do some work, you belong here.
 
+> **Never coded before?** No problem. Our **[Get Started guide](docs/GET_STARTED.md)** walks you through everything in plain language — from setting up your computer to making your first contribution using AI tools like Cursor, Claude Code, or Codex. No jargon, no experience required.
+
 ---
 
 ## 🛠️ The Build Stack
@@ -104,6 +106,7 @@ Each feature is **fully isolated** — new routes, new Firestore collections, no
 ---
 
 ## 📚 Community
+- [Get Started (No Experience Needed)](docs/GET_STARTED.md) - Plain-language guide for complete beginners
 - [Development Guide](docs/DEVELOPMENT.md) - Setup, scripts, troubleshooting, architecture
 - [First Contribution](docs/FIRST_CONTRIBUTION.md) - Step-by-step first PR walkthrough
 - [Contributing Guide](.github/CONTRIBUTING.md) - Contribution policy and code style

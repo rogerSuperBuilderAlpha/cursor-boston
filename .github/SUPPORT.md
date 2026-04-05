@@ -88,7 +88,8 @@ Please see our [Security Policy](SECURITY.md) for instructions on reporting secu
 
 Interested in contributing to the project?
 
-- **New here?** Start with the [First Contribution Guide](../docs/FIRST_CONTRIBUTION.md)
+- **Never coded before?** Start with [Get Started (No Experience Needed)](../docs/GET_STARTED.md) — plain language, AI tools do the work
+- **New to open source?** Follow the [First Contribution Guide](../docs/FIRST_CONTRIBUTION.md) for a step-by-step walkthrough
 - Set up your environment with the [Development Guide](../docs/DEVELOPMENT.md)
 - Read our [Contributing Guide](CONTRIBUTING.md) for policies and code style
 - Check out [good first issues](https://github.com/rogerSuperBuilderAlpha/cursor-boston/labels/good%20first%20issue)
@@ -100,6 +101,7 @@ Interested in contributing to the project?
 | Document | Description |
 |----------|-------------|
 | [README](../README.md) | Project overview and quick start |
+| [Get Started](../docs/GET_STARTED.md) | Plain-language guide for complete beginners |
 | [Development Guide](../docs/DEVELOPMENT.md) | Setup, scripts, troubleshooting, architecture |
 | [First Contribution](../docs/FIRST_CONTRIBUTION.md) | Step-by-step first PR walkthrough |
 | [CONTRIBUTING](CONTRIBUTING.md) | Contribution policy and code style |
