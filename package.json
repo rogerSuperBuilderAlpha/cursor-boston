@@ -74,6 +74,8 @@
     "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
     "@eslint/compat": "^2.0.3",
     "@eslint/eslintrc": "^3.3.5",
     "@firebase/rules-unit-testing": "^5.0.0",
@@ -104,10 +106,10 @@
     "tailwindcss": "^4.2.1",
     "tsx": "^4.7.0",
     "typescript": "^6.0.2",
-    "typescript-eslint": "8.57.3-alpha.4"
+    "typescript-eslint": "^8.58.0"
   },
   "overrides": {
-    "typescript-eslint": "8.57.3-alpha.4",
+    "typescript-eslint": "^8.58.0",
     "eslint-plugin-import": {
       "eslint": "$eslint"
     },
