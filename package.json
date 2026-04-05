@@ -47,6 +47,7 @@
     "check-members-db": "tsx scripts/check-members-db.ts",
     "rate-limit-cleanup": "tsx scripts/run-rate-limit-cleanup.ts",
     "backfill-merge-credit": "tsx scripts/backfill-merge-credit.ts",
+    "send-hack-a-sprint-emails": "tsx scripts/send-hack-a-sprint-emails.ts",
     "prebuild": "npm run validate-env",
     "prepare": "husky install"
   },

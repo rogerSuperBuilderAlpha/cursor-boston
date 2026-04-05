@@ -25,3 +25,17 @@
 ## Trust boundaries
 
 - Unlock and scores are **Firestore Admin / API only**; clients cannot set `hackASprint2026Unlocked*` on `users`.
+
+## Luma guest export → personalized emails
+
+From the repo root, with `.env.local` (or env) containing Firebase Admin + `GITHUB_TOKEN`, and for sends **Mailgun** (`MAILGUN_API_KEY`, `MAILGUN_DOMAIN`, optional `MAILGUN_FROM`):
+
+```bash
+# Preview classifications (no email)
+npm run send-hack-a-sprint-emails -- --dry-run --csv /path/to/luma-guests.csv
+
+# Send (throttled)
+npm run send-hack-a-sprint-emails -- --send --csv /path/to/luma-guests.csv
+```
+
+Implementation: [`scripts/send-hack-a-sprint-emails.ts`](../scripts/send-hack-a-sprint-emails.ts).
