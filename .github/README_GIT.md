@@ -55,7 +55,7 @@ Configure branch protection in **Settings** → **Branches** (or via GitHub API)
 
 **Fork PRs and CI:** Ensure **Actions** → **General** → *Fork pull request workflows from outside collaborators* is set so fork PRs can run workflows; first-time contributors may still need a maintainer to **Approve and run** pending jobs.
 
-**Vercel:** Connect the repo in the Vercel dashboard so `develop` gets **Preview** deployments and `main` gets **Production**. Optional versioned config lives in [`vercel.json`](../vercel.json) at the repo root.
+**Vercel:** Only **`main`** triggers deployments (production). [`vercel.json`](../vercel.json) sets `ignoreCommand` ([`scripts/vercel-ignore-build.sh`](../scripts/vercel-ignore-build.sh)) so pushes to `develop`, Dependabot branches, and feature branches do **not** start Vercel builds. To add preview deploys for `develop` again, relax that script and `git.deploymentEnabled` in `vercel.json`.
 
 **Cursor (optional):** Install the [Vercel plugin for AI agents](https://vercel.com/docs/agent-resources/vercel-plugin) for deployment and Next.js skills: `npx plugins add vercel/vercel-plugin` (user scope; restart the agent after install).
 
