@@ -34,10 +34,10 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       return (
         <div className="min-h-[60vh] flex items-center justify-center p-8">
           <div className="text-center max-w-md">
-            <h2 className="text-xl font-semibold text-white mb-2">
+            <h2 className="text-xl font-semibold text-foreground mb-2">
               Something went wrong
             </h2>
-            <p className="text-neutral-400 mb-6">
+            <p className="text-neutral-600 dark:text-neutral-400 mb-6">
               An unexpected error occurred. Please try reloading the page.
             </p>
             <button
