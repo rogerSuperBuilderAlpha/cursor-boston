@@ -54,8 +54,9 @@ If you're deploying Cursor Boston:
 
 1. **Environment Variables** - Never commit `.env.local` files
    - Verify `.env.local` is in `.gitignore`
-   - Use `.env.local.example` as a template
+   - Use `.env.local.example` as a template (or `.env.local.demo` for zero-config demo mode)
    - Set production environment variables in your deployment platform
+   - See [docs/DEVELOPMENT.md](../docs/DEVELOPMENT.md) for local setup instructions
 2. **Firebase Security Rules** - Review and customize Firestore and Storage rules
    - Deploy rules: `firebase deploy --only firestore:rules,storage:rules`
    - Test rules thoroughly before production
@@ -90,7 +91,7 @@ To prevent security issues:
 - Always verify `.gitignore` includes `.env*` files
 - Use `git status` before committing to ensure no sensitive files are staged
 - Consider using tools like [git-secrets](https://github.com/awslabs/git-secrets) or [truffleHog](https://github.com/trufflesecurity/trufflehog) to scan for secrets
-- Use pre-commit hooks to prevent committing secrets (see `.husky/pre-commit`)
+- Use pre-commit hooks to prevent committing secrets (see [docs/DEVELOPMENT.md - Pre-commit Hooks](../docs/DEVELOPMENT.md#pre-commit-hooks))
 
 ## Known Security Considerations
 

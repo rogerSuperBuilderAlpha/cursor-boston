@@ -2,6 +2,8 @@
 
 Thank you for your interest in contributing to Cursor Boston! This document provides guidelines and instructions for contributing to the project.
 
+> **New contributor?** Start with the [First Contribution Guide](../docs/FIRST_CONTRIBUTION.md) for a step-by-step walkthrough, or the [Development Guide](../docs/DEVELOPMENT.md) for complete setup instructions, npm scripts, troubleshooting, and architecture overview.
+
 ## Contribution policy (fork and pull request only)
 
 **If you are contributing code or content, you must use the fork workflow.** Fork this repo on GitHub, set **`origin` to your fork**, push branches there, and open a **pull request** into `rogerSuperBuilderAlpha/cursor-boston` with base branch **`develop`**. Do **not** push feature branches directly to the upstream repository (you typically will not have permission; if you do, that path is still not the supported contribution model). Maintainers merge approved PRs; contributors do not self-merge unless [GOVERNANCE](GOVERNANCE.md) explicitly allows it.
@@ -61,61 +63,28 @@ Pull requests with unsigned commits will not be merged. See [DCO.md](DCO.md) for
 
 ## Getting Started
 
-### Prerequisites
+Follow the **[Development Guide](../docs/DEVELOPMENT.md)** for complete setup instructions, including:
 
-Before you begin, ensure you have the following installed:
+- Prerequisites (Node.js 22, npm >= 9)
+- **Zero-config demo mode** — run `cp .env.local.demo .env.local && npm run dev` with no Firebase account
+- Full Firebase setup (personal project or emulator)
+- All npm scripts with descriptions
+- Pre-commit hooks explained
+- Troubleshooting common issues
+- Onboarding checklist to verify your setup
 
-- **Node.js** 18.x or higher ([Download](https://nodejs.org/))
-- **npm** 9.x or higher (comes with Node.js)
-- **Git** ([Download](https://git-scm.com/))
-- **Firebase account** (free tier works for development)
+**Quick version:**
 
-### Development Setup
+```bash
+git clone https://github.com/your-username/cursor-boston.git
+cd cursor-boston
+git remote add upstream https://github.com/rogerSuperBuilderAlpha/cursor-boston.git
+npm install
+cp .env.local.demo .env.local
+npm run dev
+```
 
-1. **Fork the repository**
-
-   Click the "Fork" button on GitHub to create your own copy of the repository.
-
-2. **Clone your fork**
-
-   ```bash
-   git clone https://github.com/your-username/cursor-boston.git
-   cd cursor-boston
-   ```
-
-3. **Add upstream remote**
-
-   ```bash
-   git remote add upstream https://github.com/rogerSuperBuilderAlpha/cursor-boston.git
-   ```
-
-4. **Install dependencies**
-
-   ```bash
-   npm install
-   ```
-
-5. **Set up environment variables**
-
-   ```bash
-   cp .env.local.example .env.local
-   ```
-
-   Fill in your Firebase configuration in `.env.local`. See the [README](https://github.com/rogerSuperBuilderAlpha/cursor-boston?tab=readme-ov-file#configuration) for detailed instructions.
-
-   **Quick Firebase Setup:**
-   - Create a Firebase project at [Firebase Console](https://console.firebase.google.com)
-   - Enable Authentication (Email/Password, Google, GitHub)
-   - Create a Firestore database (start in test mode)
-   - Copy your Firebase config values to `.env.local`
-
-6. **Run the development server**
-
-   ```bash
-   npm run dev
-   ```
-
-   Open [http://localhost:3000](http://localhost:3000) to see the app.
+Open [http://localhost:3000](http://localhost:3000) to see the app.
 
 ## Development Workflow
 
@@ -400,6 +369,13 @@ If you've modified forms:
 3. **Test your changes**
    - Follow the [Testing](#testing) checklist above
    - Test edge cases and error scenarios
+
+4. **Pre-commit hooks run automatically** when you commit:
+   - **gitleaks** — scans staged files for accidentally committed secrets
+   - **lint-staged** — runs `tsc --noEmit` and `eslint --fix --max-warnings=0` on staged files
+   - **commitlint** — validates commit message format ([Conventional Commits](https://www.conventionalcommits.org/))
+
+   If a hook fails, fix the issue and try again. See [docs/DEVELOPMENT.md](../docs/DEVELOPMENT.md#pre-commit-hooks) for details.
 
 ### PR Description Template
 

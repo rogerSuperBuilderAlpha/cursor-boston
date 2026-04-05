@@ -6,9 +6,11 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/rogerSuperBuilderAlpha/cursor-boston/actions/workflows/ci.yml"><img src="https://github.com/rogerSuperBuilderAlpha/cursor-boston/actions/workflows/ci.yml/badge.svg?branch=develop" alt="CI" /></a>
   <a href="https://github.com/rogerSuperBuilderAlpha/cursor-boston/pulls"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome" /></a>
   <a href="https://discord.gg/Wsncg8YYqc"><img src="https://img.shields.io/badge/Discord-Join%20Us-7289DA?logo=discord" alt="Discord" /></a>
   <a href="https://lu.ma/cursor-boston"><img src="https://img.shields.io/badge/Luma-Events-emerald" alt="Luma Events" /></a>
+  <img src="https://img.shields.io/badge/node-%3E%3D22-brightgreen" alt="Node >= 22" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="License: GPL v3" /></a>
 </p>
 
@@ -19,10 +21,14 @@
 Cursor Boston is a community-led platform designed to bring together the most ambitious developers, students, and founders in the Boston area. We focus on **AI-native development workflows**—leveraging tools like Cursor to ship production code at the speed of thought.
 
 ### 🎯 Who is this for?
-- **🎓 Students**: MIT, Harvard, Hult, BU, Northeastern, and beyond.
-- **🚀 Founders**: Prototype MVPs in hours and validate ideas fast.
-- **💻 Developers**: Master the art of AI-assisted full-stack development.
+- **🌱 Beginners & Students**: Pick up AI-assisted development from day one — no experience required.
+- **💼 Interns & Early-Career Devs**: Level up fast by building real features with real tools.
+- **💻 Working Developers**: Sharpen your workflow, contribute to open source, and connect with peers.
+- **🧠 Senior Engineers & Experts**: Mentor others, shape the project, and push the boundaries of AI-native development.
+- **🚀 Founders & Indie Hackers**: Prototype MVPs in hours and validate ideas fast.
 - **🎨 Designers & PMs**: Bridge the gap between design and production code.
+
+Whether you're writing your first line of code or your ten-thousandth — if you care enough to open Cursor and do some work, you belong here.
 
 ---
 
@@ -98,8 +104,10 @@ Each feature is **fully isolated** — new routes, new Firestore collections, no
 ---
 
 ## 📚 Community
+- [Development Guide](docs/DEVELOPMENT.md) - Setup, scripts, troubleshooting, architecture
+- [First Contribution](docs/FIRST_CONTRIBUTION.md) - Step-by-step first PR walkthrough
+- [Contributing Guide](.github/CONTRIBUTING.md) - Contribution policy and code style
 - [GitHub Issues](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues) - Browse and claim open tasks
-- [Contributing Guide](.github/CONTRIBUTING.md) - How to contribute to this project
 - [Code of Conduct](.github/CODE_OF_CONDUCT.md) - Our community standards
 - [Security Policy](.github/SECURITY.md) - How to report security vulnerabilities
 - [Accessibility](.github/ACCESSIBILITY.md) - Our accessibility commitment and WCAG targets
@@ -109,23 +117,24 @@ Each feature is **fully isolated** — new routes, new Firestore collections, no
 
 ## 🏃 Quick Start
 
-1. **Fork, then clone your fork** (contributions are not accepted via direct push to upstream)
+1. **Fork, then clone your fork**
    ```bash
    git clone https://github.com/your-username/cursor-boston.git
    cd cursor-boston
    ```
-   Replace `your-username` with your GitHub account after forking. Open pull requests from branches on **your fork** only. To clone upstream read-only (no contribution), use `https://github.com/rogerSuperBuilderAlpha/cursor-boston.git` — you cannot push there as an outside contributor.
 
-2. **Install & Setup**
+2. **Install & run** (no Firebase account needed)
    ```bash
    npm install
-   cp .env.local.example .env.local
+   cp .env.local.demo .env.local    # zero-config demo mode
+   npm run dev                       # open http://localhost:3000
    ```
 
-3. **Run Dev**
-   ```bash
-   npm run dev
-   ```
+The site loads fully in demo mode — pages, layouts, and styling all work. Firebase features (auth, data) are disabled until you set up credentials.
+
+> **Want full functionality?** See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for Firebase setup, all npm scripts, troubleshooting, and more.
+>
+> **First time contributing?** See [docs/FIRST_CONTRIBUTION.md](docs/FIRST_CONTRIBUTION.md) for a step-by-step walkthrough.
 
 ## 🐳 Docker
 
