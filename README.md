@@ -30,9 +30,53 @@ Cursor Boston is a community-led platform designed to bring together the most am
 
 This platform is a living example of what you can build with Cursor and modern web tech:
 
-- **Frontend**: Next.js 14 (App Router), Tailwind CSS, TypeScript
+- **Frontend**: Next.js 16 (App Router), Tailwind CSS, TypeScript
 - **Backend**: Firebase (Auth, Firestore, Storage)
 - **Integrations**: Discord/GitHub OAuth, Luma API, Framer Motion
+
+---
+
+## 🏗️ Architecture
+
+```mermaid
+graph TB
+    subgraph Client["Browser"]
+        UI["Next.js 16 App Router<br/>(React + Tailwind CSS)"]
+        Auth["Firebase Auth<br/>(Email, Google, GitHub)"]
+    end
+
+    subgraph Vercel["Vercel"]
+        Pages["Pages & Layouts<br/>(SSR / Static)"]
+        API["API Routes<br/>(63 endpoints)"]
+        MW["Middleware<br/>(CSRF, Rate Limit, Logging)"]
+    end
+
+    subgraph Firebase["Firebase"]
+        Firestore["Cloud Firestore<br/>(Users, Events, Posts, Teams)"]
+        Storage["Cloud Storage<br/>(Avatars, Uploads)"]
+    end
+
+    subgraph External["External Services"]
+        Discord["Discord OAuth + Webhooks"]
+        GitHub["GitHub OAuth + Webhooks"]
+        Luma["Luma Events"]
+        Mailgun["Mailgun Email"]
+        Leaflet["CARTO + Leaflet Maps"]
+    end
+
+    UI --> Pages
+    UI --> Auth
+    Auth --> Firestore
+    Pages --> API
+    API --> MW
+    MW --> Firestore
+    MW --> Storage
+    API --> Discord
+    API --> GitHub
+    API --> Mailgun
+    UI --> Luma
+    UI --> Leaflet
+```
 
 ---
 
@@ -58,6 +102,8 @@ Each feature is **fully isolated** — new routes, new Firestore collections, no
 - [Contributing Guide](.github/CONTRIBUTING.md) - How to contribute to this project
 - [Code of Conduct](.github/CODE_OF_CONDUCT.md) - Our community standards
 - [Security Policy](.github/SECURITY.md) - How to report security vulnerabilities
+- [Accessibility](.github/ACCESSIBILITY.md) - Our accessibility commitment and WCAG targets
+- [API Reference](docs/API.md) - Full list of API endpoints
 
 ---
 
@@ -80,6 +126,30 @@ Each feature is **fully isolated** — new routes, new Firestore collections, no
    ```bash
    npm run dev
    ```
+
+## 🐳 Docker
+
+A production-ready multi-stage Dockerfile is available at `docker/Dockerfile`:
+
+```bash
+# Build the image (pass Firebase config as build args)
+docker build -f docker/Dockerfile \
+  --build-arg NEXT_PUBLIC_FIREBASE_API_KEY=your-key \
+  --build-arg NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-domain \
+  --build-arg NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project \
+  --build-arg NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-bucket \
+  --build-arg NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-id \
+  --build-arg NEXT_PUBLIC_FIREBASE_APP_ID=your-app-id \
+  --build-arg NEXT_PUBLIC_FIREBASE_DATABASE_URL=your-db-url \
+  -t cursor-boston .
+
+# Run the container
+docker run -p 3000:3000 cursor-boston
+```
+
+The image uses Node 20 Alpine, runs as a non-root user, and includes a health check at `/api/health`.
+
+---
 
 ## 🧰 Operations
 
