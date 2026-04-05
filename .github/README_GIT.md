@@ -18,21 +18,46 @@ When creating a new issue or pull request on GitHub, these templates will be aut
 
 ## Recommended Repository Settings
 
-### Branch Protection Rules
+### Default branch and branching model
 
-For production deployments, configure branch protection on `main`:
+- **Default branch:** `develop` — all contributor PRs target `develop`.
+- **Production:** merge to `main` only via a **single release PR** (`develop` → `main`) after integration is reviewed, so Vercel production deploys track batched releases.
+- **After a release:** sync `develop` with `main` (merge or fast-forward).
 
-1. Go to **Settings** → **Branches** → **Add rule**
-2. Branch name pattern: `main`
-3. Enable:
-   - ✅ **Require a pull request before merging**
-     - Require at least 1 approval
-     - Dismiss stale pull request approvals when new commits are pushed
-   - ✅ **Require status checks to pass before merging**
-     - Required checks: `Lint and Type Check`, `Test`, `Build`
+### Branch protection rules
+
+Configure branch protection in **Settings** → **Branches** (or via GitHub API). Intended setup:
+
+**`main` (production)**
+
+1. Branch name pattern: `main`
+2. Enable:
+   - ✅ **Require a pull request before merging** — at least **1** approval; dismiss stale approvals on new commits
+   - ✅ **Require status checks to pass before merging** — strict; required checks:
+     - `Lint and Type Check`
+     - `Test`
+     - `Firestore rules tests`
+     - `Build`
    - ✅ **Require conversation resolution before merging**
+   - ✅ **Do not allow bypassing** (including admins) — `enforce_admins`
    - ✅ **Require signed commits** (optional but recommended)
-   - ✅ **Do not allow bypassing the above settings**
+
+**`develop` (integration)**
+
+1. Branch name pattern: `develop`
+2. Enable:
+   - ✅ **Require a pull request before merging** — at least **1** approval
+   - ✅ **Require status checks** — strict; required checks:
+     - `Lint and Type Check`
+     - `Test`
+     - `Firestore rules tests`
+   - (Optional) Require conversation resolution for develop as well
+
+**Fork PRs and CI:** Ensure **Actions** → **General** → *Fork pull request workflows from outside collaborators* is set so fork PRs can run workflows; first-time contributors may still need a maintainer to **Approve and run** pending jobs.
+
+**Vercel:** Only **`main`** triggers deployments (production). [`vercel.json`](../vercel.json) sets `ignoreCommand` ([`scripts/vercel-ignore-build.sh`](../scripts/vercel-ignore-build.sh)) so pushes to `develop`, Dependabot branches, and feature branches do **not** start Vercel builds. To add preview deploys for `develop` again, relax that script and `git.deploymentEnabled` in `vercel.json`.
+
+**Cursor (optional):** Install the [Vercel plugin for AI agents](https://vercel.com/docs/agent-resources/vercel-plugin) for deployment and Next.js skills: `npx plugins add vercel/vercel-plugin` (user scope; restart the agent after install).
 
 ### Secrets Configuration
 
