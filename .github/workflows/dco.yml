@@ -1,0 +1,43 @@
+# Verifies Developer Certificate of Origin (Signed-off-by) on every commit in a PR.
+# See .github/DCO.md
+
+name: DCO
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  check:
+    name: Signed-off-by (DCO)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
+      - name: Fetch base commit
+        run: |
+          git remote add upstream "https://github.com/${{ github.repository }}.git" 2>/dev/null || true
+          git fetch upstream "${{ github.event.pull_request.base.sha }}"
+
+      - name: Verify Signed-off-by on all commits
+        run: |
+          set -euo pipefail
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          MISSING=0
+          for sha in $(git rev-list --no-merges "${BASE_SHA}".."${HEAD_SHA}"); do
+            if ! git show -s --format=%B "$sha" | grep -qE '^Signed-off-by: '; then
+              echo "::error title=DCO sign-off missing::Commit ${sha} is missing a Signed-off-by line. Amend with: git commit -s, or see .github/DCO.md"
+              MISSING=1
+            fi
+          done
+          exit "$MISSING"

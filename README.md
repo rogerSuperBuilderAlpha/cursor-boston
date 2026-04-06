@@ -123,14 +123,20 @@ Each feature is **fully isolated** — new routes, new Firestore collections, no
 ---
 
 ## 📚 Community
+- [Documentation index](docs/README.md) - Order of docs for newcomers vs maintainers
 - [Get Started (No Experience Needed)](docs/GET_STARTED.md) - Plain-language guide for complete beginners
 - [Development Guide](docs/DEVELOPMENT.md) - Setup, scripts, troubleshooting, architecture
 - [First Contribution](docs/FIRST_CONTRIBUTION.md) - Step-by-step first PR walkthrough
 - [Contributing Guide](.github/CONTRIBUTING.md) - Contribution policy and code style
+- [Support](.github/SUPPORT.md) - Where to ask questions (Discord, issues, email)
+- [Governance](.github/GOVERNANCE.md) - Roles, decisions, and maintainer process
+- [Maintainers](MAINTAINERS.md) - Pointer to governance and releases
 - [GitHub Issues](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues) - Browse and claim open tasks
 - [Code of Conduct](.github/CODE_OF_CONDUCT.md) - Our community standards
 - [Security Policy](.github/SECURITY.md) - How to report security vulnerabilities
 - [Accessibility](.github/ACCESSIBILITY.md) - Our accessibility commitment and WCAG targets
+- [Changelog](CHANGELOG.md) - Version history
+- [Vercel deployments](docs/VERCEL.md) - Production-only deploys (PRs do not trigger Vercel builds)
 - [API Reference](docs/API.md) - Full list of API endpoints
 
 ---
@@ -176,7 +182,7 @@ docker build -f docker/Dockerfile \
 docker run -p 3000:3000 cursor-boston
 ```
 
-The image uses Node 20 Alpine, runs as a non-root user, and includes a health check at `/api/health`.
+The image uses Node 22 Alpine, runs as a non-root user, and includes a health check at `/api/health`.
 
 ---
 
