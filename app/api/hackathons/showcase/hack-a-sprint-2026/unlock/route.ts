@@ -5,12 +5,12 @@ import { getVerifiedUser } from "@/lib/server-auth";
 import { HACK_A_SPRINT_2026_EVENT_ID } from "@/lib/hackathon-showcase";
 import { getHackASprint2026Phase } from "@/lib/hackathon-asprint-2026-schedule";
 import { hackathonEventSignupDocId } from "@/lib/hackathon-event-signup";
-import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { checkRateLimit, getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const RATE = { windowMs: 60 * 1000, maxRequests: 20 };
+const RATE = rateLimitConfigs.hackathonShowcaseUnlock;
 
 function passcodesMatch(expected: string, provided: string): boolean {
   if (expected.length !== provided.length) return false;
@@ -70,10 +70,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({}));
     const provided = String((body as { passcode?: string }).passcode ?? "").trim();
 
-    const uidRate = checkRateLimit(`hack-asprint-unlock-uid:${user.uid}`, {
-      windowMs: 5 * 60 * 1000,
-      maxRequests: 15,
-    });
+    const uidRate = checkRateLimit(
+      `hack-asprint-unlock-uid:${user.uid}`,
+      rateLimitConfigs.hackathonShowcaseUnlockAttempts
+    );
     if (!uidRate.success) {
       return NextResponse.json(
         { error: "Too many attempts", retryAfterSeconds: uidRate.retryAfter },
