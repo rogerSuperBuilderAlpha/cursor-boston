@@ -55,10 +55,18 @@ export async function POST(
       return NextResponse.json({ error: "Session ID is required" }, { status: 400 });
     }
 
-    const body = (await request.json().catch(() => ({}))) as {
+    let body: {
       talkTitle?: unknown;
       durationMinutes?: unknown;
     };
+    try {
+      body = (await request.json()) as {
+        talkTitle?: unknown;
+        durationMinutes?: unknown;
+      };
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
+    }
 
     const talkTitle = normalizeTalkTitle(body.talkTitle);
     const durationMinutes = normalizeDuration(body.durationMinutes);
