@@ -51,7 +51,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Request not found" }, { status: 404 });
     }
 
-    const reqData = reqSnap.data()!;
+    const reqData = reqSnap.data();
+    if (!reqData) {
+      return NextResponse.json({ error: "Request not found" }, { status: 404 });
+    }
     const fromUserId = reqData.fromUserId;
     const teamId = reqData.teamId;
     if (reqData.status !== "pending") {
@@ -64,7 +67,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Team not found" }, { status: 404 });
     }
 
-    const team = teamSnap.data()!;
+    const team = teamSnap.data();
+    if (!team) {
+      return NextResponse.json({ error: "Team not found" }, { status: 404 });
+    }
     const memberIds: string[] = team.memberIds || [];
     if (!memberIds.includes(user.uid)) {
       return NextResponse.json({ error: "You are not a member of this team" }, { status: 403 });
