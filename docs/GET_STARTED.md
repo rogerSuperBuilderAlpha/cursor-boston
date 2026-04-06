@@ -160,19 +160,28 @@ The AI will walk you through each step. A "pull request" is just a way of saying
 
 ### Doing it yourself (if you want to learn)
 
-1. **Save your changes** (this is called "committing"):
+1. **Use a feature branch from `develop`** (don’t commit directly on `main`):
+   ```bash
+   git checkout develop
+   git pull upstream develop   # if you added upstream; otherwise: git pull origin develop
+   git checkout -b docs/your-short-branch-name
+   ```
+   If you don’t have `upstream` yet: `git remote add upstream https://github.com/rogerSuperBuilderAlpha/cursor-boston.git`
+
+2. **Save your changes** (this is called "committing"):
    ```
    git add .
    git commit -s -m "docs: fix typo on events page"
    ```
    The `-s` at the end is required — it's your signature saying you have the right to contribute this code.
 
-2. **Upload to GitHub** (this is called "pushing"):
+3. **Upload to GitHub** (this is called "pushing"). Push your **feature branch** (not `main` or `develop`):
    ```
-   git push origin main
+   git push -u origin your-branch-name
    ```
+   Replace `your-branch-name` with the branch you created (for example `docs/fix-typo-on-events-page`).
 
-3. **Open a pull request**:
+4. **Open a pull request**:
    - Go to your fork on GitHub (github.com/your-username/cursor-boston)
    - You'll see a banner saying "Compare & pull request" — click it
    - Make sure the base branch says **"develop"** (not "main")

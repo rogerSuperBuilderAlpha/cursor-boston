@@ -465,7 +465,7 @@ If you have questions or need help:
 
 1. **Check Documentation**
    - Read the [README](https://github.com/rogerSuperBuilderAlpha/cursor-boston?tab=readme-ov-file)
-   - Review existing issues and discussions
+   - Review existing issues
 
 2. **Ask Questions**
    - Open an issue with the `question` label

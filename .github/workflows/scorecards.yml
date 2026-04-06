@@ -1,0 +1,33 @@
+# OpenSSF Scorecard — supply-chain posture signal (weekly + on push to main/develop).
+# https://github.com/ossf/scorecard-action
+
+name: Scorecard
+
+on:
+  schedule:
+    - cron: '25 4 * * 1'
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+
+permissions: read-all
+
+jobs:
+  analysis:
+    name: Scorecard analysis
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      id-token: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Run Scorecard
+        uses: ossf/scorecard-action@v2.4.2
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          publish_results: true
