@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useEffect, useState } from "react";
 import { FormInput, FormTextarea, ToggleSwitch } from "@/components/ui/FormField";
 import { ProfileSettings } from "../_hooks/useProfileSettings";
 
@@ -11,6 +12,47 @@ interface SettingsTabProps {
   success: boolean;
   onSave: () => Promise<void>;
   onToggleAllVisibility: (show: boolean) => void;
+}
+
+function useEmailSubscription() {
+  const [onList, setOnList] = useState(false);
+  const [subscribed, setSubscribed] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [toggling, setToggling] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/profile/subscription")
+      .then((r) => r.json())
+      .then((data: { onList?: boolean; subscribed?: boolean }) => {
+        if (cancelled) return;
+        setOnList(data.onList ?? false);
+        setSubscribed(data.subscribed ?? false);
+      })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const toggle = useCallback(async (value: boolean) => {
+    setToggling(true);
+    const prev = subscribed;
+    setSubscribed(value);
+    try {
+      const res = await fetch("/api/profile/subscription", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subscribed: value }),
+      });
+      if (!res.ok) setSubscribed(prev);
+    } catch {
+      setSubscribed(prev);
+    } finally {
+      setToggling(false);
+    }
+  }, [subscribed]);
+
+  return { onList, subscribed, loading, toggling, toggle };
 }
 
 const VISIBILITY_FIELDS: { key: keyof ProfileSettings["visibility"]; label: string }[] = [
@@ -49,6 +91,8 @@ export function SettingsTab({
   const updateVisibility = (key: keyof ProfileSettings["visibility"], value: boolean) =>
     setSettings((prev) => ({ ...prev, visibility: { ...prev.visibility, [key]: value } }));
 
+  const emailSub = useEmailSubscription();
+
   return (
     <div className="space-y-6">
       {/* Profile Visibility Toggle */}
@@ -68,6 +112,27 @@ export function SettingsTab({
             : "Your profile is hidden from the Members page"}
         </p>
       </div>
+
+      {/* Email Subscription Toggle */}
+      {!emailSub.loading && emailSub.onList && (
+        <div className="bg-neutral-900 rounded-2xl p-6 border border-neutral-800">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-lg font-semibold text-white">Event Email Updates</h2>
+            <ToggleSwitch
+              size="md"
+              label="Event email updates"
+              checked={emailSub.subscribed}
+              onChange={(checked) => emailSub.toggle(checked)}
+              disabled={emailSub.toggling}
+            />
+          </div>
+          <p className="text-neutral-400 text-sm">
+            {emailSub.subscribed
+              ? "You\u2019ll receive emails about upcoming events and community updates"
+              : "You\u2019ve opted out of event update emails"}
+          </p>
+        </div>
+      )}
 
       {/* Profile Information */}
       <div className="bg-neutral-900 rounded-2xl p-6 border border-neutral-800">
