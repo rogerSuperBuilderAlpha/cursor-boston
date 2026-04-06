@@ -10,7 +10,7 @@ This project uses several layers to reduce risk in dependencies and workflows.
 ## CI checks
 
 - **npm audit** (high severity threshold), **license allowlist** (`license-checker`), **Gitleaks**, and **CycloneDX SBOM** generation run in the **Security Scanning** job in [`.github/workflows/ci.yml`](../.github/workflows/ci.yml).
-- **CodeQL** ([`.github/workflows/codeql.yml`](../.github/workflows/codeql.yml)) analyzes JavaScript/TypeScript on push/PR and weekly.
+- **CodeQL** — use **GitHub’s default code scanning setup** (Settings → Code security → Code scanning). A custom `codeql.yml` workflow was removed because it conflicted with default setup (SARIF upload error). Re-enable advanced CodeQL only after turning default setup off, or keep default only.
 - **DCO** ([`.github/workflows/dco.yml`](../.github/workflows/dco.yml)) enforces `Signed-off-by` lines on every commit in a PR.
 
 ## Trust signals

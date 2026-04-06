@@ -26,5 +26,5 @@ Maintainers can also run the workflow from **Actions → Release → Run workflo
 
 ## Notes
 
-- **OpenSSF Scorecard** and **CodeQL** run on a schedule and on pushes; they complement but do not replace the release job’s checks.
+- **OpenSSF Scorecard** runs on a schedule and on pushes to `main`; **CodeQL** may run via GitHub default code scanning — they complement but do not replace the release job’s checks.
 - Container images are built in CI on `main` for validation only (`push: false`); publishing signed images to a registry is optional future work.

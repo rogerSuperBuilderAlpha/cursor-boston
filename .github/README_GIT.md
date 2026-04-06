@@ -40,7 +40,7 @@ Configure branch protection in **Settings** → **Branches** (or via GitHub API)
      - `Security Scanning`
      - `Signed-off-by (DCO)` (from `dco.yml`)
      - `Dependency Review` / `dependency-review` (exact name may vary)
-     - CodeQL — e.g. `Analyze (javascript-typescript)` (matrix job from `codeql.yml`)
+     - CodeQL (if enabled under **Settings → Code security → Code scanning** — check exact job name in the UI)
      - `Build`
    - ✅ **Require conversation resolution before merging**
    - **Admins may bypass** — `enforce_admins` is **off** so the owner can `gh pr merge --admin` until more maintainers can review release PRs. Turn **Include administrators** back on under branch protection when ready.
@@ -58,7 +58,7 @@ Configure branch protection in **Settings** → **Branches** (or via GitHub API)
      - `Security Scanning`
      - `Signed-off-by (DCO)`
      - `Dependency Review` (or the job name shown in the UI)
-     - CodeQL analysis job (e.g. `Analyze (javascript-typescript)`)
+     - CodeQL (from GitHub default setup, if configured)
    - (Optional) Require conversation resolution for develop as well
    - **Scorecard** (`scorecards.yml`) is informational; usually **not** required for merge
 
@@ -116,7 +116,6 @@ Triggered by version tags (`v*.*.*`) or manual dispatch:
 ### Other workflows
 
 - `dco.yml` — DCO / `Signed-off-by` on PR commits
-- `codeql.yml` — CodeQL static analysis (JavaScript/TypeScript)
 - `dependency-review.yml` — flags vulnerable dependencies on PRs
 - `scorecards.yml` — OpenSSF Scorecard (weekly + on push)
 - `ci-fork-notice.yml` — welcome comment for fork PRs (no code checkout)
