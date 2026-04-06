@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `docs/VERCEL.md` — production-only Vercel policy and dashboard checklist
 - `NOTICE` file for project copyright and SPDX identifier
 - `MAINTAINERS.md` entry point linking to governance and release docs
 - `docs/README.md` documentation index
@@ -20,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Vercel**: `git.deploymentEnabled` now sets `"*": false` and `"main": true` (unspecified branches defaulted to deploy **on** before); ignore script skips `VERCEL_ENV=preview` so only production builds on `main`
+- **GitHub Actions**: Dependency Review runs only when npm lockfiles change; Scorecard no longer runs on every `develop` push
 - **LICENSE**: standardized to verbatim GPLv3 text so GitHub can detect **GPL-3.0**; project copyright moved to `NOTICE`
 - **CI**: security scanning (npm audit, license allowlist, Gitleaks, SBOM) is **blocking**; expanded license allowlist for real transitive licenses; build gates on successful security job
 - **Release workflow**: aligned with CI (lint, typecheck, coverage tests, Firestore rules tests, validate-env, build); clone URL uses `${{ github.repository }}`
