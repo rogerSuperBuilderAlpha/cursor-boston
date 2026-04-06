@@ -2,7 +2,7 @@
   "name": "cursor-boston",
   "version": "0.1.0",
   "description": "A modern community platform for Cursor users in the Boston area. Built with Next.js, TypeScript, and Firebase.",
-  "license": "GPL-3.0",
+  "license": "GPL-3.0-only",
   "homepage": "https://github.com/rogerSuperBuilderAlpha/cursor-boston#readme",
   "repository": {
     "type": "git",
@@ -12,7 +12,7 @@
     "url": "https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues"
   },
   "engines": {
-    "node": ">=20.9.0",
+    "node": ">=22.0.0",
     "npm": ">=9.0.0"
   },
   "keywords": [

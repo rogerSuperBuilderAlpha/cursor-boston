@@ -99,7 +99,7 @@ Most decisions are made through consensus among maintainers. This includes:
 - Release schedules
 
 The process:
-1. A proposal is made via GitHub issue or discussion
+1. A proposal is made via GitHub issue (or raised on Discord and summarized in an issue)
 2. Maintainers and community members provide feedback
 3. The proposal is refined based on feedback
 4. When there are no unresolved objections, the proposal is accepted
@@ -113,6 +113,16 @@ For decisions where consensus cannot be reached:
 3. Each maintainer has one vote
 4. Decisions require a simple majority
 5. The Project Lead may break ties
+
+### When there is only one maintainer
+
+While the maintainer team has a **single** person with merge rights (see the table above):
+
+- **Majority votes** described elsewhere in this document are decided by that maintainer (or by the Project Lead if they are the same person).
+- **Major changes** that call for two maintainer approvals should still get **community review time** (e.g. open PR, request feedback on Discord) before merge; the Project Lead approves when satisfied.
+- **Governance changes** that require “a majority of maintainers” require **Project Lead approval** plus the usual PR and comment period.
+
+When additional maintainers are added, this section no longer applies and normal multi-maintainer rules apply.
 
 ### Emergency Decisions
 

@@ -1,0 +1,12 @@
+blank_issues_enabled: true
+
+contact_links:
+  - name: Discord community
+    url: https://discord.gg/Wsncg8YYqc
+    about: Real-time help and discussion (recommended for quick questions).
+  - name: Security policy
+    url: https://github.com/rogerSuperBuilderAlpha/cursor-boston/blob/develop/.github/SECURITY.md
+    about: How to report vulnerabilities privately (do not use public issues).
+  - name: Development guide
+    url: https://github.com/rogerSuperBuilderAlpha/cursor-boston/blob/develop/docs/DEVELOPMENT.md
+    about: Setup, scripts, and troubleshooting before filing a bug.
