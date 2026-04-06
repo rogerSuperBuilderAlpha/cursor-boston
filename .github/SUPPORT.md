@@ -41,9 +41,10 @@ Visit our website for information about the community and upcoming events.
 ### For General Questions
 
 1. **Search existing resources first**
-   - Check our [README](../README.md) for setup and usage information
+   - Check the [Development Guide](../docs/DEVELOPMENT.md) for setup, scripts, and troubleshooting
+   - Check our [README](../README.md) for project overview and quick start
    - Search [existing issues](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues) for similar questions
-   - Review the [documentation](./) in the .github folder
+   - Review the [API Reference](../docs/API.md) for endpoint documentation
 
 2. **Ask on Discord**
    - Join our [Discord server](https://discord.gg/Wsncg8YYqc)
@@ -87,7 +88,10 @@ Please see our [Security Policy](SECURITY.md) for instructions on reporting secu
 
 Interested in contributing to the project?
 
-- Read our [Contributing Guide](CONTRIBUTING.md)
+- **Never coded before?** Start with [Get Started (No Experience Needed)](../docs/GET_STARTED.md) — plain language, AI tools do the work
+- **New to open source?** Follow the [First Contribution Guide](../docs/FIRST_CONTRIBUTION.md) for a step-by-step walkthrough
+- Set up your environment with the [Development Guide](../docs/DEVELOPMENT.md)
+- Read our [Contributing Guide](CONTRIBUTING.md) for policies and code style
 - Check out [good first issues](https://github.com/rogerSuperBuilderAlpha/cursor-boston/labels/good%20first%20issue)
 - Review our [Code of Conduct](CODE_OF_CONDUCT.md)
 - Learn about our [governance model](GOVERNANCE.md)
@@ -97,7 +101,11 @@ Interested in contributing to the project?
 | Document | Description |
 |----------|-------------|
 | [README](../README.md) | Project overview and quick start |
-| [CONTRIBUTING](CONTRIBUTING.md) | How to contribute |
+| [Get Started](../docs/GET_STARTED.md) | Plain-language guide for complete beginners |
+| [Development Guide](../docs/DEVELOPMENT.md) | Setup, scripts, troubleshooting, architecture |
+| [First Contribution](../docs/FIRST_CONTRIBUTION.md) | Step-by-step first PR walkthrough |
+| [CONTRIBUTING](CONTRIBUTING.md) | Contribution policy and code style |
+| [API Reference](../docs/API.md) | Full list of API endpoints |
 | [CODE_OF_CONDUCT](CODE_OF_CONDUCT.md) | Community guidelines |
 | [SECURITY](SECURITY.md) | Security policy |
 | [GOVERNANCE](GOVERNANCE.md) | Project governance |

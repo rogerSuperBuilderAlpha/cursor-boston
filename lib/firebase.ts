@@ -23,8 +23,10 @@ const isConfigured = firebaseConfig.apiKey && firebaseConfig.projectId;
 const isPlaceholderKey =
   !firebaseConfig.apiKey ||
   firebaseConfig.apiKey.startsWith("your-") ||
+  firebaseConfig.apiKey.startsWith("demo-") ||
   firebaseConfig.apiKey === "your-api-key" ||
-  (firebaseConfig.projectId?.startsWith("your-") ?? false);
+  (firebaseConfig.projectId?.startsWith("your-") ?? false) ||
+  (firebaseConfig.projectId?.startsWith("demo-") ?? false);
 
 let app: FirebaseApp | undefined;
 let auth: Auth | undefined;

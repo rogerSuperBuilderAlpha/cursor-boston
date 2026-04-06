@@ -134,9 +134,11 @@ export default function EventMap({ events }: EventMapProps) {
       <div className="max-w-6xl mx-auto w-full px-6 py-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           {/* Neighborhood filter */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by neighborhood">
             <button
               onClick={() => setSelectedNeighborhood(null)}
+              aria-label="Show all neighborhoods"
+              aria-pressed={!selectedNeighborhood}
               className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
                 !selectedNeighborhood
                   ? "bg-emerald-500 text-white border-emerald-500"
@@ -153,6 +155,8 @@ export default function EventMap({ events }: EventMapProps) {
                     hood === selectedNeighborhood ? null : hood
                   )
                 }
+                aria-label={`Filter by ${hood}`}
+                aria-pressed={selectedNeighborhood === hood}
                 className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
                   selectedNeighborhood === hood
                     ? "bg-emerald-500 text-white border-emerald-500"
@@ -165,9 +169,12 @@ export default function EventMap({ events }: EventMapProps) {
           </div>
 
           {/* View toggle */}
-          <div className="flex items-center bg-neutral-100 dark:bg-neutral-900 rounded-lg p-1 border border-neutral-200 dark:border-neutral-800">
+          <div className="flex items-center bg-neutral-100 dark:bg-neutral-900 rounded-lg p-1 border border-neutral-200 dark:border-neutral-800" role="tablist" aria-label="Toggle map or list view">
             <button
               onClick={() => setView("map")}
+              role="tab"
+              aria-selected={view === "map"}
+              aria-label="Map view"
               className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
                 view === "map"
                   ? "bg-white dark:bg-neutral-800 text-foreground shadow-sm"
@@ -178,6 +185,9 @@ export default function EventMap({ events }: EventMapProps) {
             </button>
             <button
               onClick={() => setView("list")}
+              role="tab"
+              aria-selected={view === "list"}
+              aria-label="List view"
               className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
                 view === "list"
                   ? "bg-white dark:bg-neutral-800 text-foreground shadow-sm"

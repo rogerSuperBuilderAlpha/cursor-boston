@@ -1,0 +1,28 @@
+---
+description: Use develop for integration; batch releases to main with a single merge PR
+alwaysApply: true
+---
+
+# Branching and batched releases — `develop` → `main`
+
+The **default branch is `develop`**. Contributor PRs must target **`develop`**, not `main`.
+
+## Day-to-day (integration on `develop`)
+
+1. Review contributor PRs as usual; merge approved PRs **into `develop`** on GitHub.
+2. Each merge updates the integration line and triggers **preview** deployments (Vercel) when the GitHub integration is enabled.
+
+## Production release (one merge to `main`)
+
+Merge **multiple** reviewed changes to production in **one** step:
+
+1. Ensure `develop` is green (required checks: Lint and Type Check, Test, Firestore rules tests; release PR also requires Build).
+2. Open **one** PR: **`develop` → `main`** with a clear title (e.g. `release: develop → main 2026-04-06`).
+3. Get review and merge that single PR into `main`. That triggers production deployment and avoids many sequential merges directly on `main`.
+4. After merging to `main`, sync `develop` with `main` (merge or fast-forward) so both branches stay aligned.
+
+**Do not** land many separate merges directly to `main` for routine contributor work. **Do not** push to `main` outside this release PR pattern except for true hotfixes (still use a PR into `main`).
+
+## If you need a disposable integration branch
+
+For unusual batch experiments only, you may use `integrate/batch-…` off `develop`, then PR that branch into `develop` — not for skipping the `develop` workflow.

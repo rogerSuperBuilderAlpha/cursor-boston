@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Enable standalone output for Docker deployments
-  output: 'standalone',
+  // Standalone output is only for Docker builds (see docker/Dockerfile). Omit on Vercel.
+  ...(process.env.DOCKER_BUILD === '1' ? { output: 'standalone' } : {}),
 
   images: {
     remotePatterns: [
@@ -34,6 +34,26 @@ const nextConfig = {
         source: '/(.*)',
         headers: [
           {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://embed.lu.ma",
+              "style-src 'self' 'unsafe-inline'",
+              "img-src 'self' data: blob: https://firebasestorage.googleapis.com https://*.googleusercontent.com https://lh3.googleusercontent.com https://avatars.githubusercontent.com https://*.cartocdn.com https://unpkg.com",
+              "font-src 'self'",
+              "connect-src 'self' https://*.firebaseio.com https://*.firebaseapp.com https://*.googleapis.com https://*.cartocdn.com https://unpkg.com",
+              "frame-src https://lu.ma https://luma.com",
+              "object-src 'none'",
+              "base-uri 'self'",
+              "form-action 'self'",
+              "frame-ancestors 'none'",
+            ].join('; '),
+          },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload',
+          },
+          {
             key: 'X-Content-Type-Options',
             value: 'nosniff',
           },
@@ -55,7 +75,7 @@ const nextConfig = {
           },
         ],
       },
-    ];
+    ]
   },
 }
 

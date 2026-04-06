@@ -179,7 +179,7 @@ describe("EventMap", () => {
       await act(async () => {
         render(<EventMap events={[]} />);
       });
-      expect(screen.getByRole("button", { name: "All" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Show all neighborhoods" })).toBeInTheDocument();
     });
   });
 
@@ -187,7 +187,7 @@ describe("EventMap", () => {
     it("switches to list view", async () => {
       const user = await renderMap([cambridgeEvent, seaportEvent]);
 
-      await user.click(screen.getByRole("button", { name: "List" }));
+      await user.click(screen.getByRole("tab", { name: "List view" }));
 
       expect(screen.queryByTestId("map-container")).not.toBeInTheDocument();
       expect(screen.getByText("Cafe Cursor Boston")).toBeInTheDocument();
@@ -197,8 +197,8 @@ describe("EventMap", () => {
     it("switches back to map view", async () => {
       const user = await renderMap([cambridgeEvent]);
 
-      await user.click(screen.getByRole("button", { name: "List" }));
-      await user.click(screen.getByRole("button", { name: "Map" }));
+      await user.click(screen.getByRole("tab", { name: "List view" }));
+      await user.click(screen.getByRole("tab", { name: "Map view" }));
 
       expect(screen.getByTestId("map-container")).toBeInTheDocument();
     });
@@ -207,9 +207,9 @@ describe("EventMap", () => {
   describe("neighborhood filter", () => {
     it("renders filter buttons from event data", async () => {
       await renderMap([cambridgeEvent, seaportEvent]);
-      expect(screen.getByRole("button", { name: "All" })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "Cambridge" })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "Seaport" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Show all neighborhoods" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Filter by Cambridge" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Filter by Seaport" })).toBeInTheDocument();
     });
 
     it("filters markers by neighborhood", async () => {
@@ -217,25 +217,25 @@ describe("EventMap", () => {
 
       expect(screen.getAllByTestId("marker")).toHaveLength(2);
 
-      await user.click(screen.getByRole("button", { name: "Cambridge" }));
+      await user.click(screen.getByRole("button", { name: "Filter by Cambridge" }));
       expect(screen.getAllByTestId("marker")).toHaveLength(1);
     });
 
     it("deselects neighborhood on second click", async () => {
       const user = await renderMap([cambridgeEvent, seaportEvent]);
 
-      await user.click(screen.getByRole("button", { name: "Cambridge" }));
+      await user.click(screen.getByRole("button", { name: "Filter by Cambridge" }));
       expect(screen.getAllByTestId("marker")).toHaveLength(1);
 
-      await user.click(screen.getByRole("button", { name: "Cambridge" }));
+      await user.click(screen.getByRole("button", { name: "Filter by Cambridge" }));
       expect(screen.getAllByTestId("marker")).toHaveLength(2);
     });
 
     it("filters list view too", async () => {
       const user = await renderMap([cambridgeEvent, seaportEvent]);
 
-      await user.click(screen.getByRole("button", { name: "List" }));
-      await user.click(screen.getByRole("button", { name: "Seaport" }));
+      await user.click(screen.getByRole("tab", { name: "List view" }));
+      await user.click(screen.getByRole("button", { name: "Filter by Seaport" }));
 
       expect(screen.queryByText("Cafe Cursor Boston")).not.toBeInTheDocument();
       expect(screen.getByText("Cursor Hack Night")).toBeInTheDocument();
@@ -338,7 +338,7 @@ describe("EventMap", () => {
     it("renders event cards with image and actions", async () => {
       const user = await renderMap([cambridgeEvent]);
 
-      await user.click(screen.getByRole("button", { name: "List" }));
+      await user.click(screen.getByRole("tab", { name: "List view" }));
 
       expect(screen.getByText("Cafe Cursor Boston")).toBeInTheDocument();
       expect(screen.getByText("Details")).toBeInTheDocument();
@@ -348,7 +348,7 @@ describe("EventMap", () => {
     it("has a directions button", async () => {
       const user = await renderMap([cambridgeEvent]);
 
-      await user.click(screen.getByRole("button", { name: "List" }));
+      await user.click(screen.getByRole("tab", { name: "List view" }));
 
       const dirLink = screen.getByRole("link", { name: "Get directions" });
       expect(dirLink).toHaveAttribute("href", expect.stringContaining("google.com/maps/dir"));
@@ -357,7 +357,7 @@ describe("EventMap", () => {
     it("shows green badge for upcoming, blue for past", async () => {
       const user = await renderMap([cambridgeEvent, seaportEvent]);
 
-      await user.click(screen.getByRole("button", { name: "List" }));
+      await user.click(screen.getByRole("tab", { name: "List view" }));
 
       const pastBadge = screen.getByText("meetup");
       expect(pastBadge.className).toContain("bg-blue-500");

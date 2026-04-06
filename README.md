@@ -6,11 +6,32 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/rogerSuperBuilderAlpha/cursor-boston/actions/workflows/ci.yml"><img src="https://github.com/rogerSuperBuilderAlpha/cursor-boston/actions/workflows/ci.yml/badge.svg?branch=develop" alt="CI" /></a>
   <a href="https://github.com/rogerSuperBuilderAlpha/cursor-boston/pulls"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome" /></a>
   <a href="https://discord.gg/Wsncg8YYqc"><img src="https://img.shields.io/badge/Discord-Join%20Us-7289DA?logo=discord" alt="Discord" /></a>
   <a href="https://lu.ma/cursor-boston"><img src="https://img.shields.io/badge/Luma-Events-emerald" alt="Luma Events" /></a>
+  <img src="https://img.shields.io/badge/node-%3E%3D22-brightgreen" alt="Node >= 22" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="License: GPL v3" /></a>
 </p>
+
+---
+
+<table>
+<tr>
+<td width="60" align="center">
+<h1>🚀</h1>
+</td>
+<td>
+
+### New here? Never coded before? Start here.
+
+**You don't need to know how to code.** AI tools like Cursor, Claude Code, and Codex can do the technical work for you. We wrote a step-by-step guide in plain, simple language — no jargon, no experience required.
+
+**[Read the Get Started Guide →](docs/GET_STARTED.md)**
+
+</td>
+</tr>
+</table>
 
 ---
 
@@ -19,10 +40,14 @@
 Cursor Boston is a community-led platform designed to bring together the most ambitious developers, students, and founders in the Boston area. We focus on **AI-native development workflows**—leveraging tools like Cursor to ship production code at the speed of thought.
 
 ### 🎯 Who is this for?
-- **🎓 Students**: MIT, Harvard, Hult, BU, Northeastern, and beyond.
-- **🚀 Founders**: Prototype MVPs in hours and validate ideas fast.
-- **💻 Developers**: Master the art of AI-assisted full-stack development.
+- **🌱 Beginners & Students**: Pick up AI-assisted development from day one — no experience required.
+- **💼 Interns & Early-Career Devs**: Level up fast by building real features with real tools.
+- **💻 Working Developers**: Sharpen your workflow, contribute to open source, and connect with peers.
+- **🧠 Senior Engineers & Experts**: Mentor others, shape the project, and push the boundaries of AI-native development.
+- **🚀 Founders & Indie Hackers**: Prototype MVPs in hours and validate ideas fast.
 - **🎨 Designers & PMs**: Bridge the gap between design and production code.
+
+Whether you're writing your first line of code or your ten-thousandth — if you care enough to open Cursor and do some work, you belong here.
 
 ---
 
@@ -30,9 +55,53 @@ Cursor Boston is a community-led platform designed to bring together the most am
 
 This platform is a living example of what you can build with Cursor and modern web tech:
 
-- **Frontend**: Next.js 14 (App Router), Tailwind CSS, TypeScript
+- **Frontend**: Next.js 16 (App Router), Tailwind CSS, TypeScript
 - **Backend**: Firebase (Auth, Firestore, Storage)
 - **Integrations**: Discord/GitHub OAuth, Luma API, Framer Motion
+
+---
+
+## 🏗️ Architecture
+
+```mermaid
+graph TB
+    subgraph Client["Browser"]
+        UI["Next.js 16 App Router<br/>(React + Tailwind CSS)"]
+        Auth["Firebase Auth<br/>(Email, Google, GitHub)"]
+    end
+
+    subgraph Vercel["Vercel"]
+        Pages["Pages & Layouts<br/>(SSR / Static)"]
+        API["API Routes<br/>(63 endpoints)"]
+        MW["Middleware<br/>(CSRF, Rate Limit, Logging)"]
+    end
+
+    subgraph Firebase["Firebase"]
+        Firestore["Cloud Firestore<br/>(Users, Events, Posts, Teams)"]
+        Storage["Cloud Storage<br/>(Avatars, Uploads)"]
+    end
+
+    subgraph External["External Services"]
+        Discord["Discord OAuth + Webhooks"]
+        GitHub["GitHub OAuth + Webhooks"]
+        Luma["Luma Events"]
+        Mailgun["Mailgun Email"]
+        Leaflet["CARTO + Leaflet Maps"]
+    end
+
+    UI --> Pages
+    UI --> Auth
+    Auth --> Firestore
+    Pages --> API
+    API --> MW
+    MW --> Firestore
+    MW --> Storage
+    API --> Discord
+    API --> GitHub
+    API --> Mailgun
+    UI --> Luma
+    UI --> Leaflet
+```
 
 ---
 
@@ -54,32 +123,62 @@ Each feature is **fully isolated** — new routes, new Firestore collections, no
 ---
 
 ## 📚 Community
+- [Get Started (No Experience Needed)](docs/GET_STARTED.md) - Plain-language guide for complete beginners
+- [Development Guide](docs/DEVELOPMENT.md) - Setup, scripts, troubleshooting, architecture
+- [First Contribution](docs/FIRST_CONTRIBUTION.md) - Step-by-step first PR walkthrough
+- [Contributing Guide](.github/CONTRIBUTING.md) - Contribution policy and code style
 - [GitHub Issues](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues) - Browse and claim open tasks
-- [Contributing Guide](.github/CONTRIBUTING.md) - How to contribute to this project
 - [Code of Conduct](.github/CODE_OF_CONDUCT.md) - Our community standards
 - [Security Policy](.github/SECURITY.md) - How to report security vulnerabilities
+- [Accessibility](.github/ACCESSIBILITY.md) - Our accessibility commitment and WCAG targets
+- [API Reference](docs/API.md) - Full list of API endpoints
 
 ---
 
 ## 🏃 Quick Start
 
-1. **Fork, then clone your fork** (contributions are not accepted via direct push to upstream)
+1. **Fork, then clone your fork**
    ```bash
    git clone https://github.com/your-username/cursor-boston.git
    cd cursor-boston
    ```
-   Replace `your-username` with your GitHub account after forking. Open pull requests from branches on **your fork** only. To clone upstream read-only (no contribution), use `https://github.com/rogerSuperBuilderAlpha/cursor-boston.git` — you cannot push there as an outside contributor.
 
-2. **Install & Setup**
+2. **Install & run** (no Firebase account needed)
    ```bash
    npm install
-   cp .env.local.example .env.local
+   cp .env.local.demo .env.local    # zero-config demo mode
+   npm run dev                       # open http://localhost:3000
    ```
 
-3. **Run Dev**
-   ```bash
-   npm run dev
-   ```
+The site loads fully in demo mode — pages, layouts, and styling all work. Firebase features (auth, data) are disabled until you set up credentials.
+
+> **Want full functionality?** See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for Firebase setup, all npm scripts, troubleshooting, and more.
+>
+> **First time contributing?** See [docs/FIRST_CONTRIBUTION.md](docs/FIRST_CONTRIBUTION.md) for a step-by-step walkthrough.
+
+## 🐳 Docker
+
+A production-ready multi-stage Dockerfile is available at `docker/Dockerfile`:
+
+```bash
+# Build the image (pass Firebase config as build args)
+docker build -f docker/Dockerfile \
+  --build-arg NEXT_PUBLIC_FIREBASE_API_KEY=your-key \
+  --build-arg NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-domain \
+  --build-arg NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project \
+  --build-arg NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-bucket \
+  --build-arg NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-id \
+  --build-arg NEXT_PUBLIC_FIREBASE_APP_ID=your-app-id \
+  --build-arg NEXT_PUBLIC_FIREBASE_DATABASE_URL=your-db-url \
+  -t cursor-boston .
+
+# Run the container
+docker run -p 3000:3000 cursor-boston
+```
+
+The image uses Node 20 Alpine, runs as a non-root user, and includes a health check at `/api/health`.
+
+---
 
 ## 🧰 Operations
 

@@ -2,15 +2,26 @@
 
 Thank you for your interest in contributing to Cursor Boston! This document provides guidelines and instructions for contributing to the project.
 
+> **Never coded before?** Start with [Get Started (No Experience Needed)](../docs/GET_STARTED.md) — a plain-language guide that shows you how to use AI tools to contribute.
+>
+> **New to open source?** Follow the [First Contribution Guide](../docs/FIRST_CONTRIBUTION.md) for a step-by-step walkthrough, or the [Development Guide](../docs/DEVELOPMENT.md) for full setup, scripts, and troubleshooting.
+
 ## Contribution policy (fork and pull request only)
 
-**If you are contributing code or content, you must use the fork workflow.** Fork this repo on GitHub, set **`origin` to your fork**, push branches there, and open a **pull request** into `rogerSuperBuilderAlpha/cursor-boston`. Do **not** push feature branches directly to the upstream repository (you typically will not have permission; if you do, that path is still not the supported contribution model). Maintainers merge approved PRs; contributors do not self-merge unless [GOVERNANCE](GOVERNANCE.md) explicitly allows it.
+**If you are contributing code or content, you must use the fork workflow.** Fork this repo on GitHub, set **`origin` to your fork**, push branches there, and open a **pull request** into `rogerSuperBuilderAlpha/cursor-boston` with base branch **`develop`**. Do **not** push feature branches directly to the upstream repository (you typically will not have permission; if you do, that path is still not the supported contribution model). Maintainers merge approved PRs; contributors do not self-merge unless [GOVERNANCE](GOVERNANCE.md) explicitly allows it.
 
 A read-only clone of upstream is fine for browsing or local experimentation, but anything you intend to merge must go through **fork → branch on your fork → PR**.
+
+## Branching model (`develop` and `main`)
+
+- **`develop`** is the **default branch** on GitHub. Open **all** contributor pull requests against `develop`. That branch is the integration line: reviews, CI, and Vercel **preview** deploys (when the integration is connected).
+- **`main`** tracks **production**. Changes reach `main` only through a **release PR** from `develop` after maintainers batch and review what should ship. That keeps production history and deployments controlled.
+- After a release merge, maintainers sync **`develop`** with **`main`** so both stay aligned.
 
 ## Table of Contents
 
 - [Contribution policy (fork and pull request only)](#contribution-policy-fork-and-pull-request-only)
+- [Branching model (develop and main)](#branching-model-develop-and-main)
 - [Code of Conduct](#code-of-conduct)
 - [Developer Certificate of Origin](#developer-certificate-of-origin)
 - [Getting Started](#getting-started)
@@ -54,61 +65,28 @@ Pull requests with unsigned commits will not be merged. See [DCO.md](DCO.md) for
 
 ## Getting Started
 
-### Prerequisites
+Follow the **[Development Guide](../docs/DEVELOPMENT.md)** for complete setup instructions, including:
 
-Before you begin, ensure you have the following installed:
+- Prerequisites (Node.js 22, npm >= 9)
+- **Zero-config demo mode** — run `cp .env.local.demo .env.local && npm run dev` with no Firebase account
+- Full Firebase setup (personal project or emulator)
+- All npm scripts with descriptions
+- Pre-commit hooks explained
+- Troubleshooting common issues
+- Onboarding checklist to verify your setup
 
-- **Node.js** 18.x or higher ([Download](https://nodejs.org/))
-- **npm** 9.x or higher (comes with Node.js)
-- **Git** ([Download](https://git-scm.com/))
-- **Firebase account** (free tier works for development)
+**Quick version:**
 
-### Development Setup
+```bash
+git clone https://github.com/your-username/cursor-boston.git
+cd cursor-boston
+git remote add upstream https://github.com/rogerSuperBuilderAlpha/cursor-boston.git
+npm install
+cp .env.local.demo .env.local
+npm run dev
+```
 
-1. **Fork the repository**
-
-   Click the "Fork" button on GitHub to create your own copy of the repository.
-
-2. **Clone your fork**
-
-   ```bash
-   git clone https://github.com/your-username/cursor-boston.git
-   cd cursor-boston
-   ```
-
-3. **Add upstream remote**
-
-   ```bash
-   git remote add upstream https://github.com/rogerSuperBuilderAlpha/cursor-boston.git
-   ```
-
-4. **Install dependencies**
-
-   ```bash
-   npm install
-   ```
-
-5. **Set up environment variables**
-
-   ```bash
-   cp .env.local.example .env.local
-   ```
-
-   Fill in your Firebase configuration in `.env.local`. See the [README](https://github.com/rogerSuperBuilderAlpha/cursor-boston?tab=readme-ov-file#configuration) for detailed instructions.
-
-   **Quick Firebase Setup:**
-   - Create a Firebase project at [Firebase Console](https://console.firebase.google.com)
-   - Enable Authentication (Email/Password, Google, GitHub)
-   - Create a Firestore database (start in test mode)
-   - Copy your Firebase config values to `.env.local`
-
-6. **Run the development server**
-
-   ```bash
-   npm run dev
-   ```
-
-   Open [http://localhost:3000](http://localhost:3000) to see the app.
+Open [http://localhost:3000](http://localhost:3000) to see the app.
 
 ## Development Workflow
 
@@ -140,8 +118,8 @@ Regularly sync your fork with the upstream repository:
 
 ```bash
 git fetch upstream
-git checkout main
-git merge upstream/main
+git checkout develop
+git merge upstream/develop
 ```
 
 ## Claiming an Issue
@@ -173,10 +151,10 @@ A maintainer will assign it to you. Only one person works on a given issue at a 
 
 ### Step 3 — Build it
 
-Create a feature branch from `main`:
+Create a feature branch from `develop`:
 
 ```bash
-git checkout main && git pull upstream main
+git checkout develop && git pull upstream develop
 git checkout -b feature/your-feature-name
 ```
 
@@ -190,7 +168,7 @@ Closes #78"
 
 ### Step 4 — Open a PR
 
-When your work is ready, open a pull request against `main`. In the PR description:
+When your work is ready, open a pull request against **`develop`** (the default base branch). In the PR description:
 
 1. **Link the issue** using a closing keyword so it auto-closes on merge:
    ```
@@ -199,7 +177,7 @@ When your work is ready, open a pull request against `main`. In the PR descripti
 2. Fill out the [PR description template](#pr-description-template) — include screenshots for any UI work.
 3. Make sure `npm run lint` and `npm run build` pass before requesting review.
 
-Maintainers will review and provide feedback. Once approved, your PR will be merged and the issue will close automatically.
+Maintainers will review and provide feedback. Once approved, your PR will be merged into `develop`. The issue will close when that merge completes (if you used a closing keyword). Releases to production go through a separate maintainer PR from `develop` to `main`.
 
 ### Etiquette
 
@@ -394,6 +372,13 @@ If you've modified forms:
    - Follow the [Testing](#testing) checklist above
    - Test edge cases and error scenarios
 
+4. **Pre-commit hooks run automatically** when you commit:
+   - **gitleaks** — scans staged files for accidentally committed secrets
+   - **lint-staged** — runs `tsc --noEmit` and `eslint --fix --max-warnings=0` on staged files
+   - **commitlint** — validates commit message format ([Conventional Commits](https://www.conventionalcommits.org/))
+
+   If a hook fails, fix the issue and try again. See [docs/DEVELOPMENT.md](../docs/DEVELOPMENT.md#pre-commit-hooks) for details.
+
 ### PR Description Template
 
 Use this structure for your PR description:
@@ -436,9 +421,9 @@ Add screenshots for UI changes.
 
 ### Review Process
 
-1. Maintainers will review your PR
+1. Maintainers will review your PR (targeting `develop`)
 2. Address any feedback or requested changes
-3. Once approved, your PR will be merged
+3. Once approved, your PR will be merged into `develop`
 4. Thank you for contributing! 🎉
 
 ## Areas for Contribution
