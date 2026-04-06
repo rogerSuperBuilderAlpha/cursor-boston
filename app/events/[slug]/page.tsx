@@ -236,22 +236,22 @@ export default async function EventPage({
           </div>
 
           {/* Event Info */}
-          <div className="p-8 lg:p-12 flex flex-col justify-center bg-neutral-950">
+          <div className="p-8 lg:p-12 flex flex-col justify-center bg-white dark:bg-neutral-950">
             <span className="inline-block px-3 py-1 bg-emerald-500/10 text-emerald-400 text-sm font-medium rounded-full mb-4 w-fit capitalize">
               {event.type}
             </span>
             
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-2">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-neutral-900 dark:text-white mb-2">
               {event.title}
             </h1>
             
             {event.subtitle && (
-              <p className="text-xl text-neutral-400 mb-6">{event.subtitle}</p>
+              <p className="text-xl text-neutral-600 dark:text-neutral-400 mb-6">{event.subtitle}</p>
             )}
 
             {/* Key Details */}
             <div className="space-y-4 mb-8">
-              <div className="flex items-center gap-3 text-neutral-300">
+            <div className="flex items-center gap-3 text-neutral-700 dark:text-neutral-300">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="20"
@@ -279,7 +279,7 @@ export default async function EventPage({
                 )}
               </div>
 
-              <div className="flex items-center gap-3 text-neutral-300">
+              <div className="flex items-center gap-3 text-neutral-700 dark:text-neutral-300">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="20"
@@ -300,21 +300,21 @@ export default async function EventPage({
               </div>
 
               {event.capacity && (
-                <div className="flex items-center gap-3 text-neutral-300">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="text-neutral-500"
-                    aria-hidden="true"
-                  >
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <div className="flex items-center gap-3 text-neutral-700 dark:text-neutral-300">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-neutral-500"
+                  aria-hidden="true"
+                >
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                     <circle cx="9" cy="7" r="4" />
                     <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
                     <path d="M16 3.13a4 4 0 0 1 0 7.75" />
@@ -527,22 +527,21 @@ export default async function EventPage({
           <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-8">
             Agenda
           </h2>
-          <div className="space-y-6">
-            {event.agenda.map((item, index) => (
-              <div
-                key={index}
-                className="flex gap-6 p-6 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800"
-              >
-                <div className="text-emerald-500 font-mono text-sm whitespace-nowrap">
-                  {item.time}
-                </div>
-                <div>
+          <div className="relative">
+              <div className="absolute left-3 top-0 bottom-0 w-px bg-emerald-500/30" />
+              {event.agenda.map((item, index) => (
+                <div key={index} className="relative flex gap-6 pb-8 last:pb-0">
+                  <div className="relative z-10 mt-1 w-6 h-6 rounded-full bg-emerald-500/20 border-2 border-emerald-500 shrink-0 flex items-center justify-center">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  </div>
+                  <div className="flex-1 pt-0.5">
                   <h3 className="text-foreground font-semibold mb-1">{item.title}</h3>
-                  <p className="text-neutral-500 dark:text-neutral-400">{item.description}</p>
+                  <p className="text-emerald-500 font-mono text-xs font-medium mb-1">{item.time}</p>
+                    <p className="text-neutral-500 dark:text-neutral-400">{item.description}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
         </div>
       </section>
       )}
@@ -587,17 +586,17 @@ export default async function EventPage({
 
       {/* What to Bring Section */}
       {event.whatToBring && event.whatToBring.length > 0 && (
-        <section className="py-16 px-6 bg-neutral-950 border-b border-neutral-800">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-8">
-              What to Bring
-            </h2>
+        <section className="py-16 px-6 bg-neutral-50 dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white mb-8">
+            What to Bring
+          </h2>
             <ul className="grid sm:grid-cols-2 gap-4">
               {event.whatToBring.map((item, index) => (
                 <li
-                  key={index}
-                  className="flex items-center gap-3 p-4 bg-neutral-900 rounded-lg border border-neutral-800"
-                >
+                key={index}
+                className="flex items-center gap-3 p-4 bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800"
+              >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="20"
@@ -613,7 +612,7 @@ export default async function EventPage({
                   >
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
-                  <span className="text-neutral-300">{item}</span>
+                  <span className="text-neutral-700 dark:text-neutral-300">{item}</span>
                 </li>
               ))}
             </ul>
@@ -623,11 +622,11 @@ export default async function EventPage({
 
       {/* Perks Section */}
       {event.perks && event.perks.length > 0 && (
-        <section className="py-16 px-6 border-b border-neutral-800">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-8">
-              Event Perks
-            </h2>
+        <section className="py-16 px-6 border-b border-neutral-200 dark:border-neutral-800">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white mb-8">
+            Event Perks
+          </h2>
             <div className="grid sm:grid-cols-3 gap-4">
               {event.perks.map((perk, index) => (
                 <div
@@ -651,7 +650,7 @@ export default async function EventPage({
                     <path d="M2 17l10 5 10-5" />
                     <path d="M2 12l10 5 10-5" />
                   </svg>
-                  <span className="text-white font-medium">{perk}</span>
+                  <span className="text-neutral-900 dark:text-white font-medium">{perk}</span>
                 </div>
               ))}
             </div>
@@ -661,19 +660,19 @@ export default async function EventPage({
 
       {/* FAQ Section */}
       {event.faq && event.faq.length > 0 && (
-        <section className="py-16 px-6 bg-neutral-950 border-b border-neutral-800">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-8">
-              Frequently Asked Questions
-            </h2>
+        <section className="py-16 px-6 bg-neutral-50 dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white mb-8">
+            Frequently Asked Questions
+          </h2>
             <div className="space-y-4">
               {event.faq.map((item, index) => (
                 <details
-                  key={index}
-                  className="group bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden"
-                >
+                key={index}
+                className="group bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden"
+              >
                   <summary className="flex items-center justify-between p-6 cursor-pointer list-none">
-                    <h3 className="text-white font-medium pr-4">{item.question}</h3>
+                  <h3 className="text-neutral-900 dark:text-white font-medium pr-4">{item.question}</h3>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="20"
@@ -690,7 +689,7 @@ export default async function EventPage({
                       <polyline points="6 9 12 15 18 9" />
                     </svg>
                   </summary>
-                  <div className="px-6 pb-6 text-neutral-400">
+                  <div className="px-6 pb-6 text-neutral-600 dark:text-neutral-400">
                     {item.answer}
                   </div>
                 </details>
@@ -702,11 +701,11 @@ export default async function EventPage({
 
       {/* Sponsors Section */}
       {event.sponsors && event.sponsors.length > 0 && (
-        <section className="py-16 px-6 border-b border-neutral-800">
-          <div className="max-w-6xl mx-auto text-center">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-8">
-              Sponsors
-            </h2>
+        <section className="py-16 px-6 border-b border-neutral-200 dark:border-neutral-800">
+        <div className="max-w-6xl mx-auto text-center">
+          <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white mb-8">
+            Sponsors
+          </h2>
             <div className="flex flex-wrap justify-center items-center gap-8">
               {event.sponsors.map((sponsor, index) => (
                 <a
@@ -714,7 +713,7 @@ export default async function EventPage({
                   href={sponsor.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-4 bg-neutral-900 rounded-xl border border-neutral-800 hover:border-neutral-700 transition-colors"
+                  className="p-4 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
                 >
                   <Image
                     src={sponsor.logo}
@@ -735,10 +734,10 @@ export default async function EventPage({
         <div className="max-w-3xl mx-auto text-center">
           {event.slug === "cursor-boston-hack-a-sprint-2026" ? (
             <>
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-white mb-4">
                 Ready to compete?
               </h2>
-              <p className="text-neutral-400 text-lg mb-8">
+              <p className="text-neutral-600 dark:text-neutral-400 text-lg mb-8">
                 Register on the website to lock in your leaderboard spot, then RSVP on Luma so you can get through the door.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -753,7 +752,7 @@ export default async function EventPage({
                   href={getLumaCheckoutHref(event)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2 px-8 py-4 border border-white/20 text-white/80 rounded-lg text-base font-medium hover:bg-white/10 transition-colors luma-checkout--button"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 border border-neutral-300 dark:border-white/20 text-neutral-700 dark:text-white/80 rounded-lg text-base font-medium hover:bg-neutral-100 dark:hover:bg-white/10 transition-colors luma-checkout--button"
                   data-luma-action="checkout"
                   data-luma-event-id={getLumaCheckoutEventId(event)}
                 >
@@ -764,10 +763,10 @@ export default async function EventPage({
             </>
           ) : (
             <>
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-white mb-4">
                 Ready to Join Us?
               </h2>
-              <p className="text-neutral-400 text-lg mb-8">
+              <p className="text-neutral-600 dark:text-neutral-400 text-lg mb-8">
                 Don&apos;t miss out on this event. Spots are limited!
               </p>
               <a
