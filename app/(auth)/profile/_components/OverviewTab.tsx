@@ -4,20 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { CalendarIcon, DiscordIcon, LayersIcon, PlusIcon, UserCardIcon } from "@/components/icons";
 import { EventRegistration } from "@/lib/registrations";
-
-interface TalkSubmission {
-  id: string;
-  title: string;
-  status: string;
-  submittedAt: { toDate: () => Date } | null;
-}
-
-interface ConnectedAgent {
-  id: string;
-  name: string;
-  description?: string;
-  avatarUrl?: string;
-}
+import type { TalkSubmission, ConnectedAgent } from "../_types";
 
 interface OverviewTabProps {
   registrations: EventRegistration[];

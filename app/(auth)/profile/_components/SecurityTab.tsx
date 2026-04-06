@@ -8,17 +8,11 @@ import { useGithubConnection } from "../_hooks/useGithubConnection";
 import { useGoogleConnection } from "../_hooks/useGoogleConnection";
 import { useMfaEnrollment } from "../_hooks/useMfaEnrollment";
 import { useEmailManagement } from "../_hooks/useEmailManagement";
+import type { ConnectedAgent } from "../_types";
 
 interface AdditionalEmail {
   email: string;
   verified: boolean;
-}
-
-interface ConnectedAgent {
-  id: string;
-  name: string;
-  description?: string;
-  avatarUrl?: string;
 }
 
 interface SecurityTabProps {
