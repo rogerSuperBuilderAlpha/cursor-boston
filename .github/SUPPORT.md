@@ -51,9 +51,8 @@ Visit our website for information about the community and upcoming events.
    - Post in the appropriate channel
    - Provide context about what you're trying to do
 
-3. **Open a GitHub Discussion**
-   - Use [GitHub Discussions](https://github.com/rogerSuperBuilderAlpha/cursor-boston/discussions) for longer-form questions
-   - Great for architectural discussions or feature ideas
+3. **Longer-form or architectural topics**
+   - GitHub Discussions is **not** enabled for this repository. Use **[Discord](https://discord.gg/Wsncg8YYqc)** for open-ended discussion, or open a **[feature request issue](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/new?template=feature_request.md)** when you want a tracked proposal on GitHub.
 
 ### For Bug Reports
 
@@ -71,7 +70,7 @@ Found a bug? Please report it!
 
 Have an idea for a new feature?
 
-1. **Check existing issues and discussions** to see if it's been proposed
+1. **Check existing issues** to see if it's been proposed
 2. **Use the feature request template** when [creating a new issue](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/new?template=feature_request.md)
 3. **Include**:
    - Clear description of the feature
@@ -112,6 +111,8 @@ Interested in contributing to the project?
 | [DCO](DCO.md) | Developer Certificate of Origin |
 | [TRADEMARK](TRADEMARK.md) | Brand usage policy |
 | [CHANGELOG](../CHANGELOG.md) | Version history |
+| [Documentation index](../docs/README.md) | Which doc to read first |
+| [Supply chain & security automation](../docs/SUPPLY_CHAIN.md) | CI security signals and dependency tooling |
 
 ## Contact
 
@@ -153,7 +154,6 @@ We're a volunteer-run community project. Here are our typical response times:
 ### Project Links
 - [GitHub Repository](https://github.com/rogerSuperBuilderAlpha/cursor-boston)
 - [Issue Tracker](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues)
-- [Discussions](https://github.com/rogerSuperBuilderAlpha/cursor-boston/discussions)
 - [Project Board](https://github.com/rogerSuperBuilderAlpha/cursor-boston/projects)
 
 ### Learning Resources
