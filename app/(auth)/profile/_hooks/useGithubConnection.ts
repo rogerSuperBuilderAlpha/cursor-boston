@@ -14,7 +14,12 @@ export interface GithubInfo {
   html_url: string;
 }
 
-export function useGithubConnection(user: User | null, userProfileGithub?: GithubInfo | null, userProvider?: string) {
+export function useGithubConnection(
+  user: User | null,
+  userProfileGithub?: GithubInfo | null,
+  userProvider?: string,
+  refreshUserProfile?: () => Promise<void>
+) {
   const router = useRouter();
   const [connecting, setConnecting] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
@@ -69,6 +74,24 @@ export function useGithubConnection(user: User | null, userProfileGithub?: Githu
       await updateDoc(userRef, {
         github: { ...githubUserInfo, connectedAt: serverTimestamp() },
       });
+
+      try {
+        const token = await user.getIdToken();
+        const response = await fetch("/api/profile/github/reconcile", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          setError("GitHub connected, but merged PR history could not be synced yet.");
+        }
+      } catch {
+        setError("GitHub connected, but merged PR history could not be synced yet.");
+      }
+
+      await refreshUserProfile?.();
       setConnectedInfo(githubUserInfo);
       setWasDisconnected(false);
       router.replace("/profile", { scroll: false });

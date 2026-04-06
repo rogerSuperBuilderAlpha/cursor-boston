@@ -12,7 +12,7 @@ import {
 import type { User } from "firebase/auth";
 import type { TalkSubmission, ConnectedAgent } from "../_types";
 
-export function useProfileData(user: User | null) {
+export function useProfileData(user: User | null, githubLogin?: string | null) {
   const [stats, setStats] = useState<UserStats | null>(null);
   const [registrations, setRegistrations] = useState<EventRegistration[]>([]);
   const [talkSubmissions, setTalkSubmissions] = useState<TalkSubmission[]>([]);
@@ -28,10 +28,28 @@ export function useProfileData(user: User | null) {
     }
     (async () => {
       try {
-        const [userStats, userRegistrations] = await Promise.all([
+        let [userStats, userRegistrations] = await Promise.all([
           getUserStats(user.uid),
           getUserRegistrations(user.uid),
         ]);
+
+        if (githubLogin && userStats.pullRequestsCount === 0) {
+          try {
+            const response = await fetch("/api/profile/github/reconcile", {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${await user.getIdToken()}`,
+              },
+            });
+
+            if (response.ok) {
+              userStats = await getUserStats(user.uid);
+            }
+          } catch (reconcileError) {
+            console.error("Error reconciling GitHub PR history:", reconcileError);
+          }
+        }
+
         setStats(userStats);
         setRegistrations(userRegistrations);
 
@@ -51,7 +69,7 @@ export function useProfileData(user: User | null) {
         setLoadingData(false);
       }
     })();
-  }, [user]);
+  }, [user, githubLogin]);
 
   // Fetch connected agents
   useEffect(() => {

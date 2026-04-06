@@ -70,12 +70,17 @@ export function ProfileProvider({
   } = useAuth();
 
   // Data hooks
-  const data = useProfileData(user);
+  const data = useProfileData(user, userProfile?.github?.login);
   const badges = useBadges(user, userProfile);
 
   // Connection hooks
   const discord = useDiscordConnection(user, userProfile?.discord);
-  const github = useGithubConnection(user, userProfile?.github, userProfile?.provider);
+  const github = useGithubConnection(
+    user,
+    userProfile?.github,
+    userProfile?.provider,
+    refreshUserProfile
+  );
   const google = useGoogleConnection(user);
   const mfa = useMfaEnrollment(user);
   const emailMgmt = useEmailManagement({

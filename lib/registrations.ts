@@ -117,10 +117,15 @@ export async function getUserStats(userId: string): Promise<UserStats> {
     (doc) => doc.data().status === "completed"
   ).length;
 
-  // Get PR count from user profile
-  const userRef = doc(db, "users", userId);
-  const userSnap = await getDoc(userRef);
-  const pullRequestsCount = userSnap.data()?.pullRequestsCount || 0;
+  // Count trusted merged PR records instead of relying only on a cached user field.
+  const pullRequestsRef = collection(db, "pullRequests");
+  const pullRequestsQuery = query(
+    pullRequestsRef,
+    where("userId", "==", userId),
+    where("state", "==", "merged")
+  );
+  const pullRequestsSnapshot = await getDocs(pullRequestsQuery);
+  const pullRequestsCount = pullRequestsSnapshot.size;
 
   return {
     eventsRegistered,

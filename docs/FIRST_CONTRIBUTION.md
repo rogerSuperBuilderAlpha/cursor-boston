@@ -93,6 +93,16 @@ type(scope): short description
 
 ## Step 6: Push and Open a Pull Request
 
+Before you push or open the PR, rebase your branch onto the latest `develop` so the diff stays clean and review only includes your work:
+
+```bash
+git fetch upstream
+git checkout docs/fix-typo-in-readme
+git rebase upstream/develop
+```
+
+If you already opened the PR and `develop` moved, rebase again and push the updated branch to the same PR.
+
 ```bash
 git push origin docs/fix-typo-in-readme
 ```
@@ -124,6 +134,7 @@ Then on GitHub:
 |---------|-----|
 | Forgot `-s` on commit | `git commit --amend -s` to add sign-off to the last commit |
 | PR targets `main` instead of `develop` | Edit the PR on GitHub and change the base branch to `develop` |
+| PR includes unrelated commits from an outdated branch | `git fetch upstream && git checkout your-branch && git rebase upstream/develop`, then push the rebased branch |
 | Pre-commit hook rejects commit | Run `npm run lint` and `npm run type-check` to see errors, fix them, and try again |
 | Commit message rejected by commitlint | Use the format `type(scope): description` — see the types table above |
 | Merge conflicts with `develop` | `git checkout develop && git pull upstream develop && git checkout your-branch && git rebase develop` |
