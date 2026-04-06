@@ -22,6 +22,28 @@ export function getInitials(name: string | null | undefined): string {
 }
 
 /**
+ * Get a stable display name from a user record.
+ * Falls back from name -> local-part of email -> "Anonymous".
+ */
+export function getDisplayName(user: {
+  name?: string | null;
+  email?: string | null;
+}): string {
+  const trimmedName = user.name?.trim();
+  if (trimmedName) return trimmedName;
+
+  const trimmedEmail = user.email?.trim();
+  if (!trimmedEmail) return "Anonymous";
+
+  const atIndex = trimmedEmail.indexOf("@");
+  if (atIndex > 0) {
+    return trimmedEmail.slice(0, atIndex);
+  }
+
+  return "Anonymous";
+}
+
+/**
  * Format a Firestore timestamp as a relative date string.
  * Returns "just now", "Xm ago", "Xh ago", "Xd ago", or formatted date.
  */
