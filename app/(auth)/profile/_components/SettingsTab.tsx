@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { FormInput, FormTextarea, ToggleSwitch } from "@/components/ui/FormField";
+import { useAuth } from "@/contexts/AuthContext";
 import { ProfileSettings } from "../_hooks/useProfileSettings";
 
 interface SettingsTabProps {
@@ -15,14 +16,20 @@ interface SettingsTabProps {
 }
 
 function useEmailSubscription() {
+  const { user } = useAuth();
   const [onList, setOnList] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState(false);
 
   useEffect(() => {
+    if (!user) return;
     let cancelled = false;
-    fetch("/api/profile/subscription")
+    user.getIdToken().then((token) =>
+      fetch("/api/profile/subscription", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+    )
       .then((r) => r.json())
       .then((data: { onList?: boolean; subscribed?: boolean }) => {
         if (cancelled) return;
@@ -32,16 +39,21 @@ function useEmailSubscription() {
       .catch(() => {})
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, []);
+  }, [user]);
 
   const toggle = useCallback(async (value: boolean) => {
+    if (!user) return;
     setToggling(true);
     const prev = subscribed;
     setSubscribed(value);
     try {
+      const token = await user.getIdToken();
       const res = await fetch("/api/profile/subscription", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ subscribed: value }),
       });
       if (!res.ok) setSubscribed(prev);
@@ -50,7 +62,7 @@ function useEmailSubscription() {
     } finally {
       setToggling(false);
     }
-  }, [subscribed]);
+  }, [user, subscribed]);
 
   return { onList, subscribed, loading, toggling, toggle };
 }
