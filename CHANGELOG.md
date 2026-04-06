@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `docs/RELEASING.md` maintainer release runbook
 - `docs/SUPPLY_CHAIN.md` overview of security and dependency automation
 - `public/.well-known/security.txt` for standardized security contact discovery
-- GitHub Actions: DCO check, Dependency Review, OpenSSF Scorecard (CodeQL via GitHub default setup; custom workflow removed to avoid SARIF conflict)
+- GitHub Actions: DCO check, Dependency Review, OpenSSF Scorecard
 - `.github/ISSUE_TEMPLATE/config.yml` with contact links (Discord, security policy, dev guide)
 
 ### Changed
