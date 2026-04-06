@@ -278,5 +278,10 @@ service cloud.firestore {
     match /hackathonEventSignups/{docId} {
       allow read, write: if false;
     }
+
+    // Consolidated event contact list — Admin SDK only
+    match /eventContacts/{docId} {
+      allow read, write: if false;
+    }
   }
 }
