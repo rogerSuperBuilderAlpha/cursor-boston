@@ -71,8 +71,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json().catch(() => ({}));
-    const ids = normalizeIds((body as { submissionIds?: unknown }).submissionIds);
+    let body: { submissionIds?: unknown };
+    try {
+      body = (await request.json()) as { submissionIds?: unknown };
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
+    }
+    const ids = normalizeIds(body.submissionIds);
     if (!ids || ids.length !== 6) {
       return NextResponse.json(
         { error: "Submit exactly 6 distinct project picks." },

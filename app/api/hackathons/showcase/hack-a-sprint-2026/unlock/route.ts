@@ -67,8 +67,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json().catch(() => ({}));
-    const provided = String((body as { passcode?: string }).passcode ?? "").trim();
+    let body: { passcode?: string };
+    try {
+      body = (await request.json()) as { passcode?: string };
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
+    }
+    const provided = String(body.passcode ?? "").trim();
 
     const uidRate = checkRateLimit(
       `hack-asprint-unlock-uid:${user.uid}`,
