@@ -27,6 +27,14 @@ function makeRequest(body: Record<string, unknown>) {
   });
 }
 
+function makeInvalidJsonRequest() {
+  return new NextRequest("http://localhost/api/live/session", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: "{",
+  });
+}
+
 describe("POST /api/live/session", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -161,6 +169,21 @@ describe("POST /api/live/session", () => {
 
     expect(res.status).toBe(400);
     expect(body.error).toContain("Title must be a string");
+    expect(mockCreateLiveSessionServer).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 for invalid JSON", async () => {
+    mockGetVerifiedUser.mockResolvedValue({
+      uid: "admin-1",
+      email: "admin@example.com",
+      isAdmin: true,
+    });
+
+    const res = await POST(makeInvalidJsonRequest());
+    const body = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(body).toEqual({ error: "Invalid JSON in request body" });
     expect(mockCreateLiveSessionServer).not.toHaveBeenCalled();
   });
 });

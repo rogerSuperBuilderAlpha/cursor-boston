@@ -41,7 +41,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const body = (await request.json().catch(() => ({}))) as { title?: unknown };
+    let body: { title?: unknown };
+    try {
+      body = (await request.json()) as { title?: unknown };
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
+    }
     const title = normalizeSessionTitle(body.title);
 
     if (!title) {
