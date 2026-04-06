@@ -30,6 +30,6 @@ jobs:
                 '- **Base branch:** PRs should target `develop` (the default). Production releases go through a separate PR from `develop` → `main`.',
                 '- **CI:** If GitHub Actions does not run yet, a maintainer may need to click **Approve and run** for first-time contributors (repository **Actions** settings allow fork workflows).',
                 '',
-                'Preview deployments are provided by the Vercel GitHub integration when checks run.',
+                '**Vercel:** Production deploys run when changes merge to `main` — not on every PR push.',
               ].join('\n'),
             });

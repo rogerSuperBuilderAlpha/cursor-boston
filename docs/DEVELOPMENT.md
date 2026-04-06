@@ -146,7 +146,7 @@ git commit -s -m "fix(auth): handle expired verification tokens"
 git commit -s -m "docs(readme): update quick start instructions"
 ```
 
-> **Important:** The `-s` flag is required on all commits (Developer Certificate of Origin). See [DCO](.github/DCO.md) for details.
+> **Important:** The `-s` flag is required on all commits (Developer Certificate of Origin). See [DCO](../.github/DCO.md) for details.
 
 ### When a hook fails
 
