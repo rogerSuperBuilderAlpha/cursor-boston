@@ -3,12 +3,12 @@ import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { getCurrentVirtualHackathonId } from "@/lib/hackathons";
-import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { checkRateLimit, getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const HACKATHON_RATE_LIMIT = { windowMs: 60 * 1000, maxRequests: 20 };
+const HACKATHON_RATE_LIMIT = rateLimitConfigs.hackathonAction;
 
 /**
  * POST /api/hackathons/pool/join
