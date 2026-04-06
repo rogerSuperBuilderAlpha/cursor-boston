@@ -14,7 +14,7 @@ A read-only clone of upstream is fine for browsing or local experimentation, but
 
 ## Branching model (`develop` and `main`)
 
-- **`develop`** is the **default branch** on GitHub. Open **all** contributor pull requests against `develop`. That branch is the integration line: reviews, CI, and Vercel **preview** deploys (when the integration is connected).
+- **`develop`** is the **default branch** on GitHub. Open **all** contributor pull requests against `develop`. That branch is the integration line: **reviews and GitHub Actions CI** (lint, tests, etc.). **Vercel production deploys run only when changes merge to `main`** — we do not deploy every PR commit to Vercel (see [docs/VERCEL.md](../docs/VERCEL.md)).
 - **`main`** tracks **production**. Changes reach `main` only through a **release PR** from `develop` after maintainers batch and review what should ship. That keeps production history and deployments controlled.
 - After a release merge, maintainers sync **`develop`** with **`main`** so both stay aligned.
 

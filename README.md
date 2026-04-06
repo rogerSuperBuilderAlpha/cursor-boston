@@ -136,6 +136,7 @@ Each feature is **fully isolated** — new routes, new Firestore collections, no
 - [Security Policy](.github/SECURITY.md) - How to report security vulnerabilities
 - [Accessibility](.github/ACCESSIBILITY.md) - Our accessibility commitment and WCAG targets
 - [Changelog](CHANGELOG.md) - Version history
+- [Vercel deployments](docs/VERCEL.md) - Production-only deploys (PRs do not trigger Vercel builds)
 - [API Reference](docs/API.md) - Full list of API endpoints
 
 ---
