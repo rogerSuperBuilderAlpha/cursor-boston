@@ -78,6 +78,101 @@
         "A willingness to build with new tools"
       ],
       "featured": true
+    },
+    {
+      "id": "cursor-boston-aic-open-source-workshop-2026",
+      "slug": "cursor-boston-aic-open-source-workshop-2026",
+      "title": "Cursor Boston/AIC BTW Open Source Workshop",
+      "subtitle": "Hands-on open source contributions with Cursor as your AI co-pilot — co-hosted with AIC",
+      "date": "2026-05-30",
+      "time": "12:00 PM – 5:00 PM ET",
+      "location": "Boston, MA",
+      "venue": {
+        "name": "TBD (exact address after approval)",
+        "address": "Register on Luma to see the venue address after you're approved.",
+        "mapUrl": null
+      },
+      "type": "workshop",
+      "description": "Open Source Drop-In Workshop co-hosted by Cursor Boston and AIC. A hands-on half-day session with two tracks: contribute to the Cursor Boston repo (beginner-friendly) or tackle curated impactful open source projects using Cursor as your AI co-pilot. Walk away with merged PRs, Cursor credits, and practical open source skills. Saturday May 30 in Boston — register on Luma; approval required.",
+      "longDescription": "We're thrilled to announce the Open Source Drop-In Workshop, co-hosted by Cursor Boston and AIC (AI Community).\n\nThis is a hands-on half-day session designed to teach you how to contribute to real open source projects using Cursor as your AI co-pilot. Whether you've never opened a pull request or you're a seasoned contributor looking for high-impact projects, there's a track for you.\n\nTwo Tracks\n\nTrack A — Cursor Boston Repo (Beginner-Friendly): Learn the fundamentals of open source contribution by working directly on the Cursor Boston community repository. Mentors will guide you through forking, branching, making changes, and opening your first PR.\n\nTrack B — Curated Impactful Projects: For more experienced developers, we've hand-picked a set of impactful open source projects with beginner-friendly issues. Use Cursor's AI capabilities to understand unfamiliar codebases quickly and ship meaningful contributions.\n\nWhat You'll Walk Away With\n\nMerged pull requests on real open source projects, Cursor credits, and practical skills you can use immediately. This isn't a lecture — it's a working session where you'll ship real code.\n\nHosted by Roger Hunt, Ananya Shah, Janna, Kanal Patel, and Jason Morris.",
+      "lumaCheckoutEventId": "evt-2erXQCohWrtPWp9",
+      "lumaEmbedSrc": "https://luma.com/embed/event/evt-2erXQCohWrtPWp9/simple",
+      "image": "/cursor-boston-logo.png",
+      "lumaUrl": "https://luma.com/w4gvg7fl",
+      "lumaEventId": "w4gvg7fl",
+      "registrationRequired": true,
+      "perks": [
+        "Cursor credits for merged PRs",
+        "Merged PRs on real open source projects",
+        "Mentored contribution experience"
+      ],
+      "topics": [
+        "Open Source Contribution",
+        "AI-Assisted Coding with Cursor",
+        "Git & GitHub Workflows",
+        "Two Tracks (Beginner & Advanced)",
+        "Hands-On PR Workshops"
+      ],
+      "agenda": [
+        {
+          "time": "12:00 PM",
+          "title": "Doors Open & Setup",
+          "description": "Arrive, get settled, install Cursor if needed, and meet fellow contributors"
+        },
+        {
+          "time": "12:30 PM",
+          "title": "Welcome & Track Overview",
+          "description": "Introduction to open source contribution, overview of Track A (Cursor Boston repo) and Track B (curated projects), and how to pick your track"
+        },
+        {
+          "time": "1:00 PM – 4:00 PM",
+          "title": "Hands-On Contribution Session",
+          "description": "Work on your chosen track with mentor support. Fork repos, pick issues, write code with Cursor as your AI co-pilot, and open pull requests"
+        },
+        {
+          "time": "4:00 PM – 4:30 PM",
+          "title": "PR Review & Merging",
+          "description": "Get your pull requests reviewed and merged. Celebrate your contributions with the group"
+        },
+        {
+          "time": "4:30 PM – 5:00 PM",
+          "title": "Wrap-Up & Networking",
+          "description": "Share what you built, exchange contacts, and connect with the Cursor Boston and AIC communities"
+        }
+      ],
+      "faq": [
+        {
+          "question": "Do I need open source experience?",
+          "answer": "Not at all! Track A is specifically designed for beginners who have never contributed to open source. Mentors will walk you through every step, from forking a repo to opening your first pull request."
+        },
+        {
+          "question": "What are the two tracks?",
+          "answer": "Track A focuses on contributing to the Cursor Boston community repository — perfect for beginners. Track B is for more experienced developers who want to contribute to curated, impactful open source projects. You can choose your track when you arrive."
+        },
+        {
+          "question": "What do I get for participating?",
+          "answer": "You'll walk away with merged pull requests on real open source projects, Cursor credits, and practical skills for contributing to open source using AI-powered tools."
+        },
+        {
+          "question": "Where is the venue?",
+          "answer": "The venue is TBD. The exact address will appear on Luma after your registration is approved."
+        },
+        {
+          "question": "Will food be provided?",
+          "answer": "Details on food and refreshments will be announced closer to the event date. Check the Luma page for updates."
+        },
+        {
+          "question": "Who is hosting this event?",
+          "answer": "This event is co-hosted by Cursor Boston and AIC (AI Community). Hosts include Roger Hunt, Ananya Shah, Janna, Kanal Patel, and Jason Morris."
+        }
+      ],
+      "whatToBring": [
+        "Laptop with Cursor installed",
+        "GitHub account (signed in and ready)",
+        "Charger",
+        "A willingness to contribute to open source"
+      ],
+      "featured": false
     }
   ],
   "past": [
