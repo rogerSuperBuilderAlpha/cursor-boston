@@ -56,8 +56,18 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
 
     // Get session ID from body
-    const body = await request.json().catch(() => ({}));
-    const sessionId = sanitizeDocId(body.sessionId);
+    let body: Record<string, unknown>;
+    try {
+      body = (await request.json()) as Record<string, unknown>;
+    } catch {
+      return NextResponse.json(
+        { success: false, error: "Invalid JSON in request body" },
+        { status: 400 }
+      );
+    }
+    const sessionId = sanitizeDocId(
+      typeof body.sessionId === "string" ? body.sessionId : ""
+    );
     if (!sessionId) {
       return NextResponse.json(
         { success: false, error: "Session ID is required" },

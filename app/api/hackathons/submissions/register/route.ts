@@ -53,7 +53,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    const body = await request.json().catch(() => ({}));
+    let body: Record<string, unknown>;
+    try {
+      body = (await request.json()) as Record<string, unknown>;
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
+    }
     const repoUrl = (body.repoUrl as string)?.trim();
     const hackathonId = (body.hackathonId as string) || getCurrentVirtualHackathonId();
 
