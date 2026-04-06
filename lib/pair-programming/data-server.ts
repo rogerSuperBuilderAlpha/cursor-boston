@@ -122,7 +122,10 @@ export async function respondToPairRequestServer(
       throw new PairRequestNotFoundError();
     }
 
-    const requestData = requestDoc.data()!;
+    const requestData = requestDoc.data();
+    if (!requestData) {
+      throw new PairRequestNotFoundError();
+    }
 
     if (requestData.toUserId !== userId) {
       throw new PairRequestUnauthorizedError();

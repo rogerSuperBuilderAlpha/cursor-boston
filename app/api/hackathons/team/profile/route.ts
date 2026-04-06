@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
-import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { checkRateLimit, getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
 import { sanitizeName, sanitizeUrl, sanitizeDocId } from "@/lib/sanitize";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const HACKATHON_RATE_LIMIT = { windowMs: 60 * 1000, maxRequests: 20 };
+const HACKATHON_RATE_LIMIT = rateLimitConfigs.hackathonAction;
 
 /**
  * PATCH /api/hackathons/team/profile
@@ -52,7 +52,10 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Team not found" }, { status: 404 });
     }
 
-    const team = teamSnap.data()!;
+    const team = teamSnap.data();
+    if (!team) {
+      return NextResponse.json({ error: "Team not found" }, { status: 404 });
+    }
     const memberIds: string[] = team.memberIds || [];
     if (!memberIds.includes(user.uid)) {
       return NextResponse.json({ error: "You are not a member of this team" }, { status: 403 });

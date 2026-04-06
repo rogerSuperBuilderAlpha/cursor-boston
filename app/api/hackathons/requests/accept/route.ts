@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
-import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { checkRateLimit, getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
 import { sanitizeDocId } from "@/lib/sanitize";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const HACKATHON_RATE_LIMIT = { windowMs: 60 * 1000, maxRequests: 20 };
+const HACKATHON_RATE_LIMIT = rateLimitConfigs.hackathonAction;
 
 /**
  * POST /api/hackathons/requests/accept
@@ -51,7 +51,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Request not found" }, { status: 404 });
     }
 
-    const reqData = reqSnap.data()!;
+    const reqData = reqSnap.data();
+    if (!reqData) {
+      return NextResponse.json({ error: "Request not found" }, { status: 404 });
+    }
     const fromUserId = reqData.fromUserId;
     const teamId = reqData.teamId;
     if (reqData.status !== "pending") {
@@ -64,7 +67,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Team not found" }, { status: 404 });
     }
 
-    const team = teamSnap.data()!;
+    const team = teamSnap.data();
+    if (!team) {
+      return NextResponse.json({ error: "Team not found" }, { status: 404 });
+    }
     const memberIds: string[] = team.memberIds || [];
     if (!memberIds.includes(user.uid)) {
       return NextResponse.json({ error: "You are not a member of this team" }, { status: 403 });

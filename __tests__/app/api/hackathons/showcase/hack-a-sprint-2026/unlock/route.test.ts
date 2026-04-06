@@ -8,10 +8,14 @@ import { getVerifiedUser } from "@/lib/server-auth";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getHackASprint2026Phase } from "@/lib/hackathon-asprint-2026-schedule";
 
-jest.mock("@/lib/rate-limit", () => ({
-  getClientIdentifier: jest.fn(() => "test-ip"),
-  checkRateLimit: jest.fn(() => ({ success: true, retryAfter: 0 })),
-}));
+jest.mock("@/lib/rate-limit", () => {
+  const actual = jest.requireActual("@/lib/rate-limit");
+  return {
+    ...actual,
+    getClientIdentifier: jest.fn(() => "test-ip"),
+    checkRateLimit: jest.fn(() => ({ success: true, retryAfter: 0 })),
+  };
+});
 
 jest.mock("@/lib/server-auth", () => ({
   getVerifiedUser: jest.fn(),

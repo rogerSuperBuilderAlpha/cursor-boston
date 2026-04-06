@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
-import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { checkRateLimit, getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
 import { sanitizeDocId } from "@/lib/sanitize";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const HACKATHON_RATE_LIMIT = { windowMs: 60 * 1000, maxRequests: 20 };
+const HACKATHON_RATE_LIMIT = rateLimitConfigs.hackathonAction;
 
 /**
  * POST /api/hackathons/invites/accept
@@ -51,7 +51,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invite not found" }, { status: 404 });
     }
 
-    const invite = inviteSnap.data()!;
+    const invite = inviteSnap.data();
+    if (!invite) {
+      return NextResponse.json({ error: "Invite not found" }, { status: 404 });
+    }
     if (invite.toUserId !== user.uid) {
       return NextResponse.json({ error: "Not your invite" }, { status: 403 });
     }
@@ -65,7 +68,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Team not found" }, { status: 404 });
     }
 
-    const team = teamSnap.data()!;
+    const team = teamSnap.data();
+    if (!team) {
+      return NextResponse.json({ error: "Team not found" }, { status: 404 });
+    }
     const memberIds: string[] = team.memberIds || [];
     if (memberIds.length >= 3) {
       return NextResponse.json({ error: "Team is full" }, { status: 400 });

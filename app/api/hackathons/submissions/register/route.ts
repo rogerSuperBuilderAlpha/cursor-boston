@@ -3,13 +3,13 @@ import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { getCurrentVirtualHackathonId, getVirtualMonthStartEndUtc, isVirtualHackathonId } from "@/lib/hackathons";
-import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { checkRateLimit, getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-const HACKATHON_RATE_LIMIT = { windowMs: 60 * 1000, maxRequests: 10 };
+const HACKATHON_RATE_LIMIT = rateLimitConfigs.hackathonMutation;
 
 /**
  * Parse repo URL to owner/repo (e.g. https://github.com/owner/repo -> owner/repo).
