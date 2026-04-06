@@ -37,12 +37,13 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://embed.lu.ma",
+              // Firebase/Google OAuth popup flows load Google-hosted scripts.
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://embed.lu.ma https://apis.google.com https://accounts.google.com",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https://firebasestorage.googleapis.com https://*.googleusercontent.com https://lh3.googleusercontent.com https://avatars.githubusercontent.com https://*.cartocdn.com https://unpkg.com",
               "font-src 'self'",
-              "connect-src 'self' https://*.firebaseio.com https://*.firebaseapp.com https://*.googleapis.com https://*.cartocdn.com https://unpkg.com",
-              "frame-src https://lu.ma https://luma.com",
+              "connect-src 'self' https://*.firebaseio.com https://*.firebaseapp.com https://*.googleapis.com https://accounts.google.com https://*.cartocdn.com https://unpkg.com",
+              "frame-src https://lu.ma https://luma.com https://accounts.google.com https://*.firebaseapp.com",
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",
