@@ -37,10 +37,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    const { inviteId } = await request.json().catch(() => ({}));
+    let body: { inviteId?: unknown };
+    try {
+      body = (await request.json()) as { inviteId?: unknown };
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
+    }
+    const { inviteId } = body;
     
     // Validate and sanitize inviteId
-    const sanitizedInviteId = sanitizeDocId(inviteId);
+    const sanitizedInviteId = sanitizeDocId(typeof inviteId === "string" ? inviteId : "");
     if (!sanitizedInviteId) {
       return NextResponse.json({ error: "Invalid inviteId format" }, { status: 400 });
     }
