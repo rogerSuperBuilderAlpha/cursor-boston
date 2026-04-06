@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { getCurrentVirtualHackathonId } from "@/lib/hackathons";
-import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { checkRateLimit, getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const HACKATHON_RATE_LIMIT = { windowMs: 60 * 1000, maxRequests: 30 };
+const HACKATHON_RATE_LIMIT = rateLimitConfigs.hackathonEligibility;
 
 /**
  * GET /api/hackathons/eligibility

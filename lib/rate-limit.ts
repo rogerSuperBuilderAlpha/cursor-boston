@@ -195,4 +195,45 @@ export const rateLimitConfigs = {
     windowMs: 60 * 1000, // 1 minute
     maxRequests: 100, // 100 requests per minute
   },
+  // Strict rate limit for hackathon mutations that change team or submission state.
+  hackathonMutation: {
+    windowMs: 60 * 1000, // 1 minute
+    maxRequests: 10, // 10 requests per minute
+  },
+  // Standard rate limit for hackathon pool, invite, request, and team profile actions.
+  hackathonAction: {
+    windowMs: 60 * 1000, // 1 minute
+    maxRequests: 20, // 20 requests per minute
+  },
+  // Eligibility checks are read-heavy but still authenticated.
+  hackathonEligibility: {
+    windowMs: 60 * 1000, // 1 minute
+    maxRequests: 30, // 30 requests per minute
+  },
+  // Event signup is used by GET/POST/DELETE on the same endpoint.
+  hackathonEventSignup: {
+    windowMs: 60 * 1000, // 1 minute
+    maxRequests: 40, // 40 requests per minute
+  },
+  // Showcase-specific presets intentionally remain distinct from other hackathon flows.
+  hackathonShowcaseAiScore: {
+    windowMs: 60 * 1000, // 1 minute
+    maxRequests: 30, // 30 requests per minute
+  },
+  hackathonShowcaseJudgeScore: {
+    windowMs: 60 * 1000, // 1 minute
+    maxRequests: 40, // 40 requests per minute
+  },
+  hackathonShowcaseUnlock: {
+    windowMs: 60 * 1000, // 1 minute
+    maxRequests: 20, // 20 requests per minute
+  },
+  hackathonShowcaseUnlockAttempts: {
+    windowMs: 5 * 60 * 1000, // 5 minutes
+    maxRequests: 15, // 15 attempts per 5 minutes
+  },
+  hackathonShowcaseVote: {
+    windowMs: 60 * 1000, // 1 minute
+    maxRequests: 30, // 30 requests per minute
+  },
 };
