@@ -33,11 +33,20 @@ export async function POST(
     }
 
     const { sessionId } = await context.params;
-    const body = (await request.json().catch(() => ({}))) as {
+    let body: {
       action?: unknown;
       entryId?: unknown;
       targetIndex?: unknown;
     };
+    try {
+      body = (await request.json()) as {
+        action?: unknown;
+        entryId?: unknown;
+        targetIndex?: unknown;
+      };
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
+    }
 
     if (!VALID_ACTIONS.includes(body.action as LiveSessionControlAction)) {
       return NextResponse.json({ error: "Invalid action" }, { status: 400 });

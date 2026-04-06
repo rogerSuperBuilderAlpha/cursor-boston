@@ -37,11 +37,16 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    const body = await request.json().catch(() => ({}));
+    let body: Record<string, unknown>;
+    try {
+      body = (await request.json()) as Record<string, unknown>;
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
+    }
     const { teamId, name, logoUrl } = body;
     
     // Validate and sanitize teamId
-    const sanitizedTeamId = sanitizeDocId(teamId);
+    const sanitizedTeamId = sanitizeDocId(typeof teamId === "string" ? teamId : "");
     if (!sanitizedTeamId) {
       return NextResponse.json({ error: "Invalid teamId format" }, { status: 400 });
     }

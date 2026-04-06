@@ -214,8 +214,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    const body = await request.json().catch(() => ({}));
-    const sanitizedProjectId = sanitizeDocId(body.projectId);
+    let body: Record<string, unknown>;
+    try {
+      body = (await request.json()) as Record<string, unknown>;
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
+    }
+    const sanitizedProjectId = sanitizeDocId(
+      typeof body.projectId === "string" ? body.projectId : ""
+    );
     if (!sanitizedProjectId) {
       return NextResponse.json({ error: "Invalid projectId" }, { status: 400 });
     }

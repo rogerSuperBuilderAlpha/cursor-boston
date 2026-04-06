@@ -30,13 +30,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const body = await request.json().catch(() => ({}));
+    let body: { submissionId?: string; aiScore?: number };
+    try {
+      body = (await request.json()) as { submissionId?: string; aiScore?: number };
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
+    }
     const submissionId = String(
-      (body as { submissionId?: string }).submissionId ?? ""
+      body.submissionId ?? ""
     )
       .trim()
       .toLowerCase();
-    const aiScore = Number((body as { aiScore?: number }).aiScore);
+    const aiScore = Number(body.aiScore);
 
     if (!submissionId || !Number.isInteger(aiScore) || aiScore < 1 || aiScore > 10) {
       return NextResponse.json(
