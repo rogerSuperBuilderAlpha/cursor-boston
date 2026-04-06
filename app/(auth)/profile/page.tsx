@@ -5,18 +5,15 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
-import type { Tab } from "./_types";
-import { TAB_LABELS } from "./_types";
 import { useOAuthCallbacks } from "./_hooks/useOAuthCallbacks";
 import { ProfileProvider, useProfileContext } from "./_contexts/ProfileContext";
 
 import { ProfileHeader } from "./_components/ProfileHeader";
+import { OnboardingChecklist } from "./_components/OnboardingChecklist";
+import { ConnectionsSection } from "./_components/ConnectionsSection";
 import { StatsGrid } from "./_components/StatsGrid";
 import { EarnedBadgesSection } from "./_components/EarnedBadgesSection";
-import { ProfileTabs } from "./_components/ProfileTabs";
-import { OverviewTab } from "./_components/OverviewTab";
-import { EventsTab } from "./_components/EventsTab";
-import { TalksTab } from "./_components/TalksTab";
+import { ActivitySection } from "./_components/ActivitySection";
 import { SecurityTab } from "./_components/SecurityTab";
 import { SettingsTab } from "./_components/SettingsTab";
 import { EditProfileModal } from "./_components/EditProfileModal";
@@ -26,7 +23,7 @@ function ProfilePageContent() {
   const {
     user,
     userProfile,
-    data: { registrations, talkSubmissions, connectedAgents, loadingData, loadingAgents },
+    data: { connectedAgents, loadingAgents },
     discord,
     github,
     google,
@@ -38,11 +35,10 @@ function ProfilePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const initialTab = (searchParams.get("tab") as Tab) || "overview";
-  const [activeTab, setActiveTab] = useState<Tab>(
-    TAB_LABELS.some((t) => t.id === initialTab) ? initialTab : "overview"
-  );
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const initialSection = searchParams.get("section");
+  const [settingsOpen, setSettingsOpen] = useState(initialSection === "settings");
+  const [securityOpen, setSecurityOpen] = useState(initialSection === "security");
 
   // Google reconnection reset
   useEffect(() => {
@@ -61,61 +57,81 @@ function ProfilePageContent() {
     github,
     email: ctx.email,
     refreshUserProfile: ctx.refreshUserProfile,
-    setActiveTab,
+    setActiveTab: (tab) => {
+      if (tab === "security") setSecurityOpen(true);
+    },
   });
 
   return (
     <div className="min-h-[80vh] px-6 py-8 md:py-12">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-3xl mx-auto">
         <ProfileHeader onEditProfile={() => setIsEditModalOpen(true)} />
+        <OnboardingChecklist />
+        <ConnectionsSection />
         <StatsGrid />
         <EarnedBadgesSection />
-        <ProfileTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+        <ActivitySection />
 
-        {activeTab === "overview" && (
-          <OverviewTab
-            registrations={registrations}
-            talkSubmissions={talkSubmissions}
-            connectedAgents={connectedAgents}
-            loadingData={loadingData}
-            loadingAgents={loadingAgents}
-          />
-        )}
-        {activeTab === "events" && (
-          <EventsTab registrations={registrations} loadingData={loadingData} />
-        )}
-        {activeTab === "talks" && (
-          <TalksTab talkSubmissions={talkSubmissions} loadingData={loadingData} />
-        )}
-        {activeTab === "security" && (
-          <SecurityTab
-            discord={discord}
-            github={github}
-            google={google}
-            mfa={ctx.mfa}
-            email={ctx.email}
-            primaryEmail={user.email}
-            additionalEmails={userProfile?.additionalEmails || []}
-            hasPasswordProvider={google.hasPasswordProvider}
-            connectedAgents={connectedAgents}
-            loadingAgents={loadingAgents}
-            onSetPassword={password.setPassword}
-            passwordSaving={password.saving}
-            passwordError={password.error}
-            passwordSuccess={password.success}
-          />
-        )}
-        {activeTab === "settings" && (
-          <SettingsTab
-            settings={profileSettings.settings}
-            setSettings={profileSettings.setSettings}
-            saving={profileSettings.saving}
-            error={profileSettings.error}
-            success={profileSettings.success}
-            onSave={profileSettings.save}
-            onToggleAllVisibility={profileSettings.toggleAllVisibility}
-          />
-        )}
+        {/* Settings — collapsible */}
+        <div className="mb-8">
+          <button
+            onClick={() => setSettingsOpen(!settingsOpen)}
+            className="w-full flex items-center justify-between text-sm font-semibold text-neutral-400 uppercase tracking-wider mb-3 hover:text-neutral-300 transition-colors"
+          >
+            <span>Profile Settings</span>
+            <svg
+              className={`w-4 h-4 transition-transform ${settingsOpen ? "rotate-180" : ""}`}
+              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          {settingsOpen && (
+            <SettingsTab
+              settings={profileSettings.settings}
+              setSettings={profileSettings.setSettings}
+              saving={profileSettings.saving}
+              error={profileSettings.error}
+              success={profileSettings.success}
+              onSave={profileSettings.save}
+              onToggleAllVisibility={profileSettings.toggleAllVisibility}
+            />
+          )}
+        </div>
+
+        {/* Security — collapsible */}
+        <div className="mb-8">
+          <button
+            onClick={() => setSecurityOpen(!securityOpen)}
+            className="w-full flex items-center justify-between text-sm font-semibold text-neutral-400 uppercase tracking-wider mb-3 hover:text-neutral-300 transition-colors"
+          >
+            <span>Security</span>
+            <svg
+              className={`w-4 h-4 transition-transform ${securityOpen ? "rotate-180" : ""}`}
+              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          {securityOpen && (
+            <SecurityTab
+              discord={discord}
+              github={github}
+              google={google}
+              mfa={ctx.mfa}
+              email={ctx.email}
+              primaryEmail={user.email}
+              additionalEmails={userProfile?.additionalEmails || []}
+              hasPasswordProvider={google.hasPasswordProvider}
+              connectedAgents={connectedAgents}
+              loadingAgents={loadingAgents}
+              onSetPassword={password.setPassword}
+              passwordSaving={password.saving}
+              passwordError={password.error}
+              passwordSuccess={password.success}
+            />
+          )}
+        </div>
       </div>
 
       {isEditModalOpen && (
