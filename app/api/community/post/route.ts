@@ -5,6 +5,7 @@ import { getVerifiedUser } from "@/lib/server-auth";
 import { logger } from "@/lib/logger";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 import { sanitizeText } from "@/lib/sanitize";
+import { getDisplayName } from "@/lib/utils";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -43,8 +44,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const authorName =
-      user.name || (user.email ? user.email.split("@")[0] : "Anonymous");
+    const authorName = getDisplayName(user);
 
     const messageRef = db.collection("communityMessages").doc();
     await messageRef.set({

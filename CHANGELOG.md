@@ -16,11 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `docs/RELEASING.md` maintainer release runbook
 - `docs/SUPPLY_CHAIN.md` overview of security and dependency automation
 - `public/.well-known/security.txt` for standardized security contact discovery
-- GitHub Actions: DCO check, CodeQL, Dependency Review, OpenSSF Scorecard
+- GitHub Actions: DCO check, Dependency Review, OpenSSF Scorecard
 - `.github/ISSUE_TEMPLATE/config.yml` with contact links (Discord, security policy, dev guide)
 
 ### Changed
 
+- Removed `.github/workflows/codeql.yml` — it conflicted with GitHub **default** Code scanning (SARIF upload error). Use default setup or one advanced workflow, not both.
 - **Vercel**: `git.deploymentEnabled` now sets `"*": false` and `"main": true` (unspecified branches defaulted to deploy **on** before); ignore script skips `VERCEL_ENV=preview` so only production builds on `main`
 - **GitHub Actions**: Dependency Review runs only when npm lockfiles change; Scorecard no longer runs on every `develop` push
 - **LICENSE**: standardized to verbatim GPLv3 text so GitHub can detect **GPL-3.0**; project copyright moved to `NOTICE`
