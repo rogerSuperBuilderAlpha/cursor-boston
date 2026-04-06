@@ -198,16 +198,16 @@ export default async function EventPage({
       />
 
       {/* Breadcrumb */}
-      <nav className="px-6 py-4 border-b border-neutral-800" aria-label="Breadcrumb">
+      <nav className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-800" aria-label="Breadcrumb">
         <div className="max-w-6xl mx-auto">
-          <ol className="flex items-center gap-2 text-sm text-neutral-400">
+          <ol className="flex items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400">
             <li>
-              <Link href="/events" className="hover:text-white transition-colors">
+              <Link href="/events" className="hover:text-foreground transition-colors">
                 Events
               </Link>
             </li>
             <li aria-hidden="true">/</li>
-            <li className="text-white truncate">{event.title}</li>
+            <li className="text-foreground truncate">{event.title}</li>
           </ol>
         </div>
       </nav>
@@ -380,26 +380,26 @@ export default async function EventPage({
       {event.slug === "cursor-boston-hack-a-sprint-2026" && (
         <section className="py-12 px-6 bg-emerald-500/5 border-b border-emerald-500/20">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
               How to participate
             </h2>
-            <p className="text-neutral-400 mb-8">
+            <p className="text-neutral-500 dark:text-neutral-400 mb-8">
               Two quick registrations, then you&apos;re in.
             </p>
             <div className="grid sm:grid-cols-3 gap-6">
-              <div className="relative p-6 bg-neutral-900 rounded-xl border border-neutral-800">
+            <div className="relative p-6 bg-neutral-100 dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800">
                 <span className="absolute -top-3 left-4 px-2 py-0.5 bg-emerald-500 text-white text-xs font-bold rounded-full">
                   Step 1
                 </span>
-                <h3 className="text-white font-semibold mt-2 mb-2">RSVP on Luma</h3>
-                <p className="text-neutral-400 text-sm mb-4">
+                <h3 className="text-foreground font-semibold mt-2 mb-2">RSVP on Luma</h3>
+                <p className="text-neutral-500 dark:text-neutral-400 text-sm mb-4">
                   Luma handles door entry and event logistics. You must RSVP there to attend.
                 </p>
                 <a
                   href={getLumaCheckoutHref(event)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-400 hover:text-emerald-300 transition-colors luma-checkout--button"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-500 hover:text-emerald-400 transition-colors luma-checkout--button"
                   data-luma-action="checkout"
                   data-luma-event-id={getLumaCheckoutEventId(event)}
                 >
@@ -407,35 +407,35 @@ export default async function EventPage({
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 17l9.2-9.2M17 17V7H7" /></svg>
                 </a>
               </div>
-              <div className="relative p-6 bg-neutral-900 rounded-xl border border-emerald-500/30">
+              <div className="relative p-6 bg-neutral-100 dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800">
                 <span className="absolute -top-3 left-4 px-2 py-0.5 bg-emerald-500 text-white text-xs font-bold rounded-full">
                   Step 2
                 </span>
-                <h3 className="text-white font-semibold mt-2 mb-2">Register on the website</h3>
-                <p className="text-neutral-400 text-sm mb-4">
+                <h3 className="text-foreground font-semibold mt-2 mb-2">Register on the website</h3>
+                <p className="text-neutral-500 dark:text-neutral-400 text-sm mb-4">
                   Sign up here to join the hackathon leaderboard. Requires a Cursor Boston account with GitHub &amp; Discord connected.
                 </p>
                 <Link
                   href="/hackathons/hack-a-sprint-2026/signup"
-                  className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-400 hover:text-emerald-300 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-500 hover:text-emerald-400 transition-colors"
                 >
                   Go to website signup
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
                 </Link>
               </div>
-              <div className="relative p-6 bg-neutral-900 rounded-xl border border-neutral-800">
-                <span className="absolute -top-3 left-4 px-2 py-0.5 bg-neutral-600 text-white text-xs font-bold rounded-full">
+              <div className="relative p-6 bg-neutral-100 dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800">
+              <span className="absolute -top-3 left-4 px-2 py-0.5 bg-emerald-500 text-white text-xs font-bold rounded-full">
                   Step 3
                 </span>
-                <h3 className="text-white font-semibold mt-2 mb-2">Climb the leaderboard</h3>
-                <p className="text-neutral-400 text-sm mb-4">
+                <h3 className="text-foreground font-semibold mt-2 mb-2">Climb the leaderboard</h3>
+                <p className="text-neutral-500 dark:text-neutral-400 text-sm mb-4">
                   Merge PRs to the cursor-boston repo before the event to climb the rankings. Top 50 are eligible for $50 Cursor credit.
                 </p>
                 <a
                   href="https://github.com/rogerSuperBuilderAlpha/cursor-boston"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-sm font-medium text-neutral-400 hover:text-white transition-colors"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-500 hover:text-emerald-400 transition-colors"
                 >
                   View repo on GitHub
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 17l9.2-9.2M17 17V7H7" /></svg>
@@ -447,20 +447,20 @@ export default async function EventPage({
       )}
 
       {/* About Section */}
-      <section className="py-16 px-6 border-b border-neutral-800">
+      <section className="py-16 px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6">
             About This Event
           </h2>
-          <div className="prose prose-invert prose-lg max-w-none">
+          <div className="prose dark:prose-invert prose-lg max-w-none">
             {event.longDescription ? (
               event.longDescription.split("\n\n").map((paragraph, index) => (
-                <p key={index} className="text-neutral-300 leading-relaxed mb-4">
+                <p key={index} className="text-neutral-600 dark:text-neutral-300 leading-relaxed mb-4">
                   {paragraph}
                 </p>
               ))
             ) : (
-              <p className="text-neutral-300 leading-relaxed">{event.description}</p>
+              <p className="text-neutral-600 dark:text-neutral-300 leading-relaxed">{event.description}</p>
             )}
           </div>
 
@@ -474,7 +474,7 @@ export default async function EventPage({
                 {event.topics.map((topic) => (
                   <span
                     key={topic}
-                    className="px-4 py-2 bg-neutral-800 text-neutral-300 rounded-full"
+                    className="px-4 py-2 bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 rounded-full"
                   >
                     {topic}
                   </span>
@@ -522,46 +522,46 @@ export default async function EventPage({
 
       {/* Agenda Section */}
       {event.agenda && event.agenda.length > 0 && (
-        <section className="py-16 px-6 bg-neutral-950 border-b border-neutral-800">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-8">
-              Agenda
-            </h2>
-            <div className="space-y-6">
-              {event.agenda.map((item, index) => (
-                <div
-                  key={index}
-                  className="flex gap-6 p-6 bg-neutral-900 rounded-xl border border-neutral-800"
-                >
-                  <div className="text-emerald-400 font-mono text-sm whitespace-nowrap">
-                    {item.time}
-                  </div>
-                  <div>
-                    <h3 className="text-white font-semibold mb-1">{item.title}</h3>
-                    <p className="text-neutral-400">{item.description}</p>
-                  </div>
+        <section className="py-16 px-6 bg-neutral-50 dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-8">
+            Agenda
+          </h2>
+          <div className="space-y-6">
+            {event.agenda.map((item, index) => (
+              <div
+                key={index}
+                className="flex gap-6 p-6 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800"
+              >
+                <div className="text-emerald-500 font-mono text-sm whitespace-nowrap">
+                  {item.time}
                 </div>
-              ))}
-            </div>
+                <div>
+                  <h3 className="text-foreground font-semibold mb-1">{item.title}</h3>
+                  <p className="text-neutral-500 dark:text-neutral-400">{item.description}</p>
+                </div>
+              </div>
+            ))}
           </div>
-        </section>
+        </div>
+      </section>
       )}
 
       {/* Speakers Section */}
       {event.speakers && event.speakers.length > 0 && (
-        <section className="py-16 px-6 border-b border-neutral-800">
-          <div className="max-w-6xl mx-auto">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-8">
-              Speakers
-            </h2>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {event.speakers.map((speaker, index) => (
-                <div
-                  key={index}
-                  className="p-6 bg-neutral-900 rounded-xl border border-neutral-800 text-center"
-                >
-                  {speaker.image && (
-                    <div className="relative w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden bg-neutral-800">
+        <section className="py-16 px-6 border-b border-neutral-200 dark:border-neutral-800">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-8">
+            Speakers
+          </h2>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {event.speakers.map((speaker, index) => (
+              <div
+                key={index}
+                className="p-6 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 text-center"
+              >
+                {speaker.image && (
+                  <div className="relative w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden bg-neutral-200 dark:bg-neutral-800">
                       <Image
                         src={speaker.image}
                         alt={speaker.name}
@@ -570,13 +570,13 @@ export default async function EventPage({
                       />
                     </div>
                   )}
-                  <h3 className="text-white font-semibold text-lg">{speaker.name}</h3>
-                  <p className="text-neutral-400 text-sm">{speaker.role}</p>
+                  <h3 className="text-foreground font-semibold text-lg">{speaker.name}</h3>
+                  <p className="text-neutral-500 dark:text-neutral-400 text-sm">{speaker.role}</p>
                   {speaker.company && (
                     <p className="text-neutral-500 text-sm">{speaker.company}</p>
                   )}
                   {speaker.bio && (
-                    <p className="text-neutral-400 text-sm mt-3">{speaker.bio}</p>
+                    <p className="text-neutral-500 dark:text-neutral-400 text-sm mt-3">{speaker.bio}</p>
                   )}
                 </div>
               ))}
