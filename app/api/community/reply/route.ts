@@ -5,6 +5,7 @@ import { getVerifiedUser } from "@/lib/server-auth";
 import { logger } from "@/lib/logger";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 import { sanitizeText, sanitizeDocId } from "@/lib/sanitize";
+import { getDisplayName } from "@/lib/utils";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -51,8 +52,7 @@ export async function POST(request: NextRequest) {
     const parentRef = db.collection("communityMessages").doc(sanitizedParentId);
     const replyRef = db.collection("communityMessages").doc();
 
-    const authorName =
-      user.name || (user.email ? user.email.split("@")[0] : "Anonymous");
+    const authorName = getDisplayName(user);
 
     const result = await db.runTransaction(async (tx) => {
       const parentSnap = await tx.get(parentRef);
