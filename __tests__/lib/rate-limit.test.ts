@@ -124,5 +124,47 @@ describe('Rate Limiting', () => {
       expect(rateLimitConfigs.standard.windowMs).toBe(60 * 1000);
       expect(rateLimitConfigs.standard.maxRequests).toBe(60);
     });
+
+    it('should preserve hackathon presets from the route-local values', () => {
+      expect(rateLimitConfigs.hackathonMutation).toEqual({
+        windowMs: 60 * 1000,
+        maxRequests: 10,
+      });
+      expect(rateLimitConfigs.hackathonAction).toEqual({
+        windowMs: 60 * 1000,
+        maxRequests: 20,
+      });
+      expect(rateLimitConfigs.hackathonEligibility).toEqual({
+        windowMs: 60 * 1000,
+        maxRequests: 30,
+      });
+      expect(rateLimitConfigs.hackathonEventSignup).toEqual({
+        windowMs: 60 * 1000,
+        maxRequests: 40,
+      });
+    });
+
+    it('should keep distinct showcase presets where the behavior differs', () => {
+      expect(rateLimitConfigs.hackathonShowcaseAiScore).toEqual({
+        windowMs: 60 * 1000,
+        maxRequests: 30,
+      });
+      expect(rateLimitConfigs.hackathonShowcaseJudgeScore).toEqual({
+        windowMs: 60 * 1000,
+        maxRequests: 40,
+      });
+      expect(rateLimitConfigs.hackathonShowcaseUnlock).toEqual({
+        windowMs: 60 * 1000,
+        maxRequests: 20,
+      });
+      expect(rateLimitConfigs.hackathonShowcaseUnlockAttempts).toEqual({
+        windowMs: 5 * 60 * 1000,
+        maxRequests: 15,
+      });
+      expect(rateLimitConfigs.hackathonShowcaseVote).toEqual({
+        windowMs: 60 * 1000,
+        maxRequests: 30,
+      });
+    });
   });
 });

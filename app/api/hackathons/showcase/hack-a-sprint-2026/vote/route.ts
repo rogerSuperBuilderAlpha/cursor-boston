@@ -12,12 +12,12 @@ import {
   hackASprint2026ScoreDocId,
   userHasHackASprint2026Signup,
 } from "@/lib/hackathon-asprint-2026-state";
-import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { checkRateLimit, getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const VOTE_RATE = { windowMs: 60 * 1000, maxRequests: 30 };
+const VOTE_RATE = rateLimitConfigs.hackathonShowcaseVote;
 
 function normalizeIds(raw: unknown): string[] | null {
   if (!Array.isArray(raw)) return null;

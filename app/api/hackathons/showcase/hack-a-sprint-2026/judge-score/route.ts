@@ -9,12 +9,12 @@ import {
 import { userIsHackASprint2026Judge } from "@/lib/hackathon-showcase-admin";
 import { getHackASprint2026Phase } from "@/lib/hackathon-asprint-2026-schedule";
 import { hackASprint2026ScoreDocId } from "@/lib/hackathon-asprint-2026-state";
-import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { checkRateLimit, getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const RATE = { windowMs: 60 * 1000, maxRequests: 40 };
+const RATE = rateLimitConfigs.hackathonShowcaseJudgeScore;
 
 export async function POST(request: NextRequest) {
   try {

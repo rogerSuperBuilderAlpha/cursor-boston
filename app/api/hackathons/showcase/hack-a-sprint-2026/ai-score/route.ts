@@ -7,12 +7,12 @@ import {
   fetchShowcaseSubmissionsFromGitHub,
 } from "@/lib/hackathon-showcase";
 import { hackASprint2026ScoreDocId } from "@/lib/hackathon-asprint-2026-state";
-import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { checkRateLimit, getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const RATE = { windowMs: 60 * 1000, maxRequests: 30 };
+const RATE = rateLimitConfigs.hackathonShowcaseAiScore;
 
 export async function POST(request: NextRequest) {
   try {

@@ -14,12 +14,12 @@ import {
 } from "@/lib/hackathon-event-signup";
 import { fetchMergedPrCountsForLogins } from "@/lib/github-merged-pr-count";
 import { getGithubRepoPair } from "@/lib/github-recent-merged-prs";
-import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { checkRateLimit, getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const RATE = { windowMs: 60 * 1000, maxRequests: 40 };
+const RATE = rateLimitConfigs.hackathonEventSignup;
 
 function signedUpAtToMs(value: unknown): number {
   if (
