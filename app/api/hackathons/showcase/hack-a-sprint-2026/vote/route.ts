@@ -55,7 +55,8 @@ export async function POST(request: NextRequest) {
     }
 
     const userSnap = await db.collection("users").doc(user.uid).get();
-    if (userSnap.data()?.hackASprint2026Unlocked !== true) {
+    const userData = userSnap.data();
+    if (userData?.hackASprint2026Unlocked !== true) {
       return NextResponse.json(
         { error: "Enter the event passcode first." },
         { status: 403 }
@@ -95,9 +96,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const githubData =
+      userData?.github && typeof userData.github === "object"
+        ? (userData.github as { login?: string })
+        : undefined;
     const ghLogin =
-      typeof userSnap.data()?.github?.login === "string"
-        ? userSnap.data()!.github!.login.trim().toLowerCase()
+      typeof githubData?.login === "string"
+        ? githubData.login.trim().toLowerCase()
         : "";
     if (ghLogin && ids.some((id) => id === ghLogin)) {
       return NextResponse.json(
@@ -119,8 +124,10 @@ export async function POST(request: NextRequest) {
       .doc(hackASprint2026PeerVoteDocId(user.uid));
     await db.runTransaction(async (tx) => {
       const prevSnap = await tx.get(voteRef);
-      const oldIds: string[] = Array.isArray(prevSnap.data()?.submissionIds)
-        ? (prevSnap.data()!.submissionIds as string[]).map((x) =>
+      const prevData = prevSnap.data();
+      const prevSubmissionIds = prevData?.submissionIds;
+      const oldIds: string[] = Array.isArray(prevSubmissionIds)
+        ? (prevSubmissionIds as string[]).map((x) =>
             String(x).toLowerCase()
           )
         : [];

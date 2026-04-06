@@ -87,7 +87,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const sub = submissionSnap.data()!;
+    const sub = submissionSnap.data();
+    if (!sub) {
+      return NextResponse.json(
+        { error: "Register a repo first before submitting" },
+        { status: 400 }
+      );
+    }
     if (sub.submittedAt) {
       return NextResponse.json(
         { error: "Already submitted", submittedAt: sub.submittedAt },

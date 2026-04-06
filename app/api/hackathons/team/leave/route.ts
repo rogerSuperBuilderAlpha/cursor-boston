@@ -51,7 +51,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Team not found" }, { status: 404 });
     }
 
-    const team = teamSnap.data()!;
+    const team = teamSnap.data();
+    if (!team) {
+      return NextResponse.json({ error: "Team not found" }, { status: 404 });
+    }
     const memberIds: string[] = team.memberIds || [];
     if (!memberIds.includes(user.uid)) {
       return NextResponse.json({ error: "You are not on this team" }, { status: 403 });
