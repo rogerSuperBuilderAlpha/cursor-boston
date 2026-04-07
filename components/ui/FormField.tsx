@@ -38,7 +38,7 @@ interface FormTextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> 
   error?: string | null;
 }
 
-export function FormTextarea({ label, id, error, ...props }: FormTextareaProps) {
+export function FormTextarea({ label, id, error, rows = 3, ...props }: FormTextareaProps) {
   return (
     <div>
       {label && (
@@ -48,6 +48,7 @@ export function FormTextarea({ label, id, error, ...props }: FormTextareaProps) 
       )}
       <textarea
         id={id}
+        rows={rows}
         className={`${inputClass} resize-none`}
         {...props}
       />
