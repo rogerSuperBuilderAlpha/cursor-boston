@@ -22,6 +22,7 @@ export const WORKS_WITH_LANGUAGES = [
   "Java",
   "C#",
   "Ruby",
+  "Swift",
   "Other",
 ] as const;
 
