@@ -8,5 +8,7 @@ export const CATEGORY_LABELS: Record<CookbookCategory, string> = {
   testing: "Testing",
   documentation: "Documentation",
   architecture: "Architecture",
+  performance: "Performance",
+  devops: "DevOps",
   other: "Other",
 };
