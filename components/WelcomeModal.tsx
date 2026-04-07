@@ -205,6 +205,7 @@ export default function WelcomeModal() {
           </div>
 
           <button
+            type="button"
             onClick={handleClose}
             className="mt-6 text-neutral-500 hover:text-neutral-300 text-sm transition-colors focus-visible:outline-none focus-visible:text-white focus-visible:underline"
           >
