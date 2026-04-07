@@ -8,8 +8,9 @@ import { Skeleton } from "@/components/ui/Skeleton";
 export function MemberCardSkeleton() {
   return (
     <div
+      role="status"
+      aria-label="Loading member card"
       className="bg-white dark:bg-neutral-900 rounded-xl p-6 border border-neutral-200 dark:border-neutral-800"
-      aria-hidden="true"
     >
       {/* Header: avatar + name/job */}
       <div className="flex items-start gap-4 mb-4">
