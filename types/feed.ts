@@ -23,6 +23,8 @@ export interface Message {
   dislikeCount?: number;
   replyCount?: number;
   repostCount?: number;
+  editedAt?: Timestamp;
+  isPinned?: boolean;
 }
 
 export interface Reaction {
