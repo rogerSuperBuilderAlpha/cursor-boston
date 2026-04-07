@@ -416,7 +416,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
           >
             <Menu className="h-6 w-6" strokeWidth={2} />
           </button>
-          <Link href="/" className="min-w-0 truncate font-semibold text-foreground">
+          <Link href="/" aria-label="Cursor Boston home" className="min-w-0 truncate font-semibold text-foreground">
             Cursor Boston
           </Link>
         </header>
