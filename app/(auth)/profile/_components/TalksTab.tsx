@@ -2,13 +2,7 @@
 
 import Link from "next/link";
 import { StackIcon } from "@/components/icons";
-
-interface TalkSubmission {
-  id: string;
-  title: string;
-  status: string;
-  submittedAt: { toDate: () => Date } | null;
-}
+import type { TalkSubmission } from "../_types";
 
 interface TalksTabProps {
   talkSubmissions: TalkSubmission[];

@@ -122,6 +122,16 @@ git checkout develop
 git merge upstream/develop
 ```
 
+Before you open a pull request, rebase your feature branch onto the latest `develop` so your PR contains only your intended changes and CI compares the right commit range:
+
+```bash
+git fetch upstream
+git checkout your-branch
+git rebase upstream/develop
+```
+
+If GitHub shows merge conflicts or your branch falls behind after review starts, rebase again and push the updated branch to the same PR.
+
 ## Claiming an Issue
 
 ### Step 1 — Find an issue
@@ -363,16 +373,25 @@ If you've modified forms:
    npm run build     # Verify the app builds
    ```
 
-2. **Update documentation**
+2. **Rebase onto the latest `develop`**
+   ```bash
+   git fetch upstream
+   git checkout your-branch
+   git rebase upstream/develop
+   ```
+
+   This keeps your PR focused, avoids unrelated commits in the diff, and helps CI run against the correct base.
+
+3. **Update documentation**
    - Update README.md if you've changed setup instructions
    - Add JSDoc comments for new functions
    - Update type definitions if needed
 
-3. **Test your changes**
+4. **Test your changes**
    - Follow the [Testing](#testing) checklist above
    - Test edge cases and error scenarios
 
-4. **Pre-commit hooks run automatically** when you commit:
+5. **Pre-commit hooks run automatically** when you commit:
    - **gitleaks** — scans staged files for accidentally committed secrets
    - **lint-staged** — runs `tsc --noEmit` and `eslint --fix --max-warnings=0` on staged files
    - **commitlint** — validates commit message format ([Conventional Commits](https://www.conventionalcommits.org/))
