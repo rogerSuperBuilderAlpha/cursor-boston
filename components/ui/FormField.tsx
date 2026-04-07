@@ -17,6 +17,7 @@ interface FormInputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export function FormInput({ label, id, error, ...props }: FormInputProps) {
+  const errorId = error ? `${id}-error` : undefined;
   return (
     <div>
       {label && (
@@ -24,8 +25,8 @@ export function FormInput({ label, id, error, ...props }: FormInputProps) {
           {label}
         </label>
       )}
-      <input id={id} className={inputClass} {...props} />
-      {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
+      <input id={id} className={inputClass} aria-describedby={errorId} {...props} />
+      {error && <p id={errorId} role="alert" className="text-red-400 text-sm mt-2">{error}</p>}
     </div>
   );
 }
@@ -38,7 +39,8 @@ interface FormTextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> 
   error?: string | null;
 }
 
-export function FormTextarea({ label, id, error, ...props }: FormTextareaProps) {
+export function FormTextarea({ label, id, error, rows = 3, ...props }: FormTextareaProps) {
+  const errorId = error ? `${id}-error` : undefined;
   return (
     <div>
       {label && (
@@ -49,9 +51,11 @@ export function FormTextarea({ label, id, error, ...props }: FormTextareaProps) 
       <textarea
         id={id}
         className={`${inputClass} resize-none`}
+        aria-describedby={errorId}
+        rows={rows}
         {...props}
       />
-      {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
+      {error && <p id={errorId} role="alert" className="text-red-400 text-sm mt-2">{error}</p>}
     </div>
   );
 }
