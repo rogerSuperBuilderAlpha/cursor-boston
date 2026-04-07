@@ -16,6 +16,7 @@ export interface PublicMember {
     website?: string;
     linkedIn?: string;
     twitter?: string;
+    bluesky?: string;
     github?: string;
     substack?: string;
   };
@@ -34,6 +35,7 @@ export interface PublicMember {
     showTwitter: boolean;
     showGithub: boolean;
     showSubstack: boolean;
+    showBluesky?: boolean;
     showMemberSince: boolean;
     showOwner?: boolean;
   };
