@@ -84,6 +84,7 @@ export function MessageCard({
       <div className="flex gap-3">
         <button
           onClick={onAuthorClick}
+          aria-label={`View ${message.authorName}'s profile`}
           className="shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 rounded-full"
         >
           {message.authorPhoto ? (
@@ -105,6 +106,7 @@ export function MessageCard({
             <div className="flex items-center gap-2 min-w-0">
               <button
                 onClick={onAuthorClick}
+                aria-label={`View ${message.authorName}'s profile`}
                 className="font-medium text-white truncate hover:text-emerald-400 transition-colors focus-visible:outline-none focus-visible:text-emerald-400"
               >
                 {message.authorName}
