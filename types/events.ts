@@ -38,6 +38,8 @@ export interface Venue {
   address: string;
   mapUrl?: string | null;
   accessibilityInfo?: string;
+  parkingInfo?: string;
+  transitInfo?: string;
   coordinates?: { lat: number; lng: number };
 }
 
