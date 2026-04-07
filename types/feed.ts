@@ -1,6 +1,6 @@
 import { Timestamp } from "firebase/firestore";
 
-export type ReactionType = "like" | "dislike";
+export type ReactionType = "like" | "dislike" | "bookmark";
 
 export interface RepostData {
   originalId: string;
@@ -23,6 +23,7 @@ export interface Message {
   dislikeCount?: number;
   replyCount?: number;
   repostCount?: number;
+  bookmarkCount?: number;
 }
 
 export interface Reaction {
