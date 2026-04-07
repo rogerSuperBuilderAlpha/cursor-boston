@@ -89,6 +89,8 @@ export default function Avatar({
 
   return (
     <div
+      role="img"
+      aria-label={name || email || "User avatar"}
       className={`${sizeClasses[size]} rounded-full flex items-center justify-center font-semibold text-white shadow-inner ${className}`}
       style={{ background: gradient }}
     >
