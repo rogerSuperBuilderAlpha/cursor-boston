@@ -73,6 +73,7 @@ export function MessageCard({
           </svg>
           <button
             onClick={onAuthorClick}
+            aria-label={`View ${message.authorName}'s profile`}
             className="hover:text-emerald-400 transition-colors"
           >
             {message.authorName}
