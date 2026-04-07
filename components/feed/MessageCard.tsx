@@ -73,6 +73,7 @@ export function MessageCard({
           </svg>
           <button
             onClick={onAuthorClick}
+            aria-label={`View ${message.authorName}'s profile`}
             className="hover:text-emerald-400 transition-colors"
           >
             {message.authorName}
@@ -84,6 +85,7 @@ export function MessageCard({
       <div className="flex gap-3">
         <button
           onClick={onAuthorClick}
+          aria-label={`View ${message.authorName}'s profile`}
           className="shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 rounded-full"
         >
           {message.authorPhoto ? (
@@ -105,6 +107,7 @@ export function MessageCard({
             <div className="flex items-center gap-2 min-w-0">
               <button
                 onClick={onAuthorClick}
+                aria-label={`View ${message.authorName}'s profile`}
                 className="font-medium text-white truncate hover:text-emerald-400 transition-colors focus-visible:outline-none focus-visible:text-emerald-400"
               >
                 {message.authorName}
@@ -292,6 +295,7 @@ export function MessageCard({
                 value={replyContent}
                 onChange={(e) => onReplyContentChange(e.target.value)}
                 placeholder={`Reply to ${message.authorName}...`}
+                aria-label={`Reply to ${message.authorName}`}
                 rows={2}
                 maxLength={500}
                 className="w-full bg-neutral-800 rounded-lg p-3 text-white placeholder-neutral-400 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-400"
@@ -308,6 +312,7 @@ export function MessageCard({
                 </span>
                 <div className="flex gap-2">
                   <button
+                    type="button"
                     onClick={onReply}
                     className="px-3 py-2 text-sm text-neutral-400 hover:text-white transition-colors min-h-[44px]"
                   >
@@ -329,6 +334,7 @@ export function MessageCard({
           {(message.replyCount || 0) > 0 && (
             <button
               onClick={onToggleReplies}
+              aria-expanded={showReplies}
               className="mt-3 text-sm text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-1"
             >
               <svg
