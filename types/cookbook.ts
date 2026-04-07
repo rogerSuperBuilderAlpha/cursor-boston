@@ -5,6 +5,7 @@ export const COOKBOOK_CATEGORIES = [
   "testing",
   "documentation",
   "architecture",
+  "performance",
   "other",
 ] as const;
 
