@@ -256,6 +256,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                             : "text-neutral-500 hover:text-foreground dark:text-neutral-400 dark:hover:text-white",
                         ].join(" ")}
                         aria-expanded={sectionOpen}
+                        aria-controls={`nav-group-${group.label.toLowerCase()}`}
                       >
                         {group.label}
                         <ChevronDown
@@ -268,7 +269,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                         />
                       </button>
                       {sectionOpen ? (
-                        <ul className="mb-1 flex flex-col gap-0.5 border-l border-neutral-200 pl-2 dark:border-neutral-800">
+                        <ul id={`nav-group-${group.label.toLowerCase()}`} className="mb-1 flex flex-col gap-0.5 border-l border-neutral-200 pl-2 dark:border-neutral-800">
                           {group.items.map((item) => {
                             const Icon = item.icon;
                             return (
