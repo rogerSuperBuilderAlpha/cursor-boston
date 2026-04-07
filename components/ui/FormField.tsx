@@ -25,7 +25,7 @@ export function FormInput({ label, id, error, ...props }: FormInputProps) {
         </label>
       )}
       <input id={id} className={inputClass} {...props} />
-      {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
+      {error && <p role="alert" className="text-red-400 text-sm mt-2">{error}</p>}
     </div>
   );
 }
@@ -51,7 +51,7 @@ export function FormTextarea({ label, id, error, ...props }: FormTextareaProps) 
         className={`${inputClass} resize-none`}
         {...props}
       />
-      {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
+      {error && <p role="alert" className="text-red-400 text-sm mt-2">{error}</p>}
     </div>
   );
 }
