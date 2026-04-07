@@ -421,7 +421,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
           </Link>
         </header>
 
-        <main id="main-content" className="flex-1 outline-none" tabIndex={-1}>
+        <main id="main-content" aria-label="Main content" className="flex-1 outline-none" tabIndex={-1}>
           {children}
         </main>
         <Footer />
