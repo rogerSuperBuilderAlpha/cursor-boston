@@ -84,8 +84,10 @@ export function PostComposer({
               {value.length}/{maxLength} (minimum {minLength})
             </span>
             <button
+              type="button"
               onClick={onSubmit}
               disabled={posting || !isValid}
+              aria-label={posting ? "Posting message" : submitLabel}
               className="px-5 py-2.5 bg-emerald-500 text-white rounded-lg text-sm font-medium hover:bg-emerald-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 min-h-[44px]"
             >
               {posting ? "Posting..." : submitLabel}
