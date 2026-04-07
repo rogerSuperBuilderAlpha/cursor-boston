@@ -34,6 +34,7 @@ export interface PublicMember {
     showTwitter: boolean;
     showGithub: boolean;
     showSubstack: boolean;
+    showBluesky?: boolean;
     showMemberSince: boolean;
     showOwner?: boolean;
   };
