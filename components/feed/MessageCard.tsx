@@ -308,6 +308,7 @@ export function MessageCard({
                 </span>
                 <div className="flex gap-2">
                   <button
+                    type="button"
                     onClick={onReply}
                     className="px-3 py-2 text-sm text-neutral-400 hover:text-white transition-colors min-h-[44px]"
                   >
