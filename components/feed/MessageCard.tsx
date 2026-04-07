@@ -292,6 +292,7 @@ export function MessageCard({
                 value={replyContent}
                 onChange={(e) => onReplyContentChange(e.target.value)}
                 placeholder={`Reply to ${message.authorName}...`}
+                aria-label={`Reply to ${message.authorName}`}
                 rows={2}
                 maxLength={500}
                 className="w-full bg-neutral-800 rounded-lg p-3 text-white placeholder-neutral-400 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-400"
