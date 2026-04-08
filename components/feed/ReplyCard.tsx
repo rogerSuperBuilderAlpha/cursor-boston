@@ -51,15 +51,14 @@ export function ReplyCard({
                 {showDeleteConfirm ? (
                   <div className="flex items-center gap-1 ml-auto">
                     <button
-                      onClick={() => {
-                        onDelete();
-                        setShowDeleteConfirm(false);
-                      }}
+                      type="button"
+                      onClick={() => { onDelete(); setShowDeleteConfirm(false); }}
                       className="text-xs text-red-400 hover:text-red-300 px-2 py-1"
                     >
                       Delete
                     </button>
                     <button
+                      type="button"
                       onClick={() => setShowDeleteConfirm(false)}
                       className="text-xs text-neutral-400 hover:text-white px-2 py-1"
                     >
@@ -89,6 +88,7 @@ export function ReplyCard({
             <button
               onClick={onLike}
               disabled={!isLoggedIn}
+              aria-label={userReaction === "like" ? "Remove like" : "Like"}
               className={`flex items-center gap-1 px-2 py-1 rounded transition-colors text-xs ${
                 userReaction === "like"
                   ? "text-emerald-400"
@@ -111,6 +111,7 @@ export function ReplyCard({
             <button
               onClick={onDislike}
               disabled={!isLoggedIn}
+              aria-label={userReaction === "dislike" ? "Remove dislike" : "Dislike"}
               className={`flex items-center gap-1 px-2 py-1 rounded transition-colors text-xs ${
                 userReaction === "dislike"
                   ? "text-red-400"
