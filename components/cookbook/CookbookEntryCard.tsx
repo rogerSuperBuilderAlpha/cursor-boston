@@ -75,6 +75,7 @@ export function CookbookEntryCard({
                   e.stopPropagation();
                   onViewFull(entry);
                 }}
+                aria-label={`View full prompt: ${entry.title}`}
                 className="text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors"
               >
                 View full
@@ -85,6 +86,7 @@ export function CookbookEntryCard({
                   e.stopPropagation();
                   void handleCopy();
                 }}
+                aria-label={copied ? "Prompt copied to clipboard" : `Copy prompt: ${entry.title}`}
                 className="px-2 py-1 rounded-md bg-neutral-200 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-300 dark:hover:bg-neutral-600 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
               >
                 {copied ? "Copied!" : "Copy"}

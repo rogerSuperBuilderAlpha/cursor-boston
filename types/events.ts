@@ -18,6 +18,7 @@ export interface Speaker {
     twitter?: string;
     linkedin?: string;
     github?: string;
+    bluesky?: string;
   };
 }
 
@@ -25,7 +26,7 @@ export interface Sponsor {
   name: string;
   logo: string;
   url?: string;
-  tier?: "gold" | "silver" | "bronze" | "community";
+  tier?: "platinum" | "gold" | "silver" | "bronze" | "community";
 }
 
 export interface FAQ {
@@ -38,6 +39,8 @@ export interface Venue {
   address: string;
   mapUrl?: string | null;
   accessibilityInfo?: string;
+  parkingInfo?: string;
+  transitInfo?: string;
   coordinates?: { lat: number; lng: number };
 }
 
@@ -58,7 +61,7 @@ export interface Event {
   date: string;
   time: string;
   location: string;
-  type: "meetup" | "workshop" | "hackathon" | "conference" | "social";
+  type: "meetup" | "workshop" | "hackathon" | "conference" | "social" | "webinar";
   description: string;
   image: string;
   lumaUrl: string;
