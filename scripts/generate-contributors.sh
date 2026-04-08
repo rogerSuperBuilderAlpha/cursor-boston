@@ -145,4 +145,40 @@ Auto-generated from git history on every merge to \`main\`. To regenerate locall
 To fix a name or merge duplicates, edit \`.mailmap\`. To add a GitHub username, edit \`.github-usernames\`.
 EOF
 
+# ── Step 6: Inject table into .github/CONTRIBUTING.md ────────────
+CONTRIBUTING=".github/CONTRIBUTING.md"
+if [ -f "$CONTRIBUTING" ]; then
+  # Extract just the table rows (between the markers in CONTRIBUTORS.md)
+  TABLE=$(sed -n '/<!-- CONTRIBUTORS:START/,/<!-- CONTRIBUTORS:END/p' "$OUT")
+
+  # Build the replacement block for CONTRIBUTING.md
+  {
+    sed '/<!-- CONTRIBUTORS:START/q' "$CONTRIBUTING"
+    echo "<!-- This section is updated by scripts/generate-contributors.sh -->"
+    echo ""
+    echo "$HEADER_COLS"
+    echo "$HEADER_SEP"
+    while IFS='|' read -r prs commits name ghuser first_date; do
+      if [ -n "$ghuser" ]; then
+        url="https://github.com/${ghuser}"
+        avatar="<img src=\"${url}.png?size=40\" width=\"40\" height=\"40\" alt=\"@${ghuser}\" />"
+        display="[${name}](${url})"
+      else
+        avatar=""
+        display="$name"
+      fi
+      if [ "$HAS_PRS" = true ]; then
+        echo "| ${avatar} | ${display} | ${prs} | ${commits} | ${first_date} |"
+      else
+        echo "| ${avatar} | ${display} | ${commits} | ${first_date} |"
+      fi
+    done < "$TMP_DIR/sorted.txt"
+    echo ""
+    sed -n '/<!-- CONTRIBUTORS:END/,$p' "$CONTRIBUTING"
+  } > "$TMP_DIR/contributing_new.txt"
+
+  cp "$TMP_DIR/contributing_new.txt" "$CONTRIBUTING"
+  echo "Updated $CONTRIBUTING"
+fi
+
 echo "Wrote ${total_contributors} contributors to $OUT (PRs: $HAS_PRS)"

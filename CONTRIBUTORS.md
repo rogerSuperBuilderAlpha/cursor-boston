@@ -4,8 +4,8 @@
 
 | Avatar | Name | Merged PRs | Commits | Since |
 |--------|------|----------:|--------:|-------|
-| <img src="https://github.com/rogerSuperBuilderAlpha.png?size=40" width="40" height="40" alt="@rogerSuperBuilderAlpha" /> | [Roger Hunt](https://github.com/rogerSuperBuilderAlpha) | 60 | 124 | 2026-01-27 |
-| <img src="https://github.com/RshieRish.png?size=40" width="40" height="40" alt="@RshieRish" /> | [Rishi Rishie](https://github.com/RshieRish) | 14 | 8 | 2026-04-07 |
+| <img src="https://github.com/rogerSuperBuilderAlpha.png?size=40" width="40" height="40" alt="@rogerSuperBuilderAlpha" /> | [Roger Hunt](https://github.com/rogerSuperBuilderAlpha) | 60 | 125 | 2026-01-27 |
+| <img src="https://github.com/RshieRish.png?size=40" width="40" height="40" alt="@RshieRish" /> | [Rishi Rishie](https://github.com/RshieRish) | 14 | 14 | 2026-04-07 |
 | <img src="https://github.com/Shreyas0786.png?size=40" width="40" height="40" alt="@Shreyas0786" /> | [Shreyas Sonwane](https://github.com/Shreyas0786) | 7 | 11 | 2026-03-23 |
 | <img src="https://github.com/nebullii.png?size=40" width="40" height="40" alt="@nebullii" /> | [Nevi Chaudhari](https://github.com/nebullii) | 7 | 8 | 2026-02-18 |
 | <img src="https://github.com/Sikes1112.png?size=40" width="40" height="40" alt="@Sikes1112" /> | [Sikes1112](https://github.com/Sikes1112) | 7 | 8 | 2026-03-23 |
