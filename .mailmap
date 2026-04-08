@@ -1,0 +1,17 @@
+# .mailmap — canonical author names for git shortlog / contributor scripts
+# Format: Canonical Name <canonical@email> Commit Name <commit@email>
+# See: https://git-scm.com/docs/gitmailmap
+
+Roger Hunt <ludwitt@ludwitt.com> Ludwitt <ludwitt@ludwitt.com>
+
+Shreyas Sonwane <123672028+Shreyas0786@users.noreply.github.com> Shreyas0786 <sonwaneshreyas@gmail.com>
+
+Rishi Rishie <118158036+RshieRish@users.noreply.github.com> rishierish <118158036+RshieRish@users.noreply.github.com>
+Rishi Rishie <118158036+RshieRish@users.noreply.github.com> RshieRish <118158036+RshieRish@users.noreply.github.com>
+
+Nevi Chaudhari <nchaudhari@clarku.edu> nebullii <nchaudhari@clarku.edu>
+Nevi Chaudhari <nchaudhari@clarku.edu> Nevi <nchaudhari@clarku.edu>
+
+Nyriq Faber <64752969+riqthedev@users.noreply.github.com> riqthedev <riqthedev@gmail.com>
+
+Ray Liao <17989965+rayruizhiliao@users.noreply.github.com> Ruizhi (Ray) Liao <17989965+rayruizhiliao@users.noreply.github.com>

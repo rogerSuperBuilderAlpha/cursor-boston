@@ -50,6 +50,7 @@
     "send-hack-a-sprint-emails": "tsx scripts/send-hack-a-sprint-emails.ts",
     "sync-event-contacts": "tsx scripts/sync-event-contacts.ts",
     "send-contact-list-email": "tsx scripts/send-contact-list-email.ts",
+    "generate-contributors": "bash scripts/generate-contributors.sh",
     "prebuild": "npm run validate-env",
     "prepare": "husky install"
   },

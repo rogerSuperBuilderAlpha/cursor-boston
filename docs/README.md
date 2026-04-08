@@ -11,6 +11,7 @@ Read docs in this order depending on your goal:
 | 5 | [RELEASING.md](RELEASING.md) | Maintainers — versioning and GitHub Releases |
 | 6 | [SUPPLY_CHAIN.md](SUPPLY_CHAIN.md) | Security automation, dependencies, and trust signals |
 | 7 | [VERCEL.md](VERCEL.md) | Why PRs do not deploy to Vercel; production-only settings |
+| 8 | [Architecture Decision Records](adr/README.md) | Why the project is built the way it is |
 
 **Operations / events** (not required for typical code contributions):
 

@@ -137,6 +137,8 @@ Each feature is **fully isolated** — new routes, new Firestore collections, no
 - [Code of Conduct](.github/CODE_OF_CONDUCT.md) - Our community standards
 - [Security Policy](.github/SECURITY.md) - How to report security vulnerabilities
 - [Accessibility](.github/ACCESSIBILITY.md) - Our accessibility commitment and WCAG targets
+- [Contributors](CONTRIBUTORS.md) - Everyone who has contributed code
+- [Architecture Decisions](docs/adr/README.md) - Why the project is built the way it is
 - [Changelog](CHANGELOG.md) - Version history
 - [Vercel deployments](docs/VERCEL.md) - Production-only deploys (PRs do not trigger Vercel builds)
 - [API Reference](docs/API.md) - Full list of API endpoints
