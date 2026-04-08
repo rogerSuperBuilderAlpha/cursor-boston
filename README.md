@@ -7,6 +7,8 @@
 
 <p align="center">
   <a href="https://github.com/rogerSuperBuilderAlpha/cursor-boston/actions/workflows/ci.yml"><img src="https://github.com/rogerSuperBuilderAlpha/cursor-boston/actions/workflows/ci.yml/badge.svg?branch=develop" alt="CI" /></a>
+  <a href="https://codecov.io/gh/rogerSuperBuilderAlpha/cursor-boston"><img src="https://codecov.io/gh/rogerSuperBuilderAlpha/cursor-boston/branch/develop/graph/badge.svg" alt="Codecov" /></a>
+  <a href="https://scorecard.dev/viewer/?uri=github.com/rogerSuperBuilderAlpha/cursor-boston"><img src="https://api.scorecard.dev/projects/github.com/rogerSuperBuilderAlpha/cursor-boston/badge" alt="OpenSSF Scorecard" /></a>
   <a href="https://github.com/rogerSuperBuilderAlpha/cursor-boston/pulls"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome" /></a>
   <a href="https://discord.gg/Wsncg8YYqc"><img src="https://img.shields.io/badge/Discord-Join%20Us-7289DA?logo=discord" alt="Discord" /></a>
   <a href="https://lu.ma/cursor-boston"><img src="https://img.shields.io/badge/Luma-Events-emerald" alt="Luma Events" /></a>

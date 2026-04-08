@@ -20,7 +20,7 @@ We take security vulnerabilities seriously. If you discover a security issue, pl
 Preferred options (pick one):
 
 1. **GitHub private vulnerability reporting** (if available on the repository) — use the **Report a vulnerability** link on the **Security** tab. This opens a private thread with maintainers.
-2. **Email:** **hello@cursorboston.com**
+2. **Email:** **security@cursorboston.com**
 
 For machine-readable disclosure routing, see [`public/.well-known/security.txt`](../public/.well-known/security.txt) (served at `https://cursorboston.com/.well-known/security.txt` in production).
 
