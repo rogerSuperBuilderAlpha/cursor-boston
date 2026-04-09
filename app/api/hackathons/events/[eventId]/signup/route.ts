@@ -184,9 +184,85 @@ export async function GET(request: NextRequest, context: RouteContext) {
       return a.signedUpAtMs - b.signedUpAtMs;
     });
 
-    const entries = rows.map((r, i) => {
+    // Build a set of emails already on the website list to deduplicate
+    const websiteEmails = new Set<string>();
+    const websiteGithubLogins = new Set<string>();
+    for (const uid of userIds) {
+      const profile = userMap.get(uid);
+      if (typeof profile?.email === "string") websiteEmails.add(profile.email.toLowerCase());
+      const gh = profile?.github && typeof profile.github === "object"
+        ? (profile.github as { login?: string }).login : undefined;
+      if (typeof gh === "string" && gh.trim()) websiteGithubLogins.add(gh.trim().toLowerCase());
+    }
+
+    // Fetch Luma-only registrants
+    const lumaSnap = await db
+      .collection("hackathonLumaRegistrants")
+      .where("eventId", "==", eventId)
+      .get();
+
+    type LumaRow = {
+      email: string;
+      name: string;
+      githubLogin: string | null;
+      lumaCreatedAt: string;
+      mergedPrCount: number;
+    };
+    const lumaRows: LumaRow[] = [];
+    const lumaGithubLogins: string[] = [];
+
+    for (const doc of lumaSnap.docs) {
+      const d = doc.data();
+      const email = (d.email as string || "").toLowerCase();
+      const ghLogin = typeof d.githubLogin === "string" ? d.githubLogin : null;
+      // Skip if already on website list
+      if (websiteEmails.has(email)) continue;
+      if (ghLogin && websiteGithubLogins.has(ghLogin.toLowerCase())) continue;
+      if (ghLogin) lumaGithubLogins.push(ghLogin);
+      lumaRows.push({
+        email,
+        name: typeof d.name === "string" ? d.name : "",
+        githubLogin: ghLogin,
+        lumaCreatedAt: typeof d.lumaCreatedAt === "string" ? d.lumaCreatedAt : "",
+        mergedPrCount: 0,
+      });
+    }
+
+    // Look up PR counts for Luma-only registrants
+    if (lumaGithubLogins.length > 0) {
+      const lumaPrCounts = await fetchMergedPrCountsForLogins(lumaGithubLogins);
+      for (const lr of lumaRows) {
+        if (lr.githubLogin) {
+          const count = lumaPrCounts.get(lr.githubLogin.toLowerCase());
+          if (count !== undefined) lr.mergedPrCount = count;
+        }
+      }
+    }
+
+    // Sort Luma-only registrants by PR count desc, then Luma signup time asc
+    lumaRows.sort((a, b) => {
+      if (b.mergedPrCount !== a.mergedPrCount) return b.mergedPrCount - a.mergedPrCount;
+      return a.lumaCreatedAt.localeCompare(b.lumaCreatedAt);
+    });
+
+    // Build unified ranked list: website signups first (ranked by PRs),
+    // then Luma-only registrants (ranked by PRs then Luma signup time)
+    type EntryStatus = "confirmed" | "waitlisted" | "luma_only";
+    const entries: {
+      rank: number;
+      userId: string | null;
+      displayName: string | null;
+      githubLogin: string | null;
+      mergedPrCount: number;
+      signedUpAt: string;
+      creditEligible: boolean;
+      status: EntryStatus;
+    }[] = [];
+
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i]!;
       const rank = i + 1;
-      return {
+      entries.push({
         rank,
         userId: r.userId,
         displayName: r.displayName,
@@ -194,8 +270,25 @@ export async function GET(request: NextRequest, context: RouteContext) {
         mergedPrCount: r.mergedPrCount,
         signedUpAt: new Date(r.signedUpAtMs).toISOString(),
         creditEligible: rank <= CURSOR_CREDIT_TOP_N,
-      };
-    });
+        status: rank <= CURSOR_CREDIT_TOP_N ? "confirmed" : "waitlisted",
+      });
+    }
+
+    const websiteCount = entries.length;
+    for (let i = 0; i < lumaRows.length; i++) {
+      const lr = lumaRows[i]!;
+      const rank = websiteCount + i + 1;
+      entries.push({
+        rank,
+        userId: null,
+        displayName: lr.name || null,
+        githubLogin: lr.githubLogin,
+        mergedPrCount: lr.mergedPrCount,
+        signedUpAt: lr.lumaCreatedAt,
+        creditEligible: false,
+        status: "luma_only",
+      });
+    }
 
     let me: {
       signedUp: boolean;
@@ -223,6 +316,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     return NextResponse.json({
       eventId,
       totalCount: entries.length,
+      websiteSignupCount: websiteCount,
       entries,
       creditTopN: CURSOR_CREDIT_TOP_N,
       me,
