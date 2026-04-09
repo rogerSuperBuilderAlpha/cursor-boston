@@ -11,3 +11,4 @@ After submitting, if you see a Discord notification about a new merge, rebase yo
 git fetch upstream
 git rebase upstream/develop
 ```
+
