@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { GitHubIcon, DiscordIcon } from "@/components/icons";
@@ -9,19 +9,23 @@ import {
 } from "@/lib/hackathon-event-signup";
 import { HACK_A_SPRINT_2026_EVENT_ID } from "@/lib/hackathon-showcase";
 
+type EntryStatus = "confirmed" | "waitlisted" | "luma_only";
+
 type LeaderboardEntry = {
   rank: number;
-  userId: string;
+  userId: string | null;
   displayName: string | null;
   githubLogin: string | null;
   mergedPrCount: number;
   signedUpAt: string;
   creditEligible: boolean;
+  status?: EntryStatus;
 };
 
 type LeaderboardResponse = {
   eventId: string;
   totalCount: number;
+  websiteSignupCount?: number;
   entries: LeaderboardEntry[];
   creditTopN: number;
   me: {
@@ -571,83 +575,137 @@ export default function HackASprint2026SignupPage() {
         )}
 
         <div className="mt-10">
-          <h2 className="text-xl font-semibold">Leaderboard</h2>
+          <h2 className="text-xl font-semibold">Participant List</h2>
           <p className="mt-1 text-sm text-neutral-500">
-            {data ? `${data.totalCount} signed up on the site` : "Loading…"}
+            {data
+              ? `${data.websiteSignupCount ?? data.totalCount} on website · ${data.totalCount} total registrants`
+              : "Loading…"}
+          </p>
+          <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+            Top {data?.creditTopN ?? CURSOR_CREDIT_TOP_N} are <strong className="text-emerald-600 dark:text-emerald-400">confirmed</strong>.
+            Everyone else is on the <strong className="text-amber-600 dark:text-amber-400">waitlist</strong>.
+            <strong> Merge PRs</strong> to the community repo to move up — rankings update in real time.
           </p>
 
           <div className="mt-4 overflow-x-auto rounded-xl border border-neutral-200 dark:border-neutral-800">
-            <table className="w-full min-w-[640px] text-left text-sm">
+            <table className="w-full min-w-[700px] text-left text-sm">
               <thead className="bg-neutral-100 dark:bg-neutral-900/80">
                 <tr>
                   <th className="px-4 py-3 font-medium">#</th>
                   <th className="px-4 py-3 font-medium">Name</th>
                   <th className="px-4 py-3 font-medium">GitHub</th>
                   <th className="px-4 py-3 font-medium">Merged PRs</th>
-                  <th className="px-4 py-3 font-medium">Signed up</th>
-                  <th className="px-4 py-3 font-medium">Credit band</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {!data ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-neutral-500">
+                    <td colSpan={5} className="px-4 py-8 text-center text-neutral-500">
                       Loading…
                     </td>
                   </tr>
                 ) : data.entries.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-neutral-500">
-                      No one has signed up on the site yet. Be the first.
+                    <td colSpan={5} className="px-4 py-8 text-center text-neutral-500">
+                      No registrants yet.
                     </td>
                   </tr>
                 ) : (
-                  data.entries.map((row) => {
-                    const isYou = user && row.userId === user.uid;
-                    return (
-                      <tr
-                        key={row.userId}
-                        className={`border-t border-neutral-200 dark:border-neutral-800 ${
-                          row.creditEligible ? "bg-cyan-500/5 dark:bg-cyan-500/10" : ""
-                        } ${isYou ? "ring-2 ring-inset ring-emerald-500/50" : ""}`}
-                      >
-                        <td className="px-4 py-3 font-mono tabular-nums">{row.rank}</td>
-                        <td className="px-4 py-3">
-                          {row.displayName || "—"}
-                          {isYou ? (
-                            <span className="ml-2 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                              (you)
-                            </span>
-                          ) : null}
-                        </td>
-                        <td className="px-4 py-3 font-mono text-xs">
-                          {row.githubLogin ? (
-                            <a
-                              href={`https://github.com/${row.githubLogin}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-emerald-600 hover:underline dark:text-emerald-400"
-                            >
-                              @{row.githubLogin}
-                            </a>
-                          ) : (
-                            "—"
+                  <>
+                    {data.entries.map((row, i) => {
+                      const isYou = user && row.userId && row.userId === user.uid;
+                      const status = row.status ?? (row.creditEligible ? "confirmed" : "waitlisted");
+                      const prevStatus = i > 0 ? (data.entries[i - 1]!.status ?? (data.entries[i - 1]!.creditEligible ? "confirmed" : "waitlisted")) : null;
+
+                      const showWaitlistDivider =
+                        status !== "confirmed" && prevStatus === "confirmed";
+                      const showLumaOnlyDivider =
+                        status === "luma_only" && prevStatus !== "luma_only";
+
+                      return (
+                        <React.Fragment key={row.userId ?? `luma-${row.rank}`}>
+                          {showWaitlistDivider && (
+                            <tr>
+                              <td colSpan={5} className="px-4 py-3 bg-amber-500/10 dark:bg-amber-500/20 border-t-2 border-amber-500/30">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-bold text-amber-700 dark:text-amber-400">
+                                    Waitlist starts here
+                                  </span>
+                                  <span className="text-xs text-amber-600 dark:text-amber-500">
+                                    — merge PRs to the community repo to move up into the top {data.creditTopN}
+                                  </span>
+                                </div>
+                              </td>
+                            </tr>
                           )}
-                        </td>
-                        <td className="px-4 py-3 tabular-nums">{row.mergedPrCount}</td>
-                        <td className="px-4 py-3 text-neutral-500">
-                          {new Date(row.signedUpAt).toLocaleString()}
-                        </td>
-                        <td className="px-4 py-3">
-                          {row.creditEligible ? (
-                            <span className="text-cyan-700 dark:text-cyan-400">Top {data.creditTopN}</span>
-                          ) : (
-                            <span className="text-neutral-400">—</span>
+                          {showLumaOnlyDivider && (
+                            <tr>
+                              <td colSpan={5} className="px-4 py-3 bg-neutral-200/50 dark:bg-neutral-800/50 border-t-2 border-neutral-300 dark:border-neutral-700">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-bold text-neutral-600 dark:text-neutral-400">
+                                    Registered on Luma only
+                                  </span>
+                                  <span className="text-xs text-neutral-500">
+                                    — complete website signup at cursorboston.com to get ranked
+                                  </span>
+                                </div>
+                              </td>
+                            </tr>
                           )}
-                        </td>
-                      </tr>
-                    );
-                  })
+                          <tr
+                            className={`border-t border-neutral-200 dark:border-neutral-800 ${
+                              status === "confirmed"
+                                ? "bg-emerald-500/5 dark:bg-emerald-500/10"
+                                : status === "luma_only"
+                                  ? "bg-neutral-100/50 dark:bg-neutral-900/50 opacity-75"
+                                  : ""
+                            } ${isYou ? "ring-2 ring-inset ring-emerald-500/50" : ""}`}
+                          >
+                            <td className="px-4 py-3 font-mono tabular-nums">{row.rank}</td>
+                            <td className="px-4 py-3">
+                              {row.displayName || "—"}
+                              {isYou ? (
+                                <span className="ml-2 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                                  (you)
+                                </span>
+                              ) : null}
+                            </td>
+                            <td className="px-4 py-3 font-mono text-xs">
+                              {row.githubLogin ? (
+                                <a
+                                  href={`https://github.com/${row.githubLogin}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-emerald-600 hover:underline dark:text-emerald-400"
+                                >
+                                  @{row.githubLogin}
+                                </a>
+                              ) : (
+                                "—"
+                              )}
+                            </td>
+                            <td className="px-4 py-3 tabular-nums">{row.mergedPrCount}</td>
+                            <td className="px-4 py-3">
+                              {status === "confirmed" ? (
+                                <span className="inline-flex items-center rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                                  Confirmed
+                                </span>
+                              ) : status === "waitlisted" ? (
+                                <span className="inline-flex items-center rounded-full bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:text-amber-400">
+                                  Waitlist
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center rounded-full bg-neutral-200 dark:bg-neutral-700 px-2 py-0.5 text-xs font-semibold text-neutral-600 dark:text-neutral-400">
+                                  Needs signup
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        </React.Fragment>
+                      );
+                    })}
+                  </>
                 )}
               </tbody>
             </table>

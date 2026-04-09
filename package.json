@@ -52,6 +52,7 @@
     "send-contact-list-email": "tsx scripts/send-contact-list-email.ts",
     "ai-evaluate": "tsx scripts/ai-evaluate-submissions.ts",
     "distribute-credits": "tsx scripts/distribute-cursor-credits.ts",
+    "seed-luma-registrants": "tsx scripts/seed-luma-registrants.ts",
     "generate-contributors": "bash scripts/generate-contributors.sh",
     "prebuild": "npm run validate-env",
     "prepare": "husky install"

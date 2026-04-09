@@ -37,7 +37,6 @@ import { sendEmail } from "../lib/mailgun";
 
 const SITE_ORIGIN = process.env.NEXT_PUBLIC_APP_URL || "https://cursorboston.com";
 const SIGNUP_PATH = "/hackathons/hack-a-sprint-2026/signup";
-const INSTRUCTIONS_PATH = "/hackathons/hack-a-sprint-2026/instructions";
 const LUMA_URL = "https://luma.com/uixo8hl6";
 
 const GITHUB_COL_KEY = "What is your GitHub username?";
@@ -447,49 +446,55 @@ function buildEmails(args: {
   } = args;
   const first = escapeHtml(name);
   const signupUrl = `${SITE_ORIGIN.replace(/\/$/, "")}${SIGNUP_PATH}`;
-  const instructionsUrl = `${SITE_ORIGIN.replace(/\/$/, "")}${INSTRUCTIONS_PATH}`;
   const repoUrl = getGithubRepoWebBaseUrl();
 
   let subject: string;
   let lead: string;
 
   if (tier === "CONFIRMED") {
-    subject = "Hack-a-Sprint: You're on the leaderboard — details for April 13";
+    subject = `Hack-a-Sprint: You’re #${rank} — confirm your spot for April 13`;
     lead = `<p>Hi ${first},</p>
-<p>Great news: you’re <strong>#${rank}</strong> on the Hack-a-Sprint website leaderboard out of <strong>${totalOnLeaderboard}</strong> builders, with <strong>${mergedPrCount}</strong> merged PR${mergedPrCount === 1 ? "" : "s"} to our community repo. With only <strong>${CURSOR_CREDIT_TOP_N}</strong> in-person spots, you’re in strong shape — keep an eye on your email for any final selection notes from Luma.</p>
-<p><strong>Please plan to arrive before 4:00 PM</strong> so you can check in and get set up before the sprint starts at 4:30 PM.</p>
-<p>Bring your laptop, charger, and something you want to build.</p>`;
+<p>The participant list is finalized. You’re <strong>#${rank}</strong> out of <strong>${totalOnLeaderboard}</strong> on the leaderboard with <strong>${mergedPrCount}</strong> merged PR${mergedPrCount === 1 ? "" : "s"}. You’re in the top ${CURSOR_CREDIT_TOP_N} — <strong>your spot is reserved</strong>.</p>
+<p><strong>To confirm you’re coming, do one of the following before April 13:</strong></p>
+<ol>
+<li><strong>Submit a PR</strong> to <a href="${escapeHtml(repoUrl)}">${escapeHtml(repoUrl)}</a> — any contribution counts (docs, fixes, features). This confirms your attendance and boosts your rank.</li>
+<li>Or <strong>reply to this email</strong> to let us know you’re coming.</li>
+</ol>
+<p>If you can no longer attend, <strong>please remove yourself from <a href="${escapeHtml(LUMA_URL)}">Luma</a></strong> so we can give your spot to someone on the waitlist.</p>
+<p><strong>Arrive by 4:00 PM ET on April 13.</strong> If you’ll be late, contact roger@cursorboston.com before the event. Unclaimed spots at 4:00 PM go to the waitlist.</p>
+<p>Bring your laptop, charger, and something you want to build. Sprint starts at 4:30 PM.</p>
+<p>Final leaderboard: <a href="${escapeHtml(signupUrl)}">${escapeHtml(signupUrl)}</a></p>`;
   } else if (tier === "WAITLISTED") {
-    subject = "Hack-a-Sprint: Your leaderboard position & how to move up";
+    subject = `Hack-a-Sprint: You’re #${rank} — waitlist for April 13`;
     lead = `<p>Hi ${first},</p>
-<p>You’re on the website leaderboard at <strong>#${rank}</strong> of <strong>${totalOnLeaderboard}</strong>, with <strong>${mergedPrCount}</strong> merged PR${mergedPrCount === 1 ? "" : "s"}. We only have <strong>${CURSOR_CREDIT_TOP_N}</strong> spots for the in-person event, so you’re currently outside the top tier — but <strong>people drop out</strong>, and <strong>merged PRs are the fastest way to move up</strong>.</p>
-<p>Open a PR to <a href="${escapeHtml(repoUrl)}">${escapeHtml(repoUrl)}</a> (documentation, fixes, small features all count). Priority on the site is: merged PRs → completed profile → Discord → signup order.</p>`;
+<p>The participant list is finalized. You’re <strong>#${rank}</strong> out of <strong>${totalOnLeaderboard}</strong> on the leaderboard with <strong>${mergedPrCount}</strong> merged PR${mergedPrCount === 1 ? "" : "s"}. We have <strong>${CURSOR_CREDIT_TOP_N}</strong> confirmed spots, so you’re currently on the <strong>waitlist</strong>.</p>
+<p><strong>You can still move up.</strong> Merged PRs are the #1 way to climb the leaderboard. Open a PR to <a href="${escapeHtml(repoUrl)}">${escapeHtml(repoUrl)}</a> — documentation, bug fixes, and small features all count. As confirmed participants drop out or don’t show up, waitlisted builders move in <strong>by rank order</strong>.</p>
+<p><strong>How day-of works:</strong> at 4:00 PM ET on April 13, unclaimed spots go to the waitlist in rank order. If you’d like a chance at a spot, be nearby and watch your email or Discord around 4:00 PM.</p>
+<p>If you know you won’t be coming, please remove yourself from <a href="${escapeHtml(LUMA_URL)}">Luma</a> so others can move up.</p>
+<p>Final leaderboard: <a href="${escapeHtml(signupUrl)}">${escapeHtml(signupUrl)}</a></p>`;
   } else if (tier === "SIGNED_UP_NO_SPOT") {
-    subject = "Hack-a-Sprint: Claim your spot on cursorboston.com";
+    subject = "Hack-a-Sprint: Final list posted — check your ranking";
     const block =
       profileBlockReason ?
         `<p><strong>Before you can claim your spot:</strong> ${escapeHtml(profileBlockReason)}</p>`
       : "";
     lead = `<p>Hi ${first},</p>
-<p>We found your <strong>cursorboston.com</strong> account, but you haven’t joined the Hack-a-Sprint signup list yet. Luma registration is one step — the <strong>website leaderboard</strong> is what we use for ordering and credits.</p>
+<p>The participant list for Hack-a-Sprint is finalized. We found your <strong>cursorboston.com</strong> account, but you haven’t joined the website signup list yet — so you’re not currently ranked.</p>
 ${block}
-<p><strong>Next step:</strong> go to <a href="${escapeHtml(signupUrl)}">${escapeHtml(signupUrl)}</a> and click to join the list. Optional detail steps: <a href="${escapeHtml(instructionsUrl)}">${escapeHtml(instructionsUrl)}</a></p>
-<p>Your merged PR count in our repo (verified): <strong>${mergedPrCount}</strong>. (We don’t rely on the free-text field from Luma for this.)</p>`;
+<p>If you still want to attend, go to <a href="${escapeHtml(signupUrl)}">${escapeHtml(signupUrl)}</a> and claim your spot. You’ll be ranked based on your merged PR count (<strong>${mergedPrCount}</strong>).</p>
+<p>If you can no longer attend, please remove yourself from the <a href="${escapeHtml(LUMA_URL)}">Luma invite</a>.</p>`;
   } else {
-    subject = "Hack-a-Sprint: Finish your cursorboston.com registration";
+    subject = "Hack-a-Sprint: Final list posted — complete your registration";
     lead = `<p>Hi ${first},</p>
-<p>You registered on <strong>Luma</strong>, but we don’t yet see a matching <strong>cursorboston.com</strong> account tied to this email. <strong>Luma approval alone doesn’t reserve a website leaderboard spot.</strong> We have <strong>50</strong> in-person spots; ordering favors merged PRs and a completed community profile.</p>
-<p><strong>Please do this as soon as you can:</strong></p>
+<p>The participant list for Hack-a-Sprint is finalized. You registered on <strong>Luma</strong>, but we don’t see a matching <strong>cursorboston.com</strong> account — so you’re not currently ranked on the leaderboard.</p>
+<p><strong>To get on the list:</strong></p>
 <ol>
 <li>Create an account at <a href="${escapeHtml(SITE_ORIGIN)}">cursorboston.com</a> (use this same email if possible).</li>
-<li>Connect <strong>GitHub</strong> on your profile.</li>
-<li>Connect <strong>Discord</strong> and enable “Show Discord” on your public profile.</li>
-<li>Set your profile to <strong>public</strong>.</li>
-<li>Open <a href="${escapeHtml(signupUrl)}">${escapeHtml(signupUrl)}</a> and <strong>claim your spot</strong> on the leaderboard.</li>
-<li>(Highly recommended) Submit a merged PR to <a href="${escapeHtml(repoUrl)}">${escapeHtml(repoUrl)}</a> to improve your priority.</li>
+<li>Connect <strong>GitHub</strong> and <strong>Discord</strong> on your profile.</li>
+<li>Set your profile to <strong>public</strong> with Discord visible.</li>
+<li>Go to <a href="${escapeHtml(signupUrl)}">${escapeHtml(signupUrl)}</a> and <strong>claim your spot</strong>.</li>
 </ol>
-<p>Full checklist: <a href="${escapeHtml(instructionsUrl)}">${escapeHtml(instructionsUrl)}</a></p>
-<p>Verified merged PRs for the GitHub username we could infer from your Luma answers: <strong>${mergedPrCount}</strong>.</p>`;
+<p>If you can no longer attend, please remove yourself from the <a href="${escapeHtml(LUMA_URL)}">Luma invite</a>.</p>`;
   }
 
   const selfNote =
@@ -503,14 +508,16 @@ ${block}
     `Hi ${name},`,
     "",
     tier === "CONFIRMED" ?
-      `You're #${rank} on the website leaderboard of ${totalOnLeaderboard} with ${mergedPrCount} merged PR(s). Arrive before 4:00 PM ET on April 13.`
+      `You’re #${rank} — spot reserved for April 13. Confirm by submitting a PR to ${repoUrl} or replying to this email. Arrive by 4:00 PM ET. If you can’t come, remove yourself from Luma.`
     : tier === "WAITLISTED" ?
-      `You're #${rank} of ${totalOnLeaderboard} on the leaderboard with ${mergedPrCount} merged PR(s). Only ${CURSOR_CREDIT_TOP_N} spots — merge PRs to ${repoUrl} to move up.`
+      `You’re #${rank} on the waitlist. Merge PRs to ${repoUrl} to move up. At 4:00 PM ET on April 13, unclaimed spots go to waitlist in rank order. If not coming, remove yourself from Luma.`
     : tier === "SIGNED_UP_NO_SPOT" ?
-      `Claim your spot: ${signupUrl}` +
-        (profileBlockReason ? ` First fix: ${profileBlockReason}` : "")
-    : `Complete signup on cursorboston.com and claim your spot: ${signupUrl}`,
+      `Claim your leaderboard spot: ${signupUrl}` +
+        (profileBlockReason ? ` First fix: ${profileBlockReason}` : "") +
+        ` If not attending, remove from Luma.`
+    : `Complete signup on cursorboston.com: ${signupUrl}. If not attending, remove from Luma.`,
     "",
+    `Final leaderboard: ${signupUrl}`,
     `Event: April 13, 2026 4–8 PM ET, Back Bay Boston. Luma: ${LUMA_URL}`,
   ];
 
@@ -527,7 +534,7 @@ function parseArgs(argv: string[]) {
     : join(
         homedir(),
         "Downloads",
-        "Cursor Boston Hack-a-Sprint - Guests - 2026-04-09-12-23-27.csv"
+        "Cursor Boston Hack-a-Sprint - Guests - 2026-04-09-19-49-56.csv"
       );
 
   if ((dryRun && send) || (!dryRun && !send)) {
