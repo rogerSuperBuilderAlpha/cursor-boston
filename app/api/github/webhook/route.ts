@@ -11,7 +11,7 @@ import { ensureHackASprint2026ScoreDoc } from "@/lib/hackathon-asprint-2026-scor
 import { awardHackASprint2026ShowcaseBadge } from "@/lib/hackathon-showcase-admin";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { notifyPROpened, notifyPRMerged, notifyHackASprintSubmissionMerged } from "@/lib/discord";
-import { withMiddleware, rateLimitConfigs } from "@/lib/middleware";
+import { withLoggingMiddleware, withRateLimitMiddleware, rateLimitConfigs } from "@/lib/middleware";
 import { logger } from "@/lib/logger";
 import { getClientIdentifier } from "@/lib/rate-limit";
 
@@ -202,10 +202,10 @@ async function handleWebhook(request: NextRequest) {
   }
 }
 
-// Apply rate limiting and logging middleware
-export const POST = withMiddleware(
-  rateLimitConfigs.webhook,
-  handleWebhook
+// Apply rate limiting and logging middleware (skip CSRF — GitHub webhooks
+// come from github.com, not our origin; signature verification handles auth).
+export const POST = withLoggingMiddleware(
+  withRateLimitMiddleware(rateLimitConfigs.webhook, handleWebhook)
 );
 
 // GitHub sends a ping event when you create a webhook
