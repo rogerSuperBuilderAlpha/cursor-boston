@@ -38,17 +38,22 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               Something went wrong
             </h2>
             <p className="text-neutral-600 dark:text-neutral-400 mb-6">
-              An unexpected error occurred. Please try reloading the page.
+              An unexpected error occurred. You can try again or reload the page.
             </p>
-            <button
-              onClick={() => {
-                this.setState({ hasError: false });
-                window.location.reload();
-              }}
-              className="px-6 py-3 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-400 transition-colors"
-            >
-              Reload Page
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                onClick={() => this.setState({ hasError: false })}
+                className="px-6 py-3 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-400 transition-colors"
+              >
+                Try again
+              </button>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-6 py-3 border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg font-medium hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+              >
+                Reload page
+              </button>
+            </div>
           </div>
         </div>
       );
