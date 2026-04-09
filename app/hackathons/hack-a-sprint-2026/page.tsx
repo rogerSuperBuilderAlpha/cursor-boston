@@ -26,6 +26,7 @@ type SubmissionRow = ShowcaseSubmission & {
   aiScore: number | null;
   judgeAverage: number | null;
   rawScore: number | null;
+  myJudgeScore: number | null;
 };
 
 type SubmissionsResponse = {
@@ -600,6 +601,11 @@ export default function HackASprint2026ShowcasePage() {
                           <label className="text-xs font-semibold text-neutral-500 uppercase">
                             Your score (1–10)
                           </label>
+                          {s.myJudgeScore != null && (
+                            <span className="rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                              Scored: {s.myJudgeScore}
+                            </span>
+                          )}
                           <select
                             defaultValue=""
                             disabled={judgeBusy === s.submissionId}
@@ -613,7 +619,7 @@ export default function HackASprint2026ShowcasePage() {
                             className="rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 px-2 py-1 text-sm"
                           >
                             <option value="" disabled>
-                              Set…
+                              {s.myJudgeScore != null ? "Change…" : "Set…"}
                             </option>
                             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
                               <option key={n} value={n}>

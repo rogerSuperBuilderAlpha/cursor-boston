@@ -410,7 +410,7 @@ function escapeHtml(s: string): string {
 function emailShell(bodyHtml: string): string {
   return `<!DOCTYPE html><html><body style="font-family:system-ui,Segoe UI,sans-serif;line-height:1.5;color:#111;max-width:640px;">
 ${bodyHtml}
-<p style="margin-top:24px;font-size:13px;color:#555;">Questions? Reply or write hello@cursorboston.com</p>
+<p style="margin-top:24px;font-size:13px;color:#555;">Questions? Reply or write roger@cursorboston.com</p>
 </body></html>`;
 }
 
@@ -527,7 +527,7 @@ function parseArgs(argv: string[]) {
     : join(
         homedir(),
         "Downloads",
-        "Cursor Boston Hack-a-Sprint - Guests - 2026-04-05-18-33-17.csv"
+        "Cursor Boston Hack-a-Sprint - Guests - 2026-04-09-12-23-27.csv"
       );
 
   if ((dryRun && send) || (!dryRun && !send)) {

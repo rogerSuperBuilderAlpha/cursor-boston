@@ -27,6 +27,13 @@
       "authorLogin": "joaquinmoyanorugby-png",
       "integrationMergedPrNumber": 98,
       "notes": "Contributor PR #95 closed unmerged; rework merged as #98 (maintainer PR with attribution in message)."
+    },
+    {
+      "classification": "landedViaIntegrationPr",
+      "prNumber": 75,
+      "authorLogin": "littlepuppi",
+      "integrationMergedPrNumber": 97,
+      "notes": "Contributor PR #75 was explicitly superseded by maintainer PR #97, which rebased and merged the contributor's profile refactor work."
     }
   ]
 }

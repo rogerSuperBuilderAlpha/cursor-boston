@@ -50,6 +50,8 @@
     "send-hack-a-sprint-emails": "tsx scripts/send-hack-a-sprint-emails.ts",
     "sync-event-contacts": "tsx scripts/sync-event-contacts.ts",
     "send-contact-list-email": "tsx scripts/send-contact-list-email.ts",
+    "ai-evaluate": "tsx scripts/ai-evaluate-submissions.ts",
+    "distribute-credits": "tsx scripts/distribute-cursor-credits.ts",
     "generate-contributors": "bash scripts/generate-contributors.sh",
     "prebuild": "npm run validate-env",
     "prepare": "husky install"
@@ -77,6 +79,7 @@
     "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
+    "@anthropic-ai/sdk": "^0.87.0",
     "@commitlint/cli": "^20.5.0",
     "@commitlint/config-conventional": "^20.5.0",
     "@eslint/compat": "^2.0.4",

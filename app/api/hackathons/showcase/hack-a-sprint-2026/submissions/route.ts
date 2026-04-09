@@ -85,6 +85,17 @@ export async function GET(request: NextRequest) {
     let submissions: ShowcaseSubmission[] = [];
     if (showSubmissionList) {
       submissions = await fetchShowcaseSubmissionsFromGitHub();
+
+      const allowedRaw = process.env.HACK_A_SPRINT_2026_ALLOWED_SUBMISSIONS || "";
+      if (allowedRaw.trim()) {
+        const allowed = new Set(
+          allowedRaw
+            .split(",")
+            .map((s) => s.trim().toLowerCase())
+            .filter(Boolean)
+        );
+        submissions = submissions.filter((s) => allowed.has(s.submissionId));
+      }
     }
 
     type Row = ShowcaseSubmission & {
@@ -92,6 +103,7 @@ export async function GET(request: NextRequest) {
       aiScore: number | null;
       judgeAverage: number | null;
       rawScore: number | null;
+      myJudgeScore: number | null;
     };
 
     const rows: Row[] = [];
@@ -123,12 +135,22 @@ export async function GET(request: NextRequest) {
         const judgeAverage = averageJudgeScores(judgeScores);
         const rawScore = computeHackASprint2026RawScore(aiScore, judgeScores);
 
+        const myJudge =
+          judgeEligible && judgeScores
+            ? judgeScores[user.uid] ?? null
+            : null;
+        const myJudgeScore =
+          typeof myJudge === "number" && myJudge >= 1 && myJudge <= 10
+            ? myJudge
+            : null;
+
         rows.push({
           ...s,
           peerVoteCount: revealJudgesAndPeers ? peerVoteCount : null,
           aiScore: revealAi ? aiScore : null,
           judgeAverage: revealJudgesAndPeers ? judgeAverage : null,
           rawScore: revealJudgesAndPeers ? rawScore : null,
+          myJudgeScore,
         });
       }
 
