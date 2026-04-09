@@ -10,7 +10,7 @@ import { HACK_A_SPRINT_2026_SUBMISSIONS_PATH } from "@/lib/hackathon-showcase";
 import { ensureHackASprint2026ScoreDoc } from "@/lib/hackathon-asprint-2026-scores";
 import { awardHackASprint2026ShowcaseBadge } from "@/lib/hackathon-showcase-admin";
 import { getAdminDb } from "@/lib/firebase-admin";
-import { notifyPROpened, notifyPRMerged } from "@/lib/discord";
+import { notifyPROpened, notifyPRMerged, notifyHackASprintSubmissionMerged } from "@/lib/discord";
 import { withMiddleware, rateLimitConfigs } from "@/lib/middleware";
 import { logger } from "@/lib/logger";
 import { getClientIdentifier } from "@/lib/rate-limit";
@@ -148,18 +148,37 @@ async function handleWebhook(request: NextRequest) {
           );
           if (touchesShowcase) {
             await awardHackASprint2026ShowcaseBadge(pr.user.login);
+            const re =
+              /^content\/hackathons\/hack-a-sprint-2026\/submissions\/([a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9]))*)\.json$/;
+            const submissionLogins: string[] = [];
             const db = getAdminDb();
             if (db) {
-              const re =
-                /^content\/hackathons\/hack-a-sprint-2026\/submissions\/([a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9]))*)\.json$/;
               for (const name of filenames) {
                 const m = name.match(re);
                 if (m?.[1]) {
+                  submissionLogins.push(m[1]);
                   await ensureHackASprint2026ScoreDoc(db, m[1]);
                 }
               }
+            } else {
+              for (const name of filenames) {
+                const m = name.match(re);
+                if (m?.[1]) submissionLogins.push(m[1]);
+              }
             }
             revalidatePath("/hackathons/hack-a-sprint-2026");
+
+            if (submissionLogins.length > 0) {
+              await notifyHackASprintSubmissionMerged({
+                number: pr.number,
+                title: pr.title || "Untitled",
+                authorLogin: pr.user.login,
+                authorAvatarUrl: pr.user.avatar_url,
+                url: pr.html_url,
+                repository,
+                submissionLogins,
+              });
+            }
           }
         } catch {
           // non-fatal

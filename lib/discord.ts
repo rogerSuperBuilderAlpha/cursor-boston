@@ -53,7 +53,7 @@ export async function sendDiscordNotification(
   options?: { username?: string; avatarUrl?: string; webhookUrl?: string }
 ): Promise<boolean> {
   const webhookUrl = options?.webhookUrl ?? DISCORD_WEBHOOK_URL_PR;
-  
+
   if (!webhookUrl) {
     logger.debug("Discord webhook not configured, skipping notification");
     return false;
@@ -172,6 +172,62 @@ export async function notifyPRMerged(prData: {
     timestamp: prData.mergedAt ?? new Date().toISOString(),
     footer: {
       text: "GitHub Pull Request",
+    },
+  };
+
+  if (prData.authorAvatarUrl) {
+    embed.author = {
+      name: prData.authorLogin,
+      url: `https://github.com/${prData.authorLogin}`,
+      icon_url: prData.authorAvatarUrl,
+    };
+  }
+
+  return sendDiscordNotification(embed);
+}
+
+/**
+ * Notify Discord when a Hack-a-Sprint submission PR is merged.
+ * Tells other participants to rebase their forks.
+ */
+export async function notifyHackASprintSubmissionMerged(prData: {
+  number: number;
+  title: string;
+  authorLogin: string;
+  authorAvatarUrl?: string;
+  url: string;
+  repository: string;
+  submissionLogins: string[];
+}): Promise<boolean> {
+  const names = prData.submissionLogins.map((l) => `**${l}**`).join(", ");
+  const embed: DiscordEmbed = {
+    title: `Hack-a-Sprint Submission Merged — PR #${prData.number}`,
+    description: [
+      `New submission${prData.submissionLogins.length > 1 ? "s" : ""} from ${names} just landed.`,
+      "",
+      "If you have a pending submission PR or a local fork, **rebase now** to avoid conflicts:",
+      "```",
+      "git fetch upstream",
+      "git rebase upstream/main",
+      "```",
+    ].join("\n"),
+    url: prData.url,
+    color: 0x10b981, // emerald-500
+    fields: [
+      {
+        name: "Merged by",
+        value: `[@${prData.authorLogin}](https://github.com/${prData.authorLogin})`,
+        inline: true,
+      },
+      {
+        name: "Submissions",
+        value: String(prData.submissionLogins.length),
+        inline: true,
+      },
+    ],
+    timestamp: new Date().toISOString(),
+    footer: {
+      text: "Hack-a-Sprint 2026",
     },
   };
 
