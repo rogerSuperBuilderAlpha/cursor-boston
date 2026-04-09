@@ -187,8 +187,9 @@ export async function notifyPRMerged(prData: {
 }
 
 /**
- * Notify Discord when a Hack-a-Sprint submission PR is merged.
- * Tells other participants to rebase their forks.
+ * Notify Discord when any PR is merged to main in the community repo.
+ * If it includes hack-a-sprint submissions, highlights them.
+ * Always tells participants to rebase their forks.
  */
 export async function notifyHackASprintSubmissionMerged(prData: {
   number: number;
@@ -199,32 +200,51 @@ export async function notifyHackASprintSubmissionMerged(prData: {
   repository: string;
   submissionLogins: string[];
 }): Promise<boolean> {
+  const hasSubmissions = prData.submissionLogins.length > 0;
   const names = prData.submissionLogins.map((l) => `**${l}**`).join(", ");
+
+  const descLines: string[] = [];
+  if (hasSubmissions) {
+    descLines.push(
+      `New submission${prData.submissionLogins.length > 1 ? "s" : ""} from ${names} just landed.`
+    );
+  } else {
+    descLines.push(`**${prData.title}** was merged into main.`);
+  }
+  descLines.push(
+    "",
+    "If you have a pending submission PR or a local fork, **rebase now** to avoid conflicts:",
+    "```",
+    "git fetch upstream",
+    "git rebase upstream/main",
+    "```"
+  );
+
+  const title = hasSubmissions
+    ? `Hack-a-Sprint Submission Merged — PR #${prData.number}`
+    : `Merged to Main — PR #${prData.number}`;
+
+  const fields: DiscordEmbedField[] = [
+    {
+      name: "Merged by",
+      value: `[@${prData.authorLogin}](https://github.com/${prData.authorLogin})`,
+      inline: true,
+    },
+  ];
+  if (hasSubmissions) {
+    fields.push({
+      name: "Submissions",
+      value: String(prData.submissionLogins.length),
+      inline: true,
+    });
+  }
+
   const embed: DiscordEmbed = {
-    title: `Hack-a-Sprint Submission Merged — PR #${prData.number}`,
-    description: [
-      `New submission${prData.submissionLogins.length > 1 ? "s" : ""} from ${names} just landed.`,
-      "",
-      "If you have a pending submission PR or a local fork, **rebase now** to avoid conflicts:",
-      "```",
-      "git fetch upstream",
-      "git rebase upstream/main",
-      "```",
-    ].join("\n"),
+    title,
+    description: descLines.join("\n"),
     url: prData.url,
-    color: 0x10b981, // emerald-500
-    fields: [
-      {
-        name: "Merged by",
-        value: `[@${prData.authorLogin}](https://github.com/${prData.authorLogin})`,
-        inline: true,
-      },
-      {
-        name: "Submissions",
-        value: String(prData.submissionLogins.length),
-        inline: true,
-      },
-    ],
+    color: hasSubmissions ? 0x10b981 : DISCORD_COLORS.GREEN, // emerald for submissions, green for general
+    fields,
     timestamp: new Date().toISOString(),
     footer: {
       text: "Hack-a-Sprint 2026",
