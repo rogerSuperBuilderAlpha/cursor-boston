@@ -177,14 +177,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       });
     }
 
-    rows.sort((a, b) => {
-      if (b.mergedPrCount !== a.mergedPrCount) {
-        return b.mergedPrCount - a.mergedPrCount;
-      }
-      return a.signedUpAtMs - b.signedUpAtMs;
-    });
-
-    // Build a set of emails already on the website list to deduplicate
+    // Build a set of emails/logins already on the website list to deduplicate
     const websiteEmails = new Set<string>();
     const websiteGithubLogins = new Set<string>();
     for (const uid of userIds) {
@@ -201,26 +194,23 @@ export async function GET(request: NextRequest, context: RouteContext) {
       .where("eventId", "==", eventId)
       .get();
 
+    const lumaGithubLogins: string[] = [];
     type LumaRow = {
-      email: string;
       name: string;
       githubLogin: string | null;
       lumaCreatedAt: string;
       mergedPrCount: number;
     };
     const lumaRows: LumaRow[] = [];
-    const lumaGithubLogins: string[] = [];
 
     for (const doc of lumaSnap.docs) {
       const d = doc.data();
       const email = (d.email as string || "").toLowerCase();
       const ghLogin = typeof d.githubLogin === "string" ? d.githubLogin : null;
-      // Skip if already on website list
       if (websiteEmails.has(email)) continue;
       if (ghLogin && websiteGithubLogins.has(ghLogin.toLowerCase())) continue;
       if (ghLogin) lumaGithubLogins.push(ghLogin);
       lumaRows.push({
-        email,
         name: typeof d.name === "string" ? d.name : "",
         githubLogin: ghLogin,
         lumaCreatedAt: typeof d.lumaCreatedAt === "string" ? d.lumaCreatedAt : "",
@@ -239,56 +229,73 @@ export async function GET(request: NextRequest, context: RouteContext) {
       }
     }
 
-    // Sort Luma-only registrants by PR count desc, then Luma signup time asc
-    lumaRows.sort((a, b) => {
-      if (b.mergedPrCount !== a.mergedPrCount) return b.mergedPrCount - a.mergedPrCount;
-      return a.lumaCreatedAt.localeCompare(b.lumaCreatedAt);
-    });
-
-    // Build unified ranked list: website signups first (ranked by PRs),
-    // then Luma-only registrants (ranked by PRs then Luma signup time)
-    type EntryStatus = "confirmed" | "waitlisted" | "luma_only";
-    const entries: {
-      rank: number;
+    // Merge everything into one unified list, sorted by PR count then signup time
+    type EntrySource = "website" | "luma_only";
+    type UnifiedRow = {
       userId: string | null;
       displayName: string | null;
       githubLogin: string | null;
       mergedPrCount: number;
-      signedUpAt: string;
-      creditEligible: boolean;
-      status: EntryStatus;
-    }[] = [];
+      signedUpAtMs: number;
+      signedUpAtIso: string;
+      source: EntrySource;
+    };
+    const unified: UnifiedRow[] = [];
 
-    for (let i = 0; i < rows.length; i++) {
-      const r = rows[i]!;
-      const rank = i + 1;
-      entries.push({
-        rank,
+    for (const r of rows) {
+      unified.push({
         userId: r.userId,
         displayName: r.displayName,
         githubLogin: r.githubLogin,
         mergedPrCount: r.mergedPrCount,
-        signedUpAt: new Date(r.signedUpAtMs).toISOString(),
-        creditEligible: rank <= CURSOR_CREDIT_TOP_N,
-        status: rank <= CURSOR_CREDIT_TOP_N ? "confirmed" : "waitlisted",
+        signedUpAtMs: r.signedUpAtMs,
+        signedUpAtIso: new Date(r.signedUpAtMs).toISOString(),
+        source: "website",
       });
     }
-
-    const websiteCount = entries.length;
-    for (let i = 0; i < lumaRows.length; i++) {
-      const lr = lumaRows[i]!;
-      const rank = websiteCount + i + 1;
-      entries.push({
-        rank,
+    for (const lr of lumaRows) {
+      unified.push({
         userId: null,
         displayName: lr.name || null,
         githubLogin: lr.githubLogin,
         mergedPrCount: lr.mergedPrCount,
-        signedUpAt: lr.lumaCreatedAt,
-        creditEligible: false,
-        status: "luma_only",
+        signedUpAtMs: lr.lumaCreatedAt ? new Date(lr.lumaCreatedAt).getTime() : 0,
+        signedUpAtIso: lr.lumaCreatedAt,
+        source: "luma_only",
       });
     }
+
+    // Sort everyone together: PR count desc, then signup time asc
+    unified.sort((a, b) => {
+      if (b.mergedPrCount !== a.mergedPrCount) return b.mergedPrCount - a.mergedPrCount;
+      return a.signedUpAtMs - b.signedUpAtMs;
+    });
+
+    // Build ranked entries — top N are confirmed, rest waitlisted
+    type EntryStatus = "confirmed" | "waitlisted" | "luma_only";
+    const websiteCount = rows.length;
+    const entries = unified.map((u, i) => {
+      const rank = i + 1;
+      const isLumaOnly = u.source === "luma_only";
+      let status: EntryStatus;
+      if (isLumaOnly) {
+        status = "luma_only";
+      } else if (rank <= CURSOR_CREDIT_TOP_N) {
+        status = "confirmed";
+      } else {
+        status = "waitlisted";
+      }
+      return {
+        rank,
+        userId: u.userId,
+        displayName: u.displayName,
+        githubLogin: u.githubLogin,
+        mergedPrCount: u.mergedPrCount,
+        signedUpAt: u.signedUpAtIso,
+        creditEligible: rank <= CURSOR_CREDIT_TOP_N && !isLumaOnly,
+        status,
+      };
+    });
 
     let me: {
       signedUp: boolean;
@@ -299,18 +306,16 @@ export async function GET(request: NextRequest, context: RouteContext) {
     } | null = null;
 
     if (meUser) {
-      const idx = rows.findIndex((r) => r.userId === meUser.uid);
-      const signedUp = idx >= 0;
-      const rank = signedUp ? idx + 1 : null;
-      me = {
-        signedUp,
-        rank,
-        mergedPrCount: signedUp ? rows[idx]!.mergedPrCount : null,
-        signedUpAt: signedUp
-          ? new Date(rows[idx]!.signedUpAtMs).toISOString()
-          : null,
-        creditEligible: signedUp && rank !== null && rank <= CURSOR_CREDIT_TOP_N,
-      };
+      const entry = entries.find((e) => e.userId === meUser.uid);
+      me = entry
+        ? {
+            signedUp: true,
+            rank: entry.rank,
+            mergedPrCount: entry.mergedPrCount,
+            signedUpAt: entry.signedUpAt,
+            creditEligible: entry.creditEligible,
+          }
+        : { signedUp: false, rank: null, mergedPrCount: null, signedUpAt: null, creditEligible: false };
     }
 
     return NextResponse.json({
