@@ -4,6 +4,7 @@ const LOGO_SRC = "/cursor-boston-logo.png";
 const ALT = "Cursor Boston";
 
 const sizeClasses = {
+  sm: "w-8 h-8",
   header: "w-12 h-12",
   footer: "w-12 h-12",
   hero: "w-28 h-28",
@@ -34,7 +35,9 @@ export default function Logo({ size, className = "", priority = false }: LogoPro
             ? "(min-width: 768px) 192px, 160px"
             : size === "hero"
               ? "112px"
-              : "48px"
+              : size === "sm"
+                ? "32px"
+                : "48px"
         }
       />
     </div>
