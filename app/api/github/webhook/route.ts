@@ -127,7 +127,7 @@ async function handleWebhook(request: NextRequest) {
         // Discord notification already sent above
       }
 
-      // Showcase: revalidate + profile badge when a merged PR touches submissions
+      // On any merge to the target repo: showcase handling + rebase notification
       if (
         action === "closed" &&
         pr.merged &&
@@ -137,6 +137,8 @@ async function handleWebhook(request: NextRequest) {
           payload.repository.name
         )
       ) {
+        let submissionLogins: string[] = [];
+
         try {
           const filenames = await fetchPullRequestChangedFilenames(
             payload.repository.owner.login,
@@ -150,7 +152,6 @@ async function handleWebhook(request: NextRequest) {
             await awardHackASprint2026ShowcaseBadge(pr.user.login);
             const re =
               /^content\/hackathons\/hack-a-sprint-2026\/submissions\/([a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9]))*)\.json$/;
-            const submissionLogins: string[] = [];
             const db = getAdminDb();
             if (db) {
               for (const name of filenames) {
@@ -167,19 +168,22 @@ async function handleWebhook(request: NextRequest) {
               }
             }
             revalidatePath("/hackathons/hack-a-sprint-2026");
-
-            if (submissionLogins.length > 0) {
-              await notifyHackASprintSubmissionMerged({
-                number: pr.number,
-                title: pr.title || "Untitled",
-                authorLogin: pr.user.login,
-                authorAvatarUrl: pr.user.avatar_url,
-                url: pr.html_url,
-                repository,
-                submissionLogins,
-              });
-            }
           }
+        } catch {
+          // non-fatal
+        }
+
+        // Notify Discord on every merge to main so participants rebase
+        try {
+          await notifyHackASprintSubmissionMerged({
+            number: pr.number,
+            title: pr.title || "Untitled",
+            authorLogin: pr.user.login,
+            authorAvatarUrl: pr.user.avatar_url,
+            url: pr.html_url,
+            repository,
+            submissionLogins,
+          });
         } catch {
           // non-fatal
         }
