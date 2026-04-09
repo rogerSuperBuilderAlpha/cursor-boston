@@ -626,7 +626,7 @@ function HackathonsPoolPageContent() {
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
                             src={t.logoUrl}
-                            alt=""
+                            alt={`${teamDisplayName(t)} logo`}
                             width={20}
                             height={20}
                             className="rounded-full object-cover w-5 h-5"

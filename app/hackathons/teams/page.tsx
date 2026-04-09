@@ -269,7 +269,7 @@ function TeamsPageContent() {
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
                               src={t.logoUrl}
-                              alt=""
+                              alt={`${teamDisplayName(t)} logo`}
                               width={28}
                               height={28}
                               className="rounded-full object-cover w-7 h-7"
@@ -386,7 +386,7 @@ function TeamsPageContent() {
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
                               src={t.logoUrl}
-                              alt=""
+                              alt={`${teamDisplayName(t)} logo`}
                               width={24}
                               height={24}
                               className="rounded-full object-cover w-6 h-6"
