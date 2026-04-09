@@ -6,7 +6,7 @@ Required fields include **loomVideoUrl** (a Loom or similar video of you explain
 
 Do not edit other contributors’ files in your PR.
 
-After submitting, if you see a Discord notification about a new merge, rebase your fork:
+After submitting, if you see a Discord notification about a new merge, rebase your fork before pushing:
 ```
 git fetch upstream
 git rebase upstream/develop
