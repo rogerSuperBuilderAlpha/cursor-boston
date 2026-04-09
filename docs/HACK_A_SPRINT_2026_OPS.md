@@ -26,6 +26,48 @@
 
 - Unlock and scores are **Firestore Admin / API only**; clients cannot set `hackASprint2026Unlocked*` on `users`.
 
+## AI evaluation
+
+Score all submissions automatically using Claude with an Inkbox-specific rubric:
+
+```bash
+# Preview scores (no Firestore writes)
+npm run ai-evaluate -- --dry-run
+
+# Write scores to Firestore
+npm run ai-evaluate -- --apply
+
+# Evaluate a single submission
+npm run ai-evaluate -- --dry-run --single alice
+```
+
+Requires `ANTHROPIC_API_KEY`. Implementation: [`scripts/ai-evaluate-submissions.ts`](../scripts/ai-evaluate-submissions.ts).
+
+## Admin dashboard
+
+Live event monitoring at [`/hackathons/hack-a-sprint-2026/admin`](https://cursorboston.com/hackathons/hack-a-sprint-2026/admin) (admin-only). Shows submissions, all scores (AI + per-judge + peer votes), voting progress, and judge coverage. Auto-refreshes every 15 seconds.
+
+## Credit distribution
+
+After the event, send Cursor credit redemption links to winners and participants:
+
+```bash
+# Export ranked list (no emails)
+npm run distribute-credits -- --dry-run
+
+# Preview emails with credit links
+npm run distribute-credits -- --dry-run --credits credits.json
+
+# Send credit emails
+npm run distribute-credits -- --send --credits credits.json
+```
+
+`credits.json` is a flat array of redemption URLs assigned by rank order. Implementation: [`scripts/distribute-cursor-credits.ts`](../scripts/distribute-cursor-credits.ts).
+
+## Discord notifications
+
+Merges to main automatically send a Discord notification (via `DISCORD_WEBHOOK_URL_PR`) telling participants to rebase against `upstream/develop`. Submission merges highlight the new author(s).
+
 ## Luma guest export → personalized emails
 
 From the repo root, with `.env.local` (or env) containing Firebase Admin + `GITHUB_TOKEN`, and for sends **Mailgun** (`MAILGUN_API_KEY`, `MAILGUN_DOMAIN`, optional `MAILGUN_FROM`):

@@ -216,7 +216,7 @@ export async function notifyHackASprintSubmissionMerged(prData: {
     "If you have a pending submission PR or a local fork, **rebase now** to avoid conflicts:",
     "```",
     "git fetch upstream",
-    "git rebase upstream/main",
+    "git rebase upstream/develop",
     "```"
   );
 
