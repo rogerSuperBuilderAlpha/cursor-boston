@@ -278,19 +278,14 @@ export async function GET(request: NextRequest, context: RouteContext) {
     });
 
     // Build ranked entries — top N are confirmed, rest waitlisted
-    type EntryStatus = "confirmed" | "waitlisted" | "luma_only";
+    type EntryStatus = "confirmed" | "waitlisted";
     const websiteCount = rows.length;
     const entries = unified.map((u, i) => {
       const rank = i + 1;
       const isLumaOnly = u.source === "luma_only";
-      let status: EntryStatus;
-      if (isLumaOnly) {
-        status = "luma_only";
-      } else if (rank <= CURSOR_CREDIT_TOP_N) {
-        status = "confirmed";
-      } else {
-        status = "waitlisted";
-      }
+      const status: EntryStatus = rank <= CURSOR_CREDIT_TOP_N && !isLumaOnly
+        ? "confirmed"
+        : "waitlisted";
       return {
         rank,
         userId: u.userId,
