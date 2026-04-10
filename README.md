@@ -1,21 +1,39 @@
-# Cursor Boston
+# <img src="public/cursor-boston-logo.png" align="center" width="48" height="48" /> Cursor Boston
 
-**The hub for Boston's AI-powered development community.**  
-Built by builders, for builders, using [Cursor](https://cursor.com).
+<p align="center">
+  <strong>The hub for Boston's AI-powered development community.</strong><br />
+  Built by builders, for builders, using <a href="https://cursor.com">Cursor</a>.
+</p>
+
+<p align="center">
+  <a href="https://github.com/rogerSuperBuilderAlpha/cursor-boston/actions/workflows/ci.yml"><img src="https://github.com/rogerSuperBuilderAlpha/cursor-boston/actions/workflows/ci.yml/badge.svg?branch=develop" alt="CI" /></a>
+  <a href="https://codecov.io/gh/rogerSuperBuilderAlpha/cursor-boston"><img src="https://codecov.io/gh/rogerSuperBuilderAlpha/cursor-boston/branch/develop/graph/badge.svg" alt="Codecov" /></a>
+  <a href="https://scorecard.dev/viewer/?uri=github.com/rogerSuperBuilderAlpha/cursor-boston"><img src="https://api.scorecard.dev/projects/github.com/rogerSuperBuilderAlpha/cursor-boston/badge" alt="OpenSSF Scorecard" /></a>
+  <a href="https://github.com/rogerSuperBuilderAlpha/cursor-boston/pulls"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome" /></a>
+  <a href="https://discord.gg/Wsncg8YYqc"><img src="https://img.shields.io/badge/Discord-Join%20Us-7289DA?logo=discord" alt="Discord" /></a>
+  <a href="https://lu.ma/cursor-boston"><img src="https://img.shields.io/badge/Luma-Events-emerald" alt="Luma Events" /></a>
+  <img src="https://img.shields.io/badge/node-%3E%3D22-brightgreen" alt="Node >= 22" />
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="License: GPL v3" /></a>
+</p>
 
 ---
 
-
-|      |     |
-| ---- | --- |
-| # 🚀 |     |
-
+<table>
+<tr>
+<td width="60" align="center">
+<h1>🚀</h1>
+</td>
+<td>
 
 ### New here? Never coded before? Start here.
 
 **You don't need to know how to code.** AI tools like Cursor, Claude Code, and Codex can do the technical work for you. We wrote a step-by-step guide in plain, simple language — no jargon, no experience required.
 
 **[Read the Get Started Guide →](docs/GET_STARTED.md)**
+
+</td>
+</tr>
+</table>
 
 ---
 
@@ -24,7 +42,6 @@ Built by builders, for builders, using [Cursor](https://cursor.com).
 Cursor Boston is a community-led platform designed to bring together the most ambitious developers, students, and founders in the Boston area. We focus on **AI-native development workflows**—leveraging tools like Cursor to ship production code at the speed of thought.
 
 ### 🎯 Who is this for?
-
 - **🌱 Beginners & Students**: Pick up AI-assisted development from day one — no experience required.
 - **💼 Interns & Early-Career Devs**: Level up fast by building real features with real tools.
 - **💻 Working Developers**: Sharpen your workflow, contribute to open source, and connect with peers.
@@ -88,31 +105,26 @@ graph TB
     UI --> Leaflet
 ```
 
-
-
 ---
 
 ## 🚀 Build Something
 
 Want to add a major feature to the platform? We have **6 open feature projects** ready for contributors to claim and build:
 
-
-| #   | Feature                                                                   | Issue                                                                    |
-| --- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| 1   | **Prompt & Rules Cookbook** — share and discover Cursor workflows         | [#78](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/78) |
-| 2   | **Achievement Badge System** — gamified milestones for community activity | [#79](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/79) |
-| 3   | **AI Pair Programming Matchmaker** — find your coding partner             | [#80](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/80) |
-| 4   | **Public Community Analytics Dashboard** — visualize community growth     | [#81](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/81) |
-| 5   | **Interactive Community Event Map** — Boston venues on a live map         | [#82](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/82) |
-| 6   | **Lightning Talk Timer & Speaker Queue** — real-time event tool           | [#83](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/83) |
-
+| # | Feature | Issue |
+|---|---------|-------|
+| 1 | **Prompt & Rules Cookbook** — share and discover Cursor workflows | [#78](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/78) |
+| 2 | **Achievement Badge System** — gamified milestones for community activity | [#79](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/79) |
+| 3 | **AI Pair Programming Matchmaker** — find your coding partner | [#80](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/80) |
+| 4 | **Public Community Analytics Dashboard** — visualize community growth | [#81](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/81) |
+| 5 | **Interactive Community Event Map** — Boston venues on a live map | [#82](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/82) |
+| 6 | **Lightning Talk Timer & Speaker Queue** — real-time event tool | [#83](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/83) |
 
 Each feature is **fully isolated** — new routes, new Firestore collections, no entanglement with existing code. Pick one, comment to claim it, and ship it. See the [Contributing Guide](.github/CONTRIBUTING.md#claiming-an-issue) for how to get started.
 
 ---
 
 ## 📚 Community
-
 - [Documentation index](docs/README.md) - Order of docs for newcomers vs maintainers
 - [Get Started (No Experience Needed)](docs/GET_STARTED.md) - Plain-language guide for complete beginners
 - [Development Guide](docs/DEVELOPMENT.md) - Setup, scripts, troubleshooting, architecture
@@ -136,16 +148,17 @@ Each feature is **fully isolated** — new routes, new Firestore collections, no
 ## 🏃 Quick Start
 
 1. **Fork, then clone your fork**
-  ```bash
+   ```bash
    git clone https://github.com/your-username/cursor-boston.git
    cd cursor-boston
-  ```
+   ```
+
 2. **Install & run** (no Firebase account needed)
-  ```bash
+   ```bash
    npm install
    cp .env.local.demo .env.local    # zero-config demo mode
    npm run dev                       # open http://localhost:3000
-  ```
+   ```
 
 The site loads fully in demo mode — pages, layouts, and styling all work. Firebase features (auth, data) are disabled until you set up credentials.
 
@@ -188,7 +201,6 @@ CRON_SECRET=your-secret npm run rate-limit-cleanup
 ```
 
 Optional environment variables:
-
 - `RATE_LIMIT_CLEANUP_BASE_URL` (default: `http://localhost:3000`)
 - `RATE_LIMIT_CLEANUP_DRY_RUN` (`true` for no-delete simulation)
 - `RATE_LIMIT_CLEANUP_BATCH_SIZE` (clamped to `1-500`)
@@ -207,13 +219,14 @@ CRON_SECRET=your-secret RATE_LIMIT_CLEANUP_BATCH_SIZE=200 RATE_LIMIT_CLEANUP_MAX
 ---
 
 ## 🗺️ Roadmap
-
-- **v0.1**: Initial Community Hub & Event Tracking
-- **v0.2**: Enhanced Member Profiles & Social Integration
-- **v0.3**: Community Discussion Boards
-- **v0.4**: PWA & Mobile Optimization
+- [x] **v0.1**: Initial Community Hub & Event Tracking
+- [ ] **v0.2**: Enhanced Member Profiles & Social Integration
+- [ ] **v0.3**: Community Discussion Boards
+- [ ] **v0.4**: PWA & Mobile Optimization
 
 ---
 
-**Made with ❤️ in Boston.**  
-Join us on [Discord](https://discord.gg/Wsncg8YYqc) or [Luma](https://lu.ma/cursor-boston).
+<p align="center">
+  <strong>Made with ❤️ in Boston.</strong><br />
+  Join us on <a href="https://discord.gg/Wsncg8YYqc">Discord</a> or <a href="https://lu.ma/cursor-boston">Luma</a>.
+</p>
