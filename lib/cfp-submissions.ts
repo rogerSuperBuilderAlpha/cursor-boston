@@ -1,3 +1,9 @@
+/**
+ * Copyright (C) 2026 Cursor Boston
+ * This file is part of Cursor Boston, licensed under GPL-3.0.
+ * See LICENSE file for details.
+ */
+
 import { doc, setDoc, getDoc, serverTimestamp, Timestamp } from "firebase/firestore";
 import { db } from "./firebase";
 import { sanitizeText, sanitizeName } from "./sanitize";

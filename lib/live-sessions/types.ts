@@ -1,3 +1,9 @@
+/**
+ * Copyright (C) 2026 Cursor Boston
+ * This file is part of Cursor Boston, licensed under GPL-3.0.
+ * See LICENSE file for details.
+ */
+
 export const LIVE_TALK_DURATIONS = [3, 5] as const;
 
 export type LiveTalkDurationMinutes = (typeof LIVE_TALK_DURATIONS)[number];
