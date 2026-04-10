@@ -1,0 +1,9 @@
+{
+  "name": "cursor-boston-cloud-agent",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "install": "bash .cursor/scripts/cloud-agent-setup.sh",
+  "start": "sudo service docker start"
+}
