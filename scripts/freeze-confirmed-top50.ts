@@ -21,7 +21,7 @@ loadEnvConfig(process.cwd());
 
 import type { DocumentData, Firestore } from "firebase-admin/firestore";
 import { FieldValue } from "firebase-admin/firestore";
-import { CURSOR_CREDIT_TOP_N } from "../lib/hackathon-event-signup";
+import { CURSOR_CREDIT_TOP_N, DECLINED_EMAILS, JUDGE_EMAILS } from "../lib/hackathon-event-signup";
 import { HACK_A_SPRINT_2026_EVENT_ID } from "../lib/hackathon-showcase";
 import { fetchMergedPrCountsForLogins } from "../lib/github-merged-pr-count";
 import { getAdminDb } from "../lib/firebase-admin";
@@ -175,6 +175,7 @@ async function main() {
     const d = doc.data();
     const email = (d.email as string || "").toLowerCase();
     const ghLogin = typeof d.githubLogin === "string" ? d.githubLogin : null;
+    if (JUDGE_EMAILS.has(email) || DECLINED_EMAILS.has(email)) continue;
     if (websiteEmails.has(email)) continue;
     if (ghLogin && websiteGhSet.has(ghLogin.toLowerCase())) continue;
     if (ghLogin) lumaGithubLogins.push(ghLogin);
@@ -213,14 +214,13 @@ async function main() {
     return a.signedUpAtMs - b.signedUpAtMs;
   });
 
-  const top = unified.slice(0, CURSOR_CREDIT_TOP_N);
-  const topDocKeys = new Set(top.map((r) => `${r.collection}:${r.docId}`));
-
-  // Find docs that need confirmedAt set or cleared
-  const toFreeze = top.filter((r) => !r.alreadyConfirmed);
-  const toClear = unified.filter(
-    (r) => r.alreadyConfirmed && !topDocKeys.has(`${r.collection}:${r.docId}`)
-  );
+  // Already-frozen users stay frozen (confirmedAt is permanent).
+  // Only fill remaining spots up to CURSOR_CREDIT_TOP_N with unfrozen users.
+  const alreadyFrozen = unified.filter((r) => r.alreadyConfirmed);
+  const unfrozen = unified.filter((r) => !r.alreadyConfirmed);
+  const spotsLeft = Math.max(0, CURSOR_CREDIT_TOP_N - alreadyFrozen.length);
+  const top = [...alreadyFrozen, ...unfrozen.slice(0, spotsLeft)];
+  const toFreeze = unfrozen.slice(0, spotsLeft);
 
   console.log(`\nTop ${CURSOR_CREDIT_TOP_N} (to be confirmed):`);
   for (const [i, r] of top.entries()) {
@@ -231,14 +231,7 @@ async function main() {
     );
   }
 
-  if (toClear.length > 0) {
-    console.log(`\nWill CLEAR confirmedAt from ${toClear.length} docs outside top ${CURSOR_CREDIT_TOP_N}:`);
-    for (const r of toClear) {
-      console.log(`  - ${r.displayName || "?"} @${r.githubLogin || "?"} (${r.collection}/${r.docId})`);
-    }
-  }
-
-  console.log(`\n${top.filter((r) => r.alreadyConfirmed).length} already frozen, ${toFreeze.length} to freeze, ${toClear.length} to clear.`);
+  console.log(`\n${alreadyFrozen.length} already frozen, ${toFreeze.length} to freeze.`);
 
   if (dryRun) {
     console.log("--dry-run: no writes. Use --write to apply.");
@@ -255,17 +248,7 @@ async function main() {
     }
   }
 
-  if (toClear.length > 0) {
-    console.log("\nClearing confirmedAt…");
-    for (const r of toClear) {
-      await db.collection(r.collection).doc(r.docId).update({
-        confirmedAt: FieldValue.delete(),
-      });
-      console.log(`  ✗ ${r.displayName} (${r.collection}/${r.docId})`);
-    }
-  }
-
-  console.log(`\nDone. ${toFreeze.length} frozen, ${toClear.length} cleared.`);
+  console.log(`\nDone. ${toFreeze.length} frozen.`);
 }
 
 main().catch((err) => {

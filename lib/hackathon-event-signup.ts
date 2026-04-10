@@ -51,3 +51,20 @@ export function getHackathonEventSignupBlockReason(
 }
 
 export const CURSOR_CREDIT_TOP_N = 50;
+
+/** Judges / organizers — excluded from the participant list so they don't take a spot. */
+export const JUDGE_EMAILS = new Set([
+  "regorhunt02052@gmail.com",
+  "rayruizhiliao@gmail.com",
+]);
+
+/** Luma registrants who declined — excluded from the participant list. */
+export const DECLINED_EMAILS = new Set([
+  "nasit.v@northeastern.edu",
+  "renganathan.b@northeastern.edu",
+  "revoftc@gmail.com",
+  "sakhare.c@northeastern.edu",
+  "lnu.ava@northeastern.edu",
+  "harrychow8888@gmail.com",
+  "brucejia@bu.edu",
+]);
