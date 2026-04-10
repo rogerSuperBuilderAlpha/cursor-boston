@@ -12,11 +12,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { DiscordIcon, GitHubIcon } from "@/components/icons";
 
-export type RequirementType = 
-  | "isPublic" 
-  | "hasGithub" 
-  | "hasDiscord" 
-  | "showDiscord" 
+export type RequirementType =
+  | "isPublic"
+  | "hasGithub"
+  | "hasDiscord"
+  | "showDiscord"
   | "hasDisplayName";
 
 interface Requirement {
@@ -94,12 +94,13 @@ export default function ProfileRequirementsModal({
 
   const fetchProfile = useCallback(async () => {
     if (!user) return;
-    
+
     try {
       const token = await user.getIdToken();
       const res = await fetch("/api/profile/visibility", {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       const data = await res.json();
       
       if (data.success) {
@@ -123,7 +124,7 @@ export default function ProfileRequirementsModal({
   // Check if all requirements are met
   const checkAllRequirementsMet = useCallback(() => {
     if (!profile) return false;
-    
+
     return requirements.every((req) => {
       switch (req) {
         case "isPublic":
@@ -151,14 +152,14 @@ export default function ProfileRequirementsModal({
 
   const toggleVisibility = async (field: "isPublic" | "showDiscord") => {
     if (!user || !profile) return;
-    
+
     setUpdating(field);
     setError(null);
-    
+
     try {
       const token = await user.getIdToken();
       const newValue = !profile.visibility?.[field];
-      
+
       const res = await fetch("/api/profile/visibility", {
         method: "PATCH",
         headers: {
@@ -167,9 +168,9 @@ export default function ProfileRequirementsModal({
         },
         body: JSON.stringify({ [field]: newValue }),
       });
-      
+
       const data = await res.json();
-      
+
       if (data.success) {
         setProfile({
           ...profile,
@@ -177,11 +178,11 @@ export default function ProfileRequirementsModal({
         });
         await refreshUserProfile();
       } else {
-        setError(data.error || "Failed to update");
+        setError(data.error || "Couldn't update profile visibility. Please refresh and try again.");
       }
     } catch (err) {
       console.error("Error updating visibility:", err);
-      setError("Failed to update setting");
+      setError("Couldn't update profile visibility. Please refresh and try again.");
     } finally {
       setUpdating(null);
     }
@@ -189,13 +190,13 @@ export default function ProfileRequirementsModal({
 
   const saveDisplayName = async () => {
     if (!user || !displayNameInput.trim()) return;
-    
+
     setUpdating("displayName");
     setError(null);
-    
+
     try {
       const token = await user.getIdToken();
-      
+
       // Use the existing profile update endpoint
       const res = await fetch("/api/profile/update", {
         method: "PATCH",
@@ -205,7 +206,7 @@ export default function ProfileRequirementsModal({
         },
         body: JSON.stringify({ displayName: displayNameInput.trim() }),
       });
-      
+
       if (res.ok) {
         setProfile({
           ...profile!,
@@ -216,11 +217,11 @@ export default function ProfileRequirementsModal({
         await refreshUserProfile();
       } else {
         const data = await res.json();
-        setError(data.error || "Failed to update display name");
+        setError(data.error || "Couldn't update display name. Please refresh and try again.");
       }
     } catch (err) {
       console.error("Error updating display name:", err);
-      setError("Failed to update display name");
+      setError("Couldn't update display name. Please refresh and try again.");
     } finally {
       setUpdating(null);
     }
@@ -228,7 +229,7 @@ export default function ProfileRequirementsModal({
 
   const getRequirementStatus = (type: RequirementType): boolean => {
     if (!profile) return false;
-    
+
     switch (type) {
       case "isPublic":
         return profile.visibility?.isPublic === true;
@@ -247,14 +248,17 @@ export default function ProfileRequirementsModal({
 
   const renderRequirementAction = (type: RequirementType) => {
     const isComplete = getRequirementStatus(type);
-    
+
     switch (type) {
       case "isPublic":
         return (
           <button
             onClick={() => toggleVisibility("isPublic")}
             disabled={updating === "isPublic"}
-            className={`relative w-12 h-6 rounded-full transition-colors ${
+            role="switch"
+            aria-checked={isComplete}
+            aria-label="Toggle public profile"
+            className={`relative w-12 h-6 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
               isComplete ? "bg-emerald-500" : "bg-neutral-600"
             } ${updating === "isPublic" ? "opacity-50" : ""}`}
           >
@@ -265,13 +269,16 @@ export default function ProfileRequirementsModal({
             />
           </button>
         );
-        
+
       case "showDiscord":
         return (
           <button
             onClick={() => toggleVisibility("showDiscord")}
             disabled={updating === "showDiscord" || !profile?.hasDiscord}
-            className={`relative w-12 h-6 rounded-full transition-colors ${
+            role="switch"
+            aria-checked={isComplete}
+            aria-label="Toggle Discord visibility"
+            className={`relative w-12 h-6 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
               isComplete ? "bg-emerald-500" : "bg-neutral-600"
             } ${updating === "showDiscord" || !profile?.hasDiscord ? "opacity-50" : ""}`}
             title={!profile?.hasDiscord ? "Connect Discord first" : ""}
@@ -283,7 +290,7 @@ export default function ProfileRequirementsModal({
             />
           </button>
         );
-        
+
       case "hasGithub":
         if (isComplete && profile?.githubUsername) {
           return (
@@ -302,7 +309,7 @@ export default function ProfileRequirementsModal({
             Connect GitHub
           </a>
         );
-        
+
       case "hasDiscord":
         if (isComplete && profile?.discordUsername) {
           return (
@@ -321,7 +328,7 @@ export default function ProfileRequirementsModal({
             Connect Discord
           </a>
         );
-        
+
       case "hasDisplayName":
         if (isComplete && !editingDisplayName) {
           return (
@@ -329,7 +336,8 @@ export default function ProfileRequirementsModal({
               <span className="text-sm text-emerald-400">{profile?.displayName}</span>
               <button
                 onClick={() => setEditingDisplayName(true)}
-                className="text-neutral-400 hover:text-white transition-colors"
+                className="text-neutral-400 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                aria-label="Edit display name"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -341,6 +349,7 @@ export default function ProfileRequirementsModal({
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
+                  aria-hidden="true"
                 >
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
@@ -356,7 +365,8 @@ export default function ProfileRequirementsModal({
               value={displayNameInput}
               onChange={(e) => setDisplayNameInput(e.target.value)}
               placeholder="Enter your name"
-              className="px-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white placeholder-neutral-400 focus:outline-none focus:border-neutral-500 w-40"
+              aria-label="Display name"
+              className="px-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent w-40"
               onKeyDown={(e) => {
                 if (e.key === "Enter") saveDisplayName();
                 if (e.key === "Escape") {
@@ -379,14 +389,14 @@ export default function ProfileRequirementsModal({
                   setEditingDisplayName(false);
                   setDisplayNameInput(profile?.displayName || "");
                 }}
-                className="text-neutral-400 hover:text-white transition-colors"
+                className="text-neutral-400 hover:text-white transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
               >
                 Cancel
               </button>
             )}
           </div>
         );
-        
+
       default:
         return null;
     }
@@ -407,6 +417,7 @@ export default function ProfileRequirementsModal({
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
+      aria-labelledby="profile-requirements-title"
       onKeyDown={(e: ReactKeyboardEvent) => {
         if (e.key === "Escape") {
           onClose();
@@ -471,13 +482,14 @@ export default function ProfileRequirementsModal({
                 </div>
               )}
               <div>
-                <h2 className="text-xl font-bold text-white">{title}</h2>
+                <h2 id="profile-requirements-title" className="text-xl font-bold text-white">{title}</h2>
                 <p className="text-sm text-neutral-400">{description}</p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="text-neutral-400 hover:text-white transition-colors p-1"
+              className="text-neutral-400 hover:text-white transition-colors p-1 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              aria-label="Close modal"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -489,6 +501,7 @@ export default function ProfileRequirementsModal({
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                aria-hidden="true"
               >
                 <line x1="18" y1="6" x2="6" y2="18" />
                 <line x1="6" y1="6" x2="18" y2="18" />
@@ -509,7 +522,7 @@ export default function ProfileRequirementsModal({
             <div className="space-y-3">
               {/* Error message */}
               {error && (
-                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg" role="alert">
                   <p className="text-red-400 text-sm">{error}</p>
                 </div>
               )}
@@ -517,7 +530,7 @@ export default function ProfileRequirementsModal({
               {/* Incomplete requirements */}
               {incompleteRequirements.length > 0 && (
                 <>
-                  <p className="text-sm text-neutral-500 font-medium mb-2">
+                  <p className="text-sm text-neutral-400 font-medium mb-2">
                     Required ({incompleteRequirements.length} remaining)
                   </p>
                   {incompleteRequirements.map((req) => {
@@ -565,7 +578,7 @@ export default function ProfileRequirementsModal({
               {/* Complete requirements */}
               {completeRequirements.length > 0 && (
                 <>
-                  <p className="text-sm text-neutral-500 font-medium mb-2 mt-4">
+                  <p className="text-sm text-neutral-400 font-medium mb-2 mt-4">
                     Completed ({completeRequirements.length})
                   </p>
                   {completeRequirements.map((req) => {
@@ -633,7 +646,7 @@ export default function ProfileRequirementsModal({
                 <path d="M7 17l9.2-9.2M17 17V7H7" />
               </svg>
             </Link>
-            
+
             {incompleteRequirements.length === 0 ? (
               <button
                 onClick={onClose}
@@ -642,7 +655,7 @@ export default function ProfileRequirementsModal({
                 Done
               </button>
             ) : (
-              <span className="text-sm text-neutral-500">
+              <span className="text-sm text-neutral-400">
                 {incompleteRequirements.length} requirement{incompleteRequirements.length !== 1 ? "s" : ""} remaining
               </span>
             )}
