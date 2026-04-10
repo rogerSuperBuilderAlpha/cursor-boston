@@ -21,7 +21,7 @@ loadEnvConfig(process.cwd());
 
 import type { DocumentData, Firestore } from "firebase-admin/firestore";
 import { FieldValue } from "firebase-admin/firestore";
-import { CURSOR_CREDIT_TOP_N } from "../lib/hackathon-event-signup";
+import { CURSOR_CREDIT_TOP_N, JUDGE_EMAILS } from "../lib/hackathon-event-signup";
 import { HACK_A_SPRINT_2026_EVENT_ID } from "../lib/hackathon-showcase";
 import { fetchMergedPrCountsForLogins } from "../lib/github-merged-pr-count";
 import { getAdminDb } from "../lib/firebase-admin";
@@ -175,6 +175,7 @@ async function main() {
     const d = doc.data();
     const email = (d.email as string || "").toLowerCase();
     const ghLogin = typeof d.githubLogin === "string" ? d.githubLogin : null;
+    if (JUDGE_EMAILS.has(email)) continue;
     if (websiteEmails.has(email)) continue;
     if (ghLogin && websiteGhSet.has(ghLogin.toLowerCase())) continue;
     if (ghLogin) lumaGithubLogins.push(ghLogin);
