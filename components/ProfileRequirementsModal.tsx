@@ -12,11 +12,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { DiscordIcon, GitHubIcon } from "@/components/icons";
 
-export type RequirementType = 
-  | "isPublic" 
-  | "hasGithub" 
-  | "hasDiscord" 
-  | "showDiscord" 
+export type RequirementType =
+  | "isPublic"
+  | "hasGithub"
+  | "hasDiscord"
+  | "showDiscord"
   | "hasDisplayName";
 
 interface Requirement {
@@ -94,12 +94,13 @@ export default function ProfileRequirementsModal({
 
   const fetchProfile = useCallback(async () => {
     if (!user) return;
-    
+
     try {
       const token = await user.getIdToken();
       const res = await fetch("/api/profile/visibility", {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       const data = await res.json();
       
       if (data.success) {
@@ -123,7 +124,7 @@ export default function ProfileRequirementsModal({
   // Check if all requirements are met
   const checkAllRequirementsMet = useCallback(() => {
     if (!profile) return false;
-    
+
     return requirements.every((req) => {
       switch (req) {
         case "isPublic":
@@ -151,14 +152,14 @@ export default function ProfileRequirementsModal({
 
   const toggleVisibility = async (field: "isPublic" | "showDiscord") => {
     if (!user || !profile) return;
-    
+
     setUpdating(field);
     setError(null);
-    
+
     try {
       const token = await user.getIdToken();
       const newValue = !profile.visibility?.[field];
-      
+
       const res = await fetch("/api/profile/visibility", {
         method: "PATCH",
         headers: {
@@ -167,9 +168,9 @@ export default function ProfileRequirementsModal({
         },
         body: JSON.stringify({ [field]: newValue }),
       });
-      
+
       const data = await res.json();
-      
+
       if (data.success) {
         setProfile({
           ...profile,
@@ -177,11 +178,11 @@ export default function ProfileRequirementsModal({
         });
         await refreshUserProfile();
       } else {
-        setError(data.error || "Failed to update");
+        setError(data.error || "Couldn't update profile visibility. Please refresh and try again.");
       }
     } catch (err) {
       console.error("Error updating visibility:", err);
-      setError("Failed to update setting");
+      setError("Couldn't update profile visibility. Please refresh and try again.");
     } finally {
       setUpdating(null);
     }
@@ -189,13 +190,13 @@ export default function ProfileRequirementsModal({
 
   const saveDisplayName = async () => {
     if (!user || !displayNameInput.trim()) return;
-    
+
     setUpdating("displayName");
     setError(null);
-    
+
     try {
       const token = await user.getIdToken();
-      
+
       // Use the existing profile update endpoint
       const res = await fetch("/api/profile/update", {
         method: "PATCH",
@@ -205,7 +206,7 @@ export default function ProfileRequirementsModal({
         },
         body: JSON.stringify({ displayName: displayNameInput.trim() }),
       });
-      
+
       if (res.ok) {
         setProfile({
           ...profile!,
@@ -216,11 +217,11 @@ export default function ProfileRequirementsModal({
         await refreshUserProfile();
       } else {
         const data = await res.json();
-        setError(data.error || "Failed to update display name");
+        setError(data.error || "Couldn't update display name. Please refresh and try again.");
       }
     } catch (err) {
       console.error("Error updating display name:", err);
-      setError("Failed to update display name");
+      setError("Couldn't update display name. Please refresh and try again.");
     } finally {
       setUpdating(null);
     }
@@ -228,7 +229,7 @@ export default function ProfileRequirementsModal({
 
   const getRequirementStatus = (type: RequirementType): boolean => {
     if (!profile) return false;
-    
+
     switch (type) {
       case "isPublic":
         return profile.visibility?.isPublic === true;
@@ -247,7 +248,7 @@ export default function ProfileRequirementsModal({
 
   const renderRequirementAction = (type: RequirementType) => {
     const isComplete = getRequirementStatus(type);
-    
+
     switch (type) {
       case "isPublic":
         return (
@@ -265,7 +266,7 @@ export default function ProfileRequirementsModal({
             />
           </button>
         );
-        
+
       case "showDiscord":
         return (
           <button
@@ -283,7 +284,7 @@ export default function ProfileRequirementsModal({
             />
           </button>
         );
-        
+
       case "hasGithub":
         if (isComplete && profile?.githubUsername) {
           return (
@@ -302,7 +303,7 @@ export default function ProfileRequirementsModal({
             Connect GitHub
           </a>
         );
-        
+
       case "hasDiscord":
         if (isComplete && profile?.discordUsername) {
           return (
@@ -321,7 +322,7 @@ export default function ProfileRequirementsModal({
             Connect Discord
           </a>
         );
-        
+
       case "hasDisplayName":
         if (isComplete && !editingDisplayName) {
           return (
@@ -386,7 +387,7 @@ export default function ProfileRequirementsModal({
             )}
           </div>
         );
-        
+
       default:
         return null;
     }
@@ -633,7 +634,7 @@ export default function ProfileRequirementsModal({
                 <path d="M7 17l9.2-9.2M17 17V7H7" />
               </svg>
             </Link>
-            
+
             {incompleteRequirements.length === 0 ? (
               <button
                 onClick={onClose}

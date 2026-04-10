@@ -202,7 +202,7 @@ export default function BadgesPage() {
             >
               {badgePersistenceStatus.message ||
                 (badgePersistenceStatus.state === "failed"
-                  ? "We couldn’t save some badge updates. Earned dates may be missing. Please refresh or try again."
+                  ? "We couldn't save some badge updates. Earned dates may be missing. Please refresh or try again."
                   : "Some badge updates are still syncing. Earned dates may appear shortly.")}
             </div>
           </section>
