@@ -90,7 +90,7 @@ function parseArgs(argv: string[]) {
   const csvPath =
     csvIdx >= 0 && argv[csvIdx + 1]
       ? argv[csvIdx + 1]!
-      : join(homedir(), "Downloads", "Cursor Boston Hack-a-Sprint - Guests - 2026-04-09-19-49-56.csv");
+      : join(homedir(), "Downloads", "Cursor Boston Hack-a-Sprint - Guests - 2026-04-10-13-18-35.csv");
   if ((dryRun && apply) || (!dryRun && !apply)) {
     console.error("Specify exactly one of: --dry-run | --apply");
     process.exit(1);

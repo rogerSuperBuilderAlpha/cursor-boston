@@ -55,7 +55,8 @@
     "seed-luma-registrants": "tsx scripts/seed-luma-registrants.ts",
     "generate-contributors": "bash scripts/generate-contributors.sh",
     "prebuild": "npm run validate-env",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "add:gpl-headers": "node scripts/add-gpl-headers.js"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.2.2",
