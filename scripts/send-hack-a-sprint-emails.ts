@@ -534,7 +534,7 @@ function parseArgs(argv: string[]) {
     : join(
         homedir(),
         "Downloads",
-        "Cursor Boston Hack-a-Sprint - Guests - 2026-04-09-19-49-56.csv"
+        "Cursor Boston Hack-a-Sprint - Guests - 2026-04-10-13-18-35.csv"
       );
 
   if ((dryRun && send) || (!dryRun && !send)) {
