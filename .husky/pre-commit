@@ -2,7 +2,7 @@
 . "$(dirname -- "$0")/_/husky.sh"
 
 # Scan for secrets in staged files (if gitleaks is installed)
-if command -v gitleaks &> /dev/null; then
+if command -v gitleaks > /dev/null 2>&1; then
   echo "🔍 Scanning for secrets..."
   gitleaks protect --staged --verbose
   if [ $? -ne 0 ]; then
@@ -12,5 +12,12 @@ if command -v gitleaks &> /dev/null; then
   echo "✅ No secrets detected"
 fi
 
-# Run lint-staged
+# Add GPL headers where missing
+echo "📝 Ensuring GPL headers are present..."
+npm run add:gpl-headers
+
+# Re-stage files that may have been modified by the header script
+git add app lib components hooks contexts types
+
+# Run lint-staged on final staged content
 npx lint-staged

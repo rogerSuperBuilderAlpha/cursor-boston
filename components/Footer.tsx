@@ -1,3 +1,9 @@
+/**
+ * Copyright (C) 2026 Cursor Boston
+ * This file is part of Cursor Boston, licensed under GPL-3.0.
+ * See LICENSE file for details.
+ */
+
 import Link from "next/link";
 import Image from "next/image";
 import Logo from "@/components/Logo";
