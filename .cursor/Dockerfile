@@ -28,21 +28,23 @@ RUN install -m 0755 -d /etc/apt/keyrings && \
     $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
     apt-get update && \
     apt-get install -y \
-    docker-ce=5:28.5.2-1~ubuntu.24.04~noble \
-    docker-ce-cli=5:28.5.2-1~ubuntu.24.04~noble \
+    docker-ce=5:28.* \
+    docker-ce-cli=5:28.* \
     containerd.io \
     docker-buildx-plugin \
     docker-compose-plugin \
     && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && apt-get install -y --no-install-recommends fuse-overlayfs && rm -rf /var/lib/apt/lists/*
-RUN mkdir -p /etc/docker && \
-    printf '%s\n' '{' \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    fuse-overlayfs \
+    iptables \
+    && mkdir -p /etc/docker \
+    && printf '%s\n' '{' \
     '  "storage-driver": "fuse-overlayfs"' \
-    '}' > /etc/docker/daemon.json
-RUN apt-get update && apt-get install -y --no-install-recommends iptables && rm -rf /var/lib/apt/lists/*
-RUN update-alternatives --set iptables /usr/sbin/iptables-legacy && \
-    update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy
+    '}' > /etc/docker/daemon.json \
+    && update-alternatives --set iptables /usr/sbin/iptables-legacy \
+    && update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy \
+    && rm -rf /var/lib/apt/lists/*
 
 ########################################################
 # gitleaks
@@ -71,12 +73,12 @@ RUN mkdir -p /etc/ssh/sshd_config.d && \
       'PasswordAuthentication no' \
       'ChallengeResponseAuthentication no' \
       'UsePAM no' \
-      > /etc/ssh/sshd_config.d/disable_password_auth.conf
-RUN id -u ubuntu &>/dev/null || useradd -m -s /bin/bash ubuntu
-RUN groupadd -f docker && usermod -aG docker ubuntu
-RUN usermod -aG sudo ubuntu
-RUN echo "ubuntu ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/ubuntu
-RUN echo "ubuntu:ubuntu" | chpasswd
+      > /etc/ssh/sshd_config.d/disable_password_auth.conf && \
+    (id -u ubuntu &>/dev/null || useradd -m -s /bin/bash ubuntu) && \
+    groupadd -f docker && usermod -aG docker ubuntu && \
+    usermod -aG sudo ubuntu && \
+    echo "ubuntu ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/ubuntu && \
+    echo "ubuntu:ubuntu" | chpasswd
 
 RUN JAVA_HOME="$(dirname "$(dirname "$(readlink -f "$(command -v java)")")")" && \
     printf 'JAVA_HOME=%s\n' "$JAVA_HOME" >> /etc/environment && \

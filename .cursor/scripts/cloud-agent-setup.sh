@@ -8,6 +8,11 @@ cd "$REPO_ROOT"
 
 npm ci
 
+if [[ ! -f .env.local.example ]]; then
+  echo "cloud-agent-setup: npm ci complete; .env.local.example missing, skipped .env.local sync."
+  exit 0
+fi
+
 node <<'NODE'
 const fs = require("fs");
 const path = require("path");
