@@ -72,7 +72,7 @@ export default function AdminDashboardPage() {
       setError(null);
       setLastRefresh(new Date().toLocaleTimeString());
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load");
+      setError(e instanceof Error ? e.message : "Couldn't load dashboard. Please refresh and try again.");
     }
   }, [user]);
 
