@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import Logo from "@/components/Logo";
 import { DiscordIcon } from "@/components/icons";
 
+
 export const metadata: Metadata = {
   title: "About",
   description:
