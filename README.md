@@ -1,4 +1,4 @@
-# <img src="public/cursor-boston-logo.png" align="center" width="48" height="48" /> Cursor Boston
+# <img src="public/cursor-boston-logo.png" alt="Cursor Boston logo" align="center" width="48" height="48" /> Cursor Boston
 
 <p align="center">
   <strong>The hub for Boston's AI-powered development community.</strong><br />
