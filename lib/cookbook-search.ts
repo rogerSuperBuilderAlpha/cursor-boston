@@ -1,3 +1,9 @@
+/**
+ * Copyright (C) 2026 Cursor Boston
+ * This file is part of Cursor Boston, licensed under GPL-3.0.
+ * See LICENSE file for details.
+ */
+
 /** Returns true if any search term matches the entry's title, description, or tags (case-insensitive). */
 export function matchesCookbookSearchTerms(
   title: string,
