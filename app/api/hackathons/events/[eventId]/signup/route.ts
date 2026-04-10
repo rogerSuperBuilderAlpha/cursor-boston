@@ -14,6 +14,7 @@ import {
 } from "@/lib/server-auth";
 import {
   CURSOR_CREDIT_TOP_N,
+  DECLINED_EMAILS,
   JUDGE_EMAILS,
   getHackathonEventSignupBlockReason,
   hackathonEventSignupDocId,
@@ -217,7 +218,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       const d = doc.data();
       const email = (d.email as string || "").toLowerCase();
       const ghLogin = typeof d.githubLogin === "string" ? d.githubLogin : null;
-      if (JUDGE_EMAILS.has(email)) continue;
+      if (JUDGE_EMAILS.has(email) || DECLINED_EMAILS.has(email)) continue;
       if (websiteEmails.has(email)) continue;
       if (ghLogin && websiteGithubLogins.has(ghLogin.toLowerCase())) continue;
       if (ghLogin) lumaGithubLogins.push(ghLogin);
