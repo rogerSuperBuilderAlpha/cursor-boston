@@ -141,6 +141,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       mergedPrCount: number;
       displayName: string | null;
       githubLogin: string | null;
+      confirmedAt: number | null;
     }[] = [];
 
     const userIds = snap.docs.map((d) => d.data().userId as string).filter(Boolean);
@@ -180,6 +181,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         displayName:
           typeof profile?.displayName === "string" ? profile.displayName : null,
         githubLogin,
+        confirmedAt: data.confirmedAt ? signedUpAtToMs(data.confirmedAt) : null,
       });
     }
 
@@ -206,6 +208,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       githubLogin: string | null;
       lumaCreatedAt: string;
       mergedPrCount: number;
+      confirmedAt: number | null;
     };
     const lumaRows: LumaRow[] = [];
 
@@ -221,6 +224,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         githubLogin: ghLogin,
         lumaCreatedAt: typeof d.lumaCreatedAt === "string" ? d.lumaCreatedAt : "",
         mergedPrCount: 0,
+        confirmedAt: d.confirmedAt ? signedUpAtToMs(d.confirmedAt) : null,
       });
     }
 
@@ -245,6 +249,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       signedUpAtMs: number;
       signedUpAtIso: string;
       source: EntrySource;
+      confirmedAt: number | null;
     };
     const unified: UnifiedRow[] = [];
 
@@ -257,6 +262,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         signedUpAtMs: r.signedUpAtMs,
         signedUpAtIso: new Date(r.signedUpAtMs).toISOString(),
         source: "website",
+        confirmedAt: r.confirmedAt,
       });
     }
     for (const lr of lumaRows) {
@@ -268,24 +274,28 @@ export async function GET(request: NextRequest, context: RouteContext) {
         signedUpAtMs: lr.lumaCreatedAt ? new Date(lr.lumaCreatedAt).getTime() : 0,
         signedUpAtIso: lr.lumaCreatedAt,
         source: "luma_only",
+        confirmedAt: lr.confirmedAt,
       });
     }
 
-    // Sort everyone together: PR count desc, then signup time asc
+    // Frozen confirmed first; within each group: PRs desc → website before luma → registration time asc
     unified.sort((a, b) => {
+      const ac = a.confirmedAt != null ? 1 : 0;
+      const bc = b.confirmedAt != null ? 1 : 0;
+      if (bc !== ac) return bc - ac;
       if (b.mergedPrCount !== a.mergedPrCount) return b.mergedPrCount - a.mergedPrCount;
+      const aWeb = a.source === "website" ? 1 : 0;
+      const bWeb = b.source === "website" ? 1 : 0;
+      if (bWeb !== aWeb) return bWeb - aWeb;
       return a.signedUpAtMs - b.signedUpAtMs;
     });
 
-    // Build ranked entries — top N are confirmed, rest waitlisted
+    // Build ranked entries — status driven by confirmedAt field
     type EntryStatus = "confirmed" | "waitlisted";
     const websiteCount = rows.length;
     const entries = unified.map((u, i) => {
       const rank = i + 1;
-      const isLumaOnly = u.source === "luma_only";
-      const status: EntryStatus = rank <= CURSOR_CREDIT_TOP_N && !isLumaOnly
-        ? "confirmed"
-        : "waitlisted";
+      const isConfirmed = u.confirmedAt != null;
       return {
         rank,
         userId: u.userId,
@@ -293,8 +303,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
         githubLogin: u.githubLogin,
         mergedPrCount: u.mergedPrCount,
         signedUpAt: u.signedUpAtIso,
-        creditEligible: rank <= CURSOR_CREDIT_TOP_N && !isLumaOnly,
-        status,
+        creditEligible: isConfirmed,
+        status: (isConfirmed ? "confirmed" : "waitlisted") as EntryStatus,
       };
     });
 
