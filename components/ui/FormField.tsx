@@ -98,7 +98,7 @@ export function ToggleSwitch({
         disabled={disabled}
         onChange={(e) => onChange(e.target.checked)}
         className="sr-only peer"
-        aria-label={label}
+        aria-label={label || "Toggle"}
       />
       <div
         className={`${trackClass} bg-neutral-700 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-400 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:transition-all peer-checked:bg-emerald-500`}

@@ -6,7 +6,7 @@
 
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import Image from "next/image";
 import { User } from "firebase/auth";
 import Avatar from "@/components/Avatar";
@@ -21,11 +21,43 @@ interface EditProfileModalProps {
 
 export function EditProfileModal({ user, onSave, onClose }: EditProfileModalProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
   const [editName, setEditName] = useState(user.displayName || "");
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Move focus into modal on mount
+  useEffect(() => {
+    const firstFocusable = modalRef.current?.querySelector<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    firstFocusable?.focus();
+  }, []);
+
+  const handleKeyDown = (e: ReactKeyboardEvent) => {
+    if (e.key === "Escape") {
+      onClose();
+    }
+    if (e.key === "Tab") {
+      const modal = modalRef.current;
+      if (!modal) return;
+      const focusable = modal.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  };
 
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -56,12 +88,13 @@ export function EditProfileModal({ user, onSave, onClose }: EditProfileModalProp
       role="dialog"
       aria-modal="true"
       aria-labelledby="edit-profile-title"
+      onKeyDown={handleKeyDown}
     >
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
 
       {/* Modal */}
-      <div className="relative bg-neutral-900 border border-neutral-800 rounded-2xl p-6 md:p-8 max-w-md w-full shadow-2xl">
+      <div ref={modalRef} className="relative bg-neutral-900 border border-neutral-800 rounded-2xl p-6 md:p-8 max-w-md w-full shadow-2xl">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-neutral-400 hover:text-white transition-colors p-1 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
@@ -86,7 +119,7 @@ export function EditProfileModal({ user, onSave, onClose }: EditProfileModalProp
               )}
             </div>
             <div className="flex-1">
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoSelect} className="hidden" id="photo-upload" />
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoSelect} className="hidden" id="photo-upload" aria-label="Upload profile photo" />
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
