@@ -51,3 +51,9 @@ export function getHackathonEventSignupBlockReason(
 }
 
 export const CURSOR_CREDIT_TOP_N = 50;
+
+/** Judges / organizers — excluded from the participant list so they don't take a spot. */
+export const JUDGE_EMAILS = new Set([
+  "regorhunt02052@gmail.com",
+  "rayruizhiliao@gmail.com",
+]);
