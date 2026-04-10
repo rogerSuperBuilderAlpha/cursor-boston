@@ -15,7 +15,7 @@ import {
 } from "@/lib/hackathon-event-signup";
 import { HACK_A_SPRINT_2026_EVENT_ID } from "@/lib/hackathon-showcase";
 
-type EntryStatus = "confirmed" | "waitlisted" | "luma_only";
+type EntryStatus = "confirmed" | "waitlisted";
 
 type LeaderboardEntry = {
   rank: number;
@@ -625,9 +625,7 @@ export default function HackASprint2026SignupPage() {
                       const prevStatus = i > 0 ? (data.entries[i - 1]!.status ?? (data.entries[i - 1]!.creditEligible ? "confirmed" : "waitlisted")) : null;
 
                       const showWaitlistDivider =
-                        status !== "confirmed" && prevStatus === "confirmed";
-                      const showLumaOnlyDivider =
-                        status === "luma_only" && prevStatus !== "luma_only";
+                        status === "waitlisted" && prevStatus === "confirmed";
 
                       return (
                         <React.Fragment key={row.userId ?? `luma-${row.rank}`}>
@@ -645,27 +643,11 @@ export default function HackASprint2026SignupPage() {
                               </td>
                             </tr>
                           )}
-                          {showLumaOnlyDivider && (
-                            <tr>
-                              <td colSpan={5} className="px-4 py-3 bg-neutral-200/50 dark:bg-neutral-800/50 border-t-2 border-neutral-300 dark:border-neutral-700">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-sm font-bold text-neutral-600 dark:text-neutral-400">
-                                    Registered on Luma only
-                                  </span>
-                                  <span className="text-xs text-neutral-500">
-                                    — complete website signup at cursorboston.com to get ranked
-                                  </span>
-                                </div>
-                              </td>
-                            </tr>
-                          )}
                           <tr
                             className={`border-t border-neutral-200 dark:border-neutral-800 ${
                               status === "confirmed"
                                 ? "bg-emerald-500/5 dark:bg-emerald-500/10"
-                                : status === "luma_only"
-                                  ? "bg-neutral-100/50 dark:bg-neutral-900/50 opacity-75"
-                                  : ""
+                                : ""
                             } ${isYou ? "ring-2 ring-inset ring-emerald-500/50" : ""}`}
                           >
                             <td className="px-4 py-3 font-mono tabular-nums">{row.rank}</td>
@@ -697,13 +679,9 @@ export default function HackASprint2026SignupPage() {
                                 <span className="inline-flex items-center rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
                                   Confirmed
                                 </span>
-                              ) : status === "waitlisted" ? (
+                              ) : (
                                 <span className="inline-flex items-center rounded-full bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:text-amber-400">
                                   Waitlist
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center rounded-full bg-neutral-200 dark:bg-neutral-700 px-2 py-0.5 text-xs font-semibold text-neutral-600 dark:text-neutral-400">
-                                  Needs signup
                                 </span>
                               )}
                             </td>
