@@ -67,10 +67,10 @@ export function MessageCard({
   const isRepost = !!message.repostOf;
 
   return (
-    <div className="bg-neutral-900 rounded-xl p-4 border border-neutral-800">
+    <div className="bg-white dark:bg-neutral-900 rounded-xl p-4 border border-neutral-200 dark:border-neutral-800">
       {/* Repost Header */}
       {isRepost && (
-        <div className="flex items-center gap-2 text-neutral-500 text-sm mb-3 pb-3 border-b border-neutral-800">
+        <div className="flex items-center gap-2 text-neutral-500 text-sm mb-3 pb-3 border-b border-neutral-200 dark:border-neutral-800">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
             <path d="M17 1l4 4-4 4" />
             <path d="M3 11V9a4 4 0 0 1 4-4h14" />
@@ -103,7 +103,7 @@ export function MessageCard({
               className="rounded-full object-cover hover:opacity-80 transition-opacity"
             />
           ) : (
-            <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center text-white font-semibold hover:bg-neutral-700 transition-colors">
+            <div className="w-10 h-10 rounded-full bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center text-neutral-700 dark:text-white font-semibold hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors">
               {getInitials(message.authorName)}
             </div>
           )}
@@ -114,7 +114,7 @@ export function MessageCard({
               <button
                 onClick={onAuthorClick}
                 aria-label={`View ${message.authorName}'s profile`}
-                className="font-medium text-white truncate hover:text-emerald-400 transition-colors focus-visible:outline-none focus-visible:text-emerald-400"
+                className="font-medium text-neutral-900 dark:text-white truncate hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors focus-visible:outline-none focus-visible:text-emerald-500 dark:focus-visible:text-emerald-400"
               >
                 {message.authorName}
               </button>
@@ -170,26 +170,26 @@ export function MessageCard({
             )}
           </div>
           {/* Reposter's comment */}
-          <p className="text-neutral-300 mt-1 whitespace-pre-wrap wrap-break-word">
+          <p className="text-neutral-700 dark:text-neutral-300 mt-1 whitespace-pre-wrap wrap-break-word">
             {message.content}
           </p>
           
           {/* Original message being reposted */}
           {isRepost && (
-            <div className="mt-3 p-3 bg-neutral-800/50 rounded-lg border-l-4 border-emerald-500/50">
+            <div className="mt-3 p-3 bg-neutral-100 dark:bg-neutral-800/50 rounded-lg border-l-4 border-emerald-500/50">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-sm font-medium text-neutral-400">
                   {message.repostOf!.originalAuthorName}
                 </span>
               </div>
-              <p className="text-neutral-300 text-sm whitespace-pre-wrap wrap-break-word">
+              <p className="text-neutral-700 dark:text-neutral-300 text-sm whitespace-pre-wrap wrap-break-word">
                 {message.repostOf!.originalContent}
               </p>
             </div>
           )}
 
           {/* Reaction Buttons */}
-          <div className="flex items-center gap-1 mt-3 pt-3 border-t border-neutral-800 -ml-2">
+          <div className="flex items-center gap-1 mt-3 pt-3 border-t border-neutral-200 dark:border-neutral-800 -ml-2">
             {/* Like */}
             <button
               onClick={onLike}
@@ -197,7 +197,7 @@ export function MessageCard({
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-colors min-h-[44px] ${
                 userReaction === "like"
                   ? "text-emerald-400 bg-emerald-500/10"
-                  : "text-neutral-500 hover:text-emerald-400 hover:bg-neutral-800"
+                  : "text-neutral-500 hover:text-emerald-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
               } ${!isLoggedIn ? "opacity-50 cursor-not-allowed" : ""}`}
               aria-label={userReaction === "like" ? "Remove like" : "Like"}
             >
@@ -222,7 +222,7 @@ export function MessageCard({
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-colors min-h-[44px] ${
                 userReaction === "dislike"
                   ? "text-red-400 bg-red-500/10"
-                  : "text-neutral-500 hover:text-red-400 hover:bg-neutral-800"
+                  : "text-neutral-500 hover:text-red-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
               } ${!isLoggedIn ? "opacity-50 cursor-not-allowed" : ""}`}
               aria-label={userReaction === "dislike" ? "Remove dislike" : "Dislike"}
             >
@@ -247,7 +247,7 @@ export function MessageCard({
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-colors min-h-[44px] ${
                 showReplyInput
                   ? "text-emerald-400 bg-emerald-500/10"
-                  : "text-neutral-500 hover:text-emerald-400 hover:bg-neutral-800"
+                  : "text-neutral-500 hover:text-emerald-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
               } ${!isLoggedIn ? "opacity-50 cursor-not-allowed" : ""}`}
               aria-label="Reply"
             >
@@ -270,7 +270,7 @@ export function MessageCard({
               <button
                 onClick={onRepost}
                 disabled={!isLoggedIn}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-colors min-h-[44px] text-neutral-500 hover:text-emerald-400 hover:bg-neutral-800 ${
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-colors min-h-[44px] text-neutral-500 hover:text-emerald-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
                   !isLoggedIn ? "opacity-50 cursor-not-allowed" : ""
                 }`}
                 aria-label="Repost"
@@ -296,7 +296,7 @@ export function MessageCard({
 
           {/* Reply Input */}
           {showReplyInput && (
-            <div className="mt-3 pt-3 border-t border-neutral-800">
+            <div className="mt-3 pt-3 border-t border-neutral-200 dark:border-neutral-800">
               <textarea
                 value={replyContent}
                 onChange={(e) => onReplyContentChange(e.target.value)}
@@ -304,7 +304,7 @@ export function MessageCard({
                 aria-label={`Reply to ${message.authorName}`}
                 rows={2}
                 maxLength={500}
-                className="w-full bg-neutral-800 rounded-lg p-3 text-white placeholder-neutral-400 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                className="w-full bg-neutral-100 dark:bg-neutral-800 rounded-lg p-3 text-neutral-900 dark:text-white placeholder-neutral-400 resize-none focus:outline-none focus:ring-2 focus:ring-emerald-400"
               />
               <div className="flex items-center justify-between mt-2">
                 <span className={`text-xs ${
@@ -361,7 +361,7 @@ export function MessageCard({
 
           {/* Replies */}
           {showReplies && replies.length > 0 && (
-            <div className="mt-3 space-y-3 pl-4 border-l-2 border-neutral-800">
+            <div className="mt-3 space-y-3 pl-4 border-l-2 border-neutral-200 dark:border-neutral-800">
               {replies.map((reply) => (
                 <ReplyCard
                   key={reply.id}
