@@ -27,6 +27,7 @@ type RankingEntry = {
   email: string;
   name: string;
   githubLogin: string | null;
+  prsThruApr9: number;
 };
 
 async function main() {
@@ -42,15 +43,16 @@ async function main() {
   ).ranking;
   console.log(`Loaded ${ranking.length} entries from ranking JSON.`);
 
-  const confirmedEmails = new Set(
-    ranking.filter((r) => r.status === "confirmed").map((r) => r.email)
-  );
-  const confirmedGithubs = new Set(
-    ranking
-      .filter((r) => r.status === "confirmed" && r.githubLogin)
-      .map((r) => r.githubLogin!.toLowerCase())
-  );
-  console.log(`Confirmed: ${confirmedEmails.size} emails, ${confirmedGithubs.size} GitHub logins.`);
+  type ConfirmedInfo = { rank: number; prsThruApr9: number };
+  const confirmedByEmail = new Map<string, ConfirmedInfo>();
+  const confirmedByGithub = new Map<string, ConfirmedInfo>();
+  for (const r of ranking) {
+    if (r.status !== "confirmed") continue;
+    const info = { rank: r.rank, prsThruApr9: r.prsThruApr9 };
+    confirmedByEmail.set(r.email, info);
+    if (r.githubLogin) confirmedByGithub.set(r.githubLogin.toLowerCase(), info);
+  }
+  console.log(`Confirmed: ${confirmedByEmail.size} emails, ${confirmedByGithub.size} GitHub logins.`);
 
   const db = getAdminDb();
   if (!db) {
@@ -96,23 +98,37 @@ async function main() {
     const user = userMap.get(uid);
     const isCurrentlyConfirmed = !!data.confirmedAt;
 
-    const shouldBeConfirmed =
-      (user?.email && confirmedEmails.has(user.email)) ||
-      (user?.githubLogin && confirmedGithubs.has(user.githubLogin));
+    const info =
+      (user?.email && confirmedByEmail.get(user.email)) ||
+      (user?.githubLogin && confirmedByGithub.get(user.githubLogin)) ||
+      null;
+    const shouldBeConfirmed = info != null;
 
-    if (shouldBeConfirmed && !isCurrentlyConfirmed) {
-      console.log(`  SET confirmedAt: ${user?.email || uid} (${user?.githubLogin || "?"})`);
-      if (write) {
-        await db.collection("hackathonEventSignups").doc(doc.id).update({
-          confirmedAt: FieldValue.serverTimestamp(),
-        });
+    if (shouldBeConfirmed) {
+      const needsUpdate =
+        !isCurrentlyConfirmed ||
+        data.frozenRank !== info.rank ||
+        data.frozenPrCount !== info.prsThruApr9;
+      if (needsUpdate) {
+        console.log(`  SET confirmed #${info.rank}: ${user?.email || uid} (${user?.githubLogin || "?"})`);
+        if (write) {
+          await db.collection("hackathonEventSignups").doc(doc.id).update({
+            confirmedAt: isCurrentlyConfirmed ? data.confirmedAt : FieldValue.serverTimestamp(),
+            frozenRank: info.rank,
+            frozenPrCount: info.prsThruApr9,
+          });
+        }
+        setCount++;
+      } else {
+        unchangedCount++;
       }
-      setCount++;
-    } else if (!shouldBeConfirmed && isCurrentlyConfirmed) {
-      console.log(`  CLEAR confirmedAt: ${user?.email || uid} (${user?.githubLogin || "?"})`);
+    } else if (isCurrentlyConfirmed || data.frozenRank != null) {
+      console.log(`  CLEAR confirmed: ${user?.email || uid} (${user?.githubLogin || "?"})`);
       if (write) {
         await db.collection("hackathonEventSignups").doc(doc.id).update({
           confirmedAt: FieldValue.delete(),
+          frozenRank: FieldValue.delete(),
+          frozenPrCount: FieldValue.delete(),
         });
       }
       clearCount++;
@@ -134,22 +150,35 @@ async function main() {
     const gh = typeof d.githubLogin === "string" ? d.githubLogin.toLowerCase() : null;
     const isCurrentlyConfirmed = !!d.confirmedAt;
 
-    const shouldBeConfirmed =
-      confirmedEmails.has(email) || (gh && confirmedGithubs.has(gh));
+    const info =
+      confirmedByEmail.get(email) || (gh && confirmedByGithub.get(gh)) || null;
+    const shouldBeConfirmed = info != null;
 
-    if (shouldBeConfirmed && !isCurrentlyConfirmed) {
-      console.log(`  SET confirmedAt: ${email} (${gh || "?"})`);
-      if (write) {
-        await db.collection("hackathonLumaRegistrants").doc(doc.id).update({
-          confirmedAt: FieldValue.serverTimestamp(),
-        });
+    if (shouldBeConfirmed) {
+      const needsUpdate =
+        !isCurrentlyConfirmed ||
+        d.frozenRank !== info.rank ||
+        d.frozenPrCount !== info.prsThruApr9;
+      if (needsUpdate) {
+        console.log(`  SET confirmed #${info.rank}: ${email} (${gh || "?"})`);
+        if (write) {
+          await db.collection("hackathonLumaRegistrants").doc(doc.id).update({
+            confirmedAt: isCurrentlyConfirmed ? d.confirmedAt : FieldValue.serverTimestamp(),
+            frozenRank: info.rank,
+            frozenPrCount: info.prsThruApr9,
+          });
+        }
+        setCount++;
+      } else {
+        unchangedCount++;
       }
-      setCount++;
-    } else if (!shouldBeConfirmed && isCurrentlyConfirmed) {
-      console.log(`  CLEAR confirmedAt: ${email} (${gh || "?"})`);
+    } else if (isCurrentlyConfirmed || d.frozenRank != null) {
+      console.log(`  CLEAR confirmed: ${email} (${gh || "?"})`);
       if (write) {
         await db.collection("hackathonLumaRegistrants").doc(doc.id).update({
           confirmedAt: FieldValue.delete(),
+          frozenRank: FieldValue.delete(),
+          frozenPrCount: FieldValue.delete(),
         });
       }
       clearCount++;

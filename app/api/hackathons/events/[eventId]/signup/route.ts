@@ -144,6 +144,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
       displayName: string | null;
       githubLogin: string | null;
       confirmedAt: number | null;
+      frozenRank: number | null;
+      frozenPrCount: number | null;
       checkedInAt: number | null;
       willBeLate: boolean;
       queuingForSpot: boolean;
@@ -187,6 +189,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
           typeof profile?.displayName === "string" ? profile.displayName : null,
         githubLogin,
         confirmedAt: data.confirmedAt ? signedUpAtToMs(data.confirmedAt) : null,
+        frozenRank: typeof data.frozenRank === "number" ? data.frozenRank : null,
+        frozenPrCount: typeof data.frozenPrCount === "number" ? data.frozenPrCount : null,
         checkedInAt: data.checkedInAt ? signedUpAtToMs(data.checkedInAt) : null,
         willBeLate: data.willBeLate === true,
         queuingForSpot: data.queuingForSpot === true,
@@ -217,6 +221,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
       lumaCreatedAt: string;
       mergedPrCount: number;
       confirmedAt: number | null;
+      frozenRank: number | null;
+      frozenPrCount: number | null;
     };
     const lumaRows: LumaRow[] = [];
 
@@ -234,6 +240,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
         lumaCreatedAt: typeof d.lumaCreatedAt === "string" ? d.lumaCreatedAt : "",
         mergedPrCount: 0,
         confirmedAt: d.confirmedAt ? signedUpAtToMs(d.confirmedAt) : null,
+        frozenRank: typeof d.frozenRank === "number" ? d.frozenRank : null,
+        frozenPrCount: typeof d.frozenPrCount === "number" ? d.frozenPrCount : null,
       });
     }
 
@@ -248,8 +256,6 @@ export async function GET(request: NextRequest, context: RouteContext) {
       }
     }
 
-    // Merge everything into one unified list, sorted by PR count then signup time
-    type EntrySource = "website" | "luma_only";
     type UnifiedRow = {
       userId: string | null;
       displayName: string | null;
@@ -257,8 +263,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
       mergedPrCount: number;
       signedUpAtMs: number;
       signedUpAtIso: string;
-      source: EntrySource;
       confirmedAt: number | null;
+      frozenRank: number | null;
+      frozenPrCount: number | null;
       checkedInAt: number | null;
       willBeLate: boolean;
       queuingForSpot: boolean;
@@ -273,8 +280,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
         mergedPrCount: r.mergedPrCount,
         signedUpAtMs: r.signedUpAtMs,
         signedUpAtIso: new Date(r.signedUpAtMs).toISOString(),
-        source: "website",
         confirmedAt: r.confirmedAt,
+        frozenRank: r.frozenRank,
+        frozenPrCount: r.frozenPrCount,
         checkedInAt: r.checkedInAt,
         willBeLate: r.willBeLate,
         queuingForSpot: r.queuingForSpot,
@@ -288,35 +296,48 @@ export async function GET(request: NextRequest, context: RouteContext) {
         mergedPrCount: lr.mergedPrCount,
         signedUpAtMs: lr.lumaCreatedAt ? new Date(lr.lumaCreatedAt).getTime() : 0,
         signedUpAtIso: lr.lumaCreatedAt,
-        source: "luma_only",
         confirmedAt: lr.confirmedAt,
+        frozenRank: typeof lr.frozenRank === "number" ? lr.frozenRank : null,
+        frozenPrCount: typeof lr.frozenPrCount === "number" ? lr.frozenPrCount : null,
         checkedInAt: null,
         willBeLate: false,
         queuingForSpot: false,
       });
     }
 
-    // Confirmed first (frozen top 50), then waitlisted. Within each group: PRs desc → time asc.
-    unified.sort((a, b) => {
-      const aConf = a.confirmedAt != null ? 1 : 0;
-      const bConf = b.confirmedAt != null ? 1 : 0;
-      if (bConf !== aConf) return bConf - aConf;
+    // Split into confirmed (frozen rank) and waitlisted (live PRs)
+    const confirmed = unified.filter((u) => u.confirmedAt != null);
+    const waitlisted = unified.filter((u) => u.confirmedAt == null);
+
+    // Confirmed: sort by frozen rank (from ranking JSON), fallback to PRs desc → time asc
+    confirmed.sort((a, b) => {
+      if (a.frozenRank != null && b.frozenRank != null) return a.frozenRank - b.frozenRank;
+      if (a.frozenRank != null) return -1;
+      if (b.frozenRank != null) return 1;
       if (b.mergedPrCount !== a.mergedPrCount) return b.mergedPrCount - a.mergedPrCount;
       return a.signedUpAtMs - b.signedUpAtMs;
     });
 
-    // Build ranked entries — status driven by confirmedAt field
+    // Waitlisted: sort by all-time PRs desc (jockeying) → signup time asc
+    waitlisted.sort((a, b) => {
+      if (b.mergedPrCount !== a.mergedPrCount) return b.mergedPrCount - a.mergedPrCount;
+      return a.signedUpAtMs - b.signedUpAtMs;
+    });
+
+    const sorted = [...confirmed, ...waitlisted];
+
     type EntryStatus = "confirmed" | "waitlisted";
     const websiteCount = rows.length;
-    const entries = unified.map((u, i) => {
+    const entries = sorted.map((u, i) => {
       const rank = i + 1;
       const isConfirmed = u.confirmedAt != null;
+      const displayPrs = isConfirmed && u.frozenPrCount != null ? u.frozenPrCount : u.mergedPrCount;
       return {
         rank,
         userId: u.userId,
         displayName: u.displayName,
         githubLogin: u.githubLogin,
-        mergedPrCount: u.mergedPrCount,
+        mergedPrCount: displayPrs,
         signedUpAt: u.signedUpAtIso,
         creditEligible: isConfirmed,
         status: (isConfirmed ? "confirmed" : "waitlisted") as EntryStatus,
