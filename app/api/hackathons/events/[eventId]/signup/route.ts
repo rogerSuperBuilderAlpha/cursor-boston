@@ -144,6 +144,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
       displayName: string | null;
       githubLogin: string | null;
       confirmedAt: number | null;
+      checkedInAt: number | null;
+      willBeLate: boolean;
+      queuingForSpot: boolean;
     }[] = [];
 
     const userIds = snap.docs.map((d) => d.data().userId as string).filter(Boolean);
@@ -184,6 +187,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
           typeof profile?.displayName === "string" ? profile.displayName : null,
         githubLogin,
         confirmedAt: data.confirmedAt ? signedUpAtToMs(data.confirmedAt) : null,
+        checkedInAt: data.checkedInAt ? signedUpAtToMs(data.checkedInAt) : null,
+        willBeLate: data.willBeLate === true,
+        queuingForSpot: data.queuingForSpot === true,
       });
     }
 
@@ -253,6 +259,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
       signedUpAtIso: string;
       source: EntrySource;
       confirmedAt: number | null;
+      checkedInAt: number | null;
+      willBeLate: boolean;
+      queuingForSpot: boolean;
     };
     const unified: UnifiedRow[] = [];
 
@@ -266,6 +275,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
         signedUpAtIso: new Date(r.signedUpAtMs).toISOString(),
         source: "website",
         confirmedAt: r.confirmedAt,
+        checkedInAt: r.checkedInAt,
+        willBeLate: r.willBeLate,
+        queuingForSpot: r.queuingForSpot,
       });
     }
     for (const lr of lumaRows) {
@@ -278,6 +290,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
         signedUpAtIso: lr.lumaCreatedAt,
         source: "luma_only",
         confirmedAt: lr.confirmedAt,
+        checkedInAt: null,
+        willBeLate: false,
+        queuingForSpot: false,
       });
     }
 
@@ -308,6 +323,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
         signedUpAt: u.signedUpAtIso,
         creditEligible: isConfirmed,
         status: (isConfirmed ? "confirmed" : "waitlisted") as EntryStatus,
+        checkedIn: u.checkedInAt != null,
+        willBeLate: u.willBeLate,
+        queuingForSpot: u.queuingForSpot,
       };
     });
 
@@ -317,6 +335,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
       mergedPrCount: number | null;
       signedUpAt: string | null;
       creditEligible: boolean;
+      willBeLate: boolean;
+      queuingForSpot: boolean;
     } | null = null;
 
     if (meUser) {
@@ -328,8 +348,18 @@ export async function GET(request: NextRequest, context: RouteContext) {
             mergedPrCount: entry.mergedPrCount,
             signedUpAt: entry.signedUpAt,
             creditEligible: entry.creditEligible,
+            willBeLate: entry.willBeLate,
+            queuingForSpot: entry.queuingForSpot,
           }
-        : { signedUp: false, rank: null, mergedPrCount: null, signedUpAt: null, creditEligible: false };
+        : {
+            signedUp: false,
+            rank: null,
+            mergedPrCount: null,
+            signedUpAt: null,
+            creditEligible: false,
+            willBeLate: false,
+            queuingForSpot: false,
+          };
     }
 
     return NextResponse.json({
@@ -397,6 +427,104 @@ export async function POST(request: NextRequest, context: RouteContext) {
   } catch (e) {
     console.error("[hackathon event signup POST]", e);
     return NextResponse.json({ error: "Failed to sign up" }, { status: 500 });
+  }
+}
+
+/**
+ * PATCH RSVP flags on the user's own signup doc.
+ * Body: { willBeLate?: boolean, queuingForSpot?: boolean }
+ * - willBeLate: only when confirmed (confirmedAt set)
+ * - queuingForSpot: only when waitlisted (no confirmedAt)
+ */
+export async function PATCH(request: NextRequest, context: RouteContext) {
+  try {
+    const clientId = getClientIdentifier(request as unknown as Request);
+    const rate = checkRateLimit(`hackathon-event-signup-patch:${clientId}`, RATE);
+    if (!rate.success) {
+      return NextResponse.json(
+        { error: "Too many requests", retryAfterSeconds: rate.retryAfter },
+        { status: 429, headers: { "Retry-After": String(rate.retryAfter || 60) } }
+      );
+    }
+
+    const user = await getVerifiedUser(request);
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { eventId: raw } = await context.params;
+    const eventId = raw?.trim() ?? "";
+    if (!isHackathonEventSignupId(eventId)) {
+      return NextResponse.json({ error: "Unknown event" }, { status: 404 });
+    }
+
+    let body: Record<string, unknown>;
+    try {
+      body = (await request.json()) as Record<string, unknown>;
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    }
+
+    const db = getAdminDb();
+    if (!db) {
+      return NextResponse.json({ error: "Server not configured" }, { status: 500 });
+    }
+
+    const docId = hackathonEventSignupDocId(eventId, user.uid);
+    const ref = db.collection("hackathonEventSignups").doc(docId);
+    const snap = await ref.get();
+    if (!snap.exists) {
+      return NextResponse.json({ error: "Not signed up for this event" }, { status: 404 });
+    }
+
+    const data = snap.data() ?? {};
+    const isConfirmed = Boolean(data.confirmedAt);
+
+    const patch: Record<string, unknown> = {};
+    if (Object.prototype.hasOwnProperty.call(body, "willBeLate")) {
+      if (typeof body.willBeLate !== "boolean") {
+        return NextResponse.json({ error: "willBeLate must be a boolean" }, { status: 400 });
+      }
+      if (body.willBeLate && !isConfirmed) {
+        return NextResponse.json(
+          { error: "Only confirmed attendees can mark that they will be late" },
+          { status: 400 }
+        );
+      }
+      if (body.willBeLate) {
+        patch.willBeLate = true;
+      } else {
+        patch.willBeLate = FieldValue.delete();
+      }
+    }
+
+    if (Object.prototype.hasOwnProperty.call(body, "queuingForSpot")) {
+      if (typeof body.queuingForSpot !== "boolean") {
+        return NextResponse.json({ error: "queuingForSpot must be a boolean" }, { status: 400 });
+      }
+      if (body.queuingForSpot && isConfirmed) {
+        return NextResponse.json(
+          { error: "Waitlisted attendees only can mark that they will queue for a spot" },
+          { status: 400 }
+        );
+      }
+      if (body.queuingForSpot) {
+        patch.queuingForSpot = true;
+      } else {
+        patch.queuingForSpot = FieldValue.delete();
+      }
+    }
+
+    if (Object.keys(patch).length === 0) {
+      return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
+    }
+
+    await ref.update(patch);
+
+    return NextResponse.json({ ok: true }, { status: 200 });
+  } catch (e) {
+    console.error("[hackathon event signup PATCH]", e);
+    return NextResponse.json({ error: "Failed to update RSVP" }, { status: 500 });
   }
 }
 

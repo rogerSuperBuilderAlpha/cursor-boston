@@ -78,6 +78,12 @@ npm run send-hack-a-sprint-emails -- --dry-run --csv /path/to/luma-guests.csv
 
 # Send (throttled)
 npm run send-hack-a-sprint-emails -- --send --csv /path/to/luma-guests.csv
+
+# Day-before reminder (confirmed / waitlist / finish-signup copy; mutually exclusive with --announce-list)
+npm run send-hack-a-sprint-emails -- --dry-run --reminder --csv /path/to/luma-guests.csv
+npm run send-hack-a-sprint-emails -- --send --reminder --csv /path/to/luma-guests.csv
 ```
 
 Implementation: [`scripts/send-hack-a-sprint-emails.ts`](../scripts/send-hack-a-sprint-emails.ts).
+
+**RSVP on site:** Confirmed attendees can mark “I’ll be late” and waitlisted users can mark “I’ll queue for a spot” on [`/hackathons/hack-a-sprint-2026/signup`](../app/hackathons/hack-a-sprint-2026/signup/page.tsx) (PATCH on the event signup API). Admins see **LATE** / **QUEUING** on the check-in tab.

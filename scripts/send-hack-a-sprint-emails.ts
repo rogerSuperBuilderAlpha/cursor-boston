@@ -8,6 +8,14 @@
  * Usage:
  *   npx tsx scripts/send-hack-a-sprint-emails.ts --dry-run [--csv path/to/export.csv]
  *   npx tsx scripts/send-hack-a-sprint-emails.ts --send [--csv path/to/export.csv]
+ *   npx tsx scripts/send-hack-a-sprint-emails.ts --send --announce-list [--csv path/to/export.csv]
+ *   npx tsx scripts/send-hack-a-sprint-emails.ts --dry-run --reminder [--csv path/to/export.csv]
+ *
+ * --announce-list: sends a simpler email linking to the participant list page
+ *   (accepted & waitlisted) instead of the full tier-specific emails.
+ *
+ * --reminder: day-before blast — confirmed vs waitlisted vs incomplete signup copy
+ *   (website registration, Luma “not going”, 4:00 PM arrival, late RSVP on site).
  *
  * Requires: FIREBASE_SERVICE_ACCOUNT_JSON or GOOGLE_APPLICATION_CREDENTIALS;
  * Use the same **GITHUB_TOKEN** as production (e.g. from `.env.local`). PR counts use
@@ -24,6 +32,8 @@ loadEnvConfig(process.cwd());
 import type { DocumentData, Firestore } from "firebase-admin/firestore";
 import {
   CURSOR_CREDIT_TOP_N,
+  DECLINED_EMAILS,
+  JUDGE_EMAILS,
   getHackathonEventSignupBlockReason,
 } from "../lib/hackathon-event-signup";
 import { HACK_A_SPRINT_2026_EVENT_ID } from "../lib/hackathon-showcase";
@@ -320,6 +330,211 @@ async function buildLeaderboard(
   };
 }
 
+/** Same unified ordering as GET signup API (confirmed first, then PRs, …). */
+async function buildUnifiedDisplayRankMaps(
+  db: Firestore
+): Promise<{
+  rankByUserId: Map<string, number>;
+  rankByEmail: Map<string, number>;
+  /** Matches signup page `totalCount` (website + Luma-only, deduped). */
+  totalEntries: number;
+}> {
+  const eventId = HACK_A_SPRINT_2026_EVENT_ID;
+  const signupSnap = await db
+    .collection("hackathonEventSignups")
+    .where("eventId", "==", eventId)
+    .get();
+
+  const rows: {
+    userId: string;
+    email: string | null;
+    signedUpAtMs: number;
+    mergedPrCount: number;
+    confirmedAt: number | null;
+  }[] = [];
+
+  const userIds = signupSnap.docs.map((d) => d.data().userId as string).filter(Boolean);
+  const userMap = await fetchUserDataMap(db, userIds);
+  const firestoreMergedCounts = await countMergedCommunityPrsByUserIds(db, userIds);
+
+  const githubLogins: string[] = [];
+  for (const uid of userIds) {
+    const profile = userMap.get(uid);
+    const login =
+      profile?.github && typeof profile.github === "object"
+        ? (profile.github as { login?: string }).login
+        : undefined;
+    if (typeof login === "string" && login.trim()) githubLogins.push(login.trim());
+  }
+  const githubMergedByLogin = await fetchMergedPrCountsForLogins(githubLogins);
+
+  for (const doc of signupSnap.docs) {
+    const data = doc.data();
+    const userId = data.userId as string;
+    if (!userId) continue;
+    const profile = userMap.get(userId);
+    const gh =
+      profile?.github && typeof profile.github === "object"
+        ? (profile.github as { login?: string }).login
+        : undefined;
+    const githubLogin = typeof gh === "string" ? gh : null;
+    let pr = firestoreMergedCounts.get(userId) ?? 0;
+    if (githubLogin) {
+      const fromApi = githubMergedByLogin.get(githubLogin.toLowerCase());
+      if (fromApi !== undefined) pr = fromApi;
+    }
+    const emailRaw =
+      profile && typeof profile.email === "string" ? profile.email.toLowerCase() : null;
+    rows.push({
+      userId,
+      email: emailRaw,
+      signedUpAtMs: signedUpAtToMs(data.signedUpAt),
+      mergedPrCount: pr,
+      confirmedAt: data.confirmedAt ? signedUpAtToMs(data.confirmedAt) : null,
+    });
+  }
+
+  const websiteEmails = new Set<string>();
+  const websiteGithubLogins = new Set<string>();
+  for (const uid of userIds) {
+    const profile = userMap.get(uid);
+    if (typeof profile?.email === "string") websiteEmails.add(profile.email.toLowerCase());
+    const g =
+      profile?.github && typeof profile.github === "object"
+        ? (profile.github as { login?: string }).login
+        : undefined;
+    if (typeof g === "string" && g.trim()) websiteGithubLogins.add(g.trim().toLowerCase());
+  }
+
+  const lumaSnap = await db
+    .collection("hackathonLumaRegistrants")
+    .where("eventId", "==", eventId)
+    .get();
+
+  const lumaGithubLogins: string[] = [];
+  type LumaRow = {
+    email: string;
+    name: string;
+    githubLogin: string | null;
+    lumaCreatedAt: string;
+    mergedPrCount: number;
+    confirmedAt: number | null;
+  };
+  const lumaRows: LumaRow[] = [];
+
+  for (const doc of lumaSnap.docs) {
+    const d = doc.data();
+    const email = (d.email as string || "").toLowerCase();
+    const ghLogin = typeof d.githubLogin === "string" ? d.githubLogin : null;
+    if (JUDGE_EMAILS.has(email) || DECLINED_EMAILS.has(email)) continue;
+    if (websiteEmails.has(email)) continue;
+    if (ghLogin && websiteGithubLogins.has(ghLogin.toLowerCase())) continue;
+    if (ghLogin) lumaGithubLogins.push(ghLogin);
+    lumaRows.push({
+      email,
+      name: typeof d.name === "string" ? d.name : "",
+      githubLogin: ghLogin,
+      lumaCreatedAt: typeof d.lumaCreatedAt === "string" ? d.lumaCreatedAt : "",
+      mergedPrCount: 0,
+      confirmedAt: d.confirmedAt ? signedUpAtToMs(d.confirmedAt) : null,
+    });
+  }
+
+  if (lumaGithubLogins.length > 0) {
+    const lumaPrCounts = await fetchMergedPrCountsForLogins(lumaGithubLogins);
+    for (const lr of lumaRows) {
+      if (lr.githubLogin) {
+        const count = lumaPrCounts.get(lr.githubLogin.toLowerCase());
+        if (count !== undefined) lr.mergedPrCount = count;
+      }
+    }
+  }
+
+  type EntrySource = "website" | "luma_only";
+  type UnifiedRow = {
+    userId: string | null;
+    email: string | null;
+    mergedPrCount: number;
+    signedUpAtMs: number;
+    source: EntrySource;
+    confirmedAt: number | null;
+  };
+
+  const unified: UnifiedRow[] = [];
+  for (const r of rows) {
+    unified.push({
+      userId: r.userId,
+      email: r.email,
+      mergedPrCount: r.mergedPrCount,
+      signedUpAtMs: r.signedUpAtMs,
+      source: "website",
+      confirmedAt: r.confirmedAt,
+    });
+  }
+  for (const lr of lumaRows) {
+    unified.push({
+      userId: null,
+      email: lr.email || null,
+      mergedPrCount: lr.mergedPrCount,
+      signedUpAtMs: lr.lumaCreatedAt ? new Date(lr.lumaCreatedAt).getTime() : 0,
+      source: "luma_only",
+      confirmedAt: lr.confirmedAt,
+    });
+  }
+
+  unified.sort((a, b) => {
+    const ac = a.confirmedAt != null ? 1 : 0;
+    const bc = b.confirmedAt != null ? 1 : 0;
+    if (bc !== ac) return bc - ac;
+    if (b.mergedPrCount !== a.mergedPrCount) return b.mergedPrCount - a.mergedPrCount;
+    const aWeb = a.source === "website" ? 1 : 0;
+    const bWeb = b.source === "website" ? 1 : 0;
+    if (bWeb !== aWeb) return bWeb - aWeb;
+    return a.signedUpAtMs - b.signedUpAtMs;
+  });
+
+  const rankByUserId = new Map<string, number>();
+  const rankByEmail = new Map<string, number>();
+  for (let i = 0; i < unified.length; i++) {
+    const u = unified[i]!;
+    const rank = i + 1;
+    if (u.userId) rankByUserId.set(u.userId, rank);
+    if (u.email) rankByEmail.set(u.email, rank);
+  }
+
+  return { rankByUserId, rankByEmail, totalEntries: unified.length };
+}
+
+async function buildSignupConfirmedByUserId(db: Firestore): Promise<Map<string, boolean>> {
+  const m = new Map<string, boolean>();
+  const snap = await db
+    .collection("hackathonEventSignups")
+    .where("eventId", "==", HACK_A_SPRINT_2026_EVENT_ID)
+    .get();
+  for (const doc of snap.docs) {
+    const d = doc.data();
+    const uid = d.userId as string;
+    if (!uid) continue;
+    m.set(uid, !!d.confirmedAt);
+  }
+  return m;
+}
+
+async function buildLumaConfirmedByEmail(db: Firestore): Promise<Map<string, boolean>> {
+  const m = new Map<string, boolean>();
+  const snap = await db
+    .collection("hackathonLumaRegistrants")
+    .where("eventId", "==", HACK_A_SPRINT_2026_EVENT_ID)
+    .get();
+  for (const doc of snap.docs) {
+    const d = doc.data();
+    const email = String(d.email ?? "").toLowerCase();
+    if (!email) continue;
+    m.set(email, !!d.confirmedAt);
+  }
+  return m;
+}
+
 type MatchMethod = "auth" | "emailLookup" | "firestoreEmail" | "githubLogin" | null;
 
 async function resolveUserIdForEmail(
@@ -524,9 +739,162 @@ ${block}
   return { subject, html, text: textParts.join("\n") };
 }
 
+function buildListAnnouncementEmail(args: {
+  tier: Exclude<RegistrantTier, "DECLINED">;
+  name: string;
+  rank: number | null;
+  totalOnLeaderboard: number;
+  mergedPrCount: number;
+}): { subject: string; html: string; text: string } {
+  const { tier, name, rank, totalOnLeaderboard, mergedPrCount } = args;
+  const first = escapeHtml(name);
+  const signupUrl = `${SITE_ORIGIN.replace(/\/$/, "")}${SIGNUP_PATH}`;
+  const repoUrl = getGithubRepoWebBaseUrl();
+
+  const subject = "Hack-a-Sprint: Accepted & waitlisted participants list is live";
+
+  let statusLine: string;
+  if (tier === "CONFIRMED" && rank !== null) {
+    statusLine = `You're <strong>#${rank}</strong> out of <strong>${totalOnLeaderboard}</strong> with <strong>${mergedPrCount}</strong> merged PR${mergedPrCount === 1 ? "" : "s"} — <strong style="color:#059669;">confirmed</strong>.`;
+  } else if (tier === "WAITLISTED" && rank !== null) {
+    statusLine = `You're <strong>#${rank}</strong> out of <strong>${totalOnLeaderboard}</strong> with <strong>${mergedPrCount}</strong> merged PR${mergedPrCount === 1 ? "" : "s"} — currently on the <strong style="color:#d97706;">waitlist</strong>. You can still move up by merging PRs to <a href="${escapeHtml(repoUrl)}">the community repo</a>.`;
+  } else if (tier === "SIGNED_UP_NO_SPOT") {
+    statusLine = `We found your cursorboston.com account but you haven't joined the signup list yet — go to the page below to claim your spot.`;
+  } else {
+    statusLine = `You registered on Luma but we don't see a matching cursorboston.com account yet — create one and claim your spot on the page below.`;
+  }
+
+  const html = emailShell(`<p>Hi ${first},</p>
+<p>The accepted and waitlisted participant list for <strong>Hack-a-Sprint</strong> is now live. You can see the full list, your ranking, and your status here:</p>
+<p style="margin:16px 0;"><a href="${escapeHtml(signupUrl)}" style="display:inline-block;background:#059669;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">View participant list</a></p>
+<p>${statusLine}</p>
+<p>The top <strong>${CURSOR_CREDIT_TOP_N}</strong> are confirmed. Everyone else is on the waitlist. Rankings are based on merged PRs to the community repo, then by signup time.</p>
+${commonEventBlockHtml()}`);
+
+  const textStatusLine =
+    tier === "CONFIRMED" && rank !== null
+      ? `You're #${rank} of ${totalOnLeaderboard} (${mergedPrCount} merged PRs) — confirmed.`
+      : tier === "WAITLISTED" && rank !== null
+        ? `You're #${rank} of ${totalOnLeaderboard} (${mergedPrCount} merged PRs) — waitlisted. Merge PRs to move up.`
+        : tier === "SIGNED_UP_NO_SPOT"
+          ? `You have an account but haven't joined the signup list yet — claim your spot at the link below.`
+          : `Create a cursorboston.com account and claim your spot at the link below.`;
+
+  const text = [
+    `Hi ${name},`,
+    "",
+    "The accepted and waitlisted participant list for Hack-a-Sprint is now live.",
+    "",
+    `View the full list: ${signupUrl}`,
+    "",
+    textStatusLine,
+    "",
+    `Top ${CURSOR_CREDIT_TOP_N} are confirmed. Rankings = merged PRs to the community repo, then signup time.`,
+    "",
+    `Event: April 13, 2026 4–8 PM ET, Back Bay Boston. Luma: ${LUMA_URL}`,
+  ].join("\n");
+
+  return { subject, html, text };
+}
+
+function buildReminderEmail(args: {
+  tier: Exclude<RegistrantTier, "DECLINED">;
+  name: string;
+  rank: number | null;
+  totalOnLeaderboard: number;
+  mergedPrCount: number;
+  profileBlockReason: string | null;
+  csvSelfReportedPr: string;
+}): { subject: string; html: string; text: string } {
+  const {
+    tier,
+    name,
+    rank,
+    totalOnLeaderboard,
+    mergedPrCount,
+    profileBlockReason,
+    csvSelfReportedPr,
+  } = args;
+  const first = escapeHtml(name);
+  const signupUrl = `${SITE_ORIGIN.replace(/\/$/, "")}${SIGNUP_PATH}`;
+  const repoUrl = getGithubRepoWebBaseUrl();
+  const rankPhrase =
+    rank !== null ? `#${rank} of ${totalOnLeaderboard}` : "the list";
+
+  let subject: string;
+  let lead: string;
+
+  if (tier === "CONFIRMED") {
+    subject = "Hack-a-Sprint is Monday — your spot is confirmed";
+    lead = `<p>Hi ${first},</p>
+<p><strong>Monday, April 13</strong> is almost here. You have a <strong>confirmed spot</strong> on the website leaderboard (${rank !== null ? `rank <strong>#${rank}</strong> of <strong>${totalOnLeaderboard}</strong>` : "see the list"} · <strong>${mergedPrCount}</strong> merged PR${mergedPrCount === 1 ? "" : "s"}).</p>
+<p><strong>Can’t make it?</strong> Please mark yourself as <strong>not going</strong> on Luma so we can offer your spot to the waitlist: <a href="${escapeHtml(LUMA_URL)}">${escapeHtml(LUMA_URL)}</a></p>
+<p><strong>Attending?</strong> You <strong>must register on the website</strong> to participate (leaderboard + day-of tools). Do it now — you can wait until you arrive, but it will be slow and annoying at the door: <a href="${escapeHtml(signupUrl)}">${escapeHtml(signupUrl)}</a></p>
+<p><strong>Arrive by 4:00 PM ET.</strong> If you are not checked in by 4:00 PM, your spot may be given to someone on the waitlist.</p>
+<p><strong>Running late but still coming?</strong> That’s OK — you <strong>must</strong> say so on the website (Day-of RSVP) or we may release your spot: <a href="${escapeHtml(signupUrl)}">${escapeHtml(signupUrl)}</a></p>`;
+  } else if (tier === "WAITLISTED") {
+    subject = "Hack-a-Sprint is Monday — waitlist update";
+    lead = `<p>Hi ${first},</p>
+<p>You are <strong>${rankPhrase}</strong> on the waitlist with <strong>${mergedPrCount}</strong> merged PR${mergedPrCount === 1 ? "" : "s"}. <strong>Admission is not guaranteed.</strong> There is <strong>no spectator room</strong> — only participants with a seat.</p>
+<p><strong>Want to try for an open spot?</strong> At <strong>4:00 PM ET</strong>, unclaimed confirmed spots go to waitlisters <strong>in rank order</strong>. On the website, you can indicate that you’ll be there to queue: <a href="${escapeHtml(signupUrl)}">${escapeHtml(signupUrl)}</a></p>
+<p><strong>Move up before Monday:</strong> Sign up on the website if you haven’t, and <strong>merge a PR</strong> to the community repo to climb the waitlist: <a href="${escapeHtml(repoUrl)}">${escapeHtml(repoUrl)}</a></p>
+<p>If you’re not planning to queue, please remove yourself from <a href="${escapeHtml(LUMA_URL)}">Luma</a> so others can move up.</p>`;
+  } else if (tier === "SIGNED_UP_NO_SPOT") {
+    subject = "Hack-a-Sprint is Monday — finish website signup";
+    const block =
+      profileBlockReason ?
+        `<p><strong>Before you can claim your spot on the site:</strong> ${escapeHtml(profileBlockReason)}</p>`
+      : "";
+    lead = `<p>Hi ${first},</p>
+<p>We see your <strong>cursorboston.com</strong> account, but you’re <strong>not on the website signup list</strong> yet — so you’re not ranked for Monday.</p>
+${block}
+<p><strong>To get on the list:</strong> Complete your profile requirements and claim your spot: <a href="${escapeHtml(signupUrl)}">${escapeHtml(signupUrl)}</a></p>
+<p><strong>Waitlist / no guaranteed seat:</strong> Spots are limited and there is <strong>no spectator room</strong>. Merge PRs to <a href="${escapeHtml(repoUrl)}">${escapeHtml(repoUrl)}</a> to improve your position.</p>
+<p><strong>Can’t attend?</strong> Mark not going on Luma: <a href="${escapeHtml(LUMA_URL)}">${escapeHtml(LUMA_URL)}</a></p>`;
+  } else {
+    subject = "Hack-a-Sprint is Monday — create your site account";
+    lead = `<p>Hi ${first},</p>
+<p>You’re approved on <strong>Luma</strong>, but we don’t see a matching <strong>cursorboston.com</strong> account — you’re <strong>not on the website leaderboard</strong> yet.</p>
+<p><strong>To compete or queue:</strong></p>
+<ol>
+<li>Create an account at <a href="${escapeHtml(SITE_ORIGIN)}">cursorboston.com</a> (this email if possible).</li>
+<li>Connect <strong>GitHub</strong> and <strong>Discord</strong>; public profile with Discord visible.</li>
+<li>Claim your spot: <a href="${escapeHtml(signupUrl)}">${escapeHtml(signupUrl)}</a></li>
+<li>Merge a PR to <a href="${escapeHtml(repoUrl)}">${escapeHtml(repoUrl)}</a> to move up the waitlist.</li>
+</ol>
+<p><strong>Waitlist reality:</strong> Admission is <strong>not guaranteed</strong>. There is <strong>no spectator room</strong>. At 4:00 PM ET, open seats go to waitlisters in rank order — use the site to signal you’ll queue.</p>
+<p><strong>Can’t come?</strong> Mark not going on Luma: <a href="${escapeHtml(LUMA_URL)}">${escapeHtml(LUMA_URL)}</a></p>`;
+  }
+
+  const selfNote =
+    csvSelfReportedPr ?
+      `<p style="font-size:13px;color:#666;">(Your Luma free-text about contributions is not used for ranking; we use GitHub + our site.)</p>`
+    : "";
+
+  const html = emailShell(`${lead}${selfNote}${commonEventBlockHtml()}`);
+
+  const textParts = [
+    `Hi ${name},`,
+    "",
+    tier === "CONFIRMED" ?
+      `Confirmed spot (${rankPhrase}). Can't come? Mark not going on Luma: ${LUMA_URL}. Attending? Register on the site (required): ${signupUrl}. Arrive by 4:00 PM ET. Late? Indicate on site Day-of RSVP: ${signupUrl}`
+    : tier === "WAITLISTED" ?
+      `Waitlist ${rankPhrase}. Not guaranteed; no spectator room. Queue intent + signup: ${signupUrl}. Move up with PRs: ${repoUrl}`
+    : tier === "SIGNED_UP_NO_SPOT" ?
+      `Finish website signup: ${signupUrl}` + (profileBlockReason ? ` (${profileBlockReason})` : "") + `. PRs: ${repoUrl}. Luma: ${LUMA_URL}`
+    : `Create account and claim spot: ${signupUrl}. Repo: ${repoUrl}. Luma: ${LUMA_URL}`,
+    "",
+    `Event: April 13, 2026 4–8 PM ET, Back Bay Boston.`,
+  ];
+
+  return { subject, html, text: textParts.join("\n") };
+}
+
 function parseArgs(argv: string[]) {
   const dryRun = argv.includes("--dry-run");
   const send = argv.includes("--send");
+  const announceList = argv.includes("--announce-list");
+  const reminder = argv.includes("--reminder");
   const csvIdx = argv.indexOf("--csv");
   const csvPath =
     csvIdx >= 0 && argv[csvIdx + 1] ?
@@ -534,14 +902,18 @@ function parseArgs(argv: string[]) {
     : join(
         homedir(),
         "Downloads",
-        "Cursor Boston Hack-a-Sprint - Guests - 2026-04-10-13-18-35.csv"
+        "Cursor Boston Hack-a-Sprint - Guests - 2026-04-11-12-28-29.csv"
       );
 
   if ((dryRun && send) || (!dryRun && !send)) {
     console.error("Specify exactly one of: --dry-run | --send");
     process.exit(1);
   }
-  return { dryRun, send, csvPath };
+  if (announceList && reminder) {
+    console.error("Use only one of: --announce-list | --reminder");
+    process.exit(1);
+  }
+  return { dryRun, send, announceList, reminder, csvPath };
 }
 
 async function sleep(ms: number) {
@@ -549,7 +921,7 @@ async function sleep(ms: number) {
 }
 
 async function main() {
-  const { dryRun, send, csvPath } = parseArgs(process.argv.slice(2));
+  const { dryRun, send, announceList, reminder, csvPath } = parseArgs(process.argv.slice(2));
 
   let raw: string;
   try {
@@ -598,8 +970,16 @@ async function main() {
   }
 
   console.log("Building leaderboard snapshot…");
-  const { rankByUserId, prByUserId, totalOnLeaderboard, entries } =
-    await buildLeaderboard(db, githubBulk);
+  const { prByUserId, entries } = await buildLeaderboard(db, githubBulk);
+
+  console.log("Building unified display ranks (matches signup page ordering)…");
+  const {
+    rankByUserId: displayRankByUserId,
+    rankByEmail: displayRankByEmail,
+    totalEntries: totalOnPublicList,
+  } = await buildUnifiedDisplayRankMaps(db);
+  const signupConfirmedByUserId = await buildSignupConfirmedByUserId(db);
+  const lumaConfirmedByEmail = await buildLumaConfirmedByEmail(db);
 
   type RowResult = {
     email: string;
@@ -648,16 +1028,37 @@ async function main() {
     let profileBlock: string | null = null;
 
     if (!uid) {
-      tier = "NO_SITE_ACCOUNT";
+      const lumaRank = displayRankByEmail.get(normalizedEmail);
       mergedPr = mergedPrForLogin(csvGithub, githubBulk);
+      if (lumaRank === undefined) {
+        tier = "NO_SITE_ACCOUNT";
+      } else {
+        rank = lumaRank;
+        tier = lumaConfirmedByEmail.get(normalizedEmail) ? "CONFIRMED" : "WAITLISTED";
+      }
     } else {
-      const leaderboardRank = rankByUserId.get(uid);
       mergedPr = prByUserId.get(uid) ?? 0;
+      const dispRank =
+        displayRankByUserId.get(uid) ?? displayRankByEmail.get(normalizedEmail);
 
-      if (leaderboardRank !== undefined) {
-        rank = leaderboardRank;
-        tier =
-          leaderboardRank <= CURSOR_CREDIT_TOP_N ? "CONFIRMED" : "WAITLISTED";
+      if (dispRank !== undefined) {
+        rank = dispRank;
+        const confirmed =
+          !!signupConfirmedByUserId.get(uid) ||
+          !!lumaConfirmedByEmail.get(normalizedEmail);
+        tier = confirmed ? "CONFIRMED" : "WAITLISTED";
+        if (!prByUserId.has(uid)) {
+          const userSnap = await db.collection("users").doc(uid).get();
+          const p = userSnap.data();
+          const profLogin =
+            p?.github && typeof p.github === "object" ?
+              (p.github as { login?: string }).login
+            : undefined;
+          const gh =
+            csvGithub ||
+            (typeof profLogin === "string" ? profLogin.trim() : null);
+          mergedPr = mergedPrForLogin(gh, githubBulk);
+        }
       } else {
         tier = "SIGNED_UP_NO_SPOT";
         const userSnap = await db.collection("users").doc(uid).get();
@@ -692,7 +1093,9 @@ async function main() {
     counts[r.tier] = (counts[r.tier] ?? 0) + 1;
   }
   console.log("\nSummary by tier:", counts);
-  console.log(`Leaderboard size (website): ${entries.length}\n`);
+  console.log(
+    `Public list size (website + Luma, deduped): ${totalOnPublicList}; website signups only: ${entries.length}\n`
+  );
 
   const pad = (s: string, n: number) => s.slice(0, n).padEnd(n);
 
@@ -710,18 +1113,58 @@ async function main() {
 
   if (dryRun) {
     console.log("\n--dry-run: no emails sent. Review the table above.");
+    if (announceList) console.log("(--announce-list mode: simplified participant-list email)");
+    if (reminder) console.log("(--reminder mode: day-before blast)");
+    const pickSample = (t: RegistrantTier) => results.find((x) => x.tier === t && x.tier !== "DECLINED");
+
+    if (reminder) {
+      const previewTiers: RegistrantTier[] = [
+        "CONFIRMED",
+        "WAITLISTED",
+        "SIGNED_UP_NO_SPOT",
+        "NO_SITE_ACCOUNT",
+      ];
+      for (const tier of previewTiers) {
+        const sample = pickSample(tier);
+        if (!sample) continue;
+        const t = sample.tier as Exclude<RegistrantTier, "DECLINED">;
+        const { subject, html } = buildReminderEmail({
+          tier: t,
+          name: sample.name,
+          rank: sample.rank,
+          totalOnLeaderboard: totalOnPublicList,
+          mergedPrCount: sample.mergedPrCount,
+          profileBlockReason: sample.profileBlock,
+          csvSelfReportedPr: sample.csvSelfReportedPr,
+        });
+        console.log(`\n[${tier}] Sample subject: ${subject}`);
+        console.log("Sample HTML preview:\n---\n" + html.slice(0, 700) + "…\n---");
+      }
+      return;
+    }
+
     const sample = results.find((x) => x.tier === "CONFIRMED") || results.find((x) => x.tier !== "DECLINED");
     if (sample && sample.tier !== "DECLINED") {
-      const { html } = buildEmails({
-        tier: sample.tier as Exclude<RegistrantTier, "DECLINED">,
-        name: sample.name,
-        rank: sample.rank,
-        totalOnLeaderboard,
-        mergedPrCount: sample.mergedPrCount,
-        profileBlockReason: sample.profileBlock,
-        csvSelfReportedPr: sample.csvSelfReportedPr,
-      });
-      console.log("\nSample HTML preview (first non-declined row):\n---\n" + html.slice(0, 500) + "…\n---");
+      const tier = sample.tier as Exclude<RegistrantTier, "DECLINED">;
+      const { subject, html } = announceList
+        ? buildListAnnouncementEmail({
+            tier,
+            name: sample.name,
+            rank: sample.rank,
+            totalOnLeaderboard: totalOnPublicList,
+            mergedPrCount: sample.mergedPrCount,
+          })
+        : buildEmails({
+            tier,
+            name: sample.name,
+            rank: sample.rank,
+            totalOnLeaderboard: totalOnPublicList,
+            mergedPrCount: sample.mergedPrCount,
+            profileBlockReason: sample.profileBlock,
+            csvSelfReportedPr: sample.csvSelfReportedPr,
+          });
+      console.log(`\nSample subject: ${subject}`);
+      console.log("\nSample HTML preview (first non-declined row):\n---\n" + html.slice(0, 800) + "…\n---");
     }
     return;
   }
@@ -730,15 +1173,34 @@ async function main() {
   let failed = 0;
   for (const r of results) {
     if (r.tier === "DECLINED") continue;
-    const { subject, html, text } = buildEmails({
-      tier: r.tier as Exclude<RegistrantTier, "DECLINED">,
-      name: r.name,
-      rank: r.rank,
-      totalOnLeaderboard,
-      mergedPrCount: r.mergedPrCount,
-      profileBlockReason: r.profileBlock,
-      csvSelfReportedPr: r.csvSelfReportedPr ?? "",
-    });
+    const tier = r.tier as Exclude<RegistrantTier, "DECLINED">;
+    const { subject, html, text } = reminder
+      ? buildReminderEmail({
+          tier,
+          name: r.name,
+          rank: r.rank,
+          totalOnLeaderboard: totalOnPublicList,
+          mergedPrCount: r.mergedPrCount,
+          profileBlockReason: r.profileBlock,
+          csvSelfReportedPr: r.csvSelfReportedPr ?? "",
+        })
+      : announceList
+        ? buildListAnnouncementEmail({
+            tier,
+            name: r.name,
+            rank: r.rank,
+            totalOnLeaderboard: totalOnPublicList,
+            mergedPrCount: r.mergedPrCount,
+          })
+        : buildEmails({
+            tier,
+            name: r.name,
+            rank: r.rank,
+            totalOnLeaderboard: totalOnPublicList,
+            mergedPrCount: r.mergedPrCount,
+            profileBlockReason: r.profileBlock,
+            csvSelfReportedPr: r.csvSelfReportedPr ?? "",
+          });
     try {
       await sendEmail({ to: r.email, subject, html, text });
       sent++;

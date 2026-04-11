@@ -7,7 +7,10 @@
  *
  * Usage:
  *   npx tsx scripts/seed-luma-registrants.ts --dry-run [--csv path]
- *   npx tsx scripts/seed-luma-registrants.ts --apply [--csv path]
+ *   npx tsx scripts/seed-luma-registrants.ts --apply [--csv path] [--prune]
+ *
+ * --prune (with --apply): deletes hackathonLumaRegistrants for this event whose
+ *   email is not in the CSV as non-declined (and not judge/declined list).
  */
 import { readFileSync } from "fs";
 import { homedir } from "os";
@@ -16,6 +19,7 @@ import { loadEnvConfig } from "@next/env";
 loadEnvConfig(process.cwd());
 
 import { FieldValue } from "firebase-admin/firestore";
+import { DECLINED_EMAILS, JUDGE_EMAILS } from "../lib/hackathon-event-signup";
 import { getAdminDb } from "../lib/firebase-admin";
 import { HACK_A_SPRINT_2026_EVENT_ID } from "../lib/hackathon-showcase";
 
@@ -86,20 +90,29 @@ function parseGithubLogin(raw: string | undefined): string | null {
 function parseArgs(argv: string[]) {
   const dryRun = argv.includes("--dry-run");
   const apply = argv.includes("--apply");
+  const prune = argv.includes("--prune");
   const csvIdx = argv.indexOf("--csv");
   const csvPath =
     csvIdx >= 0 && argv[csvIdx + 1]
       ? argv[csvIdx + 1]!
-      : join(homedir(), "Downloads", "Cursor Boston Hack-a-Sprint - Guests - 2026-04-10-13-18-35.csv");
+      : join(
+          homedir(),
+          "Downloads",
+          "Cursor Boston Hack-a-Sprint - Guests - 2026-04-11-12-28-29.csv"
+        );
   if ((dryRun && apply) || (!dryRun && !apply)) {
     console.error("Specify exactly one of: --dry-run | --apply");
     process.exit(1);
   }
-  return { dryRun, apply, csvPath };
+  if (prune && dryRun) {
+    console.error("--prune requires --apply (cannot prune on --dry-run).");
+    process.exit(1);
+  }
+  return { dryRun, apply, prune, csvPath };
 }
 
 async function main() {
-  const { dryRun, csvPath } = parseArgs(process.argv.slice(2));
+  const { dryRun, prune, csvPath } = parseArgs(process.argv.slice(2));
 
   let raw: string;
   try { raw = readFileSync(csvPath, "utf8"); }
@@ -129,6 +142,9 @@ async function main() {
   let seeded = 0;
   let skippedSignup = 0;
   let skippedDeclined = 0;
+  let skippedJudge = 0;
+
+  const approvedEmailsForPrune = new Set<string>();
 
   for (const row of csvRows) {
     const email = row.email?.trim().toLowerCase();
@@ -136,6 +152,11 @@ async function main() {
 
     const approval = (row.approval_status || "").toLowerCase();
     if (approval === "declined") { skippedDeclined++; continue; }
+    if (JUDGE_EMAILS.has(email) || DECLINED_EMAILS.has(email)) {
+      skippedJudge++;
+      continue;
+    }
+    approvedEmailsForPrune.add(email);
 
     // Check if already has a website signup
     const uid = usersByEmail.get(email);
@@ -163,7 +184,25 @@ async function main() {
     seeded++;
   }
 
-  console.log(`\nSeeded: ${seeded}, skipped (already on website): ${skippedSignup}, declined: ${skippedDeclined}`);
+  let pruned = 0;
+  if (prune && !dryRun) {
+    const existing = await db
+      .collection("hackathonLumaRegistrants")
+      .where("eventId", "==", HACK_A_SPRINT_2026_EVENT_ID)
+      .get();
+    for (const doc of existing.docs) {
+      const em = String(doc.data().email ?? "").toLowerCase();
+      if (!approvedEmailsForPrune.has(em)) {
+        await doc.ref.delete();
+        pruned++;
+      }
+    }
+  }
+
+  console.log(
+    `\nSeeded: ${seeded}, skipped (already on website): ${skippedSignup}, declined: ${skippedDeclined}, skipped (judge/ops email): ${skippedJudge}` +
+      (prune && !dryRun ? `, pruned stale Luma rows: ${pruned}` : "")
+  );
   if (dryRun) console.log("--dry-run: nothing written to Firestore.");
   else console.log("--apply: written to hackathonLumaRegistrants collection.");
 }

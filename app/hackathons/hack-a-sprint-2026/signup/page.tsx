@@ -26,6 +26,8 @@ type LeaderboardEntry = {
   signedUpAt: string;
   creditEligible: boolean;
   status?: EntryStatus;
+  willBeLate?: boolean;
+  queuingForSpot?: boolean;
 };
 
 type LeaderboardResponse = {
@@ -40,6 +42,8 @@ type LeaderboardResponse = {
     mergedPrCount: number | null;
     signedUpAt: string | null;
     creditEligible: boolean;
+    willBeLate: boolean;
+    queuingForSpot: boolean;
   } | null;
 };
 
@@ -81,6 +85,7 @@ export default function HackASprint2026SignupPage() {
   const [busy, setBusy] = useState(false);
   const [togglingPublic, setTogglingPublic] = useState(false);
   const [togglingDiscord, setTogglingDiscord] = useState(false);
+  const [rsvpBusy, setRsvpBusy] = useState(false);
 
   const eventId = HACK_A_SPRINT_2026_EVENT_ID;
   const apiUrl = `/api/hackathons/events/${eventId}/signup`;
@@ -166,6 +171,32 @@ export default function HackASprint2026SignupPage() {
       setError(e instanceof Error ? e.message : "Sign up failed");
     } finally {
       setBusy(false);
+    }
+  };
+
+  const patchRsvp = async (body: { willBeLate?: boolean; queuingForSpot?: boolean }) => {
+    if (!user) return;
+    setRsvpBusy(true);
+    setError(null);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch(apiUrl, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(json.error || "Could not update RSVP");
+      }
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not update RSVP");
+    } finally {
+      setRsvpBusy(false);
     }
   };
 
@@ -329,43 +360,133 @@ export default function HackASprint2026SignupPage() {
               </div>
             </div>
           ) : data?.me?.signedUp ? (
-            <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-6 dark:bg-emerald-500/10">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="text-sm">
-                  <span className="font-semibold text-emerald-700 dark:text-emerald-300">You are signed up.</span>{" "}
-                  {data.me.rank != null && (
-                    <>
-                      Rank <strong>#{data.me.rank}</strong> of {data.totalCount} ·{" "}
-                      <strong>{data.me.mergedPrCount ?? 0}</strong> merged PR
-                      {(data.me.mergedPrCount ?? 0) !== 1 ? "s" : ""}
-                      {data.me.creditEligible ? (
-                        <span className="ml-2 text-emerald-600 dark:text-emerald-400">
-                          (top {CURSOR_CREDIT_TOP_N} — credit band)
-                        </span>
-                      ) : null}
-                    </>
-                  )}
-                </div>
-                <div className="flex gap-3">
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void load()}
-                    className="text-sm text-neutral-500 underline hover:text-neutral-700 dark:hover:text-neutral-300"
-                  >
-                    Refresh
-                  </button>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void handleLeave()}
-                    className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium hover:bg-neutral-100 disabled:opacity-50 dark:border-neutral-600 dark:hover:bg-neutral-800"
-                  >
-                    Leave list
-                  </button>
+            <>
+              <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-6 dark:bg-emerald-500/10">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="text-sm">
+                    <span className="font-semibold text-emerald-700 dark:text-emerald-300">You are signed up.</span>{" "}
+                    {data.me.rank != null && (
+                      <>
+                        Rank <strong>#{data.me.rank}</strong> of {data.totalCount} ·{" "}
+                        <strong>{data.me.mergedPrCount ?? 0}</strong> merged PR
+                        {(data.me.mergedPrCount ?? 0) !== 1 ? "s" : ""}
+                        {data.me.creditEligible ? (
+                          <span className="ml-2 text-emerald-600 dark:text-emerald-400">
+                            (top {CURSOR_CREDIT_TOP_N} — credit band)
+                          </span>
+                        ) : null}
+                      </>
+                    )}
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void load()}
+                      className="text-sm text-neutral-500 underline hover:text-neutral-700 dark:hover:text-neutral-300"
+                    >
+                      Refresh
+                    </button>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void handleLeave()}
+                      className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium hover:bg-neutral-100 disabled:opacity-50 dark:border-neutral-600 dark:hover:bg-neutral-800"
+                    >
+                      Leave list
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
+
+              {/* Day-of RSVP */}
+              <div className="mt-6 rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
+                <h2 className="text-lg font-semibold text-foreground">Day-of RSVP</h2>
+                {data.me.creditEligible ? (
+                  <div className="mt-4 space-y-4">
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">
+                      <strong>You must arrive by 4:00 PM ET on April 13</strong> or your spot may be given to someone on the waitlist.
+                    </p>
+                    {data.me.willBeLate ? (
+                      <p className="text-sm text-emerald-700 dark:text-emerald-300 font-medium">
+                        We&apos;ve noted you&apos;ll be late but you&apos;re still coming — your spot will be held. Thank you for letting us know.
+                      </p>
+                    ) : (
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                        Running late? That&apos;s OK — tap below so we don&apos;t release your spot.
+                      </p>
+                    )}
+                    <div className="flex flex-wrap gap-3">
+                      <button
+                        type="button"
+                        disabled={rsvpBusy || data.me.willBeLate}
+                        onClick={() => void patchRsvp({ willBeLate: true })}
+                        className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-400 disabled:opacity-50"
+                      >
+                        I&apos;ll be late but I&apos;m coming
+                      </button>
+                      {data.me.willBeLate ? (
+                        <button
+                          type="button"
+                          disabled={rsvpBusy}
+                          onClick={() => void patchRsvp({ willBeLate: false })}
+                          className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium hover:bg-neutral-100 dark:border-neutral-600 dark:hover:bg-neutral-800"
+                        >
+                          Clear — I&apos;ll arrive by 4:00 PM
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-4 space-y-4">
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">
+                      You are on the <strong>waitlist</strong>. A spot is <strong>not guaranteed</strong>, and there is <strong>no spectator room</strong>.
+                    </p>
+                    <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                      Unclaimed confirmed spots are released at <strong>4:00 PM ET</strong> to waitlisters in rank order. Merge PRs to{" "}
+                      <a
+                        href="https://github.com/rogerSuperBuilderAlpha/cursor-boston"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-emerald-600 underline dark:text-emerald-400"
+                      >
+                        cursor-boston
+                      </a>{" "}
+                      to move up before the event.
+                    </p>
+                    {data.me.queuingForSpot ? (
+                      <p className="text-sm text-emerald-700 dark:text-emerald-300 font-medium">
+                        You&apos;re on the list to queue for an open spot. Plan to be nearby before 4:00 PM ET for the best chance.
+                      </p>
+                    ) : (
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                        Planning to show up and wait for a possible spot? Let us know below.
+                      </p>
+                    )}
+                    <div className="flex flex-wrap gap-3">
+                      <button
+                        type="button"
+                        disabled={rsvpBusy || data.me.queuingForSpot}
+                        onClick={() => void patchRsvp({ queuingForSpot: true })}
+                        className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-400 disabled:opacity-50"
+                      >
+                        I&apos;ll be there to queue for a spot
+                      </button>
+                      {data.me.queuingForSpot ? (
+                        <button
+                          type="button"
+                          disabled={rsvpBusy}
+                          onClick={() => void patchRsvp({ queuingForSpot: false })}
+                          className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium hover:bg-neutral-100 dark:border-neutral-600 dark:hover:bg-neutral-800"
+                        >
+                          Clear queue intent
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
           ) : (
             <div className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
               <h2 className="text-lg font-semibold text-foreground mb-1">Complete your profile to sign up</h2>

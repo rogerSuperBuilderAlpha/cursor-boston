@@ -23,7 +23,7 @@ loadEnvConfig(process.cwd());
 
 import type { DocumentData } from "firebase-admin/firestore";
 import { getAdminDb } from "../lib/firebase-admin";
-import { fetchShowcaseSubmissionsFromGitHub } from "../lib/hackathon-showcase";
+import { HACK_A_SPRINT_2026_EVENT_ID, fetchShowcaseSubmissionsFromGitHub } from "../lib/hackathon-showcase";
 import { computeHackASprint2026RawScore } from "../lib/hackathon-asprint-2026-scores";
 import { hackASprint2026ScoreDocId } from "../lib/hackathon-asprint-2026-state";
 import { CURSOR_CREDIT_TOP_N } from "../lib/hackathon-event-signup";
@@ -74,6 +74,7 @@ type RankedEntry = {
   displayName: string | null;
   creditUrl: string | null;
   isPrizeWinner: boolean;
+  checkedIn: boolean;
 };
 
 async function sleep(ms: number) {
@@ -161,7 +162,6 @@ async function main() {
 
   // Resolve user IDs and emails from event signups + users collection
   console.log("Resolving user emails…");
-  // Fetch all users in one batch for mapping github login → userId → email
   const userByGithubLogin = new Map<string, { uid: string; email: string | null; displayName: string | null }>();
   const userSnap = await db.collection("users").get();
   for (const doc of userSnap.docs) {
@@ -176,10 +176,29 @@ async function main() {
     }
   }
 
+  // Only checked-in users receive credit links
+  console.log("Loading check-in status…");
+  const checkedInUserIds = new Set<string>();
+  const signupSnap = await db
+    .collection("hackathonEventSignups")
+    .where("eventId", "==", HACK_A_SPRINT_2026_EVENT_ID)
+    .get();
+  for (const doc of signupSnap.docs) {
+    const d = doc.data();
+    if (d.checkedInAt) checkedInUserIds.add(d.userId as string);
+  }
+  console.log(`Checked-in users: ${checkedInUserIds.size}`);
+
+  let creditIdx = 0;
   const entries: RankedEntry[] = scored.map((s, i) => {
     const rank = i + 1;
     const user = userByGithubLogin.get(s.submissionId);
-    const creditUrl = rank <= creditUrls.length ? creditUrls[rank - 1]! : null;
+    const isCheckedIn = user?.uid ? checkedInUserIds.has(user.uid) : false;
+    let creditUrl: string | null = null;
+    if (isCheckedIn && creditIdx < creditUrls.length) {
+      creditUrl = creditUrls[creditIdx]!;
+      creditIdx++;
+    }
     return {
       rank,
       submissionId: s.submissionId,
@@ -192,17 +211,27 @@ async function main() {
       displayName: user?.displayName ?? null,
       creditUrl,
       isPrizeWinner: rank <= PRIZE_POOL_SPOTS,
+      checkedIn: isCheckedIn,
     };
   });
 
   // Print ranked table
   const pad = (s: string, n: number) => s.slice(0, n).padEnd(n);
-  console.log(`\n${pad("Rank", 6)} ${pad("Login", 25)} ${pad("Score", 7)} ${pad("Peer", 6)} ${pad("Email", 35)} Prize`);
-  console.log("-".repeat(100));
+  console.log(`\n${pad("Rank", 6)} ${pad("Login", 25)} ${pad("Score", 7)} ${pad("Peer", 6)} ${pad("Email", 35)} ${pad("In?", 5)} Prize`);
+  console.log("-".repeat(110));
   for (const e of entries) {
+    const prizeLabel = !e.checkedIn ? "—(not checked in)" : e.isPrizeWinner ? PRIZE_AMOUNT_TOP6 : e.rank <= CURSOR_CREDIT_TOP_N ? CREDIT_AMOUNT : "—";
     console.log(
-      `${pad(`#${e.rank}`, 6)} ${pad(e.githubLogin, 25)} ${pad(e.rawScore != null ? String(e.rawScore) : "—", 7)} ${pad(String(e.peerVoteCount), 6)} ${pad(e.email ?? "—", 35)} ${e.isPrizeWinner ? PRIZE_AMOUNT_TOP6 : e.rank <= CURSOR_CREDIT_TOP_N ? CREDIT_AMOUNT : "—"}`
+      `${pad(`#${e.rank}`, 6)} ${pad(e.githubLogin, 25)} ${pad(e.rawScore != null ? String(e.rawScore) : "—", 7)} ${pad(String(e.peerVoteCount), 6)} ${pad(e.email ?? "—", 35)} ${pad(e.checkedIn ? "YES" : "—", 5)} ${prizeLabel}`
     );
+  }
+
+  const notCheckedIn = entries.filter((e) => !e.checkedIn);
+  if (notCheckedIn.length > 0) {
+    console.warn(`\n[warn] ${notCheckedIn.length} submission(s) from users NOT checked in (no credit assigned):`);
+    for (const e of notCheckedIn) {
+      console.warn(`  #${e.rank} @${e.githubLogin}`);
+    }
   }
 
   if (!creditsPath) {

@@ -12,6 +12,8 @@
  * Usage:
  *   npx tsx scripts/freeze-confirmed-top50.ts --dry-run
  *   npx tsx scripts/freeze-confirmed-top50.ts --write
+ *   npx tsx scripts/freeze-confirmed-top50.ts --dry-run --recalculate
+ *   npx tsx scripts/freeze-confirmed-top50.ts --write --recalculate
  *
  * Requires: FIREBASE_SERVICE_ACCOUNT_JSON or GOOGLE_APPLICATION_CREDENTIALS
  * and GITHUB_TOKEN (for accurate PR counts). Load from .env.local.
@@ -24,6 +26,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { CURSOR_CREDIT_TOP_N, DECLINED_EMAILS, JUDGE_EMAILS } from "../lib/hackathon-event-signup";
 import { HACK_A_SPRINT_2026_EVENT_ID } from "../lib/hackathon-showcase";
 import { fetchMergedPrCountsForLogins } from "../lib/github-merged-pr-count";
+import { getGithubRepoPair } from "../lib/github-recent-merged-prs";
 import { getAdminDb } from "../lib/firebase-admin";
 
 const EVENT_ID = HACK_A_SPRINT_2026_EVENT_ID;
@@ -55,23 +58,39 @@ async function fetchUserDataMap(
   return map;
 }
 
+const USER_ID_IN_CHUNK = 10;
+
 async function countMergedCommunityPrsByUserIds(
   db: Firestore,
   userIds: string[]
 ): Promise<Map<string, number>> {
   const counts = new Map<string, number>();
-  const unique = [...new Set(userIds)];
-  for (let i = 0; i < unique.length; i += 10) {
-    const chunk = unique.slice(i, i + 10);
+  const unique = [...new Set(userIds.filter(Boolean))];
+  for (const id of unique) counts.set(id, 0);
+  if (unique.length === 0) return counts;
+
+  const { owner, repo } = getGithubRepoPair();
+  const expectedRepo = `${owner}/${repo}`;
+
+  for (let i = 0; i < unique.length; i += USER_ID_IN_CHUNK) {
+    const chunk = unique.slice(i, i + USER_ID_IN_CHUNK);
     const snap = await db
       .collection("pullRequests")
       .where("userId", "in", chunk)
-      .where("status", "==", "merged")
+      .where("state", "==", "merged")
       .get();
     for (const doc of snap.docs) {
       const data = doc.data();
       const uid = data.userId as string | undefined;
       if (!uid) continue;
+      const repoField = data.repository;
+      if (
+        typeof repoField === "string" &&
+        repoField.length > 0 &&
+        repoField !== expectedRepo
+      ) {
+        continue;
+      }
       counts.set(uid, (counts.get(uid) ?? 0) + 1);
     }
   }
@@ -89,14 +108,22 @@ type UnifiedEntry = {
   alreadyConfirmed: boolean;
 };
 
+function competitionSort(a: UnifiedEntry, b: UnifiedEntry): number {
+  if (b.mergedPrCount !== a.mergedPrCount) return b.mergedPrCount - a.mergedPrCount;
+  const aWeb = a.source === "website" ? 1 : 0;
+  const bWeb = b.source === "website" ? 1 : 0;
+  if (bWeb !== aWeb) return bWeb - aWeb;
+  return a.signedUpAtMs - b.signedUpAtMs;
+}
+
 async function main() {
   const dryRun = process.argv.includes("--dry-run");
   const write = process.argv.includes("--write");
+  const recalculate = process.argv.includes("--recalculate");
   if (!dryRun && !write) {
     console.error("Specify exactly one of: --dry-run | --write");
     process.exit(1);
   }
-
   const db = getAdminDb();
   if (!db) {
     console.error("Firebase Admin not configured.");
@@ -205,14 +232,45 @@ async function main() {
   console.log(`Found ${lumaEntries.length} Luma-only registrants.`);
   console.log(`Total: ${unified.length} combined.`);
 
+  if (recalculate) {
+    const ranked = [...unified].sort(competitionSort);
+    const top = ranked.slice(0, CURSOR_CREDIT_TOP_N);
+    const topSet = new Set(top.map((r) => `${r.collection}\0${r.docId}`));
+
+    console.log(`\n--recalculate: top ${CURSOR_CREDIT_TOP_N} by merged PRs (competition order):`);
+    for (const [i, r] of top.entries()) {
+      const src = r.source === "website" ? "web" : "luma";
+      console.log(
+        `  ${String(i + 1).padStart(3)}. ${(r.displayName || "?").padEnd(25)} @${(r.githubLogin || "?").padEnd(20)} PRs=${r.mergedPrCount} (${src})`
+      );
+    }
+
+    if (dryRun) {
+      console.log("\n--dry-run --recalculate: no writes. Use --write --recalculate to apply.");
+      return;
+    }
+
+    console.log("\nApplying confirmedAt to all signups + Luma rows for this event…");
+    for (const doc of snap.docs) {
+      const key = `hackathonEventSignups\0${doc.id}`;
+      const inTop = topSet.has(key);
+      await db.collection("hackathonEventSignups").doc(doc.id).update(
+        inTop ? { confirmedAt: FieldValue.serverTimestamp() } : { confirmedAt: FieldValue.delete() }
+      );
+    }
+    for (const doc of lumaSnap.docs) {
+      const key = `hackathonLumaRegistrants\0${doc.id}`;
+      const inTop = topSet.has(key);
+      await db.collection("hackathonLumaRegistrants").doc(doc.id).update(
+        inTop ? { confirmedAt: FieldValue.serverTimestamp() } : { confirmedAt: FieldValue.delete() }
+      );
+    }
+    console.log(`Done. Top ${top.length} confirmed; others cleared.`);
+    return;
+  }
+
   // Sort: PRs desc → website before luma → registration time asc
-  unified.sort((a, b) => {
-    if (b.mergedPrCount !== a.mergedPrCount) return b.mergedPrCount - a.mergedPrCount;
-    const aWeb = a.source === "website" ? 1 : 0;
-    const bWeb = b.source === "website" ? 1 : 0;
-    if (bWeb !== aWeb) return bWeb - aWeb;
-    return a.signedUpAtMs - b.signedUpAtMs;
-  });
+  unified.sort(competitionSort);
 
   // Already-frozen users stay frozen (confirmedAt is permanent).
   // Only fill remaining spots up to CURSOR_CREDIT_TOP_N with unfrozen users.
