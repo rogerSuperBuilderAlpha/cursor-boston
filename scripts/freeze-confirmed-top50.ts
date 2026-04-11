@@ -23,7 +23,12 @@ loadEnvConfig(process.cwd());
 
 import type { DocumentData, Firestore } from "firebase-admin/firestore";
 import { FieldValue } from "firebase-admin/firestore";
-import { CURSOR_CREDIT_TOP_N, DECLINED_EMAILS, JUDGE_EMAILS } from "../lib/hackathon-event-signup";
+import {
+  compareUnifiedHackathonRanking,
+  CURSOR_CREDIT_TOP_N,
+  DECLINED_EMAILS,
+  JUDGE_EMAILS,
+} from "../lib/hackathon-event-signup";
 import { HACK_A_SPRINT_2026_EVENT_ID } from "../lib/hackathon-showcase";
 import { fetchMergedPrCountsForLogins } from "../lib/github-merged-pr-count";
 import { getGithubRepoPair } from "../lib/github-recent-merged-prs";
@@ -107,14 +112,6 @@ type UnifiedEntry = {
   source: "website" | "luma_only";
   alreadyConfirmed: boolean;
 };
-
-function competitionSort(a: UnifiedEntry, b: UnifiedEntry): number {
-  if (b.mergedPrCount !== a.mergedPrCount) return b.mergedPrCount - a.mergedPrCount;
-  const aWeb = a.source === "website" ? 1 : 0;
-  const bWeb = b.source === "website" ? 1 : 0;
-  if (bWeb !== aWeb) return bWeb - aWeb;
-  return a.signedUpAtMs - b.signedUpAtMs;
-}
 
 async function main() {
   const dryRun = process.argv.includes("--dry-run");
@@ -233,7 +230,7 @@ async function main() {
   console.log(`Total: ${unified.length} combined.`);
 
   if (recalculate) {
-    const ranked = [...unified].sort(competitionSort);
+    const ranked = [...unified].sort(compareUnifiedHackathonRanking);
     const top = ranked.slice(0, CURSOR_CREDIT_TOP_N);
     const topSet = new Set(top.map((r) => `${r.collection}\0${r.docId}`));
 
@@ -270,7 +267,7 @@ async function main() {
   }
 
   // Sort: PRs desc → website before luma → registration time asc
-  unified.sort(competitionSort);
+  unified.sort(compareUnifiedHackathonRanking);
 
   // Already-frozen users stay frozen (confirmedAt is permanent).
   // Only fill remaining spots up to CURSOR_CREDIT_TOP_N with unfrozen users.

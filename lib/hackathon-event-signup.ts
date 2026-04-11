@@ -52,6 +52,29 @@ export function getHackathonEventSignupBlockReason(
 
 export const CURSOR_CREDIT_TOP_N = 50;
 
+/**
+ * Sort key for the combined website + Luma leaderboard (and freeze top-N).
+ * PR count desc → website signup before Luma-only → earlier registration first.
+ */
+export type UnifiedHackathonRankSortFields = {
+  mergedPrCount: number;
+  source: "website" | "luma_only";
+  signedUpAtMs: number;
+};
+
+export function compareUnifiedHackathonRanking(
+  a: UnifiedHackathonRankSortFields,
+  b: UnifiedHackathonRankSortFields
+): number {
+  if (b.mergedPrCount !== a.mergedPrCount) {
+    return b.mergedPrCount - a.mergedPrCount;
+  }
+  const aWeb = a.source === "website" ? 1 : 0;
+  const bWeb = b.source === "website" ? 1 : 0;
+  if (bWeb !== aWeb) return bWeb - aWeb;
+  return a.signedUpAtMs - b.signedUpAtMs;
+}
+
 /** Judges / organizers — excluded from the participant list so they don't take a spot. */
 export const JUDGE_EMAILS = new Set([
   "regorhunt02052@gmail.com",
