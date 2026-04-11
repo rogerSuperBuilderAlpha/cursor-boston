@@ -174,6 +174,38 @@ export default function HackASprint2026SignupPage() {
     }
   };
 
+  const handleGiveUpSpot = async () => {
+    if (!user) return;
+    if (
+      !window.confirm(
+        "Are you sure you want to give up your confirmed spot? This will move you to the waitlist and your spot will go to the next person in line."
+      )
+    )
+      return;
+    setRsvpBusy(true);
+    setError(null);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch(apiUrl, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ giveUpSpot: true }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(json.error || "Could not give up spot");
+      }
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not give up spot");
+    } finally {
+      setRsvpBusy(false);
+    }
+  };
+
   const patchRsvp = async (body: { willBeLate?: boolean; queuingForSpot?: boolean }) => {
     if (!user) return;
     setRsvpBusy(true);
@@ -435,6 +467,19 @@ export default function HackASprint2026SignupPage() {
                           Clear — I&apos;ll arrive by 4:00 PM
                         </button>
                       ) : null}
+                    </div>
+                    <div className="mt-4 border-t border-neutral-200 pt-4 dark:border-neutral-700">
+                      <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-2">
+                        Can&apos;t make it? Release your spot so the next person on the waitlist can attend.
+                      </p>
+                      <button
+                        type="button"
+                        disabled={rsvpBusy}
+                        onClick={() => void handleGiveUpSpot()}
+                        className="rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/20"
+                      >
+                        Give up my confirmed spot
+                      </button>
                     </div>
                   </div>
                 ) : (

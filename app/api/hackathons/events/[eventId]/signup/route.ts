@@ -13,6 +13,7 @@ import {
   getOptionalVerifiedUser,
 } from "@/lib/server-auth";
 import {
+  compareUnifiedHackathonRanking,
   CURSOR_CREDIT_TOP_N,
   DECLINED_EMAILS,
   JUDGE_EMAILS,
@@ -296,17 +297,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
       });
     }
 
-    // Frozen confirmed first; within each group: PRs desc → website before luma → registration time asc
-    unified.sort((a, b) => {
-      const ac = a.confirmedAt != null ? 1 : 0;
-      const bc = b.confirmedAt != null ? 1 : 0;
-      if (bc !== ac) return bc - ac;
-      if (b.mergedPrCount !== a.mergedPrCount) return b.mergedPrCount - a.mergedPrCount;
-      const aWeb = a.source === "website" ? 1 : 0;
-      const bWeb = b.source === "website" ? 1 : 0;
-      if (bWeb !== aWeb) return bWeb - aWeb;
-      return a.signedUpAtMs - b.signedUpAtMs;
-    });
+    // Competition order (same as freeze top-N): PRs desc → website before Luma → time asc.
+    // Confirmed vs waitlisted still come from confirmedAt, not from rank alone.
+    unified.sort(compareUnifiedHackathonRanking);
 
     // Build ranked entries — status driven by confirmedAt field
     type EntryStatus = "confirmed" | "waitlisted";
@@ -432,9 +425,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
 /**
  * PATCH RSVP flags on the user's own signup doc.
- * Body: { willBeLate?: boolean, queuingForSpot?: boolean }
+ * Body: { willBeLate?: boolean, queuingForSpot?: boolean, giveUpSpot?: true }
  * - willBeLate: only when confirmed (confirmedAt set)
  * - queuingForSpot: only when waitlisted (no confirmedAt)
+ * - giveUpSpot: confirmed attendee releases their spot (clears confirmedAt)
  */
 export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
@@ -479,6 +473,21 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     const data = snap.data() ?? {};
     const isConfirmed = Boolean(data.confirmedAt);
+
+    if (body.giveUpSpot === true) {
+      if (!isConfirmed) {
+        return NextResponse.json(
+          { error: "Only confirmed attendees can give up their spot" },
+          { status: 400 }
+        );
+      }
+      await ref.update({
+        confirmedAt: FieldValue.delete(),
+        gaveUpSpotAt: FieldValue.serverTimestamp(),
+        willBeLate: FieldValue.delete(),
+      });
+      return NextResponse.json({ ok: true, gaveUpSpot: true }, { status: 200 });
+    }
 
     const patch: Record<string, unknown> = {};
     if (Object.prototype.hasOwnProperty.call(body, "willBeLate")) {
