@@ -1,0 +1,1110 @@
+{
+  "generatedAt": "2026-04-11T13:23:24.882Z",
+  "prCutoffDate": "2026-04-09",
+  "topN": 50,
+  "totalParticipants": 109,
+  "confirmedCount": 50,
+  "waitlistedCount": 59,
+  "githubLoginCorrections": {
+    "mhoniseus": "smrifaki",
+    "chloezzxzzc": "chloezhangzzc",
+    "aakashmkj": "aakashm1712",
+    "dannygarciadev": "DannyGarciaDEV"
+  },
+  "ranking": [
+    {
+      "rank": 1,
+      "status": "confirmed",
+      "email": "rishierish@plmbr.app",
+      "name": "Rishab Nandi",
+      "githubLogin": "RshieRish",
+      "prsThruApr9": 15,
+      "prsAllTime": 15,
+      "lumaCreatedAt": "2026-04-06T23:50:06.772Z"
+    },
+    {
+      "rank": 2,
+      "status": "confirmed",
+      "email": "sonwaneshreyas@gmail.com",
+      "name": "Shreyas Sonwane",
+      "githubLogin": "Shreyas0786",
+      "prsThruApr9": 8,
+      "prsAllTime": 11,
+      "lumaCreatedAt": "2026-03-23T06:40:34.971Z"
+    },
+    {
+      "rank": 3,
+      "status": "confirmed",
+      "email": "sikeswillmcrae@gmail.com",
+      "name": "Sikes Mcrae",
+      "githubLogin": "Sikes1112",
+      "prsThruApr9": 7,
+      "prsAllTime": 7,
+      "lumaCreatedAt": "2026-03-22T12:57:32.706Z"
+    },
+    {
+      "rank": 4,
+      "status": "confirmed",
+      "email": "nebullii3@gmail.com",
+      "name": "Neha Chaudhari",
+      "githubLogin": "nebullii",
+      "prsThruApr9": 7,
+      "prsAllTime": 7,
+      "lumaCreatedAt": "2026-03-23T16:25:59.788Z"
+    },
+    {
+      "rank": 5,
+      "status": "confirmed",
+      "email": "mouhssine.rifaki@nyu.edu",
+      "name": "Mouhssine Rifaki",
+      "githubLogin": "smrifaki",
+      "lumaGithubLogin": "mhoniseus",
+      "prsThruApr9": 7,
+      "prsAllTime": 7,
+      "lumaCreatedAt": "2026-03-30T17:50:17.403Z"
+    },
+    {
+      "rank": 6,
+      "status": "confirmed",
+      "email": "jack@stepwise.ai",
+      "name": "Jack Schultz",
+      "githubLogin": "Stepwise-ai-dev",
+      "prsThruApr9": 4,
+      "prsAllTime": 4,
+      "lumaCreatedAt": "2026-03-28T18:06:50.852Z"
+    },
+    {
+      "rank": 7,
+      "status": "confirmed",
+      "email": "blakemauri2@gmail.com",
+      "name": "Blake Mauri",
+      "githubLogin": "Cloud-post-code",
+      "prsThruApr9": 2,
+      "prsAllTime": 2,
+      "lumaCreatedAt": "2026-03-25T18:06:50.910Z"
+    },
+    {
+      "rank": 8,
+      "status": "confirmed",
+      "email": "leonarudoryuu0629@gmail.com",
+      "name": "Ryuu Leonardo Sato",
+      "githubLogin": "rysat0",
+      "prsThruApr9": 2,
+      "prsAllTime": 2,
+      "lumaCreatedAt": "2026-04-09T20:21:04.565Z"
+    },
+    {
+      "rank": 9,
+      "status": "confirmed",
+      "email": "leonardo@stepai.co.jp",
+      "name": "Ryuu Leonardo Sato",
+      "githubLogin": "rysat0",
+      "prsThruApr9": 2,
+      "prsAllTime": 2,
+      "lumaCreatedAt": "2026-04-09T20:38:21.511Z"
+    },
+    {
+      "rank": 10,
+      "status": "confirmed",
+      "email": "abishek.bm@gmail.com",
+      "name": "Abishek Bangalore Muralikrishna",
+      "githubLogin": "Abi5678",
+      "prsThruApr9": 1,
+      "prsAllTime": 1,
+      "lumaCreatedAt": "2026-03-20T23:43:20.664Z"
+    },
+    {
+      "rank": 11,
+      "status": "confirmed",
+      "email": "nagaonkar.p@northeastern.edu",
+      "name": "Payal Sanjay Nagaonkar",
+      "githubLogin": "Payal2000",
+      "prsThruApr9": 1,
+      "prsAllTime": 1,
+      "lumaCreatedAt": "2026-03-21T02:07:07.231Z"
+    },
+    {
+      "rank": 12,
+      "status": "confirmed",
+      "email": "chloezzx@bu.edu",
+      "name": "Zhixin Zhang",
+      "githubLogin": "chloezhangzzc",
+      "lumaGithubLogin": "chloezzxzzc",
+      "prsThruApr9": 1,
+      "prsAllTime": 1,
+      "lumaCreatedAt": "2026-03-21T23:44:20.273Z"
+    },
+    {
+      "rank": 13,
+      "status": "confirmed",
+      "email": "dungarani.j@northeastern.edu",
+      "name": "Jaydip",
+      "githubLogin": "17-jd",
+      "prsThruApr9": 1,
+      "prsAllTime": 1,
+      "lumaCreatedAt": "2026-03-30T03:54:14.301Z"
+    },
+    {
+      "rank": 14,
+      "status": "confirmed",
+      "email": "scblouir@gmail.com",
+      "name": "Sam Blouir",
+      "githubLogin": "SamBlouir",
+      "prsThruApr9": 1,
+      "prsAllTime": 1,
+      "lumaCreatedAt": "2026-04-03T15:43:47.330Z"
+    },
+    {
+      "rank": 15,
+      "status": "confirmed",
+      "email": "ayeshafatimazra@gmail.com",
+      "name": "Ayesha Fatima",
+      "githubLogin": null,
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-20T17:09:37.992Z"
+    },
+    {
+      "rank": 16,
+      "status": "confirmed",
+      "email": "ananya@aicollective.com",
+      "name": "Ananya Shah",
+      "githubLogin": null,
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-20T17:11:14.308Z"
+    },
+    {
+      "rank": 17,
+      "status": "confirmed",
+      "email": "michael@web-schulte.de",
+      "name": "Michael Schulte",
+      "githubLogin": null,
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-20T17:22:43.447Z"
+    },
+    {
+      "rank": 18,
+      "status": "confirmed",
+      "email": "aaron.grace@comcast.net",
+      "name": "Aaron Grace",
+      "githubLogin": null,
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-20T17:54:29.853Z"
+    },
+    {
+      "rank": 19,
+      "status": "confirmed",
+      "email": "john.obrien@gmail.com",
+      "name": "John OBrien",
+      "githubLogin": "Johnobrien",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-20T22:20:29.180Z"
+    },
+    {
+      "rank": 20,
+      "status": "confirmed",
+      "email": "chun.yimin@gmail.com",
+      "name": "Yi Min",
+      "githubLogin": "yiminchun",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-20T22:36:12.748Z"
+    },
+    {
+      "rank": 21,
+      "status": "confirmed",
+      "email": "grosz.justin@bcg.com",
+      "name": "Justin Grosz",
+      "githubLogin": "grosz99",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-20T23:48:15.457Z"
+    },
+    {
+      "rank": 22,
+      "status": "confirmed",
+      "email": "hao.cai@gmail.com",
+      "name": "Iain Cai",
+      "githubLogin": "open2claw",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-21T01:18:31.958Z"
+    },
+    {
+      "rank": 23,
+      "status": "confirmed",
+      "email": "taralthota@gmail.com",
+      "name": "Taral T",
+      "githubLogin": "tvtt2k",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-21T01:18:35.666Z"
+    },
+    {
+      "rank": 24,
+      "status": "confirmed",
+      "email": "priyanka2bhutada@gmail.com",
+      "name": "Priyanka Bhutada",
+      "githubLogin": "priyanka-0207",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-21T01:44:26.306Z"
+    },
+    {
+      "rank": 25,
+      "status": "confirmed",
+      "email": "malikzeeshan3.1417@gmail.com",
+      "name": "Muhammad Zeeshan",
+      "githubLogin": "MalikZeeshan1122",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-21T19:35:31.940Z"
+    },
+    {
+      "rank": 26,
+      "status": "confirmed",
+      "email": "bg2879@columbia.edu",
+      "name": "Bharath Vishal",
+      "githubLogin": "bharath-knight",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-21T23:14:18.416Z"
+    },
+    {
+      "rank": 27,
+      "status": "confirmed",
+      "email": "sahana359@gmail.com",
+      "name": "Sahana Rajashekara",
+      "githubLogin": "sahana359",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-21T23:15:29.004Z"
+    },
+    {
+      "rank": 28,
+      "status": "confirmed",
+      "email": "emilyjolam@gmail.com",
+      "name": "Emily L",
+      "githubLogin": "littlepuppi",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-21T23:22:24.260Z"
+    },
+    {
+      "rank": 29,
+      "status": "confirmed",
+      "email": "patil.jaye@northeastern.edu",
+      "name": "Jayesh Patil",
+      "githubLogin": "JayDataWorld08",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-21T23:25:20.733Z"
+    },
+    {
+      "rank": 30,
+      "status": "confirmed",
+      "email": "salve.a@northeastern.edu",
+      "name": "Agnel Salve",
+      "githubLogin": "agnelsalve",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-21T23:39:15.338Z"
+    },
+    {
+      "rank": 31,
+      "status": "confirmed",
+      "email": "eugenio.zuccarelli@gmail.com",
+      "name": "Eugenio Zuccarelli",
+      "githubLogin": "jayzuccarelli",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-21T23:53:12.856Z"
+    },
+    {
+      "rank": 32,
+      "status": "confirmed",
+      "email": "5kf2mfbv8v@privaterelay.appleid.com",
+      "name": "Jack Digilov",
+      "githubLogin": "jackfruitsandwich",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-22T00:11:42.645Z"
+    },
+    {
+      "rank": 33,
+      "status": "confirmed",
+      "email": "mark2pm@gmail.com",
+      "name": "Nithin Yash Menezes",
+      "githubLogin": "Nithin123q",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-22T01:28:39.096Z"
+    },
+    {
+      "rank": 34,
+      "status": "confirmed",
+      "email": "sahu.man@northeastern.edu",
+      "name": "Manisha Sahu",
+      "githubLogin": "manishasahu271",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-22T01:30:22.108Z"
+    },
+    {
+      "rank": 35,
+      "status": "confirmed",
+      "email": "saikumarreddy221@gmail.com",
+      "name": "Kumar Reddy P V Sai",
+      "githubLogin": "saikumar221",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-22T03:08:55.358Z"
+    },
+    {
+      "rank": 36,
+      "status": "confirmed",
+      "email": "kompella.sa@northeastern.edu",
+      "name": "Satyasai Aditya Kompella",
+      "githubLogin": "sakompella",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-22T06:30:36.776Z"
+    },
+    {
+      "rank": 37,
+      "status": "confirmed",
+      "email": "samirizvi25@gmail.com",
+      "name": "Rizvi Syed Abdul Sami",
+      "githubLogin": "abdulsami123",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-22T07:39:40.794Z"
+    },
+    {
+      "rank": 38,
+      "status": "confirmed",
+      "email": "mikeboensel@gmail.com",
+      "name": "Mike Boensel",
+      "githubLogin": "mikeboensel",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-22T13:01:07.378Z"
+    },
+    {
+      "rank": 39,
+      "status": "confirmed",
+      "email": "nicholas@mindsettech.ai",
+      "name": "Nicholas Kozhemiakin",
+      "githubLogin": "nickkozh",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-22T14:51:54.218Z"
+    },
+    {
+      "rank": 40,
+      "status": "confirmed",
+      "email": "oftherose91@gmail.com",
+      "name": "Argenis De La Rosa",
+      "githubLogin": "theonlyhennygod",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-22T18:03:56.688Z"
+    },
+    {
+      "rank": 41,
+      "status": "confirmed",
+      "email": "alex@srge.co",
+      "name": "Alex Zuffoletti",
+      "githubLogin": "alexcbzuff",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-23T01:04:55.731Z"
+    },
+    {
+      "rank": 42,
+      "status": "confirmed",
+      "email": "mekhalrajr@gmail.com",
+      "name": "Mekhal Raj",
+      "githubLogin": "mekhalraj",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-23T05:38:02.003Z"
+    },
+    {
+      "rank": 43,
+      "status": "confirmed",
+      "email": "kmondlane@gmail.com",
+      "name": "Kris Mondlane",
+      "githubLogin": "pappacorleone",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-23T14:47:24.393Z"
+    },
+    {
+      "rank": 44,
+      "status": "confirmed",
+      "email": "asceniccola@gmail.com",
+      "name": "Andrew Ceniccola",
+      "githubLogin": "aceniccola",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-24T17:47:54.303Z"
+    },
+    {
+      "rank": 45,
+      "status": "confirmed",
+      "email": "samtem300@gmail.com",
+      "name": "Samet T",
+      "githubLogin": "samettemurcin",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-26T03:12:36.450Z"
+    },
+    {
+      "rank": 46,
+      "status": "confirmed",
+      "email": "vyahhi@gmail.com",
+      "name": "Nikolay Vyahhi",
+      "githubLogin": "vyahhi",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-26T14:25:34.089Z"
+    },
+    {
+      "rank": 47,
+      "status": "confirmed",
+      "email": "matthewb10@outlook.com",
+      "name": "Matthew Birov",
+      "githubLogin": "matthewb100",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-26T16:05:36.153Z"
+    },
+    {
+      "rank": 48,
+      "status": "confirmed",
+      "email": "krishnamurthy.p@northeastern.edu",
+      "name": "Prarthana Krishnamurthy",
+      "githubLogin": "pkrishna1801",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-26T18:02:37.887Z"
+    },
+    {
+      "rank": 49,
+      "status": "confirmed",
+      "email": "satishparaddi@gmail.com",
+      "name": "Satish Mallikarjun",
+      "githubLogin": "satishparaddi",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-27T00:41:45.339Z"
+    },
+    {
+      "rank": 50,
+      "status": "confirmed",
+      "email": "adhithyan245@gmail.com",
+      "name": "Adhithyan Aravind",
+      "githubLogin": "Adhithyan245",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-27T22:02:54.189Z"
+    },
+    {
+      "rank": 51,
+      "status": "waitlisted",
+      "email": "aakashmkj@gmail.com",
+      "name": "Aakash Mukherjee",
+      "githubLogin": "aakashm1712",
+      "lumaGithubLogin": "aakashmkj",
+      "prsThruApr9": 0,
+      "prsAllTime": 1,
+      "lumaCreatedAt": "2026-04-06T15:42:47.323Z"
+    },
+    {
+      "rank": 52,
+      "status": "waitlisted",
+      "email": "singh.para@northeastern.edu",
+      "name": "Paramjeet Singh",
+      "githubLogin": "Paramjeet-singh-neu",
+      "prsThruApr9": 0,
+      "prsAllTime": 1,
+      "lumaCreatedAt": "2026-04-08T23:37:22.271Z"
+    },
+    {
+      "rank": 53,
+      "status": "waitlisted",
+      "email": "sebastian@wallkoetter.net",
+      "name": "Sebastian Wallkötter",
+      "githubLogin": "FirefoxMetzger",
+      "prsThruApr9": 0,
+      "prsAllTime": 1,
+      "lumaCreatedAt": "2026-04-09T23:14:45.059Z"
+    },
+    {
+      "rank": 54,
+      "status": "waitlisted",
+      "email": "karthikeyan.k@northeastern.edu",
+      "name": "Kannan Karthikeyan",
+      "githubLogin": "notkannan",
+      "prsThruApr9": 0,
+      "prsAllTime": 1,
+      "lumaCreatedAt": "2026-04-10T22:46:37.016Z"
+    },
+    {
+      "rank": 55,
+      "status": "waitlisted",
+      "email": "simba@forkoff.xyz",
+      "name": "Simba",
+      "githubLogin": "0x0Simba",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-28T09:25:47.622Z"
+    },
+    {
+      "rank": 56,
+      "status": "waitlisted",
+      "email": "phang.monica@bcg.com",
+      "name": "Monica Phang",
+      "githubLogin": "NobyDa",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-28T17:38:48.808Z"
+    },
+    {
+      "rank": 57,
+      "status": "waitlisted",
+      "email": "torresr14@gmail.com",
+      "name": "Randy Torres",
+      "githubLogin": "randytorres",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-29T01:01:18.291Z"
+    },
+    {
+      "rank": 58,
+      "status": "waitlisted",
+      "email": "ashutoshiwale39@gmail.com",
+      "name": "Ashutosh Iwale",
+      "githubLogin": "AshutoshRavindraIwale",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-29T23:14:01.506Z"
+    },
+    {
+      "rank": 59,
+      "status": "waitlisted",
+      "email": "ashbhatia@gmail.com",
+      "name": "Ashish Bhatia",
+      "githubLogin": "ashbhati",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-30T02:14:27.917Z"
+    },
+    {
+      "rank": 60,
+      "status": "waitlisted",
+      "email": "yuri.braga@carefuseai.com",
+      "name": "Yuri Braga",
+      "githubLogin": "yuribraga26",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-30T14:09:32.071Z"
+    },
+    {
+      "rank": 61,
+      "status": "waitlisted",
+      "email": "naik.san@northeastern.edu",
+      "name": "Sanath Naik",
+      "githubLogin": "sanath11598",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-30T15:38:59.523Z"
+    },
+    {
+      "rank": 62,
+      "status": "waitlisted",
+      "email": "murali.na@northeastern.edu",
+      "name": "Naveen Murali",
+      "githubLogin": "Naveennnm13",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-30T15:40:32.195Z"
+    },
+    {
+      "rank": 63,
+      "status": "waitlisted",
+      "email": "ahijith@gmail.com",
+      "name": "Reghunaath Ajith Kumar Ahila",
+      "githubLogin": "Reghunaath",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-30T21:32:45.766Z"
+    },
+    {
+      "rank": 64,
+      "status": "waitlisted",
+      "email": "nagapavithralagisetty@gmail.com",
+      "name": "Pavithra Lagisetty",
+      "githubLogin": "pavithralagisetty",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-30T21:47:21.123Z"
+    },
+    {
+      "rank": 65,
+      "status": "waitlisted",
+      "email": "bradegan@gmail.com",
+      "name": "Brad Egan",
+      "githubLogin": "bradAGI",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-31T01:12:15.081Z"
+    },
+    {
+      "rank": 66,
+      "status": "waitlisted",
+      "email": "ankittejyadav@gmail.com",
+      "name": "Ankit Yadav",
+      "githubLogin": "ankittejyadav",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-31T01:40:08.003Z"
+    },
+    {
+      "rank": 67,
+      "status": "waitlisted",
+      "email": "wakrson@gmail.com",
+      "name": "Mark Robinson",
+      "githubLogin": "wakrson",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-31T22:15:51.812Z"
+    },
+    {
+      "rank": 68,
+      "status": "waitlisted",
+      "email": "ajithkumarahila.r@northeastern.edu",
+      "name": "Reghunaath A A",
+      "githubLogin": "Reghunaath",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-03-31T22:29:29.590Z"
+    },
+    {
+      "rank": 69,
+      "status": "waitlisted",
+      "email": "oalshayeb1@babson.edu",
+      "name": "Obyda Alshayeb",
+      "githubLogin": null,
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-01T04:28:42.898Z"
+    },
+    {
+      "rank": 70,
+      "status": "waitlisted",
+      "email": "monicaphang.mp@gmail.com",
+      "name": "Monica Phang",
+      "githubLogin": "Zombiedays",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-01T18:21:51.346Z"
+    },
+    {
+      "rank": 71,
+      "status": "waitlisted",
+      "email": "janna@aicollective.com",
+      "name": "Janna Hong",
+      "githubLogin": "jannareverie",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-01T23:20:22.174Z"
+    },
+    {
+      "rank": 72,
+      "status": "waitlisted",
+      "email": "dagmawimilkias@gmail.com",
+      "name": "Dagmawi Milkias",
+      "githubLogin": "Dagi2004",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-02T05:34:26.909Z"
+    },
+    {
+      "rank": 73,
+      "status": "waitlisted",
+      "email": "himanshuchouhan@gmail.com",
+      "name": "Himanshu Chouhan",
+      "githubLogin": "himanshuchouhan",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-02T17:19:54.955Z"
+    },
+    {
+      "rank": 74,
+      "status": "waitlisted",
+      "email": "buse@bluesense.ai",
+      "name": "Buse Demir",
+      "githubLogin": "busedemir",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-02T19:39:57.497Z"
+    },
+    {
+      "rank": 75,
+      "status": "waitlisted",
+      "email": "thebarmaeffect@gmail.com",
+      "name": "Karthik Barma",
+      "githubLogin": "thebarmaeffect",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-02T22:44:54.423Z"
+    },
+    {
+      "rank": 76,
+      "status": "waitlisted",
+      "email": "jaisinganmol@gmail.com",
+      "name": "Anmol Jaising",
+      "githubLogin": "jaisinganmol",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-03T01:05:40.449Z"
+    },
+    {
+      "rank": 77,
+      "status": "waitlisted",
+      "email": "mrcalebhung@gmail.com",
+      "name": "Caleb Hung",
+      "githubLogin": "calebhung",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-04T02:40:32.350Z"
+    },
+    {
+      "rank": 78,
+      "status": "waitlisted",
+      "email": "ceo@grepone.com",
+      "name": "Joshua Elkington",
+      "githubLogin": "axialxyz",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-04T20:54:04.127Z"
+    },
+    {
+      "rank": 79,
+      "status": "waitlisted",
+      "email": "aatuusa@gmail.com",
+      "name": "aatu usa",
+      "githubLogin": "aatmaj28",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-04T23:25:55.649Z"
+    },
+    {
+      "rank": 80,
+      "status": "waitlisted",
+      "email": "jinalthakkar2022@gmail.com",
+      "name": "Jinal Thakker",
+      "githubLogin": "jinalthakkar7",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-05T00:03:33.168Z"
+    },
+    {
+      "rank": 81,
+      "status": "waitlisted",
+      "email": "muradhossainmgr@gmail.com",
+      "name": "Morad Hossain",
+      "githubLogin": "MGR",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-05T02:46:25.236Z"
+    },
+    {
+      "rank": 82,
+      "status": "waitlisted",
+      "email": "orcino.raphael@gmail.com",
+      "name": "Raphael Orcino",
+      "githubLogin": "RaphaelOrcino",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-05T05:13:53.533Z"
+    },
+    {
+      "rank": 83,
+      "status": "waitlisted",
+      "email": "hirvitakabariya@gmail.com",
+      "name": "HK",
+      "githubLogin": "hirvita-kabariya",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-05T16:39:23.696Z"
+    },
+    {
+      "rank": 84,
+      "status": "waitlisted",
+      "email": "saks2730@gmail.com",
+      "name": "Sakshi Chavan",
+      "githubLogin": "Sakshi3027",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-05T19:09:25.232Z"
+    },
+    {
+      "rank": 85,
+      "status": "waitlisted",
+      "email": "sneha.sonkusare15@gmail.com",
+      "name": "Sneha Sonkusare",
+      "githubLogin": "snehasonkusare-tech",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-05T19:11:07.630Z"
+    },
+    {
+      "rank": 86,
+      "status": "waitlisted",
+      "email": "hansome594@gmail.com",
+      "name": "Clevelini Maris",
+      "githubLogin": "yogesh",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-06T03:29:56.339Z"
+    },
+    {
+      "rank": 87,
+      "status": "waitlisted",
+      "email": "bhuvaneshwaran.r@northeastern.edu",
+      "name": "Ramshankar B",
+      "githubLogin": "Ramshankar07",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-06T09:45:22.043Z"
+    },
+    {
+      "rank": 88,
+      "status": "waitlisted",
+      "email": "sai@thinkwithada.com",
+      "name": "Sai Bolla",
+      "githubLogin": "saikrishnabolla",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-06T14:23:20.718Z"
+    },
+    {
+      "rank": 89,
+      "status": "waitlisted",
+      "email": "ivormontenegro@gmail.com",
+      "name": "Ivo Rosa Montenegro",
+      "githubLogin": "ivormontenegro",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-06T14:51:18.054Z"
+    },
+    {
+      "rank": 90,
+      "status": "waitlisted",
+      "email": "heronalps@gmail.com",
+      "name": "Michael Zhang",
+      "githubLogin": "heronalps",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-06T15:43:45.616Z"
+    },
+    {
+      "rank": 91,
+      "status": "waitlisted",
+      "email": "lucas196700@gmail.com",
+      "name": "俊安 金",
+      "githubLogin": "lucasking0109",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-06T16:34:17.755Z"
+    },
+    {
+      "rank": 92,
+      "status": "waitlisted",
+      "email": "aarjav02@gmail.com",
+      "name": "Aarjav Jain",
+      "githubLogin": "aarjav0210",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-06T19:33:10.714Z"
+    },
+    {
+      "rank": 93,
+      "status": "waitlisted",
+      "email": "zhiyi_lu@brown.edu",
+      "name": "Nikky Lu",
+      "githubLogin": "nikkylu",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-06T19:50:45.708Z"
+    },
+    {
+      "rank": 94,
+      "status": "waitlisted",
+      "email": "manthan@legitreach.com",
+      "name": "Manthan Admane",
+      "githubLogin": "MisterAwesome23",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-06T23:35:00.912Z"
+    },
+    {
+      "rank": 95,
+      "status": "waitlisted",
+      "email": "ridhambhagat@gmail.com",
+      "name": "Ridham Bhagat",
+      "githubLogin": "RasenRhino",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-07T03:32:22.292Z"
+    },
+    {
+      "rank": 96,
+      "status": "waitlisted",
+      "email": "teozhihao123@gmail.com",
+      "name": "Zhi Hao Teo",
+      "githubLogin": "zzzh1hao01",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-07T04:28:46.741Z"
+    },
+    {
+      "rank": 97,
+      "status": "waitlisted",
+      "email": "dannygarciacotes1@gmail.com",
+      "name": "Danny Garcia Cortes",
+      "githubLogin": "DannyGarciaDEV",
+      "lumaGithubLogin": "dannygarciadev",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-07T14:42:50.780Z"
+    },
+    {
+      "rank": 98,
+      "status": "waitlisted",
+      "email": "patelheer2002@gmail.com",
+      "name": "Heer",
+      "githubLogin": "patelheer2910",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-07T19:05:17.390Z"
+    },
+    {
+      "rank": 99,
+      "status": "waitlisted",
+      "email": "siddhanth@huedmamas.com",
+      "name": "Siddhanth Pai",
+      "githubLogin": "Siddhanth99-tech",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-07T20:49:40.697Z"
+    },
+    {
+      "rank": 100,
+      "status": "waitlisted",
+      "email": "kashettyshruthi@gmail.com",
+      "name": "Shruthi",
+      "githubLogin": "Shruthik99",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-08T13:43:05.669Z"
+    },
+    {
+      "rank": 101,
+      "status": "waitlisted",
+      "email": "omkarsheth30@gmail.com",
+      "name": "Omkar Sheth",
+      "githubLogin": "OmkarSheth8",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-09T02:09:11.132Z"
+    },
+    {
+      "rank": 102,
+      "status": "waitlisted",
+      "email": "ssiddula.dev@gmail.com",
+      "name": "Sreekar Siddula",
+      "githubLogin": "sreekar-ss",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-09T03:16:54.952Z"
+    },
+    {
+      "rank": 103,
+      "status": "waitlisted",
+      "email": "zaraaurora82@gmail.com",
+      "name": "Zara aura",
+      "githubLogin": "fghgfdhg",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-09T10:57:57.948Z"
+    },
+    {
+      "rank": 104,
+      "status": "waitlisted",
+      "email": "amitanveri@gmail.com",
+      "name": "Amit Anveri",
+      "githubLogin": "AmitAnveri",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-10T00:49:52.209Z"
+    },
+    {
+      "rank": 105,
+      "status": "waitlisted",
+      "email": "vasilis@vasilistsolis.com",
+      "name": "Vasilis Tsolis",
+      "githubLogin": "okc0mputex",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-10T01:32:21.828Z"
+    },
+    {
+      "rank": 106,
+      "status": "waitlisted",
+      "email": "icey@starlaskincare.com",
+      "name": "Icey Roongpiti",
+      "githubLogin": "iceystarla",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-10T04:35:09.289Z"
+    },
+    {
+      "rank": 107,
+      "status": "waitlisted",
+      "email": "andre@genesisfund.co",
+      "name": "Andre Kirby",
+      "githubLogin": "AndreFKirby",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-10T23:39:17.129Z"
+    },
+    {
+      "rank": 108,
+      "status": "waitlisted",
+      "email": "d5222c@gmail.com",
+      "name": "Yinzheng Guan",
+      "githubLogin": "yguan001",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-11T01:34:58.477Z"
+    },
+    {
+      "rank": 109,
+      "status": "waitlisted",
+      "email": "miloschwartz@outlook.com",
+      "name": "Milo Scharwarx",
+      "githubLogin": "milo",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-11T06:49:29.843Z"
+    }
+  ]
+}

@@ -425,9 +425,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
 /**
  * PATCH RSVP flags on the user's own signup doc.
- * Body: { willBeLate?: boolean, queuingForSpot?: boolean }
+ * Body: { willBeLate?: boolean, queuingForSpot?: boolean, giveUpSpot?: true }
  * - willBeLate: only when confirmed (confirmedAt set)
  * - queuingForSpot: only when waitlisted (no confirmedAt)
+ * - giveUpSpot: confirmed attendee releases their spot (clears confirmedAt)
  */
 export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
@@ -472,6 +473,21 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     const data = snap.data() ?? {};
     const isConfirmed = Boolean(data.confirmedAt);
+
+    if (body.giveUpSpot === true) {
+      if (!isConfirmed) {
+        return NextResponse.json(
+          { error: "Only confirmed attendees can give up their spot" },
+          { status: 400 }
+        );
+      }
+      await ref.update({
+        confirmedAt: FieldValue.delete(),
+        gaveUpSpotAt: FieldValue.serverTimestamp(),
+        willBeLate: FieldValue.delete(),
+      });
+      return NextResponse.json({ ok: true, gaveUpSpot: true }, { status: 200 });
+    }
 
     const patch: Record<string, unknown> = {};
     if (Object.prototype.hasOwnProperty.call(body, "willBeLate")) {
