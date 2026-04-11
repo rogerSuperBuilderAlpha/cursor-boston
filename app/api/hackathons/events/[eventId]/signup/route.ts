@@ -13,7 +13,6 @@ import {
   getOptionalVerifiedUser,
 } from "@/lib/server-auth";
 import {
-  compareUnifiedHackathonRanking,
   CURSOR_CREDIT_TOP_N,
   DECLINED_EMAILS,
   JUDGE_EMAILS,
@@ -297,9 +296,14 @@ export async function GET(request: NextRequest, context: RouteContext) {
       });
     }
 
-    // Competition order (same as freeze top-N): PRs desc → website before Luma → time asc.
-    // Confirmed vs waitlisted still come from confirmedAt, not from rank alone.
-    unified.sort(compareUnifiedHackathonRanking);
+    // Confirmed first (frozen top 50), then waitlisted. Within each group: PRs desc → time asc.
+    unified.sort((a, b) => {
+      const aConf = a.confirmedAt != null ? 1 : 0;
+      const bConf = b.confirmedAt != null ? 1 : 0;
+      if (bConf !== aConf) return bConf - aConf;
+      if (b.mergedPrCount !== a.mergedPrCount) return b.mergedPrCount - a.mergedPrCount;
+      return a.signedUpAtMs - b.signedUpAtMs;
+    });
 
     // Build ranked entries — status driven by confirmedAt field
     type EntryStatus = "confirmed" | "waitlisted";
