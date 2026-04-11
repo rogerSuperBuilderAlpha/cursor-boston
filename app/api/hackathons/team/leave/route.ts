@@ -74,17 +74,19 @@ export async function POST(request: NextRequest) {
 
     const hackathonId = team.hackathonId;
 
-    const submissionSnap = await db
+    const submissionQuery = db
       .collection("hackathonSubmissions")
       .where("teamId", "==", sanitizedTeamId)
       .where("hackathonId", "==", hackathonId)
-      .limit(1)
-      .get();
+      .limit(1);
 
-    const hadSubmission = !submissionSnap.empty;
-    const submissionRef = submissionSnap.docs[0]?.ref;
+      let hadSubmission = false;
 
-    await db.runTransaction(async (tx) => {
+      await db.runTransaction(async (tx) => {
+        const submissionSnap = await tx.get(submissionQuery);
+        hadSubmission = !submissionSnap.empty;
+      const submissionRef = submissionSnap.docs[0]?.ref;
+
       const newMemberIds = memberIds.filter((id) => id !== user.uid);
       if (newMemberIds.length <= 1) {
         tx.delete(teamRef);
