@@ -27,7 +27,7 @@ export function ReplyCard({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   return (
-    <div className="bg-neutral-800/50 rounded-lg p-3">
+    <div className="bg-neutral-100 dark:bg-neutral-800/50 rounded-lg p-3">
       <div className="flex items-start gap-2">
         {reply.authorPhoto ? (
           <Image
@@ -38,13 +38,13 @@ export function ReplyCard({
             className="rounded-full object-cover shrink-0"
           />
         ) : (
-          <div className="w-7 h-7 rounded-full bg-neutral-700 flex items-center justify-center text-white text-xs font-semibold shrink-0">
+          <div className="w-7 h-7 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-neutral-700 dark:text-white text-xs font-semibold shrink-0">
             {getInitials(reply.authorName)}
           </div>
         )}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="font-medium text-white text-sm">{reply.authorName}</span>
+            <span className="font-medium text-neutral-900 dark:text-white text-sm">{reply.authorName}</span>
             <span className="text-neutral-500 text-xs">{formatRelativeDate(reply.createdAt)}</span>
             {isOwner && (
               <>
@@ -81,7 +81,7 @@ export function ReplyCard({
               </>
             )}
           </div>
-          <p className="text-neutral-300 text-sm mt-1">{reply.content}</p>
+          <p className="text-neutral-700 dark:text-neutral-300 text-sm mt-1">{reply.content}</p>
           
           {/* Reply Reactions */}
           <div className="flex items-center gap-1 mt-2 -ml-1">

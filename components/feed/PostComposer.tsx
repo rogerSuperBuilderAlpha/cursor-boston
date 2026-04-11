@@ -33,7 +33,7 @@ export function PostComposer({
 
   if (!user) {
     return (
-      <div className="bg-neutral-900 rounded-xl p-6 border border-neutral-800 mb-6 text-center">
+      <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 border border-neutral-200 dark:border-neutral-800 mb-6 text-center">
         <p className="text-neutral-400 mb-4">Sign in to post messages</p>
         <Link
           href="/login?redirect=/members"
@@ -46,7 +46,7 @@ export function PostComposer({
   }
 
   return (
-    <div className="bg-neutral-900 rounded-xl p-4 border border-neutral-800 mb-6">
+    <div className="bg-white dark:bg-neutral-900 rounded-xl p-4 border border-neutral-200 dark:border-neutral-800 mb-6">
       <div className="flex gap-3">
         <div className="shrink-0">
           {user.photoURL ? (
@@ -58,7 +58,7 @@ export function PostComposer({
               className="w-10 h-10 rounded-full object-cover"
             />
           ) : (
-            <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center text-white font-semibold">
+            <div className="w-10 h-10 rounded-full bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center text-neutral-700 dark:text-white font-semibold">
               {getInitials(user.displayName || user.email)}
             </div>
           )}
@@ -71,9 +71,9 @@ export function PostComposer({
             aria-label={placeholder}
             rows={3}
             maxLength={maxLength}
-            className="w-full bg-transparent text-white placeholder-neutral-400 resize-none focus:outline-none"
+            className="w-full bg-transparent text-neutral-900 dark:text-white placeholder-neutral-400 resize-none focus:outline-none"
           />
-          <div className="flex items-center justify-between pt-3 border-t border-neutral-800">
+          <div className="flex items-center justify-between pt-3 border-t border-neutral-200 dark:border-neutral-800">
             <span className={`text-xs ${
               trimmed.length < minLength
                 ? "text-red-400"
