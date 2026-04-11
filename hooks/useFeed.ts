@@ -51,6 +51,7 @@ export function useFeed(user: User | null, isActive: boolean) {
       setLoading(false);
     }, (error) => {
       console.error("Error listening to messages:", error);
+      setError("Failed to load feed. Please refresh.");
       setLoading(false);
     });
 

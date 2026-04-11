@@ -21,6 +21,8 @@ interface CommunityFeedProps {
 export function CommunityFeed({ user, onViewMemberProfile }: CommunityFeedProps) {
   const {
     loading,
+    error,
+    clearError,
     newMessage,
     setNewMessage,
     posting,
@@ -118,6 +120,19 @@ export function CommunityFeed({ user, onViewMemberProfile }: CommunityFeedProps)
           onSubmit={postMessage}
           posting={posting}
         />
+
+        {/* Error State */}
+        {error && (
+          <div className="flex items-center justify-between gap-4 p-4 mb-6 bg-red-500/10 border border-red-500/20 rounded-lg">
+            <p className="text-red-400 text-sm">{error}</p>
+            <button
+              onClick={clearError}
+              className="text-sm text-red-400 hover:text-red-300 underline shrink-0"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
 
         {/* Messages Feed */}
         {loading ? (
