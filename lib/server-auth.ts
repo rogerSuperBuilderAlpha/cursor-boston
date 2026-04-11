@@ -62,8 +62,8 @@ function isLegacyAdminEmail(email?: string): boolean {
 
 export async function getVerifiedUser(request: NextRequest): Promise<VerifiedUser | null> {
   const authHeader = request.headers.get("authorization") || "";
-  const tokenFromAuth =
-    authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+  const match = authHeader.match(/^Bearer\s+(.+)$/);
+  const tokenFromAuth = match ? match[1].trim() : "";
   const tokenFromHeader = request.headers.get("x-firebase-id-token")?.trim() || "";
   const token = tokenFromAuth || tokenFromHeader;
 
@@ -105,8 +105,8 @@ export async function getOptionalVerifiedUser(
   request: NextRequest
 ): Promise<VerifiedUser | null> {
   const authHeader = request.headers.get("authorization") || "";
-  const tokenFromAuth =
-    authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+  const match = authHeader.match(/^Bearer\s+(.+)$/);
+  const tokenFromAuth = match ? match[1].trim() : "";
   const tokenFromHeader = request.headers.get("x-firebase-id-token")?.trim() || "";
   const token = tokenFromAuth || tokenFromHeader;
 
