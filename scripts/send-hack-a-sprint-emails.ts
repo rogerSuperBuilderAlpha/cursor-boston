@@ -31,6 +31,7 @@ loadEnvConfig(process.cwd());
 
 import type { DocumentData, Firestore } from "firebase-admin/firestore";
 import {
+  compareUnifiedHackathonRanking,
   CURSOR_CREDIT_TOP_N,
   DECLINED_EMAILS,
   JUDGE_EMAILS,
@@ -482,16 +483,7 @@ async function buildUnifiedDisplayRankMaps(
     });
   }
 
-  unified.sort((a, b) => {
-    const ac = a.confirmedAt != null ? 1 : 0;
-    const bc = b.confirmedAt != null ? 1 : 0;
-    if (bc !== ac) return bc - ac;
-    if (b.mergedPrCount !== a.mergedPrCount) return b.mergedPrCount - a.mergedPrCount;
-    const aWeb = a.source === "website" ? 1 : 0;
-    const bWeb = b.source === "website" ? 1 : 0;
-    if (bWeb !== aWeb) return bWeb - aWeb;
-    return a.signedUpAtMs - b.signedUpAtMs;
-  });
+  unified.sort(compareUnifiedHackathonRanking);
 
   const rankByUserId = new Map<string, number>();
   const rankByEmail = new Map<string, number>();
