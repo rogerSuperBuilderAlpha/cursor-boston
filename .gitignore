@@ -178,3 +178,4 @@ temp/
 secrets/
 credentials/
 *.secret
+docs/seed-data/
