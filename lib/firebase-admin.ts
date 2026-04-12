@@ -56,6 +56,11 @@ function getAdminApp(): App | null {
   return null;
 }
 
+/**
+ * Get the Firebase Admin Firestore instance.
+ * Initializes the instance on first call and reuses it on subsequent calls.
+ * @returns The Firestore instance, or null if Firebase Admin could not be initialized
+ */
 export function getAdminDb(): Firestore | null {
   if (adminDb) {
     return adminDb;
@@ -70,6 +75,11 @@ export function getAdminDb(): Firestore | null {
   return adminDb;
 }
 
+/**
+ * Get the Firebase Admin Auth instance.
+ * Initializes the instance on first call and reuses it on subsequent calls.
+ * @returns The Auth instance, or null if Firebase Admin could not be initialized
+ */
 export function getAdminAuth(): Auth | null {
   if (adminAuth) {
     return adminAuth;
@@ -84,6 +94,11 @@ export function getAdminAuth(): Auth | null {
   return adminAuth;
 }
 
+/**
+ * Get the Firebase Admin Realtime Database instance.
+ * Initializes the instance on first call and reuses it on subsequent calls.
+ * @returns The Database instance, or null if Firebase Admin could not be initialized
+ */
 export function getAdminRtdb(): Database | null {
   if (adminRtdb) {
     return adminRtdb;
