@@ -90,4 +90,6 @@ export const DECLINED_EMAILS = new Set([
   "lnu.ava@northeastern.edu",
   "harrychow8888@gmail.com",
   "brucejia@bu.edu",
+  "gehlotvansh111@gmail.com",
+  "torresr14@gmail.com",
 ]);

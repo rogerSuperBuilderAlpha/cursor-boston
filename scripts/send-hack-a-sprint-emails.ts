@@ -621,6 +621,30 @@ ${bodyHtml}
 </body></html>`;
 }
 
+function openIssuesHtml(): string {
+  const repoIssuesUrl = `${getGithubRepoWebBaseUrl()}/issues`;
+  return `<p><strong>Looking for something to work on?</strong> These open issues are great candidates for a quick PR:</p>
+<ul style="margin:8px 0;">
+<li><strong><a href="${escapeHtml(repoIssuesUrl)}/232">#232</a></strong> — Increase test coverage from 13.9% to 50%+ <em>(good first issue, testing)</em></li>
+<li><strong><a href="${escapeHtml(repoIssuesUrl)}/235">#235</a></strong> — Add JSDoc documentation to exported utility functions <em>(good first issue, docs)</em></li>
+<li><strong><a href="${escapeHtml(repoIssuesUrl)}/243">#243</a></strong> — Add bounds checking for Firestore query .docs[0] access <em>(bug fix)</em></li>
+<li><strong><a href="${escapeHtml(repoIssuesUrl)}/257">#257</a></strong> — Career Board for Cursor-Native Developers <em>(good first issue, feature)</em></li>
+<li><strong><a href="${escapeHtml(repoIssuesUrl)}/260">#260</a></strong> — AI Dev Terminology Glossary <em>(good first issue, feature)</em></li>
+</ul>
+<p style="font-size:13px;">See all open issues: <a href="${escapeHtml(repoIssuesUrl)}">${escapeHtml(repoIssuesUrl)}</a></p>`;
+}
+
+function openIssuesText(): string {
+  const repoIssuesUrl = `${getGithubRepoWebBaseUrl()}/issues`;
+  return `Looking for something to work on? Try these open issues:
+- #232 Increase test coverage (good first issue, testing)
+- #235 Add JSDoc documentation (good first issue, docs)
+- #243 Add bounds checking for Firestore .docs[0] (bug fix)
+- #257 Career Board for Cursor-Native Developers (good first issue)
+- #260 AI Dev Terminology Glossary (good first issue)
+All issues: ${repoIssuesUrl}`;
+}
+
 function commonEventBlockHtml(): string {
   const repoUrl = getGithubRepoWebBaseUrl();
   return `<p><strong>Cursor Boston Hack-a-Sprint</strong><br/>
@@ -677,6 +701,7 @@ function buildEmails(args: {
     lead = `<p>Hi ${first},</p>
 <p>The participant list is finalized. You’re <strong>#${rank}</strong> out of <strong>${totalOnLeaderboard}</strong> on the leaderboard with <strong>${mergedPrCount}</strong> merged PR${mergedPrCount === 1 ? "" : "s"}. We have <strong>${CURSOR_CREDIT_TOP_N}</strong> confirmed spots, so you’re currently on the <strong>waitlist</strong>.</p>
 <p><strong>You can still move up.</strong> Merged PRs are the #1 way to climb the leaderboard. Open a PR to <a href="${escapeHtml(repoUrl)}">${escapeHtml(repoUrl)}</a> — documentation, bug fixes, and small features all count. As confirmed participants drop out or don’t show up, waitlisted builders move in <strong>by rank order</strong>.</p>
+${openIssuesHtml()}
 <p><strong>How day-of works:</strong> at 4:00 PM ET on April 13, unclaimed spots go to the waitlist in rank order. If you’d like a chance at a spot, be nearby and watch your email or Discord around 4:00 PM.</p>
 <p>If you know you won’t be coming, please remove yourself from <a href="${escapeHtml(LUMA_URL)}">Luma</a> so others can move up.</p>
 <p>Final leaderboard: <a href="${escapeHtml(signupUrl)}">${escapeHtml(signupUrl)}</a></p>`;
@@ -718,7 +743,7 @@ ${block}
     tier === "CONFIRMED" ?
       `You’re #${rank} — spot reserved for April 13. Confirm by submitting a PR to ${repoUrl} or replying to this email. Arrive by 4:00 PM ET. If you can’t come, remove yourself from Luma.`
     : tier === "WAITLISTED" ?
-      `You’re #${rank} on the waitlist. Merge PRs to ${repoUrl} to move up. At 4:00 PM ET on April 13, unclaimed spots go to waitlist in rank order. If not coming, remove yourself from Luma.`
+      `You’re #${rank} on the waitlist. Merge PRs to ${repoUrl} to move up. At 4:00 PM ET on April 13, unclaimed spots go to waitlist in rank order. If not coming, remove yourself from Luma.\n\n${openIssuesText()}`
     : tier === "SIGNED_UP_NO_SPOT" ?
       `Claim your leaderboard spot: ${signupUrl}` +
         (profileBlockReason ? ` First fix: ${profileBlockReason}` : "") +
@@ -761,6 +786,7 @@ function buildListAnnouncementEmail(args: {
 <p>The accepted and waitlisted participant list for <strong>Hack-a-Sprint</strong> is now live. You can see the full list, your ranking, and your status here:</p>
 <p style="margin:16px 0;"><a href="${escapeHtml(signupUrl)}" style="display:inline-block;background:#059669;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">View participant list</a></p>
 <p>${statusLine}</p>
+${tier === "WAITLISTED" ? openIssuesHtml() : ""}
 <p>The top <strong>${CURSOR_CREDIT_TOP_N}</strong> are confirmed. Everyone else is on the waitlist. Rankings are based on merged PRs to the community repo, then by signup time.</p>
 ${commonEventBlockHtml()}`);
 
@@ -831,6 +857,7 @@ function buildReminderEmail(args: {
 <p>You are <strong>${rankPhrase}</strong> on the waitlist with <strong>${mergedPrCount}</strong> merged PR${mergedPrCount === 1 ? "" : "s"}. <strong>Admission is not guaranteed.</strong> There is <strong>no spectator room</strong> — only participants with a seat.</p>
 <p><strong>Want to try for an open spot?</strong> At <strong>4:00 PM ET</strong>, unclaimed confirmed spots go to waitlisters <strong>in rank order</strong>. On the website, you can indicate that you’ll be there to queue: <a href="${escapeHtml(signupUrl)}">${escapeHtml(signupUrl)}</a></p>
 <p><strong>Move up before Monday:</strong> Sign up on the website if you haven’t, and <strong>merge a PR</strong> to the community repo to climb the waitlist: <a href="${escapeHtml(repoUrl)}">${escapeHtml(repoUrl)}</a></p>
+${openIssuesHtml()}
 <p>If you’re not planning to queue, please remove yourself from <a href="${escapeHtml(LUMA_URL)}">Luma</a> so others can move up.</p>`;
   } else if (tier === "SIGNED_UP_NO_SPOT") {
     subject = "Hack-a-Sprint is Monday — finish website signup";
@@ -872,7 +899,7 @@ ${block}
     tier === "CONFIRMED" ?
       `Confirmed spot (${rankPhrase}). Can't come? Mark not going on Luma: ${LUMA_URL}. Attending? Register on the site (required): ${signupUrl}. Arrive by 4:00 PM ET. Late? Indicate on site Day-of RSVP: ${signupUrl}`
     : tier === "WAITLISTED" ?
-      `Waitlist ${rankPhrase}. Not guaranteed; no spectator room. Queue intent + signup: ${signupUrl}. Move up with PRs: ${repoUrl}`
+      `Waitlist ${rankPhrase}. Not guaranteed; no spectator room. Queue intent + signup: ${signupUrl}. Move up with PRs: ${repoUrl}\n\n${openIssuesText()}`
     : tier === "SIGNED_UP_NO_SPOT" ?
       `Finish website signup: ${signupUrl}` + (profileBlockReason ? ` (${profileBlockReason})` : "") + `. PRs: ${repoUrl}. Luma: ${LUMA_URL}`
     : `Create account and claim spot: ${signupUrl}. Repo: ${repoUrl}. Luma: ${LUMA_URL}`,
@@ -953,6 +980,7 @@ function buildCorrectionEmail(args: {
 <p style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 16px;"><strong>Your status: WAITLISTED — #${rank} of ${totalOnLeaderboard}</strong><br/>${mergedPrCount} merged PR${mergedPrCount === 1 ? "" : "s"} · top ${CURSOR_CREDIT_TOP_N} are confirmed</p>
 <p><strong>Check your live ranking anytime:</strong> <a href="${escapeHtml(signupUrl)}">${escapeHtml(signupUrl)}</a> — this is the <strong>source of truth</strong> for your status and position. Rankings update in real time.</p>
 <p><strong>How to move up:</strong> Merge PRs to <a href="${escapeHtml(repoUrl)}">${escapeHtml(repoUrl)}</a> — documentation, bug fixes, and features all count. As confirmed participants drop out or give up their spot, waitlisted builders move in by rank order.</p>
+${openIssuesHtml()}
 <p><strong>Day of (April 13):</strong> At 4:00 PM ET, unclaimed confirmed spots go to waitlisters in rank order. If you want a chance, be nearby and watch the website or your email around 4:00 PM.</p>
 <p>Not coming? Please remove yourself from <a href="${escapeHtml(LUMA_URL)}">Luma</a> so others can move up.</p>`;
   } else {
@@ -978,7 +1006,7 @@ function buildCorrectionEmail(args: {
     tier === "CONFIRMED" ?
       `YOUR STATUS: CONFIRMED — #${rank} of ${totalOnLeaderboard}. Reserved seat, $50 Cursor credits at check-in. Arrive by 4:00 PM ET April 13. Can't make it? Give up your spot on the website.`
     : tier === "WAITLISTED" ?
-      `YOUR STATUS: WAITLISTED — #${rank} of ${totalOnLeaderboard}. Top ${CURSOR_CREDIT_TOP_N} are confirmed. Merge PRs to ${repoUrl} to move up. Day-of: unclaimed spots go to waitlist at 4:00 PM ET.`
+      `YOUR STATUS: WAITLISTED — #${rank} of ${totalOnLeaderboard}. Top ${CURSOR_CREDIT_TOP_N} are confirmed. Merge PRs to ${repoUrl} to move up. Day-of: unclaimed spots go to waitlist at 4:00 PM ET.\n\n${openIssuesText()}`
     : `Complete your registration at ${signupUrl} to see your ranking.`,
     "",
     `Live rankings (source of truth): ${signupUrl}`,
@@ -1001,7 +1029,7 @@ function parseArgs(argv: string[]) {
     : join(
         homedir(),
         "Downloads",
-        "Cursor Boston Hack-a-Sprint - Guests - 2026-04-11-12-28-29.csv"
+        "Cursor Boston Hack-a-Sprint - Guests - 2026-04-12-21-48-33.csv"
       );
 
   if ((dryRun && send) || (!dryRun && !send)) {
