@@ -208,6 +208,21 @@ export async function GET(request: NextRequest, context: RouteContext) {
       if (typeof gh === "string" && gh.trim()) websiteGithubLogins.add(gh.trim().toLowerCase());
     }
 
+    // Reverse-lookup maps: email/githubLogin → rows index (for merging Luma fields)
+    const emailToRowIdx = new Map<string, number>();
+    const ghLoginToRowIdx = new Map<string, number>();
+    for (let i = 0; i < rows.length; i++) {
+      const profile = userMap.get(rows[i].userId);
+      if (typeof profile?.email === "string") {
+        emailToRowIdx.set(profile.email.toLowerCase(), i);
+      }
+      const gh = profile?.github && typeof profile.github === "object"
+        ? (profile.github as { login?: string }).login : undefined;
+      if (typeof gh === "string" && gh.trim()) {
+        ghLoginToRowIdx.set(gh.trim().toLowerCase(), i);
+      }
+    }
+
     // Fetch Luma-only registrants
     const lumaSnap = await db
       .collection("hackathonLumaRegistrants")
@@ -231,8 +246,26 @@ export async function GET(request: NextRequest, context: RouteContext) {
       const email = (d.email as string || "").toLowerCase();
       const ghLogin = typeof d.githubLogin === "string" ? d.githubLogin : null;
       if (JUDGE_EMAILS.has(email) || DECLINED_EMAILS.has(email)) continue;
-      if (websiteEmails.has(email)) continue;
-      if (ghLogin && websiteGithubLogins.has(ghLogin.toLowerCase())) continue;
+
+      // When a Luma registrant also signed up on the website, carry over
+      // confirmed status from the Luma record so it isn't lost.
+      const matchIdx = websiteEmails.has(email)
+        ? emailToRowIdx.get(email)
+        : (ghLogin && websiteGithubLogins.has(ghLogin.toLowerCase()))
+          ? ghLoginToRowIdx.get(ghLogin.toLowerCase())
+          : undefined;
+      if (matchIdx !== undefined) {
+        if (rows[matchIdx].confirmedAt == null && d.confirmedAt) {
+          rows[matchIdx].confirmedAt = signedUpAtToMs(d.confirmedAt);
+        }
+        if (rows[matchIdx].frozenRank == null && typeof d.frozenRank === "number") {
+          rows[matchIdx].frozenRank = d.frozenRank;
+        }
+        if (rows[matchIdx].frozenPrCount == null && typeof d.frozenPrCount === "number") {
+          rows[matchIdx].frozenPrCount = d.frozenPrCount;
+        }
+        continue;
+      }
       if (ghLogin) lumaGithubLogins.push(ghLogin);
       lumaRows.push({
         name: typeof d.name === "string" ? d.name : "",
