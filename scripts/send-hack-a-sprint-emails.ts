@@ -924,9 +924,8 @@ function buildCorrectionEmail(args: {
   rank: number | null;
   totalOnLeaderboard: number;
   mergedPrCount: number;
-  profileBlockReason: string | null;
 }): { subject: string; html: string; text: string } {
-  const { tier, name, rank, totalOnLeaderboard, mergedPrCount, profileBlockReason } = args;
+  const { tier, name, rank, totalOnLeaderboard, mergedPrCount } = args;
   const first = escapeHtml(name);
   const signupUrl = `${SITE_ORIGIN.replace(/\/$/, "")}${SIGNUP_PATH}`;
   const repoUrl = getGithubRepoWebBaseUrl();
@@ -935,59 +934,38 @@ function buildCorrectionEmail(args: {
   let lead: string;
 
   if (tier === "CONFIRMED") {
-    subject = "Correction: Your spot IS confirmed for Hack-a-Sprint April 13";
+    subject = "Hack-a-Sprint April 13 — your status is CONFIRMED (#" + rank + ")";
     lead = `<p>Hi ${first},</p>
-<p><strong>We owe you an apology.</strong> Our previous email contained an error — some confirmed participants were incorrectly told they were waitlisted. We're sorry for the confusion.</p>
-<p><strong>Your correct status: CONFIRMED.</strong> You are <strong>#${rank}</strong> out of <strong>${totalOnLeaderboard}</strong> with <strong>${mergedPrCount}</strong> merged PR${mergedPrCount === 1 ? "" : "s"}.</p>
-<p><strong>What "confirmed" means:</strong></p>
-<ul>
-<li>You have a <strong>reserved seat</strong> at Hack-a-Sprint on April 13.</li>
-<li>You will receive <strong>$50 in Cursor credits</strong> when you check in.</li>
-<li>You are eligible for the <strong>$1,200 prize pool</strong> (six $200 spots).</li>
-</ul>
+<p>We apologize for the confusion caused by our previous emails — some contained incorrect status information. <strong>Please disregard those earlier messages.</strong> This email and the website are your source of truth going forward.</p>
+<p style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;padding:12px 16px;"><strong>Your status: CONFIRMED — #${rank} of ${totalOnLeaderboard}</strong><br/>${mergedPrCount} merged PR${mergedPrCount === 1 ? "" : "s"} · reserved seat · $50 Cursor credits at check-in</p>
+<p><strong>Check your live ranking anytime:</strong> <a href="${escapeHtml(signupUrl)}">${escapeHtml(signupUrl)}</a> — this is the <strong>source of truth</strong> for your status and position.</p>
 <p><strong>What you need to do:</strong></p>
-<ol>
+<ul>
 <li><strong>Arrive by 4:00 PM ET on April 13.</strong> Unclaimed spots at 4:00 PM go to the waitlist.</li>
-<li>If you'll be late, contact roger@cursorboston.com <strong>before</strong> the event or use the Day-of RSVP on the website so we hold your spot.</li>
-<li>Bring your laptop, charger, and something you want to build. Sprint starts at 4:30 PM.</li>
-</ol>
-<p>If you can no longer attend, <strong>please remove yourself from <a href="${escapeHtml(LUMA_URL)}">Luma</a></strong> so we can give your spot to someone on the waitlist.</p>
-<p>See the full participant list: <a href="${escapeHtml(signupUrl)}">${escapeHtml(signupUrl)}</a></p>`;
+<li>Running late? Use the <strong>Day-of RSVP</strong> on the website or email roger@cursorboston.com so we hold your spot.</li>
+<li>Bring your laptop, charger, and something you want to build.</li>
+</ul>
+<p>Can't make it? You can <strong>give up your spot</strong> on the website so the next waitlisted person gets in. Or remove yourself from <a href="${escapeHtml(LUMA_URL)}">Luma</a>.</p>`;
   } else if (tier === "WAITLISTED") {
-    subject = "Correction: Your Hack-a-Sprint status — waitlist for April 13";
+    subject = "Hack-a-Sprint April 13 — your status is WAITLISTED (#" + rank + ")";
     lead = `<p>Hi ${first},</p>
-<p><strong>We owe you an apology.</strong> Our previous email contained an error — some participants received the wrong status. We're sorry for the confusion.</p>
-<p><strong>Your correct status: WAITLISTED.</strong> You are <strong>#${rank}</strong> out of <strong>${totalOnLeaderboard}</strong> with <strong>${mergedPrCount}</strong> merged PR${mergedPrCount === 1 ? "" : "s"}. The top <strong>${CURSOR_CREDIT_TOP_N}</strong> have confirmed spots — you are currently on the <strong>waitlist</strong>.</p>
-<p><strong>You can still move up.</strong> Merged PRs are the #1 way to climb the leaderboard. Open a PR to <a href="${escapeHtml(repoUrl)}">${escapeHtml(repoUrl)}</a> — documentation, bug fixes, and small features all count. As confirmed participants drop out or don't show up, waitlisted builders move in <strong>by rank order</strong>.</p>
-<p><strong>How day-of works:</strong> At 4:00 PM ET on April 13, unclaimed confirmed spots go to the waitlist in rank order. If you'd like a chance at a spot, be nearby and watch your email or Discord around 4:00 PM.</p>
-<p>If you know you won't be coming, please remove yourself from <a href="${escapeHtml(LUMA_URL)}">Luma</a> so others can move up.</p>
-<p>See the full participant list: <a href="${escapeHtml(signupUrl)}">${escapeHtml(signupUrl)}</a></p>`;
-  } else if (tier === "SIGNED_UP_NO_SPOT") {
-    subject = "Correction: Hack-a-Sprint status update — complete your signup";
-    const block =
-      profileBlockReason ?
-        `<p><strong>Before you can claim your spot:</strong> ${escapeHtml(profileBlockReason)}</p>`
-      : "";
-    lead = `<p>Hi ${first},</p>
-<p><strong>We owe you an apology.</strong> Our previous email contained an error for some participants. We're correcting everyone's status now.</p>
-<p>We found your <strong>cursorboston.com</strong> account, but you haven't joined the website signup list yet — so you're not currently ranked.</p>
-${block}
-<p>If you still want to attend, go to <a href="${escapeHtml(signupUrl)}">${escapeHtml(signupUrl)}</a> and claim your spot. You'll be ranked based on your merged PR count (<strong>${mergedPrCount}</strong>). The top <strong>${CURSOR_CREDIT_TOP_N}</strong> are confirmed; everyone else is waitlisted.</p>
-<p>If you can no longer attend, please remove yourself from <a href="${escapeHtml(LUMA_URL)}">Luma</a>.</p>`;
+<p>We apologize for the confusion caused by our previous emails — some contained incorrect status information. <strong>Please disregard those earlier messages.</strong> This email and the website are your source of truth going forward.</p>
+<p style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 16px;"><strong>Your status: WAITLISTED — #${rank} of ${totalOnLeaderboard}</strong><br/>${mergedPrCount} merged PR${mergedPrCount === 1 ? "" : "s"} · top ${CURSOR_CREDIT_TOP_N} are confirmed</p>
+<p><strong>Check your live ranking anytime:</strong> <a href="${escapeHtml(signupUrl)}">${escapeHtml(signupUrl)}</a> — this is the <strong>source of truth</strong> for your status and position. Rankings update in real time.</p>
+<p><strong>How to move up:</strong> Merge PRs to <a href="${escapeHtml(repoUrl)}">${escapeHtml(repoUrl)}</a> — documentation, bug fixes, and features all count. As confirmed participants drop out or give up their spot, waitlisted builders move in by rank order.</p>
+<p><strong>Day of (April 13):</strong> At 4:00 PM ET, unclaimed confirmed spots go to waitlisters in rank order. If you want a chance, be nearby and watch the website or your email around 4:00 PM.</p>
+<p>Not coming? Please remove yourself from <a href="${escapeHtml(LUMA_URL)}">Luma</a> so others can move up.</p>`;
   } else {
-    subject = "Correction: Hack-a-Sprint status update — complete your registration";
+    subject = "Hack-a-Sprint April 13 — complete your registration";
     lead = `<p>Hi ${first},</p>
-<p><strong>We owe you an apology.</strong> Our previous email contained an error for some participants. We're correcting everyone's status now.</p>
-<p>You registered on <strong>Luma</strong>, but we don't see a matching <strong>cursorboston.com</strong> account — so you're not currently ranked on the leaderboard.</p>
-<p><strong>To get on the list:</strong></p>
+<p>We apologize for the confusion caused by our previous emails. <strong>Please disregard those earlier messages.</strong></p>
+<p>You're registered on Luma but not yet on the website leaderboard. To see your ranking and status, complete your registration:</p>
 <ol>
 <li>Create an account at <a href="${escapeHtml(SITE_ORIGIN)}">cursorboston.com</a> (use this same email if possible).</li>
 <li>Connect <strong>GitHub</strong> and <strong>Discord</strong> on your profile.</li>
-<li>Set your profile to <strong>public</strong> with Discord visible.</li>
 <li>Go to <a href="${escapeHtml(signupUrl)}">${escapeHtml(signupUrl)}</a> and <strong>claim your spot</strong>.</li>
 </ol>
-<p>The top <strong>${CURSOR_CREDIT_TOP_N}</strong> are confirmed; everyone else is waitlisted. Merge PRs to <a href="${escapeHtml(repoUrl)}">${escapeHtml(repoUrl)}</a> to move up.</p>
-<p>If you can no longer attend, please remove yourself from <a href="${escapeHtml(LUMA_URL)}">Luma</a>.</p>`;
+<p>The website is the <strong>source of truth</strong> for rankings. Top ${CURSOR_CREDIT_TOP_N} are confirmed; everyone else is waitlisted. Merge PRs to <a href="${escapeHtml(repoUrl)}">${escapeHtml(repoUrl)}</a> to move up.</p>`;
   }
 
   const html = emailShell(`${lead}${commonEventBlockHtml()}`);
@@ -995,18 +973,15 @@ ${block}
   const textParts = [
     `Hi ${name},`,
     "",
-    "CORRECTION: Our previous email contained an error — some participants received the wrong status. We apologize for the confusion.",
+    "We apologize for the confusion from our previous emails — some had incorrect status info. Please disregard those. This email and the website are your source of truth.",
     "",
     tier === "CONFIRMED" ?
-      `Your correct status: CONFIRMED. You're #${rank} with a reserved seat for April 13. Arrive by 4:00 PM ET. $50 Cursor credits at check-in. If you can't come, remove yourself from Luma.`
+      `YOUR STATUS: CONFIRMED — #${rank} of ${totalOnLeaderboard}. Reserved seat, $50 Cursor credits at check-in. Arrive by 4:00 PM ET April 13. Can't make it? Give up your spot on the website.`
     : tier === "WAITLISTED" ?
-      `Your correct status: WAITLISTED. You're #${rank}. Top ${CURSOR_CREDIT_TOP_N} are confirmed. Merge PRs to ${repoUrl} to move up. At 4:00 PM ET on April 13, unclaimed spots go to waitlist in rank order.`
-    : tier === "SIGNED_UP_NO_SPOT" ?
-      `You have an account but aren't on the signup list yet. Claim your spot: ${signupUrl}` +
-        (profileBlockReason ? ` First fix: ${profileBlockReason}` : "")
-    : `Create a cursorboston.com account and claim your spot: ${signupUrl}`,
+      `YOUR STATUS: WAITLISTED — #${rank} of ${totalOnLeaderboard}. Top ${CURSOR_CREDIT_TOP_N} are confirmed. Merge PRs to ${repoUrl} to move up. Day-of: unclaimed spots go to waitlist at 4:00 PM ET.`
+    : `Complete your registration at ${signupUrl} to see your ranking.`,
     "",
-    `Full list: ${signupUrl}`,
+    `Live rankings (source of truth): ${signupUrl}`,
     `Event: April 13, 2026 4–8 PM ET, Back Bay Boston. Luma: ${LUMA_URL}`,
   ];
 
@@ -1103,7 +1078,6 @@ async function main() {
           rank: sample.rank,
           totalOnLeaderboard: ranked.length,
           mergedPrCount: sample.mergedPrCount,
-          profileBlockReason: null,
         });
         console.log(`\n[${sample.tier}] Subject: ${subject}`);
         console.log("HTML preview:\n---\n" + html.slice(0, 700) + "…\n---");
@@ -1120,7 +1094,6 @@ async function main() {
         rank: r.rank,
         totalOnLeaderboard: ranked.length,
         mergedPrCount: r.mergedPrCount,
-        profileBlockReason: null,
       });
       try {
         await sendEmail({ to: r.email, subject, html, text });
