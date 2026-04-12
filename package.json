@@ -153,7 +153,8 @@
     "react-leaflet-cluster": {
       "react": "$react",
       "react-dom": "$react-dom"
-    }
+    },
+    "http-proxy-agent": "^7.0.0"
   },
   "lint-staged": {
     "**/*.{ts,tsx}": [
