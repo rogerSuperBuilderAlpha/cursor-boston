@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { getAdminDb, getAdminAuth } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
+import { parseRequestBody } from "@/lib/api-response";
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,7 +17,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { newPrimaryEmail } = await request.json();
+    const bodyOrError = await parseRequestBody(request);
+    if (bodyOrError instanceof NextResponse) return bodyOrError;
+    const { newPrimaryEmail } = bodyOrError;
     if (!newPrimaryEmail || typeof newPrimaryEmail !== "string") {
       return NextResponse.json({ error: "New primary email is required" }, { status: 400 });
     }

@@ -12,6 +12,8 @@ import {
 } from "@/lib/pair-programming/data-server";
 import type { SessionType } from "@/lib/pair-programming/types";
 
+import { parseRequestBody } from "@/lib/api-response";
+
 const VALID_SESSION_TYPES: SessionType[] = [
   "teach-me",
   "build-together",
@@ -67,8 +69,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const { toUserId, sessionType, message, proposedTime } = body;
+    const bodyOrError = await parseRequestBody(request);
+    if (bodyOrError instanceof NextResponse) return bodyOrError;
+    const { toUserId, sessionType, message, proposedTime } = bodyOrError;
 
     if (!toUserId || typeof toUserId !== "string") {
       return NextResponse.json(

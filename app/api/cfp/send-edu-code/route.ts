@@ -11,6 +11,7 @@ import { getAdminDb, getAdminAuth } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 import { logApiError, logger } from "@/lib/logger";
 import { sendEmail } from "@/lib/mailgun";
+import { parseRequestBody } from "@/lib/api-response";
 
 const CODE_LENGTH = 6;
 const CODE_EXPIRY_MINUTES = 15;
@@ -46,7 +47,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email } = await request.json();
+    const bodyOrError = await parseRequestBody(request);
+    if (bodyOrError instanceof NextResponse) return bodyOrError;
+    const { email } = bodyOrError;
     if (!email || typeof email !== "string") {
       logger.warn("CFP send-edu-code rejected: missing email payload", {
         uid: user.uid,

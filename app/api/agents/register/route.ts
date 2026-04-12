@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAgent, getVerifiedAgent } from "@/lib/agents";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { parseRequestBody } from "@/lib/api-response";
 
 export async function POST(request: NextRequest) {
   try {
@@ -48,8 +49,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse request body
-    const body = await request.json();
-    const { name, description } = body;
+    const bodyOrError = await parseRequestBody(request);
+    if (bodyOrError instanceof NextResponse) return bodyOrError;
+    const { name, description } = bodyOrError;
 
     // Validate name
     if (!name || typeof name !== "string") {

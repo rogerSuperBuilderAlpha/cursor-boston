@@ -4,7 +4,7 @@
  * See LICENSE file for details.
  */
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 /**
  * Standard error codes for API responses.
@@ -50,6 +50,23 @@ export function apiSuccess<T extends Record<string, unknown>>(
   status: number = 200
 ): NextResponse {
   return NextResponse.json({ success: true, ...data }, { status });
+}
+
+/**
+ * Safely parse JSON from a request body, returning a 400 response on failure.
+ * Use instanceof NextResponse to check for errors before accessing the data.
+ */
+export async function parseRequestBody<T = Record<string, any>>(
+  request: NextRequest | Request
+): Promise<T | NextResponse> {
+  try {
+    return (await request.json()) as T;
+  } catch {
+    return NextResponse.json(
+      { error: "Invalid JSON in request body" },
+      { status: 400 }
+    );
+  }
 }
 
 function inferErrorCode(status: number): ErrorCodeType {

@@ -9,6 +9,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { logger } from "@/lib/logger";
+import { parseRequestBody } from "@/lib/api-response";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 import { sanitizeText } from "@/lib/sanitize";
 import { getDisplayName } from "@/lib/utils";
@@ -40,7 +41,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    const { content } = await request.json();
+    const bodyOrError = await parseRequestBody(request);
+    if (bodyOrError instanceof NextResponse) return bodyOrError;
+    const { content } = bodyOrError;
 
     const sanitizedContent = sanitizeText(typeof content === "string" ? content : "");
     if (sanitizedContent.length < 100 || sanitizedContent.length > 500) {

@@ -9,6 +9,7 @@ import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { logger } from "@/lib/logger";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { parseRequestBody } from "@/lib/api-response";
 import { sanitizeDocId } from "@/lib/sanitize";
 
 export const runtime = "nodejs";
@@ -38,7 +39,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    const { messageId } = await request.json();
+    const bodyOrError = await parseRequestBody(request);
+    if (bodyOrError instanceof NextResponse) return bodyOrError;
+    const { messageId } = bodyOrError;
 
     const sanitizedId = sanitizeDocId(messageId);
     if (!sanitizedId) {
