@@ -38,7 +38,8 @@ const nextConfig = {
             value: [
               "default-src 'self'",
               // Firebase/Google OAuth popup flows load Google-hosted scripts.
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://embed.lu.ma https://apis.google.com https://accounts.google.com",
+              // unsafe-inline kept for Firebase Auth popup SDK; unsafe-eval removed (not needed in production builds).
+              "script-src 'self' 'unsafe-inline' https://embed.lu.ma https://apis.google.com https://accounts.google.com",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https://firebasestorage.googleapis.com https://*.googleusercontent.com https://lh3.googleusercontent.com https://avatars.githubusercontent.com https://*.cartocdn.com https://unpkg.com",
               "font-src 'self'",
