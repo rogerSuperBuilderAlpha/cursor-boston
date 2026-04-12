@@ -11,12 +11,25 @@ export const HACKATHON_EVENT_SIGNUP_IDS = [HACK_A_SPRINT_2026_EVENT_ID] as const
 
 export type HackathonEventSignupId = (typeof HACKATHON_EVENT_SIGNUP_IDS)[number];
 
+/**
+ * Type guard for website-driven hackathon signup event ids.
+ *
+ * @param eventId - Candidate event id.
+ * @returns Whether `eventId` is a known {@link HackathonEventSignupId}.
+ */
 export function isHackathonEventSignupId(
   eventId: string
 ): eventId is HackathonEventSignupId {
   return (HACKATHON_EVENT_SIGNUP_IDS as readonly string[]).includes(eventId);
 }
 
+/**
+ * Composite document id for website signup rows: `{eventId}__{userId}`.
+ *
+ * @param eventId - Event id.
+ * @param userId - User uid.
+ * @returns Firestore document id string.
+ */
 export function hackathonEventSignupDocId(
   eventId: string,
   userId: string
@@ -27,6 +40,9 @@ export function hackathonEventSignupDocId(
 /**
  * Same bar as virtual hackathon pool (public profile, GitHub, visible Discord),
  * but no monthly left-team lockout — this is for a specific in-person event.
+ *
+ * @param profile - User profile object from Firestore (may be undefined).
+ * @returns Human-readable block reason, or `null` when the user may sign up.
  */
 export function getHackathonEventSignupBlockReason(
   profile: Record<string, unknown> | undefined
@@ -62,6 +78,13 @@ export type UnifiedHackathonRankSortFields = {
   signedUpAtMs: number;
 };
 
+/**
+ * Comparator for combined leaderboard rows: higher PR count wins, then website vs Luma-only, then earlier signup.
+ *
+ * @param a - Sort fields for row A.
+ * @param b - Sort fields for row B.
+ * @returns Negative if `a` sorts before `b`, positive if after, 0 if equal.
+ */
 export function compareUnifiedHackathonRanking(
   a: UnifiedHackathonRankSortFields,
   b: UnifiedHackathonRankSortFields

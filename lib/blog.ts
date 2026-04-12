@@ -19,6 +19,11 @@ export interface BlogPost {
   content: string;
 }
 
+/**
+ * Load and parse every `content/blog/*.md` post, newest first by frontmatter `date`.
+ *
+ * @returns Parsed posts or empty array when the blog directory is missing.
+ */
 export function getAllPosts(): BlogPost[] {
   if (!fs.existsSync(blogDirectory)) {
     return [];
@@ -46,6 +51,12 @@ export function getAllPosts(): BlogPost[] {
   return allPosts.sort((a, b) => (a.date > b.date ? -1 : 1));
 }
 
+/**
+ * Load a single post by slug (`content/blog/{slug}.md`).
+ *
+ * @param slug - Filename without `.md`.
+ * @returns Post payload or `null` if the file does not exist.
+ */
 export function getPostBySlug(slug: string): BlogPost | null {
   const fullPath = path.join(blogDirectory, `${slug}.md`);
 
@@ -66,6 +77,11 @@ export function getPostBySlug(slug: string): BlogPost | null {
   };
 }
 
+/**
+ * Slugs for static paths / sitemap generation.
+ *
+ * @returns Markdown filenames without extension, or empty if the blog dir is missing.
+ */
 export function getAllPostSlugs(): string[] {
   if (!fs.existsSync(blogDirectory)) {
     return [];

@@ -37,10 +37,11 @@ interface RateLimitResult {
 }
 
 /**
- * Rate limit check
- * @param identifier - Unique identifier (e.g., IP address, user ID)
- * @param options - Rate limit options
- * @returns Rate limit result
+ * In-memory sliding-window rate limit check (not suitable for multi-instance production without shared storage).
+ *
+ * @param identifier - Unique key for the client (e.g. IP or user id).
+ * @param options - Window length (`windowMs`), max requests per window, and optional `keyGenerator` when used indirectly.
+ * @returns Whether the request is allowed plus remaining quota, reset time, and optional `retryAfter` seconds.
  */
 export function checkRateLimit(
   identifier: string,
@@ -95,7 +96,10 @@ export function checkRateLimit(
 }
 
 /**
- * Get client identifier from request
+ * Get client identifier from request by extracting the IP address.
+ * Checks proxy headers in priority order: x-forwarded-for, x-real-ip, cf-connecting-ip.
+ * @param request - The incoming HTTP request
+ * @returns The client IP address string, or "unknown" if not determinable
  */
 export function getClientIdentifier(request: Request): string {
   // Try to get IP from various headers (for proxies/load balancers)
@@ -129,7 +133,15 @@ function cleanupExpiredEntries(now: number): void {
 }
 
 /**
- * Rate limit middleware for Next.js API routes
+ * Rate limit middleware for Next.js API routes.
+ * Wraps a handler with rate limiting and adds X-RateLimit headers to all responses.
+ * @param options - Rate limit configuration including window size and max requests
+ * @param handler - The Next.js API route handler to wrap
+ * @returns A new `Request` handler that returns 429 or forwards with rate-limit headers
+ * @example
+ * export const GET = withRateLimit(rateLimitConfigs.standard, async (request) => {
+ *   return new Response(JSON.stringify({ data: "hello" }));
+ * });
  */
 export function withRateLimit(
   options: RateLimitOptions,
@@ -178,7 +190,10 @@ export function withRateLimit(
 }
 
 /**
- * Predefined rate limit configurations
+ * Predefined rate limit configurations for common API route types.
+ * Use these with withRateLimit() to apply consistent limits across the app.
+ * @example
+ * export const POST = withRateLimit(rateLimitConfigs.standard, handler);
  */
 export const rateLimitConfigs = {
   // Strict rate limit for OAuth callbacks (prevent abuse)

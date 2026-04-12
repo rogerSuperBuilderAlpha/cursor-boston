@@ -8,14 +8,19 @@ import { Timestamp } from "firebase/firestore";
 
 /**
  * Merge class names, filtering out falsy values.
+ *
+ * @param classes - Any mix of strings and falsy placeholders.
+ * @returns Space-joined class string.
  */
 export function cn(...classes: (string | undefined | null | false)[]): string {
   return classes.filter(Boolean).join(" ");
 }
 
 /**
- * Get initials from a name string.
- * Returns first letter of first and last name, or single letter if only one word.
+ * Derive one- or two-letter initials from a display name.
+ *
+ * @param name - Full name or empty.
+ * @returns Uppercase initials, or `"?"` when missing.
  */
 export function getInitials(name: string | null | undefined): string {
   const trimmed = name?.trim();
@@ -28,8 +33,10 @@ export function getInitials(name: string | null | undefined): string {
 }
 
 /**
- * Get a stable display name from a user record.
- * Falls back from name -> local-part of email -> "Anonymous".
+ * Stable display name: trimmed `name`, else email local-part, else `"Anonymous"`.
+ *
+ * @param user - Object with optional `name` and `email`.
+ * @returns Non-empty display string.
  */
 export function getDisplayName(user: {
   name?: string | null;
@@ -50,8 +57,10 @@ export function getDisplayName(user: {
 }
 
 /**
- * Format a Firestore timestamp as a relative date string.
- * Returns "just now", "Xm ago", "Xh ago", "Xd ago", or formatted date.
+ * Format a Firestore timestamp as a relative string.
+ *
+ * @param timestamp - Firestore timestamp instance.
+ * @returns Strings like `"just now"`, `"5m ago"`, or `"Mar 5"`; empty string if invalid.
  */
 export function formatRelativeDate(timestamp: Timestamp): string {
   if (!timestamp?.toDate) return "";

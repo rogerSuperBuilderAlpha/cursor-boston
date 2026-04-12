@@ -47,6 +47,10 @@ function toRetryAfter(resetTime: number, now: number): number {
  * - "deny": fail closed (503) when distributed limiter is unavailable.
  *
  * NOTE: Any memory fallback is resilience-only and not equivalent to distributed protection.
+ *
+ * @param request - Incoming HTTP request (for default IP identifier).
+ * @param options - Scope name, window, max requests, optional fixed `identifier`, fallback mode, sampling.
+ * @returns Allow/deny with remaining quota, reset time, optional `retryAfter`, and `source` discriminator.
  */
 export async function checkServerRateLimit(
   request: Request,
@@ -205,6 +209,13 @@ export async function checkServerRateLimit(
   }
 }
 
+/**
+ * Standard rate-limit response headers including optional `Retry-After` and diagnostic source.
+ *
+ * @param result - Output from {@link checkServerRateLimit}.
+ * @param maxRequests - Limit used for `X-RateLimit-Limit`.
+ * @returns Header map suitable for `Response`/`NextResponse`.
+ */
 export function buildRateLimitHeaders(
   result: ServerRateLimitResult,
   maxRequests: number

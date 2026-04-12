@@ -8,14 +8,32 @@ import type { Firestore } from "firebase-admin/firestore";
 import { HACK_A_SPRINT_2026_EVENT_ID } from "@/lib/hackathon-showcase";
 import { hackathonEventSignupDocId } from "@/lib/hackathon-event-signup";
 
+/**
+ * Document id for peer vote rows: `{eventId}__{userId}`.
+ *
+ * @param userId - Voter uid.
+ * @returns Composite id for `hackathonASprint2026PeerVotes`.
+ */
 export function hackASprint2026PeerVoteDocId(userId: string): string {
   return `${HACK_A_SPRINT_2026_EVENT_ID}__${userId}`;
 }
 
+/**
+ * Score document id: `{eventId}__{submissionId}` (submission lowercased).
+ *
+ * @param submissionId - Showcase submission id.
+ * @returns Document id for `hackathonShowcaseScores`.
+ */
 export function hackASprint2026ScoreDocId(submissionId: string): string {
   return `${HACK_A_SPRINT_2026_EVENT_ID}__${submissionId.toLowerCase()}`;
 }
 
+/**
+ * Whether the user has a `hackathonEventSignups` row for Hack-a-Sprint 2026.
+ *
+ * @param db - Admin Firestore.
+ * @param uid - User id.
+ */
 export async function userHasHackASprint2026Signup(
   db: Firestore,
   uid: string
@@ -25,6 +43,12 @@ export async function userHasHackASprint2026Signup(
   return snap.exists;
 }
 
+/**
+ * Whether the peer vote doc exists and lists exactly six `submissionIds` (round complete).
+ *
+ * @param db - Admin Firestore.
+ * @param uid - Voter uid.
+ */
 export async function userHackASprint2026PeerVoteComplete(
   db: Firestore,
   uid: string

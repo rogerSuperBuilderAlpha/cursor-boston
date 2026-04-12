@@ -14,6 +14,10 @@ const GITHUB_WEBHOOK_SECRET = process.env.GITHUB_WEBHOOK_SECRET;
 
 /**
  * Verify GitHub webhook signature
+ *
+ * @param payload - Raw request body string.
+ * @param signature - `sha256=…` header value.
+ * @returns `true` when the secret matches; `false` if misconfigured or missing inputs.
  */
 export function verifyWebhookSignature(
   payload: string,
@@ -34,6 +38,9 @@ export function verifyWebhookSignature(
 
 /**
  * Find Firebase user by GitHub login
+ *
+ * @param githubLogin - GitHub username from the webhook/API.
+ * @returns Firebase uid or `null` if not linked or on error.
  */
 export async function findUserByGitHubLogin(
   githubLogin: string
@@ -70,6 +77,9 @@ export async function findUserByGitHubLogin(
 /**
  * Check if repository matches our target repository.
  * Uses the same owner/repo resolution as the rest of the app (env with defaults).
+ * @param owner - Repo owner login from payload.
+ * @param repo - Repo name from payload.
+ * @returns `true` when owner/name match {@link getGithubRepoPair}.
  */
 export function isTargetRepository(owner: string, repo: string): boolean {
   const expected = getGithubRepoPair();
@@ -78,6 +88,11 @@ export function isTargetRepository(owner: string, repo: string): boolean {
 
 /**
  * List changed file paths for a PR (GitHub REST). Returns [] on failure.
+ *
+ * @param owner - Repository owner.
+ * @param repo - Repository name.
+ * @param prNumber - Pull request number.
+ * @returns Filenames, or empty array on HTTP/network failure.
  */
 export async function fetchPullRequestChangedFilenames(
   owner: string,
@@ -108,6 +123,9 @@ export async function fetchPullRequestChangedFilenames(
 
 /**
  * Process and store pull request
+ *
+ * @param prData - Normalized subset of GitHub pull request webhook/API payload.
+ * @throws Error when Firebase Admin is unavailable.
  */
 export async function processPullRequest(
   prData: {

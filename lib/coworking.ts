@@ -82,6 +82,10 @@ export const CAFE_CURSOR_SESSIONS: Omit<CoworkingSession, "id" | "eventId" | "cu
 
 /**
  * Get or create sessions for an event
+ *
+ * @param eventId - Event key (e.g. cafe cursor event).
+ * @returns Sessions sorted by `startTime`.
+ * @throws Error when Firebase Admin is unavailable.
  */
 export async function getOrCreateSessions(eventId: string): Promise<CoworkingSession[]> {
   const db = getAdminDb();
@@ -130,7 +134,12 @@ export async function getOrCreateSessions(eventId: string): Promise<CoworkingSes
 }
 
 /**
- * Get all sessions with their current status
+ * Get all sessions with their current status 
+ *
+ * @param eventId - Event id.
+ * @param userId - When set, populates `isUserRegistered` / `userRegistrationId`.
+ * @returns Per-session status rows.
+ * @throws Error when Firebase Admin is unavailable.
  */
 export async function getSessionsWithStatus(
   eventId: string,
@@ -316,6 +325,10 @@ export async function registerForSession(
 
 /**
  * Cancel a user's registration
+ *
+ * @param eventId - Event id.
+ * @param userId - User id.
+ * @returns Success flag and optional error message.
  */
 export async function cancelRegistration(
   eventId: string,
@@ -353,6 +366,10 @@ export async function cancelRegistration(
 /**
  * Check if a user is eligible to register for coworking
  * Requirements: registered user, public profile, GitHub connected
+ *
+ * @param userId - User id.
+ * @returns `eligible` and optional human-readable `reason`.
+ * @throws Error when Firebase Admin is unavailable.
  */
 export async function checkCoworkingEligibility(
   userId: string
@@ -389,6 +406,9 @@ export async function checkCoworkingEligibility(
 
 /**
  * Get user's profile info for registration
+ *
+ * @param userId - User id.
+ * @returns Display fields or `null` if user missing or Admin unavailable.
  */
 export async function getUserProfileForRegistration(
   userId: string

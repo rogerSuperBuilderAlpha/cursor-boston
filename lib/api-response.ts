@@ -23,7 +23,12 @@ export const ErrorCode = {
 export type ErrorCodeType = (typeof ErrorCode)[keyof typeof ErrorCode];
 
 /**
- * Create a standardized error response.
+ * Build a JSON error response for API routes.
+ *
+ * @param message - User-facing or developer error text.
+ * @param status - HTTP status code.
+ * @param code - Optional {@link ErrorCodeType}; inferred from `status` when omitted.
+ * @returns `NextResponse` with JSON payload.
  */
 export function apiError(
   message: string,
@@ -43,7 +48,11 @@ export function apiError(
 }
 
 /**
- * Create a standardized success response.
+ * Build a JSON success response for API routes.
+ *
+ * @param data - Serializable fields to merge into the response object.
+ * @param status - HTTP status (default 200).
+ * @returns `NextResponse` with JSON payload.
  */
 export function apiSuccess<T extends Record<string, unknown>>(
   data: T,

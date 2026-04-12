@@ -43,6 +43,11 @@ export interface EventRequest {
 /**
  * Submit a talk proposal to Firestore
  * Also creates an email document for Firebase Trigger Email extension
+ *
+ * @param submission - Talk fields to store.
+ * @param userId - Optional authenticated uid.
+ * @returns New document id.
+ * @throws Error when Firestore is not configured.
  */
 export async function submitTalkProposal(submission: TalkSubmission, userId?: string): Promise<string> {
   if (!db) {
@@ -76,6 +81,11 @@ export async function submitTalkProposal(submission: TalkSubmission, userId?: st
 /**
  * Submit an event request to Firestore
  * Also creates an email document for Firebase Trigger Email extension
+ *
+ * @param request - Event request payload.
+ * @param userId - Optional authenticated uid.
+ * @returns New document id.
+ * @throws Error when Firestore is not configured.
  */
 export async function submitEventRequest(request: EventRequest, userId?: string): Promise<string> {
   if (!db) {

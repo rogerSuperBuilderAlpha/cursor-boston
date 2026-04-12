@@ -11,11 +11,19 @@ import { sanitizeText, sanitizeName } from "./sanitize";
 const ABSTRACT_MIN_WORDS = 1500;
 const ABSTRACT_MAX_WORDS = 2500;
 
+/**
+ * @param text - Prose to measure.
+ * @returns Word count (whitespace-separated tokens); `0` for empty or non-string.
+ */
 export function countWords(text: string): number {
   if (!text || typeof text !== "string") return 0;
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
 
+/**
+ * @param email - Email string to test.
+ * @returns `true` if it ends with `.edu` (case-insensitive).
+ */
 export function isValidEduEmail(email: string): boolean {
   if (!email || typeof email !== "string") return false;
   return email.toLowerCase().trim().endsWith(".edu");
@@ -27,7 +35,11 @@ export interface UserProfileForEdu {
 }
 
 /**
- * Check if user has a verified .edu email (primary or additional)
+ * Whether the primary email is `.edu` or any verified additional email is `.edu`.
+ *
+ * @param userEmail - Primary account email.
+ * @param userProfile - Optional profile with `additionalEmails`.
+ * @returns `true` if a qualifying institutional email exists.
  */
 export function hasVerifiedEduEmail(
   userEmail: string | null | undefined,
@@ -42,6 +54,10 @@ export function hasVerifiedEduEmail(
 
 /**
  * Get the verified .edu email to use for CFP (primary first, then first verified additional)
+ *
+ * @param userEmail - Primary email.
+ * @param userProfile - Optional profile with verified additional emails.
+ * @returns Lowercased `.edu` address or `null`.
  */
 export function getVerifiedEduEmail(
   userEmail: string | null | undefined,
@@ -78,6 +94,9 @@ export interface CfpSubmissionInput {
 
 /**
  * Validate CFP submission data
+ *
+ * @param data - Raw CFP form payload.
+ * @returns Error message string, or `null` when valid.
  */
 export function validateCfpSubmission(data: CfpSubmissionInput): string | null {
   const wordCount = countWords(data.abstract);
@@ -101,6 +120,10 @@ export function validateCfpSubmission(data: CfpSubmissionInput): string | null {
 /**
  * Submit or update a CFP proposal in Firestore.
  * Uses userId as document ID for one submission per user.
+ *
+ * @param data - Validated input fields.
+ * @param userId - Document id / owner.
+ * @throws Error when Firestore is missing or {@link validateCfpSubmission} fails.
  */
 export async function submitCfpProposal(
   data: CfpSubmissionInput,
@@ -153,7 +176,11 @@ export async function submitCfpProposal(
 }
 
 /**
- * Fetch existing CFP submission for a user
+ * Loads the current user's CFP document if present.
+ *
+ * @param userId - Document id.
+ * @returns Stored submission or `null`.
+ * @throws Error when Firestore is not configured.
  */
 export async function getCfpSubmission(userId: string): Promise<CfpSubmission | null> {
   if (!db) {

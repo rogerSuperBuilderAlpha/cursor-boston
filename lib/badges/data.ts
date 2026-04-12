@@ -51,11 +51,21 @@ export interface UserBadgeDocument {
 
 /**
  * Deterministic document ID helpers
+ *
+ * @param badgeId - Canonical badge id.
+ * @returns Document id string for `badges/{id}`.
  */
 export function getBadgeDocumentId(badgeId: BadgeId): string {
   return badgeId;
 }
 
+/**
+ * Deterministic id for a user's award row: `{userId}_{badgeId}`.
+ *
+ * @param userId - Firebase user uid.
+ * @param badgeId - Badge being awarded.
+ * @returns Composite document id for `user_badges`.
+ */
 export function getUserBadgeDocumentId(
   userId: string,
   badgeId: BadgeId
@@ -66,6 +76,9 @@ export function getUserBadgeDocumentId(
 /**
  * Mapping helpers (domain -> storage)
  * Pure functions, no Firebase usage
+ *
+ * @param definition - App-layer badge definition.
+ * @returns Serializable fields for `badges` collection writes.
  */
 export function toBadgeDefinitionDocument(
   definition: BadgeDefinition
@@ -81,6 +94,12 @@ export function toBadgeDefinitionDocument(
   };
 }
 
+/**
+ * Maps a domain {@link UserBadge} to the Firestore document shape.
+ *
+ * @param userBadge - Award record including id and metadata.
+ * @returns Serializable fields for `user_badges` collection writes.
+ */
 export function toUserBadgeDocument(
   userBadge: UserBadge
 ): UserBadgeDocument {
@@ -152,6 +171,12 @@ function toUserBadgeFromDocument(
   };
 }
 
+/**
+ * Loads all persisted user badge rows for a user from Firestore (client SDK).
+ *
+ * @param userId - Firebase uid; empty string yields `{}`.
+ * @returns Map of badge id → {@link UserBadge}, or `{}` when Firestore is unavailable.
+ */
 export async function getUserBadgeMap(userId: string): Promise<UserBadgeMap> {
   if (!db || !userId) {
     return {};
@@ -175,6 +200,15 @@ export async function getUserBadgeMap(userId: string): Promise<UserBadgeMap> {
   return badgeMap;
 }
 
+/**
+ * Ensures Firestore reflects awards for every badge the user is eligible for but missing locally.
+ * Delegates to {@link ensureUserBadgesForEligibleWithStatus} and returns only the merged map.
+ *
+ * @param userId - Current user uid (must match signed-in client for POST awards).
+ * @param eligibilityMap - Output of {@link evaluateBadgeEligibility}.
+ * @param existingBadgeMap - Known awards before sync (defaults to empty).
+ * @returns Updated badge map after best-effort persistence.
+ */
 export async function ensureUserBadgesForEligible(
   userId: string,
   eligibilityMap: BadgeEligibilityMap,
@@ -188,6 +222,14 @@ export async function ensureUserBadgesForEligible(
   return result.userBadgeMap;
 }
 
+/**
+ * Like {@link ensureUserBadgesForEligible} but includes persistence status for UI messaging when degraded.
+ *
+ * @param userId - Current user uid.
+ * @param eligibilityMap - Eligibility snapshot.
+ * @param existingBadgeMap - Prior awards map.
+ * @returns Merged map plus `complete` | `degraded` | `failed` persistence state.
+ */
 export async function ensureUserBadgesForEligibleWithStatus(
   userId: string,
   eligibilityMap: BadgeEligibilityMap,

@@ -25,13 +25,22 @@ type GitHubPullApiItem = {
   user?: { login?: unknown } | null;
 };
 
+/**
+ * Resolved community repository owner/name from env (`GITHUB_REPO_OWNER`, `GITHUB_REPO_NAME`) with defaults.
+ *
+ * @returns `{ owner, repo }` for API calls and links.
+ */
 export function getGithubRepoPair(): { owner: string; repo: string } {
   const owner = process.env.GITHUB_REPO_OWNER || DEFAULT_OWNER;
   const repo = process.env.GITHUB_REPO_NAME || DEFAULT_REPO;
   return { owner, repo };
 }
 
-/** Public https URL for the configured repo (for links in the UI). */
+/**
+ * Public https URL for the configured repo (for links in the UI).
+ *
+ * @returns HTTPS base URL for UI links.
+ */
 export function getGithubRepoWebBaseUrl(): string {
   const { owner, repo } = getGithubRepoPair();
   return `https://github.com/${owner}/${repo}`;
@@ -64,6 +73,9 @@ function normalizeItem(raw: GitHubPullApiItem): MergedPullRequestSummary | null 
 /**
  * Fetches recently merged PRs for the configured community repo (public API).
  * Uses GITHUB_TOKEN when set (same as other server routes) for a higher rate limit.
+ *
+ * @param limit - Max merged rows to return (default 8).
+ * @returns Merged PR summaries, repo URL, and `error: true` when the GitHub request fails.
  */
 export async function fetchRecentMergedPullRequests(
   limit = 8

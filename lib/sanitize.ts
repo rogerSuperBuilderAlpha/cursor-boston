@@ -14,6 +14,9 @@
 /**
  * Sanitize plain text content by removing HTML tags and dangerous characters.
  * Preserves basic punctuation and whitespace.
+ *
+ * @param input - Raw user-supplied string (non-strings are treated as empty).
+ * @returns Sanitized plain text safe for storage or display as text.
  */
 export function sanitizeText(input: string): string {
   if (typeof input !== "string") {
@@ -39,7 +42,10 @@ export function sanitizeText(input: string): string {
 
 /**
  * Sanitize a display name.
- * More restrictive than general text - only allows alphanumeric, spaces, and basic punctuation.
+ * More restrictive than general text — only allows alphanumeric, spaces, and basic punctuation.
+ *
+ * @param input - Raw name string (non-strings are treated as empty).
+ * @returns Sanitized name with disallowed characters removed.
  */
 export function sanitizeName(input: string): string {
   if (typeof input !== "string") {
@@ -56,8 +62,10 @@ export function sanitizeName(input: string): string {
 }
 
 /**
- * Validate and sanitize a URL.
- * Returns null if the URL is invalid or uses a dangerous protocol.
+ * Validate and sanitize a URL to `http:` or `https:` only.
+ *
+ * @param input - Candidate URL string.
+ * @returns null if the URL is invalid or uses a dangerous protocol.
  */
 export function sanitizeUrl(input: string): string | null {
   if (typeof input !== "string" || !input.trim()) {
@@ -82,8 +90,10 @@ export function sanitizeUrl(input: string): string | null {
 }
 
 /**
- * Sanitize a Firestore document ID.
- * IDs should only contain alphanumeric characters, hyphens, and underscores.
+ * Sanitize a Firestore document ID (alphanumeric, hyphens, underscores; max length enforced).
+ *
+ * @param input - Candidate document id.
+ * @returns Trimmed valid id, or `null` if the format is unsafe or too long.
  */
 export function sanitizeDocId(input: string): string | null {
   if (typeof input !== "string" || !input.trim()) {
@@ -102,7 +112,10 @@ export function sanitizeDocId(input: string): string | null {
 }
 
 /**
- * Validate a hackathon ID format (e.g., "virtual-2025-01").
+ * Validate a hackathon id string against allowed patterns (e.g. `virtual-YYYY-MM` or slug form).
+ *
+ * @param input - Candidate hackathon id.
+ * @returns `true` if the string matches an allowed format.
  */
 export function isValidHackathonId(input: string): boolean {
   if (typeof input !== "string") {

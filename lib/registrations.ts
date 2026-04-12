@@ -39,7 +39,19 @@ export interface UserStats {
   pullRequestsCount?: number;
 }
 
-// Register user for an event
+/**
+ * Register user for an event
+ * Idempotently creates `eventRegistrations/{userId}_{eventId}` if missing (client Firestore).
+ *
+ * @param userId - Registrant uid.
+ * @param userEmail - Contact email stored on the row.
+ * @param userName - Optional display name.
+ * @param eventId - Event identifier.
+ * @param eventTitle - Human-readable title.
+ * @param eventDate - Optional ISO or display date string.
+ * @param lumaGuestId - When set, marks `source: "luma"`.
+ * @throws Error if Firestore is not configured.
+ */
 export async function registerForEvent(
   userId: string,
   userEmail: string,
@@ -75,7 +87,12 @@ export async function registerForEvent(
   });
 }
 
-// Get user's event registrations
+/**
+ * All event registration rows for a user.
+ *
+ * @param userId - User id.
+ * @returns Registration documents (empty if Firestore unavailable).
+ */
 export async function getUserRegistrations(
   userId: string
 ): Promise<EventRegistration[]> {
@@ -88,7 +105,12 @@ export async function getUserRegistrations(
   return snapshot.docs.map((doc) => doc.data() as EventRegistration);
 }
 
-// Get user stats
+/**
+ * Aggregates registrations, talks, and merged PR counts used by profile and badges.
+ *
+ * @param userId - User id.
+ * @returns Counts; uses zeros when Firestore is unavailable (except `pullRequestsCount` omitted when no db).
+ */
 export async function getUserStats(userId: string): Promise<UserStats> {
   if (!db) {
     return {
@@ -142,7 +164,13 @@ export async function getUserStats(userId: string): Promise<UserStats> {
   };
 }
 
-// Check if user is registered for an event
+/**
+ * Check if user is registered for an event
+ *
+ * @param userId - User id.
+ * @param eventId - Event id.
+ * @returns `true` if `eventRegistrations/{userId}_{eventId}` exists.
+ */
 export async function isUserRegistered(
   userId: string,
   eventId: string

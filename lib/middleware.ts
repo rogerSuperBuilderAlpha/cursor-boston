@@ -28,6 +28,9 @@ const ALLOWED_ORIGINS = [
 /**
  * Check if the request origin is allowed (CSRF protection).
  * Returns true if the origin is valid or if no origin check is needed (GET, HEAD, OPTIONS).
+ *
+ * @param request - Incoming Next.js request.
+ * @returns `true` if the method is safe or the origin/referer matches the allowlist (or dev fallback).
  */
 export function isOriginAllowed(request: NextRequest): boolean {
   // Skip origin check for safe methods
@@ -80,6 +83,9 @@ export function isOriginAllowed(request: NextRequest): boolean {
 /**
  * CSRF protection middleware for state-changing operations.
  * Validates origin header against allowed origins.
+ *
+ * @param handler - Next.js API handler that runs after the origin check passes.
+ * @returns A handler that responds with 403 when the origin is not allowed.
  */
 export function withCsrfProtection(
   handler: (request: NextRequest) => Promise<NextResponse>
@@ -103,6 +109,10 @@ export function withCsrfProtection(
 
 /**
  * Rate limit middleware for Next.js API routes
+ *
+ * @param options - Sliding window size and max requests per window.
+ * @param handler - Inner handler invoked when under the limit.
+ * @returns A handler that may return 429 with `Retry-After` when exceeded.
  */
 export function withRateLimitMiddleware(
   options: {
@@ -153,7 +163,11 @@ export function withRateLimitMiddleware(
 }
 
 /**
- * Logging middleware for Next.js API routes
+ * Logs each request with timing, status, optional IP/UA, and adds `X-Request-ID` to the response.
+ * Catches handler errors and returns a JSON 500 with the same request id.
+ *
+ * @param handler - Inner Next.js API handler.
+ * @returns Wrapped handler that performs structured logging around the inner call.
  */
 export function withLoggingMiddleware(
   handler: (request: NextRequest) => Promise<NextResponse>
@@ -241,7 +255,16 @@ export function withLoggingMiddleware(
 }
 
 /**
- * Combine rate limiting, CSRF protection, and logging middleware
+ * Composes logging, CSRF protection, and rate limiting (in that nesting order: log → CSRF → rate limit → handler).
+ *
+ * @param rateLimitOptions - Sliding window for {@link withRateLimitMiddleware}.
+ * @param handler - Final API handler.
+ * @returns Combined Next.js route handler.
+ * @example
+ * export const POST = withMiddleware(
+ *   { windowMs: 60_000, maxRequests: 60 },
+ *   async (request) => NextResponse.json({ ok: true })
+ * );
  */
 export function withMiddleware(
   rateLimitOptions: {
@@ -259,6 +282,9 @@ export function withMiddleware(
 
 /**
  * Middleware without rate limiting (for routes that already have custom rate limiting)
+ *
+ * @param handler - Inner API handler.
+ * @returns Wrapped handler with {@link withLoggingMiddleware} and {@link withCsrfProtection}.
  */
 export function withSecurityMiddleware(
   handler: (request: NextRequest) => Promise<NextResponse>

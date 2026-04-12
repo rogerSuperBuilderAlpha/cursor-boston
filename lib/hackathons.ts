@@ -23,6 +23,8 @@ function getBostonOffsetHours(date: Date): number {
 
 /**
  * Get current date in Boston time (for virtual hackathon month).
+ *
+ * @returns `Date` suitable for month-boundary virtual hackathon ids.
  */
 export function getNowInBoston(): Date {
   return new Date(
@@ -33,6 +35,8 @@ export function getNowInBoston(): Date {
 /**
  * Get the current virtual hackathon ID (e.g. "virtual-2025-01").
  * Virtual hackathons run 1st–last day of month in Boston time.
+ *
+ * @returns `virtual-{YYYY}-{MM}` string.
  */
 export function getCurrentVirtualHackathonId(): string {
   const now = getNowInBoston();
@@ -43,6 +47,9 @@ export function getCurrentVirtualHackathonId(): string {
 
 /**
  * Get virtual hackathon ID for a given date in Boston time.
+ *
+ * @param date - Any `Date` (interpreted into Boston for Y/M).
+ * @returns `virtual-{YYYY}-{MM}` string.
  */
 export function getVirtualHackathonIdForDate(date: Date): string {
   const inBoston = new Date(
@@ -54,7 +61,9 @@ export function getVirtualHackathonIdForDate(date: Date): string {
 }
 
 /**
- * Whether the given ID is a virtual hackathon (monthly) ID.
+ * Whether the given ID is a virtual hackathon (monthly) ID. 
+ * @param hackathonId - Candidate id string.
+ * @returns `true` if it matches `virtual-YYYY-MM`.
  */
 export function isVirtualHackathonId(hackathonId: string): boolean {
   return /^virtual-\d{4}-\d{2}$/.test(hackathonId);
@@ -63,6 +72,9 @@ export function isVirtualHackathonId(hackathonId: string): boolean {
 /**
  * Last day of the virtual hackathon month (23:59:59.999) for display.
  * Uses year/month from hackathonId (e.g. virtual-2025-01 -> Jan 31, 2025).
+ *
+ * @param hackathonId - `virtual-YYYY-MM` or invalid.
+ * @returns End of month in local JS semantics, or `new Date()` when the id does not match.
  */
 export function getMonthEndFromVirtualId(hackathonId: string): Date {
   const match = hackathonId.match(/^virtual-(\d{4})-(\d{2})$/);
@@ -76,6 +88,9 @@ export function getMonthEndFromVirtualId(hackathonId: string): Date {
  * Start and end of virtual hackathon month in UTC (for comparing with GitHub created_at).
  * Start = 1st 00:00 Boston -> UTC; end = last day 23:59 Boston -> UTC.
  * Uses approximate EST/EDT: EST = UTC-5, EDT = UTC-4.
+ *
+ * @param hackathonId - `virtual-YYYY-MM`.
+ * @returns `{ start, end }` or `null` if the id format is invalid.
  */
 export function getVirtualMonthStartEndUtc(hackathonId: string): { start: Date; end: Date } | null {
   const match = hackathonId.match(/^virtual-(\d{4})-(\d{2})$/);
@@ -93,6 +108,8 @@ export function getVirtualMonthStartEndUtc(hackathonId: string): { start: Date; 
 
 /**
  * Start of current virtual hackathon month (Boston, 00:00:00).
+ *
+ * @returns Start-of-month `Date`.
  */
 export function getCurrentVirtualMonthStart(): Date {
   const now = getNowInBoston();
@@ -101,6 +118,8 @@ export function getCurrentVirtualMonthStart(): Date {
 
 /**
  * End of current virtual hackathon month (Boston, last day 23:59:59.999).
+ *
+ * @returns End-of-month `Date`.
  */
 export function getCurrentVirtualMonthEnd(): Date {
   const now = getNowInBoston();
@@ -110,6 +129,10 @@ export function getCurrentVirtualMonthEnd(): Date {
 /**
  * Cutoff for submissions: 1st of next month 00:00:00 America/New_York.
  * Commits after this disqualify. Returns UTC Date (EST: +5h, EDT: +4h).
+ *
+ * @param year - Calendar year of the month being judged.
+ * @param month1Based - Month 1–12 for that virtual month.
+ * @returns UTC instant corresponding to Boston “next month starts”.
  */
 export function getSubmissionCutoffForMonth(year: number, month1Based: number): Date {
   const nextMonth = month1Based === 12 ? 1 : month1Based + 1;

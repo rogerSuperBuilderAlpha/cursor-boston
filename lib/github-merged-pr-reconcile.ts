@@ -35,6 +35,13 @@ function githubHeaders(): Record<string, string> {
   return headers;
 }
 
+/**
+ * Paginated GitHub Search for merged PRs in the community repo authored by `githubLogin`.
+ *
+ * @param githubLogin - GitHub username (trimmed); empty yields `[]`.
+ * @returns Raw search items (throws if GitHub returns non-OK).
+ * @throws Error when the Search API request fails.
+ */
 export async function fetchMergedPullRequestsForAuthor(
   githubLogin: string
 ): Promise<SearchMergedPrItem[]> {
@@ -107,6 +114,14 @@ async function countMergedRepoPullRequestsForUser(userId: string): Promise<numbe
   return count;
 }
 
+/**
+ * Syncs `pullRequests` docs and `users.pullRequestsCount` to match GitHub Search results for a login.
+ *
+ * @param userId - Firebase uid to credit.
+ * @param githubLogin - Author login to search.
+ * @returns Counts after sync: merged PRs from GitHub vs rows written.
+ * @throws Error when Admin, login, or GitHub search fails.
+ */
 export async function reconcileMergedPrCreditForUser(
   userId: string,
   githubLogin: string

@@ -49,6 +49,12 @@ export interface SendEmailOptions {
   from?: string;
 }
 
+/**
+ * Sends transactional email via Mailgun HTTP API (requires `MAILGUN_API_KEY`, `MAILGUN_DOMAIN`).
+ *
+ * @param options - Recipients, subject, and at least one of `text` or `html`.
+ * @throws Error when domain is unset or both body fields are empty.
+ */
 export async function sendEmail(options: SendEmailOptions): Promise<void> {
   const domain = process.env.MAILGUN_DOMAIN;
   if (!domain) {

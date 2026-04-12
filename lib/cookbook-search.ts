@@ -4,7 +4,15 @@
  * See LICENSE file for details.
  */
 
-/** Returns true if any search term matches the entry's title, description, or tags (case-insensitive). */
+/**
+ * Returns true if any search term matches the entry's title, description, or tags (case-insensitive).
+ *
+ * @param title - Entry title.
+ * @param description - Body text.
+ * @param tags - Tag strings.
+ * @param terms - Already normalized search tokens (e.g. lowercased); empty means match all.
+ * @returns `true` if there is a hit or `terms` is empty.
+ */
 export function matchesCookbookSearchTerms(
   title: string,
   description: string,

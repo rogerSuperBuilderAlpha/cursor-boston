@@ -9,6 +9,12 @@ import type { PairProfile, MatchScore } from "./types";
 /**
  * Calculate match score between two profiles based on complementary skills
  * Returns a score from 0-100 and reasons for the match
+ *
+ * @param profile1 - Viewer profile (score reasons are from their perspective).
+ * @param profile2 - Candidate profile (`userId` on the result refers to this profile).
+ * @returns Score 0–100, target `userId`, and human-readable `reasons`.
+ * @example
+ * const { score, reasons } = calculateMatchScore(me, candidate);
  */
 export function calculateMatchScore(
   profile1: PairProfile,
@@ -205,6 +211,11 @@ function timeRangesOverlap(
 
 /**
  * Get top matches for a user profile
+ *
+ * @param userProfile - Signed-in user's profile.
+ * @param allProfiles - Pool to compare against (caller often passes {@link getAllActiveProfiles}).
+ * @param limit - Max results (default 10).
+ * @returns Sorted {@link MatchScore} array (score greater than zero), highest score first.
  */
 export async function getTopMatches(
   userProfile: PairProfile,

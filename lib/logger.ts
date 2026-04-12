@@ -249,6 +249,9 @@ export const logger = new Logger();
 /**
  * Safe error logging function for API routes.
  * Use this instead of console.error to ensure proper sanitization.
+ *
+ * @param endpoint - Route or logical name for the error.
+ * @param error - Thrown value.
  */
 export function logApiError(endpoint: string, error: unknown): void {
   logger.logError(error, { endpoint });
@@ -256,6 +259,9 @@ export function logApiError(endpoint: string, error: unknown): void {
 
 /**
  * Middleware to add request logging to API routes
+ *
+ * @param handler - Inner fetch handler.
+ * @returns Handler that logs success and errors with a generated request id.
  */
 export function withLogging(
   handler: (request: Request) => Promise<Response>

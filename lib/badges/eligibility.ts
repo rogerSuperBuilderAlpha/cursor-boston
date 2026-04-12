@@ -8,6 +8,12 @@ import type { BadgeEligibilityInput, BadgeEligibilityMap } from "./types";
 
 type NormalizedBadgeEligibilityInput = Required<BadgeEligibilityInput>;
 
+/**
+ * Fills missing optional fields on eligibility input with safe defaults (zeros / false).
+ *
+ * @param input - Partial badge eligibility snapshot from profile or stats.
+ * @returns Fully populated input suitable for {@link evaluateBadgeEligibility}.
+ */
 export function normalizeBadgeEligibilityInput(
   input: BadgeEligibilityInput
 ): NormalizedBadgeEligibilityInput {
@@ -34,6 +40,20 @@ function cap(current: number, target: number): number {
   return Math.min(current, target);
 }
 
+/**
+ * Computes per-badge eligibility, progress toward targets, and human-readable reasons from a single input snapshot.
+ *
+ * @param input - User stats and profile flags (partial counts coerced via {@link normalizeBadgeEligibilityInput}).
+ * @returns Map keyed by badge id with eligibility, progress, and optional `reason` when not yet earned.
+ * @example
+ * const map = evaluateBadgeEligibility({
+ *   hasBio: true,
+ *   hasAvatar: true,
+ *   pullRequestsCount: 1,
+ *   // …remaining fields default via normalize
+ * });
+ * map["first-steps"].isEligible; // true
+ */
 export function evaluateBadgeEligibility(
   input: BadgeEligibilityInput
 ): BadgeEligibilityMap {

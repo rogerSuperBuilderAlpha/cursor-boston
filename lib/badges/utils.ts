@@ -6,6 +6,14 @@
 
 import type { BadgeDefinition, BadgeEligibilityMap, BadgeId } from "./types";
 
+/**
+ * Lists badge ids the user should show as earned: either eligible in `eligibilityMap` or already present in `userBadgeMap`.
+ *
+ * @param definitions - Ordered badge catalog (typically `BADGE_DEFINITIONS`).
+ * @param eligibilityMap - Optional live eligibility from {@link evaluateBadgeEligibility}.
+ * @param userBadgeMap - Persisted awards keyed by badge id.
+ * @returns Badge ids to display as earned, in catalog order.
+ */
 export function getEarnedBadgeIds(
   definitions: BadgeDefinition[],
   eligibilityMap?: BadgeEligibilityMap,

@@ -34,6 +34,13 @@ function toIsoDate(value: unknown): string | null {
   return null;
 }
 
+/**
+ * Parses a `user_badges` document from Admin or client reads into a {@link UserBadge}, or `null` if invalid.
+ *
+ * @param docId - Firestore document id (used when `data.id` missing).
+ * @param data - Raw document fields.
+ * @returns Validated `UserBadge` or `null` when required fields or trusted sources fail validation.
+ */
 export function userBadgeFromFirestoreDoc(
   docId: string,
   data: Record<string, unknown>
@@ -65,8 +72,11 @@ export function userBadgeFromFirestoreDoc(
 }
 
 /**
- * Builds badge eligibility input using the Admin SDK (same shape as /api/badges/awards POST).
- * Keep aligned with client-side getBadgeEligibilityData where fields overlap.
+ * Builds badge eligibility input using the Admin SDK (same shape as `POST /api/badges/awards`).
+ * Keep aligned with client-side {@link getBadgeEligibilityData} where fields overlap.
+ *
+ * @param userId - User to aggregate stats for.
+ * @returns Populated input, or `{}` when Admin Firestore is unavailable.
  */
 export async function buildAdminBadgeEligibilityInput(
   userId: string
@@ -150,7 +160,11 @@ export type SyncUserBadgesResult = {
 
 /**
  * Awards any missing badges for which the user is eligible (Admin SDK, trusted source).
- * Also refreshes users.earnedBadgeIds to match persisted user_badges rows.
+ * Also refreshes `users.earnedBadgeIds` to match persisted `user_badges` rows.
+ *
+ * @param userId - User to sync.
+ * @param options - `awardedBy` stored on migration-style award writes.
+ * @returns All eligible badge ids this run and which ids were newly written.
  */
 export async function syncUserBadgesForUser(
   userId: string,

@@ -29,6 +29,12 @@ const COLLECTIONS = {
 
 // ─── Client-side Firestore operations ───────────────────────────────────────
 
+/**
+ * Loads `pair_profiles/{userId}` with the client Firestore SDK.
+ *
+ * @param userId - Profile id.
+ * @returns Profile or `null` if missing or Firestore not configured.
+ */
 export async function getPairProfile(userId: string): Promise<PairProfile | null> {
   if (!db) return null;
   const docRef = doc(db, COLLECTIONS.PROFILES, userId);
@@ -37,6 +43,11 @@ export async function getPairProfile(userId: string): Promise<PairProfile | null
   return { ...docSnap.data(), userId: docSnap.id } as PairProfile;
 }
 
+/**
+ * Lists active profiles for matching UI (client), ordered by `updatedAt` desc.
+ *
+ * @returns Profiles or empty array when Firestore is unavailable.
+ */
 export async function getAllActiveProfiles(): Promise<PairProfile[]> {
   if (!db) return [];
   const q = query(
@@ -51,6 +62,12 @@ export async function getAllActiveProfiles(): Promise<PairProfile[]> {
   })) as PairProfile[];
 }
 
+/**
+ * Pair sessions where `participantIds` contains the user, newest first.
+ *
+ * @param userId - Participant uid.
+ * @returns Session documents with `id`, or empty if Firestore unavailable.
+ */
 export async function getPairSessionsForUser(userId: string): Promise<PairSession[]> {
   if (!db) return [];
   const q = query(
@@ -65,6 +82,13 @@ export async function getPairSessionsForUser(userId: string): Promise<PairSessio
   })) as PairSession[];
 }
 
+/**
+ * Partial update on `pair_sessions/{sessionId}` with `updatedAt` server timestamp.
+ *
+ * @param sessionId - Session document id.
+ * @param updates - Mutable session fields.
+ * @throws Error when client Firestore is not initialized.
+ */
 export async function updatePairSession(
   sessionId: string,
   updates: Partial<PairSession>

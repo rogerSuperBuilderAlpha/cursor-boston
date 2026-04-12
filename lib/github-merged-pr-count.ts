@@ -33,7 +33,7 @@ function searchHeaders(): Record<string, string> {
  * One paginated Search over all merged PRs in the community repo, aggregated by
  * author login. Replaces N per-author searches (which quickly hits Search API limits).
  *
- * @returns map (lowercase login → count), or `null` if the search failed entirely.
+ * @returns Map (lowercase login → count), or `null` if the search failed entirely.
  * @see https://docs.github.com/en/rest/search/search#search-issues-and-pull-requests
  */
 export async function fetchMergedPrCountByAuthorForRepo(): Promise<
@@ -105,6 +105,10 @@ export async function fetchMergedPrCountByAuthorForRepo(): Promise<
  * For keys in `githubLogins`, the returned map always has an entry when the bulk
  * fetch succeeded; values may be `0`. On bulk failure, returns an empty map so
  * callers keep their fallback (e.g. Firestore).
+ *
+ * @param githubLogins - GitHub usernames (trimmed, deduped case-insensitively for lookup).
+ * @param preloadedBulk - Optional result of {@link fetchMergedPrCountByAuthorForRepo} to avoid a second search.
+ * @returns Map lowercase login → merged count for requested users.
  */
 export async function fetchMergedPrCountsForLogins(
   githubLogins: string[],

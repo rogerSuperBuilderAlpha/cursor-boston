@@ -56,6 +56,11 @@ function getAdminApp(): App | null {
   return null;
 }
 
+/**
+ * Lazily initializes and returns the Firebase Admin Firestore client, or `null` if Admin is not configured.
+ *
+ * @returns Firestore instance for server-side reads/writes, or `null` when credentials are missing.
+ */
 export function getAdminDb(): Firestore | null {
   if (adminDb) {
     return adminDb;
@@ -70,6 +75,11 @@ export function getAdminDb(): Firestore | null {
   return adminDb;
 }
 
+/**
+ * Lazily initializes and returns the Firebase Admin Auth client, or `null` if Admin is not configured.
+ *
+ * @returns Auth instance for verifying ID tokens on the server, or `null` when credentials are missing.
+ */
 export function getAdminAuth(): Auth | null {
   if (adminAuth) {
     return adminAuth;
@@ -84,6 +94,11 @@ export function getAdminAuth(): Auth | null {
   return adminAuth;
 }
 
+/**
+ * Lazily initializes and returns the Firebase Admin Realtime Database client, or `null` if Admin is not configured.
+ *
+ * @returns Realtime Database instance (e.g. live session state), or `null` when credentials are missing.
+ */
 export function getAdminRtdb(): Database | null {
   if (adminRtdb) {
     return adminRtdb;

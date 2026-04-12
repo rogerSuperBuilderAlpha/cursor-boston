@@ -53,6 +53,10 @@ interface DiscordWebhookPayload {
 /**
  * Send a notification to Discord via webhook
  * Fails gracefully - logs errors but doesn't throw
+ *
+ * @param embed - Discord embed payload.
+ * @param options - Optional bot username, avatar, or webhook URL override.
+ * @returns `true` when Discord returns OK.
  */
 export async function sendDiscordNotification(
   embed: DiscordEmbed,
@@ -103,6 +107,9 @@ export async function sendDiscordNotification(
 
 /**
  * Send a PR opened notification to Discord
+ *
+ * @param prData - PR metadata for the embed fields.
+ * @returns Whether the webhook accepted the payload.
  */
 export async function notifyPROpened(prData: {
   number: number;
@@ -148,6 +155,9 @@ export async function notifyPROpened(prData: {
 
 /**
  * Send a PR merged notification to Discord
+ *
+ * @param prData - PR metadata including optional `mergedAt` ISO timestamp.
+ * @returns Whether the webhook accepted the payload.
  */
 export async function notifyPRMerged(prData: {
   number: number;
@@ -196,6 +206,9 @@ export async function notifyPRMerged(prData: {
  * Notify Discord when any PR is merged to main in the community repo.
  * If it includes hack-a-sprint submissions, highlights them.
  * Always tells participants to rebase their forks.
+ *
+ * @param prData - PR info plus `submissionLogins` merged from submission JSON in the PR.
+ * @returns Whether the webhook accepted the payload.
  */
 export async function notifyHackASprintSubmissionMerged(prData: {
   number: number;

@@ -48,6 +48,9 @@ function githubHeaders(): Record<string, string> {
 
 /**
  * List submission JSON files from GitHub API (public repo works without token).
+ *
+ * @returns Parsed submissions sorted by login; empty when the directory 404s.
+ * @throws Error when the directory listing request fails (non-404).
  */
 export async function fetchShowcaseSubmissionsFromGitHub(): Promise<
   ShowcaseSubmission[]
@@ -118,6 +121,11 @@ export async function fetchShowcaseSubmissionsFromGitHub(): Promise<
   return results;
 }
 
+/**
+ * Judge Firebase uids from `HACK_A_SPRINT_2026_JUDGE_UIDS` (comma-separated).
+ *
+ * @returns Set of uid strings.
+ */
 export function getJudgeUidSet(): Set<string> {
   const raw = process.env.HACK_A_SPRINT_2026_JUDGE_UIDS || "";
   return new Set(
@@ -128,7 +136,11 @@ export function getJudgeUidSet(): Set<string> {
   );
 }
 
-/** Comma-separated list, case-insensitive (e.g. judge@org.com,judge2@org.com). */
+/**
+ * Judge emails from `HACK_A_SPRINT_2026_JUDGE_EMAILS` (comma-separated, lowercased in the set).
+ *
+ * @returns Set of lowercased emails.
+ */
 export function getJudgeEmailSet(): Set<string> {
   const raw = process.env.HACK_A_SPRINT_2026_JUDGE_EMAILS || "";
   return new Set(
@@ -141,6 +153,9 @@ export function getJudgeEmailSet(): Set<string> {
 
 /**
  * Whether the GitHub user has a merged PR with the showcase label in the community repo.
+ *
+ * @param githubLogin - Author login.
+ * @returns `true` if `total_count > 0` from Search API; `false` on error or empty login.
  */
 export async function githubUserHasMergedLabeledShowcasePr(
   githubLogin: string

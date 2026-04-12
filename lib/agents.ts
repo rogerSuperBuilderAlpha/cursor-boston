@@ -73,6 +73,8 @@ const CLAIM_EXPIRY_DAYS = 7;
 /**
  * Generate a new API key for an agent.
  * Returns both the full key (to show once) and its hash (to store).
+ *
+ * @returns Plaintext `apiKey` (show once), `apiKeyHash`, and `apiKeyPrefix`.
  */
 export function generateApiKey(): {
   apiKey: string;
@@ -92,13 +94,17 @@ export function generateApiKey(): {
 
 /**
  * Generate a claim token for human verification.
+ *
+ * @returns 32 hex characters (16 bytes).
  */
 export function generateClaimToken(): string {
   return randomBytes(CLAIM_TOKEN_LENGTH / 2).toString("hex");
 }
 
 /**
- * Hash an API key using SHA-256.
+ * Hash an API key using SHA-256. 
+ * @param apiKey - Full agent API key string.
+ * @returns Hex-encoded SHA-256 digest for Firestore lookup.
  */
 export function hashApiKey(apiKey: string): string {
   return createHash("sha256").update(apiKey).digest("hex");
@@ -106,6 +112,7 @@ export function hashApiKey(apiKey: string): string {
 
 /**
  * Get the claim expiry timestamp (7 days from now).
+ * @returns Firestore {@link Timestamp} seven days from the current instant.
  */
 export function getClaimExpiry(): Timestamp {
   const expiryDate = new Date();
@@ -119,6 +126,10 @@ export function getClaimExpiry(): Timestamp {
 
 /**
  * Extract API key from request Authorization header.
+ * Reads `Authorization: Bearer cb_agent_…` or raw `cb_agent_…` header value.
+ *
+ * @param request - Incoming request.
+ * @returns API key string or `null`.
  */
 export function extractApiKey(request: NextRequest): string | null {
   const authHeader = request.headers.get("authorization") || "";
@@ -139,6 +150,10 @@ export function extractApiKey(request: NextRequest): string | null {
 /**
  * Verify an agent by their API key.
  * Returns the agent document if valid, null otherwise.
+ *
+ * @param request - Request carrying the agent API key.
+ * @returns Agent document or `null`.
+ * @throws Error when Firebase Admin is not configured.
  */
 export async function getVerifiedAgent(
   request: NextRequest
@@ -181,7 +196,11 @@ export async function getVerifiedAgent(
 
 /**
  * Get agent by claim token.
- * SECURITY: Validates token format before database query to prevent abuse.
+ * SECURITY: Validates token format before database query to prevent abuse. 
+ *
+ * @param claimToken - 32 hex chars from the claim URL.
+ * @returns Agent or `null` if expired/not found.
+ * @throws Error when Firebase Admin is not configured.
  */
 export async function getAgentByClaimToken(
   claimToken: string
@@ -223,7 +242,12 @@ export async function getAgentByClaimToken(
 // ============================================================================
 
 /**
- * Create a new agent.
+ * Persists a new pending agent with API key, claim token, and expiry.
+ *
+ * @param name - Display name.
+ * @param description - Optional short description.
+ * @returns Created agent, plaintext `apiKey`, and relative `claimUrl` path.
+ * @throws Error when Firebase Admin is not configured.
  */
 export async function createAgent(
   name: string,
@@ -262,7 +286,14 @@ export async function createAgent(
 }
 
 /**
- * Claim an agent (link to human owner).
+ * Claim an agent (link to human owner). 
+ *
+ * @param claimToken - Valid token from {@link getAgentByClaimToken}.
+ * @param ownerId - Firebase uid of the human owner.
+ * @param ownerEmail - Optional email to store.
+ * @param ownerDisplayName - Optional display name.
+ * @returns Updated agent or `null` if token invalid.
+ * @throws Error when Firebase Admin is not configured.
  */
 export async function claimAgent(
   claimToken: string,
@@ -315,6 +346,10 @@ export async function claimAgent(
 
 /**
  * Update agent profile.
+ *
+ * @param agentId - Document id.
+ * @param updates - Allowed field subset.
+ * @throws Error when Firebase Admin is not configured.
  */
 export async function updateAgentProfile(
   agentId: string,
@@ -330,6 +365,9 @@ export async function updateAgentProfile(
 
 /**
  * Convert agent to public profile (safe to expose).
+ *
+ * @param agent - Full agent document.
+ * @returns Safe public profile for API responses.
  */
 export function toPublicProfile(agent: Agent): AgentPublicProfile {
   const profile: AgentPublicProfile = {
@@ -354,6 +392,10 @@ export function toPublicProfile(agent: Agent): AgentPublicProfile {
 
 /**
  * Get all agents owned by a user.
+ *
+ * @param ownerId - Firebase uid.
+ * @returns Agent documents.
+ * @throws Error when Firebase Admin is not configured.
  */
 export async function getAgentsByOwner(ownerId: string): Promise<Agent[]> {
   const adminDb = getAdminDb();

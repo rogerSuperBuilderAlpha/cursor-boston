@@ -31,6 +31,12 @@ const COLLECTIONS = {
 
 // ─── Server-side operations (for API routes) ────────────────────────────────
 
+/**
+ * Loads a pair profile by user id via Admin Firestore (API routes).
+ *
+ * @param userId - Profile document id.
+ * @returns Profile with `userId` set, or `null` if missing or Admin unavailable.
+ */
 export async function getPairProfileServer(userId: string): Promise<PairProfile | null> {
   const adminDb = getAdminDb();
   if (!adminDb) return null;
@@ -40,6 +46,11 @@ export async function getPairProfileServer(userId: string): Promise<PairProfile 
   return { ...docSnap.data(), userId: docSnap.id } as PairProfile;
 }
 
+/**
+ * Lists active pair profiles ordered by `updatedAt` descending (Admin SDK).
+ *
+ * @returns Array of profiles, or empty if Admin is unavailable.
+ */
 export async function getAllActiveProfilesServer(): Promise<PairProfile[]> {
   const adminDb = getAdminDb();
   if (!adminDb) return [];
@@ -54,6 +65,13 @@ export async function getAllActiveProfilesServer(): Promise<PairProfile[]> {
   })) as PairProfile[];
 }
 
+/**
+ * Creates or updates `pair_profiles/{userId}` with server timestamps.
+ *
+ * @param userId - Owner uid.
+ * @param profile - Writable profile fields (excludes `userId`, `createdAt`, `updatedAt`).
+ * @throws Error when Firebase Admin is not initialized.
+ */
 export async function createOrUpdatePairProfileServer(
   userId: string,
   profile: Omit<PairProfile, "userId" | "createdAt" | "updatedAt">
@@ -79,6 +97,13 @@ export async function createOrUpdatePairProfileServer(
   }
 }
 
+/**
+ * Creates a pending pair request document.
+ *
+ * @param request - From/to users, session type, proposed time, etc. (id/timestamps/status added here).
+ * @returns New Firestore document id.
+ * @throws Error when Firebase Admin is not initialized.
+ */
 export async function createPairRequestServer(
   request: Omit<PairRequest, "id" | "createdAt" | "updatedAt" | "status">
 ): Promise<string> {
@@ -93,6 +118,13 @@ export async function createPairRequestServer(
   return docRef.id;
 }
 
+/**
+ * Lists pair requests sent by or received by the user, newest first.
+ *
+ * @param userId - User whose requests to load.
+ * @param type - `"sent"` filters `fromUserId`; `"received"` filters `toUserId`.
+ * @returns Request documents with `id` field, or empty if Admin unavailable.
+ */
 export async function getPairRequestsForUserServer(
   userId: string,
   type: "sent" | "received"
@@ -111,6 +143,15 @@ export async function getPairRequestsForUserServer(
   })) as PairRequest[];
 }
 
+/**
+ * Recipient accepts or declines a pending request; on accept, creates a `pair_sessions` row in the same transaction.
+ *
+ * @param requestId - Request document id.
+ * @param userId - Acting user (must be `toUserId`).
+ * @param action - `"accept"` or `"decline"`.
+ * @returns New status and optional `sessionId` when accepted.
+ * @throws PairRequestNotFoundError | PairRequestUnauthorizedError | PairRequestAlreadyRespondedError | Error.
+ */
 export async function respondToPairRequestServer(
   requestId: string,
   userId: string,

@@ -71,6 +71,9 @@ function minutesSinceMidnight(hour: number, minute: number, second: number): num
 /**
  * Returns the current Hack-a-Sprint phase for the given instant.
  * Before event day (ET): `preUnlock`. After results window on event day: `resultsOpen`.
+ *
+ * @param now - Clock to evaluate (default `new Date()`).
+ * @returns Phase id for gating UI and APIs.
  */
 export function getHackASprint2026Phase(now: Date = new Date()): HackASprint2026Phase {
   const ny = nyParts(now);

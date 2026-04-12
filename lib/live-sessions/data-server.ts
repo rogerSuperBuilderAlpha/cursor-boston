@@ -27,6 +27,12 @@ const RTDB_ROOTS = {
   QUEUE: "live_queue_entries",
 } as const;
 
+/**
+ * RTDB paths and public web paths for a live session id (audience/emcee URLs and queue roots).
+ *
+ * @param sessionId - Firestore/RTDB session id.
+ * @returns `audiencePath`, `emceePath`, `sessionRtdbPath`, and `queueRtdbPath` under the live session roots.
+ */
 export function buildLiveSessionPaths(sessionId: string) {
   return {
     audiencePath: `/live/${sessionId}`,
@@ -126,6 +132,13 @@ function buildArchiveRecord(
   };
 }
 
+/**
+ * Creates a new live session: archive row in Firestore, realtime state + empty queue in RTDB.
+ *
+ * @param input - Title and emcee identity.
+ * @returns New `sessionId` and initial {@link LiveSessionRealtimeRecord}.
+ * @throws Error if Firebase Admin DB or RTDB is not initialized.
+ */
 export async function createLiveSessionServer(
   input: CreateLiveSessionInput
 ): Promise<CreatedLiveSession> {
@@ -179,6 +192,13 @@ function buildQueueEntry(
   };
 }
 
+/**
+ * Adds a speaker to the RTDB queue and persists a `live_queue_entries` Firestore doc.
+ *
+ * @param input - Session, user, talk metadata, and duration.
+ * @returns The created queue entry record.
+ * @throws LiveSessionNotFoundError | LiveSessionClosedError | LiveSessionDuplicateSpeakerError | Error on missing Admin.
+ */
 export async function enqueueSpeakerServer(
   input: EnqueueSpeakerInput
 ): Promise<LiveQueueEntryRecord> {
@@ -371,6 +391,20 @@ function setCurrentSpeakerFromEntry(
   };
 }
 
+/**
+ * Emcee-only mutations: advance queue, timer pause/resume, skip/complete, reorder, or end session.
+ * Updates RTDB session + queue and appends archive/history in Firestore when applicable.
+ *
+ * @param input - Session id, emcee uid (must match session), and `action` (see {@link LiveSessionControlAction}).
+ * @returns Updated realtime session snapshot, queue state, and optional history row for UI.
+ * @throws LiveSessionNotFoundError | LiveSessionUnauthorizedError | LiveSessionInvalidActionError | Error on missing Admin.
+ * @example
+ * await controlLiveSessionServer({
+ *   sessionId,
+ *   emceeUid,
+ *   action: "start-next",
+ * });
+ */
 export async function controlLiveSessionServer(input: ControlLiveSessionInput) {
   const adminDb = getAdminDb();
   const adminRtdb = getAdminRtdb();

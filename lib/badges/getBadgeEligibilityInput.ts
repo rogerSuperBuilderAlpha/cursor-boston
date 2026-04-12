@@ -39,6 +39,12 @@ export interface BadgeEligibilityDataResult {
   status: BadgeEligibilityDataStatus;
 }
 
+/**
+ * Builds eligibility input from profile-linked fields only (no Firestore stats queries).
+ *
+ * @param user - Minimal profile: display name, visibility, bio, photo, Discord/GitHub links.
+ * @returns `BadgeEligibilityInput` with counts zeroed; use {@link getBadgeEligibilityData} to hydrate stats.
+ */
 export function getBaseBadgeEligibilityInput(
   user: BadgeEligibilityUserContext
 ): BadgeEligibilityInput {
@@ -111,6 +117,16 @@ function logBadgeDataSourceError(
   });
 }
 
+/**
+ * Loads registration stats, showcase, community, merged PRs, and hackathon participation to fill eligibility counts.
+ * Partial failure yields `partial` or `failed` status with per-source tracking.
+ *
+ * @param user - Must include `uid` plus profile fields used by {@link getBaseBadgeEligibilityInput}.
+ * @returns Filled `BadgeEligibilityInput` plus {@link BadgeEligibilityDataStatus} describing data completeness.
+ * @example
+ * const { input, status } = await getBadgeEligibilityData({ uid, displayName, bio });
+ * if (status.state === "complete") evaluateBadgeEligibility(input);
+ */
 export async function getBadgeEligibilityData(user: {
   uid: string;
 } & BadgeEligibilityUserContext): Promise<BadgeEligibilityDataResult> {
@@ -233,6 +249,12 @@ export async function getBadgeEligibilityData(user: {
   };
 }
 
+/**
+ * Convenience wrapper: same data load as {@link getBadgeEligibilityData} but returns only the input object.
+ *
+ * @param user - User context including `uid` and profile fields.
+ * @returns `BadgeEligibilityInput` suitable for {@link evaluateBadgeEligibility}.
+ */
 export async function getBadgeEligibilityInput(user: {
   uid: string;
 } & BadgeEligibilityUserContext): Promise<BadgeEligibilityInput> {

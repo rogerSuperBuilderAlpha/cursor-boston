@@ -14,6 +14,9 @@ import { getJudgeEmailSet, getJudgeUidSet } from "./hackathon-showcase";
 /**
  * Server-only: set when a merged PR touches Hack-a-Sprint 2026 submission JSON paths.
  * Clients cannot set this field (see firestore.rules).
+ *
+ * @param githubLogin - Author login to map via {@link findUserByGitHubLogin}.
+ * @returns Resolves when skipped (no db/user) or after merge write.
  */
 export async function awardHackASprint2026ShowcaseBadge(
   githubLogin: string
@@ -48,6 +51,14 @@ export async function awardHackASprint2026ShowcaseBadge(
   });
 }
 
+/**
+ * Whether the user is a judge via env uid list or judge email on the ID token / Firestore profile.
+ *
+ * @param db - Admin Firestore instance.
+ * @param uid - Firebase uid.
+ * @param tokenEmail - Optional verified email from the token for first-match.
+ * @returns `true` if uid or any candidate email is in the judge allowlists.
+ */
 export async function userIsHackASprint2026Judge(
   db: Firestore,
   uid: string,

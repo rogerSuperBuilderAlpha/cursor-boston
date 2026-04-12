@@ -60,6 +60,14 @@ function isLegacyAdminEmail(email?: string): boolean {
   return getLegacyAdminEmailSet().has(email.trim().toLowerCase());
 }
 
+/**
+ * Verifies a Firebase ID token from the request and returns the user profile plus admin flags.
+ * Reads `Authorization: Bearer …` or `x-firebase-id-token`.
+ *
+ * @param request - Incoming Next.js request (must carry a Bearer or `x-firebase-id-token` header).
+ * @returns `VerifiedUser` when the token is valid; `null` when no token is present.
+ * @throws Error when a token is present but Firebase Admin Auth is not configured.
+ */
 export async function getVerifiedUser(request: NextRequest): Promise<VerifiedUser | null> {
   const authHeader = request.headers.get("authorization") || "";
   const match = authHeader.match(/^Bearer\s+(.+)$/);
@@ -100,6 +108,9 @@ export async function getVerifiedUser(request: NextRequest): Promise<VerifiedUse
 /**
  * Like getVerifiedUser, but returns null if the token is missing or invalid.
  * For public API handlers that optionally personalize the response.
+ *
+ * @param request - Incoming Next.js request (optional Bearer or `x-firebase-id-token`).
+ * @returns `VerifiedUser` when a valid token is verified; otherwise `null` (including invalid tokens).
  */
 export async function getOptionalVerifiedUser(
   request: NextRequest

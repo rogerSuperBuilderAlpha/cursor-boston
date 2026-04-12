@@ -12,6 +12,10 @@ import { hackASprint2026ScoreDocId } from "@/lib/hackathon-asprint-2026-state";
 /**
  * rawScore: ceil((avg(judges) + ai) / 2) when both exist;
  * if only one side exists, ceil that side alone.
+ *
+ * @param aiScore - AI score 1–10 or null.
+ * @param judgeScores - Map of judge id → score 1–10.
+ * @returns Integer score or `null` when no valid inputs.
  */
 export function computeHackASprint2026RawScore(
   aiScore: number | null | undefined,
@@ -39,6 +43,13 @@ export function computeHackASprint2026RawScore(
   return null;
 }
 
+/**
+ * Ensures `hackathonShowcaseScores/{eventId}__{submissionId}` exists with default fields (merge).
+ *
+ * @param db - Admin Firestore.
+ * @param submissionId - Showcase submission key (normalized to lower case in storage).
+ * @returns Resolves when the merge write completes.
+ */
 export async function ensureHackASprint2026ScoreDoc(
   db: Firestore,
   submissionId: string

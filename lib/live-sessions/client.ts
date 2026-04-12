@@ -41,6 +41,12 @@ function normalizeQueue(snapshotValue: unknown): LiveQueueEntryRecord[] {
     .filter((entry): entry is LiveQueueEntryRecord => Boolean(entry));
 }
 
+/**
+ * Computes talk timer remaining seconds from RTDB state, accounting for elapsed time while running.
+ *
+ * @param session - Current session snapshot, or `null` if not loaded.
+ * @returns Non-negative seconds left on the timer (0 when idle/completed or missing session).
+ */
 export function getLiveRemainingSeconds(session: LiveSessionRealtimeRecord | null): number {
   if (!session) return 0;
 
@@ -57,6 +63,12 @@ export function getLiveRemainingSeconds(session: LiveSessionRealtimeRecord | nul
   return Math.max(0, timer.remainingSeconds - elapsedSeconds);
 }
 
+/**
+ * Subscribes to RTDB `live_sessions` and `live_queue_entries` for a session id (client hook).
+ *
+ * @param sessionId - Session to watch; empty string yields idle state.
+ * @returns Live session, ordered queue, loading flag, and error message if subscriptions fail.
+ */
 export function useLiveSession(sessionId: string): UseLiveSessionResult {
   const [session, setSession] = useState<LiveSessionRealtimeRecord | null>(null);
   const [queue, setQueue] = useState<LiveQueueEntryRecord[]>([]);
@@ -141,6 +153,13 @@ async function playAudioPattern(audioContext: AudioContext, pattern: AudioPatter
   }
 }
 
+/**
+ * Plays optional warning beeps at 60s/30s/0s boundaries when the timer is running and audio is enabled.
+ *
+ * @param session - Live session (used for `timer.status`).
+ * @param remainingSeconds - Typically from {@link getLiveRemainingSeconds}.
+ * @returns `audioEnabled`, `audioSupported`, and `enableAudio` to resume `AudioContext` after user gesture.
+ */
 export function useLiveTimerAudioAlerts(
   session: LiveSessionRealtimeRecord | null,
   remainingSeconds: number
