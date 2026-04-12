@@ -209,6 +209,41 @@ jobs:
           NEXT_PUBLIC_FIREBASE_APP_ID: "1:123456789:web:abcdef"
           NEXT_PUBLIC_FIREBASE_DATABASE_URL: "https://test-project.firebaseio.com"
 
+      - name: Report bundle size
+        run: |
+          echo "## Bundle Size Report" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f .next/analyze/client.html ]; then
+            echo "Bundle analyzer reports generated. Download the artifact to inspect." >> "$GITHUB_STEP_SUMMARY"
+          fi
+          # Parse Next.js build output for page sizes
+          if ls .next/server/app/**/*.html 1>/dev/null 2>&1; then
+            TOTAL_SIZE=$(du -sh .next/ | cut -f1)
+            CLIENT_SIZE=$(du -sh .next/static/ 2>/dev/null | cut -f1 || echo "N/A")
+            echo "| Metric | Size |" >> "$GITHUB_STEP_SUMMARY"
+            echo "|--------|------|" >> "$GITHUB_STEP_SUMMARY"
+            echo "| Total .next/ | $TOTAL_SIZE |" >> "$GITHUB_STEP_SUMMARY"
+            echo "| Client static | $CLIENT_SIZE |" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Check JS bundle budget (500KB first-load warning)
+        run: |
+          # Find the largest first-load JS chunks and warn if any exceed 500KB
+          OVER_BUDGET=0
+          for f in .next/static/chunks/*.js; do
+            SIZE=$(wc -c < "$f")
+            if [ "$SIZE" -gt 512000 ]; then
+              KB=$((SIZE / 1024))
+              echo "::warning file=$f::Chunk $(basename $f) is ${KB}KB (budget: 500KB)"
+              OVER_BUDGET=1
+            fi
+          done
+          if [ "$OVER_BUDGET" -eq 1 ]; then
+            echo "::warning::One or more JS chunks exceed the 500KB budget. Consider code splitting."
+          else
+            echo "All JS chunks are within the 500KB budget."
+          fi
+
   docker:
     name: Docker Build
     runs-on: ubuntu-latest
