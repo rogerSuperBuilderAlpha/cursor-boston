@@ -181,8 +181,9 @@ export async function GET(request: NextRequest) {
       .orderBy("lastVoteAt", "desc")
       .limit(limitParam);
 
-    if (startAfterParam) {
-      const cursorDoc = await db.collection("showcaseProjects").doc(startAfterParam).get();
+    const sanitizedCursor = startAfterParam ? sanitizeDocId(startAfterParam) : null;
+    if (sanitizedCursor) {
+      const cursorDoc = await db.collection("showcaseProjects").doc(sanitizedCursor).get();
       if (cursorDoc.exists) {
         projectsQuery = projectsQuery.startAfter(cursorDoc);
       }

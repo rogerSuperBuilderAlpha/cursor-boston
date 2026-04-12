@@ -17,7 +17,7 @@ import { getVerifiedUser } from "@/lib/server-auth";
 import { logger } from "@/lib/logger";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 import { matchesCookbookSearchTerms } from "@/lib/cookbook-search";
-import { sanitizeText } from "@/lib/sanitize";
+import { sanitizeText, sanitizeDocId } from "@/lib/sanitize";
 import {
   COOKBOOK_CATEGORIES,
   WORKS_WITH_LANGUAGES,
@@ -149,7 +149,8 @@ export async function GET(request: NextRequest) {
       Number(searchParams.get("limit")) || PAGE_SIZE,
       MAX_PAGE_SIZE
     );
-    const cursor = searchParams.get("cursor")?.trim() || null;
+    const rawCursor = searchParams.get("cursor")?.trim() || null;
+    const cursor = rawCursor ? sanitizeDocId(rawCursor) : null;
     const sortParam = parseSort(searchParams.get("sort"));
     const hasSearch = searchRaw.length > 0;
     const sort: CookbookSort = hasSearch ? "newest" : sortParam;
