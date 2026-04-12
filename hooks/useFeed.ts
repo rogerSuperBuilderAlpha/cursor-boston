@@ -6,11 +6,13 @@
 
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
-import { collection, query, where, getDocs, orderBy, limit, Timestamp, onSnapshot } from "firebase/firestore";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { collection, query, where, getDocs, orderBy, limit, startAfter, Timestamp, onSnapshot, QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { User } from "firebase/auth";
 import type { Message, ReactionType } from "@/types/feed";
+
+const PAGE_SIZE = 20;
 
 export function useFeed(user: User | null, isActive: boolean) {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -29,16 +31,20 @@ export function useFeed(user: User | null, isActive: boolean) {
   const [repostingMessage, setRepostingMessage] = useState<Message | null>(null);
   const [repostComment, setRepostComment] = useState("");
 
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const lastDocRef = useRef<QueryDocumentSnapshot<DocumentData> | null>(null);
+
   const [error, setError] = useState<string | null>(null);
   const clearError = useCallback(() => setError(null), []);
 
-  // Subscribe to real-time messages when feed tab is active
+  // Subscribe to real-time messages when feed tab is active (first page only)
   useEffect(() => {
     if (!isActive || !db) return;
 
     setLoading(true);
     const messagesRef = collection(db, "communityMessages");
-    const q = query(messagesRef, orderBy("createdAt", "desc"), limit(50));
+    const q = query(messagesRef, orderBy("createdAt", "desc"), limit(PAGE_SIZE));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const fetchedMessages = snapshot.docs
@@ -48,6 +54,8 @@ export function useFeed(user: User | null, isActive: boolean) {
         } as Message))
         .filter((msg) => !msg.parentId);
       setMessages(fetchedMessages);
+      setHasMore(snapshot.docs.length === PAGE_SIZE);
+      lastDocRef.current = snapshot.docs[snapshot.docs.length - 1] ?? null;
       setLoading(false);
     }, (error) => {
       console.error("Error listening to messages:", error);
@@ -57,6 +65,42 @@ export function useFeed(user: User | null, isActive: boolean) {
 
     return () => unsubscribe();
   }, [isActive]);
+
+  // Load more messages using cursor-based pagination
+  const loadMore = useCallback(async () => {
+    if (!db || !lastDocRef.current || loadingMore || !hasMore) return;
+
+    setLoadingMore(true);
+    try {
+      const messagesRef = collection(db, "communityMessages");
+      const q = query(
+        messagesRef,
+        orderBy("createdAt", "desc"),
+        startAfter(lastDocRef.current),
+        limit(PAGE_SIZE)
+      );
+      const snapshot = await getDocs(q);
+      const olderMessages = snapshot.docs
+        .map((d) => ({
+          id: d.id,
+          ...d.data(),
+        } as Message))
+        .filter((msg) => !msg.parentId);
+
+      setMessages((prev) => {
+        const existingIds = new Set(prev.map((m) => m.id));
+        const deduped = olderMessages.filter((m) => !existingIds.has(m.id));
+        return [...prev, ...deduped];
+      });
+      setHasMore(snapshot.docs.length === PAGE_SIZE);
+      lastDocRef.current = snapshot.docs[snapshot.docs.length - 1] ?? null;
+    } catch (error) {
+      console.error("Error loading more messages:", error);
+      setError("Failed to load more messages.");
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loadingMore, hasMore]);
 
   // Fetch user's reactions when logged in (one-time, updated optimistically)
   useEffect(() => {
@@ -396,6 +440,9 @@ export function useFeed(user: User | null, isActive: boolean) {
   return {
     messages,
     loading,
+    loadingMore,
+    hasMore,
+    loadMore,
     error,
     clearError,
     newMessage,

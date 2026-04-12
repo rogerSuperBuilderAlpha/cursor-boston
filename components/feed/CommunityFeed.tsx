@@ -21,6 +21,9 @@ interface CommunityFeedProps {
 export function CommunityFeed({ user, onViewMemberProfile }: CommunityFeedProps) {
   const {
     loading,
+    loadingMore,
+    hasMore,
+    loadMore,
     error,
     clearError,
     newMessage,
@@ -189,6 +192,17 @@ export function CommunityFeed({ user, onViewMemberProfile }: CommunityFeedProps)
                 currentUserId={user?.uid}
               />
             ))}
+            {hasMore && !feedSearchQuery && (
+              <div className="flex justify-center pt-4 pb-2">
+                <button
+                  onClick={loadMore}
+                  disabled={loadingMore}
+                  className="px-6 py-2.5 text-sm font-medium text-neutral-300 bg-neutral-800 border border-neutral-700 rounded-lg hover:bg-neutral-700 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {loadingMore ? "Loading..." : "Load more"}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
