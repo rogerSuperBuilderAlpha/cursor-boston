@@ -9,6 +9,7 @@ import { getVerifiedUser } from "@/lib/server-auth";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 import { logApiError } from "@/lib/logger";
+import { parseRequestBody } from "@/lib/api-response";
 
 function isValidEduEmail(email: string): boolean {
   return email.toLowerCase().trim().endsWith(".edu");
@@ -21,7 +22,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { email, code } = await request.json();
+    const bodyOrError = await parseRequestBody(request);
+    if (bodyOrError instanceof NextResponse) return bodyOrError;
+    const { email, code } = bodyOrError;
     if (!email || typeof email !== "string" || !code || typeof code !== "string") {
       return NextResponse.json(
         { error: "Email and code are required" },
