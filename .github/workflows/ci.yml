@@ -131,10 +131,10 @@ jobs:
         run: |
           COVERAGE=$(cat coverage/coverage-summary.json | jq '.total.lines.pct')
           echo "Current coverage: $COVERAGE%"
-          # Aligned with jest.config.js coverageThreshold (lines: 12).
+          # Aligned with jest.config.js coverageThreshold (lines: 30).
           # Ratchet this up as tests are added.
-          if (( $(echo "$COVERAGE < 12" | bc -l) )); then
-            echo "::error::Coverage is below 12% threshold"
+          if (( $(echo "$COVERAGE < 30" | bc -l) )); then
+            echo "::error::Coverage is below 30% threshold"
             exit 1
           fi
 
