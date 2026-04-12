@@ -73,6 +73,11 @@ export default function HackASprint2026ShowcasePage() {
   const [peerSelected, setPeerSelected] = useState<Set<string>>(new Set());
   const [peerBusy, setPeerBusy] = useState(false);
   const [judgeBusy, setJudgeBusy] = useState<string | null>(null);
+  const [creditCode, setCreditCode] = useState<{
+    eligible: boolean;
+    creditUrl?: string;
+    reason?: string;
+  } | null>(null);
 
   const repoBase = getGithubRepoWebBaseUrl();
   const submissionsPath = HACK_A_SPRINT_2026_SUBMISSIONS_PATH;
@@ -83,9 +88,12 @@ export default function HackASprint2026ShowcasePage() {
     try {
       const token = await user.getIdToken();
       const headers = { Authorization: `Bearer ${token}` };
-      const [meRes, subRes] = await Promise.all([
+      const [meRes, subRes, creditRes] = await Promise.all([
         fetch("/api/hackathons/showcase/hack-a-sprint-2026/me", { headers }),
         fetch("/api/hackathons/showcase/hack-a-sprint-2026/submissions", {
+          headers,
+        }),
+        fetch("/api/hackathons/showcase/hack-a-sprint-2026/credit-code", {
           headers,
         }),
       ]);
@@ -100,6 +108,9 @@ export default function HackASprint2026ShowcasePage() {
       setMe(meJson);
       setData(subJson);
       setPeerSelected(new Set(subJson.viewer.myPeerPicks ?? []));
+      if (creditRes.ok) {
+        setCreditCode(await creditRes.json());
+      }
     } catch (e) {
       setLoadError(e instanceof Error ? e.message : "Failed to load");
     }
@@ -470,6 +481,27 @@ export default function HackASprint2026ShowcasePage() {
               <pre className="text-xs md:text-sm bg-neutral-900 text-neutral-100 p-4 rounded-lg overflow-x-auto border border-neutral-700">
                 {JSON_TEMPLATE}
               </pre>
+            </div>
+          </section>
+        )}
+
+        {creditCode?.eligible && creditCode.creditUrl && (
+          <section className="py-6 px-6">
+            <div className="max-w-3xl mx-auto rounded-2xl border-2 border-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 dark:border-emerald-700 p-6">
+              <h2 className="text-lg font-bold text-emerald-800 dark:text-emerald-300 mb-2">
+                Your $50 Cursor Credit
+              </h2>
+              <p className="text-sm text-emerald-700 dark:text-emerald-400 mb-4">
+                Thank you for submitting your project! Here is your personal Cursor credit link. This code is unique to you — do not share it.
+              </p>
+              <a
+                href={creditCode.creditUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block rounded-lg bg-emerald-600 px-6 py-3 text-sm font-bold text-white hover:bg-emerald-500 transition-colors"
+              >
+                Claim your $50 Cursor credit
+              </a>
             </div>
           </section>
         )}
