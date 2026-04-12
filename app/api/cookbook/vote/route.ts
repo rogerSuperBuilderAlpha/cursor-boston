@@ -9,6 +9,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { logger } from "@/lib/logger";
+import { parseRequestBody } from "@/lib/api-response";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 import { sanitizeDocId } from "@/lib/sanitize";
 
@@ -66,7 +67,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const rawBody = await request.json();
+    const rawBody = await parseRequestBody(request);
+    if (rawBody instanceof NextResponse) return rawBody;
     if (!isNonNullObject(rawBody)) {
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
     }

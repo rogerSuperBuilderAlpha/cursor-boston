@@ -11,6 +11,7 @@ import {
   toPublicProfile,
 } from "@/lib/agents";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { parseRequestBody } from "@/lib/api-response";
 
 // Rate limit config for agent API endpoints
 const AGENT_API_RATE_LIMIT = {
@@ -133,8 +134,9 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const { name, description, avatarUrl, visibility } = body;
+    const bodyOrError = await parseRequestBody(request);
+    if (bodyOrError instanceof NextResponse) return bodyOrError;
+    const { name, description, avatarUrl, visibility } = bodyOrError;
 
     // Build update object with only provided fields
     const updates: Record<string, unknown> = {};

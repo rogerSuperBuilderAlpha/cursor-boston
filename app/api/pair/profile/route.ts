@@ -12,6 +12,8 @@ import {
 } from "@/lib/pair-programming/data-server";
 import type { PairProfile, SessionType } from "@/lib/pair-programming/types";
 
+import { parseRequestBody } from "@/lib/api-response";
+
 const VALID_SESSION_TYPES: SessionType[] = [
   "teach-me",
   "build-together",
@@ -64,7 +66,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
+    const bodyOrError = await parseRequestBody(request);
+    if (bodyOrError instanceof NextResponse) return bodyOrError;
     const {
       skillsCanTeach,
       skillsWantToLearn,
@@ -75,7 +78,7 @@ export async function POST(request: NextRequest) {
       sessionTypes,
       bio,
       isActive,
-    } = body;
+    } = bodyOrError;
 
     // Validate arrays
     if (!Array.isArray(skillsCanTeach) || !Array.isArray(skillsWantToLearn)) {

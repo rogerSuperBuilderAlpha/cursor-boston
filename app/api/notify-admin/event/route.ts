@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { sendEmail } from "@/lib/mailgun";
+import { parseRequestBody } from "@/lib/api-response";
 
 function escapeHtml(text: string | undefined): string {
   if (!text) return "";
@@ -21,8 +22,9 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "hello@cursorboston.com";
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { name, email, organization, eventType, title, description, proposedDate, expectedAttendees, venue, additionalInfo, requestId } = body;
+    const bodyOrError = await parseRequestBody(request);
+    if (bodyOrError instanceof NextResponse) return bodyOrError;
+    const { name, email, organization, eventType, title, description, proposedDate, expectedAttendees, venue, additionalInfo, requestId } = bodyOrError;
 
     if (!name || !email || !title) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });

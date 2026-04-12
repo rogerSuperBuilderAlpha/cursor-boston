@@ -12,6 +12,7 @@ import {
   PairRequestUnauthorizedError,
   PairRequestAlreadyRespondedError,
 } from "@/lib/pair-programming/data-server";
+import { parseRequestBody } from "@/lib/api-response";
 
 /**
  * POST /api/pair/respond
@@ -27,8 +28,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const { requestId, action } = body;
+    const bodyOrError = await parseRequestBody(request);
+    if (bodyOrError instanceof NextResponse) return bodyOrError;
+    const { requestId, action } = bodyOrError;
 
     if (!requestId || typeof requestId !== "string") {
       return NextResponse.json(
