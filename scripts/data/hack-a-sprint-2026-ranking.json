@@ -1,10 +1,15 @@
 {
-  "generatedAt": "2026-04-11T13:23:24.882Z",
+  "generatedAt": "2026-04-12T22:30:00.000Z",
   "prCutoffDate": "2026-04-09",
   "topN": 50,
-  "totalParticipants": 108,
+  "totalParticipants": 111,
   "confirmedCount": 49,
-  "waitlistedCount": 59,
+  "waitlistedCount": 62,
+  "capacity": 50,
+  "definitelyOpenSlots": 2,
+  "confirmedStillOnLuma": 48,
+  "slotsNote": "2 slots open (50 capacity − 48 confirmed on Luma). Agnel Salve (#29) declined on Luma — still counts as confirmed but unlikely to attend, opens 1 additional slot. Randy Torres (waitlisted #56) also declined.",
+  "duplicateNote": "Sato Ryuu Leonardo (leonardo@stepai.co.jp) is a duplicate of confirmed #8 (leonarudoryuu0629@gmail.com, GitHub: rysat0) — not added separately.",
   "githubLoginCorrections": {
     "mhoniseus": "smrifaki",
     "chloezzxzzc": "chloezhangzzc",
@@ -1095,6 +1100,56 @@
       "prsThruApr9": 0,
       "prsAllTime": 0,
       "lumaCreatedAt": "2026-04-11T06:49:29.843Z"
+    },
+    {
+      "rank": 109,
+      "status": "waitlisted",
+      "email": "choudarhyaman@gmail.com",
+      "name": "AHMAD ALI",
+      "githubLogin": "getahunxoder",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-11T17:41:44.861Z"
+    },
+    {
+      "rank": 110,
+      "status": "waitlisted",
+      "email": "pradyumna.nunna@gmail.com",
+      "name": "Pradyumna Nunna",
+      "githubLogin": "Pradyumna369",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-11T22:14:58.546Z"
+    },
+    {
+      "rank": 111,
+      "status": "waitlisted",
+      "email": "xuchuan0304@gmail.com",
+      "name": "Chuan Xu",
+      "githubLogin": "Ozzyxu",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-12T01:26:06.342Z"
+    },
+    {
+      "rank": 112,
+      "status": "waitlisted",
+      "email": "ch6546542@gmail.com",
+      "name": "King Hrdx",
+      "githubLogin": null,
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-12T11:08:28.579Z"
+    },
+    {
+      "rank": 113,
+      "status": "waitlisted",
+      "email": "therahuldubey7@gmail.com",
+      "name": "Rahul Dubey",
+      "githubLogin": "rahulgrows",
+      "prsThruApr9": 0,
+      "prsAllTime": 0,
+      "lumaCreatedAt": "2026-04-12T22:23:41.836Z"
     }
   ]
 }
