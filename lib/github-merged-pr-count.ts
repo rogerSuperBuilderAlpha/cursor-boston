@@ -105,6 +105,9 @@ export async function fetchMergedPrCountByAuthorForRepo(): Promise<
  * For keys in `githubLogins`, the returned map always has an entry when the bulk
  * fetch succeeded; values may be `0`. On bulk failure, returns an empty map so
  * callers keep their fallback (e.g. Firestore).
+ * @param githubLogins - Array of GitHub login usernames to fetch PR counts for
+ * @param preloadedBulk - Optional preloaded bulk PR count map to avoid duplicate API calls
+ * @returns A promise resolving to a map of lowercase login to merged PR count
  */
 export async function fetchMergedPrCountsForLogins(
   githubLogins: string[],

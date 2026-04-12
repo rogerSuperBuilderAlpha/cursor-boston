@@ -39,7 +39,19 @@ export interface UserStats {
   pullRequestsCount?: number;
 }
 
-// Register user for an event
+/**
+ * Register a user for an event in Firestore.
+ * Silently returns if the user is already registered.
+ * @param userId - The unique ID of the user
+ * @param userEmail - The email address of the user
+ * @param userName - The display name of the user
+ * @param eventId - The unique ID of the event
+ * @param eventTitle - The title of the event
+ * @param eventDate - The date of the event (optional)
+ * @param lumaGuestId - The Luma guest ID if registered via Luma (optional)
+ * @returns A promise that resolves when registration is complete
+ * @throws Error if Firebase is not configured
+ */
 export async function registerForEvent(
   userId: string,
   userEmail: string,
@@ -75,7 +87,11 @@ export async function registerForEvent(
   });
 }
 
-// Get user's event registrations
+/**
+ * Get all event registrations for a user.
+ * @param userId - The unique ID of the user
+ * @returns A promise resolving to an array of event registrations, or empty array if Firebase is not configured
+ */
 export async function getUserRegistrations(
   userId: string
 ): Promise<EventRegistration[]> {
@@ -88,7 +104,11 @@ export async function getUserRegistrations(
   return snapshot.docs.map((doc) => doc.data() as EventRegistration);
 }
 
-// Get user stats
+/**
+ * Get activity stats for a user including events, talks, and merged pull requests.
+ * @param userId - The unique ID of the user
+ * @returns A promise resolving to the user's stats object with zeroed values if Firebase is not configured
+ */
 export async function getUserStats(userId: string): Promise<UserStats> {
   if (!db) {
     return {
@@ -142,7 +162,12 @@ export async function getUserStats(userId: string): Promise<UserStats> {
   };
 }
 
-// Check if user is registered for an event
+/**
+ * Check if a user is registered for a specific event.
+ * @param userId - The unique ID of the user
+ * @param eventId - The unique ID of the event
+ * @returns A promise resolving to true if the user is registered, false otherwise
+ */
 export async function isUserRegistered(
   userId: string,
   eventId: string
