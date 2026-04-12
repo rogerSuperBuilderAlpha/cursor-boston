@@ -28,6 +28,8 @@ const ALLOWED_ORIGINS = [
 /**
  * Check if the request origin is allowed (CSRF protection).
  * Returns true if the origin is valid or if no origin check is needed (GET, HEAD, OPTIONS).
+ * @param request - The incoming Next.js request
+ * @returns True if the origin is allowed, false otherwise
  */
 export function isOriginAllowed(request: NextRequest): boolean {
   // Skip origin check for safe methods
@@ -80,6 +82,8 @@ export function isOriginAllowed(request: NextRequest): boolean {
 /**
  * CSRF protection middleware for state-changing operations.
  * Validates origin header against allowed origins.
+ * @param handler - The API route handler to wrap
+ * @returns A new handler with CSRF protection applied
  */
 export function withCsrfProtection(
   handler: (request: NextRequest) => Promise<NextResponse>
@@ -103,6 +107,9 @@ export function withCsrfProtection(
 
 /**
  * Rate limit middleware for Next.js API routes
+ * @param options - Rate limit configuration with windowMs and maxRequests
+ * @param handler - The API route handler to wrap
+ * @returns A new handler with rate limiting and X-RateLimit headers applied
  */
 export function withRateLimitMiddleware(
   options: {
@@ -154,6 +161,9 @@ export function withRateLimitMiddleware(
 
 /**
  * Logging middleware for Next.js API routes
+ * Logs method, path, status code, duration, and client IP for every request.
+ * @param handler - The API route handler to wrap
+ * @returns A new handler with request logging and X-Request-ID header applied
  */
 export function withLoggingMiddleware(
   handler: (request: NextRequest) => Promise<NextResponse>
@@ -242,6 +252,9 @@ export function withLoggingMiddleware(
 
 /**
  * Combine rate limiting, CSRF protection, and logging middleware
+ * @param rateLimitOptions - Rate limit configuration with windowMs and maxRequests
+ * @param handler - The API route handler to wrap
+ * @returns A new handler with rate limiting, CSRF protection, and logging applied
  */
 export function withMiddleware(
   rateLimitOptions: {
@@ -259,6 +272,8 @@ export function withMiddleware(
 
 /**
  * Middleware without rate limiting (for routes that already have custom rate limiting)
+ * @param handler - The API route handler to wrap
+ * @returns A new handler with CSRF protection and logging applied
  */
 export function withSecurityMiddleware(
   handler: (request: NextRequest) => Promise<NextResponse>

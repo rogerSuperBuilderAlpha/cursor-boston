@@ -95,7 +95,10 @@ export function checkRateLimit(
 }
 
 /**
- * Get client identifier from request
+ * Get client identifier from request by extracting the IP address.
+ * Checks proxy headers in priority order: x-forwarded-for, x-real-ip, cf-connecting-ip.
+ * @param request - The incoming HTTP request
+ * @returns The client IP address string, or "unknown" if not determinable
  */
 export function getClientIdentifier(request: Request): string {
   // Try to get IP from various headers (for proxies/load balancers)
@@ -130,6 +133,10 @@ function cleanupExpiredEntries(now: number): void {
 
 /**
  * Rate limit middleware for Next.js API routes
+ * Wraps a handler with rate limiting and adds X-RateLimit headers to all responses.
+ * @param options - Rate limit configuration including window size and max requests
+ * @param handler - The API route handler to wrap
+ * @returns A new async handler function with rate limiting applied
  */
 export function withRateLimit(
   options: RateLimitOptions,
@@ -178,7 +185,10 @@ export function withRateLimit(
 }
 
 /**
- * Predefined rate limit configurations
+ * Predefined rate limit configurations for common API route types.
+ * Use these with withRateLimit() to apply consistent limits across the app.
+ * @example
+ * export const POST = withRateLimit(rateLimitConfigs.standard, handler);
  */
 export const rateLimitConfigs = {
   // Strict rate limit for OAuth callbacks (prevent abuse)

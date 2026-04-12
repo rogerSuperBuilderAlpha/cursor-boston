@@ -14,6 +14,8 @@
 /**
  * Sanitize plain text content by removing HTML tags and dangerous characters.
  * Preserves basic punctuation and whitespace.
+ * @param input - The raw string to sanitize
+ * @returns The sanitized string, or an empty string if input is not a string
  */
 export function sanitizeText(input: string): string {
   if (typeof input !== "string") {
@@ -40,6 +42,8 @@ export function sanitizeText(input: string): string {
 /**
  * Sanitize a display name.
  * More restrictive than general text - only allows alphanumeric, spaces, and basic punctuation.
+ * @param input - The raw display name to sanitize
+ * @returns The sanitized name containing only alphanumeric characters, spaces, hyphens, underscores, and periods
  */
 export function sanitizeName(input: string): string {
   if (typeof input !== "string") {
@@ -57,7 +61,9 @@ export function sanitizeName(input: string): string {
 
 /**
  * Validate and sanitize a URL.
- * Returns null if the URL is invalid or uses a dangerous protocol.
+ * Only allows http and https protocols.
+ * @param input - The raw URL string to validate and sanitize
+ * @returns The normalized URL string, or null if the URL is invalid or uses a dangerous protocol
  */
 export function sanitizeUrl(input: string): string | null {
   if (typeof input !== "string" || !input.trim()) {
@@ -84,6 +90,8 @@ export function sanitizeUrl(input: string): string | null {
 /**
  * Sanitize a Firestore document ID.
  * IDs should only contain alphanumeric characters, hyphens, and underscores.
+ * @param input - The raw document ID to sanitize
+ * @returns The sanitized document ID, or null if invalid or exceeds 1500 characters
  */
 export function sanitizeDocId(input: string): string | null {
   if (typeof input !== "string" || !input.trim()) {
@@ -103,6 +111,8 @@ export function sanitizeDocId(input: string): string | null {
 
 /**
  * Validate a hackathon ID format (e.g., "virtual-2025-01").
+ * @param input - The hackathon ID string to validate
+ * @returns True if the ID matches a valid hackathon ID format, false otherwise
  */
 export function isValidHackathonId(input: string): boolean {
   if (typeof input !== "string") {
