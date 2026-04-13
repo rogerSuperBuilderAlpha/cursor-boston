@@ -1,0 +1,6 @@
+{
+  "projectRepoUrl": "https://github.com/Pradyumna369/hack-a-sprint",
+  "title": "Job Application Agent",
+  "description": "An AI agent that searches for React frontend jobs and sends a daily digest. When recruiters email the agent, Llama AI via Groq auto-replies on my behalf. Built with Python, Inkbox SDK, Groq, and JSearch API.",
+  "loomVideoUrl": "https://www.loom.com/share/212a2d4d552247839665bc1da7405096"
+}
