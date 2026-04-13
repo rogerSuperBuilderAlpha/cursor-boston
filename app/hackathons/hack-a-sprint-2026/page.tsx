@@ -20,7 +20,7 @@ import type { HackASprint2026Phase } from "@/lib/hackathon-asprint-2026-schedule
 type MeResponse = {
   phase: HackASprint2026Phase;
   signedUp: boolean;
-  unlocked: boolean;
+  checkedIn: boolean;
   hasCompletedPeerVoting: boolean;
   participantEligible: boolean;
   judgeEligible: boolean;
@@ -38,7 +38,7 @@ type SubmissionRow = ShowcaseSubmission & {
 type SubmissionsResponse = {
   phase: HackASprint2026Phase;
   viewer: {
-    unlocked: boolean;
+    checkedIn: boolean;
     signedUp: boolean;
     hasCompletedPeerVoting: boolean;
     judgeEligible: boolean;
@@ -56,20 +56,17 @@ const JSON_TEMPLATE = `{
 }`;
 
 const PHASE_LABEL: Record<HackASprint2026Phase, string> = {
-  preUnlock: "Before passcode window (opens 5:00 PM ET)",
-  passcodeUnlock: "Passcode & prompt",
-  submissionOpen: "Submission instructions",
+  preEvent: "Before event (opens 5:00 PM ET)",
+  submissionOpen: "Build & submit",
   peerVotingOpen: "Peer voting & judging",
   resultsOpen: "Final results",
 };
 
 export default function HackASprint2026ShowcasePage() {
-  const { user, loading: authLoading, refreshUserProfile } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [me, setMe] = useState<MeResponse | null>(null);
   const [data, setData] = useState<SubmissionsResponse | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [passcode, setPasscode] = useState("");
-  const [unlockBusy, setUnlockBusy] = useState(false);
   const [peerSelected, setPeerSelected] = useState<Set<string>>(new Set());
   const [peerBusy, setPeerBusy] = useState(false);
   const [judgeBusy, setJudgeBusy] = useState<string | null>(null);
@@ -130,42 +127,6 @@ export default function HackASprint2026ShowcasePage() {
     const t = window.setInterval(() => void loadAll(), 45_000);
     return () => window.clearInterval(t);
   }, [user, me, loadAll]);
-
-  const handleUnlock = async () => {
-    if (!user || !passcode.trim()) return;
-    setUnlockBusy(true);
-    setLoadError(null);
-    try {
-      const token = await user.getIdToken();
-      const res = await fetch(
-        "/api/hackathons/showcase/hack-a-sprint-2026/unlock",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ passcode: passcode.trim() }),
-        }
-      );
-      const j = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error((j as { error?: string }).error || "Unlock failed");
-      }
-      try {
-        localStorage.setItem(`hackASprint2026_unlocked_${user.uid}`, "1");
-      } catch {
-        // ignore
-      }
-      await refreshUserProfile();
-      setPasscode("");
-      await loadAll();
-    } catch (e) {
-      setLoadError(e instanceof Error ? e.message : "Unlock failed");
-    } finally {
-      setUnlockBusy(false);
-    }
-  };
 
   const togglePeerPick = (submissionId: string) => {
     setPeerSelected((prev) => {
@@ -294,11 +255,57 @@ export default function HackASprint2026ShowcasePage() {
   }
 
   const phase = me?.phase ?? data?.phase;
-  const signedUp = me?.signedUp ?? data?.viewer.signedUp;
-  const unlocked = me?.unlocked ?? data?.viewer.unlocked;
+  const checkedIn = me?.checkedIn ?? data?.viewer.checkedIn;
 
   const viewer = data?.viewer;
   const judgeEligible = me?.judgeEligible ?? viewer?.judgeEligible;
+
+  if (!me && !data) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[40vh] px-6">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
+        <p className="mt-4 text-neutral-500 text-sm">Loading…</p>
+      </div>
+    );
+  }
+
+  if (!checkedIn) {
+    return (
+      <div className="flex flex-col">
+        <section className="py-16 md:py-24 px-6">
+          <div className="max-w-2xl mx-auto text-center">
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Hack-a-Sprint 2026
+            </h1>
+            <div className="rounded-2xl border-2 border-rose-400 dark:border-rose-600 bg-rose-50 dark:bg-rose-950/30 p-8 mb-6">
+              <p className="text-xl font-bold text-rose-700 dark:text-rose-400 mb-2">
+                BLOCKED
+              </p>
+              <p className="text-sm text-rose-600 dark:text-rose-400">
+                You have not been checked in for the hackathon. Ask an organizer
+                at the door to check you in.
+              </p>
+            </div>
+            <p className="text-sm text-neutral-500 space-x-3">
+              <Link
+                href="/hackathons/hack-a-sprint-2026/instructions"
+                className="text-emerald-600 dark:text-emerald-400 hover:underline"
+              >
+                Pre-event instructions
+              </Link>
+              <span aria-hidden="true">·</span>
+              <Link
+                href="/hackathons"
+                className="text-emerald-600 dark:text-emerald-400 hover:underline"
+              >
+                ← Hackathons
+              </Link>
+            </p>
+          </div>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col">
@@ -315,38 +322,18 @@ export default function HackASprint2026ShowcasePage() {
               Current phase: {PHASE_LABEL[phase]}
             </p>
           )}
-          <p className="text-neutral-600 dark:text-neutral-400 mb-4">
-            Complete{" "}
-            <Link
-              href="/hackathons/hack-a-sprint-2026/signup"
-              className="text-emerald-600 dark:text-emerald-400 font-medium hover:underline"
-            >
-              website signup
-            </Link>{" "}
-            first. After 5:00 PM ET, enter the passcode given at the door. The
-            prompt and submission steps unlock for attendees only; voting and
-            results follow the posted schedule.
-          </p>
           <div className="flex flex-wrap gap-3">
-            <a
-              href="https://luma.com/uixo8hl6"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
-            >
-              Luma (admission)
-            </a>
-            <Link
-              href="/hackathons/hack-a-sprint-2026/signup"
-              className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
-            >
-              Website signup
-            </Link>
             <Link
               href="/hackathons/hack-a-sprint-2026/instructions"
               className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
             >
-              Pre-event instructions
+              Instructions &amp; challenge details
+            </Link>
+            <Link
+              href="/hackathons/hack-a-sprint-2026/signup"
+              className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
+            >
+              Signup &amp; ranking
             </Link>
             <Link
               href="/hackathons"
@@ -355,156 +342,96 @@ export default function HackASprint2026ShowcasePage() {
               Hackathons overview
             </Link>
           </div>
-          {!signedUp && phase && phase !== "preUnlock" && (
-            <p className="mt-4 text-sm text-amber-700 dark:text-amber-400">
-              You are not on the website signup list yet —{" "}
-              <Link href="/hackathons/hack-a-sprint-2026/signup" className="underline">
-                claim your spot
-              </Link>{" "}
-              to use the passcode and voting features.
-            </p>
-          )}
         </div>
       </section>
 
-      {phase === "passcodeUnlock" ||
-      phase === "submissionOpen" ||
-      phase === "peerVotingOpen" ||
-      phase === "resultsOpen" ? (
-        <section className="py-8 px-6 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950/50">
-          <div className="max-w-4xl mx-auto space-y-4">
-            {signedUp && !unlocked && (
-              <>
-                <h2 className="text-lg font-bold text-foreground">
-                  Event passcode
-                </h2>
-                <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                  Enter the code announced at the venue (5:00 PM ET onward).
-                </p>
-                <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-                  <input
-                    type="password"
-                    autoComplete="off"
-                    value={passcode}
-                    onChange={(e) => setPasscode(e.target.value)}
-                    className="rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 px-3 py-2 text-sm max-w-xs"
-                    placeholder="Passcode"
-                  />
-                  <button
-                    type="button"
-                    disabled={unlockBusy || !passcode.trim()}
-                    onClick={() => void handleUnlock()}
-                    className="inline-flex justify-center rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-400 disabled:opacity-50"
-                  >
-                    {unlockBusy ? "Checking…" : "Unlock"}
-                  </button>
-                </div>
-              </>
-            )}
-            {unlocked && (
-              <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-500/10 p-5">
-                <h2 className="text-lg font-bold text-foreground mb-2">
-                  Hack-a-Sprint prompt
-                </h2>
-                <p className="text-sm text-neutral-600 dark:text-neutral-400 whitespace-pre-wrap">
-                  The official build prompt for this sprint will be posted here
-                  before kickoff. You unlocked the attendee view — stay on this
-                  page; submission steps appear at 6:30 PM ET.
-                </p>
-              </div>
-            )}
+      {(phase === "submissionOpen" ||
+        phase === "peerVotingOpen" ||
+        phase === "resultsOpen") && (
+        <section className="py-10 px-6 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950/50">
+          <div className="max-w-4xl mx-auto space-y-6">
+            <h2 className="text-xl font-bold text-foreground">
+              How to submit (GitHub PR)
+            </h2>
+            <p className="text-sm text-neutral-600 dark:text-neutral-400">
+              Your submission is one JSON file merged into this repo. It must
+              include a public{" "}
+              <strong className="text-foreground">GitHub repo</strong>, a{" "}
+              <strong className="text-foreground">deployed link</strong>,{" "}
+              <strong className="text-foreground">title</strong>,{" "}
+              <strong className="text-foreground">description</strong>, and a{" "}
+              <strong className="text-foreground">Loom video</strong> of you
+              explaining the project.
+            </p>
+            <ol className="list-decimal list-inside space-y-3 text-neutral-600 dark:text-neutral-400 text-sm md:text-base">
+              <li>
+                <a
+                  href={`${repoBase}/fork`}
+                  className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Fork
+                </a>{" "}
+                <code className="text-xs bg-neutral-200 dark:bg-neutral-800 px-1 rounded">
+                  {repoBase}
+                </code>
+                .
+              </li>
+              <li>Create a branch (e.g. hack-a-sprint-submission).</li>
+              <li>
+                Add one file:{" "}
+                <code className="text-xs bg-neutral-200 dark:bg-neutral-800 px-1 rounded break-all">
+                  {submissionsPath}/&lt;your-github-login&gt;.json
+                </code>{" "}
+                (filename must match the PR author).
+              </li>
+              <li>
+                Use the template below; <code>loomVideoUrl</code> is required.
+              </li>
+              <li>
+                Open a PR that only changes that JSON file. CI validates the
+                schema.
+              </li>
+              <li>
+                Maintainers add label{" "}
+                <code className="text-xs bg-neutral-200 dark:bg-neutral-800 px-1 rounded">
+                  {HACK_A_SPRINT_2026_LABEL}
+                </code>{" "}
+                when merging. Connect GitHub on your{" "}
+                <Link href="/profile" className="text-emerald-600 dark:text-emerald-400 hover:underline">
+                  profile
+                </Link>
+                .
+              </li>
+            </ol>
+            <pre className="text-xs md:text-sm bg-neutral-900 text-neutral-100 p-4 rounded-lg overflow-x-auto border border-neutral-700">
+              {JSON_TEMPLATE}
+            </pre>
           </div>
         </section>
-      ) : null}
+      )}
 
-      {unlocked &&
-        (phase === "submissionOpen" ||
-          phase === "peerVotingOpen" ||
-          phase === "resultsOpen") && (
-          <section className="py-10 px-6 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950/50">
-            <div className="max-w-4xl mx-auto space-y-6">
-              <h2 className="text-xl font-bold text-foreground">
-                How to submit (GitHub PR)
-              </h2>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                Your submission is one JSON file merged into this repo. It must
-                include a public{" "}
-                <strong className="text-foreground">GitHub repo</strong>, a{" "}
-                <strong className="text-foreground">deployed link</strong>,{" "}
-                <strong className="text-foreground">title</strong>,{" "}
-                <strong className="text-foreground">description</strong>, and a{" "}
-                <strong className="text-foreground">Loom video</strong> of you
-                explaining the project.
-              </p>
-              <ol className="list-decimal list-inside space-y-3 text-neutral-600 dark:text-neutral-400 text-sm md:text-base">
-                <li>
-                  <a
-                    href={`${repoBase}/fork`}
-                    className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Fork
-                  </a>{" "}
-                  <code className="text-xs bg-neutral-200 dark:bg-neutral-800 px-1 rounded">
-                    {repoBase}
-                  </code>
-                  .
-                </li>
-                <li>Create a branch (e.g. hack-a-sprint-submission).</li>
-                <li>
-                  Add one file:{" "}
-                  <code className="text-xs bg-neutral-200 dark:bg-neutral-800 px-1 rounded break-all">
-                    {submissionsPath}/&lt;your-github-login&gt;.json
-                  </code>{" "}
-                  (filename must match the PR author).
-                </li>
-                <li>
-                  Use the template below; <code>loomVideoUrl</code> is required.
-                </li>
-                <li>
-                  Open a PR that only changes that JSON file. CI validates the
-                  schema.
-                </li>
-                <li>
-                  Maintainers add label{" "}
-                  <code className="text-xs bg-neutral-200 dark:bg-neutral-800 px-1 rounded">
-                    {HACK_A_SPRINT_2026_LABEL}
-                  </code>{" "}
-                  when merging. Connect GitHub on your{" "}
-                  <Link href="/profile" className="text-emerald-600 dark:text-emerald-400 hover:underline">
-                    profile
-                  </Link>
-                  .
-                </li>
-              </ol>
-              <pre className="text-xs md:text-sm bg-neutral-900 text-neutral-100 p-4 rounded-lg overflow-x-auto border border-neutral-700">
-                {JSON_TEMPLATE}
-              </pre>
-            </div>
-          </section>
-        )}
-
-        {creditCode?.eligible && creditCode.creditUrl && (
-          <section className="py-6 px-6">
-            <div className="max-w-3xl mx-auto rounded-2xl border-2 border-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 dark:border-emerald-700 p-6">
-              <h2 className="text-lg font-bold text-emerald-800 dark:text-emerald-300 mb-2">
-                Your $50 Cursor Credit
-              </h2>
-              <p className="text-sm text-emerald-700 dark:text-emerald-400 mb-4">
-                Thank you for submitting your project! Here is your personal Cursor credit link. This code is unique to you — do not share it.
-              </p>
-              <a
-                href={creditCode.creditUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block rounded-lg bg-emerald-600 px-6 py-3 text-sm font-bold text-white hover:bg-emerald-500 transition-colors"
-              >
-                Claim your $50 Cursor credit
-              </a>
-            </div>
-          </section>
-        )}
+      {creditCode?.eligible && creditCode.creditUrl && (
+        <section className="py-6 px-6">
+          <div className="max-w-3xl mx-auto rounded-2xl border-2 border-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 dark:border-emerald-700 p-6">
+            <h2 className="text-lg font-bold text-emerald-800 dark:text-emerald-300 mb-2">
+              Your $50 Cursor Credit
+            </h2>
+            <p className="text-sm text-emerald-700 dark:text-emerald-400 mb-4">
+              Thank you for submitting your project! Here is your personal Cursor credit link. This code is unique to you — do not share it.
+            </p>
+            <a
+              href={creditCode.creditUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block rounded-lg bg-emerald-600 px-6 py-3 text-sm font-bold text-white hover:bg-emerald-500 transition-colors"
+            >
+              Claim your $50 Cursor credit
+            </a>
+          </div>
+        </section>
+      )}
 
       <section className="py-10 px-6">
         <div className="max-w-5xl mx-auto">
@@ -518,11 +445,7 @@ export default function HackASprint2026ShowcasePage() {
           )}
           {!data || !me ? (
             <p className="text-neutral-500">Loading…</p>
-          ) : !unlocked ? (
-            <p className="text-neutral-600 dark:text-neutral-400 text-sm">
-              Enter the event passcode (after signup) to see voting and projects.
-            </p>
-          ) : phase === "passcodeUnlock" || phase === "submissionOpen" ? (
+          ) : phase === "submissionOpen" ? (
             <p className="text-neutral-600 dark:text-neutral-400 text-sm">
               Project gallery opens at 7:15 PM ET for peer voting. Finish your PR
               submission before then.

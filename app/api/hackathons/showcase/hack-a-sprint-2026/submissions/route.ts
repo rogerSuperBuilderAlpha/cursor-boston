@@ -18,6 +18,7 @@ import {
   hackASprint2026PeerVoteDocId,
   hackASprint2026ScoreDocId,
   userHasHackASprint2026Signup,
+  userIsCheckedInForHackASprint2026,
   userHackASprint2026PeerVoteComplete,
 } from "@/lib/hackathon-asprint-2026-state";
 import { userIsHackASprint2026Judge } from "@/lib/hackathon-showcase-admin";
@@ -47,15 +48,14 @@ export async function GET(request: NextRequest) {
     const phase = getHackASprint2026Phase();
     const db = getAdminDb();
 
-    let unlocked = false;
+    let checkedIn = false;
     let signedUp = false;
     let hasCompletedPeerVoting = false;
     let myPeerPicks: string[] = [];
     let judgeEligible = false;
 
     if (db) {
-      const userSnap = await db.collection("users").doc(user.uid).get();
-      unlocked = userSnap.data()?.hackASprint2026Unlocked === true;
+      checkedIn = await userIsCheckedInForHackASprint2026(db, user.uid);
       signedUp = await userHasHackASprint2026Signup(db, user.uid);
       hasCompletedPeerVoting = await userHackASprint2026PeerVoteComplete(
         db,
@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
     const revealJudgesAndPeers = phase === "resultsOpen";
 
     const showSubmissionList =
-      unlocked &&
+      checkedIn &&
       signedUp &&
       (phase === "peerVotingOpen" || phase === "resultsOpen");
 
@@ -175,7 +175,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       phase,
       viewer: {
-        unlocked,
+        checkedIn,
         signedUp,
         hasCompletedPeerVoting,
         judgeEligible,

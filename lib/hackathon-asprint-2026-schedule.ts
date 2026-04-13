@@ -14,8 +14,7 @@ export const HACK_A_SPRINT_2026_TIMEZONE = "America/New_York";
 export const HACK_A_SPRINT_2026_EVENT_DATE = "2026-04-13";
 
 export type HackASprint2026Phase =
-  | "preUnlock"
-  | "passcodeUnlock"
+  | "preEvent"
   | "submissionOpen"
   | "peerVotingOpen"
   | "resultsOpen";
@@ -23,9 +22,8 @@ export type HackASprint2026Phase =
 type PhaseBoundary = { hour: number; minute: number };
 
 const BOUNDARIES: { phase: HackASprint2026Phase; at: PhaseBoundary }[] = [
-  { phase: "preUnlock", at: { hour: 0, minute: 0 } },
-  { phase: "passcodeUnlock", at: { hour: 17, minute: 0 } }, // 5:00 PM ET
-  { phase: "submissionOpen", at: { hour: 18, minute: 30 } }, // 6:30 PM ET
+  { phase: "preEvent", at: { hour: 0, minute: 0 } },
+  { phase: "submissionOpen", at: { hour: 17, minute: 0 } }, // 5:00 PM ET
   { phase: "peerVotingOpen", at: { hour: 19, minute: 15 } }, // 7:15 PM ET
   { phase: "resultsOpen", at: { hour: 19, minute: 45 } }, // 7:45 PM ET
 ];
@@ -70,7 +68,7 @@ function minutesSinceMidnight(hour: number, minute: number, second: number): num
 
 /**
  * Returns the current Hack-a-Sprint phase for the given instant.
- * Before event day (ET): `preUnlock`. After results window on event day: `resultsOpen`.
+ * Before event day (ET): `preEvent`. After results window on event day: `resultsOpen`.
  */
 export function getHackASprint2026Phase(now: Date = new Date()): HackASprint2026Phase {
   const ny = nyParts(now);
@@ -87,21 +85,18 @@ export function getHackASprint2026Phase(now: Date = new Date()): HackASprint2026
     ) {
       return "resultsOpen";
     }
-    return "preUnlock";
+    return "preEvent";
   }
 
   const b0 = BOUNDARIES[1]!; // 17:00
-  const b1 = BOUNDARIES[2]!; // 18:30
-  const b2 = BOUNDARIES[3]!; // 19:15
-  const b3 = BOUNDARIES[4]!; // 19:45
+  const b1 = BOUNDARIES[2]!; // 19:15
+  const b2 = BOUNDARIES[3]!; // 19:45
 
   const t17 = minutesSinceMidnight(b0.at.hour, b0.at.minute, 0);
-  const t1830 = minutesSinceMidnight(b1.at.hour, b1.at.minute, 0);
-  const t1915 = minutesSinceMidnight(b2.at.hour, b2.at.minute, 0);
-  const t1945 = minutesSinceMidnight(b3.at.hour, b3.at.minute, 0);
+  const t1915 = minutesSinceMidnight(b1.at.hour, b1.at.minute, 0);
+  const t1945 = minutesSinceMidnight(b2.at.hour, b2.at.minute, 0);
 
-  if (t < t17) return "preUnlock";
-  if (t < t1830) return "passcodeUnlock";
+  if (t < t17) return "preEvent";
   if (t < t1915) return "submissionOpen";
   if (t < t1945) return "peerVotingOpen";
   return "resultsOpen";

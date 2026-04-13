@@ -25,6 +25,16 @@ export async function userHasHackASprint2026Signup(
   return snap.exists;
 }
 
+export async function userIsCheckedInForHackASprint2026(
+  db: Firestore,
+  uid: string
+): Promise<boolean> {
+  const id = hackathonEventSignupDocId(HACK_A_SPRINT_2026_EVENT_ID, uid);
+  const snap = await db.collection("hackathonEventSignups").doc(id).get();
+  if (!snap.exists) return false;
+  return snap.data()?.checkedInAt != null;
+}
+
 export async function userHackASprint2026PeerVoteComplete(
   db: Firestore,
   uid: string

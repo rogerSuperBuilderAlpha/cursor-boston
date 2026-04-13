@@ -15,6 +15,7 @@ import { userIsHackASprint2026Judge } from "@/lib/hackathon-showcase-admin";
 import { getHackASprint2026Phase } from "@/lib/hackathon-asprint-2026-schedule";
 import {
   userHasHackASprint2026Signup,
+  userIsCheckedInForHackASprint2026,
   userHackASprint2026PeerVoteComplete,
 } from "@/lib/hackathon-asprint-2026-state";
 
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest) {
 
     const db = getAdminDb();
     let githubLogin: string | null = null;
-    let unlocked = false;
+    let checkedIn = false;
     let signedUp = false;
     let hasCompletedPeerVoting = false;
 
@@ -45,7 +46,7 @@ export async function GET(request: NextRequest) {
       if (typeof login === "string" && login.trim()) {
         githubLogin = login.trim();
       }
-      unlocked = ud?.hackASprint2026Unlocked === true;
+      checkedIn = await userIsCheckedInForHackASprint2026(db, user.uid);
       signedUp = await userHasHackASprint2026Signup(db, user.uid);
       hasCompletedPeerVoting = await userHackASprint2026PeerVoteComplete(
         db,
@@ -64,7 +65,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       phase,
       signedUp,
-      unlocked,
+      checkedIn,
       hasCompletedPeerVoting,
       participantEligible,
       judgeEligible,

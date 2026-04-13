@@ -1498,6 +1498,63 @@ const TOP_50_GUARANTEED_TARGETS: Array<{
   { rank: 47, name: "Kannan", githubLogin: "notkannan", mergedPrCount: 1 },
   { rank: 48, name: "Simba", githubLogin: "0x0Simba", mergedPrCount: 0 },
   { rank: 49, name: "Monica Phang", githubLogin: "NobyDa", mergedPrCount: 0 },
+  { rank: 50, name: "Ashutosh Iwale", githubLogin: "AshutoshRavindraIwale", mergedPrCount: 0 },
+];
+
+const WAITLIST_51_PLUS_TARGETS: Array<{
+  rank: number;
+  name: string;
+  githubLogin: string | null;
+  mergedPrCount: number;
+}> = [
+  { rank: 51, name: "Ashish Bhatia", githubLogin: "ashbhati", mergedPrCount: 0 },
+  { rank: 52, name: "Yuri Braga", githubLogin: "yuribraga26", mergedPrCount: 0 },
+  { rank: 53, name: "Sanath Naik", githubLogin: "sanath11598", mergedPrCount: 0 },
+  { rank: 54, name: "Naveen Murali", githubLogin: "Naveennnm13", mergedPrCount: 0 },
+  { rank: 55, name: "Mark Robinson", githubLogin: "wakrson", mergedPrCount: 0 },
+  { rank: 56, name: "Janna Hong", githubLogin: "jannareverie", mergedPrCount: 0 },
+  { rank: 57, name: "Monica P", githubLogin: "Zombiedays", mergedPrCount: 0 },
+  { rank: 58, name: "Reghunaath", githubLogin: "Reghunaath", mergedPrCount: 0 },
+  { rank: 59, name: "Himanshu Chouhan", githubLogin: "himanshuchouhan", mergedPrCount: 0 },
+  { rank: 60, name: "Buse Demir", githubLogin: "busedemir", mergedPrCount: 0 },
+  { rank: 61, name: "Karthik Barma", githubLogin: "thebarmaeffect", mergedPrCount: 0 },
+  { rank: 62, name: "Caleb Hung", githubLogin: "calebhung", mergedPrCount: 0 },
+  { rank: 63, name: "Joshua Elkington", githubLogin: "axialxyz", mergedPrCount: 0 },
+  { rank: 64, name: "aatu usa", githubLogin: "aatmaj28", mergedPrCount: 0 },
+  { rank: 65, name: "Jinal Thakker", githubLogin: "jinalthakkar7", mergedPrCount: 0 },
+  { rank: 66, name: "Morad Hossain", githubLogin: "MGR", mergedPrCount: 0 },
+  { rank: 67, name: "Raphael Orcino", githubLogin: "RaphaelOrcino", mergedPrCount: 0 },
+  { rank: 68, name: "HK", githubLogin: "hirvita-kabariya", mergedPrCount: 0 },
+  { rank: 69, name: "Sakshi Chavan", githubLogin: "Sakshi3027", mergedPrCount: 0 },
+  { rank: 70, name: "Sneha Sonkusare", githubLogin: "snehasonkusare-tech", mergedPrCount: 0 },
+  { rank: 71, name: "Clevelini Maris", githubLogin: "yogesh", mergedPrCount: 0 },
+  { rank: 72, name: "Ramshankar B", githubLogin: "Ramshankar07", mergedPrCount: 0 },
+  { rank: 73, name: "Sai Bolla", githubLogin: "saikrishnabolla", mergedPrCount: 0 },
+  { rank: 74, name: "Ivo Rosa Montenegro", githubLogin: "ivormontenegro", mergedPrCount: 0 },
+  { rank: 75, name: "Michael Zhang", githubLogin: "heronalps", mergedPrCount: 0 },
+  { rank: 76, name: "Nikky Lu", githubLogin: "nikkylu", mergedPrCount: 0 },
+  { rank: 77, name: "Ridham Bhagat", githubLogin: "RasenRhino", mergedPrCount: 0 },
+  { rank: 78, name: "Zhi Hao", githubLogin: "zzzh1hao01", mergedPrCount: 0 },
+  { rank: 79, name: "Lucas", githubLogin: "lucasking0109", mergedPrCount: 0 },
+  { rank: 80, name: "Heer", githubLogin: "patelheer2910", mergedPrCount: 0 },
+  { rank: 81, name: "Siddhanth Pai", githubLogin: "Siddhanth99-tech", mergedPrCount: 0 },
+  { rank: 82, name: "Shruthi", githubLogin: "Shruthik99", mergedPrCount: 0 },
+  { rank: 83, name: "Danny Garcia Cortes", githubLogin: "DannyGarciaDEV", mergedPrCount: 0 },
+  { rank: 84, name: "Omkar Sheth", githubLogin: "OmkarSheth8", mergedPrCount: 0 },
+  { rank: 85, name: "Sreekar Siddula", githubLogin: "sreekar-ss", mergedPrCount: 0 },
+  { rank: 86, name: "Zara aura", githubLogin: "fghgfdhg", mergedPrCount: 0 },
+  { rank: 87, name: "Amit Anveri", githubLogin: "AmitAnveri", mergedPrCount: 0 },
+  { rank: 88, name: "Vasilis Tsolis", githubLogin: "okc0mputex", mergedPrCount: 0 },
+  { rank: 89, name: "Dagmawi Milkias", githubLogin: "Dagi2004", mergedPrCount: 0 },
+  { rank: 90, name: "Icey Roongpiti", githubLogin: "iceystarla", mergedPrCount: 0 },
+  { rank: 91, name: "Anmol Jaising", githubLogin: "jaisinganmol", mergedPrCount: 0 },
+  { rank: 92, name: "Andre Kirby", githubLogin: "AndreFKirby", mergedPrCount: 0 },
+  { rank: 93, name: "Yinzheng Guan", githubLogin: "yguan001", mergedPrCount: 0 },
+  { rank: 94, name: "Milo Scharwarx", githubLogin: "milo", mergedPrCount: 0 },
+  { rank: 95, name: "AHMAD ALI", githubLogin: "getahunxoder", mergedPrCount: 0 },
+  { rank: 96, name: "Chuan Xu", githubLogin: "Ozzyxu", mergedPrCount: 0 },
+  { rank: 97, name: "King Hrdx", githubLogin: null, mergedPrCount: 0 },
+  { rank: 98, name: "Rahul Dubey", githubLogin: "rahulgrows", mergedPrCount: 0 },
 ];
 
 function buildTop50GuaranteedEmail(args: {
@@ -1505,24 +1562,24 @@ function buildTop50GuaranteedEmail(args: {
   rank: number;
   mergedPrCount: number;
 }): { subject: string; html: string; text: string } {
-  const { name, rank, mergedPrCount } = args;
+  const { name, rank } = args;
   const firstName = escapeHtml(name.split(/\s+/)[0] || name);
   const signupUrl = `${SITE_ORIGIN.replace(/\/$/, "")}${SIGNUP_PATH}`;
 
-  const subject = `Hack-a-Sprint: You're #${rank} in the top 50 — your spot is guaranteed`;
+  const subject = `Hack-a-Sprint: You're #${rank} — your spot is locked`;
 
   const html = emailShell(`<p>Hi ${firstName},</p>
-<p>You're <strong>#${rank}</strong> in the top 50 for tonight's <strong>Hack-a-Sprint</strong> with <strong>${mergedPrCount}</strong> merged PR${mergedPrCount === 1 ? "" : "s"}. <strong>Your spot is guaranteed.</strong></p>
+<p>First — apologies for the volume of emails today. We've been sorting out the final list and this is the last one that matters.</p>
+<p>You're <strong>#${rank}</strong> in the top 50 as shown on the website (<a href="${escapeHtml(signupUrl)}">${escapeHtml(signupUrl)}</a>). <strong>Your spot is locked.</strong></p>
 
 <p><strong>Arrive by 4:00 PM ET</strong></p>
 <ul>
 <li>Check in at the door starting at <strong>4:00 PM</strong>.</li>
-<li><strong>Running late?</strong> Let us know before 4:00 PM — reply to this email or write <a href="mailto:roger@cursorboston.com">roger@cursorboston.com</a>. We will hold your spot as long as we have heard from you.</li>
-<li>If we have not heard from you by <strong>4:30 PM ET</strong>, your seat may be released to the waitlist.</li>
+<li><strong>Running late?</strong> Let us know before 4:00 PM — reply to this email or write <a href="mailto:roger@cursorboston.com">roger@cursorboston.com</a>. We will hold your spot as long as we've heard from you.</li>
 </ul>
 
-<p><strong>Register on the website (required)</strong></p>
-<p>You must be registered on the website to participate. Please do this <strong>before you arrive</strong> — it makes check-in much faster:</p>
+<p><strong>Register on the website</strong></p>
+<p>If you haven't already, please register on the website <strong>before you arrive</strong> — it makes check-in much faster:</p>
 <ol>
 <li>Go to <a href="${escapeHtml(SITE_ORIGIN)}">${escapeHtml(SITE_ORIGIN)}</a> and create an account (or log in).</li>
 <li>Connect <strong>GitHub</strong> and <strong>Discord</strong> on your profile.</li>
@@ -1531,28 +1588,100 @@ function buildTop50GuaranteedEmail(args: {
 </ol>
 
 <p><strong>Can't make it?</strong></p>
-<p>Please mark yourself as <strong>not going</strong> on Luma so someone on the waitlist can take your place: <a href="${escapeHtml(LUMA_URL)}">${escapeHtml(LUMA_URL)}</a></p>
+<p>Please decline on <a href="${escapeHtml(LUMA_URL)}">Luma</a> or reply to this email so we can give your spot to someone on the waitlist.</p>
+
+<p style="margin-top:16px;font-size:14px;color:#555;">We have a hard venue capacity limit. The worst thing that can happen is someone shows up and can't get in because we're full — so if you know you're not coming, please let us know as soon as possible.</p>
 
 ${commonEventBlockHtml()}`);
 
   const text = [
     `Hi ${name.split(/\s+/)[0] || name},`,
     "",
-    `You're #${rank} in the top 50 (${mergedPrCount} merged PRs). Your spot is guaranteed.`,
+    "Apologies for the volume of emails today — this is the last one that matters.",
+    "",
+    `You're #${rank} in the top 50 as shown on the website. Your spot is locked.`,
+    signupUrl,
     "",
     "ARRIVE BY 4:00 PM ET:",
     "- Check in at the door starting at 4:00 PM.",
     "- Running late? Let us know before 4:00 PM: reply or email roger@cursorboston.com",
-    "- No word by 4:30 PM = your seat may be released to the waitlist.",
     "",
-    "REGISTER ON THE WEBSITE (required):",
+    "REGISTER ON THE WEBSITE:",
     `1. Go to ${SITE_ORIGIN} and create an account (or log in).`,
     "2. Connect GitHub and Discord on your profile.",
     "3. Set profile to public with Discord visible.",
     `4. Claim your spot: ${signupUrl}`,
     "",
     "CAN'T MAKE IT?",
-    `Mark "not going" on Luma: ${LUMA_URL}`,
+    `Decline on Luma (${LUMA_URL}) or reply to this email.`,
+    "",
+    "We have a hard venue capacity limit. If you know you're not coming, please let us know ASAP so someone on the waitlist can take your spot.",
+    "",
+    `Event: April 13, 2026 4-8 PM ET, Back Bay Boston. Luma: ${LUMA_URL}`,
+  ].join("\n");
+
+  return { subject, html, text };
+}
+
+function buildWaitlistBottomEmail(args: {
+  name: string;
+  rank: number;
+}): { subject: string; html: string; text: string } {
+  const { name, rank } = args;
+  const firstName = escapeHtml(name.split(/\s+/)[0] || name);
+  const signupUrl = `${SITE_ORIGIN.replace(/\/$/, "")}${SIGNUP_PATH}`;
+
+  const subject = `Hack-a-Sprint: You're #${rank} on the waitlist`;
+
+  const html = emailShell(`<p>Hi ${firstName},</p>
+<p>Apologies for the volume of emails today — this is the one that matters for you.</p>
+<p>You're <strong>#${rank}</strong> on the Hack-a-Sprint waitlist. The top 50 have locked spots. <strong>Admission is not guaranteed</strong> for waitlisted participants — it depends on how many confirmed people show up and venue capacity.</p>
+
+<p><strong>If you want to try for a spot</strong></p>
+<ul>
+<li>Show up at <strong>4:00 PM ET</strong>. As confirmed participants don't show, seats open up in waitlist order.</li>
+<li><strong>Join our Discord</strong> and let us know you're coming so we can coordinate: <a href="${escapeHtml(DISCORD_INVITE_URL)}">${escapeHtml(DISCORD_INVITE_URL)}</a></li>
+<li>Check your rank on the website: <a href="${escapeHtml(signupUrl)}">${escapeHtml(signupUrl)}</a></li>
+</ul>
+
+<p><strong>Register on the website</strong></p>
+<p>If you haven't already, register before you arrive:</p>
+<ol>
+<li>Go to <a href="${escapeHtml(SITE_ORIGIN)}">${escapeHtml(SITE_ORIGIN)}</a> and create an account (or log in).</li>
+<li>Connect <strong>GitHub</strong> and <strong>Discord</strong> on your profile.</li>
+<li>Set your profile to <strong>public</strong> with Discord visible.</li>
+<li>Go to <a href="${escapeHtml(signupUrl)}">${escapeHtml(signupUrl)}</a> and <strong>claim your spot</strong>.</li>
+</ol>
+
+<p><strong>Not coming?</strong></p>
+<p>Please decline on <a href="${escapeHtml(LUMA_URL)}">Luma</a> or reply to this email.</p>
+
+<p style="margin-top:16px;font-size:14px;color:#555;">We have a hard venue capacity limit. The worst thing that can happen is someone shows up and can't get in because we're full. We don't want that to happen to you — so please join Discord if you're planning to come so we can give you a realistic expectation.</p>
+
+${commonEventBlockHtml()}`);
+
+  const text = [
+    `Hi ${name.split(/\s+/)[0] || name},`,
+    "",
+    "Apologies for the volume of emails — this is the one that matters for you.",
+    "",
+    `You're #${rank} on the waitlist. Top 50 have locked spots. Admission is NOT guaranteed for waitlisted participants.`,
+    "",
+    "IF YOU WANT TO TRY FOR A SPOT:",
+    "- Show up at 4:00 PM ET. Seats open as confirmed people don't show.",
+    `- Join Discord and let us know you're coming: ${DISCORD_INVITE_URL}`,
+    `- Check your rank: ${signupUrl}`,
+    "",
+    "REGISTER ON THE WEBSITE:",
+    `1. Go to ${SITE_ORIGIN} and create an account (or log in).`,
+    "2. Connect GitHub and Discord on your profile.",
+    "3. Set profile to public with Discord visible.",
+    `4. Claim your spot: ${signupUrl}`,
+    "",
+    "NOT COMING?",
+    `Decline on Luma (${LUMA_URL}) or reply to this email.`,
+    "",
+    "We have a hard venue capacity limit. Join Discord if you're planning to come so we can give you a realistic expectation.",
     "",
     `Event: April 13, 2026 4-8 PM ET, Back Bay Boston. Luma: ${LUMA_URL}`,
   ].join("\n");
@@ -1586,6 +1715,7 @@ function parseArgs(argv: string[]) {
   const listIsSet = argv.includes("--list-is-set");
   const eventUpdate = argv.includes("--event-update");
   const top50Guaranteed = argv.includes("--top50-guaranteed");
+  const waitlistBottom = argv.includes("--waitlist-bottom");
   const modeCount =
     [
       announceList,
@@ -1597,10 +1727,11 @@ function parseArgs(argv: string[]) {
       listIsSet,
       eventUpdate,
       top50Guaranteed,
+      waitlistBottom,
     ].filter(Boolean).length;
   if (modeCount > 1) {
     console.error(
-      "Use only one of: --announce-list | --reminder | --correction | --dayof | --waitlist-pr-deadline | --confirmed-arrival-reminder | --list-is-set | --event-update | --top50-guaranteed"
+      "Use only one of: --announce-list | --reminder | --correction | --dayof | --waitlist-pr-deadline | --confirmed-arrival-reminder | --list-is-set | --event-update | --top50-guaranteed | --waitlist-bottom"
     );
     process.exit(1);
   }
@@ -1616,6 +1747,7 @@ function parseArgs(argv: string[]) {
     listIsSet,
     eventUpdate,
     top50Guaranteed,
+    waitlistBottom,
     csvPath,
   };
 }
@@ -1637,6 +1769,7 @@ async function main() {
     listIsSet,
     eventUpdate,
     top50Guaranteed,
+    waitlistBottom,
     csvPath,
   } = parseArgs(process.argv.slice(2));
 
@@ -1815,6 +1948,79 @@ async function main() {
       await sleep(450);
     }
     console.log(`\nDone. Sent ${sentG}, failed ${failedG}, unmatched ${unmatched.length}.`);
+    return;
+  }
+
+  if (waitlistBottom) {
+    console.log(`Loading ranking data from ${RANKING_JSON_PATH}\u2026`);
+    const ranked = loadCorrectionRanking();
+
+    const emailByGithubW = new Map<string, string>();
+    const emailByNameW = new Map<string, string>();
+    const nameByGithubW = new Map<string, string>();
+    for (const r of ranked) {
+      if (r.githubLogin) {
+        emailByGithubW.set(r.githubLogin.toLowerCase(), r.email);
+        nameByGithubW.set(r.githubLogin.toLowerCase(), r.name);
+      }
+      emailByNameW.set(r.name.toLowerCase(), r.email);
+    }
+
+    type ResolvedWaitlist = { rank: number; name: string; email: string | null };
+    const wTargets: ResolvedWaitlist[] = WAITLIST_51_PLUS_TARGETS.map((t) => {
+      let email: string | null = null;
+      let resolvedName = t.name;
+      if (t.githubLogin) {
+        const key = t.githubLogin.toLowerCase();
+        email = emailByGithubW.get(key) ?? null;
+        if (!resolvedName || resolvedName === "\u2014") {
+          resolvedName = nameByGithubW.get(key) ?? t.name;
+        }
+      }
+      if (!email && resolvedName && resolvedName !== "\u2014") {
+        email = emailByNameW.get(resolvedName.toLowerCase()) ?? null;
+      }
+      return { rank: t.rank, name: resolvedName, email };
+    });
+
+    const wUnmatched = wTargets.filter((t) => !t.email);
+    const wMatched = wTargets.filter((t) => t.email);
+    console.log(`\nWaitlist bottom: ${wMatched.length} matched, ${wUnmatched.length} unmatched`);
+    if (wUnmatched.length > 0) {
+      console.error("Unmatched:", wUnmatched.map((t) => `#${t.rank} ${t.name}`).join(", "));
+    }
+
+    const padW = (s: string, n: number) => s.slice(0, n).padEnd(n);
+    for (const t of wTargets) {
+      console.log(`  ${padW(`#${t.rank}`, 5)}  ${padW(t.name, 30)}  ${t.email ?? "(no email)"}`);
+    }
+
+    if (dryRun) {
+      console.log("\n--dry-run --waitlist-bottom: no emails sent. Preview:");
+      const sample = wMatched[0];
+      if (sample) {
+        const { subject, html } = buildWaitlistBottomEmail({ name: sample.name, rank: sample.rank });
+        console.log(`\nSubject: ${subject}`);
+        console.log("HTML preview:\n---\n" + html.slice(0, 2000) + "\u2026\n---");
+      }
+      return;
+    }
+
+    let sentW = 0;
+    let failedW = 0;
+    for (const t of wMatched) {
+      const { subject, html, text } = buildWaitlistBottomEmail({ name: t.name, rank: t.rank });
+      try {
+        await sendEmail({ to: t.email!, subject, html, text });
+        sentW++;
+        console.log(`Sent: ${t.email} (#${t.rank} ${t.name})`);
+      } catch (e) {
+        failedW++;
+        console.error(`Failed: ${t.email}`, e);
+      }
+      await sleep(450);
+    }
+    console.log(`\nDone. Sent ${sentW}, failed ${failedW}, unmatched ${wUnmatched.length}.`);
     return;
   }
 

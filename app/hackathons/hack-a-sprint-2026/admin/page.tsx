@@ -68,9 +68,8 @@ type SignupData = {
 /* ─── Constants ─── */
 
 const PHASE_LABEL: Record<HackASprint2026Phase, string> = {
-  preUnlock: "Pre-unlock",
-  passcodeUnlock: "Passcode unlock (5:00 PM)",
-  submissionOpen: "Submissions open (6:30 PM)",
+  preEvent: "Pre-event",
+  submissionOpen: "Build & submit (5:00 PM)",
   peerVotingOpen: "Peer voting & judging (7:15 PM)",
   resultsOpen: "Results open (7:45 PM)",
 };

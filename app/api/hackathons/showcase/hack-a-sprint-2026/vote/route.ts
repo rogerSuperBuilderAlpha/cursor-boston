@@ -17,6 +17,7 @@ import {
   hackASprint2026PeerVoteDocId,
   hackASprint2026ScoreDocId,
   userHasHackASprint2026Signup,
+  userIsCheckedInForHackASprint2026,
 } from "@/lib/hackathon-asprint-2026-state";
 import { checkRateLimit, getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
 
@@ -60,11 +61,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    const userSnap = await db.collection("users").doc(user.uid).get();
-    const userData = userSnap.data();
-    if (userData?.hackASprint2026Unlocked !== true) {
+    const isCheckedIn = await userIsCheckedInForHackASprint2026(db, user.uid);
+    if (!isCheckedIn) {
       return NextResponse.json(
-        { error: "Enter the event passcode first." },
+        { error: "You must be checked in to vote." },
         { status: 403 }
       );
     }
@@ -107,6 +107,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const userSnap = await db.collection("users").doc(user.uid).get();
+    const userData = userSnap.data();
     const githubData =
       userData?.github && typeof userData.github === "object"
         ? (userData.github as { login?: string })
