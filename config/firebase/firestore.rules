@@ -258,6 +258,18 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Job listings — anyone can read active listings, Admin SDK writes only
+    match /jobListings/{listingId} {
+      allow read: if resource.data.status == "active";
+      allow write: if false;
+    }
+
+    // Applications — owner can read their own, Admin SDK writes only
+    match /applications/{appId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow write: if false;
+    }
+
     // Hack-a-Sprint showcase votes — authenticated read; API (Admin SDK) writes only
     match /hackathonShowcaseVotes/{voteId} {
       allow read: if request.auth != null;

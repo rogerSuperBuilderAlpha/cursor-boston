@@ -21,6 +21,7 @@ import {
   BarChart2,
   BookOpen,
   Briefcase,
+  Building2,
   Calendar,
   ChefHat,
   ChevronDown,
@@ -76,6 +77,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/showcase", label: "Showcase", icon: LayoutGrid },
       { href: "/cookbook", label: "Cookbook", icon: ChefHat },
       { href: "/opportunities", label: "Opportunities", icon: Briefcase },
+      { href: "/careers", label: "Careers", icon: Building2 },
     ],
   },
   {
