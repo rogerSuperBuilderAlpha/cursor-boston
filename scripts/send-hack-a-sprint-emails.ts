@@ -13,6 +13,7 @@
  *   npx tsx scripts/send-hack-a-sprint-emails.ts --dry-run --correction [--csv path/to/export.csv]
  *   npx tsx scripts/send-hack-a-sprint-emails.ts --dry-run --dayof [--csv path/to/export.csv]
  *   npx tsx scripts/send-hack-a-sprint-emails.ts --dry-run --waitlist-pr-deadline [--csv path/to/export.csv]
+ *   npx tsx scripts/send-hack-a-sprint-emails.ts --dry-run --confirmed-arrival-reminder [--csv path/to/export.csv]
  *
  * --announce-list: sends a simpler email linking to the participant list page
  *   (accepted & waitlisted) instead of the full tier-specific emails.
@@ -26,6 +27,9 @@
  * --waitlist-pr-deadline: **waitlisted recipients only** — short merge window, 4 PM arrival,
  *   Discord for rank questions, and per-recipient open-PR + review status from GitHub (needs token).
  *   Optional env: HACK_A_SPRINT_WAITLIST_PR_CUTOFF_LABEL, HACK_A_SPRINT_WAITLIST_PR_WINDOW_MINUTES.
+ *
+ * --confirmed-arrival-reminder: **confirmed recipients only** — be there by 4:00 PM ET (or say you’re late),
+ *   spot released if not checked in / no word by 4:30 PM ET; update Luma if not attending.
  *
  * Requires: FIREBASE_SERVICE_ACCOUNT_JSON or GOOGLE_APPLICATION_CREDENTIALS;
  * Use the same **GITHUB_TOKEN** as production (e.g. from `.env.local`). PR counts use
@@ -1072,6 +1076,51 @@ ${block}`;
   return { subject, html, text };
 }
 
+function buildConfirmedArrivalReminderEmail(args: {
+  name: string;
+  rank: number | null;
+  totalOnLeaderboard: number;
+  mergedPrCount: number;
+}): { subject: string; html: string; text: string } {
+  const { name, rank, totalOnLeaderboard, mergedPrCount } = args;
+  const first = escapeHtml(name);
+  const signupUrl = `${SITE_ORIGIN.replace(/\/$/, "")}${SIGNUP_PATH}`;
+  const subject = "Hack-a-Sprint TODAY — be here by 4:00 PM ET (or tell us you’re running late)";
+
+  const rankLine =
+    rank !== null ?
+      `You have a <strong>confirmed seat</strong> — you’re <strong>#${rank}</strong> on the public list (of <strong>${totalOnLeaderboard}</strong>) with <strong>${mergedPrCount}</strong> merged PR${mergedPrCount === 1 ? "" : "s"}.`
+    : `You have a <strong>confirmed seat</strong> on the Hack-a-Sprint list.`;
+
+  const lead = `<p>Hi ${first},</p>
+<p>${rankLine}</p>
+<p><strong>Please plan to arrive at or before 4:00 PM ET.</strong> If you’re running late but still coming, <strong>let us know before 4:00 PM ET</strong> so we can try to hold your spot — reply to this email, write <a href="mailto:roger@cursorboston.com">roger@cursorboston.com</a>, or use the day-of tools on the website: <a href="${escapeHtml(signupUrl)}">${escapeHtml(signupUrl)}</a></p>
+<p><strong>If you are not checked in and we have not heard from you by 4:30 PM ET, we will release your seat</strong> to the waitlist. Please don’t assume we’ll wait indefinitely.</p>
+<p><strong>Can’t attend?</strong> Update your status on <strong>Luma</strong> as soon as you know you’re not coming (<a href="${escapeHtml(LUMA_URL)}">${escapeHtml(LUMA_URL)}</a>) so people on the waitlist can plan. That helps everyone.</p>
+<p>Sprint kicks off at <strong>4:30 PM ET</strong>. Bring your laptop and charger.</p>`;
+
+  const text = [
+    `Hi ${name},`,
+    "",
+    rank !== null ?
+      `Confirmed seat — #${rank} of ${totalOnLeaderboard} on the list (${mergedPrCount} merged PRs).`
+    : "Confirmed seat for Hack-a-Sprint.",
+    "",
+    "Arrive at or before 4:00 PM ET. Running late but coming? Tell us before 4:00 PM ET: reply, roger@cursorboston.com, or day-of on the site:",
+    signupUrl,
+    "",
+    "If you're not checked in and we haven't heard from you by 4:30 PM ET, we release your seat to the waitlist.",
+    "",
+    "Can't make it? Update your status on Luma ASAP so waitlisted folks can plan:",
+    LUMA_URL,
+    "",
+    "Sprint starts 4:30 PM ET. Bring laptop + charger.",
+  ].join("\n");
+
+  const html = emailShell(`${lead}${commonEventBlockHtml()}`);
+  return { subject, html, text };
+}
+
 function buildWaitlistPrDeadlineEmail(args: {
   name: string;
   rank: number | null;
@@ -1288,7 +1337,7 @@ function parseArgs(argv: string[]) {
     : join(
         homedir(),
         "Downloads",
-        "Cursor Boston Hack-a-Sprint - Guests - 2026-04-13-10-53-54.csv"
+        "Cursor Boston Hack-a-Sprint - Guests - 2026-04-13-14-12-00.csv"
       );
 
   if ((dryRun && send) || (!dryRun && !send)) {
@@ -1297,11 +1346,19 @@ function parseArgs(argv: string[]) {
   }
   const dayof = argv.includes("--dayof");
   const waitlistPrDeadline = argv.includes("--waitlist-pr-deadline");
+  const confirmedArrivalReminder = argv.includes("--confirmed-arrival-reminder");
   const modeCount =
-    [announceList, reminder, correction, dayof, waitlistPrDeadline].filter(Boolean).length;
+    [
+      announceList,
+      reminder,
+      correction,
+      dayof,
+      waitlistPrDeadline,
+      confirmedArrivalReminder,
+    ].filter(Boolean).length;
   if (modeCount > 1) {
     console.error(
-      "Use only one of: --announce-list | --reminder | --correction | --dayof | --waitlist-pr-deadline"
+      "Use only one of: --announce-list | --reminder | --correction | --dayof | --waitlist-pr-deadline | --confirmed-arrival-reminder"
     );
     process.exit(1);
   }
@@ -1313,6 +1370,7 @@ function parseArgs(argv: string[]) {
     correction,
     dayof,
     waitlistPrDeadline,
+    confirmedArrivalReminder,
     csvPath,
   };
 }
@@ -1322,8 +1380,17 @@ async function sleep(ms: number) {
 }
 
 async function main() {
-  const { dryRun, send, announceList, reminder, correction, dayof, waitlistPrDeadline, csvPath } =
-    parseArgs(process.argv.slice(2));
+  const {
+    dryRun,
+    send,
+    announceList,
+    reminder,
+    correction,
+    dayof,
+    waitlistPrDeadline,
+    confirmedArrivalReminder,
+    csvPath,
+  } = parseArgs(process.argv.slice(2));
 
   let raw: string;
   try {
@@ -1613,7 +1680,25 @@ async function main() {
     if (correction) console.log("(--correction mode: status correction email)");
     if (dayof) console.log("(--dayof mode: event-day blast)");
     if (waitlistPrDeadline) console.log("(--waitlist-pr-deadline: waitlisted only)");
+    if (confirmedArrivalReminder) console.log("(--confirmed-arrival-reminder: confirmed only)");
     const pickSample = (t: RegistrantTier) => results.find((x) => x.tier === t && x.tier !== "DECLINED");
+
+    if (confirmedArrivalReminder) {
+      const sample = results.find((r) => r.tier === "CONFIRMED");
+      if (sample) {
+        const { subject, html } = buildConfirmedArrivalReminderEmail({
+          name: sample.name,
+          rank: sample.rank,
+          totalOnLeaderboard: totalOnPublicList,
+          mergedPrCount: sample.mergedPrCount,
+        });
+        console.log(`\n[CONFIRMED sample: ${sample.email}] Subject: ${subject}`);
+        console.log("Sample HTML preview:\n---\n" + html.slice(0, 900) + "…\n---");
+      } else {
+        console.log("\nNo CONFIRMED rows to preview.");
+      }
+      return;
+    }
 
     if (waitlistPrDeadline) {
       const waiters = results.filter((r) => r.tier === "WAITLISTED");
@@ -1707,7 +1792,31 @@ async function main() {
   let sent = 0;
   let failed = 0;
   let skippedNonWaitlist = 0;
+  let skippedNonConfirmed = 0;
   for (const r of results) {
+    if (confirmedArrivalReminder) {
+      if (r.tier !== "CONFIRMED") {
+        skippedNonConfirmed++;
+        continue;
+      }
+      const { subject, html, text } = buildConfirmedArrivalReminderEmail({
+        name: r.name,
+        rank: r.rank,
+        totalOnLeaderboard: totalOnPublicList,
+        mergedPrCount: r.mergedPrCount,
+      });
+      try {
+        await sendEmail({ to: r.email, subject, html, text });
+        sent++;
+        console.log(`Sent: ${r.email} (CONFIRMED)`);
+      } catch (e) {
+        failed++;
+        console.error(`Failed: ${r.email}`, e);
+      }
+      await sleep(450);
+      continue;
+    }
+
     if (waitlistPrDeadline) {
       if (r.tier !== "WAITLISTED") {
         skippedNonWaitlist++;
@@ -1773,7 +1882,11 @@ async function main() {
     }
     await sleep(450);
   }
-  if (waitlistPrDeadline) {
+  if (confirmedArrivalReminder) {
+    console.log(
+      `\nDone. Sent ${sent}, failed ${failed}, skipped non-confirmed ${skippedNonConfirmed} (waitlist / incomplete / no-account / declined).`
+    );
+  } else if (waitlistPrDeadline) {
     console.log(
       `\nDone. Sent ${sent}, failed ${failed}, skipped non-waitlist ${skippedNonWaitlist} (confirmed / incomplete / no-account / declined).`
     );
