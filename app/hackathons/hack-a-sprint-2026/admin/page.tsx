@@ -620,6 +620,9 @@ function CheckInRow({
           <button
             disabled={busy}
             onClick={() => onToggle(e.userId!, e.checkedIn)}
+            role="switch"
+            aria-checked={e.checkedIn}
+            aria-label={e.checkedIn ? "Undo check-in" : "Check in"}
             className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1 ${
               e.checkedIn
                 ? "bg-emerald-500"
