@@ -150,7 +150,7 @@ export default function EventsPage() {
   const eventsJsonLd = generateEventsJsonLd();
 
   return (
-    <div className="flex flex-col">
+    <main className="flex flex-col">
       {eventsJsonLd.map((event, index) => (
         <script
           key={index}
@@ -478,6 +478,6 @@ export default function EventsPage() {
           </Link>
         </div>
       </section>
-    </div>
+    </main>
   );
 }
