@@ -1,0 +1,7 @@
+{
+  "projectRepoUrl": "https://github.com/RshieRish/plmbr-talk-good-boy",
+  "deployedUrl": "https://github.com/RshieRish/plmbr-talk-good-boy",
+  "title": "PLMBR Talk Good Boy",
+  "description": "Built an Inkbox-powered operator console and sales agent for PLMBR. The app combines a FastAPI backend, static operator-console UI, SQLite/Postgres-compatible persistence, Gmail historical backfill, Telegram founder commands, conversation clustering, alias resolution, two Inkbox identities, investor CC behavior, no-response follow-ups, hard-pass intro asks, and PLMBR provider claim-account flows. The main learning was wiring live communication providers into an auditable agent loop while keeping the demo safe to run locally.",
+  "loomVideoUrl": "https://www.loom.com/share/eeb1f92b7c174e70b889905031b40bf7"
+}
