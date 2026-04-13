@@ -39,7 +39,7 @@ Agents should solve a real productivity or workflow problem using at least one I
 
 4. **Creativity & Originality** — Is the use case novel or interesting? Cookie-cutter TODO apps score low; unique, clever applications of Inkbox score high.
 
-5. **Demo & Deployment** — Is the project deployed and accessible? Is there a Loom walkthrough? Projects with live demos and clear explanations score higher.
+5. **Explanation & demo story** — Is there a clear Loom walkthrough? Do the repo and description make the project easy to understand? A public deployment is optional and not required for a strong score.
 
 ## Scoring Guide
 - 1-2: Minimal effort, doesn't use Inkbox, incomplete
@@ -49,7 +49,8 @@ Agents should solve a real productivity or workflow problem using at least one I
 - 9-10: Exceptional — deep SDK integration, novel use case, polished, clearly useful
 
 ## Important Notes
-- You CANNOT watch videos, so evaluate based on the project description, README, and code context.
+- You CANNOT watch videos, so evaluate based on the project description, README, and code context (not the Loom itself).
+- Submissions are valid with a public GitHub repo and Loom URL only; do not penalize solely for lacking a deployed URL.
 - A missing or sparse README is a negative signal.
 - Judge fairly for a 2.5-hour sprint — don't expect production polish.
 - Be honest and differentiate. Not every project deserves a 7.
@@ -153,7 +154,9 @@ async function main() {
       `## Submission: ${payload.title}`,
       `**Author:** ${githubLogin}`,
       `**Repo:** ${payload.projectRepoUrl}`,
-      `**Deployed URL:** ${payload.deployedUrl}`,
+      payload.deployedUrl
+        ? `**Deployed URL (optional):** ${payload.deployedUrl}`
+        : null,
       `**Loom Video:** ${payload.loomVideoUrl}`,
       payload.demoVideoUrl ? `**Demo Video:** ${payload.demoVideoUrl}` : null,
       `\n**Description:**\n${payload.description}`,

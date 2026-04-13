@@ -13,7 +13,8 @@ export const HACK_A_SPRINT_2026_SUBMISSIONS_PATH =
 
 export type ShowcaseSubmissionPayload = {
   projectRepoUrl: string;
-  deployedUrl: string;
+  /** Optional; submissions are complete with repo + Loom only. */
+  deployedUrl?: string;
   title: string;
   description: string;
   /** Required Loom (or other) walkthrough URL for Hack-a-Sprint 2026. */
@@ -87,19 +88,22 @@ export async function fetchShowcaseSubmissionsFromGitHub(): Promise<
       const payload = (await raw.json()) as ShowcaseSubmissionPayload;
       if (
         typeof payload?.projectRepoUrl !== "string" ||
-        typeof payload?.deployedUrl !== "string" ||
         typeof payload?.title !== "string" ||
         typeof payload?.description !== "string" ||
         typeof payload?.loomVideoUrl !== "string"
       ) {
         continue;
       }
+      const deployedUrl =
+        typeof payload.deployedUrl === "string" && payload.deployedUrl.trim()
+          ? payload.deployedUrl.trim()
+          : undefined;
       results.push({
         submissionId: githubLogin.toLowerCase(),
         githubLogin,
         payload: {
           projectRepoUrl: payload.projectRepoUrl,
-          deployedUrl: payload.deployedUrl,
+          ...(deployedUrl ? { deployedUrl } : {}),
           title: payload.title,
           description: payload.description,
           loomVideoUrl: payload.loomVideoUrl,

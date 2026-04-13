@@ -20,7 +20,7 @@ type SubmissionRow = {
   title: string;
   description: string;
   projectRepoUrl: string;
-  deployedUrl: string;
+  deployedUrl?: string;
   loomVideoUrl: string;
   aiScore: number | null;
   judgeScores: Record<string, number>;
@@ -932,14 +932,16 @@ function DashboardTab({ data }: { data: DashboardData | null }) {
                                 >
                                   GitHub repo
                                 </a>
-                                <a
-                                  href={s.deployedUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-emerald-600 dark:text-emerald-400 hover:underline"
-                                >
-                                  Live demo
-                                </a>
+                                {s.deployedUrl ? (
+                                  <a
+                                    href={s.deployedUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-emerald-600 dark:text-emerald-400 hover:underline"
+                                  >
+                                    Live demo
+                                  </a>
+                                ) : null}
                                 <a
                                   href={s.loomVideoUrl}
                                   target="_blank"

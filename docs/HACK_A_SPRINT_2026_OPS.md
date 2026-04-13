@@ -12,12 +12,12 @@
 |-------|-------------------|----------|
 | 17:00 | Passcode          | Website signups see passcode field. |
 | 18:30 | Submission copy   | PR instructions expand for unlocked users. |
-| 19:15 | Peer voting       | Gallery + pick 6 + judge scoring (scores hidden publicly until 19:45). |
-| 19:45 | Results           | Peer counts, judge averages, AI scores, raw score ranking. |
+| 19:15 | Peer voting       | Gallery + 1–10 peer scores on other projects + judge scoring (scores hidden publicly until 19:45). |
+| 19:45 | Results           | Peer averages, judge averages, AI scores, raw score ranking. |
 
 ## Merge flow
 
-1. Participant opens submission PR (`content/hackathons/hack-a-sprint-2026/submissions/<login>.json` with `loomVideoUrl`, etc.).
+1. Participant opens submission PR (`content/hackathons/hack-a-sprint-2026/submissions/<login>.json` with public repo, title, description, `loomVideoUrl`; `deployedUrl` optional).
 2. Review + run manual AI / Cursor evaluation.
 3. `POST /api/hackathons/showcase/hack-a-sprint-2026/ai-score` with `submissionId` (GitHub login lowercased) and `aiScore` 1–10 (admin only).
 4. Merge with label `hack-a-sprint-2026`. Webhook ensures a `hackathonShowcaseScores` row exists and bumps cache.
@@ -45,7 +45,7 @@ Requires `ANTHROPIC_API_KEY`. Implementation: [`scripts/ai-evaluate-submissions.
 
 ## Admin dashboard
 
-Live event monitoring at [`/hackathons/hack-a-sprint-2026/admin`](https://cursorboston.com/hackathons/hack-a-sprint-2026/admin) (admin-only). Shows submissions, all scores (AI + per-judge + peer votes), voting progress, and judge coverage. Auto-refreshes every 15 seconds.
+Live event monitoring at [`/hackathons/hack-a-sprint-2026/admin`](https://cursorboston.com/hackathons/hack-a-sprint-2026/admin) (admin-only). Shows submissions, all scores (AI + per-judge + peer averages), peer progress, and judge coverage. Auto-refreshes every 15 seconds.
 
 ## Credit distribution
 

@@ -55,7 +55,6 @@ type SubmissionsResponse = {
 
 const JSON_TEMPLATE = `{
   "projectRepoUrl": "https://github.com/your-username/your-hack-project",
-  "deployedUrl": "https://your-app.example.com",
   "title": "Short title for your build",
   "description": "What you built, stack, and learnings.",
   "loomVideoUrl": "https://www.loom.com/share/your-recording"
@@ -419,12 +418,12 @@ export default function HackASprint2026ShowcasePage() {
             <p className="text-sm text-neutral-600 dark:text-neutral-400">
               Your submission is one JSON file merged into this repo. It must
               include a public{" "}
-              <strong className="text-foreground">GitHub repo</strong>, a{" "}
-              <strong className="text-foreground">deployed link</strong>,{" "}
-              <strong className="text-foreground">title</strong>,{" "}
+              <strong className="text-foreground">GitHub repo</strong> for your
+              project, a <strong className="text-foreground">title</strong>,{" "}
               <strong className="text-foreground">description</strong>, and a{" "}
-              <strong className="text-foreground">Loom video</strong> of you
-              explaining the project.
+              <strong className="text-foreground">Loom video</strong> (or similar)
+              walkthrough. A live <strong className="text-foreground">deployedUrl</strong>{" "}
+              is optional if you add one.
             </p>
             <ol className="list-decimal list-inside space-y-3 text-neutral-600 dark:text-neutral-400 text-sm md:text-base">
               <li>
@@ -575,7 +574,8 @@ export default function HackASprint2026ShowcasePage() {
               )}
               {phase === "resultsOpen" && (
                 <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-6">
-                  Final ordering: raw score (average of judges + AI, rounded up), then
+                  Final ordering: raw score from judges and AI (from your repo,
+                  description, and Loom — no deployment required), rounded up, then
                   average peer score (1–10) as tiebreaker.
                 </p>
               )}
@@ -615,14 +615,16 @@ export default function HackASprint2026ShowcasePage() {
                             >
                               Repo
                             </a>
-                            <a
-                              href={s.payload.deployedUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium"
-                            >
-                              Live app
-                            </a>
+                            {s.payload.deployedUrl ? (
+                              <a
+                                href={s.payload.deployedUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium"
+                              >
+                                Live app
+                              </a>
+                            ) : null}
                             <a
                               href={s.payload.loomVideoUrl}
                               target="_blank"
