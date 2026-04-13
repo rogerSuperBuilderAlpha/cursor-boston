@@ -1,0 +1,7 @@
+{
+  "projectRepoUrl": "https://github.com/Paramjeet-singh-neu/ConNET",
+  "deployedUrl": "https://github.com/Paramjeet-singh-neu/ConNET",
+  "title": "ConNET — AI Networking Brain",
+  "description": "An AI agent that handles your entire professional networking lifecycle using all three Inkbox capabilities (Email, Vault, Phone). Features: outbound personalized outreach with GPT-4o research, inbound email classification and smart replies, agent-to-agent networking between two separate Inkbox identities, encrypted vault-backed CRM with conversation recall, sentiment-aware auto follow-ups, smart intro engine that finds contacts who should know each other, and a live React + D3.js dashboard with real-time SSE activity feed and interactive network graph. Built with Python, Inkbox SDK, LangChain, OpenAI GPT-4o, Flask, React, and D3.js.",
+
+}
