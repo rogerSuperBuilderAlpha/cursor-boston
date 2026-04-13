@@ -1,0 +1,6 @@
+{
+  "projectRepoUrl": "https://github.com/cloud-post-code/Cursor-Hack",
+  "title": "Hosting InkBox — Market Validation Agent (MVA)",
+  "description": "Local-first toolkit that turns a market hypothesis into validation artifacts: ranked customer segments, transparent Inkbox email outreach variants, fake-door landing specs, SQLite-backed queue/send with ethics guardrails, and funnel scoring from ingested events. Stack: Python 3.10+, Pydantic v2, Subconscious (LLM generation), Inkbox (outbound email), SQLite.",
+  "loomVideoUrl": "https://www.loom.com/share/your-loom-id"
+}
