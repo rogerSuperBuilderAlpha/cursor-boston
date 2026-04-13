@@ -28,6 +28,7 @@ import {
   ChevronRight,
   Info,
   LayoutGrid,
+  Library,
   LogIn,
   Map,
   Menu,
@@ -81,6 +82,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: "Resources",
     items: [
       { href: "/map", label: "Map", icon: Map },
+      { href: "/glossary", label: "Glossary", icon: Library },
       { href: "/blog", label: "Blog", icon: BookOpen },
       { href: "/analytics", label: "Analytics", icon: BarChart2 },
     ],
