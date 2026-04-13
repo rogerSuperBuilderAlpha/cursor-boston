@@ -1,0 +1,6 @@
+{
+  "projectRepoUrl": "https://github.com/Bharath-knight/chronochart-agent",
+  "title": "ChronoChart Agent",
+  "description": "Email-based agent (Inkbox) that ingests messy clinical notes and replies with a structured medication timeline, key flags, missing/unclear info, and a short summary. OpenAI extracts strict JSON; thread-level cache merges follow-up addenda so timelines stay complete (e.g. 1–5 then 1–6). Built with Cursor; demo via local scripts and live email to the agent inbox.",
+  "loomVideoUrl": "https://www.loom.com/share/0a060d8d53354cdcbe764e3c7f10a448"
+}
