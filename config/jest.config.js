@@ -34,6 +34,7 @@ const customJestConfig = {
   // Emulator-backed; run via `npm run test:rules` (see CI).
   testPathIgnorePatterns: [
     '<rootDir>/__tests__/config/firebase/firestore.rules.test.ts',
+    '<rootDir>/e2e/',
   ],
   // Coverage thresholds - ratchet up as tests are added (current: ~43%)
   coverageThreshold: {

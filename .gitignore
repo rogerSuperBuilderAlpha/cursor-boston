@@ -16,6 +16,12 @@ node_modules/
 /.nyc_output
 *.lcov
 
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
 # =============================================================================
 # Next.js
 # =============================================================================
