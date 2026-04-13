@@ -51,10 +51,19 @@ A read-only clone of upstream is fine for browsing or local experimentation, but
 - **`main`** tracks **production**. Changes reach `main` only through a **release PR** from `develop` after maintainers batch and review what should ship. That keeps production history and deployments controlled.
 - After a release merge, maintainers sync **`develop`** with **`main`** so both stay aligned.
 
+## Architecture Decision Records
+
+We document significant architectural choices in short, numbered records so future contributors understand *why* the project is built the way it is. ADRs live in [`docs/adr/`](../docs/adr/README.md).
+
+**When to write an ADR:** If your PR introduces a new technology, changes the deployment model, replaces a core library, or makes a decision that future contributors will wonder about — write an ADR. Copy the template from the ADR index, give it the next number, and include it in your PR.
+
+**When to update an existing ADR:** If your PR supersedes a previous decision, update the old ADR's status to `Superseded` and link to the new one.
+
 ## Table of Contents
 
 - [Contribution policy (fork and pull request only)](#contribution-policy-fork-and-pull-request-only)
 - [Branching model (develop and main)](#branching-model-develop-and-main)
+- [Architecture Decision Records](#architecture-decision-records)
 - [Code of Conduct](#code-of-conduct)
 - [Developer Certificate of Origin](#developer-certificate-of-origin)
 - [Getting Started](#getting-started)

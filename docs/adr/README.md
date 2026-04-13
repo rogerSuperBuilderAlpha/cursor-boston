@@ -30,6 +30,9 @@ What becomes easier or more difficult because of this decision?
 | [0001](0001-gpl3-license.md) | GPL-3.0 license | Accepted | 2026-01-27 |
 | [0002](0002-firebase-backend.md) | Firebase as backend platform | Accepted | 2026-01-27 |
 | [0003](0003-fork-only-workflow.md) | Fork-only contribution workflow | Accepted | 2026-02-16 |
+| [0004](0004-webpack-bundler.md) | Webpack over Turbopack | Accepted | 2026-04-13 |
+| [0005](0005-in-memory-rate-limiting.md) | In-memory rate limiting with Firestore fallback | Accepted | 2026-04-13 |
+| [0006](0006-develop-main-branching.md) | develop/main branching strategy | Accepted | 2026-04-13 |
 
 ## Adding a new ADR
 
