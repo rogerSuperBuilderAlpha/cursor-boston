@@ -195,7 +195,7 @@ export default function CookbookPage() {
   const showGlobalEmpty = !loading && entries.length === 0 && !hasActiveFilters;
 
   return (
-    <div className="flex flex-col">
+    <main className="flex flex-col">
       <section className="py-16 md:py-24 px-6 border-b border-neutral-200 dark:border-neutral-800 bg-gradient-to-b from-transparent via-neutral-50/50 dark:via-neutral-950/30 to-transparent">
         <div className="max-w-4xl mx-auto text-center">
           <span className="inline-block px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-sm font-semibold rounded-full mb-6 ring-1 ring-emerald-500/20">
@@ -450,6 +450,6 @@ export default function CookbookPage() {
           </div>
         </div>
       </section>
-    </div>
+    </main>
   );
 }

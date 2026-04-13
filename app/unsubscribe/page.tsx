@@ -20,7 +20,7 @@ export default async function UnsubscribePage({
   const { status } = await searchParams;
 
   return (
-    <div className="flex flex-col">
+    <main className="flex flex-col">
       <section className="py-16 md:py-24 px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-xl mx-auto text-center">
           {status === "success" && (
@@ -99,6 +99,6 @@ export default async function UnsubscribePage({
           </Link>
         </div>
       </section>
-    </div>
+    </main>
   );
 }
