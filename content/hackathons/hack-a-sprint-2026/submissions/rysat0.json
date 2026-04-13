@@ -1,0 +1,7 @@
+{
+  "projectRepoUrl": "https://github.com/rysat0/Notify-Me",
+  "deployedUrl": "http://localhost:5173",
+  "title": "Notify Me — AI-Powered Personalized Daily News Briefing",
+  "description": "AI-powered personalized daily news briefing app built for Hack-a-Sprint 2026. Uses Claude API with web_search tool to fetch and summarize real-time news across configurable categories (tech, AI, finance, security, etc.). Features an Inkbox AI agent identity (@notify-me) for automated email delivery of briefings every morning at 8 AM EST. Includes RAG-based article deduplication using Vectra + HuggingFace embeddings, Obsidian vault MCP integration for cross-referencing past research, interactive chat for deep-diving into articles with Claude, and optional ElevenLabs TTS for podcast-style audio briefings. Stack: React 19 + Vite + Tailwind v4 + shadcn/ui, Express, Claude API (BYOK), Inkbox SDK, Vectra, SQLite, node-cron. Built with Claude Code using subagent-driven development.",
+  "loomVideoUrl": "https://www.loom.com/share/34bd25c18dbe4347ac4fe593811a7cd7"
+}

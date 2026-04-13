@@ -1,0 +1,7 @@
+{
+  "projectRepoUrl": "https://github.com/pavithralagisetty/schedule_summary",
+  "deployedUrl": "N/A (CLI tool — run locally with `python3 agent.py briefing`)",
+  "title": "Daily Briefing Agent",
+  "description": "A Python CLI agent that reads all emails and texts from an Inkbox inbox, sends them to Gemini 2.5 Flash for analysis, and emails a structured weekly briefing with upcoming schedule, action items, and highlights. Stack: Python, Inkbox SDK (email/SMS), Google Generative AI (Gemini). Key learning: Inkbox SDK doesn't support sending SMS, only receiving — adapted by making the agent email-only for notifications.",
+  "loomVideoUrl": "https://www.loom.com/share/432508db1a9841a3b4f7eb9b1c9aed35"
+}

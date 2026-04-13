@@ -1,0 +1,6 @@
+{
+  "projectRepoUrl": "https://github.com/MisterAwesome23/RogerRoger",
+  "title": "RogerRoger - Reddit Community Manager Agent",
+  "description": "A Chrome extension + AI agent that monitors your Reddit notifications and surfaces actionable insights. Since Reddit has no public API, the extension scrapes the /notifications page while the user is logged in, sends the data to a local Node.js server, and uses Claude AI to analyze and categorize activity. The agent identifies meeting opportunities, volunteer signals, and engagement patterns, then emails a rich summary directly to the user via InkBox (@community_manager identity). Stack: Chrome Extension (Manifest V3), Node.js/Express backend, Claude API (claude-sonnet) for analysis, InkBox for email delivery. Built at Hack-a-Sprint 2026 in Boston.",
+  "loomVideoUrl": "https://www.loom.com/share/placeholder-update-before-715pm"
+}
