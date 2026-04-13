@@ -11,12 +11,16 @@
  *   npx tsx scripts/send-hack-a-sprint-emails.ts --send --announce-list [--csv path/to/export.csv]
  *   npx tsx scripts/send-hack-a-sprint-emails.ts --dry-run --reminder [--csv path/to/export.csv]
  *   npx tsx scripts/send-hack-a-sprint-emails.ts --dry-run --correction [--csv path/to/export.csv]
+ *   npx tsx scripts/send-hack-a-sprint-emails.ts --dry-run --dayof [--csv path/to/export.csv]
  *
  * --announce-list: sends a simpler email linking to the participant list page
  *   (accepted & waitlisted) instead of the full tier-specific emails.
  *
  * --reminder: day-before blast — confirmed vs waitlisted vs incomplete signup copy
  *   (website registration, Luma “not going”, 4:00 PM arrival, late RSVP on site).
+ *
+ * --dayof: event-day blast — 4 PM / late message for confirmed; 10 AM PR merge cutoff
+ *   and open-PR queue guidance for waitlisted; shared community / governance copy for all.
  *
  * Requires: FIREBASE_SERVICE_ACCOUNT_JSON or GOOGLE_APPLICATION_CREDENTIALS;
  * Use the same **GITHUB_TOKEN** as production (e.g. from `.env.local`). PR counts use
@@ -56,6 +60,9 @@ const PR_COL_KEY =
   "Have you contributed to the repo?  If yes, last PR to https://github.com/rogerSuperBuilderAlpha/cursor-boston";
 
 const USER_ID_IN_CHUNK = 10;
+
+/** Update before send if the open PR queue size changed (see GitHub pulls tab). */
+const DAYOF_OPEN_PR_QUEUE_COUNT = 16;
 
 const INVALID_LOGIN_TOKENS = new Set([
   "",
@@ -910,6 +917,139 @@ ${block}
   return { subject, html, text: textParts.join("\n") };
 }
 
+function dayOfCommunityBlockHtml(): string {
+  return `<hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;" />
+<p><strong>Looking ahead: this is a community project.</strong></p>
+<p>There will be plenty of other Cursor Boston events — and you can help organize them. If you have a venue (or know someone who does), reach out to <a href="mailto:roger@cursorboston.com">roger@cursorboston.com</a> and we can put something together.</p>
+<p>I only have authority right now because I'm doing everything myself, but that's changing. I'll be sending out requests for repo maintainers soon, working with them to organize events, and doing my best to provide whatever support the community needs.</p>
+<p>I'm also going to stop making personal updates to the site from here on out (unless I have a cool idea). It's community-managed now. And soon I hope to move to a more communal backend as well. Lots of exciting stuff coming.</p>
+<p>Thank you sincerely for your contributions and participation. This community is already something special.</p>`;
+}
+
+function dayOfCommunityBlockText(): string {
+  return [
+    "",
+    "Looking ahead: this is a community project.",
+    "",
+    "There will be plenty of other Cursor Boston events — and you can help organize them. If you have a venue (or know someone who does), reach out to roger@cursorboston.com and we can put something together.",
+    "",
+    "I only have authority right now because I'm doing everything myself, but that's changing. I'll be sending out requests for repo maintainers soon, working with them to organize events, and doing my best to provide whatever support the community needs.",
+    "",
+    "I'm also going to stop making personal updates to the site from here on out (unless I have a cool idea). It's community-managed now. And soon I hope to move to a more communal backend as well. Lots of exciting stuff coming.",
+    "",
+    "Thank you sincerely for your contributions and participation. This community is already something special.",
+  ].join("\n");
+}
+
+function buildDayOfEmail(args: {
+  tier: Exclude<RegistrantTier, "DECLINED">;
+  name: string;
+  rank: number | null;
+  totalOnLeaderboard: number;
+  mergedPrCount: number;
+  profileBlockReason: string | null;
+  csvSelfReportedPr: string;
+}): { subject: string; html: string; text: string } {
+  const {
+    tier,
+    name,
+    rank,
+    mergedPrCount,
+    profileBlockReason,
+    csvSelfReportedPr,
+  } = args;
+  const first = escapeHtml(name);
+  const signupUrl = `${SITE_ORIGIN.replace(/\/$/, "")}${SIGNUP_PATH}`;
+  const repoUrl = getGithubRepoWebBaseUrl();
+  const pullsUrl = `${repoUrl.replace(/\/$/, "")}/pulls`;
+
+  const selfNote =
+    csvSelfReportedPr ?
+      `<p style="font-size:13px;color:#666;">(Your Luma free-text about contributions is not used for ranking; we use GitHub + our site.)</p>`
+    : "";
+
+  let subject: string;
+  let lead: string;
+  let textLead: string;
+
+  if (tier === "CONFIRMED") {
+    subject = "Hack-a-Sprint is TODAY — arrive by 4:00 PM or let us know";
+    lead = `<p>Hi ${first},</p>
+<p>You have a <strong>confirmed spot</strong>. <strong>Arrive by 4:00 PM ET</strong> or message <a href="mailto:roger@cursorboston.com">roger@cursorboston.com</a> that you will be late.</p>
+<p><strong>After 4:00 PM, unclaimed spots will be forfeited</strong> to waitlisted participants in rank order. We cannot guarantee access after that.</p>
+<p>We have a <strong>limited venue with fire code capacity</strong> — we must stay within the limit, no exceptions.</p>
+<p>Bring your laptop, charger, and something to build. The sprint starts <strong>4:30 PM ET</strong>.</p>`;
+    textLead = [
+      `Hi ${name},`,
+      "",
+      "You have a confirmed spot. Arrive by 4:00 PM ET or email roger@cursorboston.com if you will be late.",
+      "",
+      "After 4:00 PM, unclaimed spots are forfeited to the waitlist in rank order. We cannot guarantee access after that.",
+      "",
+      "Limited venue / fire code capacity — we must stay within the limit, no exceptions.",
+      "",
+      "Bring laptop, charger, something to build. Sprint starts 4:30 PM ET.",
+    ].join("\n");
+  } else if (tier === "WAITLISTED") {
+    subject = "Hack-a-Sprint is TODAY — PR deadline 10 AM, then waitlist at 4 PM";
+    const waitRankLead =
+      rank !== null ?
+        `You are <strong>#${rank}</strong> on the waitlist`
+      : `You are on the waitlist`;
+    lead = `<p>Hi ${first},</p>
+<p>${waitRankLead} with <strong>${mergedPrCount}</strong> merged PR${mergedPrCount === 1 ? "" : "s"}.</p>
+<p><strong>Get your PRs merged by 10:00 AM ET today.</strong> Nothing will be merged after that — merged PRs are the metric for waitlist ranking.</p>
+<p><strong>Before opening a new PR</strong>, check the <strong>${DAYOF_OPEN_PR_QUEUE_COUNT} open PRs</strong> already in queue so you don't duplicate work: <a href="${escapeHtml(pullsUrl)}">${escapeHtml(pullsUrl)}</a></p>
+<p>At <strong>4:00 PM ET</strong>, unclaimed confirmed spots go to the waitlist in rank order. Be nearby if you want a chance.</p>
+<p>We have a <strong>limited venue with fire code capacity</strong> — we sincerely apologize if we cannot accommodate everyone. There is <strong>no spectator room</strong>.</p>`;
+    textLead = [
+      `Hi ${name},`,
+      "",
+      `You are ${rank !== null ? `#${rank}` : "on"} the waitlist with ${mergedPrCount} merged PRs.`,
+      "",
+      "Get your PRs merged by 10:00 AM ET today. Nothing counts after that for waitlist ranking.",
+      "",
+      `Before opening a new PR, check the ${DAYOF_OPEN_PR_QUEUE_COUNT} open PRs in queue: ${pullsUrl}`,
+      "",
+      "At 4:00 PM ET, unclaimed confirmed spots go to the waitlist in rank order. Be nearby if you want a chance.",
+      "",
+      "Limited venue / fire code — we apologize if we cannot accommodate everyone. No spectator room.",
+    ].join("\n");
+  } else if (tier === "SIGNED_UP_NO_SPOT") {
+    subject = "Hack-a-Sprint is TODAY — complete website signup to queue";
+    const block =
+      profileBlockReason ?
+        `<p><strong>Before you can join the list:</strong> ${escapeHtml(profileBlockReason)}</p>`
+      : "";
+    lead = `<p>Hi ${first},</p>
+<p><strong>Complete your website registration</strong> if you want to queue for a waitlist spot today: <a href="${escapeHtml(signupUrl)}">${escapeHtml(signupUrl)}</a></p>
+${block}`;
+    textLead = [
+      `Hi ${name},`,
+      "",
+      `Complete your website registration if you want to queue for a waitlist spot today: ${signupUrl}`,
+      ...(profileBlockReason ? [`(${profileBlockReason})`] : []),
+    ].join("\n");
+  } else {
+    subject = "Hack-a-Sprint is TODAY — complete website signup to queue";
+    lead = `<p>Hi ${first},</p>
+<p><strong>Complete your website registration</strong> if you want to queue for a waitlist spot today: <a href="${escapeHtml(signupUrl)}">${escapeHtml(signupUrl)}</a></p>
+<p>Create an account at <a href="${escapeHtml(SITE_ORIGIN)}">cursorboston.com</a> (this email if possible), connect GitHub + Discord with a public profile, then claim your spot at the link above.</p>`;
+    textLead = [
+      `Hi ${name},`,
+      "",
+      `Complete your website registration if you want to queue for a waitlist spot today: ${signupUrl}`,
+      "",
+      `Create an account at ${SITE_ORIGIN}, connect GitHub + Discord, then claim your spot.`,
+    ].join("\n");
+  }
+
+  const html = emailShell(`${lead}${selfNote}${dayOfCommunityBlockHtml()}${commonEventBlockHtml()}`);
+  const text = [textLead, dayOfCommunityBlockText(), "", `Event: April 13, 2026 4–8 PM ET, Back Bay Boston. Luma: ${LUMA_URL}`].join("\n");
+
+  return { subject, html, text };
+}
+
 const RANKING_JSON_PATH = join(__dirname, "data/hack-a-sprint-2026-ranking.json");
 
 type CorrectionRow = {
@@ -1029,19 +1169,20 @@ function parseArgs(argv: string[]) {
     : join(
         homedir(),
         "Downloads",
-        "Cursor Boston Hack-a-Sprint - Guests - 2026-04-12-21-48-33.csv"
+        "Cursor Boston Hack-a-Sprint - Guests - 2026-04-13-10-53-54.csv"
       );
 
   if ((dryRun && send) || (!dryRun && !send)) {
     console.error("Specify exactly one of: --dry-run | --send");
     process.exit(1);
   }
-  const modeCount = [announceList, reminder, correction].filter(Boolean).length;
+  const dayof = argv.includes("--dayof");
+  const modeCount = [announceList, reminder, correction, dayof].filter(Boolean).length;
   if (modeCount > 1) {
-    console.error("Use only one of: --announce-list | --reminder | --correction");
+    console.error("Use only one of: --announce-list | --reminder | --correction | --dayof");
     process.exit(1);
   }
-  return { dryRun, send, announceList, reminder, correction, csvPath };
+  return { dryRun, send, announceList, reminder, correction, dayof, csvPath };
 }
 
 async function sleep(ms: number) {
@@ -1049,7 +1190,7 @@ async function sleep(ms: number) {
 }
 
 async function main() {
-  const { dryRun, send, announceList, reminder, correction, csvPath } = parseArgs(process.argv.slice(2));
+  const { dryRun, send, announceList, reminder, correction, dayof, csvPath } = parseArgs(process.argv.slice(2));
 
   let raw: string;
   try {
@@ -1308,9 +1449,10 @@ async function main() {
     if (announceList) console.log("(--announce-list mode: simplified participant-list email)");
     if (reminder) console.log("(--reminder mode: day-before blast)");
     if (correction) console.log("(--correction mode: status correction email)");
+    if (dayof) console.log("(--dayof mode: event-day blast)");
     const pickSample = (t: RegistrantTier) => results.find((x) => x.tier === t && x.tier !== "DECLINED");
 
-    if (reminder || correction) {
+    if (reminder || correction || dayof) {
       const previewTiers: RegistrantTier[] = [
         "CONFIRMED",
         "WAITLISTED",
@@ -1330,8 +1472,9 @@ async function main() {
           profileBlockReason: sample.profileBlock,
           csvSelfReportedPr: sample.csvSelfReportedPr,
         };
-        const { subject, html } = correction
-          ? buildCorrectionEmail(emailArgs)
+        const { subject, html } =
+          correction ? buildCorrectionEmail(emailArgs)
+          : dayof ? buildDayOfEmail(emailArgs)
           : buildReminderEmail(emailArgs);
         console.log(`\n[${tier}] Sample subject: ${subject}`);
         console.log("Sample HTML preview:\n---\n" + html.slice(0, 700) + "…\n---");
@@ -1383,15 +1526,17 @@ async function main() {
       ? buildCorrectionEmail(emailArgs)
       : reminder
         ? buildReminderEmail(emailArgs)
-        : announceList
-          ? buildListAnnouncementEmail({
-              tier,
-              name: r.name,
-              rank: r.rank,
-              totalOnLeaderboard: totalOnPublicList,
-              mergedPrCount: r.mergedPrCount,
-            })
-          : buildEmails(emailArgs);
+        : dayof
+          ? buildDayOfEmail(emailArgs)
+          : announceList
+            ? buildListAnnouncementEmail({
+                tier,
+                name: r.name,
+                rank: r.rank,
+                totalOnLeaderboard: totalOnPublicList,
+                mergedPrCount: r.mergedPrCount,
+              })
+            : buildEmails(emailArgs);
     try {
       await sendEmail({ to: r.email, subject, html, text });
       sent++;
