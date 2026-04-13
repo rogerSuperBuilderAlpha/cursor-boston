@@ -1,0 +1,6 @@
+{
+  "projectRepoUrl": "https://github.com/nebullii/herClaw",
+  "title": "herClaw — a personal AI agent with her own email and phone, in one Docker command",
+  "description": "herClaw is a hardened one-command install of OpenClaw wired to Inkbox for real-world comms (email today, Telegram and voice next). Built for the 90% of nontechnical users who want an AI assistant but don't have API keys or GitHub accounts — same agent identity across channels, persistent memory, on-device workspace so conversations never leave the user's machine. During the hackathon I fixed 3 distribution-readiness bugs (startup race in `openclaw doctor --fix`, DNS pinned to public resolvers breaking on UDP-53-blocked networks, default model swapped to gpt-4o-mini for tier-1 rate-limit headroom) and landed an end-to-end email round-trip: iPhone Mail → Inkbox webhook → OpenClaw agent → reply in ~15s. Hardened Docker posture: all Linux capabilities dropped, no-new-privileges, strict file perms, CPU/memory/PID/log-size limits, host-DNS resolver for privacy.",
+  "demoVideoUrl": "https://youtu.be/TMZUD7_xwXo"
+}
