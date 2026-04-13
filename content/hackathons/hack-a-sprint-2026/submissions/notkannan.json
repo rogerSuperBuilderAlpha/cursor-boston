@@ -3,5 +3,5 @@
   "deployedUrl": "https://boston-hackathon-cursor.vercel.app/",
   "title": "QuickSolve - Customer Support for Cursor Boston",
   "description": "An AI-powered customer support system built for cursorboston.com — a Boston-based Cursor IDE community. Users submit tickets via a two-tab Next.js 16 interface (raise a ticket / view all tickets), which are persisted in Firebase Firestore and simultaneously forwarded to an Inkbox agent mailbox. A two-stage OpenAI gpt-4o-mini pipeline then classifies priority (high vs. low in under 5 tokens) and generates a contextual reply — for low-priority tickets, the reply is grounded in real site content crawled from cursorboston.com at build time using Firecrawl, preventing hallucination; for high-priority tickets, the user gets a soothing acknowledgment and the owner receives an urgent alert — both dispatched programmatically via the Inkbox SDK from the same persistent agent identity. The natural next step is leveraging Inkbox's phone/voice capability to escalate critical tickets beyond email into real-time calls.",
-  "loomVideoUrl": "https://www.loom.com/share/2e28318b00a9466aa08fd8cda1412a80"
+  "loomVideoUrl": "https://www.loom.com/share/1f87ff6349c44bdb8d88f480d46bf2b6"
 }
