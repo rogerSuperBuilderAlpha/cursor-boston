@@ -75,7 +75,7 @@ export default function LumaCheckoutTracker() {
               guestId
             );
 
-            console.log("Registration tracked for event:", eventId);
+            /* registration tracked successfully */
           }
         }
       } catch (error) {
