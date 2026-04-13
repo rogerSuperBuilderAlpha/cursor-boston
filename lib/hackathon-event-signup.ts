@@ -95,4 +95,13 @@ export const DECLINED_EMAILS = new Set([
   "salve.a@northeastern.edu",
   "aarjav02@gmail.com",
   "kompella.sa@northeastern.edu",
+  "oalshayeb1@babson.edu",
+  "mouhssine.rifaki@nyu.edu",
+  "jack@stepwise.ai",
+  "mikeboensel@gmail.com",
+  "patil.jaye@northeastern.edu",
+  "sahana359@gmail.com",
+  "grosz.justin@bcg.com",
+  "chun.yimin@gmail.com",
+  "ananya@aicollective.com",
 ]);
