@@ -16,6 +16,10 @@ jest.mock("@/lib/rate-limit", () => ({
   getClientIdentifier: () => "test-client",
 }));
 
+jest.mock("@/lib/upstash-rate-limit", () => ({
+  checkUpstashRateLimit: jest.fn(async () => ({ success: true, remaining: 9, resetTime: Date.now() + 60000 })),
+}));
+
 jest.mock("@/lib/server-auth", () => ({
   getVerifiedUser: jest.fn(),
 }));
@@ -34,7 +38,7 @@ jest.mock("@/lib/firebase-admin", () => ({
 }));
 
 const mockGetVerifiedUser = getVerifiedUser as jest.MockedFunction<typeof getVerifiedUser>;
-const { checkRateLimit } = jest.requireMock("@/lib/rate-limit");
+const { checkUpstashRateLimit } = jest.requireMock("@/lib/upstash-rate-limit");
 
 const testUser: VerifiedUser = { uid: "u1", name: "Test User" };
 
@@ -52,7 +56,7 @@ describe("POST /api/community/post", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockGetVerifiedUser.mockResolvedValue(testUser);
-    (checkRateLimit as jest.Mock).mockReturnValue({ success: true });
+    (checkUpstashRateLimit as jest.Mock).mockResolvedValue({ success: true, remaining: 9, resetTime: Date.now() + 60000 });
   });
 
   it("returns 401 when user is not authenticated", async () => {
@@ -62,7 +66,7 @@ describe("POST /api/community/post", () => {
   });
 
   it("returns 429 when rate limited", async () => {
-    (checkRateLimit as jest.Mock).mockReturnValue({ success: false, retryAfter: 30 });
+    (checkUpstashRateLimit as jest.Mock).mockResolvedValue({ success: false, remaining: 0, resetTime: Date.now(), retryAfter: 30 });
     const res = await POST(makeRequest({ content: validContent }));
     expect(res.status).toBe(429);
     const body = await res.json();

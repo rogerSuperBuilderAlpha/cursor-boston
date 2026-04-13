@@ -7,6 +7,7 @@ import { GET, POST } from "@/app/api/cookbook/entries/route";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 
 jest.mock("@/lib/logger", () => ({
   logger: { logError: jest.fn(), warn: jest.fn() },
@@ -20,6 +21,10 @@ jest.mock("@/lib/rate-limit", () => {
     checkRateLimit: jest.fn(() => ({ success: true, retryAfter: 0 })),
   };
 });
+
+jest.mock("@/lib/upstash-rate-limit", () => ({
+  checkUpstashRateLimit: jest.fn(async () => ({ success: true, remaining: 9, resetTime: Date.now() + 60000 })),
+}));
 
 jest.mock("@/lib/server-auth", () => ({
   getVerifiedUser: jest.fn(),
@@ -44,6 +49,7 @@ jest.mock("@/lib/sanitize", () => ({
 const mockGetVerifiedUser = getVerifiedUser as jest.MockedFunction<typeof getVerifiedUser>;
 const mockGetAdminDb = getAdminDb as jest.MockedFunction<typeof getAdminDb>;
 const mockCheckRateLimit = checkRateLimit as jest.MockedFunction<typeof checkRateLimit>;
+const mockCheckUpstashRateLimit = checkUpstashRateLimit as jest.MockedFunction<typeof checkUpstashRateLimit>;
 
 /* ─── helpers ─── */
 
@@ -291,10 +297,11 @@ describe("POST /api/cookbook/entries", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockCheckRateLimit.mockReturnValue({ success: true, retryAfter: 0 });
+    mockCheckUpstashRateLimit.mockResolvedValue({ success: true, remaining: 9, resetTime: Date.now() + 60000 });
   });
 
   it("returns 429 when rate limited", async () => {
-    mockCheckRateLimit.mockReturnValue({ success: false, retryAfter: 30 });
+    mockCheckUpstashRateLimit.mockResolvedValue({ success: false, remaining: 0, resetTime: Date.now(), retryAfter: 30 });
     const res = await POST(
       makePostRequest({ title: "T", description: "D", promptContent: "P" })
     );

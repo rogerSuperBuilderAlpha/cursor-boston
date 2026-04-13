@@ -10,7 +10,8 @@ import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { logger } from "@/lib/logger";
 import { parseRequestBody } from "@/lib/api-response";
-import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
+import { getClientIdentifier } from "@/lib/rate-limit";
 import { sanitizeText, sanitizeDocId } from "@/lib/sanitize";
 import { getDisplayName } from "@/lib/utils";
 
@@ -23,7 +24,7 @@ export async function POST(request: NextRequest) {
   try {
     // Rate limiting
     const clientId = getClientIdentifier(request as unknown as Request);
-    const rateResult = checkRateLimit(`community-reply:${clientId}`, COMMUNITY_RATE_LIMIT);
+    const rateResult = await checkUpstashRateLimit(`community-reply:${clientId}`, COMMUNITY_RATE_LIMIT);
     if (!rateResult.success) {
       return NextResponse.json(
         { error: "Too many requests", retryAfterSeconds: rateResult.retryAfter },

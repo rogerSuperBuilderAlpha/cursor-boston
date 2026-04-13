@@ -15,7 +15,8 @@ import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { logger } from "@/lib/logger";
-import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
+import { getClientIdentifier } from "@/lib/rate-limit";
 import { matchesCookbookSearchTerms } from "@/lib/cookbook-search";
 import { sanitizeText, sanitizeDocId } from "@/lib/sanitize";
 import {
@@ -288,7 +289,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const clientId = getClientIdentifier(request as unknown as Request);
-    const rateResult = checkRateLimit(
+    const rateResult = await checkUpstashRateLimit(
       `cookbook-submit:${clientId}`,
       COOKBOOK_SUBMIT_RATE_LIMIT
     );

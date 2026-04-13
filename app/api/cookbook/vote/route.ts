@@ -10,7 +10,8 @@ import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { logger } from "@/lib/logger";
 import { parseRequestBody } from "@/lib/api-response";
-import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
+import { getClientIdentifier } from "@/lib/rate-limit";
 import { sanitizeDocId } from "@/lib/sanitize";
 
 export const runtime = "nodejs";
@@ -37,7 +38,7 @@ function userVoteIndexDocId(uid: string, entryId: string) {
 export async function POST(request: NextRequest) {
   try {
     const clientId = getClientIdentifier(request as unknown as Request);
-    const rateResult = checkRateLimit(
+    const rateResult = await checkUpstashRateLimit(
       `cookbook-vote:${clientId}`,
       COOKBOOK_VOTE_RATE_LIMIT
     );
