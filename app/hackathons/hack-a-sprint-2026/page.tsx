@@ -35,6 +35,8 @@ type SubmissionRow = ShowcaseSubmission & {
   peerAverage: number | null;
   peerVoteCount: number | null;
   aiScore: number | null;
+  aiRank: number | null;
+  aiReasoning: string | null;
   judgeAverage: number | null;
   rawScore: number | null;
   myJudgeScore: number | null;
@@ -513,8 +515,15 @@ export default function HackASprint2026ShowcasePage() {
       <section id="peer-voting" className="py-10 px-6 scroll-mt-20">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-xl font-bold text-foreground mb-2">
-            Submissions &amp; peer scoring
+            Submissions
           </h2>
+          <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4 max-w-3xl">
+            <strong className="text-foreground">AI rank and score</strong> are automated from
+            repos and descriptions only — they do{" "}
+            <strong className="text-foreground">not</strong> use and are not affected by peer
+            scores. <strong className="text-foreground">Peer scores</strong> are a separate
+            community ballot.
+          </p>
           {loadError && (
             <p className="text-sm text-rose-600 dark:text-rose-400 mb-4" role="alert">
               {loadError}
@@ -536,9 +545,11 @@ export default function HackASprint2026ShowcasePage() {
               {phase === "peerVotingOpen" && (
                 <div className="mb-6 rounded-xl border border-neutral-200 dark:border-neutral-700 p-4 bg-white dark:bg-neutral-900/50 space-y-3">
                   <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                    Score <strong>every other project</strong> from{" "}
-                    <strong>1–10</strong> (you cannot score your own). When you have
-                    finished all scores, AI scores unlock for you below.
+                    Score <strong>every other project</strong> from <strong>1–10</strong>{" "}
+                    (you cannot score your own). That peer ballot is unrelated to the
+                    automated AI block on each card. When you have finished all peer scores,
+                    community averages and judge/raw finals appear in the separate stats row
+                    below each card.
                   </p>
                   <p className="text-sm text-neutral-600 dark:text-neutral-400">
                     Progress:{" "}
@@ -567,16 +578,25 @@ export default function HackASprint2026ShowcasePage() {
                   </p>
                   {viewer?.hasCompletedPeerVoting && (
                     <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">
-                      All peer scores saved — AI scores unlocked for you below.
+                      All peer scores saved — peer averages (and judge/raw row when results
+                      are open) are visible below each card.
                     </p>
                   )}
                 </div>
               )}
               {phase === "resultsOpen" && (
                 <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-6">
-                  Final ordering: raw score from judges and AI (from your repo,
-                  description, and Loom — no deployment required), rounded up, then
-                  average peer score (1–10) as tiebreaker.
+                  <strong className="text-foreground">Official order</strong> uses raw score
+                  from judges and automated AI only (independent of peer ballots). Average
+                  peer score (1–10) breaks ties. The AI rank on each card is for context and
+                  is not derived from peer voting.
+                </p>
+              )}
+              {data.submissions.some((s) => s.aiRank != null) && (
+                <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
+                  Gallery order: <strong className="text-foreground">AI rank</strong> (1 =
+                  best), then score. Each card includes the automated score and why it was
+                  assigned.
                 </p>
               )}
               <ul className="space-y-8">
@@ -603,6 +623,11 @@ export default function HackASprint2026ShowcasePage() {
                           <h3 className="text-lg font-semibold text-foreground mb-2">
                             {s.payload.title}
                           </h3>
+                          {s.aiRank != null && s.aiScore != null && (
+                            <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400 mb-2">
+                              AI rank #{s.aiRank} · {s.aiScore}/10
+                            </p>
+                          )}
                           <p className="text-sm text-neutral-600 dark:text-neutral-400 whitespace-pre-wrap mb-4">
                             {s.payload.description}
                           </p>
@@ -634,6 +659,26 @@ export default function HackASprint2026ShowcasePage() {
                               Loom
                             </a>
                           </div>
+                          {s.aiScore != null && (
+                            <div className="mt-4 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950/40 px-4 py-3 text-sm">
+                              <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-2">
+                                Automated evaluation (not based on peer scores).
+                              </p>
+                              <p className="font-semibold text-foreground mb-1">
+                                Why this AI score
+                              </p>
+                              {s.aiReasoning ? (
+                                <p className="text-neutral-600 dark:text-neutral-400 whitespace-pre-wrap leading-relaxed">
+                                  {s.aiReasoning}
+                                </p>
+                              ) : (
+                                <p className="text-neutral-500 dark:text-neutral-500 text-xs italic">
+                                  No written review stored yet — re-run AI evaluation to attach
+                                  reasoning.
+                                </p>
+                              )}
+                            </div>
+                          )}
                         </div>
                         {phase === "peerVotingOpen" && !own && (
                           <div className="shrink-0 flex flex-col gap-1">
@@ -709,36 +754,39 @@ export default function HackASprint2026ShowcasePage() {
                       )}
 
                       {showScores && (
-                        <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm border-t border-neutral-200 dark:border-neutral-700 pt-4">
-                          {s.aiScore != null && (
-                            <div>
-                              <p className="text-xs text-neutral-500">AI score</p>
-                              <p className="font-semibold text-foreground">{s.aiScore}</p>
-                            </div>
-                          )}
-                          {(phase === "peerVotingOpen" || phase === "resultsOpen") &&
-                            s.peerAverage != null && (
-                            <div>
-                              <p className="text-xs text-neutral-500">Peer avg</p>
-                              <p className="font-semibold text-foreground">
-                                {s.peerAverage.toFixed(2)}
-                              </p>
-                            </div>
-                          )}
-                          {phase === "resultsOpen" && s.judgeAverage != null && (
-                            <div>
-                              <p className="text-xs text-neutral-500">Judge avg</p>
-                              <p className="font-semibold text-foreground">
-                                {s.judgeAverage.toFixed(2)}
-                              </p>
-                            </div>
-                          )}
-                          {phase === "resultsOpen" && s.rawScore != null && (
-                            <div>
-                              <p className="text-xs text-neutral-500">Raw score</p>
-                              <p className="font-semibold text-foreground">{s.rawScore}</p>
-                            </div>
-                          )}
+                        <div className="mt-4 space-y-2 border-t border-neutral-200 dark:border-neutral-700 pt-4">
+                          <p className="text-xs font-medium text-neutral-500 uppercase tracking-wide">
+                            Community &amp; finals
+                          </p>
+                          <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-2">
+                            Peer and judge figures are separate from the automated AI block
+                            above.
+                          </p>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+                            {(phase === "peerVotingOpen" || phase === "resultsOpen") &&
+                              s.peerAverage != null && (
+                                <div>
+                                  <p className="text-xs text-neutral-500">Peer avg</p>
+                                  <p className="font-semibold text-foreground">
+                                    {s.peerAverage.toFixed(2)}
+                                  </p>
+                                </div>
+                              )}
+                            {phase === "resultsOpen" && s.judgeAverage != null && (
+                              <div>
+                                <p className="text-xs text-neutral-500">Judge avg</p>
+                                <p className="font-semibold text-foreground">
+                                  {s.judgeAverage.toFixed(2)}
+                                </p>
+                              </div>
+                            )}
+                            {phase === "resultsOpen" && s.rawScore != null && (
+                              <div>
+                                <p className="text-xs text-neutral-500">Raw score</p>
+                                <p className="font-semibold text-foreground">{s.rawScore}</p>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
                     </li>

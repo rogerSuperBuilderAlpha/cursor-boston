@@ -1,0 +1,106 @@
+{
+  "source": "cursor-local-evaluation",
+  "rubric": "Hack-a-Sprint 2026 Inkbox rubric (same criteria as scripts/ai-evaluate-submissions.ts)",
+  "evaluations": [
+    {
+      "submissionId": "bharath-knight",
+      "aiScore": 8,
+      "aiReasoning": "Strong Inkbox email workflow for clinical notes with structured extraction and thread-level merging—clear real-world use and meaningful SDK depth. README-quality signal is good from the submission text; Loom not reviewed here."
+    },
+    {
+      "submissionId": "notkannan",
+      "aiScore": 9,
+      "aiReasoning": "End-to-end support desk with Firestore plus Inkbox-powered email routing and a grounded reply path for low-priority tickets; deployed demo shows completeness. Among the deepest Inkbox integrations in the set."
+    },
+    {
+      "submissionId": "pradyumna369",
+      "aiScore": 8,
+      "aiReasoning": "Repo review: Python agent uses Inkbox for daily JSearch job digests and iter_unread_emails with Groq-powered recruiter replies in-thread—real autonomous email loop despite a sparse README."
+    },
+    {
+      "submissionId": "sikes1112",
+      "aiScore": 7,
+      "aiReasoning": "Repo review: OutreachDesk app.py uses the Inkbox Python SDK for email-native outreach with governance rules, tests, and structured drafts—empty top-level README hid this; score reflects verified code, not submission text alone."
+    },
+    {
+      "submissionId": "misterawesome23",
+      "aiScore": 7,
+      "aiReasoning": "Creative workaround for Reddit (extension + local server) with Inkbox email delivery of summaries—clear action-oriented agent. Depends heavily on external Claude for analysis; Inkbox is primarily outbound comms."
+    },
+    {
+      "submissionId": "bradagi",
+      "aiScore": 8,
+      "aiReasoning": "Daily digest with scraping, summarization, and subscriber flow through Inkbox email including a public agent address—simple, shippable, and on-brief. Deployed URL strengthens completeness."
+    },
+    {
+      "submissionId": "17-jd",
+      "aiScore": 2,
+      "aiReasoning": "Description reads as a generic services marketplace (Next.js/Prisma/Supabase) with no Inkbox agent, email, phone, or vault story—does not meet the sprint’s core constraint as written."
+    },
+    {
+      "submissionId": "cloud-post-code",
+      "aiScore": 8,
+      "aiReasoning": "Market validation toolkit explicitly centers Inkbox outbound email, queueing, and ethics guardrails—good depth and originality for a 2.5h sprint. Local-first SQLite aligns with a credible demo path."
+    },
+    {
+      "submissionId": "aarongrace978",
+      "aiScore": 3,
+      "aiReasoning": "Ambitious social/agent product description but no Inkbox SDK integration called out; likely off-scope for this hackathon unless the repo adds email/phone/vault agent behavior."
+    },
+    {
+      "submissionId": "zombiedays",
+      "aiScore": 5,
+      "aiReasoning": "CRM automation agent is on-theme for productivity, but the submission is thin on how Inkbox capabilities are used end-to-end. Score reflects limited evidence in the JSON description."
+    },
+    {
+      "submissionId": "abdulsami123",
+      "aiScore": 2,
+      "aiReasoning": "Placeholder description and template Loom URL; repo points at cursor-boston fork rather than a distinct agent build—minimal demonstrable Inkbox work from the submission package."
+    },
+    {
+      "submissionId": "mekhalraj",
+      "aiScore": 4,
+      "aiReasoning": "LinkedIn outreach automation is relevant to GTM workflows, but the write-up does not establish Inkbox email/phone/vault usage. Penalized for missing Inkbox evidence in the submission text."
+    },
+    {
+      "submissionId": "michaelrschulte",
+      "aiScore": 9,
+      "aiReasoning": "PDF annotation pipeline delivered entirely through email using Inkbox plus a clear multi-pass doc flow—tight product story and strong SDK fit. One of the clearest ‘agent does real work’ demos described."
+    },
+    {
+      "submissionId": "pavithralagisetty",
+      "aiScore": 7,
+      "aiReasoning": "CLI that ingests Inkbox inbox and emails a structured briefing via Gemini—solid email-centric integration with an honest constraint note on SMS. Practical personal productivity angle."
+    },
+    {
+      "submissionId": "rshierish",
+      "aiScore": 9,
+      "aiReasoning": "Broad operator console with multiple channels and two Inkbox identities; high complexity for sprint length and strong alignment with ‘agent takes action’ over passive UI. Some scope risk but impressive on-paper depth."
+    },
+    {
+      "submissionId": "ankittejyadav",
+      "aiScore": 8,
+      "aiReasoning": "Critical alerts bridged from email webhooks to outbound voice via Inkbox—excellent use of phone capability for an incident workflow. Narrow, high-signal use case."
+    },
+    {
+      "submissionId": "jackfruitsandwich",
+      "aiScore": 4,
+      "aiReasoning": "Interesting growth/automation idea for X/Twitter, but description emphasizes Claude Code and browser tooling without an Inkbox agent story—weak challenge fit as submitted."
+    },
+    {
+      "submissionId": "rysat0",
+      "aiScore": 8,
+      "aiReasoning": "Personalized news briefing with RAG, cron delivery, and an Inkbox identity for morning email—rich stack and clear autonomous loop. Localhost deploy URL is a minor completeness ding only."
+    },
+    {
+      "submissionId": "nickkozh",
+      "aiScore": 9,
+      "aiReasoning": "Fleet daily briefing with structured logs, HTML email, and optional phone briefings via Inkbox—uses email, phone, and vault together in a concrete ops loop. Strong match to the sprint’s multi-capability agent bar (submission JSON omits loom; use --accept-all to write)."
+    },
+    {
+      "submissionId": "firefoxmetzger",
+      "aiScore": 5,
+      "aiReasoning": "Newsletter-as-knowledge-base is interesting for dev content, but the submitted JSON lacks a Loom URL and the description does not spell out Inkbox email/phone/vault behavior—scored conservatively on available evidence (use --accept-all to write)."
+    }
+  ]
+}

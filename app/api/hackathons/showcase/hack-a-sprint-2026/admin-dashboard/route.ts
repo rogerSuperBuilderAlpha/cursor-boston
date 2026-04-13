@@ -108,6 +108,10 @@ export async function GET(request: NextRequest) {
         typeof data?.aiScore === "number" && data.aiScore >= 1 && data.aiScore <= 10
           ? data.aiScore
           : null;
+      const aiReasoning =
+        typeof data?.aiReasoning === "string" && data.aiReasoning.trim()
+          ? data.aiReasoning.trim()
+          : null;
       const judgeScores =
         data?.judgeScores && typeof data.judgeScores === "object"
           ? (data.judgeScores as Record<string, number>)
@@ -132,6 +136,7 @@ export async function GET(request: NextRequest) {
         deployedUrl: s.payload.deployedUrl,
         loomVideoUrl: s.payload.loomVideoUrl,
         aiScore,
+        aiReasoning,
         judgeScores,
         judgeAverage,
         peerVoteCount,
