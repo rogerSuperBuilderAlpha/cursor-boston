@@ -1,0 +1,36 @@
+name: Weekly Tips Newsletter
+
+on:
+  schedule:
+    # Every Monday at 10:00 AM ET (14:00 UTC, 15:00 UTC during DST)
+    - cron: "0 14 * * 1"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  send-weekly-tip:
+    name: Send Weekly Tip Email
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger newsletter endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          APP_URL: ${{ vars.APP_URL || 'https://cursorboston.com' }}
+        run: |
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            -H "Content-Type: application/json" \
+            "$APP_URL/api/newsletter/tips")
+
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | head -n -1)
+
+          echo "Status: $http_code"
+          echo "Response: $body"
+
+          if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
+            echo "::error::Newsletter send failed with status $http_code"
+            exit 1
+          fi

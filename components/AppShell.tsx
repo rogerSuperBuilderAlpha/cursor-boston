@@ -29,6 +29,7 @@ import {
   Info,
   LayoutGrid,
   Library,
+  Lightbulb,
   LogIn,
   Map,
   Menu,
@@ -83,6 +84,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: "/map", label: "Map", icon: Map },
       { href: "/glossary", label: "Glossary", icon: Library },
+      { href: "/tips", label: "Tips", icon: Lightbulb },
       { href: "/blog", label: "Blog", icon: BookOpen },
       { href: "/analytics", label: "Analytics", icon: BarChart2 },
     ],

@@ -283,5 +283,16 @@ service cloud.firestore {
     match /eventContacts/{docId} {
       allow read, write: if false;
     }
+
+    // Weekly tips — public read, Admin SDK writes only
+    match /weeklyTips/{tipId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Tip newsletter subscribers — Admin SDK only
+    match /tipSubscribers/{docId} {
+      allow read, write: if false;
+    }
   }
 }

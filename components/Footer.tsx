@@ -66,6 +66,11 @@ export default function Footer() {
                       About
                     </Link>
                   </li>
+                  <li>
+                    <Link href="/tips" className="text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
+                      Tips
+                    </Link>
+                  </li>
                 </ul>
               </div>
 
