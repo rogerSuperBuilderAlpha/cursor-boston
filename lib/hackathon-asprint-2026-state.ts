@@ -6,7 +6,10 @@
 
 import type { Firestore } from "firebase-admin/firestore";
 import { HACK_A_SPRINT_2026_EVENT_ID } from "@/lib/hackathon-showcase";
-import { hackathonEventSignupDocId } from "@/lib/hackathon-event-signup";
+import {
+  hackathonEventSignupDocId,
+  profileMatchesHackathonJudgeCheckinException,
+} from "@/lib/hackathon-event-signup";
 import {
   hackASprint2026ParticipantScoresDocId,
   normalizeParticipantScores,
@@ -35,12 +38,19 @@ export async function userHasHackASprint2026Signup(
 
 export async function userIsCheckedInForHackASprint2026(
   db: Firestore,
-  uid: string
+  uid: string,
+  tokenEmail?: string | null
 ): Promise<boolean> {
   const id = hackathonEventSignupDocId(HACK_A_SPRINT_2026_EVENT_ID, uid);
   const snap = await db.collection("hackathonEventSignups").doc(id).get();
-  if (!snap.exists) return false;
-  return snap.data()?.checkedInAt != null;
+  if (snap.exists && snap.data()?.checkedInAt != null) {
+    return true;
+  }
+  const userSnap = await db.collection("users").doc(uid).get();
+  return profileMatchesHackathonJudgeCheckinException(
+    tokenEmail ?? null,
+    userSnap.data() as Record<string, unknown> | undefined
+  );
 }
 
 /**

@@ -47,7 +47,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const resolved = await resolveHackASprint2026CreditForUser(db, user.uid);
+    const resolved = await resolveHackASprint2026CreditForUser(
+      db,
+      user.uid,
+      user.email
+    );
     if (!resolved.ok) {
       return NextResponse.json(
         { ok: false, reason: resolved.reason },

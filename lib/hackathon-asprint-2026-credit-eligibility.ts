@@ -9,7 +9,10 @@ import {
   HACK_A_SPRINT_2026_EVENT_ID,
   githubUserHasMergedLabeledShowcasePr,
 } from "@/lib/hackathon-showcase";
-import { hackathonEventSignupDocId } from "@/lib/hackathon-event-signup";
+import {
+  hackathonEventSignupDocId,
+  profileMatchesHackathonJudgeCheckinException,
+} from "@/lib/hackathon-event-signup";
 
 const EVENT_ID = HACK_A_SPRINT_2026_EVENT_ID;
 
@@ -22,7 +25,9 @@ export type CreditEligibilityResult =
  */
 export async function resolveHackASprint2026CreditForUser(
   db: Firestore,
-  uid: string): Promise<CreditEligibilityResult> {
+  uid: string,
+  tokenEmail?: string | null
+): Promise<CreditEligibilityResult> {
   const signupDocId = hackathonEventSignupDocId(EVENT_ID, uid);
   const signupSnap = await db.collection("hackathonEventSignups").doc(signupDocId).get();
 
@@ -32,16 +37,23 @@ export async function resolveHackASprint2026CreditForUser(
 
   const signupData = signupSnap.data()!;
 
+  const userSnap = await db.collection("users").doc(uid).get();
+  const ud = userSnap.data();
+
   if (!signupData.checkedInAt) {
-    return { ok: false, reason: "not_checked_in" };
+    if (
+      !profileMatchesHackathonJudgeCheckinException(
+        tokenEmail ?? null,
+        ud as Record<string, unknown> | undefined
+      )
+    ) {
+      return { ok: false, reason: "not_checked_in" };
+    }
   }
 
   if (!signupData.frozenRank || !signupData.confirmedAt) {
     return { ok: false, reason: "not_confirmed" };
   }
-
-  const userSnap = await db.collection("users").doc(uid).get();
-  const ud = userSnap.data();
   const githubLogin =
     ud?.github && typeof ud.github === "object"
       ? (ud.github as { login?: string }).login

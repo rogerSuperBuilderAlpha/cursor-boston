@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
     let viewerGithub: string | null = null;
 
     if (db) {
-      checkedIn = await userIsCheckedInForHackASprint2026(db, user.uid);
+      checkedIn = await userIsCheckedInForHackASprint2026(db, user.uid, user.email);
       signedUp = await userHasHackASprint2026Signup(db, user.uid);
       judgeEligible = await userIsHackASprint2026Judge(
         db,

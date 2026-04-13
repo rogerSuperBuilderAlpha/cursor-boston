@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    const checkedIn = await userIsCheckedInForHackASprint2026(db, user.uid);
+    const checkedIn = await userIsCheckedInForHackASprint2026(db, user.uid, user.email);
     if (!checkedIn) {
       return NextResponse.json({ error: "You must be checked in." }, { status: 403 });
     }

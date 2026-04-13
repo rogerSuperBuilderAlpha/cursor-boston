@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
       if (typeof login === "string" && login.trim()) {
         githubLogin = login.trim();
       }
-      checkedIn = await userIsCheckedInForHackASprint2026(db, user.uid);
+      checkedIn = await userIsCheckedInForHackASprint2026(db, user.uid, user.email);
       signedUp = await userHasHackASprint2026Signup(db, user.uid);
 
       if (

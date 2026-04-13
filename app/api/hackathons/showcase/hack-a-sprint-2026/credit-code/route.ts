@@ -34,7 +34,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    const resolved = await resolveHackASprint2026CreditForUser(db, user.uid);
+    const resolved = await resolveHackASprint2026CreditForUser(
+      db,
+      user.uid,
+      user.email
+    );
     if (!resolved.ok) {
       return NextResponse.json({
         eligible: false,

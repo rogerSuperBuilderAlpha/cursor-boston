@@ -79,7 +79,39 @@ export function compareUnifiedHackathonRanking(
 export const JUDGE_EMAILS = new Set([
   "regorhunt02052@gmail.com",
   "rayruizhiliao@gmail.com",
+  "ray@vectorly.app",
+  "ashbhatia@gmail.com",
+  "mikeboensel@gmail.com",
 ]);
+
+/**
+ * Judges may not appear on the door check-in tablet; treat matching profiles as checked in
+ * for Hack-a-Sprint2026 app gates (peer list, /me, credit check-in step).
+ */
+export function profileMatchesHackathonJudgeCheckinException(
+  tokenEmail: string | null | undefined,
+  profile: Record<string, unknown> | undefined
+): boolean {
+  if (typeof tokenEmail === "string" && JUDGE_EMAILS.has(tokenEmail.trim().toLowerCase())) {
+    return true;
+  }
+  if (!profile) return false;
+  if (typeof profile.email === "string" && JUDGE_EMAILS.has(profile.email.trim().toLowerCase())) {
+    return true;
+  }
+  for (const entry of (profile.additionalEmails as
+    | Array<{ verified?: boolean; email?: string }>
+    | undefined) ?? []) {
+    if (
+      entry?.verified &&
+      typeof entry?.email === "string" &&
+      JUDGE_EMAILS.has(entry.email.trim().toLowerCase())
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
 
 /** Luma registrants who declined — excluded from the participant list. */
 export const DECLINED_EMAILS = new Set([
@@ -98,7 +130,6 @@ export const DECLINED_EMAILS = new Set([
   "oalshayeb1@babson.edu",
   "mouhssine.rifaki@nyu.edu",
   "jack@stepwise.ai",
-  "mikeboensel@gmail.com",
   "patil.jaye@northeastern.edu",
   "sahana359@gmail.com",
   "grosz.justin@bcg.com",
