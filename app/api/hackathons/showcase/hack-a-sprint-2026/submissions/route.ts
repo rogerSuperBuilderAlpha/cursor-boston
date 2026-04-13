@@ -14,8 +14,10 @@ import {
 } from "@/lib/hackathon-showcase";
 import { getHackASprint2026Phase } from "@/lib/hackathon-asprint-2026-schedule";
 import { computeHackASprint2026RawScore } from "@/lib/hackathon-asprint-2026-scores";
+import { computePeerAverages } from "@/lib/hackathon-asprint-2026-participant-scoring";
 import {
-  hackASprint2026PeerVoteDocId,
+  getAllHackASprint2026ParticipantScoreDocs,
+  getParticipantScoresForUser,
   hackASprint2026ScoreDocId,
   userHasHackASprint2026Signup,
   userIsCheckedInForHackASprint2026,
@@ -51,37 +53,25 @@ export async function GET(request: NextRequest) {
     let checkedIn = false;
     let signedUp = false;
     let hasCompletedPeerVoting = false;
-    let myPeerPicks: string[] = [];
+    let myParticipantScores: Record<string, number> = {};
     let judgeEligible = false;
+    let viewerGithub: string | null = null;
 
     if (db) {
       checkedIn = await userIsCheckedInForHackASprint2026(db, user.uid);
       signedUp = await userHasHackASprint2026Signup(db, user.uid);
-      hasCompletedPeerVoting = await userHackASprint2026PeerVoteComplete(
-        db,
-        user.uid
-      );
       judgeEligible = await userIsHackASprint2026Judge(
         db,
         user.uid,
         user.email
       );
-      const pv = await db
-        .collection("hackathonASprint2026PeerVotes")
-        .doc(hackASprint2026PeerVoteDocId(user.uid))
-        .get();
-      const picks = pv.data()?.submissionIds;
-      if (Array.isArray(picks)) {
-        myPeerPicks = picks.map((x: unknown) => String(x).toLowerCase());
-      }
+      const uSnap = await db.collection("users").doc(user.uid).get();
+      const lg = uSnap.data()?.github?.login;
+      viewerGithub =
+        typeof lg === "string" && lg.trim() ? lg.trim().toLowerCase() : null;
     } else {
       judgeEligible = getJudgeUidSet().has(user.uid);
     }
-
-    const revealAi =
-      phase === "resultsOpen" ||
-      (phase === "peerVotingOpen" && hasCompletedPeerVoting);
-    const revealJudgesAndPeers = phase === "resultsOpen";
 
     const showSubmissionList =
       checkedIn &&
@@ -104,17 +94,62 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    if (db && viewerGithub && submissions.length > 0) {
+      const identities = submissions.map((s) => ({
+        submissionId: s.submissionId,
+        githubLogin: s.githubLogin,
+      }));
+      hasCompletedPeerVoting = await userHackASprint2026PeerVoteComplete(
+        db,
+        user.uid,
+        identities,
+        viewerGithub
+      );
+      myParticipantScores = await getParticipantScoresForUser(db, user.uid);
+    }
+
+    const revealAi =
+      phase === "resultsOpen" ||
+      (phase === "peerVotingOpen" && hasCompletedPeerVoting);
+    const revealJudgesAndPeers = phase === "resultsOpen";
+
     type Row = ShowcaseSubmission & {
+      peerAverage: number | null;
       peerVoteCount: number | null;
       aiScore: number | null;
       judgeAverage: number | null;
       rawScore: number | null;
       myJudgeScore: number | null;
+      myParticipantScore: number | null;
     };
 
     const rows: Row[] = [];
 
     if (db && submissions.length > 0) {
+      const identities = submissions.map((s) => ({
+        submissionId: s.submissionId,
+        githubLogin: s.githubLogin,
+      }));
+
+      const voterDocs = await getAllHackASprint2026ParticipantScoreDocs(db);
+      const voterUids = [...new Set(voterDocs.map((d) => d.userId))];
+      const voterRefs = voterUids.map((uid) => db.collection("users").doc(uid));
+      const voterSnaps =
+        voterRefs.length > 0 ? await db.getAll(...voterRefs) : [];
+      const voterGithubByUid = new Map<string, string>();
+      for (const snap of voterSnaps) {
+        const login = snap.data()?.github?.login;
+        if (typeof login === "string" && login.trim()) {
+          voterGithubByUid.set(snap.id, login.trim().toLowerCase());
+        }
+      }
+
+      const peerAvgBySid = computePeerAverages(
+        identities,
+        voterDocs,
+        voterGithubByUid
+      );
+
       const refs = submissions.map((s) =>
         db.collection("hackathonShowcaseScores").doc(hackASprint2026ScoreDocId(s.submissionId))
       );
@@ -128,7 +163,7 @@ export async function GET(request: NextRequest) {
 
       for (const s of submissions) {
         const data = scoreBySid.get(s.submissionId);
-        const peerVoteCount =
+        const legacyPeer =
           typeof data?.peerVoteCount === "number" ? data.peerVoteCount : 0;
         const aiScore =
           typeof data?.aiScore === "number" && data.aiScore >= 1 && data.aiScore <= 10
@@ -150,13 +185,27 @@ export async function GET(request: NextRequest) {
             ? myJudge
             : null;
 
+        const sid = s.submissionId.toLowerCase();
+        const peerAverage = peerAvgBySid.get(sid) ?? null;
+        const myPs = myParticipantScores[sid];
+        const myParticipantScore =
+          typeof myPs === "number" && myPs >= 1 && myPs <= 10 ? myPs : null;
+
         rows.push({
           ...s,
-          peerVoteCount: revealJudgesAndPeers ? peerVoteCount : null,
+          peerAverage:
+            revealJudgesAndPeers || phase === "peerVotingOpen"
+              ? peerAverage
+              : null,
+          peerVoteCount: revealJudgesAndPeers ? legacyPeer : null,
           aiScore: revealAi ? aiScore : null,
           judgeAverage: revealJudgesAndPeers ? judgeAverage : null,
           rawScore: revealJudgesAndPeers ? rawScore : null,
           myJudgeScore,
+          myParticipantScore:
+            phase === "peerVotingOpen" || phase === "resultsOpen"
+              ? myParticipantScore
+              : null,
         });
       }
 
@@ -165,9 +214,10 @@ export async function GET(request: NextRequest) {
           const ra = a.rawScore ?? -1;
           const rb = b.rawScore ?? -1;
           if (rb !== ra) return rb - ra;
-          const pa = a.peerVoteCount ?? 0;
-          const pb = b.peerVoteCount ?? 0;
-          return pb - pa;
+          const pa = a.peerAverage ?? -1;
+          const pb = b.peerAverage ?? -1;
+          if (pb !== pa) return pb - pa;
+          return (b.peerVoteCount ?? 0) - (a.peerVoteCount ?? 0);
         });
       }
     }
@@ -179,7 +229,10 @@ export async function GET(request: NextRequest) {
         signedUp,
         hasCompletedPeerVoting,
         judgeEligible,
-        myPeerPicks,
+        myParticipantScores:
+          phase === "peerVotingOpen" || phase === "resultsOpen"
+            ? myParticipantScores
+            : {},
       },
       submissions: rows,
     });

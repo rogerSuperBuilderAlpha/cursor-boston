@@ -6,7 +6,7 @@
 
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import type { HackASprint2026Phase } from "@/lib/hackathon-asprint-2026-schedule";
@@ -18,10 +18,15 @@ type SubmissionRow = {
   submissionId: string;
   githubLogin: string;
   title: string;
+  description: string;
+  projectRepoUrl: string;
+  deployedUrl: string;
+  loomVideoUrl: string;
   aiScore: number | null;
   judgeScores: Record<string, number>;
   judgeAverage: number | null;
   peerVoteCount: number;
+  peerAverage: number | null;
   rawScore: number | null;
 };
 
@@ -647,7 +652,28 @@ function CheckInRow({
    Dashboard Tab (existing content)
    ═══════════════════════════════════════════════ */
 
+const LIVE_HUB_PATH = "/hackathons/hack-a-sprint-2026";
+const LIVE_HUB_VOTING_HASH = `${LIVE_HUB_PATH}#peer-voting`;
+
 function DashboardTab({ data }: { data: DashboardData | null }) {
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  const toggleRow = (id: string) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const expandAll = () => {
+    if (!data) return;
+    setExpanded(new Set(data.submissions.map((s) => s.submissionId)));
+  };
+
+  const collapseAll = () => setExpanded(new Set());
+
   if (!data) {
     return (
       <div className="flex items-center justify-center min-h-[30vh]">
@@ -655,6 +681,8 @@ function DashboardTab({ data }: { data: DashboardData | null }) {
       </div>
     );
   }
+
+  const colCount = 8 + data.judgeUids.length;
 
   return (
     <>
@@ -712,12 +740,61 @@ function DashboardTab({ data }: { data: DashboardData | null }) {
         </section>
       )}
 
-      {/* Submissions Table */}
-      <section className="py-6 px-6 flex-1">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-lg font-bold text-foreground mb-3">
-            Submissions ({data.submissions.length})
-          </h2>
+      {/* Peer review — expandable submissions */}
+      <section className="py-6 px-6 flex-1 border-t border-neutral-200 dark:border-neutral-800">
+        <div className="max-w-7xl mx-auto space-y-4">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-bold text-foreground">
+                Peer review gallery ({data.submissions.length})
+              </h2>
+              <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400 max-w-2xl">
+                Expand each row to open repo, demo, and Loom. Cast your six peer
+                picks on the live hub (checked-in attendees only).
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {data.submissions.length > 0 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={expandAll}
+                    className="rounded-lg border border-neutral-300 dark:border-neutral-600 px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                  >
+                    Expand all
+                  </button>
+                  <button
+                    type="button"
+                    onClick={collapseAll}
+                    className="rounded-lg border border-neutral-300 dark:border-neutral-600 px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                  >
+                    Collapse all
+                  </button>
+                </>
+              )}
+              <Link
+                href={LIVE_HUB_VOTING_HASH}
+                className="inline-flex items-center rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-400"
+              >
+                Open live hub to vote →
+              </Link>
+            </div>
+          </div>
+
+          {(data.phase === "peerVotingOpen" || data.phase === "resultsOpen") && (
+            <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 dark:bg-emerald-500/15 px-4 py-3 text-sm text-emerald-900 dark:text-emerald-200">
+              <strong className="font-semibold">Peer voting window:</strong> use{" "}
+              <Link
+                href={LIVE_HUB_VOTING_HASH}
+                className="underline font-medium"
+              >
+                Hack-a-Sprint live hub
+              </Link>{" "}
+              while signed in and checked in. This admin view is for browsing
+              projects only; voting happens there.
+            </div>
+          )}
+
           {data.submissions.length === 0 ? (
             <p className="text-neutral-500">No submissions yet.</p>
           ) : (
@@ -725,6 +802,7 @@ function DashboardTab({ data }: { data: DashboardData | null }) {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800/50">
+                    <th className="w-10 px-2 py-3" aria-label="Expand" />
                     <th className="text-left px-4 py-3 font-semibold text-neutral-600 dark:text-neutral-400">
                       #
                     </th>
@@ -750,7 +828,7 @@ function DashboardTab({ data }: { data: DashboardData | null }) {
                       Judge Avg
                     </th>
                     <th className="text-center px-4 py-3 font-semibold text-neutral-600 dark:text-neutral-400">
-                      Peer
+                      Peer avg
                     </th>
                     <th className="text-center px-4 py-3 font-semibold text-neutral-600 dark:text-neutral-400">
                       Raw
@@ -758,58 +836,128 @@ function DashboardTab({ data }: { data: DashboardData | null }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {data.submissions.map((s, i) => (
-                    <tr
-                      key={s.submissionId}
-                      className={`border-b border-neutral-100 dark:border-neutral-800 ${
-                        i < 6
-                          ? "bg-emerald-500/5 dark:bg-emerald-500/10"
-                          : "bg-white dark:bg-neutral-900"
-                      }`}
-                    >
-                      <td className="px-4 py-3 text-neutral-500 font-mono">
-                        {i + 1}
-                      </td>
-                      <td className="px-4 py-3 font-medium text-foreground">
-                        @{s.githubLogin}
-                      </td>
-                      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400 max-w-[200px] truncate">
-                        {s.title}
-                      </td>
-                      <td className="px-4 py-3 text-center font-mono">
-                        {s.aiScore ?? (
-                          <span className="text-neutral-400">—</span>
-                        )}
-                      </td>
-                      {data.judgeUids.map((uid) => (
-                        <td
-                          key={uid}
-                          className="px-4 py-3 text-center font-mono"
+                  {data.submissions.map((s, i) => {
+                    const isOpen = expanded.has(s.submissionId);
+                    return (
+                      <Fragment key={s.submissionId}>
+                        <tr
+                          className={`border-b border-neutral-100 dark:border-neutral-800 ${
+                            i < 6
+                              ? "bg-emerald-500/5 dark:bg-emerald-500/10"
+                              : "bg-white dark:bg-neutral-900"
+                          }`}
                         >
-                          {typeof s.judgeScores[uid] === "number" ? (
-                            s.judgeScores[uid]
-                          ) : (
-                            <span className="text-neutral-400">—</span>
-                          )}
-                        </td>
-                      ))}
-                      <td className="px-4 py-3 text-center font-mono">
-                        {s.judgeAverage != null ? (
-                          s.judgeAverage.toFixed(1)
-                        ) : (
-                          <span className="text-neutral-400">—</span>
+                          <td className="px-2 py-3 align-top">
+                            <button
+                              type="button"
+                              onClick={() => toggleRow(s.submissionId)}
+                              className="rounded p-1 text-neutral-500 hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                              aria-expanded={isOpen}
+                              aria-label={
+                                isOpen ? "Collapse submission" : "Expand submission"
+                              }
+                            >
+                              <span className="sr-only">
+                                {isOpen ? "Collapse" : "Expand"}
+                              </span>
+                              <span aria-hidden className="text-base leading-none">
+                                {isOpen ? "\u25BC" : "\u25B6"}
+                              </span>
+                            </button>
+                          </td>
+                          <td className="px-4 py-3 text-neutral-500 font-mono align-top">
+                            {i + 1}
+                          </td>
+                          <td className="px-4 py-3 font-medium text-foreground align-top">
+                            <a
+                              href={`https://github.com/${s.githubLogin}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="hover:underline"
+                            >
+                              @{s.githubLogin}
+                            </a>
+                          </td>
+                          <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400 max-w-[220px] align-top">
+                            <span className="line-clamp-2" title={s.title}>
+                              {s.title}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-center font-mono align-top">
+                            {s.aiScore ?? (
+                              <span className="text-neutral-400">—</span>
+                            )}
+                          </td>
+                          {data.judgeUids.map((uid) => (
+                            <td
+                              key={uid}
+                              className="px-4 py-3 text-center font-mono align-top"
+                            >
+                              {typeof s.judgeScores[uid] === "number" ? (
+                                s.judgeScores[uid]
+                              ) : (
+                                <span className="text-neutral-400">—</span>
+                              )}
+                            </td>
+                          ))}
+                          <td className="px-4 py-3 text-center font-mono align-top">
+                            {s.judgeAverage != null ? (
+                              s.judgeAverage.toFixed(1)
+                            ) : (
+                              <span className="text-neutral-400">—</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-center font-mono align-top">
+                            {s.peerAverage != null ? (
+                              s.peerAverage.toFixed(2)
+                            ) : (
+                              <span className="text-neutral-400">—</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-center font-bold text-foreground align-top">
+                            {s.rawScore ?? (
+                              <span className="text-neutral-400">—</span>
+                            )}
+                          </td>
+                        </tr>
+                        {isOpen && (
+                          <tr className="border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950/80">
+                            <td colSpan={colCount} className="px-4 py-4">
+                              <div className="flex flex-wrap gap-3 text-sm font-medium mb-3">
+                                <a
+                                  href={s.projectRepoUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-emerald-600 dark:text-emerald-400 hover:underline"
+                                >
+                                  GitHub repo
+                                </a>
+                                <a
+                                  href={s.deployedUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-emerald-600 dark:text-emerald-400 hover:underline"
+                                >
+                                  Live demo
+                                </a>
+                                <a
+                                  href={s.loomVideoUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-emerald-600 dark:text-emerald-400 hover:underline"
+                                >
+                                  Loom / video
+                                </a>
+                              </div>
+                              <p className="text-sm text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap">
+                                {s.description}
+                              </p>
+                            </td>
+                          </tr>
                         )}
-                      </td>
-                      <td className="px-4 py-3 text-center font-mono">
-                        {s.peerVoteCount}
-                      </td>
-                      <td className="px-4 py-3 text-center font-bold text-foreground">
-                        {s.rawScore ?? (
-                          <span className="text-neutral-400">—</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                      </Fragment>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

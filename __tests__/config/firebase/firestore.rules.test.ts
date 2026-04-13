@@ -184,6 +184,35 @@ describe("Firestore rules: badge trust boundaries", () => {
         hackASprint2026Unlocked: true,
       })
     );
+
+    await assertFails(
+      updateDoc(userRef, {
+        hackASprint2026CreditEmailSentAt: new Date(),
+      })
+    );
+  });
+
+  it("hackathonASprint2026ParticipantScores: client read/write denied", async () => {
+    if (!testEnv) {
+      throw new Error(
+        "Firestore rules test environment was not initialized. Run via firebase emulators:exec."
+      );
+    }
+    const uid = "peer-score-user";
+    const ownerDb = testEnv.authenticatedContext(uid).firestore();
+    const ref = doc(
+      ownerDb,
+      "hackathonASprint2026ParticipantScores",
+      "hack-a-sprint-2026__user-xyz"
+    );
+    await assertFails(getDoc(ref));
+    await assertFails(
+      setDoc(ref, {
+        eventId: "hack-a-sprint-2026",
+        userId: uid,
+        scores: { octocat: 9 },
+      })
+    );
   });
 
   it("hackathonShowcaseVotes: authenticated read allowed, client write denied", async () => {

@@ -252,4 +252,12 @@ export const rateLimitConfigs = {
     windowMs: 60 * 1000, // 1 minute
     maxRequests: 30, // 30 requests per minute
   },
+  hackathonShowcaseParticipantScore: {
+    windowMs: 60 * 1000, // 1 minute
+    maxRequests: 60, // 60 score updates per minute per IP
+  },
+  hackathonShowcaseCreditEmail: {
+    windowMs: 60 * 60 * 1000, // 1 hour
+    maxRequests: 3, // 3 emails per hour per IP
+  },
 };

@@ -7,16 +7,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
-import {
-  HACK_A_SPRINT_2026_EVENT_ID,
-  githubUserHasMergedLabeledShowcasePr,
-} from "@/lib/hackathon-showcase";
-import { hackathonEventSignupDocId } from "@/lib/hackathon-event-signup";
+import { resolveHackASprint2026CreditForUser } from "@/lib/hackathon-asprint-2026-credit-eligibility";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const EVENT_ID = HACK_A_SPRINT_2026_EVENT_ID;
 
 /**
  * Returns the user's Cursor credit code URL.
@@ -40,75 +34,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    const signupDocId = hackathonEventSignupDocId(EVENT_ID, user.uid);
-    const signupSnap = await db
-      .collection("hackathonEventSignups")
-      .doc(signupDocId)
-      .get();
-
-    if (!signupSnap.exists) {
+    const resolved = await resolveHackASprint2026CreditForUser(db, user.uid);
+    if (!resolved.ok) {
       return NextResponse.json({
         eligible: false,
-        reason: "not_signed_up",
-      });
-    }
-
-    const signupData = signupSnap.data()!;
-
-    if (!signupData.checkedInAt) {
-      return NextResponse.json({
-        eligible: false,
-        reason: "not_checked_in",
-      });
-    }
-
-    if (!signupData.frozenRank || !signupData.confirmedAt) {
-      return NextResponse.json({
-        eligible: false,
-        reason: "not_confirmed",
-      });
-    }
-
-    const userSnap = await db.collection("users").doc(user.uid).get();
-    const ud = userSnap.data();
-    const githubLogin =
-      ud?.github && typeof ud.github === "object"
-        ? (ud.github as { login?: string }).login
-        : null;
-
-    if (!githubLogin) {
-      return NextResponse.json({
-        eligible: false,
-        reason: "no_github",
-      });
-    }
-
-    const hasSubmitted =
-      await githubUserHasMergedLabeledShowcasePr(githubLogin);
-    if (!hasSubmitted) {
-      return NextResponse.json({
-        eligible: false,
-        reason: "not_submitted",
-      });
-    }
-
-    const rank = signupData.frozenRank as number;
-    const codeDoc = await db
-      .collection("hackathonCreditCodes")
-      .doc(`${EVENT_ID}__${rank}`)
-      .get();
-
-    if (!codeDoc.exists) {
-      return NextResponse.json({
-        eligible: false,
-        reason: "no_code_assigned",
+        reason: resolved.reason,
       });
     }
 
     return NextResponse.json({
       eligible: true,
-      creditUrl: codeDoc.data()!.creditUrl,
-      rank,
+      creditUrl: resolved.creditUrl,
+      rank: resolved.rank,
     });
   } catch (e) {
     console.error("[credit-code GET]", e);

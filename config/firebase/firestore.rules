@@ -44,11 +44,11 @@ service cloud.firestore {
                   || (request.auth != null && request.auth.uid == userId);
       allow create: if request.auth != null
                     && request.auth.uid == userId
-                    && !request.resource.data.keys().hasAny(['earnedBadgeIds', 'pullRequestsCount', 'hackASprint2026ShowcaseBadge', 'hackASprint2026Unlocked', 'hackASprint2026UnlockedAt']);
+                    && !request.resource.data.keys().hasAny(['earnedBadgeIds', 'pullRequestsCount', 'hackASprint2026ShowcaseBadge', 'hackASprint2026Unlocked', 'hackASprint2026UnlockedAt', 'hackASprint2026CreditEmailSentAt']);
       allow update: if request.auth != null 
                     && request.auth.uid == userId
                     && !request.resource.data.diff(resource.data).affectedKeys()
-                        .hasAny(['uid', 'createdAt', 'role', 'email', 'earnedBadgeIds', 'pullRequestsCount', 'hackASprint2026ShowcaseBadge', 'hackASprint2026Unlocked', 'hackASprint2026UnlockedAt']);
+                        .hasAny(['uid', 'createdAt', 'role', 'email', 'earnedBadgeIds', 'pullRequestsCount', 'hackASprint2026ShowcaseBadge', 'hackASprint2026Unlocked', 'hackASprint2026UnlockedAt', 'hackASprint2026CreditEmailSentAt']);
       allow delete: if false; // Users cannot delete their own accounts via client
     }
     
@@ -269,8 +269,13 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // Hack-a-Sprint 2026 peer picks (exactly 6) — Admin SDK only
+    // Hack-a-Sprint 2026 peer picks (legacy) — Admin SDK only
     match /hackathonASprint2026PeerVotes/{docId} {
+      allow read, write: if false;
+    }
+
+    // Hack-a-Sprint 2026 participant 1–10 scores (per voter) — Admin SDK only
+    match /hackathonASprint2026ParticipantScores/{docId} {
       allow read, write: if false;
     }
 
