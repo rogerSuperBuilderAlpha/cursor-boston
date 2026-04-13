@@ -1,0 +1,6 @@
+{
+  "projectRepoUrl": "https://github.com/satishparaddi/financial-story-agent",
+  "title": "Financial Story Agent",
+  "description": "A real-time AI agent powered by Inkbox that transforms raw transaction data received via email into structured financial insights. It parses incoming emails, extracts spending data, analyzes patterns such as top merchants and total spend, and replies back with a clear financial summary. Built using Inkbox email webhooks and a Node.js backend, the agent demonstrates autonomous inbox-driven financial intelligence.",
+  "loomVideoUrl": "Yet to be Done"
+}
