@@ -14,6 +14,7 @@
  *   npx tsx scripts/send-hack-a-sprint-emails.ts --dry-run --dayof [--csv path/to/export.csv]
  *   npx tsx scripts/send-hack-a-sprint-emails.ts --dry-run --waitlist-pr-deadline [--csv path/to/export.csv]
  *   npx tsx scripts/send-hack-a-sprint-emails.ts --dry-run --confirmed-arrival-reminder [--csv path/to/export.csv]
+ *   npx tsx scripts/send-hack-a-sprint-emails.ts --dry-run --list-is-set [--csv path/to/export.csv]
  *
  * --announce-list: sends a simpler email linking to the participant list page
  *   (accepted & waitlisted) instead of the full tier-specific emails.
@@ -30,6 +31,9 @@
  *
  * --confirmed-arrival-reminder: **confirmed recipients only** — be there by 4:00 PM ET (or say you’re late),
  *   spot released if not checked in / no word by 4:30 PM ET; update Luma if not attending.
+ *
+ * --list-is-set: **all non-declined CSV registrants** — same copy for everyone; only the greeting name varies.
+ *   Final list + Luma + website registration + before 4 PM + community / maintainers “what’s next”.
  *
  * Requires: FIREBASE_SERVICE_ACCOUNT_JSON or GOOGLE_APPLICATION_CREDENTIALS;
  * Use the same **GITHUB_TOKEN** as production (e.g. from `.env.local`). PR counts use
@@ -1122,6 +1126,63 @@ function buildConfirmedArrivalReminderEmail(args: {
   return { subject, html, text };
 }
 
+function listIsSetNextStepsHtml(): string {
+  const repoUrl = getGithubRepoWebBaseUrl();
+  return `<hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;" />
+<p><strong>After tonight — what’s next?</strong></p>
+<p>Cursor Boston is meant to grow beyond one-off events. If you want to <strong>help maintain</strong> the <a href="${escapeHtml(repoUrl)}">community repo</a>, <strong>co-organize a meetup or hack night</strong>, or bring <strong>a new idea</strong> for the site or the group, there will be room for you.</p>
+<p>We’ll be reaching out about <strong>repo maintainers</strong> and clearer paths to co-organize. If you have a venue, a theme, or time to help run things, email <a href="mailto:roger@cursorboston.com">roger@cursorboston.com</a> and we’ll connect you.</p>
+<p>The project is <strong>community-driven</strong> — the more people shaping it, the stronger it gets. Thank you for showing up and building with us.</p>`;
+}
+
+function listIsSetNextStepsText(): string {
+  const repoUrl = getGithubRepoWebBaseUrl();
+  return [
+    "",
+    "After tonight — what's next?",
+    "",
+    `Want to help maintain the community repo (${repoUrl}), co-organize events, or pitch ideas? We'll be inviting repo maintainers and making it easier to co-organize.`,
+    "",
+    "Venue, theme, or time to help? Email roger@cursorboston.com.",
+    "",
+    "Thank you for being part of Cursor Boston.",
+  ].join("\n");
+}
+
+/** Same body for every recipient; only `name` in the greeting is personalized. */
+function buildListIsSetEmail(name: string): { subject: string; html: string; text: string } {
+  const first = escapeHtml(name);
+  const signupUrl = `${SITE_ORIGIN.replace(/\/$/, "")}${SIGNUP_PATH}`;
+  const subject = "Hack-a-Sprint: the participant list is set — check the website";
+
+  const lead = `<p>Hi ${first},</p>
+<p><strong>The participant list is set.</strong> Your status (confirmed or waitlisted) and position are on the website — that’s the source of truth:</p>
+<p style="margin:16px 0;"><a href="${escapeHtml(signupUrl)}" style="display:inline-block;background:#059669;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">View the Hack-a-Sprint list</a></p>
+<p><strong>Plan to arrive before 4:00 PM ET</strong> if you want to hold your place in line for a seat. Late arrivals may miss out if we’ve already moved to the waitlist.</p>
+<p><strong>Please register on the website before you arrive</strong> (same link above) if you haven’t already — it makes check-in much faster at the door.</p>
+<p><strong>Can’t make it?</strong> Update your registration status on <strong>Luma</strong> as soon as you know, so waitlisted people can plan: <a href="${escapeHtml(LUMA_URL)}">${escapeHtml(LUMA_URL)}</a></p>
+${listIsSetNextStepsHtml()}`;
+
+  const text = [
+    `Hi ${name},`,
+    "",
+    "The participant list is set. See your status (confirmed or waitlisted) on the website:",
+    signupUrl,
+    "",
+    "Arrive before 4:00 PM ET to hold your spot in line for a seat.",
+    "",
+    "Register on the website before you arrive if you can — faster check-in:",
+    signupUrl,
+    "",
+    "Can't make it? Update your status on Luma:",
+    LUMA_URL,
+    listIsSetNextStepsText(),
+  ].join("\n");
+
+  const html = emailShell(`${lead}${commonEventBlockHtml()}`);
+  return { subject, html, text };
+}
+
 function buildWaitlistPrDeadlineEmail(args: {
   name: string;
   rank: number | null;
@@ -1348,6 +1409,7 @@ function parseArgs(argv: string[]) {
   const dayof = argv.includes("--dayof");
   const waitlistPrDeadline = argv.includes("--waitlist-pr-deadline");
   const confirmedArrivalReminder = argv.includes("--confirmed-arrival-reminder");
+  const listIsSet = argv.includes("--list-is-set");
   const modeCount =
     [
       announceList,
@@ -1356,10 +1418,11 @@ function parseArgs(argv: string[]) {
       dayof,
       waitlistPrDeadline,
       confirmedArrivalReminder,
+      listIsSet,
     ].filter(Boolean).length;
   if (modeCount > 1) {
     console.error(
-      "Use only one of: --announce-list | --reminder | --correction | --dayof | --waitlist-pr-deadline | --confirmed-arrival-reminder"
+      "Use only one of: --announce-list | --reminder | --correction | --dayof | --waitlist-pr-deadline | --confirmed-arrival-reminder | --list-is-set"
     );
     process.exit(1);
   }
@@ -1372,6 +1435,7 @@ function parseArgs(argv: string[]) {
     dayof,
     waitlistPrDeadline,
     confirmedArrivalReminder,
+    listIsSet,
     csvPath,
   };
 }
@@ -1390,6 +1454,7 @@ async function main() {
     dayof,
     waitlistPrDeadline,
     confirmedArrivalReminder,
+    listIsSet,
     csvPath,
   } = parseArgs(process.argv.slice(2));
 
@@ -1682,7 +1747,20 @@ async function main() {
     if (dayof) console.log("(--dayof mode: event-day blast)");
     if (waitlistPrDeadline) console.log("(--waitlist-pr-deadline: waitlisted only)");
     if (confirmedArrivalReminder) console.log("(--confirmed-arrival-reminder: confirmed only)");
+    if (listIsSet) console.log("(--list-is-set: all non-declined; body identical except name)");
     const pickSample = (t: RegistrantTier) => results.find((x) => x.tier === t && x.tier !== "DECLINED");
+
+    if (listIsSet) {
+      const sample = results.find((r) => r.tier !== "DECLINED");
+      if (sample) {
+        const { subject, html } = buildListIsSetEmail(sample.name);
+        console.log(`\n[list-is-set sample: ${sample.email}] Subject: ${subject}`);
+        console.log("Sample HTML preview:\n---\n" + html.slice(0, 1100) + "…\n---");
+      } else {
+        console.log("\nNo non-declined rows to preview.");
+      }
+      return;
+    }
 
     if (confirmedArrivalReminder) {
       const sample = results.find((r) => r.tier === "CONFIRMED");
@@ -1795,6 +1873,21 @@ async function main() {
   let skippedNonWaitlist = 0;
   let skippedNonConfirmed = 0;
   for (const r of results) {
+    if (listIsSet) {
+      if (r.tier === "DECLINED") continue;
+      const { subject, html, text } = buildListIsSetEmail(r.name);
+      try {
+        await sendEmail({ to: r.email, subject, html, text });
+        sent++;
+        console.log(`Sent: ${r.email} (list-is-set)`);
+      } catch (e) {
+        failed++;
+        console.error(`Failed: ${r.email}`, e);
+      }
+      await sleep(450);
+      continue;
+    }
+
     if (confirmedArrivalReminder) {
       if (r.tier !== "CONFIRMED") {
         skippedNonConfirmed++;
@@ -1883,7 +1976,11 @@ async function main() {
     }
     await sleep(450);
   }
-  if (confirmedArrivalReminder) {
+  if (listIsSet) {
+    console.log(
+      `\nDone. Sent ${sent}, failed ${failed}, skipped declined ${counts["DECLINED"] ?? 0}.`
+    );
+  } else if (confirmedArrivalReminder) {
     console.log(
       `\nDone. Sent ${sent}, failed ${failed}, skipped non-confirmed ${skippedNonConfirmed} (waitlist / incomplete / no-account / declined).`
     );
