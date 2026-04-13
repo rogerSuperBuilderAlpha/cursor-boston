@@ -38,7 +38,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       }
 
       return (
-        <div className="min-h-[60vh] flex items-center justify-center p-8">
+        <div role="alert" className="min-h-[60vh] flex items-center justify-center p-8">
           <div className="text-center max-w-md">
             <h2 className="text-xl font-semibold text-foreground mb-2">
               Something went wrong
