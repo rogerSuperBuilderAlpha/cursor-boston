@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="flex flex-col">
+    <main className="flex flex-col">
       {/* Hero */}
       <section className="py-16 md:py-24 px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-3xl mx-auto">
@@ -136,6 +136,6 @@ export default function PrivacyPolicyPage() {
           </div>
         </div>
       </section>
-    </div>
+    </main>
   );
 }
