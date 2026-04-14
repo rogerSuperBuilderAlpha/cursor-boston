@@ -7,20 +7,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import Logo from "@/components/Logo";
-import { DiscordIcon, LinkedInIcon, XIcon } from "@/components/icons";
-
-const SOCIAL_LINKS = [
-  {
-    href: "https://x.com/cursorboston",
-    label: "Follow Cursor Boston on X",
-    Icon: XIcon,
-  },
-  {
-    href: "https://www.linkedin.com/company/cursor-boston/",
-    label: "Follow Cursor Boston on LinkedIn",
-    Icon: LinkedInIcon,
-  },
-] as const;
+import { DiscordIcon } from "@/components/icons";
 
 export default function Footer() {
   return (
@@ -50,21 +37,6 @@ export default function Footer() {
               <DiscordIcon size={18} className="mr-2" />
               Join Discord
             </a>
-            <div className="flex items-center gap-3 mt-4">
-              {SOCIAL_LINKS.map(({ href, label, Icon }) => (
-                <a
-                  key={href}
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={`${label} (opens in new tab)`}
-                  title={label}
-                  className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white hover:border-neutral-500 dark:hover:border-neutral-500 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                >
-                  <Icon size={18} />
-                </a>
-              ))}
-            </div>
           </div>
 
           {/* Links columns */}

@@ -12,13 +12,6 @@ import LumaCheckoutTracker from "@/components/LumaCheckoutTracker";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
-const ORGANIZATION_SOCIAL_LINKS = [
-  "https://discord.gg/Wsncg8YYqc",
-  "https://lu.ma/cursor-boston",
-  "https://x.com/cursorboston",
-  "https://www.linkedin.com/company/cursor-boston/",
-];
-
 export const metadata: Metadata = {
   title: {
     default: "Cursor Boston",
@@ -69,7 +62,10 @@ const organizationJsonLd = {
     "Boston's community for AI-assisted development with Cursor IDE. Meetups, workshops, and hackathons for developers, founders, and students.",
   url: "https://cursorboston.com",
   logo: "https://cursorboston.com/cursor-boston-logo.png",
-  sameAs: ORGANIZATION_SOCIAL_LINKS,
+  sameAs: [
+    "https://discord.gg/Wsncg8YYqc",
+    "https://lu.ma/cursor-boston",
+  ],
   address: {
     "@type": "PostalAddress",
     addressLocality: "Boston",
