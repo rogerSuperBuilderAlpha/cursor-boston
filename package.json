@@ -33,9 +33,9 @@
     "firestore"
   ],
   "scripts": {
-    "dev": "NODE_OPTIONS='--no-deprecation' next dev --webpack -H localhost",
+    "dev": "cross-env NODE_OPTIONS=--no-deprecation next dev --webpack -H localhost",
     "build": "next build --webpack",
-    "start": "NODE_OPTIONS='--no-deprecation' next start",
+    "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
     "test": "jest --config config/jest.config.js",
@@ -100,6 +100,7 @@
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@types/react-syntax-highlighter": "^15.5.13",
+    "cross-env": "^10.1.0",
     "eslint": "^10.2.0",
     "eslint-config-next": "^16.2.3",
     "eslint-plugin-import": "^2.32.0",
