@@ -22,6 +22,7 @@ jobs:
       - name: Validate submission PR
         env:
           GITHUB_ACTOR: ${{ github.actor }}
+          HACK_A_SPRINT_PR_AUTHOR: ${{ github.event.pull_request.user.login }}
           AUTHOR_ASSOCIATION: ${{ github.event.pull_request.author_association }}
           GIT_DIFF_RANGE: ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}
         run: node scripts/validate-hack-a-sprint-submission-pr.cjs
