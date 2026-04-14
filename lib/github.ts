@@ -47,18 +47,22 @@ export async function findUserByGitHubLogin(
   logger.info("Looking up user by GitHub login", { githubLogin });
 
   try {
-    const snapshot = await db
-      .collection("users")
-      .where("github.login", "==", githubLogin)
-      .limit(1)
-      .get();
+    const trimmed = githubLogin.trim();
+    const variants = [...new Set([trimmed, trimmed.toLowerCase()])];
+    for (const v of variants) {
+      const snapshot = await db
+        .collection("users")
+        .where("github.login", "==", v)
+        .limit(1)
+        .get();
 
-    if (!snapshot.empty) {
-      const userId = snapshot.docs[0].id;
-      logger.info("Found user by GitHub login", { githubLogin, userId });
-      return userId;
+      if (!snapshot.empty) {
+        const userId = snapshot.docs[0].id;
+        logger.info("Found user by GitHub login", { githubLogin, userId });
+        return userId;
+      }
     }
-    
+
     logger.warn("No user found with GitHub login", { githubLogin });
     return null;
   } catch (error) {

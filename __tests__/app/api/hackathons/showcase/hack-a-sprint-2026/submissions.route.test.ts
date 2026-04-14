@@ -4,22 +4,16 @@
 
 import { NextRequest } from "next/server";
 import { GET } from "@/app/api/hackathons/showcase/hack-a-sprint-2026/submissions/route";
-import { getVerifiedUser } from "@/lib/server-auth";
+import { getOptionalVerifiedUser } from "@/lib/server-auth";
 import { getAdminDb } from "@/lib/firebase-admin";
-import {
-  userIsCheckedInForHackASprint2026,
-  userHasHackASprint2026Signup,
-  userHackASprint2026PeerVoteComplete,
-  getParticipantScoresForUser,
-  getAllHackASprint2026ParticipantScoreDocs,
-} from "@/lib/hackathon-asprint-2026-state";
-import { userIsHackASprint2026Judge } from "@/lib/hackathon-showcase-admin";
+import { getAllHackASprint2026ParticipantScoreDocs } from "@/lib/hackathon-asprint-2026-state";
+import { userIsHackASprint2026JudgeFromUserData } from "@/lib/hackathon-showcase-admin";
 import { profileMatchesHackathonJudgeCheckinException } from "@/lib/hackathon-event-signup";
 import { fetchShowcaseSubmissionsFromGitHub } from "@/lib/hackathon-showcase";
 import { getHackASprint2026Phase } from "@/lib/hackathon-asprint-2026-schedule";
 
 jest.mock("@/lib/server-auth", () => ({
-  getVerifiedUser: jest.fn(),
+  getOptionalVerifiedUser: jest.fn(),
 }));
 
 jest.mock("@/lib/firebase-admin", () => ({
@@ -37,15 +31,11 @@ jest.mock("@/lib/hackathon-asprint-2026-schedule", () => ({
 
 jest.mock("@/lib/hackathon-asprint-2026-state", () => ({
   ...jest.requireActual("@/lib/hackathon-asprint-2026-state"),
-  userIsCheckedInForHackASprint2026: jest.fn(),
-  userHasHackASprint2026Signup: jest.fn(),
-  userHackASprint2026PeerVoteComplete: jest.fn(),
-  getParticipantScoresForUser: jest.fn(),
   getAllHackASprint2026ParticipantScoreDocs: jest.fn(),
 }));
 
 jest.mock("@/lib/hackathon-showcase-admin", () => ({
-  userIsHackASprint2026Judge: jest.fn(),
+  userIsHackASprint2026JudgeFromUserData: jest.fn(),
 }));
 
 jest.mock("@/lib/hackathon-event-signup", () => ({
@@ -53,8 +43,8 @@ jest.mock("@/lib/hackathon-event-signup", () => ({
   profileMatchesHackathonJudgeCheckinException: jest.fn(),
 }));
 
-const mockGetVerifiedUser = getVerifiedUser as jest.MockedFunction<
-  typeof getVerifiedUser
+const mockGetOptionalUser = getOptionalVerifiedUser as jest.MockedFunction<
+  typeof getOptionalVerifiedUser
 >;
 const mockGetAdminDb = getAdminDb as jest.MockedFunction<typeof getAdminDb>;
 const mockFetchSubmissions =
@@ -64,24 +54,12 @@ const mockFetchSubmissions =
 const mockPhase = getHackASprint2026Phase as jest.MockedFunction<
   typeof getHackASprint2026Phase
 >;
-const mockCheckedIn = userIsCheckedInForHackASprint2026 as jest.MockedFunction<
-  typeof userIsCheckedInForHackASprint2026
->;
-const mockSignedUp = userHasHackASprint2026Signup as jest.MockedFunction<
-  typeof userHasHackASprint2026Signup
->;
-const mockPeerComplete = userHackASprint2026PeerVoteComplete as jest.MockedFunction<
-  typeof userHackASprint2026PeerVoteComplete
->;
-const mockGetParticipantScores = getParticipantScoresForUser as jest.MockedFunction<
-  typeof getParticipantScoresForUser
->;
 const mockAllParticipantDocs =
   getAllHackASprint2026ParticipantScoreDocs as jest.MockedFunction<
     typeof getAllHackASprint2026ParticipantScoreDocs
   >;
-const mockIsJudge = userIsHackASprint2026Judge as jest.MockedFunction<
-  typeof userIsHackASprint2026Judge
+const mockJudgeFromProfile = userIsHackASprint2026JudgeFromUserData as jest.MockedFunction<
+  typeof userIsHackASprint2026JudgeFromUserData
 >;
 const mockJudgeCheckinBypass =
   profileMatchesHackathonJudgeCheckinException as jest.MockedFunction<
@@ -111,38 +89,57 @@ const FIXTURE_SUBMISSIONS = [
   },
 ];
 
-function makeScoreSnap(data: Record<string, unknown>) {
-  return { exists: true, data: () => data };
+function makeSnap(exists: boolean, data?: Record<string, unknown>) {
+  return {
+    exists,
+    data: () => data ?? {},
+  };
 }
 
+/** Participant scores doc: incomplete ballot = only own key; complete = includes bob-proj. */
+let participantScoresPayload: Record<string, number> = {};
+
 function buildMockDb() {
-  const getAll = jest.fn().mockResolvedValue([
-    makeScoreSnap({ aiScore: 9, aiReasoning: "Strong", peerVoteCount: 2 }),
-    makeScoreSnap({ aiScore: 6, aiReasoning: "Fine", peerVoteCount: 1 }),
-  ]);
+  let getAllCall = 0;
+  const getAll = jest.fn().mockImplementation(() => {
+    getAllCall += 1;
+    if (getAllCall === 1) {
+      return Promise.resolve([
+        makeSnap(true, { checkedInAt: new Date() }),
+        makeSnap(true, { github: { login: "alice" } }),
+      ]);
+    }
+    return Promise.resolve([
+      makeScoreSnap({ aiScore: 9, aiReasoning: "Strong", peerVoteCount: 2 }),
+      makeScoreSnap({ aiScore: 6, aiReasoning: "Fine", peerVoteCount: 1 }),
+    ]);
+  });
+
+  const participantGet = jest.fn().mockImplementation(() =>
+    Promise.resolve(
+      makeSnap(true, {
+        scores: participantScoresPayload,
+      })
+    )
+  );
 
   const db = {
-    collection: jest.fn(() => ({
-      doc: jest.fn(() => ({})),
+    collection: jest.fn((name: string) => ({
+      doc: jest.fn((id: string) => {
+        if (name === "hackathonASprint2026ParticipantScores") {
+          return { get: participantGet };
+        }
+        return {};
+      }),
     })),
     getAll,
   };
 
-  const userGet = jest.fn().mockResolvedValue({
-    exists: true,
-    data: () => ({ github: { login: "viewergh" } }),
-  });
+  return { db, getAll, participantGet };
+}
 
-  (db.collection as jest.Mock).mockImplementation((name: string) => ({
-    doc: jest.fn((id: string) => {
-      if (name === "users" && id === "u1") {
-        return { get: userGet };
-      }
-      return { get: jest.fn().mockResolvedValue({ exists: false, data: () => undefined }) };
-    }),
-  }));
-
-  return { db, getAll, userGet };
+function makeScoreSnap(data: Record<string, unknown>) {
+  return { exists: true, data: () => data };
 }
 
 function makeGetRequest() {
@@ -153,18 +150,15 @@ function makeGetRequest() {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockGetVerifiedUser.mockResolvedValue({
+  participantScoresPayload = {};
+  mockGetOptionalUser.mockResolvedValue({
     uid: "u1",
     email: "viewer@example.com",
-  } as Awaited<ReturnType<typeof getVerifiedUser>>);
+  } as Awaited<ReturnType<typeof getOptionalVerifiedUser>>);
   mockPhase.mockReturnValue("peerVotingOpen");
   mockFetchSubmissions.mockResolvedValue(FIXTURE_SUBMISSIONS);
-  mockCheckedIn.mockResolvedValue(true);
-  mockSignedUp.mockResolvedValue(true);
-  mockIsJudge.mockResolvedValue(false);
+  mockJudgeFromProfile.mockReturnValue(false);
   mockJudgeCheckinBypass.mockReturnValue(false);
-  mockPeerComplete.mockResolvedValue(false);
-  mockGetParticipantScores.mockResolvedValue({ "alice-proj": 8 });
   mockAllParticipantDocs.mockResolvedValue([]);
 
   const { db } = buildMockDb();
@@ -172,14 +166,17 @@ beforeEach(() => {
 });
 
 describe("GET /api/hackathons/showcase/hack-a-sprint-2026/submissions", () => {
-  it("returns 401 when unauthenticated", async () => {
-    mockGetVerifiedUser.mockResolvedValueOnce(null);
+  it("returns 200 for unauthenticated public gallery", async () => {
+    mockGetOptionalUser.mockResolvedValueOnce(null);
     const res = await GET(makeGetRequest());
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { viewer: { checkedIn: boolean }; submissions: unknown[] };
+    expect(body.viewer.checkedIn).toBe(false);
+    expect(Array.isArray(body.submissions)).toBe(true);
   });
 
-  it("strips AI and peer fields for a participant who has not finished peer voting", async () => {
-    mockPeerComplete.mockResolvedValue(false);
+  it("strips AI and peer fields for a submitter who has not finished peer voting", async () => {
+    participantScoresPayload = { "alice-proj": 8 };
     const res = await GET(makeGetRequest());
     expect(res.status).toBe(200);
     const body = (await res.json()) as {
@@ -219,7 +216,7 @@ describe("GET /api/hackathons/showcase/hack-a-sprint-2026/submissions", () => {
   });
 
   it("includes AI and peer fields after peer voting is complete", async () => {
-    mockPeerComplete.mockResolvedValue(true);
+    participantScoresPayload = { "bob-proj": 9 };
     const res = await GET(makeGetRequest());
     expect(res.status).toBe(200);
     const body = (await res.json()) as {
@@ -239,8 +236,8 @@ describe("GET /api/hackathons/showcase/hack-a-sprint-2026/submissions", () => {
   });
 
   it("reveals scores for judges even when peer voting is incomplete", async () => {
-    mockPeerComplete.mockResolvedValue(false);
-    mockIsJudge.mockResolvedValue(true);
+    participantScoresPayload = { "alice-proj": 8 };
+    mockJudgeFromProfile.mockReturnValue(true);
     const res = await GET(makeGetRequest());
     expect(res.status).toBe(200);
     const body = (await res.json()) as {
@@ -255,7 +252,7 @@ describe("GET /api/hackathons/showcase/hack-a-sprint-2026/submissions", () => {
   });
 
   it("reveals scores when organizer check-in bypass applies", async () => {
-    mockPeerComplete.mockResolvedValue(false);
+    participantScoresPayload = { "alice-proj": 8 };
     mockJudgeCheckinBypass.mockReturnValue(true);
     const res = await GET(makeGetRequest());
     expect(res.status).toBe(200);

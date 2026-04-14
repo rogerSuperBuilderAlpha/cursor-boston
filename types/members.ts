@@ -4,6 +4,8 @@
  * See LICENSE file for details.
  */
 
+import type { ShowcaseAwardKind } from "@/lib/hackathon-asprint-2026-awards";
+
 export type MemberType = "human" | "agent";
 
 export interface PublicMember {
@@ -49,6 +51,8 @@ export interface PublicMember {
   talksGiven?: number;
   pullRequestsCount?: number;
   hackASprint2026ShowcaseBadge?: boolean;
+  /** Server-synced showcase winner ribbons (see scripts/sync-hack-a-sprint-showcase-awards-to-profiles.ts). */
+  hackASprint2026ShowcaseAwards?: ShowcaseAwardKind[];
   earnedBadgeIds?: string[];
   github?: {
     login: string;

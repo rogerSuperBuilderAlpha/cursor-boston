@@ -750,8 +750,9 @@ function DashboardTab({ data }: { data: DashboardData | null }) {
                 Peer review gallery ({data.submissions.length})
               </h2>
               <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400 max-w-2xl">
-                Expand each row to open repo, demo, and Loom. Cast your six peer
-                picks on the live hub (checked-in attendees only).
+                Expand each row to open repo, demo, and Loom. Peer scores (1–10 on
+                every other submission) are entered on the public submissions page by
+                merged submitters when voting is open.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">

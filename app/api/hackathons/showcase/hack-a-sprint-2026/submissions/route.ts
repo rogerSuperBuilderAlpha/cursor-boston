@@ -7,8 +7,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { DocumentData } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
-import { getVerifiedUser } from "@/lib/server-auth";
+import { getOptionalVerifiedUser } from "@/lib/server-auth";
 import {
+  HACK_A_SPRINT_2026_EVENT_ID,
   fetchShowcaseSubmissionsFromGitHub,
   type ShowcaseSubmission,
 } from "@/lib/hackathon-showcase";
@@ -17,17 +18,22 @@ import {
   computeAiRanksBySubmissionId,
   computeHackASprint2026RawScore,
 } from "@/lib/hackathon-asprint-2026-scores";
-import { computePeerAverages } from "@/lib/hackathon-asprint-2026-participant-scoring";
+import {
+  computePeerAverages,
+  hackASprint2026ParticipantScoresDocId,
+  normalizeParticipantScores,
+  participantBallotComplete,
+} from "@/lib/hackathon-asprint-2026-participant-scoring";
 import {
   getAllHackASprint2026ParticipantScoreDocs,
-  getParticipantScoresForUser,
   hackASprint2026ScoreDocId,
-  userHasHackASprint2026Signup,
-  userIsCheckedInForHackASprint2026,
-  userHackASprint2026PeerVoteComplete,
+  resolveVoterGithubByUid,
 } from "@/lib/hackathon-asprint-2026-state";
-import { userIsHackASprint2026Judge } from "@/lib/hackathon-showcase-admin";
-import { profileMatchesHackathonJudgeCheckinException } from "@/lib/hackathon-event-signup";
+import { userIsHackASprint2026JudgeFromUserData } from "@/lib/hackathon-showcase-admin";
+import {
+  hackathonEventSignupDocId,
+  profileMatchesHackathonJudgeCheckinException,
+} from "@/lib/hackathon-event-signup";
 import { getJudgeUidSet } from "@/lib/hackathon-showcase";
 
 export const runtime = "nodejs";
@@ -46,10 +52,7 @@ function averageJudgeScores(
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await getVerifiedUser(request);
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const user = await getOptionalVerifiedUser(request);
 
     const phase = getHackASprint2026Phase();
     const db = getAdminDb();
@@ -62,60 +65,74 @@ export async function GET(request: NextRequest) {
     let judgeCheckinBypass = false;
     let viewerGithub: string | null = null;
 
-    if (db) {
-      checkedIn = await userIsCheckedInForHackASprint2026(db, user.uid, user.email);
-      signedUp = await userHasHackASprint2026Signup(db, user.uid);
-      judgeEligible = await userIsHackASprint2026Judge(
-        db,
-        user.uid,
-        user.email
-      );
-      const uSnap = await db.collection("users").doc(user.uid).get();
-      const profile = uSnap.data() as Record<string, unknown> | undefined;
+    if (user && db) {
+      const signupRef = db
+        .collection("hackathonEventSignups")
+        .doc(hackathonEventSignupDocId(HACK_A_SPRINT_2026_EVENT_ID, user.uid));
+      const userRef = db.collection("users").doc(user.uid);
+      const [signupSnap, userSnap] = await db.getAll(signupRef, userRef);
+      const profile = userSnap.data() as Record<string, unknown> | undefined;
+      signedUp = signupSnap.exists;
+      checkedIn =
+        Boolean(signupSnap.exists && signupSnap.data()?.checkedInAt != null) ||
+        profileMatchesHackathonJudgeCheckinException(user.email, profile);
       judgeCheckinBypass = profileMatchesHackathonJudgeCheckinException(
+        user.email,
+        profile
+      );
+      judgeEligible = userIsHackASprint2026JudgeFromUserData(
+        user.uid,
         user.email,
         profile
       );
       const gh = profile?.github as { login?: unknown } | undefined;
       const lg = typeof gh?.login === "string" ? gh.login : "";
       viewerGithub = lg.trim() ? lg.trim().toLowerCase() : null;
-    } else {
+    } else if (user && !db) {
       judgeEligible = getJudgeUidSet().has(user.uid);
     }
 
-    // Judges/organizers may match check-in bypass without a hackathonEventSignups doc;
-    // they still need the same checked-in gate as /me.
-    const showSubmissionList =
-      checkedIn && (signedUp || judgeEligible || judgeCheckinBypass);
-
+    /** Public gallery: submissions are always listed (no check-in gate on GET). */
     let submissions: ShowcaseSubmission[] = [];
-    if (showSubmissionList) {
-      submissions = await fetchShowcaseSubmissionsFromGitHub();
+    submissions = await fetchShowcaseSubmissionsFromGitHub();
 
-      const allowedRaw = process.env.HACK_A_SPRINT_2026_ALLOWED_SUBMISSIONS || "";
-      if (allowedRaw.trim()) {
-        const allowed = new Set(
-          allowedRaw
-            .split(",")
-            .map((s) => s.trim().toLowerCase())
-            .filter(Boolean)
-        );
-        submissions = submissions.filter((s) => allowed.has(s.submissionId));
-      }
+    const allowedRaw = process.env.HACK_A_SPRINT_2026_ALLOWED_SUBMISSIONS || "";
+    if (allowedRaw.trim()) {
+      const allowed = new Set(
+        allowedRaw
+          .split(",")
+          .map((s) => s.trim().toLowerCase())
+          .filter(Boolean)
+      );
+      submissions = submissions.filter((s) => allowed.has(s.submissionId));
     }
 
-    if (db && viewerGithub && submissions.length > 0) {
+    const submissionGithubSet = new Set(
+      submissions.map((s) => s.githubLogin.trim().toLowerCase())
+    );
+    const isSubmitter = Boolean(
+      viewerGithub && submissionGithubSet.has(viewerGithub)
+    );
+
+    if (user && db && viewerGithub && submissions.length > 0) {
       const identities = submissions.map((s) => ({
         submissionId: s.submissionId,
         githubLogin: s.githubLogin,
       }));
-      hasCompletedPeerVoting = await userHackASprint2026PeerVoteComplete(
-        db,
-        user.uid,
-        identities,
-        viewerGithub
+      const psRef = db
+        .collection("hackathonASprint2026ParticipantScores")
+        .doc(hackASprint2026ParticipantScoresDocId(user.uid));
+      const psSnap = await psRef.get();
+      myParticipantScores = psSnap.exists
+        ? normalizeParticipantScores(
+            psSnap.data()?.scores as Record<string, unknown> | undefined
+          )
+        : {};
+      hasCompletedPeerVoting = participantBallotComplete(
+        myParticipantScores,
+        viewerGithub,
+        identities
       );
-      myParticipantScores = await getParticipantScoresForUser(db, user.uid);
     }
 
     const revealJudgesAndPeers = phase === "resultsOpen";
@@ -141,17 +158,7 @@ export async function GET(request: NextRequest) {
       }));
 
       const voterDocs = await getAllHackASprint2026ParticipantScoreDocs(db);
-      const voterUids = [...new Set(voterDocs.map((d) => d.userId))];
-      const voterRefs = voterUids.map((uid) => db.collection("users").doc(uid));
-      const voterSnaps =
-        voterRefs.length > 0 ? await db.getAll(...voterRefs) : [];
-      const voterGithubByUid = new Map<string, string>();
-      for (const snap of voterSnaps) {
-        const login = snap.data()?.github?.login;
-        if (typeof login === "string" && login.trim()) {
-          voterGithubByUid.set(snap.id, login.trim().toLowerCase());
-        }
-      }
+      const voterGithubByUid = await resolveVoterGithubByUid(db, voterDocs);
 
       const peerAvgBySid = computePeerAverages(
         identities,
@@ -206,7 +213,7 @@ export async function GET(request: NextRequest) {
         const rawScore = computeHackASprint2026RawScore(aiScore, judgeScores);
 
         const myJudge =
-          judgeEligible && judgeScores
+          user && judgeEligible && judgeScores
             ? judgeScores[user.uid] ?? null
             : null;
         const myJudgeScore =
@@ -247,7 +254,19 @@ export async function GET(request: NextRequest) {
 
     const isJudgeView = judgeEligible || judgeCheckinBypass;
     const revealScoresToViewer =
-      isJudgeView || hasCompletedPeerVoting;
+      isJudgeView ||
+      !user ||
+      !isSubmitter ||
+      hasCompletedPeerVoting ||
+      phase === "resultsOpen";
+
+    const canPeerVote = Boolean(
+      user &&
+        isSubmitter &&
+        !judgeEligible &&
+        !judgeCheckinBypass &&
+        (phase === "peerVotingOpen" || phase === "resultsOpen")
+    );
 
     const submissionsOut = revealScoresToViewer
       ? rows
@@ -272,6 +291,8 @@ export async function GET(request: NextRequest) {
         isJudge: isJudgeView,
         peerScoresRevealed: revealScoresToViewer,
         myParticipantScores,
+        canPeerVote,
+        isSubmitter,
       },
       submissions: submissionsOut,
     });
