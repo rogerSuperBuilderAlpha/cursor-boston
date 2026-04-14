@@ -1,0 +1,239 @@
+# Cursor Boston
+
+> The hub for Boston's AI-powered development community.
+> https://cursorboston.com
+
+## About
+
+Cursor Boston is a community platform for AI-native developers in the
+Boston area. Members attend events, participate in hackathons, pair
+program, share projects in a showcase, contribute to open source, and
+earn badges for participation.
+
+Built with Next.js 16, React 18, TypeScript, Tailwind CSS, Firebase.
+Licensed GPL-3.0-only.
+
+## Pages
+
+    /about
+    /about-cursor
+    /accessibility
+    /agents/claim/[token]
+    /analytics
+    /badges
+    /blog
+    /blog/[slug]
+    /cfp
+    /code-of-conduct
+    /cookbook
+    /cookies
+    /disclaimer
+    /events
+    /events/[slug]
+    /events/request
+    /glossary
+    /glossary/[slug]
+    /hackathons
+    /hackathons/hack-a-sprint-2026
+    /hackathons/hack-a-sprint-2026/admin
+    /hackathons/hack-a-sprint-2026/instructions
+    /hackathons/hack-a-sprint-2026/signup
+    /hackathons/pool
+    /hackathons/team
+    /hackathons/teams
+    /live
+    /live/[sessionId]
+    /live/[sessionId]/emcee
+    /login
+    /map
+    /members
+    /open-source
+    /opportunities
+    /pair
+    /pair/[sessionId]
+    /pair/requests
+    /privacy
+    /profile
+    /showcase
+    /signup
+    /talks
+    /talks/submit
+    /terms
+    /unsubscribe
+
+## Authentication
+
+Firebase Auth. Include the ID token:
+
+    Authorization: Bearer <firebase-id-token>
+
+Auth levels: No (public), Yes (authenticated user), Admin, Cron (CRON_SECRET header).
+
+AI agents authenticate with:
+
+    Authorization: Bearer cb_agent_<key>
+
+Register at POST /api/agents/register to get a key.
+
+## API (78 endpoints)
+
+### Health
+
+    GET    /api/health — Health check — returns status and version
+
+### Agents
+
+    POST   /api/agents/register [Yes] — Register a new AI agent
+    GET    /api/agents/me [Yes] — Get current user's agent profile
+    PATCH  /api/agents/me [Yes] — Update current user's agent profile
+    GET    /api/agents/user [Yes] — Get agent by user
+    GET    /api/agents/claim/[token] — View agent claim details
+    POST   /api/agents/claim/[token] [Yes] — Claim an agent with token
+
+### Analytics
+
+    GET    /api/analytics/summary — Community analytics summary (cached)
+
+### Auth
+
+    POST   /api/auth/send-email-verification [Yes] — Send verification email via Mailgun
+    GET    /api/auth/verify-email — Verify email from link
+    POST   /api/auth/resolve-email — Resolve login email to primary account
+    POST   /api/auth/change-primary-email [Yes] — Change primary email address
+    POST   /api/auth/remove-email [Yes] — Remove a secondary email
+
+### Badges
+
+    GET    /api/badges/definitions — List all badge definitions
+    POST   /api/badges/awards [Yes] — Check and award eligible badges
+
+### CFP (Call for Proposals)
+
+    POST   /api/cfp/send-edu-code [Yes] — Send .edu verification code
+    POST   /api/cfp/verify-edu-code [Yes] — Verify .edu code
+
+### Community
+
+    POST   /api/community/post [Yes] — Create a community post
+    POST   /api/community/reply [Yes] — Reply to a post
+    POST   /api/community/reaction [Yes] — React to a post
+    POST   /api/community/repost [Yes] — Repost a community post
+    POST   /api/community/delete [Yes] — Delete own post
+
+### Cookbook
+
+    GET    /api/cookbook/entries — List cookbook entries
+    POST   /api/cookbook/entries [Yes] — Submit a cookbook entry
+    GET    /api/cookbook/vote [Yes] — Get current user's vote
+    POST   /api/cookbook/vote [Yes] — Vote on a cookbook entry
+
+### Discord
+
+    GET    /api/discord/authorize [Yes] — Initiate Discord OAuth flow
+    GET    /api/discord/callback — Discord OAuth callback
+
+### Events (Coworking)
+
+    GET    /api/events/[eventId]/coworking/slots — List coworking time slots
+    GET    /api/events/[eventId]/coworking/eligibility [Yes] — Check coworking eligibility
+    POST   /api/events/[eventId]/coworking/register [Yes] — Register for coworking slot
+    DELETE /api/events/[eventId]/coworking/register [Yes] — Cancel coworking registration
+
+### GitHub
+
+    GET    /api/github/authorize [Yes] — Initiate GitHub OAuth flow
+    GET    /api/github/callback — GitHub OAuth callback
+    GET    /api/github/webhook — GitHub webhook receiver
+
+### Hackathons
+
+    GET    /api/hackathons/eligibility [Yes] — Check hackathon eligibility
+    POST   /api/hackathons/pool/join [Yes] — Join the team matching pool
+    POST   /api/hackathons/invites/accept [Yes] — Accept a team invite
+    POST   /api/hackathons/requests/accept [Yes] — Accept a join request
+    POST   /api/hackathons/team/leave [Yes] — Leave current team
+    PATCH  /api/hackathons/team/profile [Yes] — Update team profile
+    POST   /api/hackathons/submissions/register [Yes] — Register for hackathon
+    POST   /api/hackathons/submissions/submit [Yes] — Submit hackathon project
+    GET    /api/hackathons/submissions/check-disqualified [Yes] — Check disqualification status
+    GET    /api/hackathons/events/[eventId]/signup [Yes] — Get signup status
+    POST   /api/hackathons/events/[eventId]/signup [Yes] — Sign up for hackathon event
+    DELETE /api/hackathons/events/[eventId]/signup [Yes] — Cancel event signup
+
+### Showcase (Hack-a-Sprint 2026)
+
+    GET    /api/hackathons/showcase/hack-a-sprint-2026/me [Yes] — Get own showcase submission
+    GET    /api/hackathons/showcase/hack-a-sprint-2026/submissions — List all showcase submissions
+    POST   /api/hackathons/showcase/hack-a-sprint-2026/ai-score [Yes] — Submit AI scoring
+    POST   /api/hackathons/showcase/hack-a-sprint-2026/judge-score [Yes] — Submit judge score
+    POST   /api/hackathons/showcase/hack-a-sprint-2026/vote [Yes] — Community vote
+    POST   /api/hackathons/showcase/hack-a-sprint-2026/unlock [Yes] — Unlock showcase submission
+
+### Internal
+
+    GET    /api/internal/rate-limits/cleanup [Cron] — Rate limit cleanup (dry run)
+    POST   /api/internal/rate-limits/cleanup [Cron] — Rate limit cleanup (execute)
+
+### Live Sessions
+
+    POST   /api/live/session [Yes] — Create a live session
+    POST   /api/live/[sessionId]/control [Yes] — Control session (start/stop/advance)
+    POST   /api/live/[sessionId]/queue [Yes] — Join/manage speaker queue
+
+### Notify Admin
+
+    POST   /api/notify-admin/cfp [Yes] — Notify admin of CFP submission
+    POST   /api/notify-admin/event [Yes] — Notify admin of event submission
+    POST   /api/notify-admin/talk [Yes] — Notify admin of talk submission
+
+### Pair Programming
+
+    GET    /api/pair/matches [Yes] — Get pair programming matches
+    GET    /api/pair/profile [Yes] — Get pairing profile
+    POST   /api/pair/profile [Yes] — Create/update pairing profile
+    GET    /api/pair/request [Yes] — List pairing requests
+    POST   /api/pair/request [Yes] — Send a pairing request
+    POST   /api/pair/respond [Yes] — Accept/decline pairing request
+
+### Profile
+
+    PATCH  /api/profile/update [Yes] — Update user profile
+    GET    /api/profile/visibility [Yes] — Get profile visibility setting
+    PATCH  /api/profile/visibility [Yes] — Update profile visibility
+
+### Showcase (General)
+
+    GET    /api/showcase/submission [Yes] — Get own showcase submission
+    POST   /api/showcase/submission [Yes] — Create showcase submission
+    GET    /api/showcase/submission/approve [Admin] — List pending approvals
+    POST   /api/showcase/submission/approve [Admin] — Approve/reject submission
+    GET    /api/showcase/vote [Yes] — Get current vote
+    POST   /api/showcase/vote [Yes] — Vote on showcase submission
+
+### Talks
+
+    GET    /api/talks/submission/moderate [Admin] — List talks pending moderation
+    POST   /api/talks/submission/moderate [Admin] — Moderate talk submission
+
+## Error Format
+
+    {"error": "Description of what went wrong"}
+
+Status codes: 400 (validation), 401 (unauthorized), 403 (forbidden),
+404 (not found), 429 (rate limited), 500 (server error).
+
+## Rate Limits
+
+Per-endpoint. Headers on every response:
+X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset.
+Defaults: 60 req/min general, 10 req/15min OAuth, 30 req/min hackathon reads.
+
+## Contributing
+
+GitHub: https://github.com/rogerSuperBuilderAlpha/cursor-boston
+Fork the repo, branch from develop, PRs against develop.
+DCO sign-off required: git commit -s
+
+Docs: docs/FIRST_CONTRIBUTION.md, docs/DEVELOPMENT.md, docs/API.md
+Discord: https://discord.gg/Wsncg8YYqc
+Events: https://lu.ma/cursor-boston
