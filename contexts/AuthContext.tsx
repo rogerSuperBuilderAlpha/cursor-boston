@@ -16,6 +16,7 @@ import {
   useState,
   ReactNode,
 } from "react";
+import type { ShowcaseAwardKind } from "@/lib/hackathon-asprint-2026-awards";
 import {
   User,
   onAuthStateChanged,
@@ -90,6 +91,8 @@ interface UserProfile {
   eduBadge?: boolean;
   /** Server-set when a merged PR adds the user's Hack-a-Sprint 2026 showcase submission. */
   hackASprint2026ShowcaseBadge?: boolean;
+  /** Server-set winner ribbons for Hack-a-Sprint 2026 showcase (judges / AI / peer). */
+  hackASprint2026ShowcaseAwards?: ShowcaseAwardKind[];
   /** @deprecated Passcode unlock removed; check-in at the door is now the gate. */
   hackASprint2026Unlocked?: boolean;
   hackASprint2026UnlockedAt?: Date;

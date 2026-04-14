@@ -165,6 +165,12 @@ describe("Firestore rules: badge trust boundaries", () => {
       })
     );
 
+    await assertFails(
+      updateDoc(userRef, {
+        hackASprint2026ShowcaseAwards: ["judgesWinner"],
+      })
+    );
+
     const userWithCounterRef = doc(
       testEnv.authenticatedContext("user-contributor-2").firestore(),
       "users",
