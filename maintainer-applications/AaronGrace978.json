@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "githubLogin": "AaronGrace978",
+  "discordUsername": "AaronGrace",
+  "displayName": "Aaron Grace",
+  "siteEmail": "aaron.grace@comcast.net",
+  "whyMaintainer": "Cursor Boston is becoming a real home for builders in this city, and I want the open source side of the house to stay as welcoming as the room feels in person. I am stepping in as Chief Marketing Officer, and I still want to contribute where it counts on GitHub: thoughtful review, clear contributor guidance, and keeping CI and process from becoming a mystery to newcomers. I care about the story we tell in public matching the experience people have when they open an issue or a pull request. If I can help merge good work faster, protect quality, and mentor people who are shipping their first contribution, that is work worth doing.",
+  "relevantExperience": "I am the Chief Marketing Officer for Cursor Boston and run the ground game on X and LinkedIn, including bringing the BostonAi.io brand into the fold with a consistent narrative. I come out of a strong recent hackathon season with the community and default to clear communication, hosting energy, and getting people unstuck. I am newer to the formal maintainer title, but I am comfortable with collaborative workflows, constructive feedback, and learning the codebase and review norms with seriousness rather than ego.",
+  "availability": "Most weeks I can spend about 4 to 6 hours on maintainer style work, split across pull request review, triage, documentation, and contributor questions, with extra bandwidth around meetups, workshops, or hackathons when repo activity spikes.",
+  "agreedToCodeOfConduct": true,
+  "submittedAt": "2026-04-14T22:07:20.4468418Z"
+}
