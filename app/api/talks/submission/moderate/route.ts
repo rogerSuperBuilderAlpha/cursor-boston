@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { FieldValue } from "firebase-admin/firestore";
+import { FieldValue, type QuerySnapshot } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { getClientIdentifier } from "@/lib/rate-limit";
@@ -19,7 +19,6 @@ const TALK_SUBMISSION_MODERATE_GET_RATE_LIMIT = { windowMs: 60 * 1000, maxReques
 const TALK_SUBMISSION_MODERATE_POST_RATE_LIMIT = { windowMs: 60 * 1000, maxRequests: 30 };
 
 type TalkModerationAction = "approve" | "complete";
-type AdminDb = NonNullable<ReturnType<typeof getAdminDb>>;
 
 function toIsoDate(value: unknown): string | undefined {
   if (!value || typeof value !== "object") return undefined;
@@ -67,16 +66,10 @@ function getPendingAgeBuckets(isoDates: Array<string | undefined>): Record<strin
 }
 
 async function logTalkPendingAgeSummary(
-  db: AdminDb,
+  pendingSnapshot: QuerySnapshot,
   source: "queue_read" | "moderation_approved" | "moderation_completed"
 ) {
   try {
-    const pendingSnapshot = await db
-      .collection("talkSubmissions")
-      .where("status", "==", "pending")
-      .limit(100)
-      .get();
-
     const pendingDates = pendingSnapshot.docs.map((doc) => {
       const data = doc.data() as { createdAt?: unknown };
       return toIsoDate(data.createdAt);
@@ -173,7 +166,7 @@ export async function GET(request: NextRequest) {
         };
       });
 
-    await logTalkPendingAgeSummary(db, "queue_read");
+    await logTalkPendingAgeSummary(pendingSnapshot, "queue_read");
 
     return NextResponse.json({ talkSubmissions });
   } catch (error) {
@@ -285,7 +278,14 @@ export async function POST(request: NextRequest) {
         submissionId,
         moderatorUid: user.uid,
       });
-      await logTalkPendingAgeSummary(db, "moderation_approved");
+      {
+        const pendingSnap = await db
+          .collection("talkSubmissions")
+          .where("status", "==", "pending")
+          .limit(100)
+          .get();
+        await logTalkPendingAgeSummary(pendingSnap, "moderation_approved");
+      }
 
       return NextResponse.json({
         approved: true,
@@ -318,7 +318,14 @@ export async function POST(request: NextRequest) {
       submissionId,
       moderatorUid: user.uid,
     });
-    await logTalkPendingAgeSummary(db, "moderation_completed");
+    {
+      const pendingSnap = await db
+        .collection("talkSubmissions")
+        .where("status", "==", "pending")
+        .limit(100)
+        .get();
+      await logTalkPendingAgeSummary(pendingSnap, "moderation_completed");
+    }
 
     return NextResponse.json({
       approved: true,

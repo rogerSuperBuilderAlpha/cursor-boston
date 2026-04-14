@@ -29,11 +29,28 @@ interface RateLimitOptions {
   keyGenerator?: (request: Request) => string; // Custom key generator
 }
 
-interface RateLimitResult {
+export interface RateLimitResult {
   success: boolean;
   remaining: number;
   resetTime: number;
   retryAfter?: number;
+}
+
+/** Response headers for in-memory rate limiting (no Firestore transaction reads). */
+export function buildMemoryRateLimitHeaders(
+  result: RateLimitResult,
+  maxRequests: number
+): Record<string, string> {
+  const headers: Record<string, string> = {
+    "X-RateLimit-Limit": String(maxRequests),
+    "X-RateLimit-Remaining": String(result.remaining),
+    "X-RateLimit-Reset": String(result.resetTime),
+    "X-RateLimit-Source": "memory",
+  };
+  if (result.retryAfter) {
+    headers["Retry-After"] = String(result.retryAfter);
+  }
+  return headers;
 }
 
 /**

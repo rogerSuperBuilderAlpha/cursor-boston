@@ -10,17 +10,7 @@ import { useEffect, useState, useCallback, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  getDoc,
-  doc,
-  addDoc,
-  serverTimestamp,
-  documentId,
-} from "firebase/firestore";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { getCurrentVirtualHackathonId } from "@/lib/hackathons";
@@ -62,12 +52,15 @@ function teamDisplayName(t: HackathonTeam): string {
 
 function formatTeamCreatedAt(createdAt: unknown): string {
   if (!createdAt) return "—";
-  const date =
-    typeof (createdAt as { toDate?: () => Date }).toDate === "function"
-      ? (createdAt as { toDate: () => Date }).toDate()
-      : createdAt instanceof Date
-        ? createdAt
-        : null;
+  let date: Date | null = null;
+  if (typeof createdAt === "string") {
+    const parsed = new Date(createdAt);
+    date = Number.isNaN(parsed.getTime()) ? null : parsed;
+  } else if (typeof (createdAt as { toDate?: () => Date }).toDate === "function") {
+    date = (createdAt as { toDate: () => Date }).toDate();
+  } else if (createdAt instanceof Date) {
+    date = createdAt;
+  }
   if (!date) return "—";
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -92,78 +85,35 @@ function TeamsPageContent() {
   const [requesting, setRequesting] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
-    if (!db) {
-      setLoading(false);
-      return;
-    }
     setLoading(true);
     try {
-      const teamsRef = collection(db, "hackathonTeams");
-      const q = query(teamsRef, where("hackathonId", "==", hackathonId));
-      const snap = await getDocs(q);
-      const list = snap.docs.map((d) => ({ id: d.id, ...d.data() } as HackathonTeam));
-      setTeams(list);
-
-      const allMemberIds = [...new Set(list.flatMap((t) => t.memberIds))].filter(
-        (id) => !isPlaceholderId(id)
-      );
-      const users: Record<string, PublicUser> = {};
-      for (let i = 0; i < allMemberIds.length; i += 10) {
-        const chunk = allMemberIds.slice(i, i + 10);
-        if (chunk.length === 0) continue;
-        const usersRef = collection(db, "users");
-        const usersQ = query(usersRef, where(documentId(), "in", chunk));
-        const usersSnap = await getDocs(usersQ);
-        usersSnap.docs.forEach((d) => {
-          const data = d.data();
-          if (data.visibility?.isPublic) {
-            users[d.id] = {
-              uid: d.id,
-              displayName: data.displayName ?? null,
-              photoURL: data.photoURL ?? null,
-            };
-          }
-        });
-      }
-      setMemberProfiles(users);
-
-      const submissionsRef = collection(db, "hackathonSubmissions");
-      const subQ = query(
-        submissionsRef,
-        where("hackathonId", "==", hackathonId)
-      );
-      const subSnap = await getDocs(subQ);
-      const counts: Record<string, number> = {};
-      subSnap.docs.forEach((d) => {
-        const data = d.data();
-        if (data.submittedAt && data.disqualified !== true && data.teamId) {
-          counts[data.teamId] = (counts[data.teamId] ?? 0) + 1;
-        }
-      });
-      setSuccessfulSubmissionsByTeam(counts);
-
+      const headers: HeadersInit = {};
       if (user) {
-        const myTeam = list.find((t) => t.memberIds.includes(user.uid));
-        setMyTeamId(myTeam?.id ?? null);
-
-        const poolRef = doc(db, "hackathonPool", `${user.uid}_${hackathonId}`);
-        const poolSnap = await getDoc(poolRef);
-        setInPool(poolSnap.exists());
-
-        const requestsRef = collection(db, "hackathonJoinRequests");
-        const requestsQ = query(
-          requestsRef,
-          where("fromUserId", "==", user.uid),
-          where("status", "==", "pending")
-        );
-        const requestsSnap = await getDocs(requestsQ);
-        const teamIds = new Set(requestsSnap.docs.map((d) => d.data().teamId as string).filter(Boolean));
-        setMyPendingRequestTeamIds(teamIds);
-      } else {
-        setMyTeamId(null);
-        setInPool(false);
-        setMyPendingRequestTeamIds(new Set());
+        const token = await user.getIdToken();
+        headers.Authorization = `Bearer ${token}`;
       }
+      const res = await fetch(
+        `/api/hackathons/teams-board?hackathonId=${encodeURIComponent(hackathonId)}`,
+        { headers }
+      );
+      if (!res.ok) {
+        throw new Error(`teams board ${res.status}`);
+      }
+      const d = (await res.json()) as {
+        teams: Array<Omit<HackathonTeam, "createdAt"> & { createdAt: string | null }>;
+        memberProfiles: Record<string, PublicUser>;
+        successfulSubmissionsByTeam: Record<string, number>;
+        myTeamId: string | null;
+        inPool: boolean;
+        myPendingRequestTeamIds: string[];
+      };
+
+      setTeams(d.teams as HackathonTeam[]);
+      setMemberProfiles(d.memberProfiles);
+      setSuccessfulSubmissionsByTeam(d.successfulSubmissionsByTeam);
+      setMyTeamId(d.myTeamId);
+      setInPool(d.inPool);
+      setMyPendingRequestTeamIds(new Set(d.myPendingRequestTeamIds));
     } catch (e) {
       console.error(e);
     } finally {

@@ -10,16 +10,7 @@ import { useEffect, useState, useCallback, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  doc,
-  updateDoc,
-  Timestamp,
-  documentId,
-} from "firebase/firestore";
+import { doc, updateDoc, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { getCurrentVirtualHackathonId, getMonthEndFromVirtualId, isVirtualHackathonId } from "@/lib/hackathons";
@@ -105,23 +96,52 @@ function HackathonsTeamPageContent() {
   const [profileLogoUrl, setProfileLogoUrl] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
 
+  function tsFromIso(iso: string | null): Timestamp {
+    if (!iso) return Timestamp.fromMillis(0);
+    return Timestamp.fromDate(new Date(iso));
+  }
+
   const fetchData = useCallback(async () => {
-    if (!db || !user) {
+    if (!user) {
       setLoading(false);
       return;
     }
     setLoading(true);
     try {
-      const teamsRef = collection(db, "hackathonTeams");
-      const myTeamQ = query(
-        teamsRef,
-        where("hackathonId", "==", hackathonId),
-        where("memberIds", "array-contains", user.uid)
+      const token = await user.getIdToken();
+      const res = await fetch(
+        `/api/hackathons/team-dashboard?hackathonId=${encodeURIComponent(hackathonId)}`,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      const myTeamSnap = await getDocs(myTeamQ);
-      const teamDoc = myTeamSnap.docs[0];
-      const team = teamDoc
-        ? ({ id: teamDoc.id, ...teamDoc.data() } as HackathonTeam)
+      if (!res.ok) {
+        throw new Error(`team dashboard ${res.status}`);
+      }
+      const d = (await res.json()) as {
+        myTeam: (Omit<HackathonTeam, "createdAt"> & { createdAt: string | null }) | null;
+        memberProfiles: Record<string, PublicUser>;
+        submission: {
+          id: string;
+          hackathonId: string;
+          teamId: string;
+          repoUrl: string;
+          registeredBy: string;
+          registeredAt: string | null;
+          submittedAt?: string | null;
+          cutoffAt?: string | null;
+          disqualified?: boolean;
+          disqualifiedReason?: string;
+        } | null;
+        myInvites: Array<
+          Omit<HackathonInvite, "createdAt"> & { createdAt: string | null; expiresAt?: string | null }
+        >;
+        requestsToMyTeam: Array<Omit<JoinRequest, "createdAt"> & { createdAt: string | null }>;
+      };
+
+      const team = d.myTeam
+        ? ({
+            ...d.myTeam,
+            createdAt: tsFromIso(d.myTeam.createdAt),
+          } as HackathonTeam)
         : null;
       setMyTeam(team);
       if (team) {
@@ -132,89 +152,39 @@ function HackathonsTeamPageContent() {
         setProfileLogoUrl("");
       }
 
-      if (team) {
-        const userIds = team.memberIds;
-        const users: Record<string, PublicUser> = {};
-        for (let i = 0; i < userIds.length; i += 10) {
-          const chunk = userIds.slice(i, i + 10);
-          const usersRef = collection(db, "users");
-          const usersQ = query(usersRef, where(documentId(), "in", chunk));
-          const usersSnap = await getDocs(usersQ);
-          usersSnap.docs.forEach((d) => {
-            const data = d.data();
-            users[d.id] = {
-              uid: d.id,
-              displayName: data.displayName ?? null,
-              photoURL: data.photoURL ?? null,
-              discord: data.discord,
-              github: data.github,
-            };
-          });
-        }
-        setMemberProfiles(users);
+      setMemberProfiles(d.memberProfiles);
 
-        const subRef = collection(db, "hackathonSubmissions");
-        const subQ = query(
-          subRef,
-          where("hackathonId", "==", hackathonId),
-          where("teamId", "==", team.id)
-        );
-        const subSnap = await getDocs(subQ);
-        const subDoc = subSnap.docs[0];
-        if (subDoc) {
-          const data = subDoc.data();
-          setSubmission({
-            id: subDoc.id,
-            hackathonId: data.hackathonId,
-            teamId: data.teamId,
-            repoUrl: data.repoUrl,
-            registeredBy: data.registeredBy,
-            registeredAt: data.registeredAt,
-            submittedAt: data.submittedAt,
-            cutoffAt: data.cutoffAt,
-            disqualified: data.disqualified,
-            disqualifiedReason: data.disqualifiedReason,
-          });
-          if (data.repoUrl) setRepoUrl(data.repoUrl);
-        } else {
-          setSubmission(null);
-        }
-
-        const invitesRef = collection(db, "hackathonInvites");
-        const invitesQ = query(
-          invitesRef,
-          where("toUserId", "==", user.uid),
-          where("status", "==", "pending")
-        );
-        const invitesSnap = await getDocs(invitesQ);
-        setMyInvites(
-          invitesSnap.docs.map((d) => ({ id: d.id, ...d.data() } as HackathonInvite))
-        );
-
-        const reqRef = collection(db, "hackathonJoinRequests");
-        const reqQ = query(
-          reqRef,
-          where("teamId", "==", team.id),
-          where("status", "==", "pending")
-        );
-        const reqSnap = await getDocs(reqQ);
-        setRequestsToMyTeam(
-          reqSnap.docs.map((d) => ({ id: d.id, ...d.data() } as JoinRequest))
-        );
+      if (d.submission) {
+        setSubmission({
+          ...d.submission,
+          registeredAt: tsFromIso(d.submission.registeredAt),
+          submittedAt: d.submission.submittedAt ? tsFromIso(d.submission.submittedAt) : undefined,
+          cutoffAt: d.submission.cutoffAt ? new Date(d.submission.cutoffAt) : undefined,
+        });
+        if (d.submission.repoUrl) setRepoUrl(d.submission.repoUrl);
       } else {
-        setMemberProfiles({});
         setSubmission(null);
-        setMyInvites(
-          (await getDocs(
-            query(
-              collection(db, "hackathonInvites"),
-              where("toUserId", "==", user.uid),
-              where("status", "==", "pending")
-            )
-          )).docs.map((d) => ({ id: d.id, ...d.data() } as HackathonInvite))
-        );
-        setRequestsToMyTeam([]);
+        setRepoUrl("");
       }
+
+      setMyInvites(
+        d.myInvites.map(
+          (inv) =>
+            ({
+              ...inv,
+              createdAt: tsFromIso(inv.createdAt),
+            }) as HackathonInvite
+        )
+      );
+      setRequestsToMyTeam(
+        d.requestsToMyTeam.map(
+          (r) =>
+            ({
+              ...r,
+              createdAt: tsFromIso(r.createdAt),
+            }) as JoinRequest
+        )
+      );
     } catch (e) {
       console.error(e);
     } finally {

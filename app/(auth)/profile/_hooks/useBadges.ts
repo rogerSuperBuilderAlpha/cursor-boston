@@ -9,22 +9,24 @@
 import { useEffect, useState } from "react";
 import type { User } from "firebase/auth";
 import type { UserProfile } from "@/contexts/AuthContext";
-import {
-  getBadgeEligibilityData,
-  type BadgeEligibilityDataStatus,
-} from "@/lib/badges/getBadgeEligibilityInput";
+import type { BadgeEligibilityDataStatus } from "@/lib/badges/getBadgeEligibilityInput";
+import type { ProfileDataApiResponse } from "@/lib/profile-data-types";
 import { evaluateBadgeEligibility } from "@/lib/badges/eligibility";
 import { BADGE_DEFINITIONS } from "@/lib/badges/definitions";
 import {
   ensureUserBadgesForEligibleWithStatus,
-  getUserBadgeMap,
   type BadgeAwardPersistenceStatus,
   type UserBadgeMap,
 } from "@/lib/badges/data";
 import type { BadgeDefinition, BadgeEligibilityMap } from "@/lib/badges/types";
 import { getEarnedBadgeIds } from "@/lib/badges/utils";
 
-export function useBadges(user: User | null, userProfile: UserProfile | null) {
+export function useBadges(
+  user: User | null,
+  _userProfile: UserProfile | null,
+  profileBundle: ProfileDataApiResponse | null
+) {
+  void _userProfile;
   const [eligibilityMap, setEligibilityMap] = useState<BadgeEligibilityMap | undefined>(undefined);
   const [userBadgeMap, setUserBadgeMap] = useState<UserBadgeMap>({});
   const [loading, setLoading] = useState(false);
@@ -38,7 +40,6 @@ export function useBadges(user: User | null, userProfile: UserProfile | null) {
   const [persistenceStatus, setPersistenceStatus] =
     useState<BadgeAwardPersistenceStatus>({ state: "complete" });
 
-  // Fetch Firestore-backed badge definitions
   useEffect(() => {
     (async () => {
       try {
@@ -61,34 +62,30 @@ export function useBadges(user: User | null, userProfile: UserProfile | null) {
     })();
   }, []);
 
-  // Evaluate eligibility and persist awards
   useEffect(() => {
     if (!user) {
       setEligibilityMap(undefined);
       setUserBadgeMap({});
       setDataStatus({ state: "failed", isAuthoritative: false, failedSources: [] });
       setPersistenceStatus({ state: "complete" });
+      setLoading(false);
+      return;
+    }
+
+    if (!profileBundle) {
+      setLoading(true);
       return;
     }
 
     setLoading(true);
     (async () => {
       try {
-        const badgeData = await getBadgeEligibilityData({
-          uid: user.uid,
-          displayName: userProfile?.displayName ?? user.displayName ?? null,
-          visibility: userProfile?.visibility ?? null,
-          bio: userProfile?.bio ?? null,
-          photoURL: userProfile?.photoURL ?? user.photoURL ?? null,
-          discord: userProfile?.discord,
-          github: userProfile?.github,
-        });
+        const badgeData = profileBundle.badgeEligibility;
         const evaluated = evaluateBadgeEligibility(badgeData.input);
-        const persisted = await getUserBadgeMap(user.uid);
         const persistenceResult = await ensureUserBadgesForEligibleWithStatus(
           user.uid,
           evaluated,
-          persisted
+          profileBundle.userBadgeMap as UserBadgeMap
         );
         setEligibilityMap(evaluated);
         setUserBadgeMap(persistenceResult.userBadgeMap);
@@ -112,9 +109,8 @@ export function useBadges(user: User | null, userProfile: UserProfile | null) {
         setLoading(false);
       }
     })();
-  }, [user, userProfile]);
+  }, [user, profileBundle]);
 
-  // Derived values
   const earnedIds = getEarnedBadgeIds(definitions, eligibilityMap, userBadgeMap);
   const earnedDefinitions = definitions.filter((d) => earnedIds.includes(d.id));
 
