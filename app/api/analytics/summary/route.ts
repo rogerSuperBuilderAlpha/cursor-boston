@@ -10,16 +10,19 @@ import { logger } from "@/lib/logger";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 import showcaseData from "@/content/showcase.json";
 import eventsData from "@/content/events.json";
+import type { EventsData } from "@/types/events";
 
 const RATE_LIMIT = { windowMs: 60 * 1000, maxRequests: 60 };
-const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours — full scans are read-heavy; refresh less often
 
 // Build a lookup map from eventId → event title using the static events JSON
+const typedEvents = eventsData as unknown as EventsData;
 const eventNameMap: Record<string, string> = {};
 [
-  ...(eventsData.upcoming ?? []),
-  ...(eventsData.past ?? []),
-].forEach((event: { id?: string; title?: string }) => {
+  ...typedEvents.upcoming,
+  ...typedEvents.past,
+  ...(typedEvents.oldEvents ?? []),
+].forEach((event) => {
   if (event.id && event.title) {
     eventNameMap[event.id] = event.title;
   }
@@ -61,6 +64,10 @@ const EMPTY_SUMMARY: AnalyticsSummary = {
   generatedAt: new Date().toISOString(),
 };
 
+const cacheHeaders = {
+  "Cache-Control": "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400",
+};
+
 export async function GET(request: NextRequest) {
   const clientId = getClientIdentifier(request as unknown as Request);
   const rateResult = checkRateLimit(`analytics-summary:${clientId}`, RATE_LIMIT);
@@ -76,15 +83,21 @@ export async function GET(request: NextRequest) {
     db = getAdminDb();
   } catch (initError) {
     logger.logError(initError, { endpoint: "/api/analytics/summary", phase: "init" });
-    return NextResponse.json({ ...EMPTY_SUMMARY, generatedAt: new Date().toISOString() });
+    return NextResponse.json(
+      { ...EMPTY_SUMMARY, generatedAt: new Date().toISOString() },
+      { headers: cacheHeaders }
+    );
   }
 
   if (!db) {
-    return NextResponse.json({ ...EMPTY_SUMMARY, generatedAt: new Date().toISOString() });
+    return NextResponse.json(
+      { ...EMPTY_SUMMARY, generatedAt: new Date().toISOString() },
+      { headers: cacheHeaders }
+    );
   }
 
   try {
-    // --- Check analytics_snapshots cache (1-hour TTL) ---
+    // --- Check analytics_snapshots cache (see CACHE_TTL_MS) ---
     const cacheRef = db.collection("analytics_snapshots").doc("latest");
     try {
       const cacheDoc = await cacheRef.get();
@@ -92,7 +105,9 @@ export async function GET(request: NextRequest) {
         const cached = cacheDoc.data();
         const expiresAt = cached?.expiresAt?.toDate ? (cached.expiresAt.toDate() as Date) : null;
         if (expiresAt && expiresAt > new Date()) {
-          return NextResponse.json(cached?.summary as AnalyticsSummary);
+          return NextResponse.json(cached?.summary as AnalyticsSummary, {
+            headers: cacheHeaders,
+          });
         }
       }
     } catch {
@@ -285,10 +300,13 @@ export async function GET(request: NextRequest) {
       // Cache write failure is non-fatal
     }
 
-    return NextResponse.json(summary);
+    return NextResponse.json(summary, { headers: cacheHeaders });
   } catch (error) {
     logger.logError(error, { endpoint: "/api/analytics/summary" });
     // Return empty data rather than a 500 so the page still renders gracefully
-    return NextResponse.json({ ...EMPTY_SUMMARY, generatedAt: new Date().toISOString() });
+    return NextResponse.json(
+      { ...EMPTY_SUMMARY, generatedAt: new Date().toISOString() },
+      { headers: cacheHeaders }
+    );
   }
 }

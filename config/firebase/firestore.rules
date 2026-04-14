@@ -44,11 +44,11 @@ service cloud.firestore {
                   || (request.auth != null && request.auth.uid == userId);
       allow create: if request.auth != null
                     && request.auth.uid == userId
-                    && !request.resource.data.keys().hasAny(['earnedBadgeIds', 'pullRequestsCount', 'hackASprint2026ShowcaseBadge', 'hackASprint2026Unlocked', 'hackASprint2026UnlockedAt', 'hackASprint2026CreditEmailSentAt']);
+                    && !request.resource.data.keys().hasAny(['earnedBadgeIds', 'pullRequestsCount', 'hackASprint2026ShowcaseBadge', 'hackASprint2026ShowcaseAwards', 'hackASprint2026Unlocked', 'hackASprint2026UnlockedAt', 'hackASprint2026CreditEmailSentAt']);
       allow update: if request.auth != null 
                     && request.auth.uid == userId
                     && !request.resource.data.diff(resource.data).affectedKeys()
-                        .hasAny(['uid', 'createdAt', 'role', 'email', 'earnedBadgeIds', 'pullRequestsCount', 'hackASprint2026ShowcaseBadge', 'hackASprint2026Unlocked', 'hackASprint2026UnlockedAt', 'hackASprint2026CreditEmailSentAt']);
+                        .hasAny(['uid', 'createdAt', 'role', 'email', 'earnedBadgeIds', 'pullRequestsCount', 'hackASprint2026ShowcaseBadge', 'hackASprint2026ShowcaseAwards', 'hackASprint2026Unlocked', 'hackASprint2026UnlockedAt', 'hackASprint2026CreditEmailSentAt']);
       allow delete: if false; // Users cannot delete their own accounts via client
     }
     

@@ -28,6 +28,7 @@ jest.mock("@/content/showcase.json", () => ({
 jest.mock("@/content/events.json", () => ({
   upcoming: [{ id: "evt1", title: "Event One" }],
   past: [],
+  oldEvents: [],
 }));
 
 import { GET } from "@/app/api/analytics/summary/route";

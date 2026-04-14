@@ -83,9 +83,16 @@ export async function getParticipantScoresForUser(
   );
 }
 
+export type HackASprintParticipantScoreDocRow = {
+  userId: string;
+  scores: Record<string, number>;
+  /** Lowercased GitHub login, denormalized on participant-score writes. */
+  githubLogin?: string | null;
+};
+
 export async function getAllHackASprint2026ParticipantScoreDocs(
   db: Firestore
-): Promise<Array<{ userId: string; scores: Record<string, number> }>> {
+): Promise<HackASprintParticipantScoreDocRow[]> {
   const snap = await db
     .collection("hackathonASprint2026ParticipantScores")
     .where("eventId", "==", HACK_A_SPRINT_2026_EVENT_ID)
@@ -98,12 +105,47 @@ export async function getAllHackASprint2026ParticipantScoreDocs(
         const parts = d.id.split("__");
         userId = parts.length >= 2 ? parts.slice(1).join("__") : "";
       }
+      const ghRaw = data.githubLogin;
+      const githubLogin =
+        typeof ghRaw === "string" && ghRaw.trim()
+          ? ghRaw.trim().toLowerCase()
+          : undefined;
       return {
         userId,
+        githubLogin,
         scores: normalizeParticipantScores(
           data.scores as Record<string, unknown> | undefined
         ),
       };
     })
     .filter((x) => Boolean(x.userId));
+}
+
+/**
+ * Map voter uid → GitHub login for peer averaging. Uses denormalized `githubLogin`
+ * on participant score docs when present; otherwise loads `users/{uid}` (batched getAll).
+ */
+export async function resolveVoterGithubByUid(
+  db: Firestore,
+  voterDocs: HackASprintParticipantScoreDocRow[]
+): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  const missing: string[] = [];
+  for (const d of voterDocs) {
+    const g =
+      typeof d.githubLogin === "string" ? d.githubLogin.trim().toLowerCase() : "";
+    if (g) map.set(d.userId, g);
+    else missing.push(d.userId);
+  }
+  const uniqueMissing = [...new Set(missing)];
+  if (uniqueMissing.length === 0) return map;
+  const refs = uniqueMissing.map((uid) => db.collection("users").doc(uid));
+  const snaps = await db.getAll(...refs);
+  for (const snap of snaps) {
+    const login = snap.data()?.github?.login;
+    if (typeof login === "string" && login.trim()) {
+      map.set(snap.id, login.trim().toLowerCase());
+    }
+  }
+  return map;
 }

@@ -16,10 +16,8 @@ import {
   hackASprint2026ParticipantScoresDocId,
   normalizeParticipantScores,
 } from "@/lib/hackathon-asprint-2026-participant-scoring";
-import {
-  userHasHackASprint2026Signup,
-  userIsCheckedInForHackASprint2026,
-} from "@/lib/hackathon-asprint-2026-state";
+import { getHackASprint2026Phase } from "@/lib/hackathon-asprint-2026-schedule";
+import { hackathonEventSignupDocId, profileMatchesHackathonJudgeCheckinException } from "@/lib/hackathon-event-signup";
 import { checkRateLimit, getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -48,15 +46,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    const checkedIn = await userIsCheckedInForHackASprint2026(db, user.uid, user.email);
-    if (!checkedIn) {
-      return NextResponse.json({ error: "You must be checked in." }, { status: 403 });
-    }
-
-    const signedUp = await userHasHackASprint2026Signup(db, user.uid);
-    if (!signedUp) {
-      return NextResponse.json({ error: "Website event signup required." }, { status: 403 });
-    }
+    const phase = getHackASprint2026Phase();
 
     let body: { submissionId?: string; score?: number };
     try {
@@ -95,8 +85,37 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Connect GitHub on your profile." }, { status: 403 });
     }
 
+    const submitterSet = new Set(
+      submissions.map((s) => s.githubLogin.trim().toLowerCase())
+    );
+    if (!submitterSet.has(gh)) {
+      return NextResponse.json(
+        { error: "Peer scoring is only available if you have a merged showcase submission." },
+        { status: 403 }
+      );
+    }
+
     if (target.githubLogin.trim().toLowerCase() === gh) {
       return NextResponse.json({ error: "You cannot score your own submission." }, { status: 400 });
+    }
+
+    const relaxSignupCheckin =
+      phase === "resultsOpen" || phase === "peerVotingOpen";
+
+    if (!relaxSignupCheckin) {
+      const signupSnap = await db
+        .collection("hackathonEventSignups")
+        .doc(hackathonEventSignupDocId(HACK_A_SPRINT_2026_EVENT_ID, user.uid))
+        .get();
+      const checkedIn =
+        Boolean(signupSnap.exists && signupSnap.data()?.checkedInAt != null) ||
+        profileMatchesHackathonJudgeCheckinException(user.email, ud as Record<string, unknown> | undefined);
+      if (!checkedIn) {
+        return NextResponse.json({ error: "You must be checked in." }, { status: 403 });
+      }
+      if (!signupSnap.exists) {
+        return NextResponse.json({ error: "Website event signup required." }, { status: 403 });
+      }
     }
 
     const uidRate = checkRateLimit(
@@ -122,6 +141,7 @@ export async function POST(request: NextRequest) {
       {
         eventId: HACK_A_SPRINT_2026_EVENT_ID,
         userId: user.uid,
+        githubLogin: gh,
         scores: nextScores,
         updatedAt: FieldValue.serverTimestamp(),
       },

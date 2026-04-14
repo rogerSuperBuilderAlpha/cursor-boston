@@ -5,16 +5,21 @@
  */
 
 import { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import eventsData from "@/content/events.json";
-import {
-  getLumaCheckoutEventId,
-  getLumaCheckoutHref,
-} from "@/lib/luma-event";
+import { EventsBrowse } from "@/components/events/EventsBrowse";
+import { todayYmdInListingTz } from "@/lib/events-calendar-buckets";
 import { EventsData } from "@/types/events";
 
+export const dynamic = "force-dynamic";
+
 const typedEventsData = eventsData as unknown as EventsData;
+
+const allListingEvents = [
+  ...typedEventsData.upcoming,
+  ...typedEventsData.past,
+  ...(typedEventsData.oldEvents ?? []),
+];
 
 export const metadata: Metadata = {
   title: "Events",
@@ -147,6 +152,7 @@ const eventTypes = [
 ];
 
 export default function EventsPage() {
+  const listingTodayYmd = todayYmdInListingTz(new Date());
   const eventsJsonLd = generateEventsJsonLd();
 
   return (
@@ -240,210 +246,9 @@ export default function EventsPage() {
         </div>
       </section>
 
-      {/* Upcoming Events */}
-      <section className="py-16 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-              Upcoming Events
-            </h2>
-          </div>
-
-          {typedEventsData.upcoming.length > 0 ? (
-            <div className="grid gap-8">
-              {typedEventsData.upcoming.map((event) => (
-                <div
-                  key={event.id}
-                  className="bg-white dark:bg-neutral-900 rounded-2xl overflow-hidden border border-neutral-200 dark:border-neutral-800"
-                >
-                  <div className="grid md:grid-cols-2 gap-0">
-                    {/* Event Image */}
-                    <div className="relative aspect-9/16 md:aspect-auto md:min-h-[400px] bg-neutral-100 dark:bg-neutral-800">
-                      <Image
-                        src={event.image}
-                        alt={event.title}
-                        fill
-                        className="object-contain"
-                      />
-                      {/* QR Code Overlay */}
-                      <div className="absolute bottom-[2%] right-[3%] w-[15%] aspect-square bg-white p-1 rounded">
-                        <Image
-                          src="/luma-qr.png"
-                          alt="Scan to register"
-                          fill
-                          className="object-contain"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Event Details */}
-                    <div className="p-8 flex flex-col justify-center">
-                      <span className="inline-block px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-sm font-medium rounded-full mb-4 w-fit capitalize">
-                        {event.type}
-                      </span>
-                      <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
-                        {event.title}
-                      </h3>
-                      <p className="text-neutral-600 dark:text-neutral-400 mb-6 leading-relaxed">
-                        {event.description}
-                      </p>
-
-                      {event.topics && (
-                        <div className="mb-6">
-                          <h4 className="text-sm font-semibold text-neutral-500 uppercase tracking-wider mb-3">
-                            Topics Covered
-                          </h4>
-                          <div className="flex flex-wrap gap-2">
-                            {event.topics.map((topic) => (
-                              <span
-                                key={topic}
-                                className="px-3 py-1 bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 text-sm rounded-full"
-                              >
-                                {topic}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="space-y-3 mb-6">
-                        <div className="flex items-center gap-3 text-neutral-700 dark:text-neutral-300">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="20"
-                            height="20"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            aria-hidden="true"
-                          >
-                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                            <circle cx="12" cy="10" r="3" />
-                          </svg>
-                          <span>{event.location}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col sm:flex-row gap-3">
-                        <Link
-                          href={`/events/${event.slug}`}
-                          className="inline-flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 bg-neutral-900 text-white dark:bg-white dark:text-black rounded-lg text-base font-semibold hover:bg-neutral-700 dark:hover:bg-neutral-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black w-full sm:w-auto"
-                        >
-                          View Details
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="18"
-                            height="18"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            aria-hidden="true"
-                          >
-                            <path d="M5 12h14M12 5l7 7-7 7" />
-                          </svg>
-                        </Link>
-                        <a
-                          href={getLumaCheckoutHref(event)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label={`Register for ${event.title} (opens in new tab)`}
-                          className="inline-flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 border border-neutral-300 dark:border-neutral-700 text-foreground rounded-lg text-base font-semibold hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black w-full sm:w-auto luma-checkout--button"
-                          data-luma-action="checkout"
-                          data-luma-event-id={getLumaCheckoutEventId(event)}
-                        >
-                          Register on Luma
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="18"
-                            height="18"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            aria-hidden="true"
-                          >
-                            <path d="M7 17l9.2-9.2M17 17V7H7" />
-                          </svg>
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="bg-white dark:bg-neutral-900 rounded-2xl p-12 text-center border border-neutral-200 dark:border-neutral-800">
-              <p className="text-neutral-600 dark:text-neutral-400 mb-4">
-                No upcoming events scheduled yet.
-              </p>
-              <a
-                href="https://lu.ma/cursor-boston"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-foreground hover:underline focus-visible:outline-none focus-visible:underline"
-              >
-                Subscribe on Luma to get notified &rarr;
-              </a>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Past Events */}
+      {/* Today / future / past (tabbed) */}
       <section className="py-16 px-6 bg-neutral-50 dark:bg-neutral-950">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-8">
-            Past Events
-          </h2>
-
-          {typedEventsData.past.length > 0 ? (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {typedEventsData.past.map((event) => (
-                <Link
-                  key={event.id}
-                  href={`/events/${event.slug}`}
-                  className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-6 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors group"
-                >
-                  <span className="inline-block px-2.5 py-0.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-medium rounded-full mb-3 capitalize">
-                    {event.type}
-                  </span>
-                  <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                    {event.title}
-                  </h3>
-                  <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-1">
-                    {event.date === "TBD"
-                      ? "Date TBD"
-                      : new Date(event.date).toLocaleDateString("en-US", {
-                          month: "long",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
-                  </p>
-                  <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-3">
-                    {event.location}
-                  </p>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400 line-clamp-2">
-                    {event.description}
-                  </p>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <div className="bg-white dark:bg-neutral-900 rounded-2xl p-12 text-center border border-neutral-200 dark:border-neutral-800">
-              <p className="text-neutral-600 dark:text-neutral-400">
-                Past events will appear here after our first event.
-              </p>
-            </div>
-          )}
-        </div>
+        <EventsBrowse events={allListingEvents} listingTodayYmd={listingTodayYmd} />
       </section>
 
       {/* Submit Event CTA */}

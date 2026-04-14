@@ -19,6 +19,7 @@ import { computePeerAverages } from "@/lib/hackathon-asprint-2026-participant-sc
 import {
   getAllHackASprint2026ParticipantScoreDocs,
   hackASprint2026ScoreDocId,
+  resolveVoterGithubByUid,
 } from "@/lib/hackathon-asprint-2026-state";
 import { checkRateLimit, getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
 
@@ -69,16 +70,7 @@ export async function GET(request: NextRequest) {
       githubLogin: s.githubLogin,
     }));
     const voterDocs = await getAllHackASprint2026ParticipantScoreDocs(db);
-    const voterUids = [...new Set(voterDocs.map((d) => d.userId))];
-    const voterRefs = voterUids.map((uid) => db.collection("users").doc(uid));
-    const voterSnaps = voterRefs.length > 0 ? await db.getAll(...voterRefs) : [];
-    const voterGithubByUid = new Map<string, string>();
-    for (const snap of voterSnaps) {
-      const login = snap.data()?.github?.login;
-      if (typeof login === "string" && login.trim()) {
-        voterGithubByUid.set(snap.id, login.trim().toLowerCase());
-      }
-    }
+    const voterGithubByUid = await resolveVoterGithubByUid(db, voterDocs);
     const peerAvgBySid = computePeerAverages(
       identities,
       voterDocs,
