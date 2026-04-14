@@ -18,19 +18,6 @@ jest.mock("@/lib/logger", () => ({
   logger: { logError: jest.fn() },
 }));
 
-// Mock static JSON so tests are not coupled to the real file contents
-jest.mock("@/content/showcase.json", () => ({
-  projects: [
-    { id: "p1", submittedDate: "2025-01" },
-    { id: "p2", submittedDate: "2025-02" },
-  ],
-}));
-jest.mock("@/content/events.json", () => ({
-  upcoming: [{ id: "evt1", title: "Event One" }],
-  past: [],
-  oldEvents: [],
-}));
-
 import { GET } from "@/app/api/analytics/summary/route";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -39,58 +26,28 @@ import { NextRequest } from "next/server";
 const mockGetAdminDb = getAdminDb as jest.Mock;
 const mockCheckRateLimit = checkRateLimit as jest.Mock;
 
-function makeSnap(docs: Record<string, unknown>[]) {
-  return {
-    size: docs.length,
-    forEach: (cb: (doc: { data: () => Record<string, unknown> }) => void) =>
-      docs.forEach((d) => cb({ data: () => d })),
-  };
-}
-
 function makeRequest() {
   return new NextRequest("http://localhost/api/analytics/summary");
 }
 
-function makeDb(overrides: Record<string, Record<string, unknown>[]> = {}, cacheExists = false) {
-  const now = new Date();
-  const recentDate = { toDate: () => new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000) };
-  const oldDate = { toDate: () => new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000) };
-
-  const defaults: Record<string, Record<string, unknown>[]> = {
-    users: [{ createdAt: recentDate, displayName: "Alice" }],
-    eventRegistrations: [
-      { eventId: "evt1", userId: "u1", registeredAt: recentDate },
-      { eventId: "evt2", userId: "u2", registeredAt: oldDate },
-    ],
-    showcaseProjects: [{ upCount: 5, downCount: 2 }],
-    pair_profiles: [
-      { skillsCanTeach: ["TypeScript"], skillsWantToLearn: ["Python"] },
-      { skillsCanTeach: ["React", "  TypeScript  "], skillsWantToLearn: [] },
-    ],
-    hackathonTeams: [{}],
-    hackathonSubmissions: [{}],
-    communityMessages: [
-      { createdAt: recentDate, userId: "u1" },           // recent post
-      { createdAt: recentDate, userId: "u1", parentId: "p1" }, // recent reply
-      { createdAt: oldDate, userId: "u2" },              // old post (prior activity)
-    ],
-    ...overrides,
-  };
-
+function snapshotDb(summary: Record<string, unknown>, expiresAt: { toDate: () => Date } | null) {
   return {
-    collection: jest.fn((name: string) => ({
-      get: jest.fn(() => makeSnap(defaults[name] ?? [])),
-      doc: jest.fn(() => ({
-        get: jest.fn(() =>
-          cacheExists
-            ? { exists: false }
-            : { exists: false }
-        ),
-        set: jest.fn(),
-      })),
-      where: jest.fn().mockReturnThis(),
-      orderBy: jest.fn().mockReturnThis(),
-    })),
+    collection: jest.fn((name: string) => {
+      if (name !== "analytics_snapshots") throw new Error(`unexpected collection ${name}`);
+      return {
+        doc: jest.fn((id: string) => {
+          if (id !== "latest") throw new Error(`unexpected doc ${id}`);
+          return {
+            get: jest.fn(() =>
+              Promise.resolve({
+                exists: true,
+                data: () => ({ summary, expiresAt }),
+              })
+            ),
+          };
+        }),
+      };
+    }),
   };
 }
 
@@ -131,196 +88,88 @@ describe("GET /api/analytics/summary", () => {
     expect(body.totalMembers).toBe(0);
   });
 
-  it("returns cached summary when cache is valid", async () => {
-    const cachedSummary = { totalMembers: 99, generatedAt: new Date().toISOString() };
-    const futureExpiry = { toDate: () => new Date(Date.now() + 60 * 60 * 1000) };
-
-    const mockDb = {
-      collection: jest.fn(() => ({
-        doc: jest.fn(() => ({
-          get: jest.fn(() => ({
-            exists: true,
-            data: () => ({ summary: cachedSummary, expiresAt: futureExpiry }),
-          })),
-        })),
-      })),
+  it("returns summary from analytics_snapshots/latest when present and valid", async () => {
+    const cachedSummary = {
+      totalMembers: 99,
+      generatedAt: new Date().toISOString(),
+      totalEventRegistrations: 0,
+      totalShowcaseProjects: 0,
+      totalShowcaseInteractions: 0,
+      memberGrowth: [],
+      eventAttendance: [],
+      skillDistribution: [],
+      hackathonStats: { teamsFormed: 0, projectsSubmitted: 0, teamsAsPercentOfMembers: 0 },
+      communityActivity: [],
+      platformHealth: { returningMembers: 0, activeThisMonth: 0 },
+      showcaseOverTime: [],
     };
-
-    mockGetAdminDb.mockReturnValue(mockDb);
+    const futureExpiry = { toDate: () => new Date(Date.now() + 60 * 60 * 1000) };
+    mockGetAdminDb.mockReturnValue(snapshotDb(cachedSummary, futureExpiry));
 
     const res = await GET(makeRequest());
     const body = await res.json();
     expect(body.totalMembers).toBe(99);
   });
 
-  it("falls through cache when it is expired", async () => {
+  it("adds stale header when snapshot TTL is expired", async () => {
+    const cachedSummary = {
+      totalMembers: 5,
+      generatedAt: new Date().toISOString(),
+      totalEventRegistrations: 0,
+      totalShowcaseProjects: 0,
+      totalShowcaseInteractions: 0,
+      memberGrowth: [],
+      eventAttendance: [],
+      skillDistribution: [],
+      hackathonStats: { teamsFormed: 0, projectsSubmitted: 0, teamsAsPercentOfMembers: 0 },
+      communityActivity: [],
+      platformHealth: { returningMembers: 0, activeThisMonth: 0 },
+      showcaseOverTime: [],
+    };
     const expiredExpiry = { toDate: () => new Date(Date.now() - 1000) };
-    const db = makeDb();
-    // Override the analytics_snapshots doc to return an expired cache
-    const originalCollection = db.collection;
-    db.collection = jest.fn((name: string) => {
-      if (name === "analytics_snapshots") {
-        return {
-          doc: jest.fn(() => ({
-            get: jest.fn(() => ({
+    mockGetAdminDb.mockReturnValue(snapshotDb(cachedSummary, expiredExpiry));
+
+    const res = await GET(makeRequest());
+    expect(res.status).toBe(200);
+    expect(res.headers.get("X-Analytics-Snapshot-Stale")).toBe("true");
+    const body = await res.json();
+    expect(body.totalMembers).toBe(5);
+  });
+
+  it("returns EMPTY_SUMMARY when snapshot doc is missing", async () => {
+    const mockDb = {
+      collection: jest.fn(() => ({
+        doc: jest.fn(() => ({
+          get: jest.fn(() => Promise.resolve({ exists: false })),
+        })),
+      })),
+    };
+    mockGetAdminDb.mockReturnValue(mockDb);
+
+    const res = await GET(makeRequest());
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body.totalMembers).toBe(0);
+  });
+
+  it("returns EMPTY_SUMMARY when snapshot payload is malformed", async () => {
+    const mockDb = {
+      collection: jest.fn(() => ({
+        doc: jest.fn(() => ({
+          get: jest.fn(() =>
+            Promise.resolve({
               exists: true,
-              data: () => ({ summary: { totalMembers: 0 }, expiresAt: expiredExpiry }),
-            })),
-            set: jest.fn(),
-          })),
-          where: jest.fn().mockReturnThis(),
-          orderBy: jest.fn().mockReturnThis(),
-          get: jest.fn(() => makeSnap([])),
-        };
-      }
-      return originalCollection(name);
-    });
-
-    mockGetAdminDb.mockReturnValue(db);
+              data: () => ({ summary: null, expiresAt: { toDate: () => new Date() } }),
+            })
+          ),
+        })),
+      })),
+    };
+    mockGetAdminDb.mockReturnValue(mockDb);
 
     const res = await GET(makeRequest());
     const body = await res.json();
-    expect(body.totalMembers).toBe(1); // from makeDb defaults
-  });
-
-  it("computes totalShowcaseInteractions as upCount + downCount", async () => {
-    mockGetAdminDb.mockReturnValue(makeDb({ showcaseProjects: [{ upCount: 10, downCount: 3 }] }));
-
-    const res = await GET(makeRequest());
-    const body = await res.json();
-    expect(body.totalShowcaseInteractions).toBe(13);
-  });
-
-  it("computes teamsAsPercentOfMembers correctly", async () => {
-    mockGetAdminDb.mockReturnValue(makeDb({
-      users: [{ createdAt: null }, { createdAt: null }, { createdAt: null }, { createdAt: null }],
-      hackathonTeams: [{}],
-    }));
-
-    const res = await GET(makeRequest());
-    const body = await res.json();
-    expect(body.hackathonStats.teamsAsPercentOfMembers).toBe(25); // 1 team / 4 members
-  });
-
-  it("returns 0% teamsAsPercentOfMembers when no members", async () => {
-    mockGetAdminDb.mockReturnValue(makeDb({ users: [], hackathonTeams: [{}] }));
-
-    const res = await GET(makeRequest());
-    const body = await res.json();
-    expect(body.hackathonStats.teamsAsPercentOfMembers).toBe(0);
-  });
-
-  it("normalizes and deduplicates skills", async () => {
-    mockGetAdminDb.mockReturnValue(makeDb({
-      pair_profiles: [
-        { skillsCanTeach: ["TypeScript", "  typescript  "], skillsWantToLearn: ["TYPESCRIPT"] },
-      ],
-    }));
-
-    const res = await GET(makeRequest());
-    const body = await res.json();
-    const tsSkill = body.skillDistribution.find((s: { skill: string }) => s.skill === "typescript");
-    expect(tsSkill).toBeDefined();
-    expect(tsSkill.count).toBe(3); // all three normalize to "typescript"
-  });
-
-  it("counts community posts and replies separately", async () => {
-    const now = new Date();
-    const recentDate = { toDate: () => new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000) };
-
-    mockGetAdminDb.mockReturnValue(makeDb({
-      communityMessages: [
-        { createdAt: recentDate, userId: "u1" },                        // post
-        { createdAt: recentDate, userId: "u1", parentId: "msg1" },     // reply
-        { createdAt: recentDate, userId: "u2", parentId: "msg1" },     // reply
-      ],
-    }));
-
-    const res = await GET(makeRequest());
-    const body = await res.json();
-
-    const totalPosts = body.communityActivity.reduce((s: number, w: { posts: number }) => s + w.posts, 0);
-    const totalReplies = body.communityActivity.reduce((s: number, w: { replies: number }) => s + w.replies, 0);
-    expect(totalPosts).toBe(1);
-    expect(totalReplies).toBe(2);
-  });
-
-  it("computes returning members correctly", async () => {
-    const now = new Date();
-    const recent = { toDate: () => new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000) };
-    const old = { toDate: () => new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000) };
-
-    mockGetAdminDb.mockReturnValue(makeDb({
-      // u1 has both recent and old activity => returning
-      eventRegistrations: [
-        { eventId: "e1", userId: "u1", registeredAt: recent },
-        { eventId: "e2", userId: "u1", registeredAt: old },
-        { eventId: "e3", userId: "u2", registeredAt: recent }, // u2 only recent, not returning
-      ],
-      communityMessages: [],
-    }));
-
-    const res = await GET(makeRequest());
-    const body = await res.json();
-    expect(body.platformHealth.returningMembers).toBe(1);
-    expect(body.platformHealth.activeThisMonth).toBe(2);
-  });
-
-  it("derives totalShowcaseProjects from static JSON, not Firestore", async () => {
-    // Firestore has 1 showcase doc; static JSON mock has 2
-    mockGetAdminDb.mockReturnValue(makeDb({ showcaseProjects: [{ upCount: 0, downCount: 0 }] }));
-
-    const res = await GET(makeRequest());
-    const body = await res.json();
-    expect(body.totalShowcaseProjects).toBe(2);
-  });
-
-  it("buckets community activity by Monday UTC week boundaries", async () => {
-    // Monday 2025-01-06 and Tuesday 2025-01-07 → same bucket "2025-01-06"
-    // Monday 2025-01-13 → next bucket "2025-01-13"
-    const mon   = { toDate: () => new Date("2025-01-06T10:00:00Z") };
-    const tue   = { toDate: () => new Date("2025-01-07T10:00:00Z") };
-    const nextMon = { toDate: () => new Date("2025-01-13T10:00:00Z") };
-
-    mockGetAdminDb.mockReturnValue(makeDb({
-      communityMessages: [
-        { createdAt: mon, userId: "u1" },
-        { createdAt: tue, userId: "u2" },
-        { createdAt: nextMon, userId: "u3" },
-      ],
-    }));
-
-    const res = await GET(makeRequest());
-    const body = await res.json();
-
-    const weeks = body.communityActivity.map((w: { week: string }) => w.week);
-    expect(weeks).toContain("2025-01-06");
-    expect(weeks).toContain("2025-01-13");
-
-    const weekJan6 = body.communityActivity.find((w: { week: string }) => w.week === "2025-01-06");
-    // mon and tue are top-level posts (no parentId); both in same bucket
-    expect(weekJan6.posts).toBe(2);
-    expect(weekJan6.replies).toBe(0);
-  });
-
-  it("returns all required fields in the summary", async () => {
-    mockGetAdminDb.mockReturnValue(makeDb());
-
-    const res = await GET(makeRequest());
-    const body = await res.json();
-
-    expect(body).toHaveProperty("totalMembers");
-    expect(body).toHaveProperty("totalEventRegistrations");
-    expect(body).toHaveProperty("totalShowcaseInteractions");
-    expect(body).toHaveProperty("totalShowcaseProjects");
-    expect(body).toHaveProperty("memberGrowth");
-    expect(body).toHaveProperty("eventAttendance");
-    expect(body).toHaveProperty("skillDistribution");
-    expect(body).toHaveProperty("hackathonStats");
-    expect(body.hackathonStats).toHaveProperty("teamsAsPercentOfMembers");
-    expect(body).toHaveProperty("communityActivity");
-    expect(body).toHaveProperty("platformHealth");
-    expect(body).toHaveProperty("showcaseOverTime");
-    expect(body).toHaveProperty("generatedAt");
+    expect(res.status).toBe(200);
+    expect(body.totalMembers).toBe(0);
   });
 });

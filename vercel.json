@@ -6,5 +6,11 @@
       "*": false,
       "main": true
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/internal/snapshots/rebuild",
+      "schedule": "0 */6 * * *"
+    }
+  ]
 }

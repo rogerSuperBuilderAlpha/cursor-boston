@@ -92,6 +92,14 @@
       ]
     },
     {
+      "collectionGroup": "hackathonJoinRequests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "fromUserId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "hackathonSubmissions",
       "queryScope": "COLLECTION",
       "fields": [

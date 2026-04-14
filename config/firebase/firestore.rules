@@ -118,6 +118,15 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Materialized read models (analytics + public members directory) — Admin SDK only
+    match /analytics_snapshots/{docId} {
+      allow read, write: if false;
+    }
+
+    match /members_snapshots/{docId} {
+      allow read, write: if false;
+    }
+
     // Badge definitions - readable by authenticated users, server-side writes only
     match /badges/{badgeId} {
       allow read: if request.auth != null;
