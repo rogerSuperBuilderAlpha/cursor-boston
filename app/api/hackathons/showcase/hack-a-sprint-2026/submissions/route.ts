@@ -245,6 +245,23 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    const isJudgeView = judgeEligible || judgeCheckinBypass;
+    const revealScoresToViewer =
+      isJudgeView || hasCompletedPeerVoting;
+
+    const submissionsOut = revealScoresToViewer
+      ? rows
+      : rows.map((r) => ({
+          ...r,
+          peerAverage: null,
+          peerVoteCount: null,
+          aiScore: null,
+          aiRank: null,
+          aiReasoning: null,
+          judgeAverage: null,
+          rawScore: null,
+        }));
+
     return NextResponse.json({
       phase,
       viewer: {
@@ -252,9 +269,11 @@ export async function GET(request: NextRequest) {
         signedUp,
         hasCompletedPeerVoting,
         judgeEligible,
+        isJudge: isJudgeView,
+        peerScoresRevealed: revealScoresToViewer,
         myParticipantScores,
       },
-      submissions: rows,
+      submissions: submissionsOut,
     });
   } catch (e) {
     console.error("[showcase submissions]", e);
