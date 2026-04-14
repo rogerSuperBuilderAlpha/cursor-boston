@@ -36,9 +36,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    let body: { submissionId?: string; aiScore?: number };
+    let body: { submissionId?: string; aiScore?: number; aiReasoning?: string };
     try {
-      body = (await request.json()) as { submissionId?: string; aiScore?: number };
+      body = (await request.json()) as {
+        submissionId?: string;
+        aiScore?: number;
+        aiReasoning?: string;
+      };
     } catch {
       return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
     }
@@ -70,15 +74,22 @@ export async function POST(request: NextRequest) {
       .collection("hackathonShowcaseScores")
       .doc(hackASprint2026ScoreDocId(submissionId));
 
-    await ref.set(
-      {
-        eventId: HACK_A_SPRINT_2026_EVENT_ID,
-        submissionId,
-        aiScore,
-        updatedAt: FieldValue.serverTimestamp(),
-      },
-      { merge: true }
-    );
+    const reasoningRaw =
+      typeof body.aiReasoning === "string" ? body.aiReasoning.trim() : "";
+    const payload: Record<string, unknown> = {
+      eventId: HACK_A_SPRINT_2026_EVENT_ID,
+      submissionId,
+      aiScore,
+      updatedAt: FieldValue.serverTimestamp(),
+    };
+    if (reasoningRaw) {
+      payload.aiReasoning =
+        reasoningRaw.length > 8000
+          ? `${reasoningRaw.slice(0, 7997)}…`
+          : reasoningRaw;
+    }
+
+    await ref.set(payload, { merge: true });
 
     return NextResponse.json({ ok: true });
   } catch (e) {

@@ -2,7 +2,10 @@
  * @jest-environment node
  */
 
-import { computeHackASprint2026RawScore } from "@/lib/hackathon-asprint-2026-scores";
+import {
+  computeAiRanksBySubmissionId,
+  computeHackASprint2026RawScore,
+} from "@/lib/hackathon-asprint-2026-scores";
 
 describe("computeHackASprint2026RawScore", () => {
   it("returns null when nothing present", () => {
@@ -21,5 +24,28 @@ describe("computeHackASprint2026RawScore", () => {
 
   it("ceil ai alone", () => {
     expect(computeHackASprint2026RawScore(7, {})).toBe(7);
+  });
+});
+
+describe("computeAiRanksBySubmissionId", () => {
+  it("returns empty map when no scores", () => {
+    const m = new Map();
+    m.set("a", null);
+    m.set("b", null);
+    expect(computeAiRanksBySubmissionId(["a", "b"], m).size).toBe(0);
+  });
+
+  it("ranks by score descending with ties sharing rank", () => {
+    const ids = ["low", "mid", "hi", "tie"];
+    const m = new Map();
+    m.set("low", 3);
+    m.set("mid", 6);
+    m.set("hi", 10);
+    m.set("tie", 10);
+    const ranks = computeAiRanksBySubmissionId(ids, m);
+    expect(ranks.get("hi")).toBe(1);
+    expect(ranks.get("tie")).toBe(1);
+    expect(ranks.get("mid")).toBe(3);
+    expect(ranks.get("low")).toBe(4);
   });
 });

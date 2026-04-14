@@ -11,6 +11,11 @@
  *
  * Requires: ANTHROPIC_API_KEY, FIREBASE_SERVICE_ACCOUNT_JSON or GOOGLE_APPLICATION_CREDENTIALS,
  *           GITHUB_TOKEN (optional, for higher rate limits).
+ *
+ * To apply scores without Anthropic (e.g. after judging in Cursor), use:
+ *   npm run ai-evaluate:apply-json -- --dry-run
+ *   npm run ai-evaluate:apply-json -- --apply
+ * See scripts/apply-ai-scores-from-json.ts and scripts/data/hack-a-sprint-2026-ai-scores.json.
  */
 import { loadEnvConfig } from "@next/env";
 loadEnvConfig(process.cwd());
@@ -202,11 +207,14 @@ async function main() {
         const ref = db
           .collection("hackathonShowcaseScores")
           .doc(hackASprint2026ScoreDocId(submissionId));
+        const aiReasoning =
+          reasoning.length > 8000 ? `${reasoning.slice(0, 7997)}…` : reasoning;
         await ref.set(
           {
             eventId: HACK_A_SPRINT_2026_EVENT_ID,
             submissionId,
             aiScore: score,
+            aiReasoning,
             updatedAt: FieldValue.serverTimestamp(),
           },
           { merge: true }
