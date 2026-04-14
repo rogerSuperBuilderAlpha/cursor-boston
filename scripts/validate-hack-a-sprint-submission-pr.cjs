@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * CI: validate Hack-a-Sprint 2026 submission PRs.
- * Env: GITHUB_ACTOR, AUTHOR_ASSOCIATION (optional)
+ * Env: HACK_A_SPRINT_PR_AUTHOR (PR opener login, preferred), GITHUB_ACTOR, AUTHOR_ASSOCIATION (optional).
  * Prefer GIT_DIFF_RANGE="base...head" (PR base sha ... head sha) from Actions.
  */
 const { readFileSync } = require("fs");
@@ -15,7 +15,11 @@ const SCHEMA_PATH = resolve(
   "content/hackathons/hack-a-sprint-2026/submission.schema.json"
 );
 
-const actor = (process.env.GITHUB_ACTOR || "").trim();
+const actor = (
+  process.env.HACK_A_SPRINT_PR_AUTHOR ||
+  process.env.GITHUB_ACTOR ||
+  ""
+).trim();
 const assoc = process.env.AUTHOR_ASSOCIATION || "NONE";
 const maintainer = ["OWNER", "MEMBER", "COLLABORATOR"].includes(assoc);
 const diffRange =
