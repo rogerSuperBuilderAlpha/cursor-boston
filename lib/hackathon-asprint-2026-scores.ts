@@ -39,6 +39,39 @@ export function computeHackASprint2026RawScore(
   return null;
 }
 
+/**
+ * Competition-style ranks by AI score (1 = best). Tied scores share the same rank;
+ * the next distinct score skips (e.g. two10s → rank 1, next9 → rank 3).
+ */
+export function computeAiRanksBySubmissionId(
+  submissionIds: string[],
+  aiScoreBySubmissionId: Map<string, number | null>
+): Map<string, number> {
+  const scored: { submissionId: string; score: number }[] = [];
+  for (const submissionId of submissionIds) {
+    const score = aiScoreBySubmissionId.get(submissionId);
+    if (typeof score === "number" && score >= 1 && score <= 10) {
+      scored.push({ submissionId, score });
+    }
+  }
+  scored.sort((a, b) => b.score - a.score);
+  const rankById = new Map<string, number>();
+  let i = 0;
+  while (i < scored.length) {
+    const score = scored[i]!.score;
+    let j = i;
+    while (j < scored.length && scored[j]!.score === score) {
+      j++;
+    }
+    const rank = i + 1;
+    for (let k = i; k < j; k++) {
+      rankById.set(scored[k]!.submissionId, rank);
+    }
+    i = j;
+  }
+  return rankById;
+}
+
 export async function ensureHackASprint2026ScoreDoc(
   db: Firestore,
   submissionId: string
