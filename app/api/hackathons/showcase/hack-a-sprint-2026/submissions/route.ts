@@ -76,10 +76,7 @@ export async function GET(request: NextRequest) {
       judgeEligible = getJudgeUidSet().has(user.uid);
     }
 
-    const showSubmissionList =
-      checkedIn &&
-      signedUp &&
-      (phase === "peerVotingOpen" || phase === "resultsOpen");
+    const showSubmissionList = checkedIn && signedUp;
 
     let submissions: ShowcaseSubmission[] = [];
     if (showSubmissionList) {
@@ -215,10 +212,7 @@ export async function GET(request: NextRequest) {
 
         rows.push({
           ...s,
-          peerAverage:
-            revealJudgesAndPeers || phase === "peerVotingOpen"
-              ? peerAverage
-              : null,
+          peerAverage,
           peerVoteCount: revealJudgesAndPeers ? legacyPeer : null,
           aiScore,
           aiRank,
@@ -226,10 +220,7 @@ export async function GET(request: NextRequest) {
           judgeAverage: revealJudgesAndPeers ? judgeAverage : null,
           rawScore: revealJudgesAndPeers ? rawScore : null,
           myJudgeScore,
-          myParticipantScore:
-            phase === "peerVotingOpen" || phase === "resultsOpen"
-              ? myParticipantScore
-              : null,
+          myParticipantScore,
         });
       }
 
@@ -251,10 +242,7 @@ export async function GET(request: NextRequest) {
         signedUp,
         hasCompletedPeerVoting,
         judgeEligible,
-        myParticipantScores:
-          phase === "peerVotingOpen" || phase === "resultsOpen"
-            ? myParticipantScores
-            : {},
+        myParticipantScores,
       },
       submissions: rows,
     });
