@@ -27,6 +27,7 @@ import {
   userHackASprint2026PeerVoteComplete,
 } from "@/lib/hackathon-asprint-2026-state";
 import { userIsHackASprint2026Judge } from "@/lib/hackathon-showcase-admin";
+import { profileMatchesHackathonJudgeCheckinException } from "@/lib/hackathon-event-signup";
 import { getJudgeUidSet } from "@/lib/hackathon-showcase";
 
 export const runtime = "nodejs";
@@ -58,6 +59,7 @@ export async function GET(request: NextRequest) {
     let hasCompletedPeerVoting = false;
     let myParticipantScores: Record<string, number> = {};
     let judgeEligible = false;
+    let judgeCheckinBypass = false;
     let viewerGithub: string | null = null;
 
     if (db) {
@@ -69,14 +71,22 @@ export async function GET(request: NextRequest) {
         user.email
       );
       const uSnap = await db.collection("users").doc(user.uid).get();
-      const lg = uSnap.data()?.github?.login;
-      viewerGithub =
-        typeof lg === "string" && lg.trim() ? lg.trim().toLowerCase() : null;
+      const profile = uSnap.data() as Record<string, unknown> | undefined;
+      judgeCheckinBypass = profileMatchesHackathonJudgeCheckinException(
+        user.email,
+        profile
+      );
+      const gh = profile?.github as { login?: unknown } | undefined;
+      const lg = typeof gh?.login === "string" ? gh.login : "";
+      viewerGithub = lg.trim() ? lg.trim().toLowerCase() : null;
     } else {
       judgeEligible = getJudgeUidSet().has(user.uid);
     }
 
-    const showSubmissionList = checkedIn && signedUp;
+    // Judges/organizers may match check-in bypass without a hackathonEventSignups doc;
+    // they still need the same checked-in gate as /me.
+    const showSubmissionList =
+      checkedIn && (signedUp || judgeEligible || judgeCheckinBypass);
 
     let submissions: ShowcaseSubmission[] = [];
     if (showSubmissionList) {
