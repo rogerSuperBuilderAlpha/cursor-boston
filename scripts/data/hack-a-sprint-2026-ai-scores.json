@@ -101,6 +101,26 @@
       "submissionId": "firefoxmetzger",
       "aiScore": 5,
       "aiReasoning": "Newsletter-as-knowledge-base is interesting for dev content, but the submitted JSON lacks a Loom URL and the description does not spell out Inkbox email/phone/vault behavior—scored conservatively on available evidence (use --accept-all to write)."
+    },
+    {
+      "submissionId": "chloezhangzzc",
+      "aiScore": 8,
+      "aiReasoning": "Clear outbound sales agent with web research, OpenAI-drafted personalization, and Inkbox for guarded send/review-inbox by default—strong email-centric SDK use and a practical compliance-minded workflow for a sprint."
+    },
+    {
+      "submissionId": "satishparaddi",
+      "aiScore": 8,
+      "aiReasoning": "Inbox-driven financial intelligence: Inkbox email webhooks plus Node backend to parse transactions, aggregate spend patterns, and reply with summaries—coherent autonomous loop; walkthrough link in JSON points at GitHub rather than a demo recording."
+    },
+    {
+      "submissionId": "shreyas0786",
+      "aiScore": 9,
+      "aiReasoning": "Proactive clinical outreach combining daily email and live phone check-ins with Inkbox STT/TTS, Groq for in-call guidance, and escalation for dangerous readings—deep multi-channel Inkbox use with a high-impact use case."
+    },
+    {
+      "submissionId": "paramjeet-singh-neu",
+      "aiScore": 8,
+      "aiReasoning": "ConNET targets full networking lifecycle across email, vault-backed CRM, and phone with agent-to-agent intros and a live dashboard—ambitious breadth similar to other high-complexity entries; score reflects strong on-paper integration depth with typical sprint scope risk."
     }
   ]
 }
