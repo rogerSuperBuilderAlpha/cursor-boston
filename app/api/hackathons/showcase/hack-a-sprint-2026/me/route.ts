@@ -71,10 +71,7 @@ export async function GET(request: NextRequest) {
       checkedIn = await userIsCheckedInForHackASprint2026(db, user.uid, user.email);
       signedUp = await userHasHackASprint2026Signup(db, user.uid);
 
-      if (
-        githubLogin &&
-        (phase === "peerVotingOpen" || phase === "resultsOpen")
-      ) {
+      if (githubLogin && checkedIn && signedUp) {
         let submissions = await fetchShowcaseSubmissionsFromGitHub();
         submissions = filterAllowedSubmissions(submissions);
         const identities = submissions.map((s) => ({
