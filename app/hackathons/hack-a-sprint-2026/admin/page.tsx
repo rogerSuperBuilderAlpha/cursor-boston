@@ -21,7 +21,7 @@ type SubmissionRow = {
   description: string;
   projectRepoUrl: string;
   deployedUrl?: string;
-  loomVideoUrl: string;
+  loomVideoUrl?: string;
   aiScore: number | null;
   aiReasoning: string | null;
   judgeScores: Record<string, number>;
@@ -924,15 +924,19 @@ function DashboardTab({ data }: { data: DashboardData | null }) {
                         {isOpen && (
                           <tr className="border-b border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950/80">
                             <td colSpan={colCount} className="px-4 py-4">
-                              <div className="flex flex-wrap gap-3 text-sm font-medium mb-3">
-                                <a
-                                  href={s.projectRepoUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-emerald-600 dark:text-emerald-400 hover:underline"
-                                >
-                                  GitHub repo
-                                </a>
+                              <div className="flex flex-wrap gap-3 text-sm font-medium mb-3 items-center">
+                                {s.projectRepoUrl.trim() ? (
+                                  <a
+                                    href={s.projectRepoUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-emerald-600 dark:text-emerald-400 hover:underline"
+                                  >
+                                    GitHub repo
+                                  </a>
+                                ) : (
+                                  <span className="text-neutral-500">No repo URL</span>
+                                )}
                                 {s.deployedUrl ? (
                                   <a
                                     href={s.deployedUrl}
@@ -943,14 +947,18 @@ function DashboardTab({ data }: { data: DashboardData | null }) {
                                     Live demo
                                   </a>
                                 ) : null}
-                                <a
-                                  href={s.loomVideoUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-emerald-600 dark:text-emerald-400 hover:underline"
-                                >
-                                  Loom / video
-                                </a>
+                                {s.loomVideoUrl?.trim() ? (
+                                  <a
+                                    href={s.loomVideoUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-emerald-600 dark:text-emerald-400 hover:underline"
+                                  >
+                                    Loom / video
+                                  </a>
+                                ) : (
+                                  <span className="text-neutral-500">No walkthrough</span>
+                                )}
                               </div>
                               <p className="text-sm text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap">
                                 {s.description}

@@ -149,22 +149,28 @@ async function main() {
     console.log(`--- ${githubLogin} ---`);
 
     let readme: string | null = null;
-    try {
-      readme = await fetchRepoReadme(payload.projectRepoUrl);
-    } catch {
-      console.log("  Could not fetch README.");
+    if (payload.projectRepoUrl.trim()) {
+      try {
+        readme = await fetchRepoReadme(payload.projectRepoUrl);
+      } catch {
+        console.log("  Could not fetch README.");
+      }
     }
 
     const context = [
       `## Submission: ${payload.title}`,
       `**Author:** ${githubLogin}`,
-      `**Repo:** ${payload.projectRepoUrl}`,
+      payload.projectRepoUrl.trim()
+        ? `**Repo:** ${payload.projectRepoUrl}`
+        : "**Repo:** Not provided",
       payload.deployedUrl
         ? `**Deployed URL (optional):** ${payload.deployedUrl}`
         : null,
-      `**Loom Video:** ${payload.loomVideoUrl}`,
+      payload.loomVideoUrl?.trim()
+        ? `**Loom Video:** ${payload.loomVideoUrl}`
+        : "**Loom Video:** Not provided",
       payload.demoVideoUrl ? `**Demo Video:** ${payload.demoVideoUrl}` : null,
-      `\n**Description:**\n${payload.description}`,
+      `\n**Description:**\n${payload.description.trim() || "(empty)"}`,
       readme ? `\n**README.md (truncated):**\n${readme}` : "\n**README.md:** Not available",
     ]
       .filter(Boolean)

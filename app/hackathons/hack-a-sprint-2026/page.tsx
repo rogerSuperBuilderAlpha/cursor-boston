@@ -451,7 +451,7 @@ export default function HackASprint2026ShowcasePage() {
                 (filename must match the PR author).
               </li>
               <li>
-                Use the template below; <code>loomVideoUrl</code> is required.
+                Use the template below; add <code>loomVideoUrl</code> when you can — the gallery still lists your entry if some fields are missing.
               </li>
               <li>
                 Open a PR that only changes that JSON file. CI validates the
@@ -623,17 +623,23 @@ export default function HackASprint2026ShowcasePage() {
                             </p>
                           )}
                           <p className="text-sm text-neutral-600 dark:text-neutral-400 whitespace-pre-wrap mb-4">
-                            {s.payload.description}
+                            {s.payload.description.trim()
+                              ? s.payload.description
+                              : "No description in submission yet."}
                           </p>
-                          <div className="flex flex-wrap gap-3 text-sm">
-                            <a
-                              href={s.payload.projectRepoUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium"
-                            >
-                              Repo
-                            </a>
+                          <div className="flex flex-wrap gap-3 text-sm items-center">
+                            {s.payload.projectRepoUrl.trim() ? (
+                              <a
+                                href={s.payload.projectRepoUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium"
+                              >
+                                Repo
+                              </a>
+                            ) : (
+                              <span className="text-neutral-500">No repo URL</span>
+                            )}
                             {s.payload.deployedUrl ? (
                               <a
                                 href={s.payload.deployedUrl}
@@ -644,14 +650,18 @@ export default function HackASprint2026ShowcasePage() {
                                 Live app
                               </a>
                             ) : null}
-                            <a
-                              href={s.payload.loomVideoUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium"
-                            >
-                              Loom
-                            </a>
+                            {s.payload.loomVideoUrl?.trim() ? (
+                              <a
+                                href={s.payload.loomVideoUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium"
+                              >
+                                Walkthrough video
+                              </a>
+                            ) : (
+                              <span className="text-neutral-500">No walkthrough yet</span>
+                            )}
                           </div>
                           {s.aiScore != null && (
                             <div className="mt-4 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950/40 px-4 py-3 text-sm">
