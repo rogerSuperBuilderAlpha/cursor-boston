@@ -50,10 +50,42 @@ type SubmissionsResponse = {
     signedUp: boolean;
     hasCompletedPeerVoting: boolean;
     judgeEligible: boolean;
+    isJudge: boolean;
+    peerScoresRevealed: boolean;
     myParticipantScores: Record<string, number>;
   };
   submissions: SubmissionRow[];
 };
+
+type GallerySortKey = "title" | "github" | "aiScore" | "peerAvg";
+
+function compareSubmissionRows(
+  a: SubmissionRow,
+  b: SubmissionRow,
+  key: GallerySortKey,
+  asc: boolean
+): number {
+  const dir = asc ? 1 : -1;
+  if (key === "title") {
+    return (
+      dir *
+      a.payload.title.localeCompare(b.payload.title, "en", { sensitivity: "base" })
+    );
+  }
+  if (key === "github") {
+    return (
+      dir *
+      a.githubLogin.localeCompare(b.githubLogin, "en", { sensitivity: "base" })
+    );
+  }
+  const na = key === "aiScore" ? a.aiScore : a.peerAverage;
+  const nb = key === "aiScore" ? b.aiScore : b.peerAverage;
+  if (na == null && nb == null) return 0;
+  if (na == null) return 1;
+  if (nb == null) return -1;
+  if (na === nb) return 0;
+  return dir * (na < nb ? -1 : 1);
+}
 
 const JSON_TEMPLATE = `{
   "projectRepoUrl": "https://github.com/your-username/your-hack-project",
@@ -87,6 +119,9 @@ export default function HackASprint2026ShowcasePage() {
   } | null>(null);
   const [creditEmailBusy, setCreditEmailBusy] = useState(false);
   const [creditEmailMessage, setCreditEmailMessage] = useState<string | null>(null);
+  const [gallerySearch, setGallerySearch] = useState("");
+  const [gallerySortKey, setGallerySortKey] = useState<GallerySortKey>("title");
+  const [gallerySortAsc, setGallerySortAsc] = useState(true);
 
   const repoBase = getGithubRepoWebBaseUrl();
   const submissionsPath = HACK_A_SPRINT_2026_SUBMISSIONS_PATH;
@@ -123,6 +158,16 @@ export default function HackASprint2026ShowcasePage() {
       setLoadError(e instanceof Error ? e.message : "Failed to load");
     }
   }, [user]);
+
+  const isOwnSubmission = useCallback(
+    (s: SubmissionRow) =>
+      Boolean(
+        me?.githubLogin &&
+          s.githubLogin.trim().toLowerCase() ===
+            me.githubLogin.trim().toLowerCase()
+      ),
+    [me?.githubLogin]
+  );
 
   useEffect(() => {
     if (user) {
@@ -257,6 +302,82 @@ export default function HackASprint2026ShowcasePage() {
     return { totalOthers: others.length, scored };
   }, [data?.submissions, data?.viewer?.myParticipantScores, me?.githubLogin]);
 
+  const isJudgeView = data?.viewer.isJudge ?? false;
+  const peerScoresRevealed = data?.viewer.peerScoresRevealed ?? false;
+  const participantQueueMode = Boolean(
+    data &&
+      me &&
+      !isJudgeView &&
+      !data.viewer.hasCompletedPeerVoting
+  );
+
+  const { queueUnscored, queueScored, queueOwn, galleryList } = useMemo(() => {
+    if (!data?.submissions?.length || !me?.githubLogin) {
+      return {
+        queueUnscored: [] as SubmissionRow[],
+        queueScored: [] as SubmissionRow[],
+        queueOwn: null as SubmissionRow | null,
+        galleryList: data?.submissions ?? [],
+      };
+    }
+    const ownGh = me.githubLogin.trim().toLowerCase();
+    const q = gallerySearch.trim().toLowerCase();
+    const matches = (s: SubmissionRow) =>
+      !q ||
+      s.payload.title.toLowerCase().includes(q) ||
+      s.githubLogin.toLowerCase().includes(q);
+
+    const others = data.submissions.filter(
+      (s) => s.githubLogin.trim().toLowerCase() !== ownGh
+    );
+    const ownRow =
+      data.submissions.find(
+        (s) => s.githubLogin.trim().toLowerCase() === ownGh
+      ) ?? null;
+
+    const unscored = others
+      .filter((s) => s.myParticipantScore == null)
+      .filter(matches)
+      .sort((a, b) =>
+        a.payload.title.localeCompare(b.payload.title, "en", {
+          sensitivity: "base",
+        })
+      );
+
+    const scored = others
+      .filter(
+        (s) =>
+          typeof s.myParticipantScore === "number" &&
+          s.myParticipantScore >= 1 &&
+          s.myParticipantScore <= 10
+      )
+      .filter(matches)
+      .sort((a, b) =>
+        a.payload.title.localeCompare(b.payload.title, "en", {
+          sensitivity: "base",
+        })
+      );
+
+    const galleryListSorted = [...data.submissions]
+      .filter(matches)
+      .sort((a, b) =>
+        compareSubmissionRows(a, b, gallerySortKey, gallerySortAsc)
+      );
+
+    return {
+      queueUnscored: unscored,
+      queueScored: scored,
+      queueOwn: ownRow,
+      galleryList: galleryListSorted,
+    };
+  }, [
+    data,
+    me?.githubLogin,
+    gallerySearch,
+    gallerySortKey,
+    gallerySortAsc,
+  ]);
+
   if (authLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[40vh] px-6">
@@ -365,11 +486,220 @@ export default function HackASprint2026ShowcasePage() {
     );
   }
 
-  const isOwnSubmission = (s: SubmissionRow) =>
-    Boolean(
-      me?.githubLogin &&
-        s.githubLogin.trim().toLowerCase() === me.githubLogin.trim().toLowerCase()
+  function SubmissionCard({
+    s,
+    ownQueueNote,
+  }: {
+    s: SubmissionRow;
+    ownQueueNote?: string;
+  }) {
+    const own = isOwnSubmission(s);
+    const showCommunityBlock =
+      peerScoresRevealed &&
+      (phase === "peerVotingOpen" || phase === "resultsOpen") &&
+      (s.peerAverage != null ||
+        (phase === "resultsOpen" && s.judgeAverage != null) ||
+        (phase === "resultsOpen" && s.rawScore != null));
+
+    return (
+      <li className="rounded-2xl border border-neutral-200 dark:border-neutral-800 p-6 shadow-sm bg-white dark:bg-neutral-900">
+        <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-start">
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-medium uppercase tracking-wide text-neutral-500 mb-1">
+              @{s.githubLogin}
+              {own && (
+                <span className="ml-2 text-emerald-600 dark:text-emerald-400">
+                  (you)
+                </span>
+              )}
+            </p>
+            <h3 className="text-lg font-semibold text-foreground mb-2">
+              {s.payload.title}
+            </h3>
+            {ownQueueNote ? (
+              <p className="text-sm text-amber-700 dark:text-amber-400 mb-2">
+                {ownQueueNote}
+              </p>
+            ) : null}
+            {s.aiRank != null && s.aiScore != null && (
+              <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400 mb-2">
+                AI rank #{s.aiRank} · {s.aiScore}/10
+              </p>
+            )}
+            <p className="text-sm text-neutral-600 dark:text-neutral-400 whitespace-pre-wrap mb-4">
+              {s.payload.description.trim()
+                ? s.payload.description
+                : "No description in submission yet."}
+            </p>
+            <div className="flex flex-wrap gap-3 text-sm items-center">
+              {s.payload.projectRepoUrl.trim() ? (
+                <a
+                  href={s.payload.projectRepoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium"
+                >
+                  Repo
+                </a>
+              ) : (
+                <span className="text-neutral-500">No repo URL</span>
+              )}
+              {s.payload.deployedUrl ? (
+                <a
+                  href={s.payload.deployedUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium"
+                >
+                  Live app
+                </a>
+              ) : null}
+              {s.payload.loomVideoUrl?.trim() ? (
+                <a
+                  href={s.payload.loomVideoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium"
+                >
+                  Walkthrough video
+                </a>
+              ) : (
+                <span className="text-neutral-500">No walkthrough yet</span>
+              )}
+            </div>
+            {s.aiScore != null && (
+              <div className="mt-4 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950/40 px-4 py-3 text-sm">
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-2">
+                  Automated evaluation (not based on peer scores).
+                </p>
+                <p className="font-semibold text-foreground mb-1">
+                  Why this AI score
+                </p>
+                {s.aiReasoning ? (
+                  <p className="text-neutral-600 dark:text-neutral-400 whitespace-pre-wrap leading-relaxed">
+                    {s.aiReasoning}
+                  </p>
+                ) : (
+                  <p className="text-neutral-500 dark:text-neutral-500 text-xs italic">
+                    No written review stored yet — re-run AI evaluation to attach
+                    reasoning.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+          {!own && (
+            <div className="shrink-0 flex flex-col gap-1">
+              <label className="text-xs font-semibold text-neutral-500 uppercase">
+                Your peer score (1–10)
+              </label>
+              <select
+                disabled={participantBusy === s.submissionId}
+                value={
+                  s.myParticipantScore != null
+                    ? String(s.myParticipantScore)
+                    : ""
+                }
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  if (v >= 1 && v <= 10) {
+                    void submitParticipantScore(s.submissionId, v);
+                  }
+                }}
+                className="rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 px-2 py-1 text-sm min-w-[5rem]"
+              >
+                <option value="" disabled>
+                  Set…
+                </option>
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+              {participantBusy === s.submissionId && (
+                <span className="text-xs text-neutral-500">Saving…</span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {judgeEligible && phase === "peerVotingOpen" && (
+          <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-neutral-200 dark:border-neutral-700 pt-4">
+            <label className="text-xs font-semibold text-neutral-500 uppercase">
+              Judge score (1–10)
+            </label>
+            {s.myJudgeScore != null && (
+              <span className="rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                Scored: {s.myJudgeScore}
+              </span>
+            )}
+            <select
+              defaultValue=""
+              disabled={judgeBusy === s.submissionId}
+              onChange={(e) => {
+                const v = Number(e.target.value);
+                if (v >= 1 && v <= 10) {
+                  void submitJudgeScore(s.submissionId, v);
+                }
+                e.target.value = "";
+              }}
+              className="rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 px-2 py-1 text-sm"
+            >
+              <option value="" disabled>
+                {s.myJudgeScore != null ? "Change…" : "Set…"}
+              </option>
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </select>
+            {judgeBusy === s.submissionId && (
+              <span className="text-xs text-neutral-500">Saving…</span>
+            )}
+          </div>
+        )}
+
+        {showCommunityBlock && (
+          <div className="mt-4 space-y-2 border-t border-neutral-200 dark:border-neutral-700 pt-4">
+            <p className="text-xs font-medium text-neutral-500 uppercase tracking-wide">
+              Community &amp; finals
+            </p>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-2">
+              Peer and judge figures are separate from the automated AI block
+              above.
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+              {(phase === "peerVotingOpen" || phase === "resultsOpen") &&
+                s.peerAverage != null && (
+                  <div>
+                    <p className="text-xs text-neutral-500">Peer avg</p>
+                    <p className="font-semibold text-foreground">
+                      {s.peerAverage.toFixed(2)}
+                    </p>
+                  </div>
+                )}
+              {phase === "resultsOpen" && s.judgeAverage != null && (
+                <div>
+                  <p className="text-xs text-neutral-500">Judge avg</p>
+                  <p className="font-semibold text-foreground">
+                    {s.judgeAverage.toFixed(2)}
+                  </p>
+                </div>
+              )}
+              {phase === "resultsOpen" && s.rawScore != null && (
+                <div>
+                  <p className="text-xs text-neutral-500">Raw score</p>
+                  <p className="font-semibold text-foreground">{s.rawScore}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </li>
     );
+  }
 
   return (
     <div className="flex flex-col">
@@ -518,11 +848,12 @@ export default function HackASprint2026ShowcasePage() {
             Submissions &amp; peer scoring
           </h2>
           <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4 max-w-3xl">
-            <strong className="text-foreground">AI rank and score</strong> are automated from
-            repos and descriptions only — they do{" "}
-            <strong className="text-foreground">not</strong> use and are not affected by peer
-            scores. <strong className="text-foreground">Peer scores</strong> are a separate
-            community ballot.
+            <strong className="text-foreground">Peer scores</strong> are a community ballot
+            (1–10 on every <em>other</em> project).{" "}
+            <strong className="text-foreground">Automated AI scores</strong> and{" "}
+            <strong className="text-foreground">community averages</strong> stay hidden until
+            you have submitted a peer score for every other project. Judges and organizers see
+            full scores immediately.
           </p>
           {loadError && (
             <p className="text-sm text-rose-600 dark:text-rose-400 mb-4" role="alert">
@@ -539,11 +870,21 @@ export default function HackASprint2026ShowcasePage() {
             <>
               <div className="mb-6 rounded-xl border border-neutral-200 dark:border-neutral-700 p-4 bg-white dark:bg-neutral-900/50 space-y-3">
                   <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                    Score <strong>every other project</strong> from <strong>1–10</strong>{" "}
-                    (you cannot score your own). That peer ballot is unrelated to the
-                    automated AI block on each card. You can add or change scores anytime.
-                    Community averages and judge/raw finals appear in the stats row below each
-                    card when available.
+                    {participantQueueMode ? (
+                      <>
+                        Below you only see <strong className="text-foreground">projects you
+                        have not scored yet</strong>. Use{" "}
+                        <strong className="text-foreground">Change a score</strong> if you need
+                        to fix a rating. Your own project is listed separately — you cannot
+                        score it.
+                      </>
+                    ) : (
+                      <>
+                        Score <strong>every other project</strong> from <strong>1–10</strong>.
+                        You can change peer scores anytime. AI and community averages are
+                        visible now that your ballot is complete.
+                      </>
+                    )}
                   </p>
                   <p className="text-sm text-neutral-600 dark:text-neutral-400">
                     Progress:{" "}
@@ -572,11 +913,59 @@ export default function HackASprint2026ShowcasePage() {
                   </p>
                   {viewer?.hasCompletedPeerVoting && (
                     <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">
-                      All peer scores saved — peer averages (and judge/raw row when results
-                      are open) are visible below each card.
+                      Peer ballot complete — AI scores, your scores, and community averages are
+                      shown on each card (judge/raw row when results are open).
+                    </p>
+                  )}
+                  {!peerScoresRevealed && !isJudgeView && (
+                    <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                      Finish scoring <strong className="text-foreground">every other</strong>{" "}
+                      project to unlock automated AI scores and peer averages.
                     </p>
                   )}
                 </div>
+              <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+                <label className="flex flex-col gap-1 text-sm min-w-[12rem] flex-1">
+                  <span className="font-medium text-neutral-600 dark:text-neutral-400">
+                    Search (title or @github)
+                  </span>
+                  <input
+                    type="search"
+                    value={gallerySearch}
+                    onChange={(e) => setGallerySearch(e.target.value)}
+                    placeholder="Filter…"
+                    className="rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 px-3 py-2 text-sm"
+                  />
+                </label>
+                {!participantQueueMode && (
+                  <>
+                    <label className="flex flex-col gap-1 text-sm min-w-[10rem]">
+                      <span className="font-medium text-neutral-600 dark:text-neutral-400">
+                        Sort by
+                      </span>
+                      <select
+                        value={gallerySortKey}
+                        onChange={(e) =>
+                          setGallerySortKey(e.target.value as GallerySortKey)
+                        }
+                        className="rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 px-2 py-2 text-sm"
+                      >
+                        <option value="title">Project title</option>
+                        <option value="github">GitHub name</option>
+                        <option value="aiScore">AI score</option>
+                        <option value="peerAvg">Peer average</option>
+                      </select>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setGallerySortAsc((v) => !v)}
+                      className="rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 px-3 py-2 text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800"
+                    >
+                      {gallerySortAsc ? "Ascending" : "Descending"}
+                    </button>
+                  </>
+                )}
+              </div>
               {phase === "resultsOpen" && (
                 <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-6">
                   <strong className="text-foreground">Official order</strong> uses raw score
@@ -585,218 +974,62 @@ export default function HackASprint2026ShowcasePage() {
                   is not derived from peer voting.
                 </p>
               )}
-              {data.submissions.some((s) => s.aiRank != null) && (
+              {peerScoresRevealed &&
+                data.submissions.some((s) => s.aiRank != null) && (
                 <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
-                  Gallery order: <strong className="text-foreground">AI rank</strong> (1 =
-                  best), then score. Each card includes the automated score and why it was
-                  assigned.
+                  Cards show <strong className="text-foreground">AI rank</strong> (1 = best)
+                  and reasoning when available. Use sort above to reorder the gallery.
                 </p>
               )}
-              <ul className="space-y-8">
-                {data.submissions.map((s) => {
-                  const own = isOwnSubmission(s);
-                  const showScores =
-                    phase === "resultsOpen" ||
-                    viewer?.hasCompletedPeerVoting ||
-                    s.peerAverage != null;
-                  return (
-                    <li
-                      key={s.submissionId}
-                      className="rounded-2xl border border-neutral-200 dark:border-neutral-800 p-6 shadow-sm bg-white dark:bg-neutral-900"
-                    >
-                      <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-start">
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs font-medium uppercase tracking-wide text-neutral-500 mb-1">
-                            @{s.githubLogin}
-                            {own && (
-                              <span className="ml-2 text-emerald-600 dark:text-emerald-400">
-                                (you)
-                              </span>
-                            )}
-                          </p>
-                          <h3 className="text-lg font-semibold text-foreground mb-2">
-                            {s.payload.title}
-                          </h3>
-                          {s.aiRank != null && s.aiScore != null && (
-                            <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400 mb-2">
-                              AI rank #{s.aiRank} · {s.aiScore}/10
-                            </p>
-                          )}
-                          <p className="text-sm text-neutral-600 dark:text-neutral-400 whitespace-pre-wrap mb-4">
-                            {s.payload.description.trim()
-                              ? s.payload.description
-                              : "No description in submission yet."}
-                          </p>
-                          <div className="flex flex-wrap gap-3 text-sm items-center">
-                            {s.payload.projectRepoUrl.trim() ? (
-                              <a
-                                href={s.payload.projectRepoUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium"
-                              >
-                                Repo
-                              </a>
-                            ) : (
-                              <span className="text-neutral-500">No repo URL</span>
-                            )}
-                            {s.payload.deployedUrl ? (
-                              <a
-                                href={s.payload.deployedUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium"
-                              >
-                                Live app
-                              </a>
-                            ) : null}
-                            {s.payload.loomVideoUrl?.trim() ? (
-                              <a
-                                href={s.payload.loomVideoUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium"
-                              >
-                                Walkthrough video
-                              </a>
-                            ) : (
-                              <span className="text-neutral-500">No walkthrough yet</span>
-                            )}
-                          </div>
-                          {s.aiScore != null && (
-                            <div className="mt-4 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950/40 px-4 py-3 text-sm">
-                              <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-2">
-                                Automated evaluation (not based on peer scores).
-                              </p>
-                              <p className="font-semibold text-foreground mb-1">
-                                Why this AI score
-                              </p>
-                              {s.aiReasoning ? (
-                                <p className="text-neutral-600 dark:text-neutral-400 whitespace-pre-wrap leading-relaxed">
-                                  {s.aiReasoning}
-                                </p>
-                              ) : (
-                                <p className="text-neutral-500 dark:text-neutral-500 text-xs italic">
-                                  No written review stored yet — re-run AI evaluation to attach
-                                  reasoning.
-                                </p>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                        {!own && (
-                          <div className="shrink-0 flex flex-col gap-1">
-                            <label className="text-xs font-semibold text-neutral-500 uppercase">
-                              Your peer score (1–10)
-                            </label>
-                            <select
-                              disabled={participantBusy === s.submissionId}
-                              value={
-                                s.myParticipantScore != null
-                                  ? String(s.myParticipantScore)
-                                  : ""
-                              }
-                              onChange={(e) => {
-                                const v = Number(e.target.value);
-                                if (v >= 1 && v <= 10) {
-                                  void submitParticipantScore(s.submissionId, v);
-                                }
-                              }}
-                              className="rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 px-2 py-1 text-sm min-w-[5rem]"
-                            >
-                              <option value="" disabled>
-                                Set…
-                              </option>
-                              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-                                <option key={n} value={n}>
-                                  {n}
-                                </option>
-                              ))}
-                            </select>
-                            {participantBusy === s.submissionId && (
-                              <span className="text-xs text-neutral-500">Saving…</span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-
-                      {judgeEligible && phase === "peerVotingOpen" && (
-                        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-neutral-200 dark:border-neutral-700 pt-4">
-                          <label className="text-xs font-semibold text-neutral-500 uppercase">
-                            Judge score (1–10)
-                          </label>
-                          {s.myJudgeScore != null && (
-                            <span className="rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                              Scored: {s.myJudgeScore}
-                            </span>
-                          )}
-                          <select
-                            defaultValue=""
-                            disabled={judgeBusy === s.submissionId}
-                            onChange={(e) => {
-                              const v = Number(e.target.value);
-                              if (v >= 1 && v <= 10) {
-                                void submitJudgeScore(s.submissionId, v);
-                              }
-                              e.target.value = "";
-                            }}
-                            className="rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 px-2 py-1 text-sm"
-                          >
-                            <option value="" disabled>
-                              {s.myJudgeScore != null ? "Change…" : "Set…"}
-                            </option>
-                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-                              <option key={n} value={n}>
-                                {n}
-                              </option>
-                            ))}
-                          </select>
-                          {judgeBusy === s.submissionId && (
-                            <span className="text-xs text-neutral-500">Saving…</span>
-                          )}
-                        </div>
-                      )}
-
-                      {showScores && (
-                        <div className="mt-4 space-y-2 border-t border-neutral-200 dark:border-neutral-700 pt-4">
-                          <p className="text-xs font-medium text-neutral-500 uppercase tracking-wide">
-                            Community &amp; finals
-                          </p>
-                          <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-2">
-                            Peer and judge figures are separate from the automated AI block
-                            above.
-                          </p>
-                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
-                            {(phase === "peerVotingOpen" || phase === "resultsOpen") &&
-                              s.peerAverage != null && (
-                                <div>
-                                  <p className="text-xs text-neutral-500">Peer avg</p>
-                                  <p className="font-semibold text-foreground">
-                                    {s.peerAverage.toFixed(2)}
-                                  </p>
-                                </div>
-                              )}
-                            {phase === "resultsOpen" && s.judgeAverage != null && (
-                              <div>
-                                <p className="text-xs text-neutral-500">Judge avg</p>
-                                <p className="font-semibold text-foreground">
-                                  {s.judgeAverage.toFixed(2)}
-                                </p>
-                              </div>
-                            )}
-                            {phase === "resultsOpen" && s.rawScore != null && (
-                              <div>
-                                <p className="text-xs text-neutral-500">Raw score</p>
-                                <p className="font-semibold text-foreground">{s.rawScore}</p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
+              {participantQueueMode ? (
+                <>
+                  {queueOwn ? (
+                    <div className="mb-8">
+                      <h3 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3">
+                        Your submission
+                      </h3>
+                      <ul className="space-y-8">
+                        <SubmissionCard
+                          key={queueOwn.submissionId}
+                          s={queueOwn}
+                          ownQueueNote="Automated AI score and community peer average for your project unlock after you finish scoring everyone else."
+                        />
+                      </ul>
+                    </div>
+                  ) : null}
+                  <h3 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3">
+                    Projects to score next ({queueUnscored.length})
+                  </h3>
+                  {queueUnscored.length === 0 && !queueOwn ? (
+                    <p className="text-neutral-600 dark:text-neutral-400 text-sm mb-4">
+                      No submissions match your filter, or there is nothing left to score.
+                    </p>
+                  ) : null}
+                  <ul className="space-y-8 mb-8">
+                    {queueUnscored.map((s) => (
+                      <SubmissionCard key={s.submissionId} s={s} />
+                    ))}
+                  </ul>
+                  {queueScored.length > 0 ? (
+                    <details className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900/50 p-4 mb-8">
+                      <summary className="cursor-pointer text-sm font-semibold text-foreground">
+                        Change a score you already gave ({queueScored.length})
+                      </summary>
+                      <ul className="space-y-8 mt-4">
+                        {queueScored.map((s) => (
+                          <SubmissionCard key={s.submissionId} s={s} />
+                        ))}
+                      </ul>
+                    </details>
+                  ) : null}
+                </>
+              ) : (
+                <ul className="space-y-8">
+                  {galleryList.map((s) => (
+                    <SubmissionCard key={s.submissionId} s={s} />
+                  ))}
+                </ul>
+              )}
             </>
           )}
         </div>

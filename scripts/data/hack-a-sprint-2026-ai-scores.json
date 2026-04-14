@@ -101,6 +101,26 @@
       "submissionId": "firefoxmetzger",
       "aiScore": 5,
       "aiReasoning": "Newsletter-as-knowledge-base is interesting for dev content, but the submitted JSON lacks a Loom URL and the description does not spell out Inkbox email/phone/vault behavior—scored conservatively on available evidence (use --accept-all to write)."
+    },
+    {
+      "submissionId": "chloezhangzzc",
+      "aiScore": 8,
+      "aiReasoning": "README and layout show a serious outbound-sales agent: website/careers research, OpenAI draft generation, CSV review workflow, and Inkbox delivery with a safe default to a review inbox and explicit --live gating. Strong email-centric Inkbox fit for a governed GTM workflow."
+    },
+    {
+      "submissionId": "satishparaddi",
+      "aiScore": 8,
+      "aiReasoning": "Node service uses @inkbox/sdk end-to-end: verified webhooks, strict JSON transaction payloads, financial analysis, and threaded replies via messages.send. README documents the pipeline clearly—tight, observable email agent without extra UI surface."
+    },
+    {
+      "submissionId": "shreyas0786",
+      "aiScore": 8,
+      "aiReasoning": "Medical check-in flow combines Inkbox email plus live phone (STT/TTS) with Groq over WebSocket—matches the sprint’s multi-channel agent bar. README is concise; stack is credible for a short sprint (Flask, call_server, bot.py)."
+    },
+    {
+      "submissionId": "paramjeet-singh-neu",
+      "aiScore": 9,
+      "aiReasoning": "ConNET README claims full lifecycle on Email, Vault, and Phone: outbound research + send, inbound classification, vault-backed CRM, agent-to-agent mode, follow-ups, smart intros, plus Flask SSE dashboard and D3 network graph. High breadth and depth versus typical single-feature demos; score reflects documented scope (Loom not reviewed here)."
     }
   ]
 }

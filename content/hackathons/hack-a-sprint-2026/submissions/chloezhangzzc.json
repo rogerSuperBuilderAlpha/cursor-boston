@@ -1,0 +1,6 @@
+{
+  "projectRepoUrl": "https://github.com/chloezhangzzc/sales_agent",
+  "title": "AI Sales Outreach Agent",
+  "description": "Built a Python-based outbound sales agent that researches company websites, discovers public contact emails, generates personalized outreach drafts with OpenAI, and sends approved emails through Inkbox with a safe review-inbox workflow by default. Stack: Python, OpenAI API, and Inkbox SDK. Learned how to combine web research, AI-generated personalization, and guarded email delivery into a practical outbound workflow.",
+  "loomVideoUrl": "https://www.loom.com/share/a4d9aba1475f4ac6aa973df4e3494f48"
+}
