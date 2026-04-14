@@ -515,7 +515,7 @@ export default function HackASprint2026ShowcasePage() {
       <section id="peer-voting" className="py-10 px-6 scroll-mt-20">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-xl font-bold text-foreground mb-2">
-            Submissions
+            Submissions &amp; peer scoring
           </h2>
           <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4 max-w-3xl">
             <strong className="text-foreground">AI rank and score</strong> are automated from
@@ -531,25 +531,19 @@ export default function HackASprint2026ShowcasePage() {
           )}
           {!data || !me ? (
             <p className="text-neutral-500">Loading…</p>
-          ) : phase === "submissionOpen" ? (
-            <p className="text-neutral-600 dark:text-neutral-400 text-sm">
-              Project gallery opens at 7:15 PM ET for peer scoring. Finish your PR
-              submission before then.
-            </p>
           ) : data.submissions.length === 0 ? (
             <p className="text-neutral-600 dark:text-neutral-400">
               No merged submissions yet.
             </p>
           ) : (
             <>
-              {phase === "peerVotingOpen" && (
-                <div className="mb-6 rounded-xl border border-neutral-200 dark:border-neutral-700 p-4 bg-white dark:bg-neutral-900/50 space-y-3">
+              <div className="mb-6 rounded-xl border border-neutral-200 dark:border-neutral-700 p-4 bg-white dark:bg-neutral-900/50 space-y-3">
                   <p className="text-sm text-neutral-600 dark:text-neutral-400">
                     Score <strong>every other project</strong> from <strong>1–10</strong>{" "}
                     (you cannot score your own). That peer ballot is unrelated to the
-                    automated AI block on each card. When you have finished all peer scores,
-                    community averages and judge/raw finals appear in the separate stats row
-                    below each card.
+                    automated AI block on each card. You can add or change scores anytime.
+                    Community averages and judge/raw finals appear in the stats row below each
+                    card when available.
                   </p>
                   <p className="text-sm text-neutral-600 dark:text-neutral-400">
                     Progress:{" "}
@@ -583,7 +577,6 @@ export default function HackASprint2026ShowcasePage() {
                     </p>
                   )}
                 </div>
-              )}
               {phase === "resultsOpen" && (
                 <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-6">
                   <strong className="text-foreground">Official order</strong> uses raw score
@@ -604,7 +597,8 @@ export default function HackASprint2026ShowcasePage() {
                   const own = isOwnSubmission(s);
                   const showScores =
                     phase === "resultsOpen" ||
-                    (phase === "peerVotingOpen" && viewer?.hasCompletedPeerVoting);
+                    viewer?.hasCompletedPeerVoting ||
+                    s.peerAverage != null;
                   return (
                     <li
                       key={s.submissionId}
@@ -680,7 +674,7 @@ export default function HackASprint2026ShowcasePage() {
                             </div>
                           )}
                         </div>
-                        {phase === "peerVotingOpen" && !own && (
+                        {!own && (
                           <div className="shrink-0 flex flex-col gap-1">
                             <label className="text-xs font-semibold text-neutral-500 uppercase">
                               Your peer score (1–10)
