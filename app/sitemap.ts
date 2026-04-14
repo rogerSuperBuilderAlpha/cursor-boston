@@ -79,6 +79,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.6,
     },
     {
+      url: `${baseUrl}/maintainers`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.52,
+    },
+    {
+      url: `${baseUrl}/maintainers/apply`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    },
+    {
       url: `${baseUrl}/cookbook`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
