@@ -43,6 +43,14 @@
       ]
     },
     {
+      "collectionGroup": "messageReactions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "messageId", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "communityMessages",
       "queryScope": "COLLECTION",
       "fields": [
