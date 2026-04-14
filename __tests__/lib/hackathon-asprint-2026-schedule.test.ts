@@ -5,23 +5,14 @@
 import { getHackASprint2026Phase } from "@/lib/hackathon-asprint-2026-schedule";
 
 describe("getHackASprint2026Phase", () => {
-  it("returns preUnlock before 5pm ET on event day", () => {
+  it("returns preEvent before 5pm ET on event day", () => {
     expect(getHackASprint2026Phase(new Date("2026-04-13T16:59:00-04:00"))).toBe(
-      "preUnlock"
+      "preEvent"
     );
   });
 
-  it("returns passcodeUnlock from 5pm through before 6:30pm ET", () => {
+  it("returns submissionOpen from 5pm through before 7:15pm ET", () => {
     expect(getHackASprint2026Phase(new Date("2026-04-13T17:00:00-04:00"))).toBe(
-      "passcodeUnlock"
-    );
-    expect(getHackASprint2026Phase(new Date("2026-04-13T18:29:00-04:00"))).toBe(
-      "passcodeUnlock"
-    );
-  });
-
-  it("returns submissionOpen from 6:30pm through before 7:15pm ET", () => {
-    expect(getHackASprint2026Phase(new Date("2026-04-13T18:30:00-04:00"))).toBe(
       "submissionOpen"
     );
     expect(getHackASprint2026Phase(new Date("2026-04-13T19:14:00-04:00"))).toBe(
@@ -44,9 +35,9 @@ describe("getHackASprint2026Phase", () => {
     );
   });
 
-  it("returns preUnlock on days before the event", () => {
+  it("returns preEvent on days before the event", () => {
     expect(getHackASprint2026Phase(new Date("2026-04-12T12:00:00-04:00"))).toBe(
-      "preUnlock"
+      "preEvent"
     );
   });
 

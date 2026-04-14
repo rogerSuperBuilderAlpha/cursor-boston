@@ -23,6 +23,7 @@ type SubmissionRow = {
   deployedUrl?: string;
   loomVideoUrl: string;
   aiScore: number | null;
+  aiReasoning: string | null;
   judgeScores: Record<string, number>;
   judgeAverage: number | null;
   peerVoteCount: number;
@@ -954,6 +955,16 @@ function DashboardTab({ data }: { data: DashboardData | null }) {
                               <p className="text-sm text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap">
                                 {s.description}
                               </p>
+                              {s.aiReasoning ? (
+                                <div className="mt-4 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900/60 p-3">
+                                  <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-1">
+                                    AI reasoning
+                                  </p>
+                                  <p className="text-sm text-neutral-600 dark:text-neutral-400 whitespace-pre-wrap">
+                                    {s.aiReasoning}
+                                  </p>
+                                </div>
+                              ) : null}
                             </td>
                           </tr>
                         )}

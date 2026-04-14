@@ -12,7 +12,6 @@ import {
   HACK_A_SPRINT_2026_EVENT_ID,
   fetchShowcaseSubmissionsFromGitHub,
 } from "@/lib/hackathon-showcase";
-import { getHackASprint2026Phase } from "@/lib/hackathon-asprint-2026-schedule";
 import {
   hackASprint2026ParticipantScoresDocId,
   normalizeParticipantScores,
@@ -42,14 +41,6 @@ export async function POST(request: NextRequest) {
     const user = await getVerifiedUser(request);
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const phase = getHackASprint2026Phase();
-    if (phase !== "peerVotingOpen") {
-      return NextResponse.json(
-        { error: "Peer scoring is only open during the judging window." },
-        { status: 403 }
-      );
     }
 
     const db = getAdminDb();

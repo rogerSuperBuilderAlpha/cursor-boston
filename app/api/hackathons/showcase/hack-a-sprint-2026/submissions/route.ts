@@ -13,7 +13,10 @@ import {
   type ShowcaseSubmission,
 } from "@/lib/hackathon-showcase";
 import { getHackASprint2026Phase } from "@/lib/hackathon-asprint-2026-schedule";
-import { computeHackASprint2026RawScore } from "@/lib/hackathon-asprint-2026-scores";
+import {
+  computeAiRanksBySubmissionId,
+  computeHackASprint2026RawScore,
+} from "@/lib/hackathon-asprint-2026-scores";
 import { computePeerAverages } from "@/lib/hackathon-asprint-2026-participant-scoring";
 import {
   getAllHackASprint2026ParticipantScoreDocs,
@@ -73,10 +76,7 @@ export async function GET(request: NextRequest) {
       judgeEligible = getJudgeUidSet().has(user.uid);
     }
 
-    const showSubmissionList =
-      checkedIn &&
-      signedUp &&
-      (phase === "peerVotingOpen" || phase === "resultsOpen");
+    const showSubmissionList = checkedIn && signedUp;
 
     let submissions: ShowcaseSubmission[] = [];
     if (showSubmissionList) {
@@ -108,15 +108,14 @@ export async function GET(request: NextRequest) {
       myParticipantScores = await getParticipantScoresForUser(db, user.uid);
     }
 
-    const revealAi =
-      phase === "resultsOpen" ||
-      (phase === "peerVotingOpen" && hasCompletedPeerVoting);
     const revealJudgesAndPeers = phase === "resultsOpen";
 
     type Row = ShowcaseSubmission & {
       peerAverage: number | null;
       peerVoteCount: number | null;
       aiScore: number | null;
+      aiRank: number | null;
+      aiReasoning: string | null;
       judgeAverage: number | null;
       rawScore: number | null;
       myJudgeScore: number | null;
@@ -161,6 +160,20 @@ export async function GET(request: NextRequest) {
         }
       });
 
+      const aiScoreBySubmissionId = new Map<string, number | null>();
+      for (const s of submissions) {
+        const data = scoreBySid.get(s.submissionId);
+        const ai =
+          typeof data?.aiScore === "number" && data.aiScore >= 1 && data.aiScore <= 10
+            ? data.aiScore
+            : null;
+        aiScoreBySubmissionId.set(s.submissionId, ai);
+      }
+      const aiRankBySubmissionId = computeAiRanksBySubmissionId(
+        submissions.map((s) => s.submissionId),
+        aiScoreBySubmissionId
+      );
+
       for (const s of submissions) {
         const data = scoreBySid.get(s.submissionId);
         const legacyPeer =
@@ -169,6 +182,12 @@ export async function GET(request: NextRequest) {
           typeof data?.aiScore === "number" && data.aiScore >= 1 && data.aiScore <= 10
             ? data.aiScore
             : null;
+        const aiReasoningRaw =
+          typeof data?.aiReasoning === "string" && data.aiReasoning.trim()
+            ? data.aiReasoning.trim()
+            : null;
+        const aiRank =
+          aiScore != null ? aiRankBySubmissionId.get(s.submissionId) ?? null : null;
         const judgeScores =
           data?.judgeScores && typeof data.judgeScores === "object"
             ? (data.judgeScores as Record<string, number>)
@@ -193,33 +212,27 @@ export async function GET(request: NextRequest) {
 
         rows.push({
           ...s,
-          peerAverage:
-            revealJudgesAndPeers || phase === "peerVotingOpen"
-              ? peerAverage
-              : null,
+          peerAverage,
           peerVoteCount: revealJudgesAndPeers ? legacyPeer : null,
-          aiScore: revealAi ? aiScore : null,
+          aiScore,
+          aiRank,
+          aiReasoning: aiReasoningRaw,
           judgeAverage: revealJudgesAndPeers ? judgeAverage : null,
           rawScore: revealJudgesAndPeers ? rawScore : null,
           myJudgeScore,
-          myParticipantScore:
-            phase === "peerVotingOpen" || phase === "resultsOpen"
-              ? myParticipantScore
-              : null,
+          myParticipantScore,
         });
       }
 
-      if (revealJudgesAndPeers) {
-        rows.sort((a, b) => {
-          const ra = a.rawScore ?? -1;
-          const rb = b.rawScore ?? -1;
-          if (rb !== ra) return rb - ra;
-          const pa = a.peerAverage ?? -1;
-          const pb = b.peerAverage ?? -1;
-          if (pb !== pa) return pb - pa;
-          return (b.peerVoteCount ?? 0) - (a.peerVoteCount ?? 0);
-        });
-      }
+      rows.sort((a, b) => {
+        const rankA = a.aiRank ?? Number.POSITIVE_INFINITY;
+        const rankB = b.aiRank ?? Number.POSITIVE_INFINITY;
+        if (rankA !== rankB) return rankA - rankB;
+        const sa = a.aiScore ?? -1;
+        const sb = b.aiScore ?? -1;
+        if (sb !== sa) return sb - sa;
+        return a.submissionId.localeCompare(b.submissionId);
+      });
     }
 
     return NextResponse.json({
@@ -229,10 +242,7 @@ export async function GET(request: NextRequest) {
         signedUp,
         hasCompletedPeerVoting,
         judgeEligible,
-        myParticipantScores:
-          phase === "peerVotingOpen" || phase === "resultsOpen"
-            ? myParticipantScores
-            : {},
+        myParticipantScores,
       },
       submissions: rows,
     });
