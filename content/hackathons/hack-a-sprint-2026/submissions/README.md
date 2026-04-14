@@ -2,7 +2,7 @@
 
 Add **one** file: `{your-github-login}.json` (login must match the PR author).
 
-Required fields include **loomVideoUrl** (a Loom or similar video of you explaining the project). See the [showcase page](https://cursorboston.com/hackathons/hack-a-sprint-2026) for full instructions and the JSON schema.
+Required fields: **projectRepoUrl** (public GitHub repo for your hack), **title**, **description**, and **loomVideoUrl** (a Loom or similar walkthrough). A **deployedUrl** is optional. See the [showcase page](https://cursorboston.com/hackathons/hack-a-sprint-2026) for full instructions and the JSON schema.
 
 Do not edit other contributors’ files in your PR.
 

@@ -1,0 +1,6 @@
+{
+  "projectRepoUrl": "https://github.com/ankittejyadav/inkbox_agent",
+  "title": "Critical Incident Voice Pager",
+  "description": "A SvelteKit automated voice pager that monitors email webhooks and triggers outbound phone calls via Inkbox SDK. Designed to bridge the gap between email alerts and physical awareness for critical incidents.",
+  "loomVideoUrl": "https://www.loom.com/share/your-recording"
+}

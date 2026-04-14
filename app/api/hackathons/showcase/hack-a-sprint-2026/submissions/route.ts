@@ -7,20 +7,33 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { DocumentData } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
-import { getVerifiedUser } from "@/lib/server-auth";
+import { getOptionalVerifiedUser } from "@/lib/server-auth";
 import {
+  HACK_A_SPRINT_2026_EVENT_ID,
   fetchShowcaseSubmissionsFromGitHub,
   type ShowcaseSubmission,
 } from "@/lib/hackathon-showcase";
 import { getHackASprint2026Phase } from "@/lib/hackathon-asprint-2026-schedule";
-import { computeHackASprint2026RawScore } from "@/lib/hackathon-asprint-2026-scores";
 import {
-  hackASprint2026PeerVoteDocId,
+  computeAiRanksBySubmissionId,
+  computeHackASprint2026RawScore,
+} from "@/lib/hackathon-asprint-2026-scores";
+import {
+  computePeerAverages,
+  hackASprint2026ParticipantScoresDocId,
+  normalizeParticipantScores,
+  participantBallotComplete,
+} from "@/lib/hackathon-asprint-2026-participant-scoring";
+import {
+  getAllHackASprint2026ParticipantScoreDocs,
   hackASprint2026ScoreDocId,
-  userHasHackASprint2026Signup,
-  userHackASprint2026PeerVoteComplete,
+  resolveVoterGithubByUid,
 } from "@/lib/hackathon-asprint-2026-state";
-import { userIsHackASprint2026Judge } from "@/lib/hackathon-showcase-admin";
+import { userIsHackASprint2026JudgeFromUserData } from "@/lib/hackathon-showcase-admin";
+import {
+  hackathonEventSignupDocId,
+  profileMatchesHackathonJudgeCheckinException,
+} from "@/lib/hackathon-event-signup";
 import { getJudgeUidSet } from "@/lib/hackathon-showcase";
 
 export const runtime = "nodejs";
@@ -39,82 +52,120 @@ function averageJudgeScores(
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await getVerifiedUser(request);
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const user = await getOptionalVerifiedUser(request);
 
     const phase = getHackASprint2026Phase();
     const db = getAdminDb();
 
-    let unlocked = false;
+    let checkedIn = false;
     let signedUp = false;
     let hasCompletedPeerVoting = false;
-    let myPeerPicks: string[] = [];
+    let myParticipantScores: Record<string, number> = {};
     let judgeEligible = false;
+    let judgeCheckinBypass = false;
+    let viewerGithub: string | null = null;
 
-    if (db) {
-      const userSnap = await db.collection("users").doc(user.uid).get();
-      unlocked = userSnap.data()?.hackASprint2026Unlocked === true;
-      signedUp = await userHasHackASprint2026Signup(db, user.uid);
-      hasCompletedPeerVoting = await userHackASprint2026PeerVoteComplete(
-        db,
-        user.uid
+    if (user && db) {
+      const signupRef = db
+        .collection("hackathonEventSignups")
+        .doc(hackathonEventSignupDocId(HACK_A_SPRINT_2026_EVENT_ID, user.uid));
+      const userRef = db.collection("users").doc(user.uid);
+      const [signupSnap, userSnap] = await db.getAll(signupRef, userRef);
+      const profile = userSnap.data() as Record<string, unknown> | undefined;
+      signedUp = signupSnap.exists;
+      checkedIn =
+        Boolean(signupSnap.exists && signupSnap.data()?.checkedInAt != null) ||
+        profileMatchesHackathonJudgeCheckinException(user.email, profile);
+      judgeCheckinBypass = profileMatchesHackathonJudgeCheckinException(
+        user.email,
+        profile
       );
-      judgeEligible = await userIsHackASprint2026Judge(
-        db,
+      judgeEligible = userIsHackASprint2026JudgeFromUserData(
         user.uid,
-        user.email
+        user.email,
+        profile
       );
-      const pv = await db
-        .collection("hackathonASprint2026PeerVotes")
-        .doc(hackASprint2026PeerVoteDocId(user.uid))
-        .get();
-      const picks = pv.data()?.submissionIds;
-      if (Array.isArray(picks)) {
-        myPeerPicks = picks.map((x: unknown) => String(x).toLowerCase());
-      }
-    } else {
+      const gh = profile?.github as { login?: unknown } | undefined;
+      const lg = typeof gh?.login === "string" ? gh.login : "";
+      viewerGithub = lg.trim() ? lg.trim().toLowerCase() : null;
+    } else if (user && !db) {
       judgeEligible = getJudgeUidSet().has(user.uid);
     }
 
-    const revealAi =
-      phase === "resultsOpen" ||
-      (phase === "peerVotingOpen" && hasCompletedPeerVoting);
-    const revealJudgesAndPeers = phase === "resultsOpen";
-
-    const showSubmissionList =
-      unlocked &&
-      signedUp &&
-      (phase === "peerVotingOpen" || phase === "resultsOpen");
-
+    /** Public gallery: submissions are always listed (no check-in gate on GET). */
     let submissions: ShowcaseSubmission[] = [];
-    if (showSubmissionList) {
-      submissions = await fetchShowcaseSubmissionsFromGitHub();
+    submissions = await fetchShowcaseSubmissionsFromGitHub();
 
-      const allowedRaw = process.env.HACK_A_SPRINT_2026_ALLOWED_SUBMISSIONS || "";
-      if (allowedRaw.trim()) {
-        const allowed = new Set(
-          allowedRaw
-            .split(",")
-            .map((s) => s.trim().toLowerCase())
-            .filter(Boolean)
-        );
-        submissions = submissions.filter((s) => allowed.has(s.submissionId));
-      }
+    const allowedRaw = process.env.HACK_A_SPRINT_2026_ALLOWED_SUBMISSIONS || "";
+    if (allowedRaw.trim()) {
+      const allowed = new Set(
+        allowedRaw
+          .split(",")
+          .map((s) => s.trim().toLowerCase())
+          .filter(Boolean)
+      );
+      submissions = submissions.filter((s) => allowed.has(s.submissionId));
     }
 
+    const submissionGithubSet = new Set(
+      submissions.map((s) => s.githubLogin.trim().toLowerCase())
+    );
+    const isSubmitter = Boolean(
+      viewerGithub && submissionGithubSet.has(viewerGithub)
+    );
+
+    if (user && db && viewerGithub && submissions.length > 0) {
+      const identities = submissions.map((s) => ({
+        submissionId: s.submissionId,
+        githubLogin: s.githubLogin,
+      }));
+      const psRef = db
+        .collection("hackathonASprint2026ParticipantScores")
+        .doc(hackASprint2026ParticipantScoresDocId(user.uid));
+      const psSnap = await psRef.get();
+      myParticipantScores = psSnap.exists
+        ? normalizeParticipantScores(
+            psSnap.data()?.scores as Record<string, unknown> | undefined
+          )
+        : {};
+      hasCompletedPeerVoting = participantBallotComplete(
+        myParticipantScores,
+        viewerGithub,
+        identities
+      );
+    }
+
+    const revealJudgesAndPeers = phase === "resultsOpen";
+
     type Row = ShowcaseSubmission & {
+      peerAverage: number | null;
       peerVoteCount: number | null;
       aiScore: number | null;
+      aiRank: number | null;
+      aiReasoning: string | null;
       judgeAverage: number | null;
       rawScore: number | null;
       myJudgeScore: number | null;
+      myParticipantScore: number | null;
     };
 
     const rows: Row[] = [];
 
     if (db && submissions.length > 0) {
+      const identities = submissions.map((s) => ({
+        submissionId: s.submissionId,
+        githubLogin: s.githubLogin,
+      }));
+
+      const voterDocs = await getAllHackASprint2026ParticipantScoreDocs(db);
+      const voterGithubByUid = await resolveVoterGithubByUid(db, voterDocs);
+
+      const peerAvgBySid = computePeerAverages(
+        identities,
+        voterDocs,
+        voterGithubByUid
+      );
+
       const refs = submissions.map((s) =>
         db.collection("hackathonShowcaseScores").doc(hackASprint2026ScoreDocId(s.submissionId))
       );
@@ -126,14 +177,34 @@ export async function GET(request: NextRequest) {
         }
       });
 
+      const aiScoreBySubmissionId = new Map<string, number | null>();
       for (const s of submissions) {
         const data = scoreBySid.get(s.submissionId);
-        const peerVoteCount =
+        const ai =
+          typeof data?.aiScore === "number" && data.aiScore >= 1 && data.aiScore <= 10
+            ? data.aiScore
+            : null;
+        aiScoreBySubmissionId.set(s.submissionId, ai);
+      }
+      const aiRankBySubmissionId = computeAiRanksBySubmissionId(
+        submissions.map((s) => s.submissionId),
+        aiScoreBySubmissionId
+      );
+
+      for (const s of submissions) {
+        const data = scoreBySid.get(s.submissionId);
+        const legacyPeer =
           typeof data?.peerVoteCount === "number" ? data.peerVoteCount : 0;
         const aiScore =
           typeof data?.aiScore === "number" && data.aiScore >= 1 && data.aiScore <= 10
             ? data.aiScore
             : null;
+        const aiReasoningRaw =
+          typeof data?.aiReasoning === "string" && data.aiReasoning.trim()
+            ? data.aiReasoning.trim()
+            : null;
+        const aiRank =
+          aiScore != null ? aiRankBySubmissionId.get(s.submissionId) ?? null : null;
         const judgeScores =
           data?.judgeScores && typeof data.judgeScores === "object"
             ? (data.judgeScores as Record<string, number>)
@@ -142,7 +213,7 @@ export async function GET(request: NextRequest) {
         const rawScore = computeHackASprint2026RawScore(aiScore, judgeScores);
 
         const myJudge =
-          judgeEligible && judgeScores
+          user && judgeEligible && judgeScores
             ? judgeScores[user.uid] ?? null
             : null;
         const myJudgeScore =
@@ -150,38 +221,80 @@ export async function GET(request: NextRequest) {
             ? myJudge
             : null;
 
+        const sid = s.submissionId.toLowerCase();
+        const peerAverage = peerAvgBySid.get(sid) ?? null;
+        const myPs = myParticipantScores[sid];
+        const myParticipantScore =
+          typeof myPs === "number" && myPs >= 1 && myPs <= 10 ? myPs : null;
+
         rows.push({
           ...s,
-          peerVoteCount: revealJudgesAndPeers ? peerVoteCount : null,
-          aiScore: revealAi ? aiScore : null,
+          peerAverage,
+          peerVoteCount: revealJudgesAndPeers ? legacyPeer : null,
+          aiScore,
+          aiRank,
+          aiReasoning: aiReasoningRaw,
           judgeAverage: revealJudgesAndPeers ? judgeAverage : null,
           rawScore: revealJudgesAndPeers ? rawScore : null,
           myJudgeScore,
+          myParticipantScore,
         });
       }
 
-      if (revealJudgesAndPeers) {
-        rows.sort((a, b) => {
-          const ra = a.rawScore ?? -1;
-          const rb = b.rawScore ?? -1;
-          if (rb !== ra) return rb - ra;
-          const pa = a.peerVoteCount ?? 0;
-          const pb = b.peerVoteCount ?? 0;
-          return pb - pa;
-        });
-      }
+      rows.sort((a, b) => {
+        const rankA = a.aiRank ?? Number.POSITIVE_INFINITY;
+        const rankB = b.aiRank ?? Number.POSITIVE_INFINITY;
+        if (rankA !== rankB) return rankA - rankB;
+        const sa = a.aiScore ?? -1;
+        const sb = b.aiScore ?? -1;
+        if (sb !== sa) return sb - sa;
+        return a.submissionId.localeCompare(b.submissionId);
+      });
     }
+
+    const isJudgeView = judgeEligible || judgeCheckinBypass;
+    const revealScoresToViewer =
+      isJudgeView ||
+      !user ||
+      !isSubmitter ||
+      hasCompletedPeerVoting ||
+      phase === "resultsOpen";
+
+    const canPeerVote = Boolean(
+      user &&
+        isSubmitter &&
+        !judgeEligible &&
+        !judgeCheckinBypass &&
+        (phase === "peerVotingOpen" || phase === "resultsOpen")
+    );
+
+    const submissionsOut = revealScoresToViewer
+      ? rows
+      : rows.map((r) => ({
+          ...r,
+          peerAverage: null,
+          peerVoteCount: null,
+          aiScore: null,
+          aiRank: null,
+          aiReasoning: null,
+          judgeAverage: null,
+          rawScore: null,
+        }));
 
     return NextResponse.json({
       phase,
       viewer: {
-        unlocked,
+        checkedIn,
         signedUp,
         hasCompletedPeerVoting,
         judgeEligible,
-        myPeerPicks,
+        isJudge: isJudgeView,
+        peerScoresRevealed: revealScoresToViewer,
+        myParticipantScores,
+        canPeerVote,
+        isSubmitter,
       },
-      submissions: rows,
+      submissions: submissionsOut,
     });
   } catch (e) {
     console.error("[showcase submissions]", e);

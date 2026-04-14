@@ -288,7 +288,8 @@ with Inkbox(api_key="ApiKey_...") as inkbox:
             </li>
             <li>
               <strong className="text-foreground">$1,200 prize pool</strong> — six $200 winning
-              spots awarded by combined peer, judge, and AI scoring
+              spots from combined peer voting, judge scores, and AI scores (from your repo,
+              write-up, and Loom; a live deployment is not required)
             </li>
           </ul>
         </section>
@@ -297,7 +298,13 @@ with Inkbox(api_key="ApiKey_...") as inkbox:
         <section className="mt-10">
           <h2 className="text-xl font-bold text-foreground">Submission overview</h2>
           <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
-            Full submission instructions unlock on event day.
+            On event day you will submit via PR: one JSON file with your public{" "}
+            <strong className="text-foreground">GitHub repo</strong>,{" "}
+            <strong className="text-foreground">title</strong>,{" "}
+            <strong className="text-foreground">description</strong>, and a{" "}
+            <strong className="text-foreground">Loom</strong> (or similar) walkthrough. A
+            deployed demo URL is optional. Full step-by-step instructions unlock on the live
+            hub.
           </p>
         </section>
 

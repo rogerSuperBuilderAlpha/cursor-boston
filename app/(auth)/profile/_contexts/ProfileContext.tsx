@@ -77,7 +77,7 @@ export function ProfileProvider({
 
   // Data hooks
   const data = useProfileData(user, userProfile?.github?.login);
-  const badges = useBadges(user, userProfile);
+  const badges = useBadges(user, userProfile, data.profileBundle);
 
   // Connection hooks
   const discord = useDiscordConnection(user, userProfile?.discord);

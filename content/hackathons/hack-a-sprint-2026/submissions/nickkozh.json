@@ -1,0 +1,5 @@
+{
+  "projectRepoUrl": "https://github.com/nickkozh/openclaw-inkbox-agent",
+  "title": "Daily AI Agent Briefing System",
+  "description": "Built a daily briefing system for a fleet of AI agents running on a Mac Mini. Agents log structured tasks to JSONL files throughout the day, and a reporter script reads those logs, uses Claude to generate a styled HTML email summary and a spoken phone briefing, then delivers both via Inkbox. Phone calls are only triggered on errors — the WebSocket + ngrok call server streams TTS audio in real time. Scheduled via macOS launchd. Stack: TypeScript, Claude API (claude-opus-4-6), Inkbox SDK (email, phone, vault), ngrok, Node.js."
+}

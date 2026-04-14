@@ -11,6 +11,7 @@ import {
   GitHubIcon,
   UserCardIcon,
 } from "@/components/icons";
+import { SHOWCASE_AWARD_LABEL } from "@/lib/hackathon-asprint-2026-awards";
 import { useProfileContext } from "../_contexts/ProfileContext";
 
 export function ConnectionsSection() {
@@ -103,7 +104,8 @@ export function ConnectionsSection() {
       {(connectedAgents.length > 0 ||
         userProfile?.eduBadge ||
         userProfile?.additionalEmails?.some((e) => e.verified && e.email.toLowerCase().endsWith(".edu")) ||
-        userProfile?.hackASprint2026ShowcaseBadge) && (
+        userProfile?.hackASprint2026ShowcaseBadge ||
+        (userProfile?.hackASprint2026ShowcaseAwards?.length ?? 0) > 0) && (
         <div className="flex flex-wrap gap-2 mt-3">
           {connectedAgents.length > 0 && (
             <span className="px-3 py-1 bg-purple-500/10 text-purple-400 text-xs rounded-full inline-flex items-center gap-1">
@@ -118,6 +120,14 @@ export function ConnectionsSection() {
           {userProfile?.hackASprint2026ShowcaseBadge && (
             <span className="px-3 py-1 bg-cyan-500/10 text-cyan-400 text-xs rounded-full">Hack-a-Sprint &apos;26</span>
           )}
+          {userProfile?.hackASprint2026ShowcaseAwards?.map((kind) => (
+            <span
+              key={kind}
+              className="px-3 py-1 bg-amber-500/10 text-amber-400 text-xs rounded-full"
+            >
+              {SHOWCASE_AWARD_LABEL[kind]}
+            </span>
+          ))}
         </div>
       )}
 

@@ -103,7 +103,7 @@ function MembersPageContent() {
       </section>
 
       {/* Tab Content */}
-      {activeTab === "feed" ? (
+           {activeTab === "feed" ? (
         <CommunityFeed user={user} onViewMemberProfile={viewMemberProfile} />
       ) : (
         <MemberDirectory key={searchQuery} initialSearch={searchQuery} />

@@ -101,11 +101,17 @@ export interface Event {
   isCancelled?: boolean;
   isPostponed?: boolean;
   postponedTo?: string;
+
+  /** Past events: primary button target (e.g. submissions gallery) instead of only /events/[slug]. */
+  primaryCtaHref?: string;
+  primaryCtaLabel?: string;
 }
 
 export interface EventsData {
   upcoming: Event[];
   past: Event[];
+  /** Archived listings (e.g. hackathons whose gallery lives elsewhere). */
+  oldEvents: Event[];
 }
 
 /**

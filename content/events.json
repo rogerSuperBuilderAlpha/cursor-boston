@@ -1,91 +1,12 @@
 {
   "upcoming": [
     {
-      "id": "cursor-boston-hack-a-sprint-2026",
-      "slug": "cursor-boston-hack-a-sprint-2026",
-      "title": "Cursor Boston Hack-a-Sprint",
-      "subtitle": "Inaugural in-person sprint — 50 builders, solo competition, co-hosted with inkbox.ai & Genesis Fund",
-      "date": "2026-04-13",
-      "time": "4:00 PM – 8:00 PM ET",
-      "location": "Back Bay, Boston, MA",
-      "venue": {
-        "name": "Back Bay (exact address after approval)",
-        "address": "Register on Luma to see the venue address after you're approved.",
-        "mapUrl": null
-      },
-      "type": "hackathon",
-      "description": "First-ever Cursor Boston Hack-a-Sprint: 50 developers, fast solo competition, fully fed and watered. $50 in Cursor Credits for every selected participant, $1,200 prize pool (six $200 spots). Monday April 13 in Back Bay — register on Luma; approval required.",
-      "longDescription": "We're thrilled to announce our inaugural Hack-a-Sprint, co-hosted with inkbox.ai and genesisfund.co. We're bringing together 50 developers for a fast-paced, solo competition.\n\nWhether you're building something brand new or pushing the limits of your current project, this is your chance to code, compete, and connect with the Boston Cursor community. You will be fully fed and watered.\n\nThe Perks & Prizes\n\nGuaranteed bounty: Every selected participant receives $50 in Cursor Credits.\nPrize pool: $1,200 total, split across six $200 Cursor Credit winning spots.\n\nWhen & Where\n\nDate: Monday, April 13, 2026\nLocation: Back Bay, Boston — exact address is shown on Luma after your registration is approved.\n\nThe Schedule\n\n4:00 PM — Meet, greet, and get set up.\n4:30 PM – 7:00 PM — The Hack-a-Sprint.\n7:00 PM – 8:00 PM — Scoring and judging. Results use participants, judges, and AI; a detailed rubric will be shared soon.\n\nHow to Secure Your Spot\n\nWe have exactly 50 spots; everyone competes individually. Selection happens about one week before the event. Priority order:\n\n1. Open source: Most merged PRs to github.com/rogerSuperBuilderAlpha/cursor-boston — get to work!\n2. Community profile: Completed profile on cursorboston.com.\n3. Discord: Member of the Cursor Boston Discord server.\n4. Sign-up order: Early birds get the worm.\n\nRegistration is subject to host approval. Luma may ask you to verify token ownership with your wallet as part of checkout.\n\nWe qualify participants rigorously. If selected people don't meet criteria or drop out, we pull aggressively from the waitlist.\n\nGet Involved\n\nDidn't make the top 50? Join the waitlist — drop-outs happen. Want to judge instead? Contact the hosts on Luma.\n\nMore info is coming soon; don't wait to request your spot.",
-      "lumaCheckoutEventId": "evt-Wkfyzu00afkUQaX",
-      "lumaEmbedSrc": "https://luma.com/embed/event/evt-Wkfyzu00afkUQaX/simple",
-      "image": "/cursor-boston-logo.png",
-      "lumaUrl": "https://luma.com/uixo8hl6",
-      "lumaEventId": "uixo8hl6",
-      "registrationRequired": true,
-      "capacity": 50,
-      "perks": [
-        "$50 Cursor credits (guaranteed for every participant)",
-        "$1,200 prize pool (six $200 winning spots)",
-        "Food and drinks"
-      ],
-      "topics": [
-        "Solo competition",
-        "Cursor Credits",
-        "Judging (participants + judges + AI)"
-      ],
-      "agenda": [
-        {
-          "time": "4:00 PM",
-          "title": "Meet, greet, and get set up",
-          "description": "Arrive, connect with fellow developers, and get ready to build"
-        },
-        {
-          "time": "4:30 PM – 7:00 PM",
-          "title": "Hack-a-Sprint",
-          "description": "The main build period—code, compete, and ship"
-        },
-        {
-          "time": "7:00 PM – 8:00 PM",
-          "title": "Scoring and Judging",
-          "description": "Results calculated by participants, judges, and AI"
-        }
-      ],
-      "faq": [
-        {
-          "question": "Who should apply?",
-          "answer": "Developers and builders who want to compete individually in a fast-paced hackathon. You must have a completed profile on cursorboston.com and be in the Cursor Boston Discord server."
-        },
-        {
-          "question": "Is this a team or solo competition?",
-          "answer": "Solo! Everyone competes individually. We have exactly 50 spots."
-        },
-        {
-          "question": "Will food be provided?",
-          "answer": "Yes. You will be fully fed and watered."
-        },
-        {
-          "question": "Is the date and venue final?",
-          "answer": "Date: Monday, April 13, 2026 in Back Bay, Boston. The exact address appears on Luma after your registration is approved."
-        },
-        {
-          "question": "What if I don't make the top 50?",
-          "answer": "Join the waitlist! Drop-outs happen, and you could be next in line. You can also contact us to become a judge."
-        }
-      ],
-      "whatToBring": [
-        "Laptop and charger",
-        "A project idea or problem you want to explore",
-        "A willingness to build with new tools"
-      ],
-      "featured": true
-    },
-    {
       "id": "cursor-boston-aic-open-source-workshop-2026",
       "slug": "cursor-boston-aic-open-source-workshop-2026",
       "title": "Cursor Boston/AIC BTW Open Source Workshop",
-      "subtitle": "Hands-on open source contributions with Cursor as your AI co-pilot — co-hosted with AIC",
+      "subtitle": "Hands-on open source contributions with Cursor as your AI co-pilot \u2014 co-hosted with AIC",
       "date": "2026-05-30",
-      "time": "12:00 PM – 5:00 PM ET",
+      "time": "12:00 PM \u2013 5:00 PM ET",
       "location": "Boston, MA",
       "venue": {
         "name": "TBD (exact address after approval)",
@@ -93,8 +14,8 @@
         "mapUrl": null
       },
       "type": "workshop",
-      "description": "Open Source Drop-In Workshop co-hosted by Cursor Boston and AIC. A hands-on half-day session with two tracks: contribute to the Cursor Boston repo (beginner-friendly) or tackle curated impactful open source projects using Cursor as your AI co-pilot. Walk away with merged PRs, Cursor credits, and practical open source skills. Saturday May 30 in Boston — register on Luma; approval required.",
-      "longDescription": "We're thrilled to announce the Open Source Drop-In Workshop, co-hosted by Cursor Boston and AIC (AI Community).\n\nThis is a hands-on half-day session designed to teach you how to contribute to real open source projects using Cursor as your AI co-pilot. Whether you've never opened a pull request or you're a seasoned contributor looking for high-impact projects, there's a track for you.\n\nTwo Tracks\n\nTrack A — Cursor Boston Repo (Beginner-Friendly): Learn the fundamentals of open source contribution by working directly on the Cursor Boston community repository. Mentors will guide you through forking, branching, making changes, and opening your first PR.\n\nTrack B — Curated Impactful Projects: For more experienced developers, we've hand-picked a set of impactful open source projects with beginner-friendly issues. Use Cursor's AI capabilities to understand unfamiliar codebases quickly and ship meaningful contributions.\n\nWhat You'll Walk Away With\n\nMerged pull requests on real open source projects, Cursor credits, and practical skills you can use immediately. This isn't a lecture — it's a working session where you'll ship real code.\n\nHosted by Roger Hunt, Ananya Shah, Janna, Kanal Patel, and Jason Morris.",
+      "description": "Open Source Drop-In Workshop co-hosted by Cursor Boston and AIC. A hands-on half-day session with two tracks: contribute to the Cursor Boston repo (beginner-friendly) or tackle curated impactful open source projects using Cursor as your AI co-pilot. Walk away with merged PRs, Cursor credits, and practical open source skills. Saturday May 30 in Boston \u2014 register on Luma; approval required.",
+      "longDescription": "We're thrilled to announce the Open Source Drop-In Workshop, co-hosted by Cursor Boston and AIC (AI Community).\n\nThis is a hands-on half-day session designed to teach you how to contribute to real open source projects using Cursor as your AI co-pilot. Whether you've never opened a pull request or you're a seasoned contributor looking for high-impact projects, there's a track for you.\n\nTwo Tracks\n\nTrack A \u2014 Cursor Boston Repo (Beginner-Friendly): Learn the fundamentals of open source contribution by working directly on the Cursor Boston community repository. Mentors will guide you through forking, branching, making changes, and opening your first PR.\n\nTrack B \u2014 Curated Impactful Projects: For more experienced developers, we've hand-picked a set of impactful open source projects with beginner-friendly issues. Use Cursor's AI capabilities to understand unfamiliar codebases quickly and ship meaningful contributions.\n\nWhat You'll Walk Away With\n\nMerged pull requests on real open source projects, Cursor credits, and practical skills you can use immediately. This isn't a lecture \u2014 it's a working session where you'll ship real code.\n\nHosted by Roger Hunt, Ananya Shah, Janna, Kanal Patel, and Jason Morris.",
       "lumaCheckoutEventId": "evt-2erXQCohWrtPWp9",
       "lumaEmbedSrc": "https://luma.com/embed/event/evt-2erXQCohWrtPWp9/simple",
       "image": "/cursor-boston-logo.png",
@@ -125,17 +46,17 @@
           "description": "Introduction to open source contribution, overview of Track A (Cursor Boston repo) and Track B (curated projects), and how to pick your track"
         },
         {
-          "time": "1:00 PM – 4:00 PM",
+          "time": "1:00 PM \u2013 4:00 PM",
           "title": "Hands-On Contribution Session",
           "description": "Work on your chosen track with mentor support. Fork repos, pick issues, write code with Cursor as your AI co-pilot, and open pull requests"
         },
         {
-          "time": "4:00 PM – 4:30 PM",
+          "time": "4:00 PM \u2013 4:30 PM",
           "title": "PR Review & Merging",
           "description": "Get your pull requests reviewed and merged. Celebrate your contributions with the group"
         },
         {
-          "time": "4:30 PM – 5:00 PM",
+          "time": "4:30 PM \u2013 5:00 PM",
           "title": "Wrap-Up & Networking",
           "description": "Share what you built, exchange contacts, and connect with the Cursor Boston and AIC communities"
         }
@@ -147,7 +68,7 @@
         },
         {
           "question": "What are the two tracks?",
-          "answer": "Track A focuses on contributing to the Cursor Boston community repository — perfect for beginners. Track B is for more experienced developers who want to contribute to curated, impactful open source projects. You can choose your track when you arrive."
+          "answer": "Track A focuses on contributing to the Cursor Boston community repository \u2014 perfect for beginners. Track B is for more experienced developers who want to contribute to curated, impactful open source projects. You can choose your track when you arrive."
         },
         {
           "question": "What do I get for participating?",
@@ -188,11 +109,14 @@
         "name": "Caffe Nero",
         "address": "100 Cambridgeside Pl, Cambridge, MA 02141",
         "mapUrl": null,
-        "coordinates": { "lat": 42.3677, "lng": -71.0764 }
+        "coordinates": {
+          "lat": 42.3677,
+          "lng": -71.0764
+        }
       },
       "type": "meetup",
       "description": "Join us for the first Cursor community event in Boston. Featuring co-working, Cursor workshops for entrepreneurs, engineers, and non-technical folks. Meet the community, learn something new, and grab some coffee.",
-      "longDescription": "Cafe Cursor Boston is an intimate gathering designed to bring together developers, entrepreneurs, and curious minds who want to explore the future of AI-powered development.\n\nWhether you're a seasoned engineer looking to supercharge your workflow, an entrepreneur wanting to build faster, or someone who's never written a line of code but is curious about what's possible — this event is for you.\n\nWe'll have hands-on workshops, open co-working time, and plenty of opportunities to connect with fellow community members over great coffee.",
+      "longDescription": "Cafe Cursor Boston is an intimate gathering designed to bring together developers, entrepreneurs, and curious minds who want to explore the future of AI-powered development.\n\nWhether you're a seasoned engineer looking to supercharge your workflow, an entrepreneur wanting to build faster, or someone who's never written a line of code but is curious about what's possible \u2014 this event is for you.\n\nWe'll have hands-on workshops, open co-working time, and plenty of opportunities to connect with fellow community members over great coffee.",
       "image": "/Gemini_Generated_Image_lc032wlc032wlc03.png",
       "lumaUrl": "https://luma.com/u43ar9pi",
       "lumaEventId": "u43ar9pi",
@@ -272,6 +196,89 @@
         "startTime": "9:00 AM",
         "endTime": "3:00 PM"
       }
+    }
+  ],
+  "oldEvents": [
+    {
+      "id": "cursor-boston-hack-a-sprint-2026",
+      "slug": "cursor-boston-hack-a-sprint-2026",
+      "title": "Cursor Boston Hack-a-Sprint",
+      "subtitle": "Inaugural in-person sprint \u2014 50 builders, solo competition, co-hosted with inkbox.ai & Genesis Fund",
+      "date": "2026-04-13",
+      "time": "4:00 PM \u2013 8:00 PM ET",
+      "location": "Back Bay, Boston, MA",
+      "venue": {
+        "name": "Back Bay (exact address after approval)",
+        "address": "Register on Luma to see the venue address after you're approved.",
+        "mapUrl": null
+      },
+      "type": "hackathon",
+      "description": "First-ever Cursor Boston Hack-a-Sprint: 50 developers, fast solo competition, fully fed and watered. $50 in Cursor Credits for every selected participant, $1,200 prize pool (six $200 spots). Monday April 13 in Back Bay \u2014 register on Luma; approval required.",
+      "longDescription": "We're thrilled to announce our inaugural Hack-a-Sprint, co-hosted with inkbox.ai and genesisfund.co. We're bringing together 50 developers for a fast-paced, solo competition.\n\nWhether you're building something brand new or pushing the limits of your current project, this is your chance to code, compete, and connect with the Boston Cursor community. You will be fully fed and watered.\n\nThe Perks & Prizes\n\nGuaranteed bounty: Every selected participant receives $50 in Cursor Credits.\nPrize pool: $1,200 total, split across six $200 Cursor Credit winning spots.\n\nWhen & Where\n\nDate: Monday, April 13, 2026\nLocation: Back Bay, Boston \u2014 exact address is shown on Luma after your registration is approved.\n\nThe Schedule\n\n4:00 PM \u2014 Meet, greet, and get set up.\n4:30 PM \u2013 7:00 PM \u2014 The Hack-a-Sprint.\n7:00 PM \u2013 8:00 PM \u2014 Scoring and judging. Results use participants, judges, and AI; a detailed rubric will be shared soon.\n\nHow to Secure Your Spot\n\nWe have exactly 50 spots; everyone competes individually. Selection happens about one week before the event. Priority order:\n\n1. Open source: Most merged PRs to github.com/rogerSuperBuilderAlpha/cursor-boston \u2014 get to work!\n2. Community profile: Completed profile on cursorboston.com.\n3. Discord: Member of the Cursor Boston Discord server.\n4. Sign-up order: Early birds get the worm.\n\nRegistration is subject to host approval. Luma may ask you to verify token ownership with your wallet as part of checkout.\n\nWe qualify participants rigorously. If selected people don't meet criteria or drop out, we pull aggressively from the waitlist.\n\nGet Involved\n\nDidn't make the top 50? Join the waitlist \u2014 drop-outs happen. Want to judge instead? Contact the hosts on Luma.\n\nMore info is coming soon; don't wait to request your spot.",
+      "lumaCheckoutEventId": "evt-Wkfyzu00afkUQaX",
+      "lumaEmbedSrc": "https://luma.com/embed/event/evt-Wkfyzu00afkUQaX/simple",
+      "image": "/cursor-boston-logo.png",
+      "lumaUrl": "https://luma.com/uixo8hl6",
+      "lumaEventId": "uixo8hl6",
+      "registrationRequired": true,
+      "capacity": 50,
+      "perks": [
+        "$50 Cursor credits (guaranteed for every participant)",
+        "$1,200 prize pool (six $200 winning spots)",
+        "Food and drinks"
+      ],
+      "topics": [
+        "Solo competition",
+        "Cursor Credits",
+        "Judging (participants + judges + AI)"
+      ],
+      "agenda": [
+        {
+          "time": "4:00 PM",
+          "title": "Meet, greet, and get set up",
+          "description": "Arrive, connect with fellow developers, and get ready to build"
+        },
+        {
+          "time": "4:30 PM \u2013 7:00 PM",
+          "title": "Hack-a-Sprint",
+          "description": "The main build period\u2014code, compete, and ship"
+        },
+        {
+          "time": "7:00 PM \u2013 8:00 PM",
+          "title": "Scoring and Judging",
+          "description": "Results calculated by participants, judges, and AI"
+        }
+      ],
+      "faq": [
+        {
+          "question": "Who should apply?",
+          "answer": "Developers and builders who want to compete individually in a fast-paced hackathon. You must have a completed profile on cursorboston.com and be in the Cursor Boston Discord server."
+        },
+        {
+          "question": "Is this a team or solo competition?",
+          "answer": "Solo! Everyone competes individually. We have exactly 50 spots."
+        },
+        {
+          "question": "Will food be provided?",
+          "answer": "Yes. You will be fully fed and watered."
+        },
+        {
+          "question": "Is the date and venue final?",
+          "answer": "Date: Monday, April 13, 2026 in Back Bay, Boston. The exact address appears on Luma after your registration is approved."
+        },
+        {
+          "question": "What if I don't make the top 50?",
+          "answer": "Join the waitlist! Drop-outs happen, and you could be next in line. You can also contact us to become a judge."
+        }
+      ],
+      "whatToBring": [
+        "Laptop and charger",
+        "A project idea or problem you want to explore",
+        "A willingness to build with new tools"
+      ],
+      "featured": false,
+      "primaryCtaHref": "/hackathons/hack-a-sprint-2026",
+      "primaryCtaLabel": "View submissions"
     }
   ]
 }

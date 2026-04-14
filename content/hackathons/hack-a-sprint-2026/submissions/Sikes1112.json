@@ -1,0 +1,6 @@
+{
+  "projectRepoUrl": "https://github.com/Sikes1112/OutreachDesk",
+  "title": "OutreachDesk: A Governed AI Drafting Workflow",
+  "description": "OutreachDesk is a controlled AI outreach drafting system designed to eliminate generic, low-quality outputs. Instead of free-form prompting, it enforces a structured workflow: requires a validated lead record, fails closed if required fields are missing, uses a canonical outreach template, and runs deterministic post-generation checks before marking drafts ready for review. Built in Python with a focus on system design over raw generation. This project explores how to make LLM outputs reliable by combining input contracts, validation layers, and evaluation gates.",
+  "loomVideoUrl": "PASTE_YOUR_LOOM_URL_HERE"
+}

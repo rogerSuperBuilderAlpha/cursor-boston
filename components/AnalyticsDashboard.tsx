@@ -338,7 +338,8 @@ export default function AnalyticsDashboard() {
         </div>
 
         <p className="text-center text-xs text-neutral-400">
-          Data cached hourly · Last updated: {new Date(data.generatedAt).toLocaleString()}
+          Snapshot refreshed on a schedule (~6h) · Last updated:{" "}
+          {new Date(data.generatedAt).toLocaleString()}
         </p>
       </div>
     </section>

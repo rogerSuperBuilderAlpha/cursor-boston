@@ -15,7 +15,12 @@ import {
 } from "@/lib/hackathon-showcase";
 import { getHackASprint2026Phase } from "@/lib/hackathon-asprint-2026-schedule";
 import { computeHackASprint2026RawScore } from "@/lib/hackathon-asprint-2026-scores";
-import { hackASprint2026ScoreDocId } from "@/lib/hackathon-asprint-2026-state";
+import { computePeerAverages } from "@/lib/hackathon-asprint-2026-participant-scoring";
+import {
+  getAllHackASprint2026ParticipantScoreDocs,
+  hackASprint2026ScoreDocId,
+  resolveVoterGithubByUid,
+} from "@/lib/hackathon-asprint-2026-state";
 import { checkRateLimit, getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -60,6 +65,18 @@ export async function GET(request: NextRequest) {
     const submissions = await fetchShowcaseSubmissionsFromGitHub();
     const judgeUids = [...getJudgeUidSet()];
 
+    const identities = submissions.map((s) => ({
+      submissionId: s.submissionId,
+      githubLogin: s.githubLogin,
+    }));
+    const voterDocs = await getAllHackASprint2026ParticipantScoreDocs(db);
+    const voterGithubByUid = await resolveVoterGithubByUid(db, voterDocs);
+    const peerAvgBySid = computePeerAverages(
+      identities,
+      voterDocs,
+      voterGithubByUid
+    );
+
     // Fetch all score docs
     const scoreBySid = new Map<string, DocumentData>();
     if (submissions.length > 0) {
@@ -83,6 +100,10 @@ export async function GET(request: NextRequest) {
         typeof data?.aiScore === "number" && data.aiScore >= 1 && data.aiScore <= 10
           ? data.aiScore
           : null;
+      const aiReasoning =
+        typeof data?.aiReasoning === "string" && data.aiReasoning.trim()
+          ? data.aiReasoning.trim()
+          : null;
       const judgeScores =
         data?.judgeScores && typeof data.judgeScores === "object"
           ? (data.judgeScores as Record<string, number>)
@@ -95,14 +116,23 @@ export async function GET(request: NextRequest) {
         Object.keys(judgeScores).length > 0 ? judgeScores : undefined
       );
 
+      const sid = s.submissionId.toLowerCase();
+      const peerAverage = peerAvgBySid.get(sid) ?? null;
+
       return {
         submissionId: s.submissionId,
         githubLogin: s.githubLogin,
         title: s.payload.title,
+        description: s.payload.description,
+        projectRepoUrl: s.payload.projectRepoUrl,
+        deployedUrl: s.payload.deployedUrl,
+        loomVideoUrl: s.payload.loomVideoUrl,
         aiScore,
+        aiReasoning,
         judgeScores,
         judgeAverage,
         peerVoteCount,
+        peerAverage,
         rawScore,
       };
     });
@@ -111,16 +141,18 @@ export async function GET(request: NextRequest) {
       const ra = a.rawScore ?? -1;
       const rb = b.rawScore ?? -1;
       if (rb !== ra) return rb - ra;
+      const pa = a.peerAverage ?? -1;
+      const pb = b.peerAverage ?? -1;
+      if (pb !== pa) return pb - pa;
       return (b.peerVoteCount ?? 0) - (a.peerVoteCount ?? 0);
     });
 
-    // Voting stats
-    const voteSnap = await db
-      .collection("hackathonASprint2026PeerVotes")
+    const participantBallotSnap = await db
+      .collection("hackathonASprint2026ParticipantScores")
       .where("eventId", "==", HACK_A_SPRINT_2026_EVENT_ID)
       .count()
       .get();
-    const totalVoters = voteSnap.data().count;
+    const totalVoters = participantBallotSnap.data().count;
 
     const signupSnap = await db
       .collection("hackathonEventSignups")

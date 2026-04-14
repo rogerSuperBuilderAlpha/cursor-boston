@@ -255,6 +255,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
       // When a Luma registrant also signed up on the website, carry over
       // confirmed status from the Luma record so it isn't lost.
+      // Also preserve the earlier signup time so waitlist ordering stays stable.
       const matchIdx = websiteEmails.has(email)
         ? emailToRowIdx.get(email)
         : (ghLogin && websiteGithubLogins.has(ghLogin.toLowerCase()))
@@ -269,6 +270,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
         }
         if (rows[matchIdx].frozenPrCount == null && typeof d.frozenPrCount === "number") {
           rows[matchIdx].frozenPrCount = d.frozenPrCount;
+        }
+        const lumaMs = d.lumaCreatedAt ? new Date(d.lumaCreatedAt as string).getTime() : 0;
+        if (lumaMs > 0 && lumaMs < rows[matchIdx].signedUpAtMs) {
+          rows[matchIdx].signedUpAtMs = lumaMs;
         }
         continue;
       }

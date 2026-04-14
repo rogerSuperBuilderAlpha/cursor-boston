@@ -1,0 +1,7 @@
+{
+  "projectRepoUrl": "https://github.com/bradAGI/ai-digest",
+  "deployedUrl": "https://aidigest.fly.dev",
+  "title": "AI Digest — Daily AI News, No Noise",
+  "description": "AI agent that scrapes 6 Reddit AI subreddits daily, summarizes top posts with Gemini, and emails subscribers a curated digest via Inkbox. Subscribe on the web or by emailing aidigest@inkboxmail.com. Built with Python, FastAPI, Inkbox SDK, Gemini API. Deployed on Fly.io.",
+  "loomVideoUrl": "https://www.loom.com/share/example"
+}

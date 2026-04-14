@@ -12,12 +12,13 @@ export const HACK_A_SPRINT_2026_SUBMISSIONS_PATH =
   "content/hackathons/hack-a-sprint-2026/submissions";
 
 export type ShowcaseSubmissionPayload = {
+  /** May be empty if omitted in JSON; hide repo link in UI when missing. */
   projectRepoUrl: string;
-  deployedUrl: string;
+  deployedUrl?: string;
   title: string;
   description: string;
-  /** Required Loom (or other) walkthrough URL for Hack-a-Sprint 2026. */
-  loomVideoUrl: string;
+  /** Walkthrough URL when present; gallery still lists submissions without it. */
+  loomVideoUrl?: string;
   demoVideoUrl?: string;
 };
 
@@ -35,6 +36,10 @@ type GitHubContentItem = {
 
 const LOGIN_JSON = /^[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9]))*\.json$/;
 const SKIP_FILES = new Set(["readme.md", "example-login.json"]);
+
+function trimStr(v: unknown): string {
+  return typeof v === "string" ? v.trim() : "";
+}
 
 function githubHeaders(): Record<string, string> {
   const h: Record<string, string> = {
@@ -84,30 +89,38 @@ export async function fetchShowcaseSubmissionsFromGitHub(): Promise<
         next: { revalidate: 60 },
       });
       if (!raw.ok) continue;
-      const payload = (await raw.json()) as ShowcaseSubmissionPayload;
+      let parsed: unknown;
+      try {
+        parsed = await raw.json();
+      } catch {
+        continue;
+      }
       if (
-        typeof payload?.projectRepoUrl !== "string" ||
-        typeof payload?.deployedUrl !== "string" ||
-        typeof payload?.title !== "string" ||
-        typeof payload?.description !== "string" ||
-        typeof payload?.loomVideoUrl !== "string"
+        !parsed ||
+        typeof parsed !== "object" ||
+        Array.isArray(parsed)
       ) {
         continue;
       }
+      const pr = parsed as Record<string, unknown>;
+      const projectRepoUrl = trimStr(pr.projectRepoUrl);
+      const title = trimStr(pr.title) || githubLogin;
+      const description = trimStr(pr.description);
+      const loomVideoUrl = trimStr(pr.loomVideoUrl);
+      const deployedRaw = trimStr(pr.deployedUrl);
+      const demoRaw = trimStr(pr.demoVideoUrl);
+      const payload: ShowcaseSubmissionPayload = {
+        projectRepoUrl,
+        title,
+        description,
+        ...(loomVideoUrl ? { loomVideoUrl } : {}),
+        ...(deployedRaw ? { deployedUrl: deployedRaw } : {}),
+        ...(demoRaw ? { demoVideoUrl: demoRaw } : {}),
+      };
       results.push({
         submissionId: githubLogin.toLowerCase(),
         githubLogin,
-        payload: {
-          projectRepoUrl: payload.projectRepoUrl,
-          deployedUrl: payload.deployedUrl,
-          title: payload.title,
-          description: payload.description,
-          loomVideoUrl: payload.loomVideoUrl,
-          demoVideoUrl:
-            typeof payload.demoVideoUrl === "string"
-              ? payload.demoVideoUrl
-              : undefined,
-        },
+        payload,
       });
     } catch {
       // skip invalid

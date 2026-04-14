@@ -17,11 +17,8 @@ jest.mock("@/lib/logger", () => ({
 
 jest.mock("@/lib/rate-limit", () => ({
   getClientIdentifier: jest.fn(() => "test-ip"),
-}));
-
-jest.mock("@/lib/rate-limit-server", () => ({
-  checkServerRateLimit: jest.fn(async () => ({ success: true, retryAfter: 0 })),
-  buildRateLimitHeaders: jest.fn(() => ({})),
+  checkRateLimit: jest.fn(() => ({ success: true, remaining: 19 })),
+  buildMemoryRateLimitHeaders: jest.fn(() => ({})),
 }));
 
 jest.mock("@/lib/server-auth", () => ({

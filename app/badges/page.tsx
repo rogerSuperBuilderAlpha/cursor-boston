@@ -9,15 +9,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import {
-  getBadgeEligibilityData,
-  type BadgeEligibilityDataStatus,
-} from "@/lib/badges/getBadgeEligibilityInput";
+import type { BadgeEligibilityDataStatus } from "@/lib/badges/getBadgeEligibilityInput";
+import type { ProfileDataApiResponse } from "@/lib/profile-data-types";
 import { evaluateBadgeEligibility } from "@/lib/badges/eligibility";
 import { BADGE_DEFINITIONS } from "@/lib/badges/definitions";
 import {
   ensureUserBadgesForEligibleWithStatus,
-  getUserBadgeMap,
   type BadgeAwardPersistenceStatus,
   type UserBadgeMap,
 } from "@/lib/badges/data";
@@ -87,21 +84,33 @@ export default function BadgesPage() {
     setLoadingBadges(true);
     (async () => {
       try {
-        const badgeData = await getBadgeEligibilityData({
-          uid: user.uid,
-          displayName: userProfile?.displayName ?? user.displayName ?? null,
-          visibility: userProfile?.visibility ?? null,
-          bio: userProfile?.bio ?? null,
-          photoURL: userProfile?.photoURL ?? user.photoURL ?? null,
-          discord: userProfile?.discord,
-          github: userProfile?.github,
-        });
+        const headers = { Authorization: `Bearer ${await user.getIdToken()}` };
+        let res = await fetch("/api/profile/data", { headers });
+        if (!res.ok) {
+          throw new Error(`profile data HTTP ${res.status}`);
+        }
+        let json = (await res.json()) as ProfileDataApiResponse;
+        const githubLogin =
+          userProfile?.github &&
+          typeof userProfile.github === "object" &&
+          "login" in userProfile.github &&
+          typeof (userProfile.github as { login?: string }).login === "string"
+            ? (userProfile.github as { login: string }).login.trim()
+            : "";
+        if (githubLogin && (json.stats.pullRequestsCount ?? 0) === 0) {
+          const res2 = await fetch("/api/profile/data?reconcileGithub=1", {
+            headers: { Authorization: `Bearer ${await user.getIdToken()}` },
+          });
+          if (res2.ok) {
+            json = (await res2.json()) as ProfileDataApiResponse;
+          }
+        }
+        const badgeData = json.badgeEligibility;
         const evaluated = evaluateBadgeEligibility(badgeData.input);
-        const persisted = await getUserBadgeMap(user.uid);
         const persistenceResult = await ensureUserBadgesForEligibleWithStatus(
           user.uid,
           evaluated,
-          persisted
+          json.userBadgeMap as UserBadgeMap
         );
         setEligibilityMap(evaluated);
         setUserBadgeMap(persistenceResult.userBadgeMap);

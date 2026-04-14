@@ -1,0 +1,6 @@
+{
+  "projectRepoUrl": "https://github.com/Shreyas0786/Medical-assistant",
+  "title": "Medical Assistant Bot — proactive diabetic check-ins by phone",
+  "description": "An AI assistant that emails and calls diabetic patients daily, asks about blood sugar, blood pressure, and symptoms, and uses Groq (Llama 3.3) for real-time personalized guidance over a live call via Inkbox STT/TTS. Includes a Flask webhook and a WebSocket call server; ngrok exposes endpoints for Inkbox. Learnings: wiring voice agents to LLMs, safe escalation when readings are dangerous, and end-to-end local-to-phone testing.",
+  "loomVideoUrl": "https://drive.google.com/file/d/1flvnJqXJDkXveN6TkyznttL1DSmvWyFP/view?usp=sharing"
+}

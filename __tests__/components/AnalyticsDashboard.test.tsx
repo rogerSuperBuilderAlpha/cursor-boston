@@ -237,7 +237,7 @@ describe("AnalyticsDashboard", () => {
     render(<AnalyticsDashboard />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Data cached hourly/)).toBeInTheDocument();
+      expect(screen.getByText(/Snapshot refreshed on a schedule/)).toBeInTheDocument();
     });
   });
 
