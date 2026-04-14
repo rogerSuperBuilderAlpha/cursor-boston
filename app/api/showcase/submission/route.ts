@@ -8,8 +8,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
-import { getClientIdentifier } from "@/lib/rate-limit";
-import { buildRateLimitHeaders, checkServerRateLimit } from "@/lib/rate-limit-server";
+import {
+  getClientIdentifier,
+  checkRateLimit,
+  buildMemoryRateLimitHeaders,
+} from "@/lib/rate-limit";
 import { sanitizeDocId } from "@/lib/sanitize";
 import { logger } from "@/lib/logger";
 import showcaseData from "@/content/showcase.json";
@@ -124,20 +127,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const rateResult = await checkServerRateLimit(request as unknown as Request, {
-      scope: "showcase-submission-get",
-      windowMs: SHOWCASE_SUBMISSION_GET_RATE_LIMIT.windowMs,
-      maxRequests: SHOWCASE_SUBMISSION_GET_RATE_LIMIT.maxRequests,
-      identifier: `uid:${user.uid}|ip:${getClientIdentifier(request as unknown as Request)}`,
-      fallbackMode: "strict-memory",
-      fallbackMaxRequests: 20,
-    });
+    const rateResult = checkRateLimit(
+      `showcase-submission-get:uid:${user.uid}|ip:${getClientIdentifier(request as unknown as Request)}`,
+      SHOWCASE_SUBMISSION_GET_RATE_LIMIT
+    );
     if (!rateResult.success) {
       return NextResponse.json(
         { error: "Too many requests", retryAfterSeconds: rateResult.retryAfter },
         {
-          status: rateResult.statusCode ?? 429,
-          headers: buildRateLimitHeaders(
+          status: 429,
+          headers: buildMemoryRateLimitHeaders(
             rateResult,
             SHOWCASE_SUBMISSION_GET_RATE_LIMIT.maxRequests
           ),
@@ -189,20 +188,16 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const clientId = getClientIdentifier(request as unknown as Request);
-    const rateResult = await checkServerRateLimit(request as unknown as Request, {
-      scope: "showcase-submission-post",
-      windowMs: SHOWCASE_SUBMISSION_POST_RATE_LIMIT.windowMs,
-      maxRequests: SHOWCASE_SUBMISSION_POST_RATE_LIMIT.maxRequests,
-      identifier: `ip:${clientId}`,
-      fallbackMode: "strict-memory",
-      fallbackMaxRequests: 5,
-    });
+    const rateResult = checkRateLimit(
+      `showcase-submission-post:ip:${clientId}`,
+      SHOWCASE_SUBMISSION_POST_RATE_LIMIT
+    );
     if (!rateResult.success) {
       return NextResponse.json(
         { error: "Too many requests", retryAfterSeconds: rateResult.retryAfter },
         {
-          status: rateResult.statusCode ?? 429,
-          headers: buildRateLimitHeaders(
+          status: 429,
+          headers: buildMemoryRateLimitHeaders(
             rateResult,
             SHOWCASE_SUBMISSION_POST_RATE_LIMIT.maxRequests
           ),

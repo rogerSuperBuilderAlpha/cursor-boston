@@ -7,16 +7,33 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, query, where, getDocs } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import {
-  getUserRegistrations,
-  getUserStats,
-  type EventRegistration,
-  type UserStats,
+import type {
+  EventRegistration,
+  UserStats,
 } from "@/lib/registrations";
+import type { ProfileDataApiResponse, ProfileRegistrationJson, ProfileTalkJson } from "@/lib/profile-data-types";
 import type { User } from "firebase/auth";
 import type { TalkSubmission, ConnectedAgent } from "../_types";
+
+function reviveRegistration(r: ProfileRegistrationJson): EventRegistration {
+  const iso = r.registeredAt;
+  return {
+    ...r,
+    registeredAt: iso
+      ? ({ toDate: () => new Date(iso) } as EventRegistration["registeredAt"])
+      : ({ toDate: () => new Date(0) } as EventRegistration["registeredAt"]),
+  };
+}
+
+function reviveTalk(t: ProfileTalkJson): TalkSubmission {
+  const submitted = t.submittedAt;
+  return {
+    id: t.id,
+    title: t.title,
+    status: t.status,
+    submittedAt: submitted ? { toDate: () => new Date(submitted) } : null,
+  };
+}
 
 export function useProfileData(user: User | null, githubLogin?: string | null) {
   const [stats, setStats] = useState<UserStats | null>(null);
@@ -25,59 +42,55 @@ export function useProfileData(user: User | null, githubLogin?: string | null) {
   const [loadingData, setLoadingData] = useState(true);
   const [connectedAgents, setConnectedAgents] = useState<ConnectedAgent[]>([]);
   const [loadingAgents, setLoadingAgents] = useState(false);
+  const [profileBundle, setProfileBundle] = useState<ProfileDataApiResponse | null>(null);
 
-  // Fetch stats, registrations, and talks
   useEffect(() => {
     if (!user) {
       setLoadingData(false);
+      setStats(null);
+      setRegistrations([]);
+      setTalkSubmissions([]);
+      setProfileBundle(null);
       return;
     }
+
     (async () => {
+      setLoadingData(true);
       try {
-        let [userStats, userRegistrations] = await Promise.all([
-          getUserStats(user.uid),
-          getUserRegistrations(user.uid),
-        ]);
+        const token = await user.getIdToken();
+        const headers = { Authorization: `Bearer ${token}` };
+        let res = await fetch("/api/profile/data", { headers });
+        if (!res.ok) {
+          throw new Error(`profile data HTTP ${res.status}`);
+        }
+        let json = (await res.json()) as ProfileDataApiResponse;
 
-        if (githubLogin && userStats.pullRequestsCount === 0) {
-          try {
-            const response = await fetch("/api/profile/github/reconcile", {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${await user.getIdToken()}`,
-              },
-            });
-
-            if (response.ok) {
-              userStats = await getUserStats(user.uid);
-            }
-          } catch (reconcileError) {
-            console.error("Error reconciling GitHub PR history:", reconcileError);
+        if (githubLogin && (json.stats.pullRequestsCount ?? 0) === 0) {
+          const token2 = await user.getIdToken();
+          const res2 = await fetch("/api/profile/data?reconcileGithub=1", {
+            headers: { Authorization: `Bearer ${token2}` },
+          });
+          if (res2.ok) {
+            json = (await res2.json()) as ProfileDataApiResponse;
           }
         }
 
-        setStats(userStats);
-        setRegistrations(userRegistrations);
-
-        if (db) {
-          const talksQuery = query(
-            collection(db, "talkSubmissions"),
-            where("userId", "==", user.uid)
-          );
-          const snap = await getDocs(talksQuery);
-          setTalkSubmissions(
-            snap.docs.map((d) => ({ id: d.id, ...d.data() })) as TalkSubmission[]
-          );
-        }
+        setStats(json.stats);
+        setRegistrations(json.registrations.map(reviveRegistration));
+        setTalkSubmissions(json.talks.map(reviveTalk));
+        setProfileBundle(json);
       } catch (err) {
         console.error("Error fetching user data:", err);
+        setStats(null);
+        setRegistrations([]);
+        setTalkSubmissions([]);
+        setProfileBundle(null);
       } finally {
         setLoadingData(false);
       }
     })();
   }, [user, githubLogin]);
 
-  // Fetch connected agents
   useEffect(() => {
     if (!user) return;
     setLoadingAgents(true);
@@ -96,5 +109,13 @@ export function useProfileData(user: User | null, githubLogin?: string | null) {
     })();
   }, [user]);
 
-  return { stats, registrations, talkSubmissions, connectedAgents, loadingData, loadingAgents };
+  return {
+    stats,
+    registrations,
+    talkSubmissions,
+    connectedAgents,
+    loadingData,
+    loadingAgents,
+    profileBundle,
+  };
 }

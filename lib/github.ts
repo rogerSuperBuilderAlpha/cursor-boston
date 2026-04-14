@@ -48,16 +48,27 @@ export async function findUserByGitHubLogin(
 
   try {
     const trimmed = githubLogin.trim();
-    const variants = [...new Set([trimmed, trimmed.toLowerCase()])];
-    for (const v of variants) {
-      const snapshot = await db
+    const lower = trimmed.toLowerCase();
+    const snapshotLower = await db
+      .collection("users")
+      .where("github.login", "==", lower)
+      .limit(1)
+      .get();
+
+    if (!snapshotLower.empty) {
+      const userId = snapshotLower.docs[0].id;
+      logger.info("Found user by GitHub login", { githubLogin, userId });
+      return userId;
+    }
+
+    if (trimmed !== lower) {
+      const snapshotExact = await db
         .collection("users")
-        .where("github.login", "==", v)
+        .where("github.login", "==", trimmed)
         .limit(1)
         .get();
-
-      if (!snapshot.empty) {
-        const userId = snapshot.docs[0].id;
+      if (!snapshotExact.empty) {
+        const userId = snapshotExact.docs[0].id;
         logger.info("Found user by GitHub login", { githubLogin, userId });
         return userId;
       }

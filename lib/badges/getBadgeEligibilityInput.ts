@@ -18,7 +18,7 @@ interface BadgeEligibilityUserContext {
   github?: unknown;
 }
 
-type BadgeDataSource =
+export type BadgeDataSource =
   | "stats"
   | "showcaseSubmissions"
   | "communityMessages"
@@ -61,7 +61,7 @@ export function getBaseBadgeEligibilityInput(
   };
 }
 
-function buildBadgeDataStatus(
+export function buildBadgeDataStatus(
   sourceStates: Record<BadgeDataSource, "ok" | "error">
 ): BadgeEligibilityDataStatus {
   const failedSources = (Object.entries(sourceStates) as Array<
