@@ -329,5 +329,26 @@ service cloud.firestore {
     match /treasureHuntRuntime/{docId} {
       allow read, write: if false;
     }
+
+    // Community Q&A — questions: public read, Admin SDK writes only
+    match /questions/{questionId} {
+      allow read: if true;
+      allow create, update, delete: if false;
+      match /answers/{answerId} {
+        allow read: if true;
+        allow create, update, delete: if false;
+      }
+    }
+
+    // Community Q&A — vote index collections: authenticated read, Admin SDK writes
+    match /question_votes/{voteId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if false;
+    }
+
+    match /answer_votes/{voteId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if false;
+    }
   }
 }
