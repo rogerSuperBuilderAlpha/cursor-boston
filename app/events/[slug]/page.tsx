@@ -9,6 +9,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import eventsData from "@/content/events.json";
+import type { EventsData } from "@/types/events";
 import CoworkingSlots from "@/components/events/CoworkingSlots";
 import {
   getLumaCheckoutEventId,
@@ -87,11 +88,14 @@ interface Event {
   coworkingInfo?: CoworkingInfo;
 }
 
-// Get all events (upcoming + past) for static generation
+const typedEvents = eventsData as unknown as EventsData;
+
+// Get all events (upcoming + past + archived) for static generation
 function getAllEvents(): Event[] {
   return [
-    ...(eventsData.upcoming as Event[]),
-    ...(eventsData.past as Event[]),
+    ...(typedEvents.upcoming as Event[]),
+    ...(typedEvents.past as Event[]),
+    ...((typedEvents.oldEvents ?? []) as Event[]),
   ];
 }
 

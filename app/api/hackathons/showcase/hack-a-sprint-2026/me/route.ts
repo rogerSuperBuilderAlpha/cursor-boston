@@ -8,19 +8,23 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
 import {
+  HACK_A_SPRINT_2026_EVENT_ID,
   fetchShowcaseSubmissionsFromGitHub,
   getJudgeUidSet,
   githubUserHasMergedLabeledShowcasePr,
 } from "@/lib/hackathon-showcase";
-import { userIsHackASprint2026Judge } from "@/lib/hackathon-showcase-admin";
+import { userIsHackASprint2026JudgeFromUserData } from "@/lib/hackathon-showcase-admin";
 import { getHackASprint2026Phase } from "@/lib/hackathon-asprint-2026-schedule";
-import { participantPrizeEligibility } from "@/lib/hackathon-asprint-2026-participant-scoring";
 import {
-  getParticipantScoresForUser,
-  userHasHackASprint2026Signup,
-  userIsCheckedInForHackASprint2026,
-  userHackASprint2026PeerVoteComplete,
-} from "@/lib/hackathon-asprint-2026-state";
+  hackASprint2026ParticipantScoresDocId,
+  normalizeParticipantScores,
+  participantBallotComplete,
+  participantPrizeEligibility,
+} from "@/lib/hackathon-asprint-2026-participant-scoring";
+import {
+  hackathonEventSignupDocId,
+  profileMatchesHackathonJudgeCheckinException,
+} from "@/lib/hackathon-event-signup";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -55,21 +59,31 @@ export async function GET(request: NextRequest) {
     let highScoreCount = 0;
     let requiredHighScores = 0;
 
-    const judgeEligible = db
-      ? await userIsHackASprint2026Judge(db, user.uid, user.email)
-      : getJudgeUidSet().has(user.uid);
-
     const phase = getHackASprint2026Phase();
 
+    let judgeEligible = getJudgeUidSet().has(user.uid);
+
     if (db) {
-      const userSnap = await db.collection("users").doc(user.uid).get();
-      const ud = userSnap.data();
-      const login = ud?.github?.login;
-      if (typeof login === "string" && login.trim()) {
-        githubLogin = login.trim();
+      const signupRef = db
+        .collection("hackathonEventSignups")
+        .doc(hackathonEventSignupDocId(HACK_A_SPRINT_2026_EVENT_ID, user.uid));
+      const userRef = db.collection("users").doc(user.uid);
+      const [signupSnap, userSnap] = await db.getAll(signupRef, userRef);
+      const profile = userSnap.data() as Record<string, unknown> | undefined;
+      judgeEligible = userIsHackASprint2026JudgeFromUserData(
+        user.uid,
+        user.email,
+        profile
+      );
+      signedUp = signupSnap.exists;
+      checkedIn =
+        Boolean(signupSnap.exists && signupSnap.data()?.checkedInAt != null) ||
+        profileMatchesHackathonJudgeCheckinException(user.email, profile);
+      const gh = profile?.github as { login?: unknown } | undefined;
+      const login = typeof gh?.login === "string" ? gh.login : "";
+      if (login.trim()) {
+        githubLogin = login.trim().toLowerCase();
       }
-      checkedIn = await userIsCheckedInForHackASprint2026(db, user.uid, user.email);
-      signedUp = await userHasHackASprint2026Signup(db, user.uid);
 
       if (githubLogin && checkedIn && signedUp) {
         let submissions = await fetchShowcaseSubmissionsFromGitHub();
@@ -78,13 +92,20 @@ export async function GET(request: NextRequest) {
           submissionId: s.submissionId,
           githubLogin: s.githubLogin,
         }));
-        hasCompletedPeerVoting = await userHackASprint2026PeerVoteComplete(
-          db,
-          user.uid,
-          identities,
-          githubLogin
+        const psRef = db
+          .collection("hackathonASprint2026ParticipantScores")
+          .doc(hackASprint2026ParticipantScoresDocId(user.uid));
+        const psSnap = await psRef.get();
+        const scores = psSnap.exists
+          ? normalizeParticipantScores(
+              psSnap.data()?.scores as Record<string, unknown> | undefined
+            )
+          : {};
+        hasCompletedPeerVoting = participantBallotComplete(
+          scores,
+          githubLogin,
+          identities
         );
-        const scores = await getParticipantScoresForUser(db, user.uid);
         const pe = participantPrizeEligibility(scores, githubLogin, identities);
         prizeEligible = pe.eligible;
         highScoreCount = pe.highScoreCount;

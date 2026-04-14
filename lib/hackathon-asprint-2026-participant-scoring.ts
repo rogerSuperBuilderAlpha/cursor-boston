@@ -50,7 +50,8 @@ export function participantBallotComplete(
 }
 
 /**
- * Prize eligibility: at least `min(6, #other submissions)` scores strictly above 8 on others.
+ * Prize eligibility: (1) valid 1–10 on every other submission (full ballot), and
+ * (2) at least `min(6, #others)` of those scores strictly above 8 (9 or 10).
  */
 export function participantPrizeEligibility(
   scores: Record<string, number> | undefined,
@@ -66,12 +67,17 @@ export function participantPrizeEligibility(
     (s) => s.githubLogin.trim().toLowerCase() !== own
   );
   const requiredHighScores = Math.min(6, others.length);
-  if (requiredHighScores === 0) {
+  if (others.length === 0) {
     return { eligible: true, highScoreCount: 0, requiredHighScores: 0 };
   }
   if (!scores) {
     return { eligible: false, highScoreCount: 0, requiredHighScores };
   }
+  const ballotComplete = participantBallotComplete(
+    scores,
+    ownGithubLogin,
+    allSubmissions
+  );
   let highScoreCount = 0;
   for (const s of others) {
     const sid = s.submissionId.trim().toLowerCase();
@@ -79,7 +85,8 @@ export function participantPrizeEligibility(
     if (typeof v === "number" && v > 8) highScoreCount++;
   }
   return {
-    eligible: highScoreCount >= requiredHighScores,
+    eligible:
+      ballotComplete && highScoreCount >= requiredHighScores,
     highScoreCount,
     requiredHighScores,
   };

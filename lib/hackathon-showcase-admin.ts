@@ -48,11 +48,12 @@ export async function awardHackASprint2026ShowcaseBadge(
   });
 }
 
-export async function userIsHackASprint2026Judge(
-  db: Firestore,
+/** Judge eligibility from an already-loaded `users/{uid}` document (avoids extra reads). */
+export function userIsHackASprint2026JudgeFromUserData(
   uid: string,
-  tokenEmail?: string | null
-): Promise<boolean> {
+  tokenEmail: string | null | undefined,
+  userData: Record<string, unknown> | undefined
+): boolean {
   if (getJudgeUidSet().has(uid)) return true;
   const allowed = getJudgeEmailSet();
   if (allowed.size === 0) return false;
@@ -61,16 +62,14 @@ export async function userIsHackASprint2026Judge(
   if (tokenEmail) {
     candidates.add(tokenEmail.trim().toLowerCase());
   }
-  const snap = await db.collection("users").doc(uid).get();
-  const d = snap.data();
-  if (typeof d?.email === "string") {
-    candidates.add(d.email.trim().toLowerCase());
+  if (typeof userData?.email === "string") {
+    candidates.add(userData.email.trim().toLowerCase());
   }
-  for (const entry of d?.additionalEmails ?? []) {
-    if (
-      entry?.verified &&
-      typeof entry?.email === "string"
-    ) {
+  for (const entry of (userData?.additionalEmails ?? []) as Array<{
+    verified?: boolean;
+    email?: string;
+  }>) {
+    if (entry?.verified && typeof entry?.email === "string") {
       candidates.add(entry.email.trim().toLowerCase());
     }
   }
@@ -78,4 +77,17 @@ export async function userIsHackASprint2026Judge(
     if (allowed.has(c)) return true;
   }
   return false;
+}
+
+export async function userIsHackASprint2026Judge(
+  db: Firestore,
+  uid: string,
+  tokenEmail?: string | null
+): Promise<boolean> {
+  const snap = await db.collection("users").doc(uid).get();
+  return userIsHackASprint2026JudgeFromUserData(
+    uid,
+    tokenEmail ?? null,
+    snap.data() as Record<string, unknown> | undefined
+  );
 }

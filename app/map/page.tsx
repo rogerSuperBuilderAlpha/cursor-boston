@@ -25,6 +25,10 @@ export default function MapPage() {
   const allEvents = [
     ...typedEventsData.upcoming.map((e) => ({ ...e, _upcoming: true })),
     ...typedEventsData.past.map((e) => ({ ...e, _upcoming: false })),
+    ...(typedEventsData.oldEvents ?? []).map((e) => ({
+      ...e,
+      _upcoming: false,
+    })),
   ] as (Event & { _upcoming: boolean })[];
 
   // Only include events with venue coordinates
