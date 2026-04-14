@@ -105,22 +105,22 @@
     {
       "submissionId": "chloezhangzzc",
       "aiScore": 8,
-      "aiReasoning": "Clear outbound sales agent with web research, OpenAI-drafted personalization, and Inkbox for guarded send/review-inbox by default—strong email-centric SDK use and a practical compliance-minded workflow for a sprint."
+      "aiReasoning": "README and layout show a serious outbound-sales agent: website/careers research, OpenAI draft generation, CSV review workflow, and Inkbox delivery with a safe default to a review inbox and explicit --live gating. Strong email-centric Inkbox fit for a governed GTM workflow."
     },
     {
       "submissionId": "satishparaddi",
       "aiScore": 8,
-      "aiReasoning": "Inbox-driven financial intelligence: Inkbox email webhooks plus Node backend to parse transactions, aggregate spend patterns, and reply with summaries—coherent autonomous loop; walkthrough link in JSON points at GitHub rather than a demo recording."
+      "aiReasoning": "Node service uses @inkbox/sdk end-to-end: verified webhooks, strict JSON transaction payloads, financial analysis, and threaded replies via messages.send. README documents the pipeline clearly—tight, observable email agent without extra UI surface."
     },
     {
       "submissionId": "shreyas0786",
-      "aiScore": 9,
-      "aiReasoning": "Proactive clinical outreach combining daily email and live phone check-ins with Inkbox STT/TTS, Groq for in-call guidance, and escalation for dangerous readings—deep multi-channel Inkbox use with a high-impact use case."
+      "aiScore": 8,
+      "aiReasoning": "Medical check-in flow combines Inkbox email plus live phone (STT/TTS) with Groq over WebSocket—matches the sprint’s multi-channel agent bar. README is concise; stack is credible for a short sprint (Flask, call_server, bot.py)."
     },
     {
       "submissionId": "paramjeet-singh-neu",
-      "aiScore": 8,
-      "aiReasoning": "ConNET targets full networking lifecycle across email, vault-backed CRM, and phone with agent-to-agent intros and a live dashboard—ambitious breadth similar to other high-complexity entries; score reflects strong on-paper integration depth with typical sprint scope risk."
+      "aiScore": 9,
+      "aiReasoning": "ConNET README claims full lifecycle on Email, Vault, and Phone: outbound research + send, inbound classification, vault-backed CRM, agent-to-agent mode, follow-ups, smart intros, plus Flask SSE dashboard and D3 network graph. High breadth and depth versus typical single-feature demos; score reflects documented scope (Loom not reviewed here)."
     }
   ]
 }
