@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "githubLogin": "bradAGI",
+  "discordUsername": "🍞",
+  "displayName": "Brad Egan",
+  "siteEmail": "bradegan@gmail.com",
+  "whyMaintainer": "I've been actively contributing to Cursor Boston and want to help keep the project healthy long-term. I care about code quality, test coverage, and security — and I'd like to help review PRs and mentor newer contributors through the same patterns I've been establishing.",
+  "relevantExperience": "Submitted 39 PRs in a single session covering bug fixes (safe JSON parsing across 21 API routes, npm audit vulnerabilities, CSP hardening, Firestore doc ID sanitization), CI improvements (coverage threshold alignment, bundle size tracking), features (community feed pagination, build-time llms.txt generator), and testing (grew coverage from 14% to 43% with 952 new tests across 78 new test suites). Familiar with the full codebase: API routes, Firebase/Firestore patterns, rate limiting, sanitization, hackathon flows, pair programming, and the CI pipeline.",
+  "availability": "Up to 5 hours per week",
+  "agreedToCodeOfConduct": true,
+  "submittedAt": "2026-04-14T18:00:00.000Z"
+}
