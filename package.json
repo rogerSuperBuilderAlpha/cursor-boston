@@ -55,7 +55,8 @@
     "distribute-credits": "tsx scripts/distribute-cursor-credits.ts",
     "seed-luma-registrants": "tsx scripts/seed-luma-registrants.ts",
     "generate-contributors": "bash scripts/generate-contributors.sh",
-    "prebuild": "npm run validate-env",
+    "generate:llms-txt": "node scripts/generate-llms-txt.js",
+    "prebuild": "npm run validate-env && npm run generate:llms-txt",
     "prepare": "husky install",
     "add:gpl-headers": "node scripts/add-gpl-headers.js",
     "analyze": "ANALYZE=true next build"
