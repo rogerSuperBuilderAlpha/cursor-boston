@@ -447,47 +447,47 @@ export default function OpenSourcePage() {
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold text-neutral-900 dark:text-white mb-8 text-center">How to Contribute</h2>
 
-          <div className="grid md:grid-cols-4 gap-6">
-            <div className="text-center">
-              <div className="w-12 h-12 bg-emerald-500 text-white rounded-xl flex items-center justify-center font-bold mx-auto mb-4">
+          <ol className="grid md:grid-cols-4 gap-6 list-none p-0 m-0">
+            <li className="text-center">
+              <div className="w-12 h-12 bg-emerald-500 text-white rounded-xl flex items-center justify-center font-bold mx-auto mb-4" aria-hidden="true">
                 1
               </div>
               <h3 className="font-semibold text-neutral-900 dark:text-white mb-2">Fork & Clone</h3>
               <p className="text-sm text-neutral-600 dark:text-neutral-400">
                 Fork the repo and clone it to your local machine
               </p>
-            </div>
+            </li>
 
-            <div className="text-center">
-              <div className="w-12 h-12 bg-emerald-500 text-white rounded-xl flex items-center justify-center font-bold mx-auto mb-4">
+            <li className="text-center">
+              <div className="w-12 h-12 bg-emerald-500 text-white rounded-xl flex items-center justify-center font-bold mx-auto mb-4" aria-hidden="true">
                 2
               </div>
               <h3 className="font-semibold text-neutral-900 dark:text-white mb-2">Pick an Idea</h3>
               <p className="text-sm text-neutral-600 dark:text-neutral-400">
                 Choose from the roadmap above or propose your own
               </p>
-            </div>
+            </li>
 
-            <div className="text-center">
-              <div className="w-12 h-12 bg-emerald-500 text-white rounded-xl flex items-center justify-center font-bold mx-auto mb-4">
+            <li className="text-center">
+              <div className="w-12 h-12 bg-emerald-500 text-white rounded-xl flex items-center justify-center font-bold mx-auto mb-4" aria-hidden="true">
                 3
               </div>
               <h3 className="font-semibold text-neutral-900 dark:text-white mb-2">Build It</h3>
               <p className="text-sm text-neutral-600 dark:text-neutral-400">
                 Create a branch, write code, and test locally
               </p>
-            </div>
+            </li>
 
-            <div className="text-center">
-              <div className="w-12 h-12 bg-emerald-500 text-white rounded-xl flex items-center justify-center font-bold mx-auto mb-4">
+            <li className="text-center">
+              <div className="w-12 h-12 bg-emerald-500 text-white rounded-xl flex items-center justify-center font-bold mx-auto mb-4" aria-hidden="true">
                 4
               </div>
               <h3 className="font-semibold text-neutral-900 dark:text-white mb-2">Submit PR</h3>
               <p className="text-sm text-neutral-600 dark:text-neutral-400">
                 Open a pull request and get feedback from maintainers
               </p>
-            </div>
-          </div>
+            </li>
+          </ol>
 
           <div className="mt-10 flex flex-wrap justify-center gap-4">
             <a
