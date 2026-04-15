@@ -258,7 +258,7 @@ export default function OpenSourcePage() {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="py-16 md:py-24 px-6 border-b border-neutral-800">
+      <section className="py-16 md:py-24 px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-500/10 rounded-2xl mb-6">
             <svg
@@ -277,10 +277,10 @@ export default function OpenSourcePage() {
               <path d="M9 18c-4.51 2-5-2-7-2" />
             </svg>
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold text-neutral-900 dark:text-white mb-4">
             Build With Us
           </h1>
-          <p className="text-xl text-neutral-400 max-w-2xl mx-auto mb-8">
+          <p className="text-xl text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto mb-8">
             Cursor Boston is fully open source. Explore our roadmap, find something exciting to build, and make your mark.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
@@ -288,7 +288,7 @@ export default function OpenSourcePage() {
               href="https://github.com/rogerSuperBuilderAlpha/cursor-boston"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-neutral-800 text-white rounded-lg font-semibold hover:bg-neutral-700 transition-colors"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-neutral-200 dark:bg-neutral-800 text-neutral-900 dark:text-white rounded-lg font-semibold hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
@@ -309,35 +309,35 @@ export default function OpenSourcePage() {
       </section>
 
       {/* Quick Stats */}
-      <section className="py-8 px-6 border-b border-neutral-800 bg-neutral-950/50">
+      <section className="py-8 px-6 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950/50">
         <div className="max-w-4xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
             <div>
-              <div className="text-2xl font-bold text-white">GPL-3.0</div>
-              <div className="text-sm text-neutral-400">License</div>
+              <div className="text-2xl font-bold text-neutral-900 dark:text-white">GPL-3.0</div>
+              <div className="text-sm text-neutral-600 dark:text-neutral-400">License</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-white">Next.js 16</div>
-              <div className="text-sm text-neutral-400">Framework</div>
+              <div className="text-2xl font-bold text-neutral-900 dark:text-white">Next.js 16</div>
+              <div className="text-sm text-neutral-600 dark:text-neutral-400">Framework</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-white">TypeScript</div>
-              <div className="text-sm text-neutral-400">Language</div>
+              <div className="text-2xl font-bold text-neutral-900 dark:text-white">TypeScript</div>
+              <div className="text-sm text-neutral-600 dark:text-neutral-400">Language</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-white">Firebase</div>
-              <div className="text-sm text-neutral-400">Backend</div>
+              <div className="text-2xl font-bold text-neutral-900 dark:text-white">Firebase</div>
+              <div className="text-sm text-neutral-600 dark:text-neutral-400">Backend</div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Roadmap */}
-      <section id="roadmap" className="py-12 md:py-16 px-6 border-b border-neutral-800">
+      <section id="roadmap" className="py-12 md:py-16 px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-white mb-4">Contribution Roadmap</h2>
-            <p className="text-lg text-neutral-400 max-w-2xl mx-auto">
+            <h2 className="text-3xl font-bold text-neutral-900 dark:text-white mb-4">Contribution Roadmap</h2>
+            <p className="text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">
               Find something that excites you. Each item includes the skills you&apos;ll use and practice.
               Click any item to start working on it.
             </p>
@@ -362,7 +362,7 @@ export default function OpenSourcePage() {
                     <div className={`w-10 h-10 rounded-lg ${colors.iconBg} flex items-center justify-center ${colors.text}`}>
                       {category.icon}
                     </div>
-                    <h3 className="text-xl font-bold text-white">{category.category}</h3>
+                    <h3 className="text-xl font-bold text-neutral-900 dark:text-white">{category.category}</h3>
                     <span className="text-sm text-neutral-500">({category.items.length} ideas)</span>
                   </div>
 
@@ -378,23 +378,23 @@ export default function OpenSourcePage() {
                       return (
                         <div
                           key={item.title}
-                          className="bg-neutral-900/50 border border-neutral-800 rounded-xl p-5 hover:border-neutral-700 transition-colors group"
+                          className="bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors group"
                         >
                           <div className="flex items-start justify-between gap-3 mb-3">
-                            <h4 className="font-semibold text-white group-hover:text-emerald-400 transition-colors">
+                            <h4 className="font-semibold text-neutral-900 dark:text-white group-hover:text-emerald-400 transition-colors">
                               {item.title}
                             </h4>
                             <span className={`px-2 py-0.5 rounded-full text-xs border shrink-0 ${difficulty.color}`}>
                               {difficulty.label}
                             </span>
                           </div>
-                          <p className="text-sm text-neutral-400 mb-4">{item.description}</p>
+                          <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">{item.description}</p>
                           <div className="flex items-center justify-between">
                             <div className="flex flex-wrap gap-1.5">
                               {item.skills.map((skill) => (
                                 <span
                                   key={skill}
-                                  className="px-2 py-0.5 bg-neutral-800 text-neutral-400 text-xs rounded"
+                                  className="px-2 py-0.5 bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 text-xs rounded"
                                 >
                                   {skill}
                                 </span>
@@ -422,8 +422,8 @@ export default function OpenSourcePage() {
           </div>
 
           {/* Have Your Own Idea */}
-          <div className="mt-10 bg-neutral-900 border border-neutral-800 rounded-xl p-6 text-center">
-            <h3 className="text-lg font-semibold text-white mb-2">Have Your Own Idea?</h3>
+          <div className="mt-10 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-6 text-center">
+            <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-2">Have Your Own Idea?</h3>
             <p className="text-neutral-400 mb-4">
               Don&apos;t see what you want to build? Propose your own feature or improvement.
             </p>
@@ -431,7 +431,7 @@ export default function OpenSourcePage() {
               href="https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/new?template=feature_request.md"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-neutral-800 text-white rounded-lg font-medium hover:bg-neutral-700 transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-neutral-200 dark:bg-neutral-800 text-neutral-900 dark:text-white rounded-lg font-medium hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M12 5v14M5 12h14" />
@@ -443,58 +443,58 @@ export default function OpenSourcePage() {
       </section>
 
       {/* How to Contribute */}
-      <section className="py-12 md:py-16 px-6 border-b border-neutral-800 bg-neutral-950/50">
+      <section className="py-12 md:py-16 px-6 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950/50">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold text-white mb-8 text-center">How to Contribute</h2>
+          <h2 className="text-3xl font-bold text-neutral-900 dark:text-white mb-8 text-center">How to Contribute</h2>
 
-          <div className="grid md:grid-cols-4 gap-6">
-            <div className="text-center">
-              <div className="w-12 h-12 bg-emerald-500 text-white rounded-xl flex items-center justify-center font-bold mx-auto mb-4">
+          <ol className="grid md:grid-cols-4 gap-6 list-none p-0 m-0">
+            <li className="text-center">
+              <div className="w-12 h-12 bg-emerald-500 text-white rounded-xl flex items-center justify-center font-bold mx-auto mb-4" aria-hidden="true">
                 1
               </div>
-              <h3 className="font-semibold text-white mb-2">Fork & Clone</h3>
-              <p className="text-sm text-neutral-400">
+              <h3 className="font-semibold text-neutral-900 dark:text-white mb-2">Fork & Clone</h3>
+              <p className="text-sm text-neutral-600 dark:text-neutral-400">
                 Fork the repo and clone it to your local machine
               </p>
-            </div>
+            </li>
 
-            <div className="text-center">
-              <div className="w-12 h-12 bg-emerald-500 text-white rounded-xl flex items-center justify-center font-bold mx-auto mb-4">
+            <li className="text-center">
+              <div className="w-12 h-12 bg-emerald-500 text-white rounded-xl flex items-center justify-center font-bold mx-auto mb-4" aria-hidden="true">
                 2
               </div>
-              <h3 className="font-semibold text-white mb-2">Pick an Idea</h3>
-              <p className="text-sm text-neutral-400">
+              <h3 className="font-semibold text-neutral-900 dark:text-white mb-2">Pick an Idea</h3>
+              <p className="text-sm text-neutral-600 dark:text-neutral-400">
                 Choose from the roadmap above or propose your own
               </p>
-            </div>
+            </li>
 
-            <div className="text-center">
-              <div className="w-12 h-12 bg-emerald-500 text-white rounded-xl flex items-center justify-center font-bold mx-auto mb-4">
+            <li className="text-center">
+              <div className="w-12 h-12 bg-emerald-500 text-white rounded-xl flex items-center justify-center font-bold mx-auto mb-4" aria-hidden="true">
                 3
               </div>
-              <h3 className="font-semibold text-white mb-2">Build It</h3>
-              <p className="text-sm text-neutral-400">
+              <h3 className="font-semibold text-neutral-900 dark:text-white mb-2">Build It</h3>
+              <p className="text-sm text-neutral-600 dark:text-neutral-400">
                 Create a branch, write code, and test locally
               </p>
-            </div>
+            </li>
 
-            <div className="text-center">
-              <div className="w-12 h-12 bg-emerald-500 text-white rounded-xl flex items-center justify-center font-bold mx-auto mb-4">
+            <li className="text-center">
+              <div className="w-12 h-12 bg-emerald-500 text-white rounded-xl flex items-center justify-center font-bold mx-auto mb-4" aria-hidden="true">
                 4
               </div>
-              <h3 className="font-semibold text-white mb-2">Submit PR</h3>
-              <p className="text-sm text-neutral-400">
+              <h3 className="font-semibold text-neutral-900 dark:text-white mb-2">Submit PR</h3>
+              <p className="text-sm text-neutral-600 dark:text-neutral-400">
                 Open a pull request and get feedback from maintainers
               </p>
-            </div>
-          </div>
+            </li>
+          </ol>
 
           <div className="mt-10 flex flex-wrap justify-center gap-4">
             <a
               href="https://github.com/rogerSuperBuilderAlpha/cursor-boston?tab=contributing-ov-file#readme"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-neutral-800 text-white rounded-lg font-medium hover:bg-neutral-700 transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-neutral-200 dark:bg-neutral-800 text-neutral-900 dark:text-white rounded-lg font-medium hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -517,7 +517,7 @@ export default function OpenSourcePage() {
       {/* Why Contribute */}
       <section className="py-12 md:py-16 px-6">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold text-white mb-8 text-center">Why Contribute?</h2>
+          <h2 className="text-3xl font-bold text-neutral-900 dark:text-white mb-8 text-center">Why Contribute?</h2>
 
           <div className="grid md:grid-cols-2 gap-6">
             <div className="flex items-start gap-4">
@@ -527,8 +527,8 @@ export default function OpenSourcePage() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-white mb-1">Build Your Portfolio</h3>
-                <p className="text-neutral-400">Real contributions to a production app that you can show off to employers.</p>
+                <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-1">Build Your Portfolio</h3>
+                <p className="text-neutral-600 dark:text-neutral-400">Real contributions to a production app that you can show off to employers.</p>
               </div>
             </div>
 
@@ -539,8 +539,8 @@ export default function OpenSourcePage() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-white mb-1">Learn Modern Tech</h3>
-                <p className="text-neutral-400">Work with Next.js 16, TypeScript, Firebase, Tailwind, and AI-powered workflows.</p>
+                <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-1">Learn Modern Tech</h3>
+                <p className="text-neutral-600 dark:text-neutral-400">Work with Next.js 16, TypeScript, Firebase, Tailwind, and AI-powered workflows.</p>
               </div>
             </div>
 
@@ -551,8 +551,8 @@ export default function OpenSourcePage() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-white mb-1">Join the Community</h3>
-                <p className="text-neutral-400">Connect with developers who share your passion for AI-powered development.</p>
+                <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-1">Join the Community</h3>
+                <p className="text-neutral-600 dark:text-neutral-400">Connect with developers who share your passion for AI-powered development.</p>
               </div>
             </div>
 
@@ -563,14 +563,14 @@ export default function OpenSourcePage() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-white mb-1">Make an Impact</h3>
-                <p className="text-neutral-400">Your work helps a real community and serves as a template for others.</p>
+                <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-1">Make an Impact</h3>
+                <p className="text-neutral-600 dark:text-neutral-400">Your work helps a real community and serves as a template for others.</p>
               </div>
             </div>
           </div>
 
-          <div className="mt-12 pt-8 border-t border-neutral-800">
-            <p className="text-neutral-400 text-sm text-center">
+          <div className="mt-12 pt-8 border-t border-neutral-200 dark:border-neutral-800">
+            <p className="text-neutral-600 dark:text-neutral-400 text-sm text-center">
               See also:{" "}
               <Link href="/code-of-conduct" className="text-emerald-400 hover:text-emerald-300">Code of Conduct</Link>
               {" | "}

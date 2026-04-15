@@ -41,7 +41,8 @@ function isValidWorksWith(v: string): v is WorksWithTag {
 const PAGE_SIZE = 12;
 const MAX_PAGE_SIZE = 24;
 const SEARCH_SCAN_BATCH = 40;
-const MAX_SEARCH_SCAN = 30;
+// Reduced from 30 → 5 to cap search reads at ~200 instead of ~1,200 per request.
+const MAX_SEARCH_SCAN = 5;
 
 export type CookbookSort = "newest" | "oldest" | "top";
 
@@ -268,11 +269,15 @@ export async function GET(request: NextRequest) {
     const nextCursor =
       hasMore && entries.length > 0 ? entries[entries.length - 1].id : null;
 
-    return NextResponse.json({
-      entries,
-      nextCursor,
-      hasMore,
-    });
+    return NextResponse.json(
+      { entries, nextCursor, hasMore },
+      {
+        headers: {
+          // Cache non-search paginated results for 60s to reduce repeat Firestore reads.
+          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=30",
+        },
+      }
+    );
   } catch (error) {
     logger.logError(error, { endpoint: "/api/cookbook/entries GET" });
     return NextResponse.json({ entries: [], nextCursor: null, hasMore: false });

@@ -79,7 +79,9 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    return NextResponse.json({ reactions });
+    return NextResponse.json({ reactions }, {
+      headers: { "Cache-Control": "private, max-age=15" },
+    });
   } catch (e) {
     console.error("[api/community/my-reactions]", e);
     return NextResponse.json({ error: "Failed to load reactions" }, { status: 500 });

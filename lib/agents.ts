@@ -117,6 +117,10 @@ export function getClaimExpiry(): Timestamp {
 // Agent Verification
 // ============================================================================
 
+// In-memory cache for verified agents to avoid a Firestore query on every request.
+const agentCache = new Map<string, { agent: Agent; ts: number }>();
+const AGENT_CACHE_TTL_MS = 60_000; // 60 seconds
+
 /**
  * Extract API key from request Authorization header.
  */
@@ -155,6 +159,13 @@ export async function getVerifiedAgent(
 
   const apiKeyHash = hashApiKey(apiKey);
 
+  // Check cache first to avoid a Firestore query on every agent request.
+  const cached = agentCache.get(apiKeyHash);
+  if (cached && Date.now() - cached.ts < AGENT_CACHE_TTL_MS) {
+    if (cached.agent.status === "suspended") return null;
+    return cached.agent;
+  }
+
   // Query for agent with matching hash
   const agentsRef = adminDb.collection("agents");
   const snapshot = await agentsRef.where("apiKeyHash", "==", apiKeyHash).get();
@@ -170,6 +181,9 @@ export async function getVerifiedAgent(
   if (agent.status === "suspended") {
     return null;
   }
+
+  // Cache the result
+  agentCache.set(apiKeyHash, { agent, ts: Date.now() });
 
   // Update last active timestamp (fire and forget)
   doc.ref.update({ lastActiveAt: Timestamp.now() }).catch(() => {
