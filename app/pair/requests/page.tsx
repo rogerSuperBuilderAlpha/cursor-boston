@@ -64,7 +64,8 @@ export default function PairRequestsPage() {
           ...(sentData.requests || []).map((r: PairRequest) => r.toUserId),
           ...(receivedData.requests || []).map((r: PairRequest) => r.fromUserId),
         ];
-        const uniqueIds = [...new Set(allUserIds)];
+        // Cap user profile lookups to avoid unbounded Firestore reads.
+        const uniqueIds = [...new Set(allUserIds)].slice(0, 50);
         const profilePromises = uniqueIds.map(async (uid: string) => {
           if (!db) return { uid, displayName: null, photoURL: null };
           const userDoc = await getDoc(doc(db, "users", uid));

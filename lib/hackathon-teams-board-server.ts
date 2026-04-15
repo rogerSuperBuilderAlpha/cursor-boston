@@ -63,7 +63,7 @@ export async function loadHackathonTeamsBoard(
   uid: string | null,
   hackathonId: string
 ): Promise<TeamsBoardPayload> {
-  const teamsSnap = await db.collection("hackathonTeams").where("hackathonId", "==", hackathonId).get();
+  const teamsSnap = await db.collection("hackathonTeams").where("hackathonId", "==", hackathonId).limit(200).get();
   const teams: TeamsBoardTeam[] = teamsSnap.docs.map((d) => {
     const data = d.data();
     return {
@@ -95,7 +95,7 @@ export async function loadHackathonTeamsBoard(
     });
   }
 
-  const subSnap = await db.collection("hackathonSubmissions").where("hackathonId", "==", hackathonId).get();
+  const subSnap = await db.collection("hackathonSubmissions").where("hackathonId", "==", hackathonId).limit(200).get();
   const successfulSubmissionsByTeam: Record<string, number> = {};
   subSnap.docs.forEach((d) => {
     const data = d.data();
