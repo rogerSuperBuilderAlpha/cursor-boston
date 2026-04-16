@@ -171,3 +171,24 @@ export async function githubUserHasMergedLabeledShowcasePr(
   const data = (await res.json()) as { total_count?: number };
   return typeof data.total_count === "number" && data.total_count > 0;
 }
+
+/**
+ * Whether the GitHub user has any merged PR in the community repo within the
+ * last `windowHours` hours. Uses the GitHub Search API `merged:>ISO` filter.
+ */
+export async function githubUserHasRecentlyMergedPr(
+  githubLogin: string,
+  windowHours: number
+): Promise<boolean> {
+  if (!githubLogin || windowHours <= 0) return false;
+  const { owner, repo } = getGithubRepoPair();
+  const since = new Date(Date.now() - windowHours * 3600 * 1000).toISOString();
+  const q = encodeURIComponent(
+    `repo:${owner}/${repo} is:pr is:merged author:${githubLogin} merged:>${since}`
+  );
+  const url = `https://api.github.com/search/issues?q=${q}&per_page=1`;
+  const res = await fetch(url, { headers: githubHeaders() });
+  if (!res.ok) return false;
+  const data = (await res.json()) as { total_count?: number };
+  return typeof data.total_count === "number" && data.total_count > 0;
+}

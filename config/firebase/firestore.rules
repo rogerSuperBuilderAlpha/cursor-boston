@@ -303,5 +303,26 @@ service cloud.firestore {
     match /eventContacts/{docId} {
       allow read, write: if false;
     }
+
+    // Treasure hunt prize pool — Admin SDK only (server-side claim via transactions)
+    match /treasureHuntPrizes/{docId} {
+      allow read, write: if false;
+    }
+
+    // Treasure hunt per-user progress — readable by owner, server-only writes
+    match /treasureHuntProgress/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if false;
+    }
+
+    // Treasure hunt per-path winner index — Admin SDK only
+    match /treasureHuntPathWinners/{pathId} {
+      allow read, write: if false;
+    }
+
+    // Treasure hunt rate-limit buckets — Admin SDK only
+    match /treasureHuntRateLimit/{docId} {
+      allow read, write: if false;
+    }
   }
 }
