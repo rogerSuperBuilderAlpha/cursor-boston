@@ -14,6 +14,7 @@ import type {
   MatchScore,
   PairRequest,
   SessionType,
+  AvailabilityWindow,
 } from "@/lib/pair-programming/types";
 import Image from "next/image";
 import { getPairProfile, getAllActiveProfiles } from "@/lib/pair-programming/data";
@@ -408,6 +409,12 @@ function ProfileForm({
     existingProfile?.preferredFrameworks || []
   );
   const [timezone, setTimezone] = useState(existingProfile?.timezone || "America/New_York");
+  const [availability, setAvailability] = useState<AvailabilityWindow[]>(
+    existingProfile?.availability || []
+  );
+  const [newDay, setNewDay] = useState<number>(1);
+  const [newStart, setNewStart] = useState("09:00");
+  const [newEnd, setNewEnd] = useState("17:00");
   const [sessionTypes, setSessionTypes] = useState<SessionType[]>(
     existingProfile?.sessionTypes || []
   );
@@ -442,7 +449,7 @@ function ProfileForm({
           preferredLanguages,
           preferredFrameworks,
           timezone,
-          availability: existingProfile?.availability || [],
+          availability,
           sessionTypes,
           bio,
           isActive,
@@ -640,6 +647,67 @@ function ProfileForm({
           <option value="America/Los_Angeles">Pacific Time (PT)</option>
           <option value="UTC">UTC</option>
         </select>
+      </div>
+
+      {/* Availability */}
+      <div>
+        <label className="block text-sm font-medium mb-2">Availability</label>
+        <div className="flex flex-wrap gap-2 mb-3">
+          <select
+            value={newDay}
+            onChange={(e) => setNewDay(Number(e.target.value))}
+            className="px-3 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800"
+          >
+            {["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"].map((d, i) => (
+              <option key={d} value={i}>{d}</option>
+            ))}
+          </select>
+          <input
+            type="time"
+            value={newStart}
+            onChange={(e) => setNewStart(e.target.value)}
+            className="px-3 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800"
+          />
+          <span className="self-center text-sm text-neutral-500">to</span>
+          <input
+            type="time"
+            value={newEnd}
+            onChange={(e) => setNewEnd(e.target.value)}
+            className="px-3 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800"
+          />
+          <button
+            type="button"
+            onClick={() => {
+              if (newStart >= newEnd) {
+                alert("End time must be after start time");
+                return;
+              }
+              setAvailability([...availability, { dayOfWeek: newDay, startTime: newStart, endTime: newEnd }]);
+            }}
+            className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-400 transition-colors"
+          >
+            Add
+          </button>
+        </div>
+        <div className="space-y-2">
+          {availability.map((w, idx) => (
+            <div key={idx} className="flex items-center justify-between px-3 py-2 bg-neutral-50 dark:bg-neutral-800 rounded-lg text-sm">
+              <span>
+                {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][w.dayOfWeek]} &nbsp;{w.startTime}–{w.endTime}
+              </span>
+              <button
+                type="button"
+                onClick={() => setAvailability(availability.filter((_, i) => i !== idx))}
+                className="text-neutral-400 hover:text-red-500 transition-colors"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+          {availability.length === 0 && (
+            <p className="text-sm text-neutral-400">No availability windows added yet.</p>
+          )}
+        </div>
       </div>
 
       {/* Session Types */}

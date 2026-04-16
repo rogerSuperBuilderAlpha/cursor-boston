@@ -324,5 +324,10 @@ service cloud.firestore {
     match /treasureHuntRateLimit/{docId} {
       allow read, write: if false;
     }
+
+    // Treasure hunt runtime markers (queue-empty signal) — Admin SDK only
+    match /treasureHuntRuntime/{docId} {
+      allow read, write: if false;
+    }
   }
 }

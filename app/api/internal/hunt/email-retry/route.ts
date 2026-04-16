@@ -41,6 +41,15 @@ async function handle(request: NextRequest) {
   const db = getAdminDb();
   if (!db) return NextResponse.json({ error: "No DB" }, { status: 500 });
 
+  // Skip the scan entirely while the queue is known empty. The scan clears
+  // this marker when it finds work; new claims clear it via the claim path.
+  const markerRef = db.collection("treasureHuntRuntime").doc("emailRetry");
+  const marker = await markerRef.get();
+  const knownEmpty = marker.exists && marker.data()?.queueEmpty === true;
+  if (knownEmpty) {
+    return NextResponse.json({ scanned: 0, sent: 0, failed: 0, skipped: "known_empty" });
+  }
+
   const stuckSnap = await db
     .collection("treasureHuntProgress")
     .where("prizeEmailSentAt", "==", null)
@@ -70,6 +79,18 @@ async function handle(request: NextRequest) {
       logger.warn("[hunt/email-retry] send failed", { uid: doc.id, error: String(e) });
       failed += 1;
     }
+  }
+
+  if (stuckSnap.size === 0) {
+    await markerRef.set(
+      { queueEmpty: true, updatedAt: FieldValue.serverTimestamp() },
+      { merge: true }
+    );
+  } else {
+    await markerRef.set(
+      { queueEmpty: false, updatedAt: FieldValue.serverTimestamp() },
+      { merge: true }
+    );
   }
 
   return NextResponse.json({ scanned: stuckSnap.size, sent, failed });

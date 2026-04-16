@@ -4,9 +4,12 @@
  * See LICENSE file for details.
  */
 
+import { unstable_cache } from "next/cache";
 import { getGithubRepoPair } from "@/lib/github-recent-merged-prs";
+import { fetchWithTimeout } from "@/lib/http-fetch";
 
 export const HACK_A_SPRINT_2026_EVENT_ID = "hack-a-sprint-2026";
+export const SHOWCASE_SUBMISSIONS_CACHE_TAG = "showcase-submissions";
 export const HACK_A_SPRINT_2026_LABEL = "hack-a-sprint-2026";
 export const HACK_A_SPRINT_2026_SUBMISSIONS_PATH =
   "content/hackathons/hack-a-sprint-2026/submissions";
@@ -51,15 +54,12 @@ function githubHeaders(): Record<string, string> {
   return h;
 }
 
-/**
- * List submission JSON files from GitHub API (public repo works without token).
- */
-export async function fetchShowcaseSubmissionsFromGitHub(): Promise<
+async function fetchShowcaseSubmissionsFromGitHubUncached(): Promise<
   ShowcaseSubmission[]
 > {
   const { owner, repo } = getGithubRepoPair();
   const url = `https://api.github.com/repos/${owner}/${repo}/contents/${HACK_A_SPRINT_2026_SUBMISSIONS_PATH}`;
-  const res = await fetch(url, { headers: githubHeaders(), next: { revalidate: 60 } });
+  const res = await fetchWithTimeout(url, { headers: githubHeaders() });
   if (res.status === 404) {
     return [];
   }
@@ -79,57 +79,65 @@ export async function fetchShowcaseSubmissionsFromGitHub(): Promise<
       !SKIP_FILES.has(item.name.toLowerCase())
   );
 
-  const results: ShowcaseSubmission[] = [];
-  for (const file of jsonFiles) {
-    if (!file.download_url) continue;
-    const githubLogin = file.name.replace(/\.json$/i, "");
-    try {
-      const raw = await fetch(file.download_url, {
-        headers: githubHeaders(),
-        next: { revalidate: 60 },
-      });
-      if (!raw.ok) continue;
-      let parsed: unknown;
+  const fileResults = await Promise.all(
+    jsonFiles.map(async (file) => {
+      if (!file.download_url) return null;
+      const githubLogin = file.name.replace(/\.json$/i, "");
       try {
-        parsed = await raw.json();
+        const raw = await fetchWithTimeout(file.download_url, {
+          headers: githubHeaders(),
+        });
+        if (!raw.ok) return null;
+        let parsed: unknown;
+        try {
+          parsed = await raw.json();
+        } catch {
+          return null;
+        }
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+          return null;
+        }
+        const pr = parsed as Record<string, unknown>;
+        const projectRepoUrl = trimStr(pr.projectRepoUrl);
+        const title = trimStr(pr.title) || githubLogin;
+        const description = trimStr(pr.description);
+        const loomVideoUrl = trimStr(pr.loomVideoUrl);
+        const deployedRaw = trimStr(pr.deployedUrl);
+        const demoRaw = trimStr(pr.demoVideoUrl);
+        const payload: ShowcaseSubmissionPayload = {
+          projectRepoUrl,
+          title,
+          description,
+          ...(loomVideoUrl ? { loomVideoUrl } : {}),
+          ...(deployedRaw ? { deployedUrl: deployedRaw } : {}),
+          ...(demoRaw ? { demoVideoUrl: demoRaw } : {}),
+        };
+        return {
+          submissionId: githubLogin.toLowerCase(),
+          githubLogin,
+          payload,
+        } as ShowcaseSubmission;
       } catch {
-        continue;
+        return null;
       }
-      if (
-        !parsed ||
-        typeof parsed !== "object" ||
-        Array.isArray(parsed)
-      ) {
-        continue;
-      }
-      const pr = parsed as Record<string, unknown>;
-      const projectRepoUrl = trimStr(pr.projectRepoUrl);
-      const title = trimStr(pr.title) || githubLogin;
-      const description = trimStr(pr.description);
-      const loomVideoUrl = trimStr(pr.loomVideoUrl);
-      const deployedRaw = trimStr(pr.deployedUrl);
-      const demoRaw = trimStr(pr.demoVideoUrl);
-      const payload: ShowcaseSubmissionPayload = {
-        projectRepoUrl,
-        title,
-        description,
-        ...(loomVideoUrl ? { loomVideoUrl } : {}),
-        ...(deployedRaw ? { deployedUrl: deployedRaw } : {}),
-        ...(demoRaw ? { demoVideoUrl: demoRaw } : {}),
-      };
-      results.push({
-        submissionId: githubLogin.toLowerCase(),
-        githubLogin,
-        payload,
-      });
-    } catch {
-      // skip invalid
-    }
-  }
+    })
+  );
 
+  const results = fileResults.filter((r): r is ShowcaseSubmission => r !== null);
   results.sort((a, b) => a.githubLogin.localeCompare(b.githubLogin, "en"));
   return results;
 }
+
+/**
+ * Cached listing of submission JSON files from GitHub. Shared across the
+ * 6+ routes that need this data. Invalidated via revalidateTag in the
+ * GitHub webhook when showcase submissions change.
+ */
+export const fetchShowcaseSubmissionsFromGitHub = unstable_cache(
+  fetchShowcaseSubmissionsFromGitHubUncached,
+  ["fetchShowcaseSubmissionsFromGitHub", HACK_A_SPRINT_2026_EVENT_ID],
+  { revalidate: 60, tags: [SHOWCASE_SUBMISSIONS_CACHE_TAG] }
+);
 
 export function getJudgeUidSet(): Set<string> {
   const raw = process.env.HACK_A_SPRINT_2026_JUDGE_UIDS || "";
@@ -164,7 +172,7 @@ export async function githubUserHasMergedLabeledShowcasePr(
     `repo:${owner}/${repo} is:pr is:merged label:${HACK_A_SPRINT_2026_LABEL} author:${githubLogin}`
   );
   const url = `https://api.github.com/search/issues?q=${q}&per_page=1`;
-  const res = await fetch(url, { headers: githubHeaders() });
+  const res = await fetchWithTimeout(url, { headers: githubHeaders() });
   if (!res.ok) {
     return false;
   }
@@ -187,7 +195,7 @@ export async function githubUserHasRecentlyMergedPr(
     `repo:${owner}/${repo} is:pr is:merged author:${githubLogin} merged:>${since}`
   );
   const url = `https://api.github.com/search/issues?q=${q}&per_page=1`;
-  const res = await fetch(url, { headers: githubHeaders() });
+  const res = await fetchWithTimeout(url, { headers: githubHeaders() });
   if (!res.ok) return false;
   const data = (await res.json()) as { total_count?: number };
   return typeof data.total_count === "number" && data.total_count > 0;

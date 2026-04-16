@@ -4,8 +4,12 @@
  * See LICENSE file for details.
  */
 
+import { unstable_cache } from "next/cache";
 import { getGithubRepoPair } from "@/lib/github-recent-merged-prs";
+import { fetchWithTimeout } from "@/lib/http-fetch";
 import { logger } from "@/lib/logger";
+
+export const MERGED_PR_COUNTS_CACHE_TAG = "merged-pr-counts";
 
 function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
@@ -29,15 +33,8 @@ function searchHeaders(): Record<string, string> {
   return headers;
 }
 
-/**
- * One paginated Search over all merged PRs in the community repo, aggregated by
- * author login. Replaces N per-author searches (which quickly hits Search API limits).
- *
- * @returns map (lowercase login → count), or `null` if the search failed entirely.
- * @see https://docs.github.com/en/rest/search/search#search-issues-and-pull-requests
- */
-export async function fetchMergedPrCountByAuthorForRepo(): Promise<
-  Map<string, number> | null
+async function fetchMergedPrCountByAuthorForRepoUncached(): Promise<
+  Array<[string, number]> | null
 > {
   const { owner, repo } = getGithubRepoPair();
   const q = `repo:${owner}/${repo} type:pr is:merged`;
@@ -51,7 +48,7 @@ export async function fetchMergedPrCountByAuthorForRepo(): Promise<
       url.searchParams.set("per_page", String(SEARCH_PER_PAGE));
       url.searchParams.set("page", String(page));
 
-      let res = await fetch(url.toString(), { headers, cache: "no-store" });
+      let res = await fetchWithTimeout(url.toString(), { headers, cache: "no-store" });
       if ((res.status === 403 || res.status === 429) && page === 1) {
         const retryAfter = res.headers.get("retry-after");
         const waitSec = retryAfter ? Number.parseInt(retryAfter, 10) : Number.NaN;
@@ -63,7 +60,7 @@ export async function fetchMergedPrCountByAuthorForRepo(): Promise<
           waitMs,
         });
         await sleep(waitMs);
-        res = await fetch(url.toString(), { headers, cache: "no-store" });
+        res = await fetchWithTimeout(url.toString(), { headers, cache: "no-store" });
       }
 
       if (!res.ok) {
@@ -71,7 +68,7 @@ export async function fetchMergedPrCountByAuthorForRepo(): Promise<
           status: res.status,
           page,
         });
-        return page === 1 ? null : counts;
+        return page === 1 ? null : Array.from(counts.entries());
       }
 
       const data = (await res.json()) as { items?: SearchIssueItem[] };
@@ -88,13 +85,36 @@ export async function fetchMergedPrCountByAuthorForRepo(): Promise<
       if (items.length < SEARCH_PER_PAGE) break;
     }
 
-    return counts;
+    return Array.from(counts.entries());
   } catch (error) {
     logger.warn("GitHub bulk merged-PR search error", {
       error: error instanceof Error ? error.message : String(error),
     });
     return null;
   }
+}
+
+const cachedMergedPrCountEntries = unstable_cache(
+  fetchMergedPrCountByAuthorForRepoUncached,
+  ["fetchMergedPrCountByAuthorForRepo"],
+  { revalidate: 600, tags: [MERGED_PR_COUNTS_CACHE_TAG] }
+);
+
+/**
+ * One paginated Search over all merged PRs in the community repo, aggregated by
+ * author login. Replaces N per-author searches (which quickly hits Search API limits).
+ *
+ * Result cached for 10 minutes via next/cache; invalidate with
+ * revalidateTag(MERGED_PR_COUNTS_CACHE_TAG) from the GitHub webhook on a merge.
+ *
+ * @returns map (lowercase login → count), or `null` if the search failed entirely.
+ * @see https://docs.github.com/en/rest/search/search#search-issues-and-pull-requests
+ */
+export async function fetchMergedPrCountByAuthorForRepo(): Promise<
+  Map<string, number> | null
+> {
+  const entries = await cachedMergedPrCountEntries();
+  return entries === null ? null : new Map(entries);
 }
 
 /**

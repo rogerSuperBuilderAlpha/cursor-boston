@@ -48,10 +48,17 @@ async function fetchUserDataMap(
 ): Promise<Map<string, DocumentData>> {
   const map = new Map<string, DocumentData>();
   const unique = [...new Set(userIds)];
+  const chunks: string[][] = [];
   for (let i = 0; i < unique.length; i += 10) {
-    const chunk = unique.slice(i, i + 10);
-    const refs = chunk.map((id) => db.collection("users").doc(id));
-    const snaps = await db.getAll(...refs);
+    chunks.push(unique.slice(i, i + 10));
+  }
+  const chunkResults = await Promise.all(
+    chunks.map((chunk) => {
+      const refs = chunk.map((id) => db.collection("users").doc(id));
+      return db.getAll(...refs);
+    })
+  );
+  for (const snaps of chunkResults) {
     snaps.forEach((s) => {
       if (s.exists) {
         map.set(s.id, s.data() ?? {});
@@ -79,14 +86,20 @@ async function countMergedCommunityPrsByUserIds(
   const { owner, repo } = getGithubRepoPair();
   const expectedRepo = `${owner}/${repo}`;
 
+  const chunks: string[][] = [];
   for (let i = 0; i < unique.length; i += USER_ID_IN_CHUNK) {
-    const chunk = unique.slice(i, i + USER_ID_IN_CHUNK);
-    const snap = await db
-      .collection("pullRequests")
-      .where("userId", "in", chunk)
-      .where("state", "==", "merged")
-      .get();
-
+    chunks.push(unique.slice(i, i + USER_ID_IN_CHUNK));
+  }
+  const chunkSnaps = await Promise.all(
+    chunks.map((chunk) =>
+      db
+        .collection("pullRequests")
+        .where("userId", "in", chunk)
+        .where("state", "==", "merged")
+        .get()
+    )
+  );
+  for (const snap of chunkSnaps) {
     for (const doc of snap.docs) {
       const data = doc.data();
       const uid = data.userId as string | undefined;
@@ -152,8 +165,11 @@ export async function GET(request: NextRequest, context: RouteContext) {
     }[] = [];
 
     const userIds = snap.docs.map((d) => d.data().userId as string).filter(Boolean);
-    const userMap = await fetchUserDataMap(db, userIds);
-    const firestoreMergedCounts = await countMergedCommunityPrsByUserIds(db, userIds);
+    // User data + Firestore merged-PR counts are independent — run concurrently.
+    const [userMap, firestoreMergedCounts] = await Promise.all([
+      fetchUserDataMap(db, userIds),
+      countMergedCommunityPrsByUserIds(db, userIds),
+    ]);
 
     const githubLogins: string[] = [];
     for (const uid of userIds) {

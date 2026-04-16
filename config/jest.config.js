@@ -34,6 +34,7 @@ const customJestConfig = {
   // Emulator-backed; run via `npm run test:rules` (see CI).
   testPathIgnorePatterns: [
     '<rootDir>/__tests__/config/firebase/firestore.rules.test.ts',
+    '<rootDir>/e2e/',
   ],
   // Global thresholds — keep just below current CI totals so new UI without tests fails CI loudly.
   // Last aligned: 2026-04 (statements ~37.8%, branches ~33%, lines ~39.3%, functions ~30.5%).

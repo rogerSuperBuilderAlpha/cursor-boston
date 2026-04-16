@@ -6,6 +6,7 @@
 
 import type { Firestore } from "firebase-admin/firestore";
 import { FieldValue } from "firebase-admin/firestore";
+import { after } from "next/server";
 import { sendEmail } from "@/lib/mailgun";
 import { emailAlreadyWon } from "@/lib/treasure-hunt-eligibility";
 
@@ -109,32 +110,45 @@ export async function claimTreasureHuntPrize(
     return { ok: false, reason: awarded.status };
   }
 
+  // Clear the retry-cron "queue empty" marker so the next cron run scans.
   try {
-    const name = displayName.trim() || "there";
-    await sendEmail({
-      to,
-      subject: "🗺️ You found it — your Cursor credit inside",
-      text:
-        `Hi ${name},\n\n` +
-        `You cracked the "${pathId}" path of the Cursor Boston treasure hunt. ` +
-        `Here is your personal Cursor credit link (do not share it):\n\n` +
-        `${awarded.creditUrl}\n\n` +
-        `— Cursor Boston`,
-      html:
-        `<p>Hi ${name},</p>` +
-        `<p>You cracked the <strong>${pathId}</strong> path of the Cursor Boston treasure hunt. ` +
-        `Here is your personal Cursor credit link — <strong>do not share it</strong>:</p>` +
-        `<p><a href="${awarded.creditUrl}">${awarded.creditUrl}</a></p>` +
-        `<p>— Cursor Boston</p>`,
-    });
-    await progressRef.set(
-      { prizeEmailSentAt: FieldValue.serverTimestamp() },
+    await db.collection("treasureHuntRuntime").doc("emailRetry").set(
+      { queueEmpty: false, updatedAt: FieldValue.serverTimestamp() },
       { merge: true }
     );
-  } catch (err) {
-    console.error("[treasure-hunt-claim] email send failed", err);
-    // The retry cron will catch this: progressRef.prizeEmailSentAt stays null.
+  } catch {
+    // non-fatal
   }
+
+  // Fire-and-forget the email so the user's response returns immediately.
+  // The retry cron will catch any Mailgun failure: prizeEmailSentAt stays null.
+  const name = displayName.trim() || "there";
+  after(async () => {
+    try {
+      await sendEmail({
+        to,
+        subject: "🗺️ You found it — your Cursor credit inside",
+        text:
+          `Hi ${name},\n\n` +
+          `You cracked the "${pathId}" path of the Cursor Boston treasure hunt. ` +
+          `Here is your personal Cursor credit link (do not share it):\n\n` +
+          `${awarded.creditUrl}\n\n` +
+          `— Cursor Boston`,
+        html:
+          `<p>Hi ${name},</p>` +
+          `<p>You cracked the <strong>${pathId}</strong> path of the Cursor Boston treasure hunt. ` +
+          `Here is your personal Cursor credit link — <strong>do not share it</strong>:</p>` +
+          `<p><a href="${awarded.creditUrl}">${awarded.creditUrl}</a></p>` +
+          `<p>— Cursor Boston</p>`,
+      });
+      await progressRef.set(
+        { prizeEmailSentAt: FieldValue.serverTimestamp() },
+        { merge: true }
+      );
+    } catch (err) {
+      console.error("[treasure-hunt-claim] email send failed", err);
+    }
+  });
 
   return { ok: true, code: awarded.code, creditUrl: awarded.creditUrl, pathId };
 }
