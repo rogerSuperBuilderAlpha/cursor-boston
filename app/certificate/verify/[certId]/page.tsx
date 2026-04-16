@@ -4,6 +4,7 @@
  * See LICENSE file for details.
  */
 
+import { cache } from "react";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Award, CheckCircle } from "lucide-react";
@@ -18,7 +19,9 @@ interface Props {
   params: Promise<{ certId: string }>;
 }
 
-async function getCertificate(certId: string) {
+export const revalidate = 3600;
+
+const getCertificate = cache(async (certId: string) => {
   const db = getAdminDb();
   if (!db) return null;
 
@@ -26,7 +29,7 @@ async function getCertificate(certId: string) {
   if (!doc.exists) return null;
 
   return parseCertificateFromFirestore(certId, doc.data() as Record<string, unknown>);
-}
+});
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { certId } = await params;

@@ -5,14 +5,18 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import {
   verifyWebhookSignature,
   processPullRequest,
   isTargetRepository,
   fetchPullRequestChangedFilenames,
 } from "@/lib/github";
-import { HACK_A_SPRINT_2026_SUBMISSIONS_PATH } from "@/lib/hackathon-showcase";
+import {
+  HACK_A_SPRINT_2026_SUBMISSIONS_PATH,
+  SHOWCASE_SUBMISSIONS_CACHE_TAG,
+} from "@/lib/hackathon-showcase";
+import { MERGED_PR_COUNTS_CACHE_TAG } from "@/lib/github-merged-pr-count";
 import { ensureHackASprint2026ScoreDoc } from "@/lib/hackathon-asprint-2026-scores";
 import { awardHackASprint2026ShowcaseBadge } from "@/lib/hackathon-showcase-admin";
 import { getAdminDb } from "@/lib/firebase-admin";
@@ -25,10 +29,25 @@ import { getClientIdentifier } from "@/lib/rate-limit";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const MAX_WEBHOOK_BODY_BYTES = 1_000_000;
+
 async function handleWebhook(request: NextRequest) {
   try {
+    const declaredLen = Number(request.headers.get("content-length") || 0);
+    if (declaredLen && declaredLen > MAX_WEBHOOK_BODY_BYTES) {
+      return NextResponse.json(
+        { error: "payload too large" },
+        { status: 413 }
+      );
+    }
     // Get the raw body for signature verification
     const body = await request.text();
+    if (body.length > MAX_WEBHOOK_BODY_BYTES) {
+      return NextResponse.json(
+        { error: "payload too large" },
+        { status: 413 }
+      );
+    }
     const signature = request.headers.get("x-hub-signature-256");
 
     // Verify webhook signature
@@ -174,7 +193,15 @@ async function handleWebhook(request: NextRequest) {
               }
             }
             revalidatePath("/hackathons/hack-a-sprint-2026");
+            revalidateTag(SHOWCASE_SUBMISSIONS_CACHE_TAG, { expire: 0 });
           }
+        } catch {
+          // non-fatal
+        }
+
+        // Merged PR counts caches go stale on every merge — refresh.
+        try {
+          revalidateTag(MERGED_PR_COUNTS_CACHE_TAG, { expire: 0 });
         } catch {
           // non-fatal
         }

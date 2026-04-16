@@ -89,15 +89,11 @@ export async function POST(request: NextRequest) {
       {
         eventId: HACK_A_SPRINT_2026_EVENT_ID,
         submissionId,
+        judgeScores: { [user.uid]: score },
         updatedAt: FieldValue.serverTimestamp(),
       },
       { merge: true }
     );
-
-    await ref.update({
-      [`judgeScores.${user.uid}`]: score,
-      updatedAt: FieldValue.serverTimestamp(),
-    });
 
     return NextResponse.json({ ok: true });
   } catch (e) {

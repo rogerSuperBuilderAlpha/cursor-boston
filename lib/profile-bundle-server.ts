@@ -120,18 +120,19 @@ export async function fetchProfileDataBundleJson(
     poolSnap,
     userBadgesSnap,
   ] = await Promise.all([
-    db.collection("eventRegistrations").where("userId", "==", uid).get(),
-    db.collection("talkSubmissions").where("userId", "==", uid).get(),
+    db.collection("eventRegistrations").where("userId", "==", uid).limit(200).get(),
+    db.collection("talkSubmissions").where("userId", "==", uid).limit(50).get(),
     db
       .collection("pullRequests")
       .where("userId", "==", uid)
       .where("state", "==", "merged")
+      .limit(200)
       .get(),
-    db.collection("showcaseSubmissions").where("userId", "==", uid).get(),
-    db.collection("communityMessages").where("authorId", "==", uid).get(),
-    db.collection("hackathonTeams").where("memberIds", "array-contains", uid).get(),
-    db.collection("hackathonPool").where("userId", "==", uid).get(),
-    db.collection("user_badges").where("userId", "==", uid).get(),
+    db.collection("showcaseSubmissions").where("userId", "==", uid).limit(20).get(),
+    db.collection("communityMessages").where("authorId", "==", uid).limit(100).get(),
+    db.collection("hackathonTeams").where("memberIds", "array-contains", uid).limit(20).get(),
+    db.collection("hackathonPool").where("userId", "==", uid).limit(20).get(),
+    db.collection("user_badges").where("userId", "==", uid).limit(100).get(),
   ]);
 
   const registrations: ProfileRegistrationJson[] = regSnap.docs.map((doc) => {

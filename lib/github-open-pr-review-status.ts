@@ -39,10 +39,6 @@ function githubHeaders(): Record<string, string> {
   return headers;
 }
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((r) => setTimeout(r, ms));
-}
-
 function summarizeReviews(
   reviews: ReviewItem[],
   isDraft: boolean
@@ -174,10 +170,15 @@ export async function fetchOpenPrsWithReviewStatusForAuthors(
     for (const b of list) uniqueNumbers.add(b.number);
   }
 
-  let i = 0;
-  for (const pullNumber of uniqueNumbers) {
-    if (i++ > 0) await sleep(80);
-    reviewCache.set(pullNumber, await fetchReviewsForPull(owner, repo, pullNumber));
+  // Parallel in batches of 10 to stay well under GitHub Search API quotas.
+  const BATCH = 10;
+  const nums = [...uniqueNumbers];
+  for (let start = 0; start < nums.length; start += BATCH) {
+    const chunk = nums.slice(start, start + BATCH);
+    const results = await Promise.all(
+      chunk.map((n) => fetchReviewsForPull(owner, repo, n))
+    );
+    chunk.forEach((n, idx) => reviewCache.set(n, results[idx]!));
   }
 
   for (const [authorLower, briefs] of byAuthor) {

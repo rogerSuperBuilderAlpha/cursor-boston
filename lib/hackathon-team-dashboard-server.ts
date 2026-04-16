@@ -64,6 +64,7 @@ export async function loadHackathonTeamDashboard(
     .collection("hackathonTeams")
     .where("hackathonId", "==", hackathonId)
     .where("memberIds", "array-contains", uid)
+    .limit(1)
     .get();
 
   const teamDoc = myTeamSnap.docs[0];
