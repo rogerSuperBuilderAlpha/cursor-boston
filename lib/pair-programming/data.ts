@@ -13,6 +13,7 @@ import {
   query,
   where,
   orderBy,
+  limit,
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -42,7 +43,9 @@ export async function getAllActiveProfiles(): Promise<PairProfile[]> {
   const q = query(
     collection(db, COLLECTIONS.PROFILES),
     where("isActive", "==", true),
-    orderBy("updatedAt", "desc")
+    orderBy("updatedAt", "desc"),
+    // Cap client-side reads — matching only needs a reasonable pool, not the entire collection.
+    limit(100)
   );
   const snapshot = await getDocs(q);
   return snapshot.docs.map((d) => ({

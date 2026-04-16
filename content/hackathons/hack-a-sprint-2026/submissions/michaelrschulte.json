@@ -1,0 +1,6 @@
+{
+  "projectRepoUrl": "https://github.com/michaelrschulte/ink-email-agent",
+  "title": "Ink Email Agent — AI PDF Annotations via Email",
+  "description": "Email a PDF to an AI agent, get it back annotated with highlights, margin notes, and an executive summary — as if a brilliant study partner already read it. Built with Inkbox.ai for email infrastructure, FastAPI for the webhook server, and Claude for the annotation intelligence. The proprietary Ink pipeline analyzes documents in 3 passes (global scan, per-page annotations, executive summary) and renders annotations directly onto the PDF using ReportLab.",
+  "loomVideoUrl": "https://www.loom.com/share/YOUR_RECORDING"
+}

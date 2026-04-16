@@ -9,8 +9,16 @@ import "./globals.css";
 import AppShell from "@/components/AppShell";
 import WelcomeModal from "@/components/WelcomeModal";
 import LumaCheckoutTracker from "@/components/LumaCheckoutTracker";
+import { KonamiListener } from "@/components/hunt/KonamiListener";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
+
+const ORGANIZATION_SOCIAL_LINKS = [
+  "https://discord.gg/Wsncg8YYqc",
+  "https://lu.ma/cursor-boston",
+  "https://x.com/cursorboston",
+  "https://www.linkedin.com/company/cursor-boston/",
+];
 
 export const metadata: Metadata = {
   title: {
@@ -62,10 +70,7 @@ const organizationJsonLd = {
     "Boston's community for AI-assisted development with Cursor IDE. Meetups, workshops, and hackathons for developers, founders, and students.",
   url: "https://cursorboston.com",
   logo: "https://cursorboston.com/cursor-boston-logo.png",
-  sameAs: [
-    "https://discord.gg/Wsncg8YYqc",
-    "https://lu.ma/cursor-boston",
-  ],
+  sameAs: ORGANIZATION_SOCIAL_LINKS,
   address: {
     "@type": "PostalAddress",
     addressLocality: "Boston",
@@ -120,6 +125,7 @@ export default function RootLayout({
             <AppShell>{children}</AppShell>
             <WelcomeModal />
             <LumaCheckoutTracker />
+            <KonamiListener />
           </AuthProvider>
         </ThemeProvider>
       </body>

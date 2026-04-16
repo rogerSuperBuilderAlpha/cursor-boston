@@ -39,6 +39,20 @@ function makePostRequest(body: Record<string, unknown>) {
   });
 }
 
+/** Pending-queue logging uses .where().limit().get() on talkSubmissions. */
+function talkSubmissionsCol(inner: {
+  doc: ReturnType<typeof jest.fn>;
+}) {
+  return {
+    ...inner,
+    where: jest.fn(() => ({
+      limit: jest.fn(() => ({
+        get: jest.fn(async () => ({ docs: [], size: 0, forEach: () => undefined })),
+      })),
+    })),
+  };
+}
+
 describe("POST /api/talks/submission/moderate", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -56,12 +70,12 @@ describe("POST /api/talks/submission/moderate", () => {
     const db = {
       collection: jest.fn((name: string) => {
         if (name !== "talkSubmissions") throw new Error("unexpected collection");
-        return {
+        return talkSubmissionsCol({
           doc: jest.fn(() => ({
             get: jest.fn(async () => ({ exists: true, data: () => ({ status: "pending" }) })),
             set: jest.fn(async () => undefined),
           })),
-        };
+        });
       }),
     };
 
@@ -90,12 +104,12 @@ describe("POST /api/talks/submission/moderate", () => {
     const db = {
       collection: jest.fn((name: string) => {
         if (name !== "talkSubmissions") throw new Error("unexpected collection");
-        return {
+        return talkSubmissionsCol({
           doc: jest.fn(() => ({
             get: jest.fn(async () => ({ exists: true, data: () => ({ status }) })),
             set: setMock,
           })),
-        };
+        });
       }),
     };
 
@@ -127,12 +141,12 @@ describe("POST /api/talks/submission/moderate", () => {
     const db = {
       collection: jest.fn((name: string) => {
         if (name !== "talkSubmissions") throw new Error("unexpected collection");
-        return {
+        return talkSubmissionsCol({
           doc: jest.fn(() => ({
             get: jest.fn(async () => ({ exists: true, data: () => ({ status: "completed" }) })),
             set: setMock,
           })),
-        };
+        });
       }),
     };
 
@@ -157,12 +171,12 @@ describe("POST /api/talks/submission/moderate", () => {
     const db = {
       collection: jest.fn((name: string) => {
         if (name !== "talkSubmissions") throw new Error("unexpected collection");
-        return {
+        return talkSubmissionsCol({
           doc: jest.fn(() => ({
             get: jest.fn(async () => ({ exists: true, data: () => ({ status: "approved" }) })),
             set: setMock,
           })),
-        };
+        });
       }),
     };
 
@@ -192,12 +206,12 @@ describe("POST /api/talks/submission/moderate", () => {
     const db = {
       collection: jest.fn((name: string) => {
         if (name !== "talkSubmissions") throw new Error("unexpected collection");
-        return {
+        return talkSubmissionsCol({
           doc: jest.fn(() => ({
             get: jest.fn(async () => ({ exists: true, data: () => ({ status: "completed" }) })),
             set: setMock,
           })),
-        };
+        });
       }),
     };
 

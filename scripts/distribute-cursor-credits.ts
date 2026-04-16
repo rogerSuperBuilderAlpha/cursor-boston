@@ -25,7 +25,12 @@ import type { DocumentData } from "firebase-admin/firestore";
 import { getAdminDb } from "../lib/firebase-admin";
 import { HACK_A_SPRINT_2026_EVENT_ID, fetchShowcaseSubmissionsFromGitHub } from "../lib/hackathon-showcase";
 import { computeHackASprint2026RawScore } from "../lib/hackathon-asprint-2026-scores";
-import { hackASprint2026ScoreDocId } from "../lib/hackathon-asprint-2026-state";
+import { computePeerAverages } from "../lib/hackathon-asprint-2026-participant-scoring";
+import {
+  getAllHackASprint2026ParticipantScoreDocs,
+  hackASprint2026ScoreDocId,
+  resolveVoterGithubByUid,
+} from "../lib/hackathon-asprint-2026-state";
 import { CURSOR_CREDIT_TOP_N } from "../lib/hackathon-event-signup";
 import { sendEmail } from "../lib/mailgun";
 
@@ -69,6 +74,7 @@ type RankedEntry = {
   title: string;
   rawScore: number | null;
   peerVoteCount: number;
+  peerAverage: number | null;
   userId: string | null;
   email: string | null;
   displayName: string | null;
@@ -136,6 +142,18 @@ async function main() {
     }
   });
 
+  const identities = submissions.map((s) => ({
+    submissionId: s.submissionId,
+    githubLogin: s.githubLogin,
+  }));
+  const voterDocs = await getAllHackASprint2026ParticipantScoreDocs(db);
+  const voterGithubByUid = await resolveVoterGithubByUid(db, voterDocs);
+  const peerAvgBySid = computePeerAverages(
+    identities,
+    voterDocs,
+    voterGithubByUid
+  );
+
   // Build ranked list
   const scored = submissions.map((s) => {
     const data = scoreBySid.get(s.submissionId);
@@ -150,13 +168,17 @@ async function main() {
     const peerVoteCount =
       typeof data?.peerVoteCount === "number" ? data.peerVoteCount : 0;
     const rawScore = computeHackASprint2026RawScore(aiScore, judgeScores);
-    return { ...s, rawScore, peerVoteCount };
+    const peerAverage = peerAvgBySid.get(s.submissionId.toLowerCase()) ?? null;
+    return { ...s, rawScore, peerVoteCount, peerAverage };
   });
 
   scored.sort((a, b) => {
     const ra = a.rawScore ?? -1;
     const rb = b.rawScore ?? -1;
     if (rb !== ra) return rb - ra;
+    const pa = a.peerAverage ?? -1;
+    const pb = b.peerAverage ?? -1;
+    if (pb !== pa) return pb - pa;
     return (b.peerVoteCount ?? 0) - (a.peerVoteCount ?? 0);
   });
 
@@ -206,6 +228,7 @@ async function main() {
       title: s.payload.title,
       rawScore: s.rawScore,
       peerVoteCount: s.peerVoteCount,
+      peerAverage: s.peerAverage,
       userId: user?.uid ?? null,
       email: user?.email ?? null,
       displayName: user?.displayName ?? null,
@@ -217,12 +240,12 @@ async function main() {
 
   // Print ranked table
   const pad = (s: string, n: number) => s.slice(0, n).padEnd(n);
-  console.log(`\n${pad("Rank", 6)} ${pad("Login", 25)} ${pad("Score", 7)} ${pad("Peer", 6)} ${pad("Email", 35)} ${pad("In?", 5)} Prize`);
+  console.log(`\n${pad("Rank", 6)} ${pad("Login", 25)} ${pad("Score", 7)} ${pad("Pavg", 6)} ${pad("Email", 35)} ${pad("In?", 5)} Prize`);
   console.log("-".repeat(110));
   for (const e of entries) {
     const prizeLabel = !e.checkedIn ? "—(not checked in)" : e.isPrizeWinner ? PRIZE_AMOUNT_TOP6 : e.rank <= CURSOR_CREDIT_TOP_N ? CREDIT_AMOUNT : "—";
     console.log(
-      `${pad(`#${e.rank}`, 6)} ${pad(e.githubLogin, 25)} ${pad(e.rawScore != null ? String(e.rawScore) : "—", 7)} ${pad(String(e.peerVoteCount), 6)} ${pad(e.email ?? "—", 35)} ${pad(e.checkedIn ? "YES" : "—", 5)} ${prizeLabel}`
+      `${pad(`#${e.rank}`, 6)} ${pad(e.githubLogin, 25)} ${pad(e.rawScore != null ? String(e.rawScore) : "—", 7)} ${pad(e.peerAverage != null ? e.peerAverage.toFixed(2) : "—", 6)} ${pad(e.email ?? "—", 35)} ${pad(e.checkedIn ? "YES" : "—", 5)} ${prizeLabel}`
     );
   }
 
@@ -297,7 +320,7 @@ function buildCreditEmail(entry: RankedEntry): { subject: string; html: string; 
   if (entry.isPrizeWinner) {
     subject = `Hack-a-Sprint: Congratulations #${entry.rank} — ${PRIZE_AMOUNT_TOP6} prize + ${CREDIT_AMOUNT} Cursor credit`;
     body = `<p>Hi ${name},</p>
-<p>Congratulations! You placed <strong>#${entry.rank}</strong> at the Cursor Boston Hack-a-Sprint with a score of <strong>${entry.rawScore ?? "—"}</strong> and <strong>${entry.peerVoteCount}</strong> peer vote${entry.peerVoteCount === 1 ? "" : "s"} for <strong>${escapeHtml(entry.title)}</strong>.</p>
+<p>Congratulations! You placed <strong>#${entry.rank}</strong> at the Cursor Boston Hack-a-Sprint with a score of <strong>${entry.rawScore ?? "—"}</strong>${entry.peerAverage != null ? ` and peer average <strong>${entry.peerAverage.toFixed(2)}</strong>` : ""} for <strong>${escapeHtml(entry.title)}</strong>.</p>
 <p>You've won <strong>${PRIZE_AMOUNT_TOP6}</strong> from the prize pool, plus <strong>${CREDIT_AMOUNT} in Cursor credits</strong>.</p>
 <p><strong>Redeem your Cursor credit here:</strong><br/>
 <a href="${creditLink}" style="display:inline-block;margin:8px 0;padding:10px 20px;background:#10b981;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;">${creditLink}</a></p>

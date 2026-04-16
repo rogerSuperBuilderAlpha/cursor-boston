@@ -14,6 +14,7 @@ import type { BadgeEligibilityInput, BadgeId } from "@/lib/badges/types";
 import { getBaseBadgeEligibilityInput } from "@/lib/badges/getBadgeEligibilityInput";
 import { getEarnedBadgeIds } from "@/lib/badges/utils";
 import { BadgeGrid } from "@/components/badges/BadgeGrid";
+import { SHOWCASE_AWARD_LABEL } from "@/lib/hackathon-asprint-2026-awards";
 
 interface MemberCardProps {
   member: PublicMember;
@@ -177,6 +178,14 @@ export function MemberCard({ member }: MemberCardProps) {
             Hack-a-Sprint &apos;26
           </span>
         )}
+        {member.hackASprint2026ShowcaseAwards?.map((kind) => (
+          <span
+            key={kind}
+            className="px-2 py-1 bg-amber-500/15 text-amber-800 dark:text-amber-300 text-xs rounded-full"
+          >
+            {SHOWCASE_AWARD_LABEL[kind]}
+          </span>
+        ))}
       </div>
 
       <div className="mb-4">

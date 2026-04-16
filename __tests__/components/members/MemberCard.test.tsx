@@ -207,6 +207,18 @@ describe("MemberCard", () => {
     expect(screen.getByText("Hack-a-Sprint '26")).toBeInTheDocument();
   });
 
+  it("shows Hack-a-Sprint showcase winner ribbons when present", () => {
+    render(
+      <MemberCard
+        member={buildMember({
+          hackASprint2026ShowcaseAwards: ["judgesWinner", "peerReviewWinner"],
+        })}
+      />
+    );
+    expect(screen.getByText("Judges winner")).toBeInTheDocument();
+    expect(screen.getByText("Peer review winner")).toBeInTheDocument();
+  });
+
   it("renders social links when visible", () => {
     render(<MemberCard member={buildMember()} />);
     expect(screen.getByLabelText("Website (opens in new tab)")).toHaveAttribute("href", "https://jane.dev");

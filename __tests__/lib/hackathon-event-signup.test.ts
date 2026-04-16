@@ -1,6 +1,7 @@
 import {
   getHackathonEventSignupBlockReason,
   isHackathonEventSignupId,
+  profileMatchesHackathonJudgeCheckinException,
 } from "@/lib/hackathon-event-signup";
 import { HACK_A_SPRINT_2026_EVENT_ID } from "@/lib/hackathon-showcase";
 
@@ -32,5 +33,25 @@ describe("hackathon-event-signup", () => {
         discord: { id: "1" },
       })
     ).toBe(null);
+  });
+
+  it("treats judge emails as check-in exceptions via token or profile", () => {
+    expect(profileMatchesHackathonJudgeCheckinException("Ray@vectorly.app", undefined)).toBe(
+      true
+    );
+    expect(
+      profileMatchesHackathonJudgeCheckinException(null, {
+        email: "ashbhatia@gmail.com",
+      })
+    ).toBe(true);
+    expect(
+      profileMatchesHackathonJudgeCheckinException(null, {
+        email: "other@example.com",
+        additionalEmails: [{ verified: true, email: "MikeBoensel@gmail.com" }],
+      })
+    ).toBe(true);
+    expect(
+      profileMatchesHackathonJudgeCheckinException(null, { email: "participant@example.com" })
+    ).toBe(false);
   });
 });

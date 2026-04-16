@@ -44,11 +44,11 @@ service cloud.firestore {
                   || (request.auth != null && request.auth.uid == userId);
       allow create: if request.auth != null
                     && request.auth.uid == userId
-                    && !request.resource.data.keys().hasAny(['earnedBadgeIds', 'pullRequestsCount', 'hackASprint2026ShowcaseBadge', 'hackASprint2026Unlocked', 'hackASprint2026UnlockedAt']);
+                    && !request.resource.data.keys().hasAny(['earnedBadgeIds', 'pullRequestsCount', 'hackASprint2026ShowcaseBadge', 'hackASprint2026ShowcaseAwards', 'hackASprint2026Unlocked', 'hackASprint2026UnlockedAt', 'hackASprint2026CreditEmailSentAt']);
       allow update: if request.auth != null 
                     && request.auth.uid == userId
                     && !request.resource.data.diff(resource.data).affectedKeys()
-                        .hasAny(['uid', 'createdAt', 'role', 'email', 'earnedBadgeIds', 'pullRequestsCount', 'hackASprint2026ShowcaseBadge', 'hackASprint2026Unlocked', 'hackASprint2026UnlockedAt']);
+                        .hasAny(['uid', 'createdAt', 'role', 'email', 'earnedBadgeIds', 'pullRequestsCount', 'hackASprint2026ShowcaseBadge', 'hackASprint2026ShowcaseAwards', 'hackASprint2026Unlocked', 'hackASprint2026UnlockedAt', 'hackASprint2026CreditEmailSentAt']);
       allow delete: if false; // Users cannot delete their own accounts via client
     }
     
@@ -113,8 +113,23 @@ service cloud.firestore {
       allow write: if false; // Only server-side writes via webhook
     }
 
+    // Certificates - public read for LinkedIn verification, server-side writes only
+    match /certificates/{certId} {
+      allow read: if true;
+      allow write: if false; // Only server-side writes via Admin SDK
+    }
+
     // API rate limiter buckets - server-side only
     match /apiRateLimits/{docId} {
+      allow read, write: if false;
+    }
+
+    // Materialized read models (analytics + public members directory) — Admin SDK only
+    match /analytics_snapshots/{docId} {
+      allow read, write: if false;
+    }
+
+    match /members_snapshots/{docId} {
       allow read, write: if false;
     }
 
@@ -269,8 +284,13 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // Hack-a-Sprint 2026 peer picks (exactly 6) — Admin SDK only
+    // Hack-a-Sprint 2026 peer picks (legacy) — Admin SDK only
     match /hackathonASprint2026PeerVotes/{docId} {
+      allow read, write: if false;
+    }
+
+    // Hack-a-Sprint 2026 participant 1–10 scores (per voter) — Admin SDK only
+    match /hackathonASprint2026ParticipantScores/{docId} {
       allow read, write: if false;
     }
 
@@ -281,6 +301,27 @@ service cloud.firestore {
 
     // Consolidated event contact list — Admin SDK only
     match /eventContacts/{docId} {
+      allow read, write: if false;
+    }
+
+    // Treasure hunt prize pool — Admin SDK only (server-side claim via transactions)
+    match /treasureHuntPrizes/{docId} {
+      allow read, write: if false;
+    }
+
+    // Treasure hunt per-user progress — readable by owner, server-only writes
+    match /treasureHuntProgress/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if false;
+    }
+
+    // Treasure hunt per-path winner index — Admin SDK only
+    match /treasureHuntPathWinners/{pathId} {
+      allow read, write: if false;
+    }
+
+    // Treasure hunt rate-limit buckets — Admin SDK only
+    match /treasureHuntRateLimit/{docId} {
       allow read, write: if false;
     }
   }

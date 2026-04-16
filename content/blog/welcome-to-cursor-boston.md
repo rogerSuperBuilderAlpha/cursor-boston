@@ -57,3 +57,6 @@ Check our [events page](/events) for details and registration.
 We're thrilled to be building this community in Boston. See you at our first event!
 
 *— The Cursor Boston Team*
+
+*P.S. The librarian keeps a spare key under the welcome mat. The password is the same as it ever was: the two words every treasure-seeker knows.*
+

@@ -29,11 +29,28 @@ interface RateLimitOptions {
   keyGenerator?: (request: Request) => string; // Custom key generator
 }
 
-interface RateLimitResult {
+export interface RateLimitResult {
   success: boolean;
   remaining: number;
   resetTime: number;
   retryAfter?: number;
+}
+
+/** Response headers for in-memory rate limiting (no Firestore transaction reads). */
+export function buildMemoryRateLimitHeaders(
+  result: RateLimitResult,
+  maxRequests: number
+): Record<string, string> {
+  const headers: Record<string, string> = {
+    "X-RateLimit-Limit": String(maxRequests),
+    "X-RateLimit-Remaining": String(result.remaining),
+    "X-RateLimit-Reset": String(result.resetTime),
+    "X-RateLimit-Source": "memory",
+  };
+  if (result.retryAfter) {
+    headers["Retry-After"] = String(result.retryAfter);
+  }
+  return headers;
 }
 
 /**
@@ -251,5 +268,13 @@ export const rateLimitConfigs = {
   hackathonShowcaseVote: {
     windowMs: 60 * 1000, // 1 minute
     maxRequests: 30, // 30 requests per minute
+  },
+  hackathonShowcaseParticipantScore: {
+    windowMs: 60 * 1000, // 1 minute
+    maxRequests: 60, // 60 score updates per minute per IP
+  },
+  hackathonShowcaseCreditEmail: {
+    windowMs: 60 * 60 * 1000, // 1 hour
+    maxRequests: 3, // 3 emails per hour per IP
   },
 };

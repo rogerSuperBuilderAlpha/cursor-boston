@@ -8,9 +8,18 @@
  *   npx tsx scripts/ai-evaluate-submissions.ts --dry-run
  *   npx tsx scripts/ai-evaluate-submissions.ts --apply
  *   npx tsx scripts/ai-evaluate-submissions.ts --dry-run --single alice
+ *   npx tsx scripts/ai-evaluate-submissions.ts --apply --only-missing
+ *
+ * --only-missing skips submissions that already have aiScore 1–10 in Firestore
+ * (requires Firebase Admin env vars even with --dry-run).
  *
  * Requires: ANTHROPIC_API_KEY, FIREBASE_SERVICE_ACCOUNT_JSON or GOOGLE_APPLICATION_CREDENTIALS,
  *           GITHUB_TOKEN (optional, for higher rate limits).
+ *
+ * To apply scores without Anthropic (e.g. after judging in Cursor), use:
+ *   npm run ai-evaluate:apply-json -- --dry-run
+ *   npm run ai-evaluate:apply-json -- --apply
+ * See scripts/apply-ai-scores-from-json.ts and scripts/data/hack-a-sprint-2026-ai-scores.json.
  */
 import { loadEnvConfig } from "@next/env";
 loadEnvConfig(process.cwd());
@@ -21,6 +30,7 @@ import { fetchShowcaseSubmissionsFromGitHub } from "../lib/hackathon-showcase";
 import { hackASprint2026ScoreDocId } from "../lib/hackathon-asprint-2026-state";
 import { HACK_A_SPRINT_2026_EVENT_ID } from "../lib/hackathon-showcase";
 import { getAdminDb } from "../lib/firebase-admin";
+import type { Firestore } from "firebase-admin/firestore";
 
 const RUBRIC = `You are an expert hackathon judge for the Cursor Boston Hack-a-Sprint 2026.
 
@@ -39,7 +49,7 @@ Agents should solve a real productivity or workflow problem using at least one I
 
 4. **Creativity & Originality** — Is the use case novel or interesting? Cookie-cutter TODO apps score low; unique, clever applications of Inkbox score high.
 
-5. **Demo & Deployment** — Is the project deployed and accessible? Is there a Loom walkthrough? Projects with live demos and clear explanations score higher.
+5. **Explanation & demo story** — Is there a clear Loom walkthrough? Do the repo and description make the project easy to understand? A public deployment is optional and not required for a strong score.
 
 ## Scoring Guide
 - 1-2: Minimal effort, doesn't use Inkbox, incomplete
@@ -49,7 +59,8 @@ Agents should solve a real productivity or workflow problem using at least one I
 - 9-10: Exceptional — deep SDK integration, novel use case, polished, clearly useful
 
 ## Important Notes
-- You CANNOT watch videos, so evaluate based on the project description, README, and code context.
+- You CANNOT watch videos, so evaluate based on the project description, README, and code context (not the Loom itself).
+- Submissions are valid with a public GitHub repo and Loom URL only; do not penalize solely for lacking a deployed URL.
 - A missing or sparse README is a negative signal.
 - Judge fairly for a 2.5-hour sprint — don't expect production polish.
 - Be honest and differentiate. Not every project deserves a 7.
@@ -89,6 +100,7 @@ async function fetchRepoReadme(repoUrl: string): Promise<string | null> {
 function parseArgs(argv: string[]) {
   const dryRun = argv.includes("--dry-run");
   const apply = argv.includes("--apply");
+  const onlyMissing = argv.includes("--only-missing");
   const singleIdx = argv.indexOf("--single");
   const single = singleIdx >= 0 ? argv[singleIdx + 1]?.trim().toLowerCase() ?? null : null;
 
@@ -96,7 +108,27 @@ function parseArgs(argv: string[]) {
     console.error("Specify exactly one of: --dry-run | --apply");
     process.exit(1);
   }
-  return { dryRun, apply, single };
+  return { dryRun, apply, single, onlyMissing };
+}
+
+async function submissionIdsWithExistingAiScore(
+  db: Firestore,
+  submissionIds: string[]
+): Promise<Set<string>> {
+  if (submissionIds.length === 0) return new Set();
+  const refs = submissionIds.map((id) =>
+    db.collection("hackathonShowcaseScores").doc(hackASprint2026ScoreDocId(id))
+  );
+  const snaps = await db.getAll(...refs);
+  const has = new Set<string>();
+  snaps.forEach((snap, i) => {
+    if (!snap.exists) return;
+    const ai = snap.data()?.aiScore;
+    if (typeof ai === "number" && ai >= 1 && ai <= 10) {
+      has.add(submissionIds[i]!);
+    }
+  });
+  return has;
 }
 
 async function sleep(ms: number) {
@@ -104,16 +136,22 @@ async function sleep(ms: number) {
 }
 
 async function main() {
-  const { dryRun, apply, single } = parseArgs(process.argv.slice(2));
+  const { dryRun, apply, single, onlyMissing } = parseArgs(process.argv.slice(2));
 
   if (!process.env.ANTHROPIC_API_KEY) {
     console.error("ANTHROPIC_API_KEY is required.");
     process.exit(1);
   }
 
-  const db = apply ? getAdminDb() : null;
+  const db = apply || onlyMissing ? getAdminDb() : null;
   if (apply && !db) {
     console.error("Firebase Admin not configured (needed for --apply).");
+    process.exit(1);
+  }
+  if (onlyMissing && !db) {
+    console.error(
+      "Firebase Admin not configured (needed for --only-missing to read existing scores)."
+    );
     process.exit(1);
   }
 
@@ -134,6 +172,20 @@ async function main() {
     }
   }
 
+  if (onlyMissing && db) {
+    const ids = submissions.map((s) => s.submissionId);
+    const already = await submissionIdsWithExistingAiScore(db, ids);
+    const before = submissions.length;
+    submissions = submissions.filter((s) => !already.has(s.submissionId));
+    console.log(
+      `--only-missing: skipping ${before - submissions.length} with existing AI score; ${submissions.length} to evaluate.`
+    );
+    if (submissions.length === 0) {
+      console.log("Nothing left to evaluate.");
+      return;
+    }
+  }
+
   console.log(`Evaluating ${submissions.length} submission(s)…\n`);
 
   const results: { login: string; score: number; reasoning: string }[] = [];
@@ -143,20 +195,28 @@ async function main() {
     console.log(`--- ${githubLogin} ---`);
 
     let readme: string | null = null;
-    try {
-      readme = await fetchRepoReadme(payload.projectRepoUrl);
-    } catch {
-      console.log("  Could not fetch README.");
+    if (payload.projectRepoUrl.trim()) {
+      try {
+        readme = await fetchRepoReadme(payload.projectRepoUrl);
+      } catch {
+        console.log("  Could not fetch README.");
+      }
     }
 
     const context = [
       `## Submission: ${payload.title}`,
       `**Author:** ${githubLogin}`,
-      `**Repo:** ${payload.projectRepoUrl}`,
-      `**Deployed URL:** ${payload.deployedUrl}`,
-      `**Loom Video:** ${payload.loomVideoUrl}`,
+      payload.projectRepoUrl.trim()
+        ? `**Repo:** ${payload.projectRepoUrl}`
+        : "**Repo:** Not provided",
+      payload.deployedUrl
+        ? `**Deployed URL (optional):** ${payload.deployedUrl}`
+        : null,
+      payload.loomVideoUrl?.trim()
+        ? `**Loom Video:** ${payload.loomVideoUrl}`
+        : "**Loom Video:** Not provided",
       payload.demoVideoUrl ? `**Demo Video:** ${payload.demoVideoUrl}` : null,
-      `\n**Description:**\n${payload.description}`,
+      `\n**Description:**\n${payload.description.trim() || "(empty)"}`,
       readme ? `\n**README.md (truncated):**\n${readme}` : "\n**README.md:** Not available",
     ]
       .filter(Boolean)
@@ -199,11 +259,14 @@ async function main() {
         const ref = db
           .collection("hackathonShowcaseScores")
           .doc(hackASprint2026ScoreDocId(submissionId));
+        const aiReasoning =
+          reasoning.length > 8000 ? `${reasoning.slice(0, 7997)}…` : reasoning;
         await ref.set(
           {
             eventId: HACK_A_SPRINT_2026_EVENT_ID,
             submissionId,
             aiScore: score,
+            aiReasoning,
             updatedAt: FieldValue.serverTimestamp(),
           },
           { merge: true }

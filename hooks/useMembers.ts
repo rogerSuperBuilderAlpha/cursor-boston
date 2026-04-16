@@ -7,9 +7,18 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import type { PublicMember, MemberFilters, SortOption, MemberType } from "@/types/members";
+import type { PublicMember, MemberFilters, SortOption } from "@/types/members";
+
+function revivePublicMember(raw: PublicMember): PublicMember {
+  const c = raw.createdAt as unknown;
+  if (typeof c === "string") {
+    return {
+      ...raw,
+      createdAt: { toDate: () => new Date(c) },
+    };
+  }
+  return raw;
+}
 
 const defaultFilters: MemberFilters = {
   hasDiscord: false,
@@ -28,67 +37,17 @@ export function useMembers(initialSearch: string = "") {
   const [filters, setFilters] = useState<MemberFilters>(defaultFilters);
   const [sortBy, setSortBy] = useState<SortOption>("newest");
 
-  // Fetch members on mount
+  // Load via cached API (avoids N client Firestore reads per visitor).
   useEffect(() => {
     async function fetchPublicMembers() {
-      if (!db) {
-        setLoading(false);
-        return;
-      }
-
       try {
-        // Fetch human members
-        const usersRef = collection(db, "users");
-        const usersQuery = query(
-          usersRef,
-          where("visibility.isPublic", "==", true),
-          orderBy("createdAt", "desc")
-        );
-        const usersSnapshot = await getDocs(usersQuery);
-        const humanMembers = usersSnapshot.docs.map((doc) => ({
-          uid: doc.id,
-          memberType: "human" as MemberType,
-          ...doc.data(),
-        })) as PublicMember[];
-
-        // Fetch agent members
-        const agentsRef = collection(db, "agents");
-        const agentsQuery = query(
-          agentsRef,
-          where("visibility.isPublic", "==", true),
-          where("status", "==", "claimed"),
-          orderBy("createdAt", "desc")
-        );
-        const agentsSnapshot = await getDocs(agentsQuery);
-        const agentMembers = agentsSnapshot.docs.map((doc) => {
-          const data = doc.data();
-          return {
-            uid: doc.id,
-            memberType: "agent" as MemberType,
-            displayName: data.name,
-            photoURL: data.avatarUrl || null,
-            bio: data.description,
-            visibility: {
-              ...data.visibility,
-              showBio: true,
-              showMemberSince: true,
-            },
-            createdAt: data.createdAt,
-            owner: data.visibility?.showOwner ? {
-              displayName: data.ownerDisplayName,
-              email: data.ownerEmail,
-            } : undefined,
-          } as PublicMember;
-        });
-
-        // Combine and sort by creation date
-        const allMembers = [...humanMembers, ...agentMembers].sort((a, b) => {
-          const dateA = a.createdAt?.toDate?.()?.getTime() || 0;
-          const dateB = b.createdAt?.toDate?.()?.getTime() || 0;
-          return dateB - dateA;
-        });
-
-        setMembers(allMembers);
+        const res = await fetch("/api/members/public");
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+        const body = (await res.json()) as { members?: PublicMember[] };
+        const list = Array.isArray(body.members) ? body.members : [];
+        setMembers(list.map(revivePublicMember));
       } catch (error) {
         console.error("Error fetching members:", error);
       } finally {
@@ -96,7 +55,7 @@ export function useMembers(initialSearch: string = "") {
       }
     }
 
-    fetchPublicMembers();
+    void fetchPublicMembers();
   }, []);
 
   // Filter and sort members

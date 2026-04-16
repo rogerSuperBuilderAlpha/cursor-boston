@@ -7,7 +7,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
-import { collection, query, where, getDocs, orderBy, limit, startAfter, Timestamp, onSnapshot, QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
+import { collection, query, where, getDocs, orderBy, limit, startAfter, Timestamp, QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { User } from "firebase/auth";
 import type { Message, ReactionType } from "@/types/feed";
@@ -38,15 +38,15 @@ export function useFeed(user: User | null, isActive: boolean) {
   const [error, setError] = useState<string | null>(null);
   const clearError = useCallback(() => setError(null), []);
 
-  // Subscribe to real-time messages when feed tab is active (first page only)
-  useEffect(() => {
-    if (!isActive || !db) return;
-
+  // Fetch messages with a one-shot getDocs (avoids real-time listener fan-out
+  // that was causing 399K+ Firestore reads/day).
+  const fetchMessages = useCallback(async () => {
+    if (!db) return;
     setLoading(true);
-    const messagesRef = collection(db, "communityMessages");
-    const q = query(messagesRef, orderBy("createdAt", "desc"), limit(PAGE_SIZE));
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    try {
+      const messagesRef = collection(db, "communityMessages");
+      const q = query(messagesRef, orderBy("createdAt", "desc"), limit(PAGE_SIZE));
+      const snapshot = await getDocs(q);
       const fetchedMessages = snapshot.docs
         .map((d) => ({
           id: d.id,
@@ -56,15 +56,21 @@ export function useFeed(user: User | null, isActive: boolean) {
       setMessages(fetchedMessages);
       setHasMore(snapshot.docs.length === PAGE_SIZE);
       lastDocRef.current = snapshot.docs[snapshot.docs.length - 1] ?? null;
-      setLoading(false);
-    }, (error) => {
-      console.error("Error listening to messages:", error);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
       setError("Failed to load feed. Please refresh.");
+    } finally {
       setLoading(false);
-    });
+    }
+  }, []);
 
-    return () => unsubscribe();
-  }, [isActive]);
+  // Load messages on mount and poll every 30s while active (replaces onSnapshot)
+  useEffect(() => {
+    if (!isActive || !db) return;
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 30_000);
+    return () => clearInterval(interval);
+  }, [isActive, fetchMessages]);
 
   // Load more messages using cursor-based pagination
   const loadMore = useCallback(async () => {
@@ -102,31 +108,40 @@ export function useFeed(user: User | null, isActive: boolean) {
     }
   }, [loadingMore, hasMore]);
 
-  // Fetch user's reactions when logged in (one-time, updated optimistically)
-  useEffect(() => {
-    if (!isActive || !db || !user) return;
+  const visibleMessageIdsKey = useMemo(
+    () => [...messages.map((m) => m.id)].sort().join("\0"),
+    [messages]
+  );
 
-    async function fetchReactions() {
+  // Reactions for visible feed messages only (bounded reads vs. full user history scan).
+  useEffect(() => {
+    if (!isActive || !user) {
+      if (!user) setUserReactions({});
+      return;
+    }
+    if (messages.length === 0) {
+      setUserReactions({});
+      return;
+    }
+
+    (async () => {
       try {
-        const reactionsRef = collection(db!, "messageReactions");
-        const reactionsQuery = query(
-          reactionsRef,
-          where("userId", "==", user!.uid)
+        const ids = [...messages.map((m) => m.id)].slice(0, 60);
+        const token = await user.getIdToken();
+        const res = await fetch(
+          `/api/community/my-reactions?messageIds=${encodeURIComponent(ids.join(","))}`,
+          { headers: { Authorization: `Bearer ${token}` } }
         );
-        const reactionsSnapshot = await getDocs(reactionsQuery);
-        const reactions: Record<string, ReactionType> = {};
-        reactionsSnapshot.docs.forEach((d) => {
-          const data = d.data();
-          reactions[data.messageId] = data.type;
-        });
-        setUserReactions(reactions);
+        if (!res.ok) return;
+        const data = (await res.json()) as { reactions?: Record<string, ReactionType> };
+        setUserReactions(data.reactions ?? {});
       } catch (error) {
         console.error("Error fetching reactions:", error);
       }
-    }
-
-    fetchReactions();
-  }, [isActive, user]);
+    })();
+    // `visibleMessageIdsKey` is derived from `messages` and limits refetches to id-set changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: deps via visibleMessageIdsKey
+  }, [isActive, user, visibleMessageIdsKey]);
 
   // API helper
   const callCommunityApi = useCallback(
@@ -299,7 +314,8 @@ export function useFeed(user: User | null, isActive: boolean) {
       const q = query(
         messagesRef,
         where("parentId", "==", parentId),
-        orderBy("createdAt", "asc")
+        orderBy("createdAt", "asc"),
+        limit(100)
       );
       const snapshot = await getDocs(q);
       const replies = snapshot.docs.map((doc) => ({

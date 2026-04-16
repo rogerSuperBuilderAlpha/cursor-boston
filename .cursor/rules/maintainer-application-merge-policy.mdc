@@ -1,0 +1,18 @@
+---
+description: Never merge maintainer-application PRs without explicit repo owner approval
+alwaysApply: true
+---
+
+# Maintainer application branch — merge gate
+
+**Do not merge** any pull request whose **base branch** is `maintainer-application` (maintainer onboarding / application JSON, etc.) **unless the user has explicitly approved that merge in this chat session.**
+
+This includes:
+
+- `gh pr merge` targeting `maintainer-application`
+- Merging via the GitHub UI into `maintainer-application`
+- Landing application files (e.g. `*.json` under maintainer application paths) by any side channel
+
+**Allowed without a maintainer-application merge:** Triage, review, comments, requesting changes, or merging **normal feature PRs** into `develop` per the existing PR policies.
+
+**If the user asks to process maintainer applications:** Confirm whether they want **review-only** or an **actual merge** before using any merge command.

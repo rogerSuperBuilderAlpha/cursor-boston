@@ -6,5 +6,15 @@
       "*": false,
       "main": true
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/internal/snapshots/rebuild",
+      "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/internal/hunt/email-retry",
+      "schedule": "*/15 * * * *"
+    }
+  ]
 }

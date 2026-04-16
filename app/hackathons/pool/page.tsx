@@ -12,16 +12,10 @@ import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import {
   collection,
-  query,
-  where,
-  getDocs,
-  orderBy,
   doc,
-  getDoc,
   deleteDoc,
   addDoc,
   serverTimestamp,
-  documentId,
   Timestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -132,185 +126,118 @@ function HackathonsPoolPageContent() {
   const [inviting, setInviting] = useState<string | null>(null);
   const [requesting, setRequesting] = useState<string | null>(null);
 
-  const fetchEligibility = useCallback(async () => {
-    if (!user) return;
-    try {
-      const token = await user.getIdToken();
-      const res = await fetch(`/api/hackathons/eligibility?hackathonId=${encodeURIComponent(hackathonId)}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      setEligible(data.eligible === true);
-      setEligibilityReason(data.reason || "");
-    } catch {
-      setEligible(false);
-      setEligibilityReason("Could not check eligibility.");
-    }
-  }, [user, hackathonId]);
+  function tsFromIso(iso: string | null): Timestamp {
+    if (!iso) return Timestamp.fromMillis(0);
+    return Timestamp.fromDate(new Date(iso));
+  }
 
   const fetchData = useCallback(async () => {
-    if (!db || !user) {
+    if (!user) {
       setLoading(false);
       return;
     }
     setLoading(true);
     try {
-      const poolRef = collection(db, "hackathonPool");
-      const poolQ = query(
-        poolRef,
-        where("hackathonId", "==", hackathonId),
-        orderBy("joinedAt", "desc")
-      );
-      const poolSnap = await getDocs(poolQ);
-      const entries: PoolEntry[] = poolSnap.docs.map((d) => ({
-        userId: d.data().userId,
-        hackathonId: d.data().hackathonId,
-        joinedAt: d.data().joinedAt,
-      }));
-      setPoolEntries(entries);
+      const token = await user.getIdToken();
+      const headers = { Authorization: `Bearer ${token}` };
+      const [dashRes, eligRes] = await Promise.all([
+        fetch(
+          `/api/hackathons/pool-dashboard?hackathonId=${encodeURIComponent(hackathonId)}`,
+          { headers }
+        ),
+        fetch(`/api/hackathons/eligibility?hackathonId=${encodeURIComponent(hackathonId)}`, {
+          headers,
+        }),
+      ]);
 
-      const myPoolDoc = await getDoc(doc(db, "hackathonPool", `${user.uid}_${hackathonId}`));
-      setInPool(myPoolDoc.exists());
-
-      const userIds = entries.map((e) => e.userId).filter(Boolean);
-      const users: Record<string, PublicUser> = {};
-      for (let i = 0; i < userIds.length; i += 10) {
-        const chunk = userIds.slice(i, i + 10);
-        if (chunk.length === 0) continue;
-        const usersRef = collection(db, "users");
-        const usersQ = query(usersRef, where(documentId(), "in", chunk));
-        const usersSnap = await getDocs(usersQ);
-        usersSnap.docs.forEach((d) => {
-          const data = d.data();
-          if (data.visibility?.isPublic) {
-            users[d.id] = {
-              uid: d.id,
-              displayName: data.displayName ?? null,
-              photoURL: data.photoURL ?? null,
-              discord: data.discord,
-              github: data.github,
-            };
-          }
-        });
+      if (!dashRes.ok) {
+        throw new Error(`pool dashboard ${dashRes.status}`);
       }
-      setPoolUsers(users);
-
-      const teamsRef = collection(db, "hackathonTeams");
-      const myTeamQ = query(
-        teamsRef,
-        where("hackathonId", "==", hackathonId),
-        where("memberIds", "array-contains", user.uid)
-      );
-      const myTeamSnap = await getDocs(myTeamQ);
-      const team = myTeamSnap.docs[0];
-      const myTeamData = team
-        ? { id: team.id, ...team.data() } as HackathonTeam
-        : null;
-      setMyTeam(myTeamData);
-
-      const allTeamsQ = query(teamsRef, where("hackathonId", "==", hackathonId));
-      const allTeamsSnap = await getDocs(allTeamsQ);
-      const withSlots = allTeamsSnap.docs
-        .map((d) => ({ id: d.id, ...d.data() } as HackathonTeam))
-        .filter((t) => t.memberIds.length >= 2 && t.memberIds.length < 3);
-      setTeamsWithSlots(withSlots);
-
-      const allTeamMemberIds = [...new Set(withSlots.flatMap((t) => t.memberIds))].filter(
-        (id) => !isPlaceholderMemberId(id)
-      );
-      const teamMembers: Record<string, PublicUser> = {};
-      for (let i = 0; i < allTeamMemberIds.length; i += 10) {
-        const chunk = allTeamMemberIds.slice(i, i + 10);
-        if (chunk.length === 0) continue;
-        const usersRef = collection(db, "users");
-        const usersQ = query(usersRef, where(documentId(), "in", chunk));
-        const usersSnap = await getDocs(usersQ);
-        usersSnap.docs.forEach((d) => {
-          const data = d.data();
-          if (data.visibility?.isPublic) {
-            teamMembers[d.id] = {
-              uid: d.id,
-              displayName: data.displayName ?? null,
-              photoURL: data.photoURL ?? null,
-              discord: data.discord,
-              github: data.github,
-            };
+      const d = (await dashRes.json()) as {
+        poolEntries: Array<{ userId: string; hackathonId: string; joinedAt: string | null }>;
+        inPool: boolean;
+        poolUsers: Record<string, PublicUser>;
+        myTeam: (Omit<HackathonTeam, "createdAt"> & { createdAt: string | null }) | null;
+        teamsWithSlots: Array<Omit<HackathonTeam, "createdAt"> & { createdAt: string | null }>;
+        teamMemberProfiles: Record<string, PublicUser>;
+        successfulSubmissionsByTeam: Record<string, number>;
+        myInvites: Array<
+          Omit<HackathonInvite, "createdAt" | "expiresAt"> & {
+            createdAt: string | null;
+            expiresAt?: string | null;
           }
-        });
-      }
-      setTeamMemberProfiles(teamMembers);
+        >;
+        myInvitedUserIds: string[];
+        requestsToMyTeam: Array<
+          Omit<JoinRequest, "createdAt"> & { createdAt: string | null }
+        >;
+        myPendingRequestTeamIds: string[];
+      };
 
-      const submissionsRef = collection(db, "hackathonSubmissions");
-      const subQ = query(
-        submissionsRef,
-        where("hackathonId", "==", hackathonId)
+      setPoolEntries(
+        d.poolEntries.map((e) => ({
+          userId: e.userId,
+          hackathonId: e.hackathonId,
+          joinedAt: tsFromIso(e.joinedAt),
+        }))
       );
-      const subSnap = await getDocs(subQ);
-      const subCounts: Record<string, number> = {};
-      subSnap.docs.forEach((d) => {
-        const data = d.data();
-        if (data.submittedAt && data.disqualified !== true && data.teamId) {
-          subCounts[data.teamId] = (subCounts[data.teamId] ?? 0) + 1;
-        }
-      });
-      setSuccessfulSubmissionsByTeam(subCounts);
-
-      const invitesRef = collection(db, "hackathonInvites");
-      const invitesQ = query(
-        invitesRef,
-        where("toUserId", "==", user.uid),
-        where("status", "==", "pending")
+      setInPool(d.inPool);
+      setPoolUsers(d.poolUsers);
+      setMyTeam(
+        d.myTeam
+          ? ({
+              ...d.myTeam,
+              createdAt: tsFromIso(d.myTeam.createdAt),
+            } as HackathonTeam)
+          : null
       );
-      const invitesSnap = await getDocs(invitesQ);
+      setTeamsWithSlots(
+        d.teamsWithSlots.map(
+          (t) =>
+            ({
+              ...t,
+              createdAt: tsFromIso(t.createdAt),
+            }) as HackathonTeam
+        )
+      );
+      setTeamMemberProfiles(d.teamMemberProfiles);
+      setSuccessfulSubmissionsByTeam(d.successfulSubmissionsByTeam);
       setMyInvites(
-        invitesSnap.docs.map((d) => ({ id: d.id, ...d.data() } as HackathonInvite))
+        d.myInvites.map(
+          (inv) =>
+            ({
+              ...inv,
+              createdAt: tsFromIso(inv.createdAt),
+              expiresAt: inv.expiresAt ? tsFromIso(inv.expiresAt) : undefined,
+            }) as HackathonInvite
+        )
       );
+      setMyInvitedUserIds(new Set(d.myInvitedUserIds));
+      setRequestsToMyTeam(
+        d.requestsToMyTeam.map(
+          (r) =>
+            ({
+              ...r,
+              createdAt: tsFromIso(r.createdAt),
+            }) as JoinRequest
+        )
+      );
+      setMyPendingRequestTeamIds(new Set(d.myPendingRequestTeamIds));
 
-      const sentInvitesQ = query(
-        invitesRef,
-        where("fromUserId", "==", user.uid),
-        where("status", "==", "pending")
-      );
-      const sentInvitesSnap = await getDocs(sentInvitesQ);
-      const invitedIds = new Set(
-        sentInvitesSnap.docs.map((d) => d.data().toUserId as string).filter(Boolean)
-      );
-      setMyInvitedUserIds(invitedIds);
-
-      if (myTeamData) {
-        const reqRef = collection(db, "hackathonJoinRequests");
-        const reqQ = query(
-          reqRef,
-          where("teamId", "==", myTeamData.id),
-          where("status", "==", "pending")
-        );
-        const reqSnap = await getDocs(reqQ);
-        setRequestsToMyTeam(
-          reqSnap.docs.map((d) => ({ id: d.id, ...d.data() } as JoinRequest))
-        );
+      if (eligRes.ok) {
+        const e = (await eligRes.json()) as { eligible?: boolean; reason?: string };
+        setEligible(e.eligible === true);
+        setEligibilityReason(e.reason || "");
       } else {
-        setRequestsToMyTeam([]);
+        setEligible(false);
+        setEligibilityReason("Could not check eligibility.");
       }
-
-      const myRequestsRef = collection(db, "hackathonJoinRequests");
-      const myRequestsQ = query(
-        myRequestsRef,
-        where("fromUserId", "==", user.uid),
-        where("status", "==", "pending")
-      );
-      const myRequestsSnap = await getDocs(myRequestsQ);
-      const requestedTeamIds = new Set(
-        myRequestsSnap.docs.map((d) => d.data().teamId as string).filter(Boolean)
-      );
-      setMyPendingRequestTeamIds(requestedTeamIds);
-
-      await fetchEligibility();
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
     }
-  }, [user, hackathonId, fetchEligibility]);
+  }, [user, hackathonId]);
 
   useEffect(() => {
     if (authLoading || !user) {

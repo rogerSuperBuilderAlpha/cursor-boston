@@ -12,9 +12,11 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   ReactNode,
 } from "react";
+import type { ShowcaseAwardKind } from "@/lib/hackathon-asprint-2026-awards";
 import {
   User,
   onAuthStateChanged,
@@ -89,7 +91,9 @@ interface UserProfile {
   eduBadge?: boolean;
   /** Server-set when a merged PR adds the user's Hack-a-Sprint 2026 showcase submission. */
   hackASprint2026ShowcaseBadge?: boolean;
-  /** Server-set after correct event passcode (website signup required). */
+  /** Server-set winner ribbons for Hack-a-Sprint 2026 showcase (judges / AI / peer). */
+  hackASprint2026ShowcaseAwards?: ShowcaseAwardKind[];
+  /** @deprecated Passcode unlock removed; check-in at the door is now the gate. */
   hackASprint2026Unlocked?: boolean;
   hackASprint2026UnlockedAt?: Date;
   // Public profile fields
@@ -123,10 +127,30 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// In-memory profile cache to avoid a Firestore read on every page navigation.
+const PROFILE_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+let _profileCache: { uid: string; data: UserProfile; ts: number } | null = null;
+
+function getCachedProfile(uid: string): UserProfile | null {
+  if (_profileCache && _profileCache.uid === uid && Date.now() - _profileCache.ts < PROFILE_CACHE_TTL_MS) {
+    return _profileCache.data;
+  }
+  return null;
+}
+
+function setCachedProfile(uid: string, data: UserProfile) {
+  _profileCache = { uid, data, ts: Date.now() };
+}
+
+function clearCachedProfile() {
+  _profileCache = null;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const profileFetchGen = useRef(0);
 
   // Create or update user profile in Firestore
   const createUserProfile = async (user: User, provider: string) => {
@@ -178,7 +202,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Fetch and set user profile
     const updatedSnap = await getDoc(userRef);
     if (updatedSnap.exists()) {
-      setUserProfile(updatedSnap.data() as UserProfile);
+      const profile = updatedSnap.data() as UserProfile;
+      setCachedProfile(user.uid, profile);
+      setUserProfile(profile);
     }
   };
 
@@ -189,22 +215,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user);
-      if (user && db) {
-        // Fetch user profile from Firestore
-        const userRef = doc(db, "users", user.uid);
-        const userSnap = await getDoc(userRef);
-        if (userSnap.exists()) {
-          setUserProfile(userSnap.data() as UserProfile);
-        }
-      } else {
+    const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
+      const gen = ++profileFetchGen.current;
+      setUser(nextUser);
+      if (!nextUser || !db) {
         setUserProfile(null);
+        clearCachedProfile();
+        setLoading(false);
+        return;
       }
+      // Serve from cache if available to avoid a Firestore read on every page nav.
+      const cached = getCachedProfile(nextUser.uid);
+      if (cached) {
+        setUserProfile(cached);
+        setLoading(false);
+        return;
+      }
+      // Do not block initial render (or pages like hackathon showcase) on Firestore.
       setLoading(false);
+      void (async () => {
+        try {
+          const userRef = doc(db, "users", nextUser.uid);
+          const userSnap = await getDoc(userRef);
+          if (gen !== profileFetchGen.current) return;
+          if (userSnap.exists()) {
+            const profile = userSnap.data() as UserProfile;
+            setCachedProfile(nextUser.uid, profile);
+            setUserProfile(profile);
+          } else {
+            setUserProfile(null);
+          }
+        } catch {
+          if (gen !== profileFetchGen.current) return;
+        }
+      })();
     });
 
-    return () => unsubscribe();
+    return () => {
+      profileFetchGen.current += 1;
+      unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
@@ -236,6 +286,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     if (!auth) throw new Error("Firebase is not configured");
     await firebaseSignOut(auth);
+    clearCachedProfile();
     setUserProfile(null);
   };
 
@@ -278,7 +329,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Refresh user profile state from Firestore
     const updatedSnap = await getDoc(userRef);
     if (updatedSnap.exists()) {
-      setUserProfile(updatedSnap.data() as UserProfile);
+      const profile = updatedSnap.data() as UserProfile;
+      setCachedProfile(auth.currentUser.uid, profile);
+      setUserProfile(profile);
     }
 
     // Force reload the Firebase Auth user to get updated photoURL
@@ -296,7 +349,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const userRef = doc(db, "users", auth.currentUser.uid);
     const userSnap = await getDoc(userRef);
     if (userSnap.exists()) {
-      setUserProfile(userSnap.data() as UserProfile);
+      const profile = userSnap.data() as UserProfile;
+      setCachedProfile(auth.currentUser.uid, profile);
+      setUserProfile(profile);
     }
   }, []);
 

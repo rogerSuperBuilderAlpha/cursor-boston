@@ -1,0 +1,6 @@
+{
+  "projectRepoUrl": "https://github.com/jackfruitsandwich/surgeon-promotion",
+  "title": "Surgeon Promotion — autonomous social media lead finder for context-surgeon",
+  "description": "An AI-powered system that autonomously scouts X/Twitter for posts where context-surgeon (a tool that lets AI agents edit their own context window) would be relevant, then drafts natural promotional comments for human review. Built with Claude Code skills and browser-use CLI for browser automation. File-based architecture with JSONL for leads and drafts.",
+  "loomVideoUrl": "https://www.loom.com/share/9edb010ba5344833b48ef281380cedaa"
+}
