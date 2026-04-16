@@ -8,6 +8,10 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { DiscordIcon } from "@/components/icons";
 
+// 🗺️ Treasure hunt clue — The Code Reader:
+// Somewhere under lib/ lives the function that gates access to a 2026
+// Hack-a-Sprint credit. Find its exported name, translate it to snake_case,
+// and submit at /api/hunt/paths/code-reader/submit.
 export const metadata: Metadata = {
   title: "Open Source",
   description: "Cursor Boston is open source - Explore our roadmap and find ways to contribute.",

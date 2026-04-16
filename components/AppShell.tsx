@@ -18,6 +18,7 @@ import {
   type ReactNode,
 } from "react";
 import {
+  Award,
   BarChart2,
   BookOpen,
   Briefcase,
@@ -76,6 +77,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/showcase", label: "Showcase", icon: LayoutGrid },
       { href: "/cookbook", label: "Cookbook", icon: ChefHat },
       { href: "/opportunities", label: "Opportunities", icon: Briefcase },
+      { href: "/certificate", label: "Certificate", icon: Award },
     ],
   },
   {

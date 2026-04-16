@@ -12,7 +12,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/api/', '/live/', '/hackathons/team/', '/hackathons/pool/', '/profile', '/hackathons/hack-a-sprint-2026/signup', '/agents/claim/'],
+        disallow: ['/api/', '/live/', '/hackathons/team/', '/hackathons/pool/', '/profile', '/hackathons/hack-a-sprint-2026/signup', '/agents/claim/', '/hunt/'],
       },
     ],
     sitemap: 'https://cursorboston.com/sitemap.xml',
