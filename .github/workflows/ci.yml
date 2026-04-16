@@ -186,16 +186,27 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
       - name: Install Playwright Browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
-        env:
-          PLAYWRIGHT_BROWSERS_PATH: 0
+
+      - name: Install Playwright system deps (on cache hit)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
 
       - name: Run Playwright tests
         run: npm run test:e2e
         env:
           CI: true
           PW_WORKERS: ${{ vars.PW_WORKERS || '4' }}
+          PLAYWRIGHT_BROWSERS_PATH: ''
           NEXT_PUBLIC_FIREBASE_API_KEY: "test-api-key"
           NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: "test-project.firebaseapp.com"
           NEXT_PUBLIC_FIREBASE_PROJECT_ID: "test-project-id"
