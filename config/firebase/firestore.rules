@@ -113,6 +113,12 @@ service cloud.firestore {
       allow write: if false; // Only server-side writes via webhook
     }
 
+    // Certificates - public read for LinkedIn verification, server-side writes only
+    match /certificates/{certId} {
+      allow read: if true;
+      allow write: if false; // Only server-side writes via Admin SDK
+    }
+
     // API rate limiter buckets - server-side only
     match /apiRateLimits/{docId} {
       allow read, write: if false;
