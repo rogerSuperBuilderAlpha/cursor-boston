@@ -72,24 +72,24 @@ export default function CodeOfConductPage() {
             <p className="text-neutral-700 dark:text-neutral-300 mb-4">
               Community leaders will enforce these standards. Consequences include:
             </p>
-            <div className="space-y-3 mb-6">
-              <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-4">
-                <span className="text-foreground font-semibold">1. Correction</span>
-                <span className="text-neutral-600 dark:text-neutral-400"> - Private warning for minor issues</span>
-              </div>
-              <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-4">
-                <span className="text-foreground font-semibold">2. Warning</span>
-                <span className="text-neutral-600 dark:text-neutral-400"> - Formal warning with consequences for continued behavior</span>
-              </div>
-              <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-4">
-                <span className="text-foreground font-semibold">3. Temporary Ban</span>
-                <span className="text-neutral-600 dark:text-neutral-400"> - Temporary removal for serious violations</span>
-              </div>
-              <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-4">
-                <span className="text-foreground font-semibold">4. Permanent Ban</span>
-                <span className="text-neutral-600 dark:text-neutral-400"> - Permanent removal for egregious behavior</span>
-              </div>
-            </div>
+            <ol className="space-y-3 mb-6 list-none p-0 m-0">
+              <li className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-4">
+                <span className="text-foreground font-semibold">Correction</span>
+                <span className="text-neutral-600 dark:text-neutral-400"> — Private warning for minor issues</span>
+              </li>
+              <li className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-4">
+                <span className="text-foreground font-semibold">Warning</span>
+                <span className="text-neutral-600 dark:text-neutral-400"> — Formal warning with consequences for continued behavior</span>
+              </li>
+              <li className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-4">
+                <span className="text-foreground font-semibold">Temporary Ban</span>
+                <span className="text-neutral-600 dark:text-neutral-400"> — Temporary removal for serious violations</span>
+              </li>
+              <li className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-4">
+                <span className="text-foreground font-semibold">Permanent Ban</span>
+                <span className="text-neutral-600 dark:text-neutral-400"> — Permanent removal for egregious behavior</span>
+              </li>
+            </ol>
 
             <h2 className="text-2xl font-bold text-foreground mb-4 mt-8">Reporting</h2>
             <p className="text-neutral-700 dark:text-neutral-300 mb-6">

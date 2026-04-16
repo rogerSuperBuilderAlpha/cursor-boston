@@ -96,6 +96,7 @@ export async function getAllHackASprint2026ParticipantScoreDocs(
   const snap = await db
     .collection("hackathonASprint2026ParticipantScores")
     .where("eventId", "==", HACK_A_SPRINT_2026_EVENT_ID)
+    .limit(500)
     .get();
   return snap.docs
     .map((d) => {

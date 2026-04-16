@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
 
     const payload = await loadHackathonTeamsBoard(db, uid, hackathonId);
     return NextResponse.json(payload, {
-      headers: { "Cache-Control": "private, no-store" },
+      headers: { "Cache-Control": "private, max-age=30" },
     });
   } catch (e) {
     console.error("[api/hackathons/teams-board]", e);

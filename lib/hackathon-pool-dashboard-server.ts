@@ -93,6 +93,7 @@ export async function loadHackathonPoolDashboard(
     .collection("hackathonPool")
     .where("hackathonId", "==", hackathonId)
     .orderBy("joinedAt", "desc")
+    .limit(200)
     .get();
 
   const poolEntries: PoolDashboardPoolEntry[] = poolSnap.docs.map((d) => {
@@ -148,6 +149,7 @@ export async function loadHackathonPoolDashboard(
   const allTeamsSnap = await db
     .collection("hackathonTeams")
     .where("hackathonId", "==", hackathonId)
+    .limit(200)
     .get();
   const teamsWithSlots: PoolDashboardTeam[] = allTeamsSnap.docs
     .map((d) => ({
@@ -186,6 +188,7 @@ export async function loadHackathonPoolDashboard(
   const subSnap = await db
     .collection("hackathonSubmissions")
     .where("hackathonId", "==", hackathonId)
+    .limit(200)
     .get();
   const successfulSubmissionsByTeam: Record<string, number> = {};
   subSnap.docs.forEach((d) => {

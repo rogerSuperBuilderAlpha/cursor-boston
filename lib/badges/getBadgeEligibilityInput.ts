@@ -4,7 +4,7 @@
  * See LICENSE file for details.
  */
 
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, getDocs, query, where, limit } from "firebase/firestore";
 import { db } from "../firebase";
 import { getUserStats } from "../registrations";
 import type { BadgeEligibilityInput } from "./types";
@@ -159,7 +159,8 @@ export async function getBadgeEligibilityData(user: {
     const showcaseSubmissionsRef = collection(db, "showcaseSubmissions");
     const showcaseSubmissionsQuery = query(
       showcaseSubmissionsRef,
-      where("userId", "==", user.uid)
+      where("userId", "==", user.uid),
+      limit(50)
     );
     const showcaseSubmissionsSnapshot = await getDocs(showcaseSubmissionsQuery);
     // Only approved submissions count toward badge eligibility. Client must never be able to set status = 'approved'.
@@ -174,7 +175,8 @@ export async function getBadgeEligibilityData(user: {
 
   try {
     const messagesRef = collection(db, "communityMessages");
-    const postsQuery = query(messagesRef, where("authorId", "==", user.uid));
+    // Cap at 50 — badge threshold is only >= 5, no need to fetch entire history.
+    const postsQuery = query(messagesRef, where("authorId", "==", user.uid), limit(50));
     const snapshot = await getDocs(postsQuery);
     base.communityMessagesCount = snapshot.size;
 
@@ -192,7 +194,8 @@ export async function getBadgeEligibilityData(user: {
     const mergedPrsQuery = query(
       mergedPrsRef,
       where("userId", "==", user.uid),
-      where("state", "==", "merged")
+      where("state", "==", "merged"),
+      limit(50)
     );
     const mergedPrsSnapshot = await getDocs(mergedPrsQuery);
     // Trust boundary: Contributor eligibility must come from merged PR evidence only.
@@ -205,11 +208,11 @@ export async function getBadgeEligibilityData(user: {
 
   try {
     const hackathonTeamsRef = collection(db, "hackathonTeams");
-    const teamsQuery = query(hackathonTeamsRef, where("memberIds", "array-contains", user.uid));
+    const teamsQuery = query(hackathonTeamsRef, where("memberIds", "array-contains", user.uid), limit(20));
     const teamsSnapshot = await getDocs(teamsQuery);
 
     const hackathonPoolRef = collection(db, "hackathonPool");
-    const poolQuery = query(hackathonPoolRef, where("userId", "==", user.uid));
+    const poolQuery = query(hackathonPoolRef, where("userId", "==", user.uid), limit(20));
     const poolSnapshot = await getDocs(poolQuery);
 
     base.hackathonParticipationCount = Math.max(teamsSnapshot.size, poolSnapshot.size);

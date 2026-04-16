@@ -7,7 +7,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
-import { collection, query, where, getDocs, orderBy, limit, startAfter, Timestamp, onSnapshot, QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
+import { collection, query, where, getDocs, orderBy, limit, startAfter, Timestamp, QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { User } from "firebase/auth";
 import type { Message, ReactionType } from "@/types/feed";
@@ -38,15 +38,15 @@ export function useFeed(user: User | null, isActive: boolean) {
   const [error, setError] = useState<string | null>(null);
   const clearError = useCallback(() => setError(null), []);
 
-  // Subscribe to real-time messages when feed tab is active (first page only)
-  useEffect(() => {
-    if (!isActive || !db) return;
-
+  // Fetch messages with a one-shot getDocs (avoids real-time listener fan-out
+  // that was causing 399K+ Firestore reads/day).
+  const fetchMessages = useCallback(async () => {
+    if (!db) return;
     setLoading(true);
-    const messagesRef = collection(db, "communityMessages");
-    const q = query(messagesRef, orderBy("createdAt", "desc"), limit(PAGE_SIZE));
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    try {
+      const messagesRef = collection(db, "communityMessages");
+      const q = query(messagesRef, orderBy("createdAt", "desc"), limit(PAGE_SIZE));
+      const snapshot = await getDocs(q);
       const fetchedMessages = snapshot.docs
         .map((d) => ({
           id: d.id,
@@ -56,15 +56,21 @@ export function useFeed(user: User | null, isActive: boolean) {
       setMessages(fetchedMessages);
       setHasMore(snapshot.docs.length === PAGE_SIZE);
       lastDocRef.current = snapshot.docs[snapshot.docs.length - 1] ?? null;
-      setLoading(false);
-    }, (error) => {
-      console.error("Error listening to messages:", error);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
       setError("Failed to load feed. Please refresh.");
+    } finally {
       setLoading(false);
-    });
+    }
+  }, []);
 
-    return () => unsubscribe();
-  }, [isActive]);
+  // Load messages on mount and poll every 30s while active (replaces onSnapshot)
+  useEffect(() => {
+    if (!isActive || !db) return;
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 30_000);
+    return () => clearInterval(interval);
+  }, [isActive, fetchMessages]);
 
   // Load more messages using cursor-based pagination
   const loadMore = useCallback(async () => {
