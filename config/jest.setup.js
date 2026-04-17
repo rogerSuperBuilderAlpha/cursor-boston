@@ -1,6 +1,14 @@
 // Learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom'
 
+// jsdom does not expose Node's TextEncoder/TextDecoder on the global scope,
+// but next/cache (pulled in transitively by lib/hackathon-showcase) requires them.
+if (typeof globalThis.TextEncoder === 'undefined') {
+  const util = require('util')
+  globalThis.TextEncoder = util.TextEncoder
+  globalThis.TextDecoder = util.TextDecoder
+}
+
 // Mock environment variables for tests
 process.env.NEXT_PUBLIC_FIREBASE_API_KEY = 'test-api-key'
 process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN = 'test-project.firebaseapp.com'
