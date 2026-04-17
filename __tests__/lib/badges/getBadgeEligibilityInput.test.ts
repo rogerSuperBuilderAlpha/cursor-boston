@@ -22,6 +22,7 @@ jest.mock("firebase/firestore", () => ({
     __filters: filters,
   })),
   getDocs: jest.fn(),
+  limit: jest.fn((n: number) => ({ __limit: n })),
 }));
 
 const mockGetUserStats = getUserStats as jest.MockedFunction<typeof getUserStats>;

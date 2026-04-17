@@ -10,6 +10,11 @@ jest.mock("@/lib/logger", () => ({
   logger: { warn: jest.fn(), info: jest.fn(), error: jest.fn() },
 }));
 
+jest.mock("next/cache", () => ({
+  unstable_cache: <T extends (...args: unknown[]) => unknown>(fn: T) => fn,
+  revalidateTag: jest.fn(),
+}));
+
 const mockFetch = jest.fn();
 global.fetch = mockFetch;
 
