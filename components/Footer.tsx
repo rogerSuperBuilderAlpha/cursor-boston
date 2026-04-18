@@ -7,7 +7,9 @@
 import Link from "next/link";
 import Image from "next/image";
 import Logo from "@/components/Logo";
-import { DiscordIcon, LinkedInIcon, XIcon } from "@/components/icons";
+import { DiscordIcon, GitHubIcon, LinkedInIcon, XIcon } from "@/components/icons";
+import { EditOnGitHubLink } from "@/components/EditOnGitHubLink";
+import { getRepoUrl } from "@/lib/github-edit-link";
 
 const SOCIAL_LINKS = [
   {
@@ -19,6 +21,11 @@ const SOCIAL_LINKS = [
     href: "https://www.linkedin.com/company/cursor-boston/",
     label: "Follow Cursor Boston on LinkedIn",
     Icon: LinkedInIcon,
+  },
+  {
+    href: getRepoUrl(),
+    label: "Cursor Boston on GitHub",
+    Icon: GitHubIcon,
   },
 ] as const;
 
@@ -80,13 +87,23 @@ export default function Footer() {
                     </Link>
                   </li>
                   <li>
-                    <Link href="/talks" className="text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
-                      Talks
+                    <Link href="/blog" className="text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
+                      Blog
                     </Link>
                   </li>
                   <li>
-                    <Link href="/blog" className="text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
-                      Blog
+                    <Link href="/questions" className="text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
+                      Q&A
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/ecosystem" className="text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
+                      Ecosystem
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/talks" className="text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
+                      Talks
                     </Link>
                   </li>
                   <li>
@@ -133,6 +150,20 @@ export default function Footer() {
                     <Link href="/open-source" className="text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
                       Open Source
                     </Link>
+                  </li>
+                  <li>
+                    <a
+                      href={getRepoUrl()}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="GitHub repository (opens in new tab)"
+                      className="text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white text-sm transition-colors inline-flex items-center focus-visible:outline-none focus-visible:text-foreground focus-visible:underline"
+                    >
+                      GitHub
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="ml-1" aria-hidden="true">
+                        <path d="M7 17l9.2-9.2M17 17V7H7" />
+                      </svg>
+                    </a>
                   </li>
                 </ul>
               </div>
@@ -261,16 +292,19 @@ export default function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="border-t border-neutral-200 dark:border-neutral-800 mt-8 pt-8 flex flex-col sm:flex-row justify-between items-center">
+        <div className="border-t border-neutral-200 dark:border-neutral-800 mt-8 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-neutral-600 dark:text-neutral-400 text-sm">
             © {new Date().getFullYear()} Cursor Boston
           </p>
-          <a
-            href="mailto:hello@cursorboston.com"
-            className="text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white text-sm transition-colors mt-4 sm:mt-0 focus-visible:outline-none focus-visible:text-foreground focus-visible:underline"
-          >
-            hello@cursorboston.com
-          </a>
+          <div className="flex items-center gap-6">
+            <EditOnGitHubLink />
+            <a
+              href="mailto:hello@cursorboston.com"
+              className="text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline"
+            >
+              hello@cursorboston.com
+            </a>
+          </div>
         </div>
       </div>
     </footer>

@@ -115,7 +115,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.6,
     },
     {
-      url: `${baseUrl}/map`,
+      url: `${baseUrl}/ecosystem`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.7,
@@ -131,6 +131,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.6,
+    },
+    {
+      url: `${baseUrl}/questions`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 0.7,
     },
     // Legal pages
     {

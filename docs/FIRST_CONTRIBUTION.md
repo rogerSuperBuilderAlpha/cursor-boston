@@ -35,7 +35,7 @@ git checkout -b docs/fix-typo-in-readme    # use type/short-description
 ```
 
 **Branch naming convention:** `type/short-description`
-- `feat/add-voting` for features
+- `feature/add-voting` for features
 - `fix/auth-redirect` for bug fixes
 - `docs/update-api-reference` for documentation
 

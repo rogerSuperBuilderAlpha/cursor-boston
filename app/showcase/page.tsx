@@ -10,6 +10,7 @@ import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import showcaseData from "@/content/showcase.json";
+import { NeedsWorkBanner } from "@/components/NeedsWorkBanner";
 
 interface ProjectContact {
   github?: string;
@@ -464,6 +465,12 @@ export default function ShowcasePage() {
 
   return (
     <div className="flex flex-col">
+      <div className="max-w-6xl mx-auto w-full px-6 pt-4">
+        <NeedsWorkBanner
+          area="Showcase"
+          description="Voting + moderation ship, but submission cards could be richer (demos, tech stack, screenshots). Help by improving the UX, card layout, or admin flow."
+        />
+      </div>
       {/* Hero */}
       <section className="py-16 md:py-24 px-6 border-b border-neutral-800">
         <div className="max-w-4xl mx-auto text-center">

@@ -90,9 +90,9 @@ describe("AppShell", () => {
 
   it("renders all nav group headers when sidebar is expanded", () => {
     render(<AppShell>Content</AppShell>);
-    expect(screen.getByText("Community")).toBeInTheDocument();
-    expect(screen.getByText("Participate")).toBeInTheDocument();
-    expect(screen.getByText("Resources")).toBeInTheDocument();
+    expect(screen.getByText("Live")).toBeInTheDocument();
+    expect(screen.getByText("Needs Work")).toBeInTheDocument();
+    expect(screen.getByText("About")).toBeInTheDocument();
   });
 
   it("renders expected navigation links", () => {
@@ -175,18 +175,18 @@ describe("AppShell", () => {
     const user = userEvent.setup();
     render(<AppShell>Content</AppShell>);
 
-    // Community section should be open by default (multi-item group)
+    // Live section should be open by default (multi-item group)
     expect(screen.getByText("Events")).toBeInTheDocument();
 
-    // Click the Community group header to collapse it
-    const communityBtn = screen.getByText("Community");
-    await user.click(communityBtn);
+    // Click the Live group header to collapse it
+    const liveBtn = screen.getByText("Live");
+    await user.click(liveBtn);
 
     // Events should no longer be visible
     expect(screen.queryByText("Events")).not.toBeInTheDocument();
 
     // Click again to expand
-    await user.click(communityBtn);
+    await user.click(liveBtn);
     expect(screen.getByText("Events")).toBeInTheDocument();
   });
 

@@ -150,6 +150,23 @@ export default function OpportunitiesPage() {
         </div>
       </section>
 
+      {/* Contribute CTA */}
+      <section className="py-6 px-6 border-b border-neutral-200 dark:border-neutral-800">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-sm">
+          <p className="text-neutral-700 dark:text-neutral-300">
+            <strong>Know of an opportunity?</strong> Post it by opening a PR that adds an entry to <code className="font-mono text-xs">content/opportunities.json</code>.
+          </p>
+          <a
+            href="https://github.com/rogerSuperBuilderAlpha/cursor-boston/blob/develop/docs/ADD_CONTENT.md#add-an-opportunity"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-medium hover:bg-neutral-700 dark:hover:bg-neutral-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:focus-visible:ring-white focus-visible:ring-offset-2"
+          >
+            How to add an opportunity →
+          </a>
+        </div>
+      </section>
+
       {/* Opportunity Types */}
       <section className="py-12 px-6 bg-neutral-50 dark:bg-neutral-950">
         <div className="max-w-6xl mx-auto">

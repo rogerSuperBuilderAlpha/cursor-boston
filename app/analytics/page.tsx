@@ -6,6 +6,7 @@
 
 import { Metadata } from "next";
 import AnalyticsDashboard from "@/components/AnalyticsDashboard";
+import { NeedsWorkBanner } from "@/components/NeedsWorkBanner";
 
 export const metadata: Metadata = {
   title: "Analytics",
@@ -16,6 +17,12 @@ export const metadata: Metadata = {
 export default function AnalyticsPage() {
   return (
     <div className="flex flex-col">
+      <div className="max-w-6xl mx-auto w-full px-6 pt-4">
+        <NeedsWorkBanner
+          area="Analytics"
+          description="The dashboard is wired up but the backend data is sparse. Help by populating /api/analytics/summary or improving the visualizations."
+        />
+      </div>
       <section className="py-16 md:py-24 px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-4xl mx-auto text-center">
           <span className="inline-block px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-sm font-semibold rounded-full mb-6">

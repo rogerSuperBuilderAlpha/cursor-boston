@@ -13,6 +13,7 @@ import {
 } from "@/lib/luma-event";
 import eventsData from "@/content/events.json";
 import { Event, EventsData } from "@/types/events";
+import { NeedsWorkBanner } from "@/components/NeedsWorkBanner";
 
 export const metadata: Metadata = {
   title: "Hackathons",
@@ -51,6 +52,12 @@ export default function HackathonsPage() {
 
   return (
     <div className="flex flex-col">
+      <div className="max-w-6xl mx-auto w-full px-6 pt-4">
+        <NeedsWorkBanner
+          area="Hackathons"
+          description="Team pool + dashboards ship, but the flow from signup → matching → submission → post-event recap could be smoother. Dry runs and UX polish welcome."
+        />
+      </div>
       {/* Hero */}
       <section className="py-16 md:py-24 px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-4xl mx-auto text-center">
