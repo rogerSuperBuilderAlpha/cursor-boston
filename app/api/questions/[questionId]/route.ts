@@ -36,17 +36,16 @@ export async function GET(
     }
 
     const service = getQuestionsService();
-    const [question, answers, relatedCookbook] = await Promise.all([
+    const [question, answers] = await Promise.all([
       service.getQuestion(questionId),
       service.getAnswersForQuestion(questionId, "top"),
-      service.getQuestion(questionId).then((q) =>
-        q ? service.getRelatedCookbookEntries(q.tags) : []
-      ),
     ]);
 
     if (!question) {
       return NextResponse.json({ error: "Question not found" }, { status: 404 });
     }
+
+    const relatedCookbook = await service.getRelatedCookbookEntries(question.tags);
 
     return NextResponse.json({ question, answers, relatedCookbook });
   } catch (error) {

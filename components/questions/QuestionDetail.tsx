@@ -301,7 +301,7 @@ export function QuestionDetail({
             {initialRelatedCookbook.map((entry) => (
               <li key={entry.id}>
                 <Link
-                  href="/cookbook"
+                  href={`/cookbook/${entry.id}`}
                   className="text-sm text-emerald-600 dark:text-emerald-400 hover:underline"
                 >
                   {entry.title}

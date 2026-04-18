@@ -310,11 +310,12 @@ export class QuestionsService {
       const aSnap = await tx.get(answerRef);
       if (!aSnap.exists) throw new AnswerNotFoundError();
 
-      // Unaccept any previously accepted answer
-      const prevAccepted = await questionRef
-        .collection(ANSWERS_SUBCOLLECTION)
-        .where("isAccepted", "==", true)
-        .get();
+      // Unaccept any previously accepted answer (must read through tx)
+      const prevAccepted = await tx.get(
+        questionRef
+          .collection(ANSWERS_SUBCOLLECTION)
+          .where("isAccepted", "==", true)
+      );
 
       for (const doc of prevAccepted.docs) {
         if (doc.id !== answerId) {
