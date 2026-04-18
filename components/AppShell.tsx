@@ -27,6 +27,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  HelpCircle,
   Info,
   LayoutGrid,
   Library,
@@ -87,6 +88,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/glossary", label: "Glossary", icon: Library },
       { href: "/blog", label: "Blog", icon: BookOpen },
       { href: "/analytics", label: "Analytics", icon: BarChart2 },
+      { href: "/questions", label: "Q&A", icon: HelpCircle },
     ],
   },
   {

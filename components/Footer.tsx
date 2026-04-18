@@ -90,6 +90,11 @@ export default function Footer() {
                     </Link>
                   </li>
                   <li>
+                    <Link href="/questions" className="text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
+                      Q&A
+                    </Link>
+                  </li>
+                  <li>
                     <Link href="/about" className="text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
                       About
                     </Link>
