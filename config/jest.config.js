@@ -37,13 +37,13 @@ const customJestConfig = {
     '<rootDir>/e2e/',
   ],
   // Global thresholds — keep just below current CI totals so new UI without tests fails CI loudly.
-  // Last aligned: 2026-04 (statements ~35.98%, branches ~31.64%, lines ~37.54%, functions ~29.22%).
+  // Last aligned: 2026-04 (statements ~37.03%, branches ~32.43%, lines ~38.63%, functions ~31.42%).
   coverageThreshold: {
     global: {
-      branches: 31,
-      functions: 29,
-      lines: 37,
-      statements: 35,
+      branches: 32,
+      functions: 31,
+      lines: 38,
+      statements: 37,
     },
   },
   // Generate JSON summary for CI coverage checks
