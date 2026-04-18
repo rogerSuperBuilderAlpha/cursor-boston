@@ -1,0 +1,294 @@
+{
+  "entries": [
+    {
+      "id": "mit-csail",
+      "name": "MIT CSAIL",
+      "fullName": "MIT Computer Science and Artificial Intelligence Laboratory",
+      "category": "research_lab",
+      "location": "Cambridge, MA",
+      "website": "https://www.csail.mit.edu",
+      "description": "MIT's largest interdepartmental research lab — one of the original homes of AI research, now a hub for LLM, robotics, and systems work.",
+      "tags": ["AI", "research", "MIT"]
+    },
+    {
+      "id": "mit-sloan-ai",
+      "name": "MIT Sloan AI",
+      "fullName": "MIT Sloan School of Management — AI initiatives",
+      "category": "university",
+      "location": "Cambridge, MA",
+      "website": "https://mitsloan.mit.edu/",
+      "description": "Business-of-AI research and education at MIT Sloan, with a focus on enterprise AI adoption and management.",
+      "tags": ["AI", "business", "MIT"]
+    },
+    {
+      "id": "mit-engine",
+      "name": "The Engine",
+      "fullName": "The Engine, built by MIT",
+      "category": "accelerator",
+      "location": "Cambridge, MA",
+      "website": "https://engine.xyz",
+      "description": "Tough-tech accelerator spun out of MIT — backs startups in AI, biotech, advanced materials, and climate.",
+      "tags": ["accelerator", "deep tech", "MIT"]
+    },
+    {
+      "id": "harvard-seas",
+      "name": "Harvard SEAS",
+      "fullName": "Harvard John A. Paulson School of Engineering and Applied Sciences",
+      "category": "university",
+      "location": "Cambridge, MA",
+      "website": "https://www.seas.harvard.edu",
+      "description": "Harvard's engineering school with strong programs in applied ML, systems, and computational science.",
+      "tags": ["engineering", "research", "Harvard"]
+    },
+    {
+      "id": "harvard-innovation-labs",
+      "name": "Harvard Innovation Labs",
+      "fullName": "Harvard Innovation Labs (i-lab)",
+      "category": "accelerator",
+      "location": "Allston, MA",
+      "website": "https://innovationlabs.harvard.edu",
+      "description": "Harvard's student + alumni venture incubator. Free programming for early-stage Harvard-affiliated founders.",
+      "tags": ["accelerator", "students", "Harvard"]
+    },
+    {
+      "id": "northeastern-khoury",
+      "name": "Northeastern Khoury",
+      "fullName": "Khoury College of Computer Sciences, Northeastern University",
+      "category": "university",
+      "location": "Boston, MA",
+      "website": "https://www.khoury.northeastern.edu",
+      "description": "Northeastern's computing college — strong in AI, systems, cybersecurity, and the co-op model that ties students to local industry.",
+      "tags": ["CS", "co-op", "Northeastern"]
+    },
+    {
+      "id": "northeastern-roux",
+      "name": "Roux Institute",
+      "fullName": "The Roux Institute at Northeastern University",
+      "category": "research_lab",
+      "location": "Portland, ME",
+      "website": "https://roux.northeastern.edu",
+      "description": "Northeastern's graduate campus focused on AI, life sciences, and digital engineering in partnership with industry.",
+      "tags": ["AI", "research", "Northeastern"]
+    },
+    {
+      "id": "bu-hariri",
+      "name": "BU Hariri Institute",
+      "fullName": "Rafik B. Hariri Institute for Computing, Boston University",
+      "category": "research_lab",
+      "location": "Boston, MA",
+      "website": "https://www.bu.edu/hic/",
+      "description": "BU's interdisciplinary computing institute — funds and connects AI, data science, and computational research across campus.",
+      "tags": ["AI", "research", "BU"]
+    },
+    {
+      "id": "bu-spark",
+      "name": "BU Spark!",
+      "fullName": "BU Spark! — Computing & Data Sciences",
+      "category": "university",
+      "location": "Boston, MA",
+      "website": "https://www.bu.edu/spark/",
+      "description": "BU's technology incubator and experiential learning lab — students build real AI/data products for civic and nonprofit partners.",
+      "tags": ["students", "civic", "BU"]
+    },
+    {
+      "id": "tufts-engineering",
+      "name": "Tufts Engineering",
+      "fullName": "Tufts School of Engineering",
+      "category": "university",
+      "location": "Medford, MA",
+      "website": "https://engineering.tufts.edu",
+      "description": "Tufts' engineering school with strong robotics, human-robot interaction, and applied ML programs.",
+      "tags": ["engineering", "robotics", "Tufts"]
+    },
+    {
+      "id": "umass-amherst",
+      "name": "UMass Amherst",
+      "fullName": "University of Massachusetts Amherst — College of Information and Computer Sciences",
+      "category": "university",
+      "location": "Amherst, MA",
+      "website": "https://www.cics.umass.edu",
+      "description": "UMass's flagship CS program — a top-ranked public school for AI and NLP research.",
+      "tags": ["AI", "NLP", "UMass"]
+    },
+    {
+      "id": "umass-boston",
+      "name": "UMass Boston",
+      "fullName": "University of Massachusetts Boston — Department of Computer Science",
+      "category": "university",
+      "location": "Boston, MA",
+      "website": "https://www.umb.edu/academics/csm/computer-science",
+      "description": "UMass Boston's CS department — urban public university with AI/ML and data science programs.",
+      "tags": ["CS", "public", "UMass"]
+    },
+    {
+      "id": "wpi",
+      "name": "WPI",
+      "fullName": "Worcester Polytechnic Institute",
+      "category": "university",
+      "location": "Worcester, MA",
+      "website": "https://www.wpi.edu",
+      "description": "Project-based STEM university with strong robotics, AI, and interactive-media programs.",
+      "tags": ["engineering", "robotics", "WPI"]
+    },
+    {
+      "id": "bentley",
+      "name": "Bentley University",
+      "fullName": "Bentley University",
+      "category": "university",
+      "location": "Waltham, MA",
+      "website": "https://www.bentley.edu",
+      "description": "Business-tech university in the Boston suburbs — programs in data analytics, information systems, and AI for business.",
+      "tags": ["business", "analytics", "Bentley"]
+    },
+    {
+      "id": "babson",
+      "name": "Babson College",
+      "fullName": "Babson College",
+      "category": "university",
+      "location": "Wellesley, MA",
+      "website": "https://www.babson.edu",
+      "description": "Entrepreneurship-focused business school — top-ranked for startup founder development.",
+      "tags": ["entrepreneurship", "business", "Babson"]
+    },
+    {
+      "id": "olin",
+      "name": "Olin College",
+      "fullName": "Olin College of Engineering",
+      "category": "university",
+      "location": "Needham, MA",
+      "website": "https://www.olin.edu",
+      "description": "Small project-based engineering college — students build and ship real engineering projects from day one.",
+      "tags": ["engineering", "project-based", "Olin"]
+    },
+    {
+      "id": "maic",
+      "name": "MAIC",
+      "fullName": "Massachusetts AI Consortium",
+      "category": "ai_org",
+      "location": "Boston, MA",
+      "website": "https://maic.ai",
+      "description": "Cross-industry coalition bringing together Massachusetts-based companies, academia, and government to shape AI policy and practice.",
+      "tags": ["AI", "policy", "community"]
+    },
+    {
+      "id": "massrobotics",
+      "name": "MassRobotics",
+      "fullName": "MassRobotics",
+      "category": "nonprofit",
+      "location": "Boston, MA",
+      "website": "https://www.massrobotics.org",
+      "description": "Independent nonprofit hub for robotics startups — shared lab space, programs, and industry partnerships.",
+      "tags": ["robotics", "startups", "nonprofit"]
+    },
+    {
+      "id": "masschallenge",
+      "name": "MassChallenge",
+      "fullName": "MassChallenge",
+      "category": "accelerator",
+      "location": "Boston, MA",
+      "website": "https://masschallenge.org",
+      "description": "Equity-free global accelerator, headquartered in Boston. Year-long program for early-stage startups across industries.",
+      "tags": ["accelerator", "equity-free", "global"]
+    },
+    {
+      "id": "techstars-boston",
+      "name": "TechStars Boston",
+      "fullName": "Techstars Boston",
+      "category": "accelerator",
+      "location": "Boston, MA",
+      "website": "https://www.techstars.com/accelerators/boston",
+      "description": "Mentor-driven 13-week accelerator program with Boston-region focus.",
+      "tags": ["accelerator", "mentor-driven", "Techstars"]
+    },
+    {
+      "id": "greentown-labs",
+      "name": "Greentown Labs",
+      "fullName": "Greentown Labs",
+      "category": "accelerator",
+      "location": "Somerville, MA",
+      "website": "https://www.greentownlabs.com",
+      "description": "North America's largest climatetech startup incubator — lab and office space for energy, mobility, and materials startups.",
+      "tags": ["climatetech", "hardware", "incubator"]
+    },
+    {
+      "id": "learnlaunch",
+      "name": "LearnLaunch",
+      "fullName": "LearnLaunch",
+      "category": "accelerator",
+      "location": "Boston, MA",
+      "website": "https://learnlaunch.com",
+      "description": "Edtech-focused accelerator and community — programs for startups building at the intersection of learning and technology.",
+      "tags": ["edtech", "accelerator"]
+    },
+    {
+      "id": "masstlc",
+      "name": "MassTLC",
+      "fullName": "Mass Technology Leadership Council",
+      "category": "nonprofit",
+      "location": "Boston, MA",
+      "website": "https://www.masstlc.org",
+      "description": "Member-led industry association for Massachusetts technology companies — programs, advocacy, and executive peer groups.",
+      "tags": ["industry", "policy", "network"]
+    },
+    {
+      "id": "mass-tech-collaborative",
+      "name": "Mass Tech Collaborative",
+      "fullName": "Massachusetts Technology Collaborative",
+      "category": "nonprofit",
+      "location": "Westborough, MA",
+      "website": "https://masstech.org",
+      "description": "State public agency that invests in tech-driven economic growth across Massachusetts — grants, programs, and ecosystem work.",
+      "tags": ["public", "economic development", "Mass"]
+    },
+    {
+      "id": "mitre",
+      "name": "MITRE",
+      "fullName": "The MITRE Corporation",
+      "category": "research_lab",
+      "location": "Bedford, MA",
+      "website": "https://www.mitre.org",
+      "description": "Federally funded R&D center operating multiple FFRDCs for the U.S. government — significant AI, cybersecurity, and systems research footprint.",
+      "tags": ["research", "federal", "AI"]
+    },
+    {
+      "id": "underscore-vc",
+      "name": "Underscore VC",
+      "fullName": "Underscore VC",
+      "category": "vc",
+      "location": "Boston, MA",
+      "website": "https://underscore.vc",
+      "description": "Boston-based seed-stage venture firm known for its operator-investor Core Community model.",
+      "tags": ["VC", "seed", "Boston"]
+    },
+    {
+      "id": "pillar-vc",
+      "name": "Pillar VC",
+      "fullName": "Pillar VC",
+      "category": "vc",
+      "location": "Boston, MA",
+      "website": "https://www.pillar.vc",
+      "description": "Seed and pre-seed firm investing in Boston-area founders across enterprise software, biotech, and AI.",
+      "tags": ["VC", "seed", "Boston"]
+    },
+    {
+      "id": "general-catalyst",
+      "name": "General Catalyst",
+      "fullName": "General Catalyst (Cambridge office)",
+      "category": "vc",
+      "location": "Cambridge, MA",
+      "website": "https://www.generalcatalyst.com",
+      "description": "Multi-stage VC firm with deep Boston roots — invests across AI, healthcare, and enterprise software.",
+      "tags": ["VC", "multi-stage"]
+    },
+    {
+      "id": "flagship-pioneering",
+      "name": "Flagship Pioneering",
+      "fullName": "Flagship Pioneering",
+      "category": "vc",
+      "location": "Cambridge, MA",
+      "website": "https://www.flagshippioneering.com",
+      "description": "Venture firm and platform that originates, founds, and scales companies at the frontier of life sciences and AI.",
+      "tags": ["VC", "life sciences", "biotech"]
+    }
+  ]
+}
