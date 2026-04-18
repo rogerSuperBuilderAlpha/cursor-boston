@@ -22,6 +22,7 @@ import {
   BarChart2,
   BookOpen,
   Briefcase,
+  Building2,
   Calendar,
   ChefHat,
   ChevronDown,
@@ -30,9 +31,7 @@ import {
   HelpCircle,
   Info,
   LayoutGrid,
-  Library,
   LogIn,
-  Map,
   Menu,
   MessageSquare,
   Trophy,
@@ -60,35 +59,33 @@ interface NavGroup {
   items: NavItem[];
 }
 
-/** Grouped nav (Community / Participate / Resources / About); flat when sidebar is collapsed. */
+/**
+ * Grouped nav. "Live" = polished, production-ready. "Needs Work" = pages open
+ * for contributor improvement (see the on-page banner for how to help). About
+ * stays standalone.
+ */
 const NAV_GROUPS: NavGroup[] = [
   {
-    label: "Community",
+    label: "Live",
     items: [
       { href: "/events", label: "Events", icon: Calendar },
-      { href: "/talks", label: "Talks", icon: MessageSquare },
-      { href: "/members", label: "Members", icon: Users },
-      { href: "/pair", label: "Pair Programming", icon: UsersRound },
-    ],
-  },
-  {
-    label: "Participate",
-    items: [
-      { href: "/hackathons", label: "Hackathons", icon: Trophy },
-      { href: "/showcase", label: "Showcase", icon: LayoutGrid },
       { href: "/cookbook", label: "Cookbook", icon: ChefHat },
+      { href: "/questions", label: "Q&A", icon: HelpCircle },
       { href: "/opportunities", label: "Opportunities", icon: Briefcase },
+      { href: "/ecosystem", label: "Ecosystem", icon: Building2 },
+      { href: "/blog", label: "Blog", icon: BookOpen },
       { href: "/certificate", label: "Certificate", icon: Award },
     ],
   },
   {
-    label: "Resources",
+    label: "Needs Work",
     items: [
-      { href: "/map", label: "Map", icon: Map },
-      { href: "/glossary", label: "Glossary", icon: Library },
-      { href: "/blog", label: "Blog", icon: BookOpen },
+      { href: "/hackathons", label: "Hackathons", icon: Trophy },
+      { href: "/showcase", label: "Showcase", icon: LayoutGrid },
+      { href: "/members", label: "Members", icon: Users },
+      { href: "/pair", label: "Pair Programming", icon: UsersRound },
+      { href: "/talks", label: "Talks", icon: MessageSquare },
       { href: "/analytics", label: "Analytics", icon: BarChart2 },
-      { href: "/questions", label: "Q&A", icon: HelpCircle },
     ],
   },
   {

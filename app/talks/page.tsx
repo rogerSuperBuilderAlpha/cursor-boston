@@ -7,6 +7,7 @@
 import { Metadata } from "next";
 import talksData from "@/content/talks.json";
 import articlesData from "@/content/articles.json";
+import { NeedsWorkBanner } from "@/components/NeedsWorkBanner";
 
 export const metadata: Metadata = {
   title: "Talks",
@@ -17,6 +18,12 @@ export const metadata: Metadata = {
 export default function TalksPage() {
   return (
     <div className="flex flex-col">
+      <div className="max-w-6xl mx-auto w-full px-6 pt-4">
+        <NeedsWorkBanner
+          area="Talks"
+          description="Talks archive is mostly empty. Help by submitting recordings, backfilling past meetup talks, or improving the archive UX and filters."
+        />
+      </div>
       {/* Hero */}
       <section className="py-16 md:py-24 px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-4xl mx-auto text-center">

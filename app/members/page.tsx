@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { MemberDirectory } from "@/components/members/MemberDirectory";
 import { CommunityFeed } from "@/components/feed/CommunityFeed";
 import { MembersPageSkeleton } from "@/components/skeletons/MembersPageSkeleton";
+import { NeedsWorkBanner } from "@/components/NeedsWorkBanner";
 
 type PageTab = "members" | "feed";
 
@@ -31,6 +32,12 @@ function MembersPageContent() {
 
   return (
     <div className="flex flex-col">
+      <div className="max-w-6xl mx-auto w-full px-6 pt-4">
+        <NeedsWorkBanner
+          area="Members"
+          description="Directory + feed ship, but profiles could be richer and the feed needs moderation + better filtering."
+        />
+      </div>
       {/* Hero */}
       <section className="py-12 md:py-16 px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-4xl mx-auto text-center">
