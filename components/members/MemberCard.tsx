@@ -197,6 +197,7 @@ export function MemberCard({ member }: MemberCardProps) {
           eligibilityMap={badgeEligibilityMap}
           earnedBadgeIds={earnedBadgeIds}
           compact
+          layout="horizontal"
         />
       </div>
 
