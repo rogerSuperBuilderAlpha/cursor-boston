@@ -27,6 +27,7 @@ type SignupEntry = {
   checkedIn: boolean;
   willBeLate?: boolean;
   queuingForSpot?: boolean;
+  lumaRegistered?: boolean;
 };
 
 type SignupData = {
@@ -165,6 +166,7 @@ export default function SportsHack2026AdminPage() {
         noShows: 0,
         arrivingLate: 0,
         queueing: 0,
+        notOnLuma: 0,
       };
     }
     const confirmed = signupData.entries.filter((e) => e.status === "confirmed");
@@ -177,6 +179,10 @@ export default function SportsHack2026AdminPage() {
     const queueing = signupData.entries.filter(
       (e) => e.status === "waitlisted" && e.queuingForSpot === true
     ).length;
+    // Website signups without a matching row in the latest Luma export.
+    const notOnLuma = signupData.entries.filter(
+      (e) => e.userId != null && !e.lumaRegistered
+    ).length;
     return {
       confirmedTotal: confirmed.length,
       confirmedIn,
@@ -184,6 +190,7 @@ export default function SportsHack2026AdminPage() {
       noShows: confirmed.length - confirmedIn,
       arrivingLate,
       queueing,
+      notOnLuma,
     };
   }, [signupData]);
 
@@ -294,6 +301,12 @@ export default function SportsHack2026AdminPage() {
             label="Queueing"
             value={String(checkinStats.queueing)}
             highlight={checkinStats.queueing > 0}
+          />
+          <StatCard
+            label="Not on Luma"
+            value={String(checkinStats.notOnLuma)}
+            highlight={checkinStats.notOnLuma > 0}
+            warn
           />
           <div className="flex-1 min-w-[200px]">
             <input
@@ -442,15 +455,36 @@ function CheckInRow({
       </td>
       <td className="px-4 py-3 text-center font-mono">{e.mergedPrCount}</td>
       <td className="px-4 py-3 text-center">
-        <span
-          className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${
-            e.status === "confirmed"
-              ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
-              : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
-          }`}
-        >
-          {e.status === "confirmed" ? "Confirmed" : "Waitlist"}
-        </span>
+        <div className="flex flex-col gap-1 items-center">
+          <span
+            className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${
+              e.status === "confirmed"
+                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
+                : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+            }`}
+          >
+            {e.status === "confirmed" ? "Confirmed" : "Waitlist"}
+          </span>
+          {e.userId != null ? (
+            // Luma-only rows (userId == null) already live in a separate section —
+            // no need to label them. Website signups get a second pill to flag
+            // whether they've also registered on Luma.
+            <span
+              className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${
+                e.lumaRegistered
+                  ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
+                  : "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
+              }`}
+              title={
+                e.lumaRegistered
+                  ? "Matched to a registration in the latest Luma export"
+                  : "No matching Luma registration found (by email or GitHub login)"
+              }
+            >
+              {e.lumaRegistered ? "✓ Luma" : "⚠ No Luma"}
+            </span>
+          ) : null}
+        </div>
       </td>
       <td className="px-4 py-3 text-center">
         {e.willBeLate === true ? (

@@ -39,6 +39,27 @@ const TONE_BANNER_CLASS: Record<SportsHack2026RankTone, string> = {
   far: "border-rose-500/40 bg-rose-500/5 dark:bg-rose-500/10",
 };
 
+function LumaPill({ registered }: { registered: boolean | undefined }) {
+  if (registered) {
+    return (
+      <span
+        className="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400"
+        title="Matched to a registration in the latest Luma export"
+      >
+        ✓ On Luma
+      </span>
+    );
+  }
+  return (
+    <span
+      className="inline-flex items-center rounded-full border border-rose-500/30 bg-rose-500/10 px-2 py-0.5 text-xs font-semibold text-rose-700 dark:text-rose-400"
+      title="No matching Luma registration found (by email or GitHub login)"
+    >
+      ⚠ Not on Luma yet
+    </span>
+  );
+}
+
 type EntryStatus = "confirmed" | "waitlisted";
 
 type LeaderboardEntry = {
@@ -52,6 +73,7 @@ type LeaderboardEntry = {
   status?: EntryStatus;
   willBeLate?: boolean;
   queuingForSpot?: boolean;
+  lumaRegistered?: boolean;
 };
 
 type LeaderboardResponse = {
@@ -68,6 +90,7 @@ type LeaderboardResponse = {
     creditEligible: boolean;
     willBeLate: boolean;
     queuingForSpot: boolean;
+    lumaRegistered: boolean;
   } | null;
 };
 
@@ -439,6 +462,7 @@ export default function SportsHack2026SignupPage() {
                               {tier.label}
                             </span>
                           ) : null}
+                          <LumaPill registered={data.me?.lumaRegistered} />
                         </div>
                         {myRank != null && (
                           <p className="mt-1 text-neutral-700 dark:text-neutral-300">
@@ -455,6 +479,21 @@ export default function SportsHack2026SignupPage() {
                         {tier ? (
                           <p className="mt-2 text-neutral-600 dark:text-neutral-400">
                             {tier.detail}
+                          </p>
+                        ) : null}
+                        {data.me && !data.me.lumaRegistered ? (
+                          <p className="mt-3 rounded-lg border border-rose-500/30 bg-rose-500/5 px-3 py-2 text-xs text-rose-700 dark:text-rose-300">
+                            <strong>You&apos;re not on the Luma list yet.</strong>{" "}
+                            Website signup alone won&apos;t get you through the door —{" "}
+                            <a
+                              href={SPORTS_HACK_2026_LUMA_URL}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="underline font-medium"
+                            >
+                              RSVP on Luma now
+                            </a>
+                            .
                           </p>
                         ) : null}
                       </div>
@@ -968,22 +1007,25 @@ export default function SportsHack2026SignupPage() {
                               {row.mergedPrCount}
                             </td>
                             <td className="px-4 py-3">
-                              {tier ? (
-                                <span
-                                  className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold ${TONE_PILL_CLASS[tier.tone]}`}
-                                  title={tier.detail}
-                                >
-                                  {tier.label}
-                                </span>
-                              ) : status === "confirmed" ? (
-                                <span className="inline-flex items-center rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
-                                  Confirmed
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center rounded-full bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:text-amber-400">
-                                  Waitlist
-                                </span>
-                              )}
+                              <div className="flex flex-col gap-1 items-start">
+                                {tier ? (
+                                  <span
+                                    className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold ${TONE_PILL_CLASS[tier.tone]}`}
+                                    title={tier.detail}
+                                  >
+                                    {tier.label}
+                                  </span>
+                                ) : status === "confirmed" ? (
+                                  <span className="inline-flex items-center rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                                    Confirmed
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center rounded-full bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:text-amber-400">
+                                    Waitlist
+                                  </span>
+                                )}
+                                <LumaPill registered={row.lumaRegistered} />
+                              </div>
                             </td>
                           </tr>
                         </React.Fragment>
