@@ -5,9 +5,18 @@
  */
 
 import { HACK_A_SPRINT_2026_EVENT_ID } from "@/lib/hackathon-showcase";
+import {
+  SPORTS_HACK_2026_CAPACITY,
+  SPORTS_HACK_2026_DECLINED_EMAILS,
+  SPORTS_HACK_2026_EVENT_ID,
+  SPORTS_HACK_2026_JUDGE_EMAILS,
+} from "@/lib/sports-hack-2026";
 
 /** In-person / special events with website signup (separate from Luma). */
-export const HACKATHON_EVENT_SIGNUP_IDS = [HACK_A_SPRINT_2026_EVENT_ID] as const;
+export const HACKATHON_EVENT_SIGNUP_IDS = [
+  HACK_A_SPRINT_2026_EVENT_ID,
+  SPORTS_HACK_2026_EVENT_ID,
+] as const;
 
 export type HackathonEventSignupId = (typeof HACKATHON_EVENT_SIGNUP_IDS)[number];
 
@@ -51,6 +60,15 @@ export function getHackathonEventSignupBlockReason(
 }
 
 export const CURSOR_CREDIT_TOP_N = 50;
+
+/**
+ * Per-event confirmed-seat capacity (used as `creditTopN` in the API response
+ * and drives the waitlist divider in the UI).
+ */
+export function getConfirmedCapacityForEvent(eventId: string): number {
+  if (eventId === SPORTS_HACK_2026_EVENT_ID) return SPORTS_HACK_2026_CAPACITY;
+  return CURSOR_CREDIT_TOP_N;
+}
 
 /**
  * Sort key for the combined website + Luma leaderboard (and freeze top-N).
@@ -111,6 +129,23 @@ export function profileMatchesHackathonJudgeCheckinException(
     }
   }
   return false;
+}
+
+/**
+ * Per-event judge set for the generic signup route. Global `JUDGE_EMAILS`
+ * stays as-is for existing hack-a-sprint callers (showcase/me/etc.) — this
+ * helper only routes the generic `/api/hackathons/events/[eventId]/signup`
+ * filter to the right per-event set so one event's organizers don't leak
+ * into another event's leaderboard.
+ */
+export function getJudgeEmailsForEvent(eventId: string): ReadonlySet<string> {
+  if (eventId === SPORTS_HACK_2026_EVENT_ID) return SPORTS_HACK_2026_JUDGE_EMAILS;
+  return JUDGE_EMAILS;
+}
+
+export function getDeclinedEmailsForEvent(eventId: string): ReadonlySet<string> {
+  if (eventId === SPORTS_HACK_2026_EVENT_ID) return SPORTS_HACK_2026_DECLINED_EMAILS;
+  return DECLINED_EMAILS;
 }
 
 /** Luma registrants who declined — excluded from the participant list. */
