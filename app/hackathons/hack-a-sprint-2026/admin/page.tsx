@@ -141,12 +141,17 @@ export default function AdminDashboardPage() {
   }, [loadDashboard, loadSignups]);
 
   useEffect(() => {
+    // Initial dashboard + signup list load once auth resolves.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch-on-mount, state set inside async callback
     if (user) void loadAll();
   }, [user, loadAll]);
 
   useEffect(() => {
     if (!user || error) return;
-    const t = window.setInterval(() => void loadAll(), 15_000);
+    // 60s poll (was 15s) — the signup API has its own 30s server cache and
+    // checkin writes bust the cache, so organizers see fresh data within
+    // ~30–60s while a tab open all day is 60 calls/hour instead of 240.
+    const t = window.setInterval(() => void loadAll(), 60_000);
     return () => window.clearInterval(t);
   }, [user, error, loadAll]);
 

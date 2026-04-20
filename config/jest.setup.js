@@ -9,6 +9,17 @@ if (typeof globalThis.TextEncoder === 'undefined') {
   globalThis.TextDecoder = util.TextDecoder
 }
 
+// Stub next/cache for unit tests. `unstable_cache` and `revalidateTag` need
+// Next's request-scoped incremental cache store, which Jest route-handler
+// tests don't set up. Pass-through unstable_cache (no caching — every call
+// executes the fn fresh) and no-op revalidateTag/revalidatePath is accurate
+// for unit-test assertions; cache behavior itself is integration-verified.
+jest.mock('next/cache', () => ({
+  unstable_cache: (fn) => fn,
+  revalidateTag: () => {},
+  revalidatePath: () => {},
+}))
+
 // Mock environment variables for tests
 process.env.NEXT_PUBLIC_FIREBASE_API_KEY = 'test-api-key'
 process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN = 'test-project.firebaseapp.com'

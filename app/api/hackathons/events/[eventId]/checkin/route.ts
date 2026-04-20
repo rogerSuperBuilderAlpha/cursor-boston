@@ -5,6 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
@@ -16,6 +17,9 @@ import { checkRateLimit, getClientIdentifier, rateLimitConfigs } from "@/lib/rat
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+/** Kept in sync with the same constant in the signup route. */
+const HACKATHON_SIGNUP_CACHE_TAG = "hackathon-event-signup";
 
 type RouteContext = { params: Promise<{ eventId: string }> };
 
@@ -88,6 +92,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
         signedUpAt: FieldValue.serverTimestamp(),
         checkedInAt: FieldValue.serverTimestamp(),
       });
+      revalidateTag(HACKATHON_SIGNUP_CACHE_TAG, { expire: 0 });
       return NextResponse.json({ ok: true, checkedIn: true, created: true });
     }
 
@@ -103,6 +108,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     } else {
       await ref.update({ checkedInAt: FieldValue.delete() });
     }
+    revalidateTag(HACKATHON_SIGNUP_CACHE_TAG, { expire: 0 });
 
     return NextResponse.json({ ok: true, checkedIn });
   } catch (e) {
