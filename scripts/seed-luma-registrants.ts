@@ -163,7 +163,7 @@ async function main() {
   }
 
   let seeded = 0;
-  let skippedSignup = 0;
+  let alsoOnWebsite = 0;
   let skippedDeclined = 0;
   let skippedJudge = 0;
 
@@ -181,9 +181,13 @@ async function main() {
     }
     approvedEmailsForPrune.add(email);
 
-    // Check if already has a website signup
+    // Always insert the Luma row, even when the registrant also has a
+    // website signup. The unified leaderboard dedupes at API time (matched
+    // rows don't appear twice); keeping the Luma doc lets the signup API
+    // set `lumaRegistered = true` on the website row, which drives the
+    // "✓ On Luma" pill in the UI.
     const uid = usersByEmail.get(email);
-    if (uid && signupUserIds.has(uid)) { skippedSignup++; continue; }
+    if (uid && signupUserIds.has(uid)) alsoOnWebsite++;
 
     const name = [row.first_name, row.last_name].filter(Boolean).join(" ").trim() || row.name?.trim() || "";
     const githubLogin = parseGithubLogin(row[GITHUB_COL_KEY]);
@@ -192,7 +196,8 @@ async function main() {
     const docId = `${eventId}__${email}`;
 
     if (dryRun) {
-      console.log(`  WOULD SEED: ${email} | ${name} | gh:${githubLogin || "—"} | luma:${lumaCreatedAt.slice(0, 10)}`);
+      const tag = uid && signupUserIds.has(uid) ? " [also on website]" : "";
+      console.log(`  WOULD SEED: ${email} | ${name} | gh:${githubLogin || "—"} | luma:${lumaCreatedAt.slice(0, 10)}${tag}`);
     } else {
       await db.collection("hackathonLumaRegistrants").doc(docId).set({
         eventId,
@@ -223,7 +228,7 @@ async function main() {
   }
 
   console.log(
-    `\nSeeded: ${seeded}, skipped (already on website): ${skippedSignup}, declined: ${skippedDeclined}, skipped (judge/ops email): ${skippedJudge}` +
+    `\nSeeded: ${seeded} (${alsoOnWebsite} also have a website signup — still seeded so the "✓ On Luma" pill renders), declined: ${skippedDeclined}, skipped (judge/ops email): ${skippedJudge}` +
       (prune && !dryRun ? `, pruned stale Luma rows: ${pruned}` : "")
   );
   if (dryRun) console.log("--dry-run: nothing written to Firestore.");
