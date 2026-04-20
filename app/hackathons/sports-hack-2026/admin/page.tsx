@@ -77,7 +77,11 @@ export default function SportsHack2026AdminPage() {
 
   useEffect(() => {
     if (!user || error) return;
-    const t = window.setInterval(() => void loadSignups(), 15_000);
+    // 60s is a compromise between day-of responsiveness and Firestore reads:
+    // the signup API has its own 30s server cache so organizers see fresh
+    // data within ~30–60s of any change, and a tab left open generates
+    // 60 calls/hour instead of 240.
+    const t = window.setInterval(() => void loadSignups(), 60_000);
     return () => window.clearInterval(t);
   }, [user, error, loadSignups]);
 
