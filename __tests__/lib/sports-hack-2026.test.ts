@@ -47,8 +47,11 @@ describe("sports-hack-2026 constants", () => {
     expect(SPORTS_HACK_2026_LOCATION).toMatch(/Cambridge/);
   });
 
-  it("seeds judge set with organizer email and keeps declined set empty until Luma exports arrive", () => {
-    expect(SPORTS_HACK_2026_JUDGE_EMAILS.has("regorhunt02052@gmail.com")).toBe(true);
+  it("starts with empty judge/declined sets (fresh event, no inherited filters)", () => {
+    // Intentionally empty until sports-hack picks named judges. See
+    // lib/sports-hack-2026.ts — seeding the hack-a-sprint organizer here
+    // caused Roger to be dropped from the Luma import, which was wrong.
+    expect(SPORTS_HACK_2026_JUDGE_EMAILS.size).toBe(0);
     expect(SPORTS_HACK_2026_DECLINED_EMAILS.size).toBe(0);
   });
 

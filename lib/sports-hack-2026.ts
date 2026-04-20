@@ -21,13 +21,12 @@ export const SPORTS_HACK_2026_END_HOUR_ET = 16;
 export const SPORTS_HACK_2026_LOCATION = "Cambridge, MA";
 
 /**
- * Organizer / judge emails — used to keep organizers off the participant list
- * and to bypass door check-in gates for their own accounts. Add more via the
- * `SPORTS_HACK_2026_JUDGE_EMAILS` env var (comma-separated, case-insensitive).
+ * Sports-hack-2026 keeps this set empty on purpose: this is a fresh event
+ * with fresh registrants, so nobody from the hack-a-sprint judge list should
+ * be auto-filtered from the leaderboard or the Luma import. If/when sports
+ * hack picks named judges, add them here.
  */
-export const SPORTS_HACK_2026_JUDGE_EMAILS: ReadonlySet<string> = new Set([
-  "regorhunt02052@gmail.com",
-]);
+export const SPORTS_HACK_2026_JUDGE_EMAILS: ReadonlySet<string> = new Set();
 
 /**
  * Luma registrants who have declined — excluded from participant list.
