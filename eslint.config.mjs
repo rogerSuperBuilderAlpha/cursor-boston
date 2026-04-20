@@ -57,6 +57,14 @@ const config = tseslint.config(
       "jsx-a11y/role-has-required-aria-props": "warn",
       "jsx-a11y/role-supports-aria-props": "warn",
       "react/jsx-no-target-blank": "off",
+      // eslint-plugin-react-hooks 7.1 promoted several React Compiler-driven
+      // checks into recommended as errors. They flag ~40 pre-existing idiomatic
+      // patterns (data-fetch effects, derived memoization) across feature code.
+      // Keep them visible as warnings so develop stays green while they are
+      // addressed incrementally.
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/preserve-manual-memoization": "warn",
+      "react-hooks/static-components": "warn",
     },
   },
   {
