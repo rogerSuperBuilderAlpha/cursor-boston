@@ -16,6 +16,7 @@ import {
   SPORTS_HACK_2026_TIMEZONE,
   SPORTS_HACK_2026_START_HOUR_ET,
   SPORTS_HACK_2026_END_HOUR_ET,
+  getSportsHack2026RankTier,
 } from "@/lib/sports-hack-2026";
 
 describe("sports-hack-2026 constants", () => {
@@ -49,5 +50,37 @@ describe("sports-hack-2026 constants", () => {
   it("seeds judge set with organizer email and keeps declined set empty until Luma exports arrive", () => {
     expect(SPORTS_HACK_2026_JUDGE_EMAILS.has("regorhunt02052@gmail.com")).toBe(true);
     expect(SPORTS_HACK_2026_DECLINED_EMAILS.size).toBe(0);
+  });
+
+  describe("getSportsHack2026RankTier", () => {
+    it("tier progression walks from hot → far as rank increases, with the bubble at the 80-seat cap", () => {
+      expect(getSportsHack2026RankTier(1).tone).toBe("hot");
+      expect(getSportsHack2026RankTier(10).tone).toBe("hot");
+      expect(getSportsHack2026RankTier(11).tone).toBe("good");
+      expect(getSportsHack2026RankTier(30).tone).toBe("good");
+      expect(getSportsHack2026RankTier(31).tone).toBe("solid");
+      expect(getSportsHack2026RankTier(60).tone).toBe("solid");
+      expect(getSportsHack2026RankTier(61).tone).toBe("bubble");
+      expect(getSportsHack2026RankTier(80).tone).toBe("bubble"); // exactly at the cap
+      expect(getSportsHack2026RankTier(81).tone).toBe("close");
+      expect(getSportsHack2026RankTier(100).tone).toBe("close");
+      expect(getSportsHack2026RankTier(101).tone).toBe("climb");
+      expect(getSportsHack2026RankTier(130).tone).toBe("climb");
+      expect(getSportsHack2026RankTier(131).tone).toBe("far");
+      expect(getSportsHack2026RankTier(1000).tone).toBe("far");
+    });
+
+    it("bubble/close copy references the capacity so it stays in sync with SPORTS_HACK_2026_CAPACITY", () => {
+      expect(getSportsHack2026RankTier(75).detail).toContain(String(SPORTS_HACK_2026_CAPACITY));
+      expect(getSportsHack2026RankTier(90).detail).toContain(String(SPORTS_HACK_2026_CAPACITY));
+    });
+
+    it("every tier has a non-empty label and detail", () => {
+      for (const rank of [1, 15, 45, 70, 90, 120, 200]) {
+        const t = getSportsHack2026RankTier(rank);
+        expect(t.label.length).toBeGreaterThan(0);
+        expect(t.detail.length).toBeGreaterThan(0);
+      }
+    });
   });
 });

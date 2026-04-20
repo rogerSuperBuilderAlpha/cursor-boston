@@ -165,6 +165,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
       checkedInAt: number | null;
       willBeLate: boolean;
       queuingForSpot: boolean;
+      /** True when a matching row was found in hackathonLumaRegistrants (email or githubLogin match). */
+      lumaRegistered: boolean;
     }[] = [];
 
     const userIds = snap.docs.map((d) => d.data().userId as string).filter(Boolean);
@@ -219,6 +221,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         checkedInAt: data.checkedInAt ? signedUpAtToMs(data.checkedInAt) : null,
         willBeLate: data.willBeLate === true,
         queuingForSpot: data.queuingForSpot === true,
+        lumaRegistered: false, // flipped true below when the Luma loop finds a match
       });
     }
 
@@ -281,6 +284,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
           ? ghLoginToRowIdx.get(ghLogin.toLowerCase())
           : undefined;
       if (matchIdx !== undefined) {
+        rows[matchIdx].lumaRegistered = true;
         if (rows[matchIdx].confirmedAt == null && d.confirmedAt) {
           rows[matchIdx].confirmedAt = signedUpAtToMs(d.confirmedAt);
         }
@@ -332,6 +336,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       checkedInAt: number | null;
       willBeLate: boolean;
       queuingForSpot: boolean;
+      lumaRegistered: boolean;
     };
     const unified: UnifiedRow[] = [];
 
@@ -349,6 +354,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         checkedInAt: r.checkedInAt,
         willBeLate: r.willBeLate,
         queuingForSpot: r.queuingForSpot,
+        lumaRegistered: r.lumaRegistered,
       });
     }
     for (const lr of lumaRows) {
@@ -365,6 +371,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
         checkedInAt: null,
         willBeLate: false,
         queuingForSpot: false,
+        // Rows with no matching website signup came from the Luma collection directly —
+        // they're on Luma by definition.
+        lumaRegistered: true,
       });
     }
 
@@ -407,6 +416,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         checkedIn: u.checkedInAt != null,
         willBeLate: u.willBeLate,
         queuingForSpot: u.queuingForSpot,
+        lumaRegistered: u.lumaRegistered,
       };
     });
 
@@ -418,6 +428,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       creditEligible: boolean;
       willBeLate: boolean;
       queuingForSpot: boolean;
+      lumaRegistered: boolean;
     } | null = null;
 
     if (meUser) {
@@ -431,6 +442,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
             creditEligible: entry.creditEligible,
             willBeLate: entry.willBeLate,
             queuingForSpot: entry.queuingForSpot,
+            lumaRegistered: entry.lumaRegistered,
           }
         : {
             signedUp: false,
@@ -440,6 +452,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
             creditEligible: false,
             willBeLate: false,
             queuingForSpot: false,
+            lumaRegistered: false,
           };
     }
 

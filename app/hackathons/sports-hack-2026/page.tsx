@@ -117,7 +117,7 @@ export default function SportsHack2026LandingPage() {
               >
                 {data?.me?.signedUp
                   ? `You're signed up${data.me.rank != null ? ` — rank #${data.me.rank}` : ""} · Manage`
-                  : "Claim your spot on the ranking list"}
+                  : "Register on the website"}
               </Link>
               <a
                 href={SPORTS_HACK_2026_LUMA_URL}
@@ -125,7 +125,7 @@ export default function SportsHack2026LandingPage() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center rounded-lg border border-neutral-300 px-6 py-3 text-sm font-semibold hover:bg-neutral-100 dark:border-neutral-600 dark:hover:bg-neutral-800"
               >
-                Register on Luma →
+                RSVP on Luma →
               </a>
               {isAdmin ? (
                 <Link
@@ -136,6 +136,9 @@ export default function SportsHack2026LandingPage() {
                 </Link>
               ) : null}
             </div>
+            <p className="mt-3 text-sm text-amber-600 dark:text-amber-400 font-medium">
+              You must register on <strong>both</strong>: Luma (for door entry) <strong>and</strong> the website (for hackathon ranking &amp; prizes). One without the other won&apos;t get you in.
+            </p>
 
             <div className="mt-10 rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
               <h2 className="text-lg font-semibold">How selection works</h2>
