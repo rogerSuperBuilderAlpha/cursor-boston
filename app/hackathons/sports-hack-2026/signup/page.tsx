@@ -15,7 +15,29 @@ import {
   SPORTS_HACK_2026_EVENT_ID,
   SPORTS_HACK_2026_LUMA_URL,
   SPORTS_HACK_2026_SHORT_NAME,
+  getSportsHack2026RankTier,
+  type SportsHack2026RankTone,
 } from "@/lib/sports-hack-2026";
+
+const TONE_PILL_CLASS: Record<SportsHack2026RankTone, string> = {
+  hot: "bg-emerald-500/15 border-emerald-500/40 text-emerald-700 dark:text-emerald-300",
+  good: "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400",
+  solid: "bg-emerald-500/5 border-emerald-500/20 text-emerald-700 dark:text-emerald-400",
+  bubble: "bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-400",
+  close: "bg-amber-500/15 border-amber-500/40 text-amber-800 dark:text-amber-300",
+  climb: "bg-orange-500/10 border-orange-500/30 text-orange-700 dark:text-orange-400",
+  far: "bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-400",
+};
+
+const TONE_BANNER_CLASS: Record<SportsHack2026RankTone, string> = {
+  hot: "border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-500/10",
+  good: "border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-500/10",
+  solid: "border-emerald-500/25 bg-emerald-500/5 dark:bg-emerald-500/10",
+  bubble: "border-amber-500/30 bg-amber-500/5 dark:bg-amber-500/10",
+  close: "border-amber-500/40 bg-amber-500/5 dark:bg-amber-500/10",
+  climb: "border-orange-500/40 bg-orange-500/5 dark:bg-orange-500/10",
+  far: "border-rose-500/40 bg-rose-500/5 dark:bg-rose-500/10",
+};
 
 type EntryStatus = "confirmed" | "waitlisted";
 
@@ -302,6 +324,10 @@ export default function SportsHack2026SignupPage() {
     profile?.visibility?.showDiscord === true,
   ].filter(Boolean).length;
 
+  // Before the ranking snapshot runs, nobody has `confirmedAt` set. Switch to
+  // rank-based "fun" statuses until a real confirmed/waitlist split exists.
+  const preFreeze = data ? data.entries.every((e) => e.status !== "confirmed") : true;
+
   return (
     <div className="min-h-screen bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
       <div className="mx-auto max-w-4xl px-6 py-12 md:py-16">
@@ -394,50 +420,100 @@ export default function SportsHack2026SignupPage() {
             </div>
           ) : data?.me?.signedUp ? (
             <>
-              <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-6 dark:bg-emerald-500/10">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="text-sm">
-                    <span className="font-semibold text-emerald-700 dark:text-emerald-300">
-                      You are signed up.
-                    </span>{" "}
-                    {data.me.rank != null && (
-                      <>
-                        Rank <strong>#{data.me.rank}</strong> of {data.totalCount} ·{" "}
-                        <strong>{data.me.mergedPrCount ?? 0}</strong> merged PR
-                        {(data.me.mergedPrCount ?? 0) !== 1 ? "s" : ""}
-                        {data.me.creditEligible ? (
-                          <span className="ml-2 text-emerald-600 dark:text-emerald-400">
-                            (top {capacity} — confirmed band)
-                          </span>
+              {(() => {
+                const myRank = data.me.rank;
+                const tier = preFreeze && myRank != null ? getSportsHack2026RankTier(myRank) : null;
+                const bannerClass = tier
+                  ? `rounded-2xl border p-6 ${TONE_BANNER_CLASS[tier.tone]}`
+                  : "rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-6 dark:bg-emerald-500/10";
+                return (
+                  <div className={bannerClass}>
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="text-sm">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-semibold text-foreground">You are signed up.</span>
+                          {tier ? (
+                            <span
+                              className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold ${TONE_PILL_CLASS[tier.tone]}`}
+                            >
+                              {tier.label}
+                            </span>
+                          ) : null}
+                        </div>
+                        {myRank != null && (
+                          <p className="mt-1 text-neutral-700 dark:text-neutral-300">
+                            Rank <strong>#{myRank}</strong> of {data.totalCount} ·{" "}
+                            <strong>{data.me.mergedPrCount ?? 0}</strong> merged PR
+                            {(data.me.mergedPrCount ?? 0) !== 1 ? "s" : ""}
+                            {!preFreeze && data.me.creditEligible ? (
+                              <span className="ml-2 text-emerald-600 dark:text-emerald-400">
+                                (top {capacity} — confirmed band)
+                              </span>
+                            ) : null}
+                          </p>
+                        )}
+                        {tier ? (
+                          <p className="mt-2 text-neutral-600 dark:text-neutral-400">
+                            {tier.detail}
+                          </p>
                         ) : null}
-                      </>
-                    )}
+                      </div>
+                      <div className="flex gap-3 shrink-0">
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => void load()}
+                          className="text-sm text-neutral-500 underline hover:text-neutral-700 dark:hover:text-neutral-300"
+                        >
+                          Refresh
+                        </button>
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => void handleLeave()}
+                          className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium hover:bg-neutral-100 disabled:opacity-50 dark:border-neutral-600 dark:hover:bg-neutral-800"
+                        >
+                          Leave list
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex gap-3">
-                    <button
-                      type="button"
-                      disabled={busy}
-                      onClick={() => void load()}
-                      className="text-sm text-neutral-500 underline hover:text-neutral-700 dark:hover:text-neutral-300"
-                    >
-                      Refresh
-                    </button>
-                    <button
-                      type="button"
-                      disabled={busy}
-                      onClick={() => void handleLeave()}
-                      className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium hover:bg-neutral-100 disabled:opacity-50 dark:border-neutral-600 dark:hover:bg-neutral-800"
-                    >
-                      Leave list
-                    </button>
-                  </div>
-                </div>
-              </div>
+                );
+              })()}
 
-              {/* Day-of RSVP */}
-              <div className="mt-6 rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
-                <h2 className="text-lg font-semibold text-foreground">Day-of RSVP</h2>
-                {data.me.creditEligible ? (
+              {/* Pre-freeze info card (replaces the day-of RSVP controls until a real confirmed/waitlist split exists) */}
+              {preFreeze ? (
+                <div className="mt-6 rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
+                  <h2 className="text-lg font-semibold text-foreground">What happens next</h2>
+                  <ul className="mt-3 space-y-2 text-sm text-neutral-600 dark:text-neutral-400 list-disc list-inside">
+                    <li>
+                      The confirmed/waitlist split is <strong>frozen about a week before the event</strong> based on rank.
+                    </li>
+                    <li>
+                      Until then, your status is your{" "}
+                      <strong>rank vs the top-{capacity} cap</strong> — merge PRs to{" "}
+                      <a
+                        href="https://github.com/rogerSuperBuilderAlpha/cursor-boston"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-emerald-600 underline dark:text-emerald-400"
+                      >
+                        cursor-boston
+                      </a>{" "}
+                      to climb.
+                    </li>
+                    <li>
+                      Day-of RSVP controls (arriving late, queuing for a spot) appear here after the freeze.
+                    </li>
+                  </ul>
+                </div>
+              ) : null}
+
+              {/* Day-of RSVP — only shown after the freeze, once confirmed/waitlist is real */}
+              {!preFreeze && (
+                <div className="mt-6 rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
+                  <h2 className="text-lg font-semibold text-foreground">Day-of RSVP</h2>
+                  {data.me.creditEligible ? (
                   <div className="mt-4 space-y-4">
                     <p className="text-sm text-neutral-700 dark:text-neutral-300">
                       <strong>
@@ -544,7 +620,8 @@ export default function SportsHack2026SignupPage() {
                     </div>
                   </div>
                 )}
-              </div>
+                </div>
+              )}
             </>
           ) : (
             <div className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
@@ -769,14 +846,23 @@ export default function SportsHack2026SignupPage() {
               ? `${data.websiteSignupCount ?? data.totalCount} on website · ${data.totalCount} total registrants`
               : "Loading…"}
           </p>
-          <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-            Top {data?.creditTopN ?? capacity} are{" "}
-            <strong className="text-emerald-600 dark:text-emerald-400">confirmed</strong>.
-            Everyone else is on the{" "}
-            <strong className="text-amber-600 dark:text-amber-400">waitlist</strong>.
-            <strong> Merge PRs</strong> to the community repo to move up — rankings
-            update in real time.
-          </p>
+          {preFreeze ? (
+            <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+              The confirmed/waitlist split is <strong>frozen about a week before the event</strong>.
+              Until then, we show each registrant&apos;s <strong>chances to make the cut</strong> based
+              on their rank vs the top-{data?.creditTopN ?? capacity} cap.{" "}
+              <strong>Merge PRs</strong> to the community repo to climb — rankings update in real time.
+            </p>
+          ) : (
+            <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+              Top {data?.creditTopN ?? capacity} are{" "}
+              <strong className="text-emerald-600 dark:text-emerald-400">confirmed</strong>.
+              Everyone else is on the{" "}
+              <strong className="text-amber-600 dark:text-amber-400">waitlist</strong>.
+              <strong> Merge PRs</strong> to the community repo to move up — rankings
+              update in real time.
+            </p>
+          )}
 
           <div className="mt-4 overflow-x-auto rounded-xl border border-neutral-200 dark:border-neutral-800">
             <table className="w-full min-w-[700px] text-left text-sm">
@@ -813,8 +899,23 @@ export default function SportsHack2026SignupPage() {
                         ? (prev.status ?? (prev.creditEligible ? "confirmed" : "waitlisted"))
                         : null;
 
-                      const showWaitlistDivider =
-                        status === "waitlisted" && prevStatus === "confirmed";
+                      // Pre-freeze: divide between "in the top-N" and "outside" by rank;
+                      // Post-freeze: divide between confirmed/waitlisted as the API reports.
+                      const inTopN = row.rank <= data.creditTopN;
+                      const prevInTopN = prev ? prev.rank <= data.creditTopN : false;
+                      const showWaitlistDivider = preFreeze
+                        ? !inTopN && prevInTopN
+                        : status === "waitlisted" && prevStatus === "confirmed";
+
+                      const rowHighlight = preFreeze
+                        ? inTopN
+                          ? "bg-emerald-500/5 dark:bg-emerald-500/10"
+                          : ""
+                        : status === "confirmed"
+                          ? "bg-emerald-500/5 dark:bg-emerald-500/10"
+                          : "";
+
+                      const tier = preFreeze ? getSportsHack2026RankTier(row.rank) : null;
 
                       return (
                         <React.Fragment key={row.userId ?? `luma-${row.rank}`}>
@@ -826,22 +927,17 @@ export default function SportsHack2026SignupPage() {
                               >
                                 <div className="flex items-center gap-2">
                                   <span className="text-sm font-bold text-amber-700 dark:text-amber-400">
-                                    Waitlist starts here
+                                    {preFreeze ? `Below the top-${data.creditTopN} cut` : "Waitlist starts here"}
                                   </span>
                                   <span className="text-xs text-amber-600 dark:text-amber-500">
-                                    — merge PRs to the community repo to move up into
-                                    the top {data.creditTopN}
+                                    — merge PRs to the community repo to climb into the top {data.creditTopN}
                                   </span>
                                 </div>
                               </td>
                             </tr>
                           )}
                           <tr
-                            className={`border-t border-neutral-200 dark:border-neutral-800 ${
-                              status === "confirmed"
-                                ? "bg-emerald-500/5 dark:bg-emerald-500/10"
-                                : ""
-                            } ${isYou ? "ring-2 ring-inset ring-emerald-500/50" : ""}`}
+                            className={`border-t border-neutral-200 dark:border-neutral-800 ${rowHighlight} ${isYou ? "ring-2 ring-inset ring-emerald-500/50" : ""}`}
                           >
                             <td className="px-4 py-3 font-mono tabular-nums">
                               {row.rank}
@@ -872,7 +968,14 @@ export default function SportsHack2026SignupPage() {
                               {row.mergedPrCount}
                             </td>
                             <td className="px-4 py-3">
-                              {status === "confirmed" ? (
+                              {tier ? (
+                                <span
+                                  className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold ${TONE_PILL_CLASS[tier.tone]}`}
+                                  title={tier.detail}
+                                >
+                                  {tier.label}
+                                </span>
+                              ) : status === "confirmed" ? (
                                 <span className="inline-flex items-center rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
                                   Confirmed
                                 </span>
