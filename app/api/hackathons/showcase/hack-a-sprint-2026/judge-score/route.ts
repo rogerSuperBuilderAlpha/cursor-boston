@@ -15,7 +15,8 @@ import {
 import { userIsHackASprint2026Judge } from "@/lib/hackathon-showcase-admin";
 import { getHackASprint2026Phase } from "@/lib/hackathon-asprint-2026-schedule";
 import { hackASprint2026ScoreDocId } from "@/lib/hackathon-asprint-2026-state";
-import { checkRateLimit, getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
+import { getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
+import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,7 +26,7 @@ const RATE = rateLimitConfigs.hackathonShowcaseJudgeScore;
 export async function POST(request: NextRequest) {
   try {
     const clientId = getClientIdentifier(request as unknown as Request);
-    const rate = checkRateLimit(`hack-asprint-judge:${clientId}`, RATE);
+    const rate = await checkUpstashRateLimit(`hack-asprint-judge:${clientId}`, RATE);
     if (!rate.success) {
       return NextResponse.json(
         { error: "Too many requests", retryAfterSeconds: rate.retryAfter },

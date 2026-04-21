@@ -17,6 +17,10 @@ jest.mock("@/lib/rate-limit", () => ({
   getClientIdentifier: () => "test-client",
 }));
 
+jest.mock("@/lib/upstash-rate-limit", () => ({
+  checkUpstashRateLimit: jest.fn(async () => ({ success: true, remaining: 9, resetTime: Date.now() + 60000 })),
+}));
+
 jest.mock("@/lib/server-auth", () => ({
   getVerifiedUser: jest.fn(),
 }));

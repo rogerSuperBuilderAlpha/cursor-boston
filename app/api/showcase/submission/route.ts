@@ -10,9 +10,9 @@ import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
 import {
   getClientIdentifier,
-  checkRateLimit,
   buildMemoryRateLimitHeaders,
 } from "@/lib/rate-limit";
+import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 import { sanitizeDocId } from "@/lib/sanitize";
 import { logger } from "@/lib/logger";
 import showcaseData from "@/content/showcase.json";
@@ -127,7 +127,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const rateResult = checkRateLimit(
+    const rateResult = await checkUpstashRateLimit(
       `showcase-submission-get:uid:${user.uid}|ip:${getClientIdentifier(request as unknown as Request)}`,
       SHOWCASE_SUBMISSION_GET_RATE_LIMIT
     );
@@ -188,7 +188,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const clientId = getClientIdentifier(request as unknown as Request);
-    const rateResult = checkRateLimit(
+    const rateResult = await checkUpstashRateLimit(
       `showcase-submission-post:ip:${clientId}`,
       SHOWCASE_SUBMISSION_POST_RATE_LIMIT
     );

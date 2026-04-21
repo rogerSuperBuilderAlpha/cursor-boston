@@ -16,6 +16,10 @@ jest.mock("@/lib/rate-limit", () => ({
   getClientIdentifier: () => "test-client",
 }));
 
+jest.mock("@/lib/upstash-rate-limit", () => ({
+  checkUpstashRateLimit: jest.fn(async () => ({ success: true, remaining: 9, resetTime: Date.now() + 60000 })),
+}));
+
 jest.mock("@/lib/server-auth", () => ({
   getVerifiedUser: jest.fn(),
 }));
@@ -235,8 +239,8 @@ describe("PATCH /api/profile/update", () => {
   });
 
   it("returns 429 when rate limited", async () => {
-    const { checkRateLimit } = require("@/lib/rate-limit");
-    checkRateLimit.mockReturnValueOnce({ success: false, retryAfter: 30 });
+    const { checkUpstashRateLimit } = jest.requireMock("@/lib/upstash-rate-limit") as { checkUpstashRateLimit: jest.Mock };
+    checkUpstashRateLimit.mockResolvedValueOnce({ success: false, retryAfter: 30 });
     mockGetVerifiedUser.mockResolvedValue(testUser);
 
     const res = await PATCH(makeRequest({ displayName: "Test" }));

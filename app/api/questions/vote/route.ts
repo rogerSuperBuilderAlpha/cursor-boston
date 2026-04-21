@@ -13,7 +13,8 @@ import {
 } from "@/lib/questions/service";
 import { logger } from "@/lib/logger";
 import { parseRequestBody } from "@/lib/api-response";
-import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { getClientIdentifier } from "@/lib/rate-limit";
+import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 import { sanitizeDocId } from "@/lib/sanitize";
 
 export const runtime = "nodejs";
@@ -24,7 +25,7 @@ const RATE_LIMIT = { windowMs: 60_000, maxRequests: 60 };
 export async function POST(request: NextRequest) {
   try {
     const clientId = getClientIdentifier(request as unknown as Request);
-    const rateResult = checkRateLimit(`questions-vote:${clientId}`, RATE_LIMIT);
+    const rateResult = await checkUpstashRateLimit(`questions-vote:${clientId}`, RATE_LIMIT);
     if (!rateResult.success) {
       return NextResponse.json(
         { error: "Too many requests", retryAfterSeconds: rateResult.retryAfter },
