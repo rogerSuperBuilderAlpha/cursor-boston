@@ -67,13 +67,21 @@ export async function checkUpstashRateLimit(
     return checkRateLimit(identifier, options);
   }
 
-  const limiter = getLimiter(client, windowMs, maxRequests);
-  const { success, remaining, reset } = await limiter.limit(identifier);
+  try {
+    const limiter = getLimiter(client, windowMs, maxRequests);
+    const { success, remaining, reset } = await limiter.limit(identifier);
 
-  return {
-    success,
-    remaining,
-    resetTime: reset,
-    retryAfter: success ? undefined : Math.ceil((reset - Date.now()) / 1000),
-  };
+    return {
+      success,
+      remaining,
+      resetTime: reset,
+      retryAfter: success ? undefined : Math.ceil((reset - Date.now()) / 1000),
+    };
+
+  } catch (error) {
+    // Redis transient failure — degrade to per-instance in-memory limits
+    // rather than 500ing the request.
+    return checkRateLimit(identifier, options);
+  }
+
 }
