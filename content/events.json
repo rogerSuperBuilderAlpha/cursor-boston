@@ -1,6 +1,102 @@
 {
   "upcoming": [
     {
+      "id": "cursor-boston-pydata-2026",
+      "slug": "cursor-boston-pydata-2026",
+      "title": "Cursor Boston × PyData Data Science Hack",
+      "subtitle": "Evening data-science hack at Moderna HQ — talk from Eric Ma, then build",
+      "date": "2026-05-13",
+      "time": "6:30 PM – 9:30 PM ET",
+      "location": "Cambridge, MA",
+      "venue": {
+        "name": "Moderna HQ",
+        "address": "325 Binney St, Cambridge, MA 02142",
+        "mapUrl": null
+      },
+      "type": "hackathon",
+      "description": "Hands-on evening hackathon at Moderna HQ co-hosted by Cursor Boston and PyData Boston. A short talk from Eric Ma, then a focused build session on data-science workflows with Cursor. Pizza and Cursor credits. Wednesday May 13 in Cambridge — register on Luma; host approval and Envoy NDA sign-in required.",
+      "longDescription": "Cursor Boston and PyData Boston team up for an evening of data-science building at Moderna HQ in Cambridge.\n\nThe Format\n\nDoors open at 6:30 with networking and pizza. Welcome at 7:00, then a talk from Eric Ma at 7:15 on a practical data-science topic. At ~8:05 we break into the hack — build and explore data-science workflows in Cursor. Optional demos at ~9:10 and we wrap by 9:30.\n\nWhat You'll Get\n\nCommunity, learning, pizza, and Cursor credits (details TBA).\n\nImportant: Security & Access\n\nSign-up closes 48 hours prior — no sign-up, no entry. Moderna has tight security.\n\nRSVPs must include first name, last name, email, and organization. After approval you'll get an email from no-reply@envoy.com. Complete the Envoy sign-in including NDA and signature before arriving — you'll receive a QR code. No QR code, no access. When taking photos, do not include the Moderna logo or branding.\n\nPreparation\n\nBring a laptop, charger, Cursor IDE installed, and a registered Cursor account.\n\nHosts\n\nRoger Hunt, Jacqueline Valeri, Sebastian Wallkötter, Alexander Commodore.",
+      "lumaCheckoutEventId": "evt-9PHCTsttlDD5wYW",
+      "lumaEmbedSrc": "https://luma.com/embed/event/evt-9PHCTsttlDD5wYW/simple",
+      "image": "/cursor-boston-logo.png",
+      "lumaUrl": "https://luma.com/ggjlxdnk",
+      "lumaEventId": "ggjlxdnk",
+      "registrationRequired": true,
+      "perks": [
+        "Cursor credits (details TBA)",
+        "Talk from Eric Ma",
+        "Pizza + community",
+        "Hands-on data-science building"
+      ],
+      "topics": [
+        "Data science with Cursor",
+        "LLM + Python workflows",
+        "Hands-on build session",
+        "Optional demos"
+      ],
+      "agenda": [
+        {
+          "time": "6:30 PM",
+          "title": "Doors open",
+          "description": "Arrive, clear Moderna security, pizza, networking"
+        },
+        {
+          "time": "7:00 PM",
+          "title": "Welcome",
+          "description": "Kick-off from the Cursor Boston and PyData Boston hosts"
+        },
+        {
+          "time": "7:15 PM",
+          "title": "Talk — Eric Ma",
+          "description": "Practical data-science talk"
+        },
+        {
+          "time": "~8:05 PM",
+          "title": "Hack session",
+          "description": "Build and explore data-science workflows in Cursor"
+        },
+        {
+          "time": "~9:10 PM",
+          "title": "Optional demos",
+          "description": "Show what you built to the room"
+        },
+        {
+          "time": "9:30 PM",
+          "title": "End",
+          "description": "Wrap and head out"
+        }
+      ],
+      "faq": [
+        {
+          "question": "Who should come?",
+          "answer": "Anyone building with Python, data, or ML — PyData regulars, Cursor users, and data scientists curious about AI-assisted workflows."
+        },
+        {
+          "question": "Why does sign-up close 48 hours early?",
+          "answer": "Moderna has tight security. Every attendee needs to be pre-approved and complete an Envoy NDA sign-in before arrival. No sign-up, no QR code, no entry."
+        },
+        {
+          "question": "What's the Envoy / NDA step?",
+          "answer": "After your Luma approval you'll get an email from no-reply@envoy.com. Complete the sign-in (including NDA and signature) before the event. That generates the QR code you need to enter Moderna."
+        },
+        {
+          "question": "Can I take photos?",
+          "answer": "Yes — just don't include the Moderna logo or branding in any photos you share."
+        },
+        {
+          "question": "What do I need to bring?",
+          "answer": "Laptop, charger, Cursor IDE installed, and a registered Cursor account."
+        }
+      ],
+      "whatToBring": [
+        "Laptop",
+        "Charger",
+        "Cursor IDE installed",
+        "Registered Cursor account"
+      ],
+      "featured": true
+    },
+    {
       "id": "cursor-boston-sports-hack-2026",
       "slug": "cursor-boston-sports-hack-2026",
       "title": "Cursor Boston \u2014 Boston Tech Week Sports Hack",
