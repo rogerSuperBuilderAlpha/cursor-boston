@@ -9,7 +9,8 @@ import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { getCurrentVirtualHackathonId, getVirtualMonthStartEndUtc, isVirtualHackathonId } from "@/lib/hackathons";
-import { checkRateLimit, getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
+import { getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
+import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
   try {
     // Rate limiting
     const clientId = getClientIdentifier(request as unknown as Request);
-    const rateResult = checkRateLimit(`hackathon-submission-register:${clientId}`, HACKATHON_RATE_LIMIT);
+    const rateResult = await checkUpstashRateLimit(`hackathon-submission-register:${clientId}`, HACKATHON_RATE_LIMIT);
     if (!rateResult.success) {
       return NextResponse.json(
         { error: "Too many requests", retryAfterSeconds: rateResult.retryAfter },

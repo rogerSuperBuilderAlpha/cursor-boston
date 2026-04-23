@@ -8,7 +8,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
-import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { getClientIdentifier } from "@/lib/rate-limit";
+import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 import { sanitizeName, sanitizeText, sanitizeUrl } from "@/lib/sanitize";
 
 export const runtime = "nodejs";
@@ -24,7 +25,7 @@ export async function PATCH(request: NextRequest) {
   try {
     // Rate limiting
     const clientId = getClientIdentifier(request as unknown as Request);
-    const rateResult = checkRateLimit(`profile-update:${clientId}`, RATE_LIMIT);
+    const rateResult = await checkUpstashRateLimit(`profile-update:${clientId}`, RATE_LIMIT);
     if (!rateResult.success) {
       return NextResponse.json(
         { error: "Too many requests", retryAfterSeconds: rateResult.retryAfter },
