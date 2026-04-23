@@ -48,7 +48,6 @@ export interface RateLimitResult {
  * const headers = buildMemoryRateLimitHeaders(result, options.maxRequests);
  * // returns { "X-RateLimit-Limit": "60", "X-RateLimit-Remaining": "59", ... }
  */
-
 export function buildMemoryRateLimitHeaders(
   result: RateLimitResult,
   maxRequests: number
@@ -78,7 +77,6 @@ export function buildMemoryRateLimitHeaders(
  *   console.log(`Rate limited! Retry after ${status.retryAfter}s`);
  * }
  */
-
 export function checkRateLimit(
   identifier: string,
   options: RateLimitOptions
@@ -144,7 +142,6 @@ export function checkRateLimit(
  *   return new Response(`Your IP is ${ip}`);
  * }
  */
-
 export function getClientIdentifier(request: Request): string {
   // Try to get IP from various headers (for proxies/load balancers)
   const forwarded = request.headers.get("x-forwarded-for");
@@ -196,7 +193,6 @@ function cleanupExpiredEntries(now: number): void {
  *   return Response.json({ data: "Hello World" });
  * });
  */
-
 export function withRateLimit(
   options: RateLimitOptions,
   handler: (request: Request) => Promise<Response>
@@ -250,123 +246,106 @@ export function withRateLimit(
  * export const POST = withRateLimit(rateLimitConfigs.standard, handler);
  */
 export const rateLimitConfigs = {
-  /** 
-    * Strict rate limit for OAuth callbacks to prevent abuse and brute-forcing. 
-    * @type {RateLimitOptions}
-    */
+  /**
+   * Strict rate limit for OAuth callbacks to prevent abuse and brute-forcing.
+   */
   oauthCallback: {
     windowMs: 15 * 60 * 1000, // 15 minutes
     maxRequests: 10, // 10 requests per 15 minutes
   },
-  /** 
-   * Moderate rate limit for incoming webhooks. 
-   * @type {RateLimitOptions}
+  /**
+   * Moderate rate limit for incoming webhooks.
    */
   webhook: {
     windowMs: 60 * 1000, // 1 minute
     maxRequests: 30, // 30 requests per minute
   },
-  /** 
-   * Standard rate limit for general, authenticated API routes. 
-   * @type {RateLimitOptions}
+  /**
+   * Standard rate limit for general, authenticated API routes.
    */
   standard: {
     windowMs: 60 * 1000, // 1 minute
     maxRequests: 60, // 60 requests per minute
   },
-  /** 
-   * Lenient rate limit for general public endpoints. 
-   * @type {RateLimitOptions}
+  /**
+   * Lenient rate limit for general public endpoints.
    */
   public: {
     windowMs: 60 * 1000, // 1 minute
     maxRequests: 100, // 100 requests per minute
   },
-  /** 
- * Strict rate limit for hackathon mutations that change team or submission state. 
- * @type {RateLimitOptions}
- */
+  /**
+   * Strict rate limit for hackathon mutations that change team or submission state.
+   */
   hackathonMutation: {
     windowMs: 60 * 1000, // 1 minute
     maxRequests: 10, // 10 requests per minute
   },
-  /** 
-  * Standard rate limit for hackathon pool, invite, request, and team profile actions. 
-  * @type {RateLimitOptions}
-  */
+  /**
+   * Standard rate limit for hackathon pool, invite, request, and team profile actions.
+   */
   hackathonAction: {
     windowMs: 60 * 1000, // 1 minute
     maxRequests: 20, // 20 requests per minute
   },
-  /** 
-   * Limits for eligibility checks which are read-heavy but still authenticated. 
-   * @type {RateLimitOptions}
+  /**
+   * Limits for eligibility checks which are read-heavy but still authenticated.
    */
   hackathonEligibility: {
     windowMs: 60 * 1000, // 1 minute
     maxRequests: 30, // 30 requests per minute
   },
-  /** 
-    * Event signup rate limiting, used by GET/POST/DELETE on the same endpoint. 
-    * @type {RateLimitOptions}
-    */
+  /**
+   * Event signup rate limiting, used by GET/POST/DELETE on the same endpoint.
+   */
   hackathonEventSignup: {
     windowMs: 60 * 1000, // 1 minute
     maxRequests: 40, // 40 requests per minute
   },
-  /** 
-   * Rate limiting for Hackathon Showcase AI scoring submissions. 
-   * @type {RateLimitOptions}
+  /**
+   * Rate limiting for Hackathon Showcase AI scoring submissions.
    */
   hackathonShowcaseAiScore: {
     windowMs: 60 * 1000, // 1 minute
     maxRequests: 30, // 30 requests per minute
   },
-
-  /** 
- * Rate limiting for Hackathon Showcase Judge scoring submissions. 
- * @type {RateLimitOptions}
- */
+  /**
+   * Rate limiting for Hackathon Showcase Judge scoring submissions.
+   */
   hackathonShowcaseJudgeScore: {
     windowMs: 60 * 1000, // 1 minute
     maxRequests: 40, // 40 requests per minute
   },
-  /** 
- * Rate limiting for unlocking Hackathon Showcase voting functionality. 
- * @type {RateLimitOptions}
- */
+  /**
+   * Rate limiting for unlocking Hackathon Showcase voting functionality.
+   */
   hackathonShowcaseUnlock: {
     windowMs: 60 * 1000, // 1 minute
     maxRequests: 20, // 20 requests per minute
   },
-  /** 
- * Strict rate limiting for brute-force prevention on Showcase unlock attempts. 
- * @type {RateLimitOptions}
- */
+  /**
+   * Strict rate limiting for brute-force prevention on Showcase unlock attempts.
+   */
   hackathonShowcaseUnlockAttempts: {
     windowMs: 5 * 60 * 1000, // 5 minutes
     maxRequests: 15, // 15 attempts per 5 minutes
   },
-  /** 
- * Rate limiting for casting votes in the Hackathon Showcase. 
- * @type {RateLimitOptions}
- */
+  /**
+   * Rate limiting for casting votes in the Hackathon Showcase.
+   */
   hackathonShowcaseVote: {
     windowMs: 60 * 1000, // 1 minute
     maxRequests: 30, // 30 requests per minute
   },
-  /** 
- * Rate limiting for fetching/updating Hackathon Showcase participant scores. 
- * @type {RateLimitOptions}
- */
+  /**
+   * Rate limiting for fetching/updating Hackathon Showcase participant scores.
+   */
   hackathonShowcaseParticipantScore: {
     windowMs: 60 * 1000, // 1 minute
     maxRequests: 60, // 60 score updates per minute per IP
   },
-
-  /** 
-   * Highly strict rate limiting for credit-related emails in the Hackathon Showcase. 
-   * @type {RateLimitOptions}
+  /**
+   * Highly strict rate limiting for credit-related emails in the Hackathon Showcase.
    */
   hackathonShowcaseCreditEmail: {
     windowMs: 60 * 60 * 1000, // 1 hour
