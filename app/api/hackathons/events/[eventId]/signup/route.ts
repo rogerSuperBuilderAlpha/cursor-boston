@@ -23,7 +23,8 @@ import {
 } from "@/lib/hackathon-event-signup";
 import { fetchMergedPrCountsForLogins } from "@/lib/github-merged-pr-count";
 import { getGithubRepoPair } from "@/lib/github-recent-merged-prs";
-import { checkRateLimit, getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
+import { getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
+import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -476,7 +477,7 @@ type RouteContext = { params: Promise<{ eventId: string }> };
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const clientId = getClientIdentifier(request as unknown as Request);
-    const rate = checkRateLimit(`hackathon-event-signup-get:${clientId}`, RATE);
+    const rate = await checkUpstashRateLimit(`hackathon-event-signup-get:${clientId}`, RATE);
     if (!rate.success) {
       return NextResponse.json(
         { error: "Too many requests", retryAfterSeconds: rate.retryAfter },
@@ -555,7 +556,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
     const clientId = getClientIdentifier(request as unknown as Request);
-    const rate = checkRateLimit(`hackathon-event-signup-post:${clientId}`, RATE);
+    const rate = await checkUpstashRateLimit(`hackathon-event-signup-post:${clientId}`, RATE);
     if (!rate.success) {
       return NextResponse.json(
         { error: "Too many requests", retryAfterSeconds: rate.retryAfter },
@@ -617,7 +618,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
     const clientId = getClientIdentifier(request as unknown as Request);
-    const rate = checkRateLimit(`hackathon-event-signup-patch:${clientId}`, RATE);
+    const rate = await checkUpstashRateLimit(`hackathon-event-signup-patch:${clientId}`, RATE);
     if (!rate.success) {
       return NextResponse.json(
         { error: "Too many requests", retryAfterSeconds: rate.retryAfter },
@@ -726,7 +727,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     const clientId = getClientIdentifier(request as unknown as Request);
-    const rate = checkRateLimit(`hackathon-event-signup-del:${clientId}`, RATE);
+    const rate = await checkUpstashRateLimit(`hackathon-event-signup-del:${clientId}`, RATE);
     if (!rate.success) {
       return NextResponse.json(
         { error: "Too many requests", retryAfterSeconds: rate.retryAfter },

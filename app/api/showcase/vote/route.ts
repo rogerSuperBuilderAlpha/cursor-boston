@@ -10,7 +10,8 @@ import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { logger } from "@/lib/logger";
 import { parseRequestBody } from "@/lib/api-response";
-import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { getClientIdentifier } from "@/lib/rate-limit";
+import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 import { sanitizeDocId } from "@/lib/sanitize";
 
 export const runtime = "nodejs";
@@ -23,7 +24,7 @@ const SHOWCASE_VOTE_RATE_LIMIT = { windowMs: 60 * 1000, maxRequests: 60 };
 export async function POST(request: NextRequest) {
   try {
     const clientId = getClientIdentifier(request as unknown as Request);
-    const rateResult = checkRateLimit(`showcase-vote:${clientId}`, SHOWCASE_VOTE_RATE_LIMIT);
+    const rateResult = await checkUpstashRateLimit(`showcase-vote:${clientId}`, SHOWCASE_VOTE_RATE_LIMIT);
     if (!rateResult.success) {
       return NextResponse.json(
         { error: "Too many requests", retryAfterSeconds: rateResult.retryAfter },

@@ -8,7 +8,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAgentByClaimToken, claimAgent } from "@/lib/agents";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { getAdminDb } from "@/lib/firebase-admin";
-import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { getClientIdentifier } from "@/lib/rate-limit";
+import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 import { logApiError } from "@/lib/logger";
 
 interface RouteContext {
@@ -33,7 +34,7 @@ export async function GET(
   try {
     // Apply rate limiting
     const clientId = getClientIdentifier(request as unknown as Request);
-    const rateLimitResult = checkRateLimit(`agent-claim-get:${clientId}`, CLAIM_RATE_LIMIT);
+    const rateLimitResult = await checkUpstashRateLimit(`agent-claim-get:${clientId}`, CLAIM_RATE_LIMIT);
     
     if (!rateLimitResult.success) {
       return NextResponse.json(
@@ -158,7 +159,7 @@ export async function POST(
   try {
     // Apply rate limiting (stricter for POST to prevent claim abuse)
     const clientId = getClientIdentifier(request as unknown as Request);
-    const rateLimitResult = checkRateLimit(`agent-claim-post:${clientId}`, CLAIM_RATE_LIMIT);
+    const rateLimitResult = await checkUpstashRateLimit(`agent-claim-post:${clientId}`, CLAIM_RATE_LIMIT);
     
     if (!rateLimitResult.success) {
       return NextResponse.json(

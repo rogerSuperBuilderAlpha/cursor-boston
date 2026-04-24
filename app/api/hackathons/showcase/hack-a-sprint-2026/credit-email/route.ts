@@ -10,7 +10,8 @@ import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { resolveHackASprint2026CreditForUser } from "@/lib/hackathon-asprint-2026-credit-eligibility";
 import { sendEmail } from "@/lib/mailgun";
-import { checkRateLimit, getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
+import { getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
+import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,7 +21,7 @@ const RATE = rateLimitConfigs.hackathonShowcaseCreditEmail;
 export async function POST(request: NextRequest) {
   try {
     const clientId = getClientIdentifier(request as unknown as Request);
-    const rate = checkRateLimit(`hack-asprint-credit-email:${clientId}`, RATE);
+    const rate = await checkUpstashRateLimit(`hack-asprint-credit-email:${clientId}`, RATE);
     if (!rate.success) {
       return NextResponse.json(
         { error: "Too many requests", retryAfterSeconds: rate.retryAfter },
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    const uidRate = checkRateLimit(`hack-asprint-credit-email-uid:${user.uid}`, RATE);
+    const uidRate = await checkUpstashRateLimit(`hack-asprint-credit-email-uid:${user.uid}`, RATE);
     if (!uidRate.success) {
       return NextResponse.json(
         { error: "Too many requests", retryAfterSeconds: uidRate.retryAfter },
