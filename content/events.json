@@ -99,19 +99,19 @@
     {
       "id": "cursor-boston-sports-hack-2026",
       "slug": "cursor-boston-sports-hack-2026",
-      "title": "Cursor Boston \u2014 Boston Tech Week Sports Hack",
-      "subtitle": "Morning sports hackathon \u2014 80 builders, LSE guest lecture, 2-hour build sprint, live pitches",
+      "title": "Cursor Boston \u00d7 Hult International \u2014 Boston Tech Week Speakers & Workshop",
+      "subtitle": "Full day at Hult \u2014 LSE guest lecture from Antonio Mele, lunch, 2-hour hackathon sprint, live pitches",
       "date": "2026-05-26",
       "time": "10:00 AM \u2013 4:00 PM ET",
       "location": "Cambridge, MA",
       "venue": {
-        "name": "Cambridge (exact address after approval)",
+        "name": "Hult International (exact address after approval)",
         "address": "Register on Luma to see the venue address after you're approved.",
         "mapUrl": null
       },
       "type": "hackathon",
-      "description": "Morning sports hackathon blending tech innovation with sports industry collaboration. Networking, guest lecture from LSE, 2-hour build sprint with expert talks, AI-powered project scoring, and live pitches. $1,200 cash + prizes; $50 Cursor Credits + Red Bull merch for selected participants. Tuesday May 26 in Cambridge \u2014 register on Luma; approval required.",
-      "longDescription": "Cursor Boston + Boston Tech Week bring together 80 developers for a morning sports hackathon, co-run with Hult International, BeatM, Red Bull, NFX, and MIT Sports Lab.\n\nThe Format\n\nWe open with networking and a guest lecture from the London School of Economics on the state of sports technology. After expert talks from industry partners, teams start a 2-hour build sprint. Projects are scored by AI and the room; finalists pitch live.\n\nThe Perks & Prizes\n\nGuaranteed bounty for selected participants: $50 in Cursor Credits and exclusive Red Bull merchandise.\nPrize pool: $1,200 total in cash and prizes for top projects.\n\nWhen & Where\n\nDate: Tuesday, May 26, 2026\nLocation: Cambridge, MA \u2014 exact address is shown on Luma after your registration is approved.\n\nHow to Secure Your Spot\n\nWe have 80 confirmed seats; selection prioritizes open-source contributors, profile completers on cursorboston.com, active Discord members, and early registrants. Luma approval is required. After Luma, claim your spot on cursorboston.com/hackathons/sports-hack-2026/signup so we can rank builders by merged PRs to the community repo and signup time.\n\nWe qualify participants rigorously. If selected people don't meet criteria or drop out, we pull aggressively from the waitlist.\n\nGet Involved\n\nDidn't make the top 80? Join the waitlist \u2014 drop-outs happen. Want to judge or partner instead? Contact the hosts on Luma.",
+      "description": "Full-day Speakers & Workshop at Hult International to launch Boston Tech Week. Guest lecture from Antonio Mele (London School of Economics), lunch, a 2-hour hackathon sprint, AI-powered scoring, top-10 live presentations, and judges' analysis. $1,200 cash + prizes; $50 Cursor Credits + Red Bull merch for selected participants. Tuesday May 26 in Cambridge \u2014 register on Luma; approval required.",
+      "longDescription": "Cursor Boston and Hult International team up to launch Boston Tech Week with a full-day Speakers & Workshop \u2014 a guest lecture, lunch, a focused hackathon sprint, and live finalist pitches. Co-run with BeatM, Red Bull, NFX, and MIT Sports Lab.\n\nThe Format\n\nDoors open at 10:00 AM with coffee, snacks, and networking. From 10:30 to 12:00, Antonio Mele of the London School of Economics gives a guest lecture. Lunch runs 12:00\u201312:30, then builders kick off a 2-hour hackathon sprint (12:30\u20132:30). The afternoon closes with AI scoring (2:30\u20133:00), top-10 live presentations (3:00\u20133:30), judges' analysis (3:30\u20134:00), and winners announced at 4:00.\n\nThe Perks & Prizes\n\nGuaranteed bounty for selected participants: $50 in Cursor Credits and exclusive Red Bull merchandise.\nPrize pool: $1,200 total in cash and prizes for top projects.\n\nWhen & Where\n\nDate: Tuesday, May 26, 2026\nLocation: Cambridge, MA \u2014 Hult International (exact address shown on Luma after your registration is approved).\n\nHow to Secure Your Spot\n\nSelection prioritizes open-source contributors, profile completers on cursorboston.com, active Discord members, and early registrants. Luma approval is required. After Luma, claim your spot on cursorboston.com/hackathons/sports-hack-2026/signup so we can rank builders by merged PRs to the community repo and signup time.\n\nWe qualify participants rigorously. If selected people don't meet criteria or drop out, we pull aggressively from the waitlist.\n\nHosts\n\nRoger Hunt, Harry Chow, and Anusha Vissapragada.\n\nGet Involved\n\nDidn't make the seat list? Join the waitlist \u2014 drop-outs happen. Want to judge or partner instead? Contact the hosts on Luma.",
       "lumaCheckoutEventId": "evt-tTiu9jkwv4jVVxx",
       "lumaEmbedSrc": "https://luma.com/embed/event/evt-tTiu9jkwv4jVVxx/simple",
       "image": "/cursor-boston-logo.png",
@@ -123,7 +123,8 @@
         "$50 Cursor credits (guaranteed for selected participants)",
         "Exclusive Red Bull merchandise",
         "$1,200 total cash + prizes",
-        "LSE guest lecture on sports tech"
+        "LSE guest lecture from Antonio Mele",
+        "Lunch provided"
       ],
       "topics": [
         "Sports tech + AI",
@@ -134,28 +135,43 @@
       "agenda": [
         {
           "time": "10:00 AM",
-          "title": "Doors open + networking",
-          "description": "Meet builders, partners, and mentors from Hult, BeatM, Red Bull, NFX, and MIT Sports Lab"
+          "title": "Coffee, snacks & networking",
+          "description": "Doors open at Hult \u2014 coffee, snacks, and networking with builders, hosts, and partners (BeatM, Red Bull, NFX, MIT Sports Lab)"
         },
         {
-          "time": "Morning",
-          "title": "LSE guest lecture + partner talks",
-          "description": "State of sports technology; expert talks from industry partners"
+          "time": "10:30 AM \u2013 12:00 PM",
+          "title": "Guest lecture \u2014 Antonio Mele (LSE)",
+          "description": "Guest lecture from Antonio Mele of the London School of Economics"
         },
         {
-          "time": "Midday",
-          "title": "2-hour build sprint",
-          "description": "Teams ship a working sports-tech build with Cursor as their AI co-pilot"
+          "time": "12:00 PM \u2013 12:30 PM",
+          "title": "Lunch",
+          "description": "Lunch and continued networking before the build sprint"
         },
         {
-          "time": "Afternoon",
-          "title": "AI scoring + live pitches",
-          "description": "AI-powered project scoring and live finalist pitches"
+          "time": "12:30 PM \u2013 2:30 PM",
+          "title": "Hackathon sprint",
+          "description": "Two-hour build sprint with Cursor as your AI co-pilot"
+        },
+        {
+          "time": "2:30 PM \u2013 3:00 PM",
+          "title": "AI scoring",
+          "description": "AI-powered scoring of submitted projects"
+        },
+        {
+          "time": "3:00 PM \u2013 3:30 PM",
+          "title": "Top 10 presentations",
+          "description": "Top 10 teams present their builds live"
+        },
+        {
+          "time": "3:30 PM \u2013 4:00 PM",
+          "title": "Judges' analysis",
+          "description": "Judges weigh in and analyze the top builds"
         },
         {
           "time": "4:00 PM",
-          "title": "Wrap-up + networking",
-          "description": "Awards, photos, and continued conversations with the Boston sports-tech community"
+          "title": "Winners announced & wrap-up",
+          "description": "Winners announced, prizes awarded, and wrap-up"
         }
       ],
       "faq": [
@@ -165,7 +181,7 @@
         },
         {
           "question": "How many spots are there?",
-          "answer": "80 confirmed seats. Beyond that, waitlist \u2014 drop-outs happen, merge PRs to cursor-boston to move up."
+          "answer": "Limited seats \u2014 selection prioritizes open-source contributors, completed cursorboston.com profiles, and Discord members. Drop-outs happen, so merge PRs to cursor-boston to move up the list."
         },
         {
           "question": "Solo or team?",
@@ -177,7 +193,7 @@
         },
         {
           "question": "Is the venue confirmed?",
-          "answer": "Date: Tuesday, May 26, 2026 in Cambridge. Exact address appears on Luma after your registration is approved."
+          "answer": "Yes \u2014 Tuesday, May 26, 2026 at Hult International in Cambridge. The exact address appears on Luma after your registration is approved."
         },
         {
           "question": "What if I don't make the top 80?",
@@ -191,7 +207,14 @@
       ],
       "featured": true,
       "primaryCtaHref": "/hackathons/sports-hack-2026",
-      "primaryCtaLabel": "Claim your ranking spot"
+      "primaryCtaLabel": "Claim your ranking spot",
+      "speakers": [
+        {
+          "name": "Antonio Mele",
+          "role": "Guest Lecturer",
+          "company": "London School of Economics"
+        }
+      ]
     },
     {
       "id": "cursor-boston-aic-open-source-workshop-2026",
