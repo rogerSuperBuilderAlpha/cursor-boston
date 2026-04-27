@@ -121,6 +121,16 @@
       "tags": ["CS", "public", "UMass"]
     },
     {
+      "id": "umass-lowell",
+      "name": "UMass Lowell",
+      "fullName": "University of Massachusetts Lowell",
+      "category": "university",
+      "location": "Lowell, MA",
+      "website": "https://www.uml.edu",
+      "description": "A public research university in Lowell, Massachusetts with strong programs in computer science, engineering, business, and applied research. Just introduced a new Interdisciplinary AI research hub called AICORE.",
+      "tags": ["university", "research", "computer science", "engineering"]
+    },
+    {
       "id": "wpi",
       "name": "WPI",
       "fullName": "Worcester Polytechnic Institute",
@@ -169,6 +179,16 @@
       "website": "https://maic.ai",
       "description": "Cross-industry coalition bringing together Massachusetts-based companies, academia, and government to shape AI policy and practice.",
       "tags": ["AI", "policy", "community"]
+    },
+    {
+      "id": "aim-society-umass-lowell",
+      "name": "AIM Society",
+      "fullName": "Artificial Intelligence Multidisciplinary Society at UMass Lowell",
+      "category": "ai_org",
+      "location": "Lowell, MA",
+      "website": "https://www.aimsociety.org/",
+      "description": "A student-led AI organization at UMass Lowell focused on making AI accessible across majors through projects, workshops, events, and interdisciplinary collaboration. AIM Society is part of the Massachusetts AI Coalition ecosystem.",
+      "tags": ["AI", "students", "community", "education", "Massachusetts AI Coalition"]
     },
     {
       "id": "massrobotics",
