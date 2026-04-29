@@ -99,7 +99,7 @@
     {
       "id": "cursor-boston-sports-hack-2026",
       "slug": "cursor-boston-sports-hack-2026",
-      "title": "Cursor Boston \u00d7 Hult International \u2014 Boston Tech Week Speakers & Workshop",
+      "title": "Cursor Boston \u00d7 AIC \u00d7 Hult International \u2014 Boston Tech Week Speakers & Workshop",
       "subtitle": "Full day at Hult \u2014 LSE guest lecture from Antonio Mele, lunch, 2-hour hackathon sprint, live pitches",
       "date": "2026-05-26",
       "time": "10:00 AM \u2013 4:00 PM ET",
@@ -110,8 +110,8 @@
         "mapUrl": null
       },
       "type": "hackathon",
-      "description": "Full-day Speakers & Workshop at Hult International to launch Boston Tech Week. Guest lecture from Antonio Mele (London School of Economics), lunch, a 2-hour hackathon sprint, AI-powered scoring, top-10 live presentations, and judges' analysis. $1,200 cash + prizes; $50 Cursor Credits + Red Bull merch for selected participants. Tuesday May 26 in Cambridge \u2014 register on Luma; approval required.",
-      "longDescription": "Cursor Boston and Hult International team up to launch Boston Tech Week with a full-day Speakers & Workshop \u2014 a guest lecture, lunch, a focused hackathon sprint, and live finalist pitches. Co-run with BeatM, Red Bull, NFX, and MIT Sports Lab.\n\nThe Format\n\nDoors open at 10:00 AM with coffee, snacks, and networking. From 10:30 to 12:00, Antonio Mele of the London School of Economics gives a guest lecture. Lunch runs 12:00\u201312:30, then builders kick off a 2-hour hackathon sprint (12:30\u20132:30). The afternoon closes with AI scoring (2:30\u20133:00), top-10 live presentations (3:00\u20133:30), judges' analysis (3:30\u20134:00), and winners announced at 4:00.\n\nThe Perks & Prizes\n\nGuaranteed bounty for selected participants: $50 in Cursor Credits and exclusive Red Bull merchandise.\nPrize pool: $1,200 total in cash and prizes for top projects.\n\nWhen & Where\n\nDate: Tuesday, May 26, 2026\nLocation: Cambridge, MA \u2014 Hult International (exact address shown on Luma after your registration is approved).\n\nHow to Secure Your Spot\n\nSelection prioritizes open-source contributors, profile completers on cursorboston.com, active Discord members, and early registrants. Luma approval is required. After Luma, claim your spot on cursorboston.com/hackathons/sports-hack-2026/signup so we can rank builders by merged PRs to the community repo and signup time.\n\nWe qualify participants rigorously. If selected people don't meet criteria or drop out, we pull aggressively from the waitlist.\n\nHosts\n\nRoger Hunt, Harry Chow, and Anusha Vissapragada.\n\nGet Involved\n\nDidn't make the seat list? Join the waitlist \u2014 drop-outs happen. Want to judge or partner instead? Contact the hosts on Luma.",
+      "description": "Full-day Speakers & Workshop at Hult International (with AIC + Hult) to launch Boston Tech Week. Guest lecture from Antonio Mele (London School of Economics), lunch, a 2-hour hackathon sprint, AI-powered scoring, top-10 live presentations, and judges' analysis. $1,200 cash + prizes; $50 Cursor Credits + Red Bull merch for selected participants. Tuesday May 26 in Cambridge \u2014 register on Luma; approval required.",
+      "longDescription": "Cursor Boston, AIC, and Hult International team up to launch Boston Tech Week with a full-day Speakers & Workshop \u2014 a guest lecture, lunch, a focused hackathon sprint, and live finalist pitches. We're merging two high-energy events (Hult speakers + AIC open-source workshop) into one morning sprint. Co-run with BeatM, Red Bull, NFX, and MIT Sports Lab.\n\nThe Format\n\nDoors open at 10:00 AM with coffee, snacks, and networking. From 10:30 to 12:00, Antonio Mele of the London School of Economics gives a guest lecture. Lunch runs 12:00\u201312:30, then builders kick off a 2-hour hackathon sprint (12:30\u20132:30). The afternoon closes with AI scoring (2:30\u20133:00), top-10 live presentations (3:00\u20133:30), judges' analysis (3:30\u20134:00), and winners announced at 4:00.\n\nThe Perks & Prizes\n\nGuaranteed bounty for selected participants: $50 in Cursor Credits and exclusive Red Bull merchandise.\nPrize pool: $1,200 total in cash and prizes for top projects.\n\nWhen & Where\n\nDate: Tuesday, May 26, 2026\nLocation: Cambridge, MA \u2014 Hult International (exact address shown on Luma after your registration is approved).\n\nHow to Secure Your Spot\n\nSelection prioritizes open-source contributors, profile completers on cursorboston.com, active Discord members, and early registrants. Luma approval is required. After Luma, claim your spot on cursorboston.com/hackathons/sports-hack-2026/signup so we can rank builders by merged PRs to the community repo and signup time.\n\nWe qualify participants rigorously. If selected people don't meet criteria or drop out, we pull aggressively from the waitlist.\n\nHosts\n\nRoger Hunt, Harry Chow, Anusha Vissapragada, and Ananya Shah.\n\nGet Involved\n\nDidn't make the seat list? Join the waitlist \u2014 drop-outs happen. Want to judge or partner instead? Contact the hosts on Luma.",
       "lumaCheckoutEventId": "evt-tTiu9jkwv4jVVxx",
       "lumaEmbedSrc": "https://luma.com/embed/event/evt-tTiu9jkwv4jVVxx/simple",
       "image": "/cursor-boston-logo.png",
@@ -215,101 +215,6 @@
           "company": "London School of Economics"
         }
       ]
-    },
-    {
-      "id": "cursor-boston-aic-open-source-workshop-2026",
-      "slug": "cursor-boston-aic-open-source-workshop-2026",
-      "title": "Cursor Boston/AIC BTW Open Source Workshop",
-      "subtitle": "Hands-on open source contributions with Cursor as your AI co-pilot \u2014 co-hosted with AIC",
-      "date": "2026-05-30",
-      "time": "12:00 PM \u2013 5:00 PM ET",
-      "location": "Boston, MA",
-      "venue": {
-        "name": "TBD (exact address after approval)",
-        "address": "Register on Luma to see the venue address after you're approved.",
-        "mapUrl": null
-      },
-      "type": "workshop",
-      "description": "Open Source Drop-In Workshop co-hosted by Cursor Boston and AIC. A hands-on half-day session with two tracks: contribute to the Cursor Boston repo (beginner-friendly) or tackle curated impactful open source projects using Cursor as your AI co-pilot. Walk away with merged PRs, Cursor credits, and practical open source skills. Saturday May 30 in Boston \u2014 register on Luma; approval required.",
-      "longDescription": "We're thrilled to announce the Open Source Drop-In Workshop, co-hosted by Cursor Boston and AIC (AI Community).\n\nThis is a hands-on half-day session designed to teach you how to contribute to real open source projects using Cursor as your AI co-pilot. Whether you've never opened a pull request or you're a seasoned contributor looking for high-impact projects, there's a track for you.\n\nTwo Tracks\n\nTrack A \u2014 Cursor Boston Repo (Beginner-Friendly): Learn the fundamentals of open source contribution by working directly on the Cursor Boston community repository. Mentors will guide you through forking, branching, making changes, and opening your first PR.\n\nTrack B \u2014 Curated Impactful Projects: For more experienced developers, we've hand-picked a set of impactful open source projects with beginner-friendly issues. Use Cursor's AI capabilities to understand unfamiliar codebases quickly and ship meaningful contributions.\n\nWhat You'll Walk Away With\n\nMerged pull requests on real open source projects, Cursor credits, and practical skills you can use immediately. This isn't a lecture \u2014 it's a working session where you'll ship real code.\n\nHosted by Roger Hunt, Ananya Shah, Janna, Kanal Patel, and Jason Morris.",
-      "lumaCheckoutEventId": "evt-2erXQCohWrtPWp9",
-      "lumaEmbedSrc": "https://luma.com/embed/event/evt-2erXQCohWrtPWp9/simple",
-      "image": "/cursor-boston-logo.png",
-      "lumaUrl": "https://luma.com/w4gvg7fl",
-      "lumaEventId": "w4gvg7fl",
-      "registrationRequired": true,
-      "perks": [
-        "Cursor credits for merged PRs",
-        "Merged PRs on real open source projects",
-        "Mentored contribution experience"
-      ],
-      "topics": [
-        "Open Source Contribution",
-        "AI-Assisted Coding with Cursor",
-        "Git & GitHub Workflows",
-        "Two Tracks (Beginner & Advanced)",
-        "Hands-On PR Workshops"
-      ],
-      "agenda": [
-        {
-          "time": "12:00 PM",
-          "title": "Doors Open & Setup",
-          "description": "Arrive, get settled, install Cursor if needed, and meet fellow contributors"
-        },
-        {
-          "time": "12:30 PM",
-          "title": "Welcome & Track Overview",
-          "description": "Introduction to open source contribution, overview of Track A (Cursor Boston repo) and Track B (curated projects), and how to pick your track"
-        },
-        {
-          "time": "1:00 PM \u2013 4:00 PM",
-          "title": "Hands-On Contribution Session",
-          "description": "Work on your chosen track with mentor support. Fork repos, pick issues, write code with Cursor as your AI co-pilot, and open pull requests"
-        },
-        {
-          "time": "4:00 PM \u2013 4:30 PM",
-          "title": "PR Review & Merging",
-          "description": "Get your pull requests reviewed and merged. Celebrate your contributions with the group"
-        },
-        {
-          "time": "4:30 PM \u2013 5:00 PM",
-          "title": "Wrap-Up & Networking",
-          "description": "Share what you built, exchange contacts, and connect with the Cursor Boston and AIC communities"
-        }
-      ],
-      "faq": [
-        {
-          "question": "Do I need open source experience?",
-          "answer": "Not at all! Track A is specifically designed for beginners who have never contributed to open source. Mentors will walk you through every step, from forking a repo to opening your first pull request."
-        },
-        {
-          "question": "What are the two tracks?",
-          "answer": "Track A focuses on contributing to the Cursor Boston community repository \u2014 perfect for beginners. Track B is for more experienced developers who want to contribute to curated, impactful open source projects. You can choose your track when you arrive."
-        },
-        {
-          "question": "What do I get for participating?",
-          "answer": "You'll walk away with merged pull requests on real open source projects, Cursor credits, and practical skills for contributing to open source using AI-powered tools."
-        },
-        {
-          "question": "Where is the venue?",
-          "answer": "The venue is TBD. The exact address will appear on Luma after your registration is approved."
-        },
-        {
-          "question": "Will food be provided?",
-          "answer": "Details on food and refreshments will be announced closer to the event date. Check the Luma page for updates."
-        },
-        {
-          "question": "Who is hosting this event?",
-          "answer": "This event is co-hosted by Cursor Boston and AIC (AI Community). Hosts include Roger Hunt, Ananya Shah, Janna, Kanal Patel, and Jason Morris."
-        }
-      ],
-      "whatToBring": [
-        "Laptop with Cursor installed",
-        "GitHub account (signed in and ready)",
-        "Charger",
-        "A willingness to contribute to open source"
-      ],
-      "featured": false
     }
   ],
   "past": [

@@ -12,7 +12,7 @@ import {
 
 export const metadata: Metadata = {
   title: `${SPORTS_HACK_2026_NAME} — Cursor Boston`,
-  description: `Boston Tech Week Speakers & Workshop at Hult International — Tuesday May 26, 2026, 10:00 AM – 4:00 PM ET, ${SPORTS_HACK_2026_LOCATION}. Guest lecture from Antonio Mele (LSE), lunch, two-hour hackathon sprint, and live pitches from Cursor Boston.`,
+  description: `Boston Tech Week Speakers & Workshop at Hult International — Tuesday May 26, 2026, 10:00 AM – 4:00 PM ET, ${SPORTS_HACK_2026_LOCATION}. Guest lecture from Antonio Mele (LSE), lunch, two-hour hackathon sprint, and live pitches from Cursor Boston and AIC.`,
 };
 
 export default function SportsHack2026Layout({

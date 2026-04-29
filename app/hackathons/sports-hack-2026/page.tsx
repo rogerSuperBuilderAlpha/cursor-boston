@@ -88,7 +88,7 @@ export default function SportsHack2026LandingPage() {
               {SPORTS_HACK_2026_NAME}
             </h1>
             <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400">
-              A full-day Speakers & Workshop at Hult International with Cursor Boston — coffee
+              A full-day Speakers & Workshop at Hult International with Cursor Boston and AIC — coffee
               and networking, a guest lecture from Antonio Mele (London School of Economics),
               lunch, a two-hour hackathon sprint, AI-powered scoring, top-10 live pitches, and
               judges&apos; analysis. Tuesday May 26, 10:00 AM – 4:00 PM ET, {SPORTS_HACK_2026_LOCATION}.
