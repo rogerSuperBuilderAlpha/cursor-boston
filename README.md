@@ -124,31 +124,6 @@ Each feature is **fully isolated** — new routes, new Firestore collections, no
 
 ---
 
-## 🤝 Choosing Your First Issue
-
-If you're new to the repo, pick an issue that matches the time you actually have:
-
-- **XS**: 15-45 minutes. Small docs or copy fixes.
-- **S**: 45-120 minutes. Focused UI fixes, accessibility work, or small tests.
-- **M**: Half day. Moderate multi-file fixes.
-- **L**: Multi-day feature or refactor work.
-
-For contribution events like Sports Hack, prefer **XS** or **S** issues so you can finish in under two hours and still have time to test and open a PR.
-
-For contribution-driven events, completed PRs help demonstrate interest and readiness. More meaningful contributions can improve your chances of being selected, but selection still depends on maintainer review and event capacity.
-
-To claim an issue, leave a comment first:
-
-> "I'll work on this."
-
-Start here:
-
-- [All open issues](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues)
-- [Good first issues](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
-- [First contribution guide](docs/FIRST_CONTRIBUTION.md)
-
----
-
 ## 📚 Community
 - [Documentation index](docs/README.md) - Order of docs for newcomers vs maintainers
 - [Get Started (No Experience Needed)](docs/GET_STARTED.md) - Plain-language guide for complete beginners
