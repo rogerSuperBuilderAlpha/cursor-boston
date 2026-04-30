@@ -11,11 +11,26 @@ test.describe('Sidebar navigation', () => {
   test('navigates to key pages via sidebar links', async ({ page }) => {
     await page.goto('/');
 
-    const welcomeDialog = page.getByRole('dialog');
-    if (await welcomeDialog.isVisible({ timeout: 3_000 }).catch(() => false)) {
-      await welcomeDialog.getByRole('button').first().click();
-      await expect(welcomeDialog).toBeHidden();
+    // Dismiss any auto-opening dialogs (Welcome modal, Summer Cohort modal, etc.).
+    // When multiple dialogs render concurrently, later ones stack on top — close
+    // the topmost (last) first so its backdrop doesn't intercept our click.
+    // Locators re-resolve on each call, so assert by count decreasing rather
+    // than checking a specific dialog handle.
+    const dialogs = page.getByRole('dialog');
+    for (let i = 0; i < 5; i++) {
+      const before = await dialogs.count();
+      if (before === 0) break;
+      const top = dialogs.last();
+      if (!(await top.isVisible({ timeout: 1_000 }).catch(() => false))) break;
+      const closeBtn = top.getByRole('button', { name: /close/i }).first();
+      if (await closeBtn.isVisible({ timeout: 1_000 }).catch(() => false)) {
+        await closeBtn.click();
+      } else {
+        await top.getByRole('button').first().click();
+      }
+      await expect.poll(() => dialogs.count(), { timeout: 5_000 }).toBeLessThan(before);
     }
+    await expect(dialogs).toHaveCount(0);
 
     const sidebar = page.locator('aside[aria-label="Site navigation"]');
 

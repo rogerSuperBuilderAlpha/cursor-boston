@@ -65,3 +65,72 @@ export interface SummerCohortApplication {
 export function isValidCohortId(value: unknown): value is SummerCohortId {
   return value === "cohort-1" || value === "cohort-2";
 }
+
+export interface SummerCohortWeek {
+  week: number;
+  title: string;
+  description: string;
+  winnerCert?: string;
+}
+
+export const SUMMER_COHORT_WEEKS: readonly SummerCohortWeek[] = [
+  {
+    week: 1,
+    title: "Project management tool",
+    description:
+      "Everyone builds a PM tool. The cohort reviews each other's work and votes for a winner. The winner maintains the cohort PM platform through the rest of the program and uses it to keep engagement and support flowing.",
+    winnerCert: "PM Winner",
+  },
+  {
+    week: 2,
+    title: "Communications platform",
+    description:
+      "Everyone builds a comms platform for the cohort. Same vote-and-pick-a-winner format. The winner maintains the platform through the rest of the cohort.",
+    winnerCert: "Comms Winner",
+  },
+  {
+    week: 3,
+    title: "Marketing platform",
+    description:
+      "Everyone builds a marketing platform — for example a website to promote the cohort and everyone's work. Same voting format; winner maintains it.",
+    winnerCert: "Marketing Winner",
+  },
+  {
+    week: 4,
+    title: "Education tool — merged to Ludwitt",
+    description:
+      "Everyone builds an education tool that gets merged into Ludwitt. As users consume credits via your tool, you earn a revenue share — every shipped tool earns its author fees.",
+  },
+  {
+    week: 5,
+    title: "Your own startup",
+    description:
+      "Build whatever you want — your own startup project for the week.",
+  },
+  {
+    week: 6,
+    title: "Open-source PR merge",
+    description:
+      "Pick a hugely popular open-source project of your choice and land a merged PR.",
+  },
+] as const;
+
+export const SUMMER_COHORT_MEETING_CADENCE =
+  "Twice-weekly Zoom for demos and Q&A.";
+
+export const SUMMER_COHORT_IMMERSION = {
+  date: "2026-05-26",
+  label: "Mon, May 26",
+  title: "Hult / Cursor Boston immersion event",
+  description:
+    "All cohort participants get a spot in the 80-person cap. Includes Cursor credits and the chance to win more at the hackathon.",
+} as const;
+
+export const SUMMER_COHORT_DEMO_DAY = {
+  title: "Final demo day with hiring partners",
+  description:
+    "Participants demo. Hiring partners share what their companies need and surface specific opportunities to apply to. No placement guarantees — placement depends on what the cohort builds and the partners' interest.",
+} as const;
+
+export const SUMMER_COHORT_PHILOSOPHY =
+  "The cohort succeeds or fails as a cohort. Goal: every participant lands a job offer. The tools each cohort builds are how they market themselves to hiring partners and the world.";
