@@ -173,6 +173,37 @@ async function handlePost(request: NextRequest) {
   }
 }
 
+async function handleDelete(request: NextRequest) {
+  const user = await getVerifiedUser(request);
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const db = getAdminDb();
+  if (!db) {
+    return NextResponse.json({ error: "Server not configured" }, { status: 500 });
+  }
+
+  try {
+    const ref = db.collection(SUMMER_COHORT_COLLECTION).doc(user.uid);
+    const existing = await ref.get();
+    if (!existing.exists) {
+      return NextResponse.json({ withdrawn: false });
+    }
+    await ref.delete();
+    return NextResponse.json({ withdrawn: true });
+  } catch (error) {
+    logger.logError(error, {
+      endpoint: "/api/summer-cohort/apply",
+      method: "DELETE",
+    });
+    return NextResponse.json(
+      { error: "Failed to withdraw application" },
+      { status: 500 }
+    );
+  }
+}
+
 interface ApplicantRow {
   name: string;
   email: string;
@@ -316,3 +347,4 @@ async function sendNewApplicationEmail(
 
 export const GET = withMiddleware(rateLimitConfigs.standard, handleGet);
 export const POST = withMiddleware(rateLimitConfigs.standard, handlePost);
+export const DELETE = withMiddleware(rateLimitConfigs.standard, handleDelete);

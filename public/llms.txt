@@ -67,6 +67,7 @@ Licensed GPL-3.0-only.
     /questions/ask
     /showcase
     /signup
+    /summer-cohort
     /talks
     /talks/submit
     /terms

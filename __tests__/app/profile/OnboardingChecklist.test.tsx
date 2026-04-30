@@ -108,6 +108,19 @@ describe("OnboardingChecklist", () => {
     expect(mockContextValue.github.connect).toHaveBeenCalled();
   });
 
+  it("calls onWriteBio when Write a short bio is clicked", async () => {
+    const user = userEvent.setup();
+    const onWriteBio = jest.fn();
+    render(<OnboardingChecklist onWriteBio={onWriteBio} />);
+
+    const bioButton = screen.getByText("Write a short bio").closest("button");
+    expect(bioButton).toBeInTheDocument();
+    expect(bioButton).toHaveTextContent("Open");
+
+    await user.click(bioButton!);
+    expect(onWriteBio).toHaveBeenCalled();
+  });
+
   it("shows connected status for GitHub when linked", () => {
     mockContextValue = makeContext({
       github: { githubInfo: { login: "octocat" }, connect: jest.fn() } as unknown as ProfileContextValue["github"],
