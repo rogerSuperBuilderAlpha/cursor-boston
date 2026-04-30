@@ -61,6 +61,128 @@ function CohortDatesList() {
   );
 }
 
+function scrollToConnections() {
+  const el = document.getElementById("connections-heading");
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+interface StatusPanelProps {
+  application: ApplicationDto;
+  cohortLabel: (id: SummerCohortId) => string;
+  withdrawing: boolean;
+  withdrawError: string | null;
+  onWithdraw: () => void;
+  needsDiscord: boolean;
+}
+
+function ApplicationStatusPanel({
+  application,
+  cohortLabel,
+  withdrawing,
+  withdrawError,
+  onWithdraw,
+  needsDiscord,
+}: StatusPanelProps) {
+  const status = application.status;
+  const cohortText = application.cohorts.map(cohortLabel).join(" and ");
+
+  const tone =
+    status === "admitted"
+      ? {
+          panel:
+            "rounded-xl border border-emerald-400 bg-emerald-50 p-6 dark:border-emerald-700 dark:bg-emerald-950/40",
+          badge: "bg-emerald-500 text-white",
+          divider: "border-emerald-200 dark:border-emerald-900",
+          label: "Status: Admitted",
+          headline: `You're in! Welcome to ${cohortText || "the cohort"}.`,
+          body:
+            "Watch for a separate email with the Zoom kickoff link. Until then, get ready by skimming the program breakdown below.",
+        }
+      : status === "waitlist"
+        ? {
+            panel:
+              "rounded-xl border border-amber-300 bg-amber-50 p-6 dark:border-amber-800 dark:bg-amber-950/30",
+            badge: "bg-amber-500 text-white",
+            divider: "border-amber-200 dark:border-amber-900",
+            label: "Status: Waitlist",
+            headline: `You're on the waitlist for ${cohortText || "the cohort"}.`,
+            body:
+              "We'll let you know by email if a spot opens up. In the meantime, the program breakdown below is what you'd be joining.",
+          }
+        : status === "rejected"
+          ? {
+              panel:
+                "rounded-xl border border-neutral-300 bg-neutral-50 p-6 dark:border-neutral-700 dark:bg-neutral-900/60",
+              badge: "bg-neutral-500 text-white",
+              divider: "border-neutral-200 dark:border-neutral-800",
+              label: "Status: Not selected",
+              headline: "We weren't able to fit you into this cohort round.",
+              body: "Thanks for applying — we'd love for you to apply to a future cohort.",
+            }
+          : {
+              panel:
+                "rounded-xl border border-emerald-300 bg-emerald-50 p-6 dark:border-emerald-900 dark:bg-emerald-950/30",
+              badge: "bg-emerald-500 text-white",
+              divider: "border-emerald-200 dark:border-emerald-900",
+              label: "Status: Pending",
+              headline: `We received your application for ${cohortText || "the cohort"}.`,
+              body: "We'll review and follow up by email. " + KICKOFF_NOTE,
+            };
+
+  const showDiscordCallout = status === "admitted" && needsDiscord;
+
+  return (
+    <section className={tone.panel}>
+      <div className="flex items-center gap-3">
+        <span
+          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider ${tone.badge}`}
+        >
+          {tone.label}
+        </span>
+      </div>
+      <p className="mt-3 text-sm font-semibold text-neutral-800 dark:text-neutral-100">
+        {tone.headline}
+      </p>
+      <p className="mt-2 text-sm text-neutral-700 dark:text-neutral-300">
+        {tone.body}
+      </p>
+
+      {showDiscordCallout ? (
+        <div className="mt-4 rounded-lg border-l-4 border-amber-500 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-400 dark:bg-amber-950/40 dark:text-amber-200">
+          <strong>Action needed:</strong> connect your Discord below so we can
+          add you to the cohort channel.{" "}
+          <button
+            type="button"
+            onClick={scrollToConnections}
+            className="underline decoration-amber-700/60 underline-offset-2 hover:decoration-amber-700 dark:decoration-amber-300/60"
+          >
+            Jump to connections
+          </button>
+          .
+        </div>
+      ) : null}
+
+      <div
+        className={`mt-4 flex flex-wrap items-center gap-3 border-t pt-4 ${tone.divider}`}
+      >
+        <button
+          type="button"
+          onClick={onWithdraw}
+          disabled={withdrawing}
+          className="inline-flex items-center gap-2 rounded-lg border border-red-300 bg-white px-3 py-2 text-xs font-semibold text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50 dark:border-red-900 dark:bg-transparent dark:text-red-400 dark:hover:bg-red-950/30"
+        >
+          {withdrawing ? "Withdrawing…" : "Withdraw application"}
+        </button>
+        {withdrawError ? (
+          <span className="text-xs text-red-600 dark:text-red-400">
+            {withdrawError}
+          </span>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
 function SummerCohortPageInner() {
   const searchParams = useSearchParams();
   const { user, userProfile, loading, refreshUserProfile } = useAuth();
@@ -314,38 +436,14 @@ function SummerCohortPageInner() {
         </div>
       ) : application ? (
         <>
-          <section className="rounded-xl border border-emerald-300 bg-emerald-50 p-6 dark:border-emerald-900 dark:bg-emerald-950/30">
-            <div className="flex items-center gap-3">
-              <span className="inline-flex items-center rounded-full bg-emerald-500 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white">
-                Status: Pending
-              </span>
-            </div>
-            <p className="mt-3 text-sm text-neutral-700 dark:text-neutral-300">
-              We received your application for{" "}
-              <strong>
-                {application.cohorts.map(cohortLabel).join(" and ")}
-              </strong>
-              . We&apos;ll review and follow up by email.
-            </p>
-            <p className="mt-2 text-sm text-neutral-700 dark:text-neutral-300">
-              {KICKOFF_NOTE}
-            </p>
-            <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-emerald-200 pt-4 dark:border-emerald-900">
-              <button
-                type="button"
-                onClick={withdraw}
-                disabled={withdrawing}
-                className="inline-flex items-center gap-2 rounded-lg border border-red-300 bg-white px-3 py-2 text-xs font-semibold text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50 dark:border-red-900 dark:bg-transparent dark:text-red-400 dark:hover:bg-red-950/30"
-              >
-                {withdrawing ? "Withdrawing…" : "Withdraw application"}
-              </button>
-              {withdrawError ? (
-                <span className="text-xs text-red-600 dark:text-red-400">
-                  {withdrawError}
-                </span>
-              ) : null}
-            </div>
-          </section>
+          <ApplicationStatusPanel
+            application={application}
+            cohortLabel={cohortLabel}
+            withdrawing={withdrawing}
+            withdrawError={withdrawError}
+            onWithdraw={withdraw}
+            needsDiscord={!discord.discordInfo}
+          />
           <CohortProgramBreakdown />
         </>
       ) : (
