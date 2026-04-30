@@ -12,11 +12,38 @@ Browse open issues and pick one tagged `good first issue`:
 
 **[View good first issues](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)**
 
+### Issue Selection Guide
+
+If you're contributing during a busy event such as Sports Hack, choose an issue you can realistically finish in one sitting.
+
+Use this sizing guide:
+
+- **XS**: 15-45 minutes. Typos, copy edits, tiny documentation fixes, labels.
+- **S**: 45-120 minutes. Small UI polish, focused accessibility fixes, one-file tests, small bug fixes.
+- **M**: Half day. Multi-file bug fixes or moderate feature work.
+- **L**: Multi-day work. Larger refactors or feature work that usually needs follow-up review.
+
+For hackathon-style contribution events, prefer **XS** or **S** issues so you can finish, verify, and open a PR in under two hours.
+
+Why this matters: for contribution-driven events, completed PRs help demonstrate interest, follow-through, and readiness to participate. More meaningful contributions can improve your chances of being selected, but selection still depends on maintainer review and event capacity.
+
+Useful links:
+
+- **[All open issues](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues)**
+- **[Good first issues](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)**
+- **[Feature projects](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues?q=is%3Aissue+is%3Aopen+%2383+OR+%2382+OR+%2381+OR+%2380+OR+%2379+OR+%2378)**
+
 Comment on the issue to let others know you're working on it:
 
-> "I'd like to work on this!"
+> "I'll work on this."
 
 If an issue is already claimed, pick another one or ask in [Discord](https://discord.gg/Wsncg8YYqc) for suggestions.
+
+Before you start coding, check:
+
+- whether someone is already assigned
+- whether a recent comment suggests active work is already in progress
+- whether the scope matches the time you actually have available
 
 ---
 
