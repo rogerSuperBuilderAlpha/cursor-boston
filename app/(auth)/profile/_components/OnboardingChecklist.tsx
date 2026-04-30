@@ -13,11 +13,16 @@ interface ChecklistItem {
   label: string;
   done: boolean;
   action?: () => void;
+  actionLabel?: string;
   href?: string;
   description: string;
 }
 
-export function OnboardingChecklist() {
+interface OnboardingChecklistProps {
+  onWriteBio?: () => void;
+}
+
+export function OnboardingChecklist({ onWriteBio }: OnboardingChecklistProps) {
   const {
     user,
     userProfile,
@@ -41,6 +46,8 @@ export function OnboardingChecklist() {
     {
       label: "Write a short bio",
       done: Boolean(userProfile?.bio?.trim()),
+      action: userProfile?.bio?.trim() ? undefined : onWriteBio,
+      actionLabel: "Open",
       description: "Tell people what you're building",
     },
     {
@@ -135,7 +142,7 @@ export function OnboardingChecklist() {
 
               {!item.done && (item.action || item.href) && (
                 <span className="shrink-0 text-xs text-emerald-400 font-medium mt-0.5">
-                  {item.href ? "Open" : "Connect"} &rarr;
+                  {item.actionLabel ?? (item.href ? "Open" : "Connect")} &rarr;
                 </span>
               )}
             </div>

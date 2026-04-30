@@ -6,7 +6,7 @@
 
 "use client";
 
-import { useEffect, Suspense, useState } from "react";
+import { useEffect, Suspense, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -45,6 +45,17 @@ function ProfilePageContent() {
   const initialSection = searchParams.get("section");
   const [settingsOpen, setSettingsOpen] = useState(initialSection === "settings");
   const [securityOpen, setSecurityOpen] = useState(initialSection === "security");
+  const settingsSectionRef = useRef<HTMLDivElement>(null);
+
+  const openProfileSettings = () => {
+    setSettingsOpen(true);
+    window.requestAnimationFrame(() => {
+      settingsSectionRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  };
 
   // Google reconnection reset
   useEffect(() => {
@@ -72,16 +83,18 @@ function ProfilePageContent() {
     <div className="min-h-[80vh] px-6 py-8 md:py-12">
       <div className="max-w-3xl mx-auto">
         <ProfileHeader onEditProfile={() => setIsEditModalOpen(true)} />
-        <OnboardingChecklist />
+        <OnboardingChecklist onWriteBio={openProfileSettings} />
         <ConnectionsSection />
         <StatsGrid />
         <EarnedBadgesSection />
         <ActivitySection />
 
         {/* Settings — collapsible */}
-        <div className="mb-8">
+        <div id="profile-settings" ref={settingsSectionRef} className="mb-8 scroll-mt-8">
           <button
             onClick={() => setSettingsOpen(!settingsOpen)}
+            aria-expanded={settingsOpen}
+            aria-controls="profile-settings-panel"
             className="w-full flex items-center justify-between text-sm font-semibold text-neutral-400 uppercase tracking-wider mb-3 hover:text-neutral-300 transition-colors"
           >
             <span>Profile Settings</span>
@@ -93,15 +106,17 @@ function ProfilePageContent() {
             </svg>
           </button>
           {settingsOpen && (
-            <SettingsTab
-              settings={profileSettings.settings}
-              setSettings={profileSettings.setSettings}
-              saving={profileSettings.saving}
-              error={profileSettings.error}
-              success={profileSettings.success}
-              onSave={profileSettings.save}
-              onToggleAllVisibility={profileSettings.toggleAllVisibility}
-            />
+            <div id="profile-settings-panel">
+              <SettingsTab
+                settings={profileSettings.settings}
+                setSettings={profileSettings.setSettings}
+                saving={profileSettings.saving}
+                error={profileSettings.error}
+                success={profileSettings.success}
+                onSave={profileSettings.save}
+                onToggleAllVisibility={profileSettings.toggleAllVisibility}
+              />
+            </div>
           )}
         </div>
 
