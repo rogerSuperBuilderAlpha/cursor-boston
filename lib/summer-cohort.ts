@@ -8,6 +8,7 @@ import type { Timestamp } from "firebase/firestore";
 
 export const SUMMER_COHORT_SITE_ID = "cursor-boston";
 export const SUMMER_COHORT_COLLECTION = "summerCohortApplications";
+export const SUMMER_COHORT_NOTIFY_EMAIL = "roger@cursorboston.com";
 export const SUMMER_COHORT_LOCALSTORAGE_KEY =
   "cursor-boston-summer-cohort-modal-shown-date";
 export const SUMMER_COHORT_RETURN_TO = "/summer-cohort";
