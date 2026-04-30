@@ -6,7 +6,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createAgent, getVerifiedAgent } from "@/lib/agents";
-import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { getClientIdentifier } from "@/lib/rate-limit";
+import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 import { parseRequestBody } from "@/lib/api-response";
 
 export async function POST(request: NextRequest) {
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
 
     // Rate limit: 10 registrations per hour per IP
     const clientId = getClientIdentifier(request);
-    const rateLimitResult = checkRateLimit(`agent-register:${clientId}`, {
+    const rateLimitResult = await checkUpstashRateLimit(`agent-register:${clientId}`, {
       windowMs: 60 * 60 * 1000, // 1 hour
       maxRequests: 10,
     });

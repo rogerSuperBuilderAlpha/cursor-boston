@@ -90,6 +90,35 @@ interface Event {
 
 const typedEvents = eventsData as unknown as EventsData;
 
+/**
+ * Events that also require a separate registration on cursorboston.com
+ * (beyond the Luma RSVP) get the dual-registration UI: stronger website CTA,
+ * a 3-step "how to participate" strip, and a final CTA emphasizing both.
+ *
+ * Keyed by events.json slug (not the internal hackathon event id).
+ */
+const WEBSITE_REGISTRATION_CONFIG: Record<
+  string,
+  {
+    signupHref: string;
+    instructionsHref?: string;
+    /** Copy for the "Step 3 — climb the leaderboard" tile. */
+    leaderboardRewardCopy: string;
+  }
+> = {
+  "cursor-boston-hack-a-sprint-2026": {
+    signupHref: "/hackathons/hack-a-sprint-2026/signup",
+    instructionsHref: "/hackathons/hack-a-sprint-2026/instructions",
+    leaderboardRewardCopy:
+      "Merge PRs to the cursor-boston repo before the event to climb the rankings. Top 50 are eligible for $50 Cursor credit.",
+  },
+  "cursor-boston-sports-hack-2026": {
+    signupHref: "/hackathons/sports-hack-2026/signup",
+    leaderboardRewardCopy:
+      "Merge PRs to the cursor-boston repo before the event to climb the rankings. Top 80 get a confirmed seat; selected participants also receive $50 Cursor credit and Red Bull merch.",
+  },
+};
+
 // Get all events (upcoming + past + archived) for static generation
 function getAllEvents(): Event[] {
   return [
@@ -166,6 +195,8 @@ export default async function EventPage({
   if (!event) {
     notFound();
   }
+
+  const websiteRegistration = WEBSITE_REGISTRATION_CONFIG[event.slug];
 
   // Generate JSON-LD structured data
   const eventJsonLd = {
@@ -335,10 +366,10 @@ export default async function EventPage({
             </div>
 
             {/* CTA Buttons */}
-            {event.slug === "cursor-boston-hack-a-sprint-2026" ? (
+            {websiteRegistration ? (
               <div className="flex flex-col gap-4">
                 <Link
-                  href="/hackathons/hack-a-sprint-2026/signup"
+                  href={websiteRegistration.signupHref}
                   className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-emerald-500 text-white rounded-lg text-base font-semibold hover:bg-emerald-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black w-full sm:w-auto"
                 >
                   Register for the Hackathon
@@ -356,15 +387,17 @@ export default async function EventPage({
                     RSVP on Luma (for event entry)
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 17l9.2-9.2M17 17V7H7" /></svg>
                   </a>
-                  <Link
-                    href="/hackathons/hack-a-sprint-2026/instructions"
-                    className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/20 text-white/80 rounded-lg text-sm font-medium hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black w-full sm:w-auto"
-                  >
-                    Pre-event instructions
-                  </Link>
+                  {websiteRegistration.instructionsHref ? (
+                    <Link
+                      href={websiteRegistration.instructionsHref}
+                      className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/20 text-white/80 rounded-lg text-sm font-medium hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black w-full sm:w-auto"
+                    >
+                      Pre-event instructions
+                    </Link>
+                  ) : null}
                 </div>
-                <p className="text-sm text-neutral-500 mt-1">
-                  You need both: Luma RSVP for door entry + website registration for hackathon ranking &amp; prizes.
+                <p className="text-sm text-amber-600 dark:text-amber-400 mt-1 font-medium">
+                  You must register on <strong>both</strong>: Luma (for door entry) <strong>and</strong> the website (for hackathon ranking &amp; prizes). One without the other won&apos;t get you in.
                 </p>
               </div>
             ) : (
@@ -386,20 +419,23 @@ export default async function EventPage({
         </div>
       </section>
 
-      {/* How to Participate — hack-a-sprint only */}
-      {event.slug === "cursor-boston-hack-a-sprint-2026" && (
+      {/* How to Participate — events requiring both Luma + website registration */}
+      {websiteRegistration && (
         <section className="py-12 px-6 bg-emerald-500/5 border-b border-emerald-500/20">
           <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
               How to participate
             </h2>
+            <p className="text-neutral-700 dark:text-neutral-300 mb-2 font-medium">
+              Two required registrations. If you only do one, you won&apos;t be on the list.
+            </p>
             <p className="text-neutral-500 dark:text-neutral-400 mb-8">
-              Two quick registrations, then you&apos;re in.
+              Luma handles door entry. The website handles your hackathon ranking and prize eligibility. You need both.
             </p>
             <div className="grid sm:grid-cols-3 gap-6">
-            <div className="relative p-6 bg-neutral-100 dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800">
+              <div className="relative p-6 bg-neutral-100 dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800">
                 <span className="absolute -top-3 left-4 px-2 py-0.5 bg-emerald-500 text-white text-xs font-bold rounded-full">
-                  Step 1
+                  Step 1 · Required
                 </span>
                 <h3 className="text-foreground font-semibold mt-2 mb-2">RSVP on Luma</h3>
                 <p className="text-neutral-500 dark:text-neutral-400 text-sm mb-4">
@@ -419,14 +455,14 @@ export default async function EventPage({
               </div>
               <div className="relative p-6 bg-neutral-100 dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800">
                 <span className="absolute -top-3 left-4 px-2 py-0.5 bg-emerald-500 text-white text-xs font-bold rounded-full">
-                  Step 2
+                  Step 2 · Required
                 </span>
                 <h3 className="text-foreground font-semibold mt-2 mb-2">Register on the website</h3>
                 <p className="text-neutral-500 dark:text-neutral-400 text-sm mb-4">
                   Sign up here to join the hackathon leaderboard. Requires a Cursor Boston account with GitHub &amp; Discord connected.
                 </p>
                 <Link
-                  href="/hackathons/hack-a-sprint-2026/signup"
+                  href={websiteRegistration.signupHref}
                   className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-500 hover:text-emerald-400 transition-colors"
                 >
                   Go to website signup
@@ -434,12 +470,12 @@ export default async function EventPage({
                 </Link>
               </div>
               <div className="relative p-6 bg-neutral-100 dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800">
-              <span className="absolute -top-3 left-4 px-2 py-0.5 bg-emerald-500 text-white text-xs font-bold rounded-full">
+                <span className="absolute -top-3 left-4 px-2 py-0.5 bg-emerald-500 text-white text-xs font-bold rounded-full">
                   Step 3
                 </span>
                 <h3 className="text-foreground font-semibold mt-2 mb-2">Climb the leaderboard</h3>
                 <p className="text-neutral-500 dark:text-neutral-400 text-sm mb-4">
-                  Merge PRs to the cursor-boston repo before the event to climb the rankings. Top 50 are eligible for $50 Cursor credit.
+                  {websiteRegistration.leaderboardRewardCopy}
                 </p>
                 <a
                   href="https://github.com/rogerSuperBuilderAlpha/cursor-boston"
@@ -742,20 +778,23 @@ export default async function EventPage({
       {/* Final CTA */}
       <section className="py-20 px-6">
         <div className="max-w-3xl mx-auto text-center">
-          {event.slug === "cursor-boston-hack-a-sprint-2026" ? (
+          {websiteRegistration ? (
             <>
               <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-white mb-4">
                 Ready to compete?
               </h2>
-              <p className="text-neutral-600 dark:text-neutral-400 text-lg mb-8">
+              <p className="text-neutral-600 dark:text-neutral-400 text-lg mb-2">
                 Register on the website to lock in your leaderboard spot, then RSVP on Luma so you can get through the door.
+              </p>
+              <p className="text-amber-600 dark:text-amber-400 text-sm font-medium mb-8">
+                Both are required. One without the other won&apos;t get you in.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link
-                  href="/hackathons/hack-a-sprint-2026/signup"
+                  href={websiteRegistration.signupHref}
                   className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-emerald-500 text-white rounded-lg text-lg font-semibold hover:bg-emerald-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                 >
-                  Register for the Hackathon
+                  Register on the website
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
                 </Link>
                 <a

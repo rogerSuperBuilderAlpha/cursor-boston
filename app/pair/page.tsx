@@ -21,6 +21,7 @@ import { getPairProfile, getAllActiveProfiles } from "@/lib/pair-programming/dat
 import { getTopMatches } from "@/lib/pair-programming/matching";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { NeedsWorkBanner } from "@/components/NeedsWorkBanner";
 
 interface PublicUser {
   uid: string;
@@ -210,6 +211,10 @@ export default function PairProgrammingPage() {
   return (
     <div className="min-h-screen py-12 px-6">
       <div className="max-w-6xl mx-auto">
+        <NeedsWorkBanner
+          area="Pair Programming"
+          description="Profile + matching work end-to-end but discovery is quiet. Help by improving match quality, adding session reminders, or building a post-session feedback loop."
+        />
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold mb-2">Pair Programming Matchmaker</h1>

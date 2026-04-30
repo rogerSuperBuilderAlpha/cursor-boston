@@ -16,6 +16,10 @@ jest.mock("@/lib/rate-limit", () => {
   };
 });
 
+jest.mock("@/lib/upstash-rate-limit", () => ({
+  checkUpstashRateLimit: jest.fn(async () => ({ success: true, remaining: 9, resetTime: Date.now() + 60000 })),
+}));
+
 jest.mock("@/lib/server-auth", () => ({
   getVerifiedUser: jest.fn(),
   getOptionalVerifiedUser: jest.fn(),
@@ -162,6 +166,77 @@ describe("GET /api/hackathons/events/[eventId]/signup", () => {
     expect(json.me).toBeDefined();
     expect(json.me.signedUp).toBe(true);
     expect(json.me.rank).toBe(1);
+  });
+
+  it("tags website signups with lumaRegistered based on email/GitHub match against hackathonLumaRegistrants", async () => {
+    mockGetOptionalVerifiedUser.mockResolvedValue(null);
+
+    // Two website signups + three Luma rows:
+    //   - alice: email match → lumaRegistered=true
+    //   - bob:   no email match but github login match → lumaRegistered=true
+    //   - carol: no match in Luma → lumaRegistered=false
+    //   - dave:  Luma-only (no website signup) → appears as userId=null row with lumaRegistered=true
+    const aliceId = "alice-uid";
+    const bobId = "bob-uid";
+    const carolId = "carol-uid";
+    const signupDocs = [
+      { id: `${VALID_EVENT_ID}__${aliceId}`, data: () => ({ userId: aliceId, eventId: VALID_EVENT_ID, signedUpAt: new Date("2026-04-20") }) },
+      { id: `${VALID_EVENT_ID}__${bobId}`, data: () => ({ userId: bobId, eventId: VALID_EVENT_ID, signedUpAt: new Date("2026-04-21") }) },
+      { id: `${VALID_EVENT_ID}__${carolId}`, data: () => ({ userId: carolId, eventId: VALID_EVENT_ID, signedUpAt: new Date("2026-04-22") }) },
+    ];
+    const userDocs = [
+      { exists: true, id: aliceId, data: () => ({ displayName: "Alice", email: "alice@example.com", github: { login: "alice-gh" } }) },
+      { exists: true, id: bobId, data: () => ({ displayName: "Bob", email: "bob-website@example.com", github: { login: "bob-gh" } }) },
+      { exists: true, id: carolId, data: () => ({ displayName: "Carol", email: "carol@example.com", github: { login: "carol-gh" } }) },
+    ];
+    const lumaDocs = [
+      { id: "l1", data: () => ({ eventId: VALID_EVENT_ID, email: "alice@example.com", name: "Alice", lumaCreatedAt: "2026-04-10T00:00:00Z" }) },
+      { id: "l2", data: () => ({ eventId: VALID_EVENT_ID, email: "bob-luma@example.com", githubLogin: "bob-gh", name: "Bob", lumaCreatedAt: "2026-04-11T00:00:00Z" }) },
+      { id: "l3", data: () => ({ eventId: VALID_EVENT_ID, email: "dave@example.com", name: "Dave (luma only)", lumaCreatedAt: "2026-04-12T00:00:00Z" }) },
+    ];
+
+    const signupsCol = makeMockCollection(signupDocs);
+    const lumaCol = makeMockCollection(lumaDocs);
+    const prCol = makeMockCollection([]);
+
+    mockGetAdminDb.mockReturnValue({
+      collection: jest.fn((name: string) => {
+        if (name === "hackathonEventSignups") return signupsCol;
+        if (name === "hackathonLumaRegistrants") return lumaCol;
+        if (name === "pullRequests") return prCol;
+        if (name === "users") return { doc: jest.fn() };
+        return makeMockCollection();
+      }),
+      getAll: jest.fn(async () => userDocs),
+    } as never);
+
+    const req = makeRequest("GET");
+    const res = await GET(req, makeContext(VALID_EVENT_ID));
+    expect(res.status).toBe(200);
+    const json = await res.json();
+
+    const byName: Record<string, { lumaRegistered: boolean; userId: string | null }> = {};
+    for (const e of json.entries) byName[e.displayName] = { lumaRegistered: e.lumaRegistered, userId: e.userId };
+
+    // Alice: website signup with email that matches a Luma row
+    expect(byName["Alice"]).toBeDefined();
+    expect(byName["Alice"].lumaRegistered).toBe(true);
+    expect(byName["Alice"].userId).toBe(aliceId);
+
+    // Bob: website email differs from Luma email but github login matches
+    expect(byName["Bob"]).toBeDefined();
+    expect(byName["Bob"].lumaRegistered).toBe(true);
+    expect(byName["Bob"].userId).toBe(bobId);
+
+    // Carol: website-only, no Luma match
+    expect(byName["Carol"]).toBeDefined();
+    expect(byName["Carol"].lumaRegistered).toBe(false);
+    expect(byName["Carol"].userId).toBe(carolId);
+
+    // Dave: Luma-only, no website signup → userId=null, lumaRegistered=true
+    expect(byName["Dave (luma only)"]).toBeDefined();
+    expect(byName["Dave (luma only)"].lumaRegistered).toBe(true);
+    expect(byName["Dave (luma only)"].userId).toBeNull();
   });
 
   it("returns me.signedUp false when user is authenticated but not signed up", async () => {

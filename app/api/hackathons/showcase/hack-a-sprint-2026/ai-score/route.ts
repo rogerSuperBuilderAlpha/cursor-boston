@@ -13,7 +13,8 @@ import {
   fetchShowcaseSubmissionsFromGitHub,
 } from "@/lib/hackathon-showcase";
 import { hackASprint2026ScoreDocId } from "@/lib/hackathon-asprint-2026-state";
-import { checkRateLimit, getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
+import { getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
+import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,7 +24,7 @@ const RATE = rateLimitConfigs.hackathonShowcaseAiScore;
 export async function POST(request: NextRequest) {
   try {
     const clientId = getClientIdentifier(request as unknown as Request);
-    const rate = checkRateLimit(`hack-asprint-ai-score:${clientId}`, RATE);
+    const rate = await checkUpstashRateLimit(`hack-asprint-ai-score:${clientId}`, RATE);
     if (!rate.success) {
       return NextResponse.json(
         { error: "Too many requests", retryAfterSeconds: rate.retryAfter },

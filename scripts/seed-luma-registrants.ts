@@ -6,8 +6,12 @@
  * `hackathonLumaRegistrants` so the signup API can show a unified list.
  *
  * Usage:
- *   npx tsx scripts/seed-luma-registrants.ts --dry-run [--csv path]
- *   npx tsx scripts/seed-luma-registrants.ts --apply [--csv path] [--prune]
+ *   npx tsx scripts/seed-luma-registrants.ts --dry-run --event-id <eventId> [--csv path]
+ *   npx tsx scripts/seed-luma-registrants.ts --apply   --event-id <eventId> [--csv path] [--prune]
+ *
+ * --event-id: required. Must be a known signup event id (see
+ *   HACKATHON_EVENT_SIGNUP_IDS in lib/hackathon-event-signup.ts). Scopes both
+ *   the Firestore writes and the per-event judge/declined filters.
  *
  * --prune (with --apply): deletes hackathonLumaRegistrants for this event whose
  *   email is not in the CSV as non-declined (and not judge/declined list).
@@ -19,9 +23,12 @@ import { loadEnvConfig } from "@next/env";
 loadEnvConfig(process.cwd());
 
 import { FieldValue } from "firebase-admin/firestore";
-import { DECLINED_EMAILS, JUDGE_EMAILS } from "../lib/hackathon-event-signup";
+import {
+  getDeclinedEmailsForEvent,
+  getJudgeEmailsForEvent,
+  isHackathonEventSignupId,
+} from "../lib/hackathon-event-signup";
 import { getAdminDb } from "../lib/firebase-admin";
-import { HACK_A_SPRINT_2026_EVENT_ID } from "../lib/hackathon-showcase";
 
 const GITHUB_COL_KEY = "What is your GitHub username?";
 
@@ -100,6 +107,8 @@ function parseArgs(argv: string[]) {
           "Downloads",
           "Cursor Boston Hack-a-Sprint - Guests - 2026-04-11-12-28-29.csv"
         );
+  const eventIdIdx = argv.indexOf("--event-id");
+  const eventId = eventIdIdx >= 0 ? argv[eventIdIdx + 1] : undefined;
   if ((dryRun && apply) || (!dryRun && !apply)) {
     console.error("Specify exactly one of: --dry-run | --apply");
     process.exit(1);
@@ -108,11 +117,21 @@ function parseArgs(argv: string[]) {
     console.error("--prune requires --apply (cannot prune on --dry-run).");
     process.exit(1);
   }
-  return { dryRun, apply, prune, csvPath };
+  if (!eventId) {
+    console.error("Missing required --event-id <eventId> (e.g. sports-hack-2026).");
+    process.exit(1);
+  }
+  if (!isHackathonEventSignupId(eventId)) {
+    console.error(
+      `Unknown event id "${eventId}". Must be one of the ids listed in HACKATHON_EVENT_SIGNUP_IDS.`
+    );
+    process.exit(1);
+  }
+  return { dryRun, apply, prune, csvPath, eventId };
 }
 
 async function main() {
-  const { dryRun, prune, csvPath } = parseArgs(process.argv.slice(2));
+  const { dryRun, prune, csvPath, eventId } = parseArgs(process.argv.slice(2));
 
   let raw: string;
   try { raw = readFileSync(csvPath, "utf8"); }
@@ -121,13 +140,17 @@ async function main() {
   const db = getAdminDb();
   if (!db) { console.error("Firebase Admin not configured."); process.exit(1); }
 
+  const judgeEmails = getJudgeEmailsForEvent(eventId);
+  const declinedEmails = getDeclinedEmailsForEvent(eventId);
+
   const csvRows = parseCsv(raw);
+  console.log(`Event: ${eventId}`);
   console.log(`Loaded ${csvRows.length} rows from ${csvPath}`);
 
   // Get existing website signups to skip
   const signupSnap = await db
     .collection("hackathonEventSignups")
-    .where("eventId", "==", HACK_A_SPRINT_2026_EVENT_ID)
+    .where("eventId", "==", eventId)
     .get();
   const signupUserIds = new Set(signupSnap.docs.map((d) => d.data().userId as string));
 
@@ -140,7 +163,7 @@ async function main() {
   }
 
   let seeded = 0;
-  let skippedSignup = 0;
+  let alsoOnWebsite = 0;
   let skippedDeclined = 0;
   let skippedJudge = 0;
 
@@ -152,27 +175,32 @@ async function main() {
 
     const approval = (row.approval_status || "").toLowerCase();
     if (approval === "declined") { skippedDeclined++; continue; }
-    if (JUDGE_EMAILS.has(email) || DECLINED_EMAILS.has(email)) {
+    if (judgeEmails.has(email) || declinedEmails.has(email)) {
       skippedJudge++;
       continue;
     }
     approvedEmailsForPrune.add(email);
 
-    // Check if already has a website signup
+    // Always insert the Luma row, even when the registrant also has a
+    // website signup. The unified leaderboard dedupes at API time (matched
+    // rows don't appear twice); keeping the Luma doc lets the signup API
+    // set `lumaRegistered = true` on the website row, which drives the
+    // "✓ On Luma" pill in the UI.
     const uid = usersByEmail.get(email);
-    if (uid && signupUserIds.has(uid)) { skippedSignup++; continue; }
+    if (uid && signupUserIds.has(uid)) alsoOnWebsite++;
 
     const name = [row.first_name, row.last_name].filter(Boolean).join(" ").trim() || row.name?.trim() || "";
     const githubLogin = parseGithubLogin(row[GITHUB_COL_KEY]);
     const lumaCreatedAt = row.created_at || "";
 
-    const docId = `${HACK_A_SPRINT_2026_EVENT_ID}__${email}`;
+    const docId = `${eventId}__${email}`;
 
     if (dryRun) {
-      console.log(`  WOULD SEED: ${email} | ${name} | gh:${githubLogin || "—"} | luma:${lumaCreatedAt.slice(0, 10)}`);
+      const tag = uid && signupUserIds.has(uid) ? " [also on website]" : "";
+      console.log(`  WOULD SEED: ${email} | ${name} | gh:${githubLogin || "—"} | luma:${lumaCreatedAt.slice(0, 10)}${tag}`);
     } else {
       await db.collection("hackathonLumaRegistrants").doc(docId).set({
-        eventId: HACK_A_SPRINT_2026_EVENT_ID,
+        eventId,
         email,
         name,
         githubLogin,
@@ -188,7 +216,7 @@ async function main() {
   if (prune && !dryRun) {
     const existing = await db
       .collection("hackathonLumaRegistrants")
-      .where("eventId", "==", HACK_A_SPRINT_2026_EVENT_ID)
+      .where("eventId", "==", eventId)
       .get();
     for (const doc of existing.docs) {
       const em = String(doc.data().email ?? "").toLowerCase();
@@ -200,7 +228,7 @@ async function main() {
   }
 
   console.log(
-    `\nSeeded: ${seeded}, skipped (already on website): ${skippedSignup}, declined: ${skippedDeclined}, skipped (judge/ops email): ${skippedJudge}` +
+    `\nSeeded: ${seeded} (${alsoOnWebsite} also have a website signup — still seeded so the "✓ On Luma" pill renders), declined: ${skippedDeclined}, skipped (judge/ops email): ${skippedJudge}` +
       (prune && !dryRun ? `, pruned stale Luma rows: ${pruned}` : "")
   );
   if (dryRun) console.log("--dry-run: nothing written to Firestore.");

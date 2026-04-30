@@ -8,6 +8,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import AppShell from "@/components/AppShell";
 import WelcomeModal from "@/components/WelcomeModal";
+import SummerCohortModal from "@/components/SummerCohortModal";
 import LumaCheckoutTracker from "@/components/LumaCheckoutTracker";
 import { KonamiListener } from "@/components/hunt/KonamiListener";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -124,6 +125,7 @@ export default function RootLayout({
           <AuthProvider>
             <AppShell>{children}</AppShell>
             <WelcomeModal />
+            <SummerCohortModal />
             <LumaCheckoutTracker />
             <KonamiListener />
           </AuthProvider>

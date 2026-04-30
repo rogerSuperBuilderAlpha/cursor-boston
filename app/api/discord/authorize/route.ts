@@ -21,6 +21,12 @@ function getDiscordRedirectUri(request: NextRequest): string {
   return `${url.origin}/api/discord/callback`;
 }
 
+function sanitizeReturnTo(value: string | null): string | null {
+  if (!value) return null;
+  if (!value.startsWith("/") || value.startsWith("//")) return null;
+  return value;
+}
+
 export async function GET(request: NextRequest) {
   if (!DISCORD_CLIENT_ID) {
     return NextResponse.redirect(
@@ -30,6 +36,7 @@ export async function GET(request: NextRequest) {
 
   const redirectUri = getDiscordRedirectUri(request);
   const state = randomBytes(32).toString("base64url");
+  const returnTo = sanitizeReturnTo(request.nextUrl.searchParams.get("returnTo"));
   const params = new URLSearchParams({
     client_id: DISCORD_CLIENT_ID,
     redirect_uri: redirectUri,
@@ -49,6 +56,16 @@ export async function GET(request: NextRequest) {
     path: "/",
     maxAge: 10 * 60,
   });
+
+  if (returnTo) {
+    response.cookies.set("discord_oauth_return_to", returnTo, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 10 * 60,
+    });
+  }
 
   return response;
 }

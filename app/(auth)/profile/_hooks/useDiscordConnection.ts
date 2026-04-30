@@ -18,13 +18,19 @@ export interface DiscordInfo {
   avatar?: string;
 }
 
-export function useDiscordConnection(user: User | null, userProfileDiscord?: DiscordInfo | null) {
+export function useDiscordConnection(
+  user: User | null,
+  userProfileDiscord?: DiscordInfo | null,
+  returnTo?: string
+) {
   const router = useRouter();
   const [connecting, setConnecting] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [connectedInfo, setConnectedInfo] = useState<DiscordInfo | null>(null);
   const [wasDisconnected, setWasDisconnected] = useState(false);
+
+  const fallbackPath = returnTo || "/profile";
 
   // Priority: explicit disconnection > local state > userProfile
   const discordInfo = wasDisconnected ? null : (connectedInfo || userProfileDiscord || null);
@@ -35,7 +41,10 @@ export function useDiscordConnection(user: User | null, userProfileDiscord?: Dis
       return;
     }
     setConnecting(true);
-    window.location.href = "/api/discord/authorize";
+    const authorizeUrl = returnTo
+      ? `/api/discord/authorize?returnTo=${encodeURIComponent(returnTo)}`
+      : "/api/discord/authorize";
+    window.location.href = authorizeUrl;
   };
 
   const disconnect = async () => {
@@ -57,7 +66,7 @@ export function useDiscordConnection(user: User | null, userProfileDiscord?: Dis
   const handleOAuthSuccess = async (data: Record<string, string>) => {
     if (!user || !db) {
       setError("Please sign in to finish connecting Discord.");
-      router.replace("/login?redirect=/profile");
+      router.replace(`/login?redirect=${encodeURIComponent(fallbackPath)}`);
       return;
     }
     try {
@@ -72,7 +81,7 @@ export function useDiscordConnection(user: User | null, userProfileDiscord?: Dis
       });
       setConnectedInfo(discordUserInfo);
       setWasDisconnected(false);
-      router.replace("/profile", { scroll: false });
+      router.replace(fallbackPath, { scroll: false });
     } catch {
       setError("Failed to save Discord connection");
     }
@@ -84,7 +93,7 @@ export function useDiscordConnection(user: User | null, userProfileDiscord?: Dis
     } else {
       setError("Failed to connect Discord. Please try again.");
     }
-    router.replace("/profile");
+    router.replace(fallbackPath);
   };
 
   return {

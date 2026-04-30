@@ -1,99 +1,220 @@
 {
   "upcoming": [
     {
-      "id": "cursor-boston-aic-open-source-workshop-2026",
-      "slug": "cursor-boston-aic-open-source-workshop-2026",
-      "title": "Cursor Boston/AIC BTW Open Source Workshop",
-      "subtitle": "Hands-on open source contributions with Cursor as your AI co-pilot \u2014 co-hosted with AIC",
-      "date": "2026-05-30",
-      "time": "12:00 PM \u2013 5:00 PM ET",
-      "location": "Boston, MA",
+      "id": "cursor-boston-pydata-2026",
+      "slug": "cursor-boston-pydata-2026",
+      "title": "Cursor Boston × PyData Data Science Hack",
+      "subtitle": "Evening data-science hack at Moderna HQ — talk from Eric Ma, then build",
+      "date": "2026-05-13",
+      "time": "6:30 PM – 9:30 PM ET",
+      "location": "Cambridge, MA",
       "venue": {
-        "name": "TBD (exact address after approval)",
-        "address": "Register on Luma to see the venue address after you're approved.",
+        "name": "Moderna HQ",
+        "address": "325 Binney St, Cambridge, MA 02142",
         "mapUrl": null
       },
-      "type": "workshop",
-      "description": "Open Source Drop-In Workshop co-hosted by Cursor Boston and AIC. A hands-on half-day session with two tracks: contribute to the Cursor Boston repo (beginner-friendly) or tackle curated impactful open source projects using Cursor as your AI co-pilot. Walk away with merged PRs, Cursor credits, and practical open source skills. Saturday May 30 in Boston \u2014 register on Luma; approval required.",
-      "longDescription": "We're thrilled to announce the Open Source Drop-In Workshop, co-hosted by Cursor Boston and AIC (AI Community).\n\nThis is a hands-on half-day session designed to teach you how to contribute to real open source projects using Cursor as your AI co-pilot. Whether you've never opened a pull request or you're a seasoned contributor looking for high-impact projects, there's a track for you.\n\nTwo Tracks\n\nTrack A \u2014 Cursor Boston Repo (Beginner-Friendly): Learn the fundamentals of open source contribution by working directly on the Cursor Boston community repository. Mentors will guide you through forking, branching, making changes, and opening your first PR.\n\nTrack B \u2014 Curated Impactful Projects: For more experienced developers, we've hand-picked a set of impactful open source projects with beginner-friendly issues. Use Cursor's AI capabilities to understand unfamiliar codebases quickly and ship meaningful contributions.\n\nWhat You'll Walk Away With\n\nMerged pull requests on real open source projects, Cursor credits, and practical skills you can use immediately. This isn't a lecture \u2014 it's a working session where you'll ship real code.\n\nHosted by Roger Hunt, Ananya Shah, Janna, Kanal Patel, and Jason Morris.",
-      "lumaCheckoutEventId": "evt-2erXQCohWrtPWp9",
-      "lumaEmbedSrc": "https://luma.com/embed/event/evt-2erXQCohWrtPWp9/simple",
+      "type": "hackathon",
+      "description": "Hands-on evening hackathon at Moderna HQ co-hosted by Cursor Boston and PyData Boston. A short talk from Eric Ma, then a focused build session on data-science workflows with Cursor. Pizza and Cursor credits. Wednesday May 13 in Cambridge — register on Luma; host approval and Envoy NDA sign-in required.",
+      "longDescription": "Cursor Boston and PyData Boston team up for an evening of data-science building at Moderna HQ in Cambridge.\n\nThe Format\n\nDoors open at 6:30 with networking and pizza. Welcome at 7:00, then a talk from Eric Ma at 7:15 on a practical data-science topic. At ~8:05 we break into the hack — build and explore data-science workflows in Cursor. Optional demos at ~9:10 and we wrap by 9:30.\n\nWhat You'll Get\n\nCommunity, learning, pizza, and Cursor credits (details TBA).\n\nImportant: Security & Access\n\nSign-up closes 48 hours prior — no sign-up, no entry. Moderna has tight security.\n\nRSVPs must include first name, last name, email, and organization. After approval you'll get an email from no-reply@envoy.com. Complete the Envoy sign-in including NDA and signature before arriving — you'll receive a QR code. No QR code, no access. When taking photos, do not include the Moderna logo or branding.\n\nPreparation\n\nBring a laptop, charger, Cursor IDE installed, and a registered Cursor account.\n\nHosts\n\nRoger Hunt, Jacqueline Valeri, Sebastian Wallkötter, Alexander Commodore.",
+      "lumaCheckoutEventId": "evt-9PHCTsttlDD5wYW",
+      "lumaEmbedSrc": "https://luma.com/embed/event/evt-9PHCTsttlDD5wYW/simple",
       "image": "/cursor-boston-logo.png",
-      "lumaUrl": "https://luma.com/w4gvg7fl",
-      "lumaEventId": "w4gvg7fl",
+      "lumaUrl": "https://luma.com/ggjlxdnk",
+      "lumaEventId": "ggjlxdnk",
       "registrationRequired": true,
       "perks": [
-        "Cursor credits for merged PRs",
-        "Merged PRs on real open source projects",
-        "Mentored contribution experience"
+        "Cursor credits (details TBA)",
+        "Talk from Eric Ma",
+        "Pizza + community",
+        "Hands-on data-science building"
       ],
       "topics": [
-        "Open Source Contribution",
-        "AI-Assisted Coding with Cursor",
-        "Git & GitHub Workflows",
-        "Two Tracks (Beginner & Advanced)",
-        "Hands-On PR Workshops"
+        "Data science with Cursor",
+        "LLM + Python workflows",
+        "Hands-on build session",
+        "Optional demos"
       ],
       "agenda": [
         {
-          "time": "12:00 PM",
-          "title": "Doors Open & Setup",
-          "description": "Arrive, get settled, install Cursor if needed, and meet fellow contributors"
+          "time": "6:30 PM",
+          "title": "Doors open",
+          "description": "Arrive, clear Moderna security, pizza, networking"
         },
         {
-          "time": "12:30 PM",
-          "title": "Welcome & Track Overview",
-          "description": "Introduction to open source contribution, overview of Track A (Cursor Boston repo) and Track B (curated projects), and how to pick your track"
+          "time": "7:00 PM",
+          "title": "Welcome",
+          "description": "Kick-off from the Cursor Boston and PyData Boston hosts"
         },
         {
-          "time": "1:00 PM \u2013 4:00 PM",
-          "title": "Hands-On Contribution Session",
-          "description": "Work on your chosen track with mentor support. Fork repos, pick issues, write code with Cursor as your AI co-pilot, and open pull requests"
+          "time": "7:15 PM",
+          "title": "Talk — Eric Ma",
+          "description": "Practical data-science talk"
         },
         {
-          "time": "4:00 PM \u2013 4:30 PM",
-          "title": "PR Review & Merging",
-          "description": "Get your pull requests reviewed and merged. Celebrate your contributions with the group"
+          "time": "~8:05 PM",
+          "title": "Hack session",
+          "description": "Build and explore data-science workflows in Cursor"
         },
         {
-          "time": "4:30 PM \u2013 5:00 PM",
-          "title": "Wrap-Up & Networking",
-          "description": "Share what you built, exchange contacts, and connect with the Cursor Boston and AIC communities"
+          "time": "~9:10 PM",
+          "title": "Optional demos",
+          "description": "Show what you built to the room"
+        },
+        {
+          "time": "9:30 PM",
+          "title": "End",
+          "description": "Wrap and head out"
         }
       ],
       "faq": [
         {
-          "question": "Do I need open source experience?",
-          "answer": "Not at all! Track A is specifically designed for beginners who have never contributed to open source. Mentors will walk you through every step, from forking a repo to opening your first pull request."
+          "question": "Who should come?",
+          "answer": "Anyone building with Python, data, or ML — PyData regulars, Cursor users, and data scientists curious about AI-assisted workflows."
         },
         {
-          "question": "What are the two tracks?",
-          "answer": "Track A focuses on contributing to the Cursor Boston community repository \u2014 perfect for beginners. Track B is for more experienced developers who want to contribute to curated, impactful open source projects. You can choose your track when you arrive."
+          "question": "Why does sign-up close 48 hours early?",
+          "answer": "Moderna has tight security. Every attendee needs to be pre-approved and complete an Envoy NDA sign-in before arrival. No sign-up, no QR code, no entry."
         },
         {
-          "question": "What do I get for participating?",
-          "answer": "You'll walk away with merged pull requests on real open source projects, Cursor credits, and practical skills for contributing to open source using AI-powered tools."
+          "question": "What's the Envoy / NDA step?",
+          "answer": "After your Luma approval you'll get an email from no-reply@envoy.com. Complete the sign-in (including NDA and signature) before the event. That generates the QR code you need to enter Moderna."
         },
         {
-          "question": "Where is the venue?",
-          "answer": "The venue is TBD. The exact address will appear on Luma after your registration is approved."
+          "question": "Can I take photos?",
+          "answer": "Yes — just don't include the Moderna logo or branding in any photos you share."
         },
         {
-          "question": "Will food be provided?",
-          "answer": "Details on food and refreshments will be announced closer to the event date. Check the Luma page for updates."
-        },
-        {
-          "question": "Who is hosting this event?",
-          "answer": "This event is co-hosted by Cursor Boston and AIC (AI Community). Hosts include Roger Hunt, Ananya Shah, Janna, Kanal Patel, and Jason Morris."
+          "question": "What do I need to bring?",
+          "answer": "Laptop, charger, Cursor IDE installed, and a registered Cursor account."
         }
       ],
       "whatToBring": [
-        "Laptop with Cursor installed",
-        "GitHub account (signed in and ready)",
+        "Laptop",
         "Charger",
-        "A willingness to contribute to open source"
+        "Cursor IDE installed",
+        "Registered Cursor account"
       ],
-      "featured": false
+      "featured": true
+    },
+    {
+      "id": "cursor-boston-sports-hack-2026",
+      "slug": "cursor-boston-sports-hack-2026",
+      "title": "Cursor Boston \u00d7 AIC \u00d7 Hult International \u2014 Boston Tech Week Speakers & Workshop",
+      "subtitle": "Full day at Hult \u2014 LSE guest lecture from Antonio Mele, lunch, 2-hour hackathon sprint, live pitches",
+      "date": "2026-05-26",
+      "time": "10:00 AM \u2013 4:00 PM ET",
+      "location": "Cambridge, MA",
+      "venue": {
+        "name": "Hult International (exact address after approval)",
+        "address": "Register on Luma to see the venue address after you're approved.",
+        "mapUrl": null
+      },
+      "type": "hackathon",
+      "description": "Full-day Speakers & Workshop at Hult International (with AIC + Hult) to launch Boston Tech Week. Guest lecture from Antonio Mele (London School of Economics), lunch, a 2-hour hackathon sprint, AI-powered scoring, top-10 live presentations, and judges' analysis. $1,200 cash + prizes; $50 Cursor Credits + Red Bull merch for selected participants. Tuesday May 26 in Cambridge \u2014 register on Luma; approval required.",
+      "longDescription": "Cursor Boston, AIC, and Hult International team up to launch Boston Tech Week with a full-day Speakers & Workshop \u2014 a guest lecture, lunch, a focused hackathon sprint, and live finalist pitches. We're merging two high-energy events (Hult speakers + AIC open-source workshop) into one morning sprint. Co-run with BeatM, Red Bull, NFX, and MIT Sports Lab.\n\nThe Format\n\nDoors open at 10:00 AM with coffee, snacks, and networking. From 10:30 to 12:00, Antonio Mele of the London School of Economics gives a guest lecture. Lunch runs 12:00\u201312:30, then builders kick off a 2-hour hackathon sprint (12:30\u20132:30). The afternoon closes with AI scoring (2:30\u20133:00), top-10 live presentations (3:00\u20133:30), judges' analysis (3:30\u20134:00), and winners announced at 4:00.\n\nThe Perks & Prizes\n\nGuaranteed bounty for selected participants: $50 in Cursor Credits and exclusive Red Bull merchandise.\nPrize pool: $1,200 total in cash and prizes for top projects.\n\nWhen & Where\n\nDate: Tuesday, May 26, 2026\nLocation: Cambridge, MA \u2014 Hult International (exact address shown on Luma after your registration is approved).\n\nHow to Secure Your Spot\n\nSelection prioritizes open-source contributors, profile completers on cursorboston.com, active Discord members, and early registrants. Luma approval is required. After Luma, claim your spot on cursorboston.com/hackathons/sports-hack-2026/signup so we can rank builders by merged PRs to the community repo and signup time.\n\nWe qualify participants rigorously. If selected people don't meet criteria or drop out, we pull aggressively from the waitlist.\n\nHosts\n\nRoger Hunt, Harry Chow, Anusha Vissapragada, and Ananya Shah.\n\nGet Involved\n\nDidn't make the seat list? Join the waitlist \u2014 drop-outs happen. Want to judge or partner instead? Contact the hosts on Luma.",
+      "lumaCheckoutEventId": "evt-tTiu9jkwv4jVVxx",
+      "lumaEmbedSrc": "https://luma.com/embed/event/evt-tTiu9jkwv4jVVxx/simple",
+      "image": "/cursor-boston-logo.png",
+      "lumaUrl": "https://luma.com/t5vseeed",
+      "lumaEventId": "t5vseeed",
+      "registrationRequired": true,
+      "capacity": 80,
+      "perks": [
+        "$50 Cursor credits (guaranteed for selected participants)",
+        "Exclusive Red Bull merchandise",
+        "$1,200 total cash + prizes",
+        "LSE guest lecture from Antonio Mele",
+        "Lunch provided"
+      ],
+      "topics": [
+        "Sports tech + AI",
+        "2-hour build sprint",
+        "Live pitches",
+        "Judging (AI + judges + peer review)"
+      ],
+      "agenda": [
+        {
+          "time": "10:00 AM",
+          "title": "Coffee, snacks & networking",
+          "description": "Doors open at Hult \u2014 coffee, snacks, and networking with builders, hosts, and partners (BeatM, Red Bull, NFX, MIT Sports Lab)"
+        },
+        {
+          "time": "10:30 AM \u2013 12:00 PM",
+          "title": "Guest lecture \u2014 Antonio Mele (LSE)",
+          "description": "Guest lecture from Antonio Mele of the London School of Economics"
+        },
+        {
+          "time": "12:00 PM \u2013 12:30 PM",
+          "title": "Lunch",
+          "description": "Lunch and continued networking before the build sprint"
+        },
+        {
+          "time": "12:30 PM \u2013 2:30 PM",
+          "title": "Hackathon sprint",
+          "description": "Two-hour build sprint with Cursor as your AI co-pilot"
+        },
+        {
+          "time": "2:30 PM \u2013 3:00 PM",
+          "title": "AI scoring",
+          "description": "AI-powered scoring of submitted projects"
+        },
+        {
+          "time": "3:00 PM \u2013 3:30 PM",
+          "title": "Top 10 presentations",
+          "description": "Top 10 teams present their builds live"
+        },
+        {
+          "time": "3:30 PM \u2013 4:00 PM",
+          "title": "Judges' analysis",
+          "description": "Judges weigh in and analyze the top builds"
+        },
+        {
+          "time": "4:00 PM",
+          "title": "Winners announced & wrap-up",
+          "description": "Winners announced, prizes awarded, and wrap-up"
+        }
+      ],
+      "faq": [
+        {
+          "question": "Who should apply?",
+          "answer": "Builders interested in sports technology. You must have a completed profile on cursorboston.com and be in the Cursor Boston Discord server."
+        },
+        {
+          "question": "How many spots are there?",
+          "answer": "Limited seats \u2014 selection prioritizes open-source contributors, completed cursorboston.com profiles, and Discord members. Drop-outs happen, so merge PRs to cursor-boston to move up the list."
+        },
+        {
+          "question": "Solo or team?",
+          "answer": "Details coming in Luma; expect small teams formed on the day."
+        },
+        {
+          "question": "Will food be provided?",
+          "answer": "Yes \u2014 breakfast and lunch are covered."
+        },
+        {
+          "question": "Is the venue confirmed?",
+          "answer": "Yes \u2014 Tuesday, May 26, 2026 at Hult International in Cambridge. The exact address appears on Luma after your registration is approved."
+        },
+        {
+          "question": "What if I don't make the top 80?",
+          "answer": "Join the waitlist \u2014 drop-outs happen. You can also contact the hosts on Luma to judge or partner."
+        }
+      ],
+      "whatToBring": [
+        "Laptop and charger",
+        "A sports-tech project idea (optional \u2014 you can also form around a partner prompt on the day)",
+        "A willingness to ship in two hours"
+      ],
+      "featured": true,
+      "primaryCtaHref": "/hackathons/sports-hack-2026",
+      "primaryCtaLabel": "Claim your ranking spot",
+      "speakers": [
+        {
+          "name": "Antonio Mele",
+          "role": "Guest Lecturer",
+          "company": "London School of Economics"
+        }
+      ]
     }
   ],
   "past": [

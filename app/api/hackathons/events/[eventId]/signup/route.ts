@@ -5,6 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { unstable_cache, revalidateTag } from "next/cache";
 import type { DocumentData, Firestore } from "firebase-admin/firestore";
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
@@ -13,21 +14,30 @@ import {
   getOptionalVerifiedUser,
 } from "@/lib/server-auth";
 import {
-  CURSOR_CREDIT_TOP_N,
-  DECLINED_EMAILS,
-  JUDGE_EMAILS,
+  getConfirmedCapacityForEvent,
+  getDeclinedEmailsForEvent,
   getHackathonEventSignupBlockReason,
+  getJudgeEmailsForEvent,
   hackathonEventSignupDocId,
   isHackathonEventSignupId,
 } from "@/lib/hackathon-event-signup";
 import { fetchMergedPrCountsForLogins } from "@/lib/github-merged-pr-count";
 import { getGithubRepoPair } from "@/lib/github-recent-merged-prs";
-import { checkRateLimit, getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
+import { getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
+import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const RATE = rateLimitConfigs.hackathonEventSignup;
+
+/**
+ * Cache tag for the signup leaderboard payload. Bust it from POST/PATCH/DELETE
+ * so mutations are visible on the next GET instead of waiting out the 30s
+ * revalidate window. Shared across all events — fine at current scale (2
+ * active event ids); split into `:${eventId}` if that ever grows.
+ */
+const HACKATHON_SIGNUP_CACHE_TAG = "hackathon-event-signup";
 
 function signedUpAtToMs(value: unknown): number {
   if (
@@ -119,36 +129,47 @@ async function countMergedCommunityPrsByUserIds(
   return counts;
 }
 
-type RouteContext = { params: Promise<{ eventId: string }> };
+type EntryStatus = "confirmed" | "waitlisted";
 
-export async function GET(request: NextRequest, context: RouteContext) {
-  try {
-    const clientId = getClientIdentifier(request as unknown as Request);
-    const rate = checkRateLimit(`hackathon-event-signup-get:${clientId}`, RATE);
-    if (!rate.success) {
-      return NextResponse.json(
-        { error: "Too many requests", retryAfterSeconds: rate.retryAfter },
-        { status: 429, headers: { "Retry-After": String(rate.retryAfter || 60) } }
-      );
-    }
+type LeaderboardEntry = {
+  rank: number;
+  userId: string | null;
+  displayName: string | null;
+  githubLogin: string | null;
+  mergedPrCount: number;
+  signedUpAt: string;
+  creditEligible: boolean;
+  status: EntryStatus;
+  checkedIn: boolean;
+  willBeLate: boolean;
+  queuingForSpot: boolean;
+  lumaRegistered: boolean;
+};
 
-    const { eventId: raw } = await context.params;
-    const eventId = raw?.trim() ?? "";
-    if (!isHackathonEventSignupId(eventId)) {
-      return NextResponse.json({ error: "Unknown event" }, { status: 404 });
-    }
+type LeaderboardPayload = {
+  entries: LeaderboardEntry[];
+  totalCount: number;
+  websiteSignupCount: number;
+  creditTopN: number;
+};
 
-    const db = getAdminDb();
-    if (!db) {
-      return NextResponse.json({ error: "Server not configured" }, { status: 500 });
-    }
+/**
+ * Uncached body of the leaderboard load. Pulled out of the GET handler so
+ * `unstable_cache` can collapse N concurrent page loads (e.g., after an email
+ * blast) into one Firestore pass per 30s. `me` is computed on top of this by
+ * the handler since it varies per-caller and shouldn't be cached.
+ */
+async function buildLeaderboardPayload(eventId: string): Promise<LeaderboardPayload> {
+  const db = getAdminDb();
+  if (!db) throw new Error("Server not configured");
 
-    const meUser = await getOptionalVerifiedUser(request);
+  const judgeEmails = getJudgeEmailsForEvent(eventId);
+  const declinedEmails = getDeclinedEmailsForEvent(eventId);
 
-    const snap = await db
-      .collection("hackathonEventSignups")
-      .where("eventId", "==", eventId)
-      .get();
+  const snap = await db
+    .collection("hackathonEventSignups")
+    .where("eventId", "==", eventId)
+    .get();
 
     const rows: {
       userId: string;
@@ -162,25 +183,43 @@ export async function GET(request: NextRequest, context: RouteContext) {
       checkedInAt: number | null;
       willBeLate: boolean;
       queuingForSpot: boolean;
+      /** True when a matching row was found in hackathonLumaRegistrants (email or githubLogin match). */
+      lumaRegistered: boolean;
     }[] = [];
 
     const userIds = snap.docs.map((d) => d.data().userId as string).filter(Boolean);
-    // User data + Firestore merged-PR counts are independent — run concurrently.
-    const [userMap, firestoreMergedCounts] = await Promise.all([
-      fetchUserDataMap(db, userIds),
-      countMergedCommunityPrsByUserIds(db, userIds),
-    ]);
+    // Phase 1: load user profiles. We need profile.github.login to decide
+    // whether to hit the GitHub API (primary) or the Firestore pullRequests
+    // fallback (for the rare user with no linked GitHub). Signup gate already
+    // blocks users without linked GitHub from posting, so the fallback set is
+    // usually empty in practice.
+    const userMap = await fetchUserDataMap(db, userIds);
 
     const githubLogins: string[] = [];
+    const userIdsWithoutGithub: string[] = [];
     for (const uid of userIds) {
       const profile = userMap.get(uid);
       const login =
         profile?.github && typeof profile.github === "object"
           ? (profile.github as { login?: string }).login
           : undefined;
-      if (typeof login === "string" && login.trim()) githubLogins.push(login.trim());
+      if (typeof login === "string" && login.trim()) {
+        githubLogins.push(login.trim());
+      } else {
+        userIdsWithoutGithub.push(uid);
+      }
     }
-    const githubMergedByLogin = await fetchMergedPrCountsForLogins(githubLogins);
+
+    // Phase 2: GitHub + Firestore pullRequests fan out in parallel, but the
+    // Firestore scan is now scoped to only users whose profile has no linked
+    // GitHub login (so a hack-a-sprint-scale event skips ~40 users' worth of
+    // pullRequests reads per page load).
+    const [githubMergedByLogin, firestoreMergedCounts] = await Promise.all([
+      fetchMergedPrCountsForLogins(githubLogins),
+      userIdsWithoutGithub.length > 0
+        ? countMergedCommunityPrsByUserIds(db, userIdsWithoutGithub)
+        : Promise.resolve(new Map<string, number>()),
+    ]);
 
     for (const doc of snap.docs) {
       const data = doc.data();
@@ -189,7 +228,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       const profile = userMap.get(userId);
       if (
         typeof profile?.email === "string" &&
-        DECLINED_EMAILS.has(profile.email.toLowerCase())
+        declinedEmails.has(profile.email.toLowerCase())
       ) {
         continue;
       }
@@ -216,6 +255,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         checkedInAt: data.checkedInAt ? signedUpAtToMs(data.checkedInAt) : null,
         willBeLate: data.willBeLate === true,
         queuingForSpot: data.queuingForSpot === true,
+        lumaRegistered: false, // flipped true below when the Luma loop finds a match
       });
     }
 
@@ -267,7 +307,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       const d = doc.data();
       const email = (d.email as string || "").toLowerCase();
       const ghLogin = typeof d.githubLogin === "string" ? d.githubLogin : null;
-      if (JUDGE_EMAILS.has(email) || DECLINED_EMAILS.has(email)) continue;
+      if (judgeEmails.has(email) || declinedEmails.has(email)) continue;
 
       // When a Luma registrant also signed up on the website, carry over
       // confirmed status from the Luma record so it isn't lost.
@@ -278,6 +318,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
           ? ghLoginToRowIdx.get(ghLogin.toLowerCase())
           : undefined;
       if (matchIdx !== undefined) {
+        rows[matchIdx].lumaRegistered = true;
         if (rows[matchIdx].confirmedAt == null && d.confirmedAt) {
           rows[matchIdx].confirmedAt = signedUpAtToMs(d.confirmedAt);
         }
@@ -329,6 +370,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       checkedInAt: number | null;
       willBeLate: boolean;
       queuingForSpot: boolean;
+      lumaRegistered: boolean;
     };
     const unified: UnifiedRow[] = [];
 
@@ -346,6 +388,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         checkedInAt: r.checkedInAt,
         willBeLate: r.willBeLate,
         queuingForSpot: r.queuingForSpot,
+        lumaRegistered: r.lumaRegistered,
       });
     }
     for (const lr of lumaRows) {
@@ -362,6 +405,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
         checkedInAt: null,
         willBeLate: false,
         queuingForSpot: false,
+        // Rows with no matching website signup came from the Luma collection directly —
+        // they're on Luma by definition.
+        lumaRegistered: true,
       });
     }
 
@@ -386,9 +432,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     const sorted = [...confirmed, ...waitlisted];
 
-    type EntryStatus = "confirmed" | "waitlisted";
     const websiteCount = rows.length;
-    const entries = sorted.map((u, i) => {
+    const entries: LeaderboardEntry[] = sorted.map((u, i) => {
       const rank = i + 1;
       const isConfirmed = u.confirmedAt != null;
       const displayPrs = isConfirmed && u.frozenPrCount != null ? u.frozenPrCount : u.mergedPrCount;
@@ -400,12 +445,54 @@ export async function GET(request: NextRequest, context: RouteContext) {
         mergedPrCount: displayPrs,
         signedUpAt: u.signedUpAtIso,
         creditEligible: isConfirmed,
-        status: (isConfirmed ? "confirmed" : "waitlisted") as EntryStatus,
+        status: isConfirmed ? "confirmed" : "waitlisted",
         checkedIn: u.checkedInAt != null,
         willBeLate: u.willBeLate,
         queuingForSpot: u.queuingForSpot,
+        lumaRegistered: u.lumaRegistered,
       };
     });
+
+    return {
+      entries,
+      totalCount: entries.length,
+      websiteSignupCount: websiteCount,
+      creditTopN: getConfirmedCapacityForEvent(eventId),
+    };
+}
+
+/**
+ * 30s cache around the Firestore + GitHub work. Bust with
+ * `revalidateTag(HACKATHON_SIGNUP_CACHE_TAG)` from mutations so the next GET
+ * sees fresh data without waiting out the window.
+ */
+const loadLeaderboardPayload = unstable_cache(
+  buildLeaderboardPayload,
+  ["hackathon-event-signup:leaderboard"],
+  { revalidate: 30, tags: [HACKATHON_SIGNUP_CACHE_TAG] }
+);
+
+type RouteContext = { params: Promise<{ eventId: string }> };
+
+export async function GET(request: NextRequest, context: RouteContext) {
+  try {
+    const clientId = getClientIdentifier(request as unknown as Request);
+    const rate = await checkUpstashRateLimit(`hackathon-event-signup-get:${clientId}`, RATE);
+    if (!rate.success) {
+      return NextResponse.json(
+        { error: "Too many requests", retryAfterSeconds: rate.retryAfter },
+        { status: 429, headers: { "Retry-After": String(rate.retryAfter || 60) } }
+      );
+    }
+
+    const { eventId: raw } = await context.params;
+    const eventId = raw?.trim() ?? "";
+    if (!isHackathonEventSignupId(eventId)) {
+      return NextResponse.json({ error: "Unknown event" }, { status: 404 });
+    }
+
+    const meUser = await getOptionalVerifiedUser(request);
+    const payload = await loadLeaderboardPayload(eventId);
 
     let me: {
       signedUp: boolean;
@@ -415,10 +502,11 @@ export async function GET(request: NextRequest, context: RouteContext) {
       creditEligible: boolean;
       willBeLate: boolean;
       queuingForSpot: boolean;
+      lumaRegistered: boolean;
     } | null = null;
 
     if (meUser) {
-      const entry = entries.find((e) => e.userId === meUser.uid);
+      const entry = payload.entries.find((e) => e.userId === meUser.uid);
       me = entry
         ? {
             signedUp: true,
@@ -428,6 +516,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
             creditEligible: entry.creditEligible,
             willBeLate: entry.willBeLate,
             queuingForSpot: entry.queuingForSpot,
+            lumaRegistered: entry.lumaRegistered,
           }
         : {
             signedUp: false,
@@ -437,15 +526,16 @@ export async function GET(request: NextRequest, context: RouteContext) {
             creditEligible: false,
             willBeLate: false,
             queuingForSpot: false,
+            lumaRegistered: false,
           };
     }
 
     return NextResponse.json({
       eventId,
-      totalCount: entries.length,
-      websiteSignupCount: websiteCount,
-      entries,
-      creditTopN: CURSOR_CREDIT_TOP_N,
+      totalCount: payload.totalCount,
+      websiteSignupCount: payload.websiteSignupCount,
+      entries: payload.entries,
+      creditTopN: payload.creditTopN,
       me,
     });
   } catch (e) {
@@ -454,10 +544,19 @@ export async function GET(request: NextRequest, context: RouteContext) {
   }
 }
 
+/**
+ * POST does not enforce capacity — it always accepts a new signup into the
+ * waitlist. The confirmed/waitlisted cut happens later when the ranking
+ * snapshot script writes `frozenRank` + `confirmedAt` on the top N docs
+ * (N = event-specific capacity). Keep it that way: turning this into a
+ * "first N wins" gate causes a capacity race condition (two clients posting
+ * concurrently near the cap) that the current design avoids by deferring to
+ * the offline snapshot.
+ */
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
     const clientId = getClientIdentifier(request as unknown as Request);
-    const rate = checkRateLimit(`hackathon-event-signup-post:${clientId}`, RATE);
+    const rate = await checkUpstashRateLimit(`hackathon-event-signup-post:${clientId}`, RATE);
     if (!rate.success) {
       return NextResponse.json(
         { error: "Too many requests", retryAfterSeconds: rate.retryAfter },
@@ -500,6 +599,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       userId: user.uid,
       signedUpAt: FieldValue.serverTimestamp(),
     });
+    revalidateTag(HACKATHON_SIGNUP_CACHE_TAG, { expire: 0 });
 
     return NextResponse.json({ signedUp: true }, { status: 200 });
   } catch (e) {
@@ -518,7 +618,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
     const clientId = getClientIdentifier(request as unknown as Request);
-    const rate = checkRateLimit(`hackathon-event-signup-patch:${clientId}`, RATE);
+    const rate = await checkUpstashRateLimit(`hackathon-event-signup-patch:${clientId}`, RATE);
     if (!rate.success) {
       return NextResponse.json(
         { error: "Too many requests", retryAfterSeconds: rate.retryAfter },
@@ -571,6 +671,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         gaveUpSpotAt: FieldValue.serverTimestamp(),
         willBeLate: FieldValue.delete(),
       });
+      revalidateTag(HACKATHON_SIGNUP_CACHE_TAG, { expire: 0 });
       return NextResponse.json({ ok: true, gaveUpSpot: true }, { status: 200 });
     }
 
@@ -614,6 +715,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     }
 
     await ref.update(patch);
+    revalidateTag(HACKATHON_SIGNUP_CACHE_TAG, { expire: 0 });
 
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (e) {
@@ -625,7 +727,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     const clientId = getClientIdentifier(request as unknown as Request);
-    const rate = checkRateLimit(`hackathon-event-signup-del:${clientId}`, RATE);
+    const rate = await checkUpstashRateLimit(`hackathon-event-signup-del:${clientId}`, RATE);
     if (!rate.success) {
       return NextResponse.json(
         { error: "Too many requests", retryAfterSeconds: rate.retryAfter },
@@ -651,6 +753,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     const docId = hackathonEventSignupDocId(eventId, user.uid);
     await db.collection("hackathonEventSignups").doc(docId).delete().catch(() => undefined);
+    revalidateTag(HACKATHON_SIGNUP_CACHE_TAG, { expire: 0 });
 
     return NextResponse.json({ left: true }, { status: 200 });
   } catch (e) {

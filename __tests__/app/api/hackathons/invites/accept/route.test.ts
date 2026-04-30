@@ -18,6 +18,10 @@ jest.mock("@/lib/rate-limit", () => ({
   rateLimitConfigs: { hackathonAction: { windowMs: 60000, maxRequests: 10 } },
 }));
 
+jest.mock("@/lib/upstash-rate-limit", () => ({
+  checkUpstashRateLimit: jest.fn(async () => ({ success: true, remaining: 9, resetTime: Date.now() + 60000 })),
+}));
+
 jest.mock("@/lib/server-auth", () => ({
   getVerifiedUser: jest.fn(),
 }));
@@ -82,7 +86,8 @@ describe("POST /api/hackathons/invites/accept", () => {
   });
 
   it("returns 429 when rate limited", async () => {
-    mockCheckRateLimit.mockReturnValue({ success: false, retryAfter: 30 });
+    const { checkUpstashRateLimit } = jest.requireMock("@/lib/upstash-rate-limit") as { checkUpstashRateLimit: jest.Mock };
+    checkUpstashRateLimit.mockResolvedValueOnce({ success: false, retryAfter: 30 });
     const res = await POST(makeRequest({ inviteId: "inv1" }));
     expect(res.status).toBe(429);
   });

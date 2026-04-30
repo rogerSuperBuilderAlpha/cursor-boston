@@ -23,29 +23,37 @@ Licensed GPL-3.0-only.
     /badges
     /blog
     /blog/[slug]
+    /certificate
+    /certificate/verify/[certId]
     /cfp
     /code-of-conduct
     /cookbook
     /cookies
     /disclaimer
+    /ecosystem
     /events
     /events/[slug]
     /events/request
-    /glossary
-    /glossary/[slug]
     /hackathons
     /hackathons/hack-a-sprint-2026
     /hackathons/hack-a-sprint-2026/admin
     /hackathons/hack-a-sprint-2026/instructions
     /hackathons/hack-a-sprint-2026/signup
     /hackathons/pool
+    /hackathons/sports-hack-2026
+    /hackathons/sports-hack-2026/admin
+    /hackathons/sports-hack-2026/signup
     /hackathons/team
     /hackathons/teams
+    /hunt/[slug]
+    /hunt/claim/[pathId]
     /live
     /live/[sessionId]
     /live/[sessionId]/emcee
     /login
-    /map
+    /maintainers
+    /maintainers/apply
+    /maintainers/dashboard
     /members
     /open-source
     /opportunities
@@ -54,6 +62,9 @@ Licensed GPL-3.0-only.
     /pair/requests
     /privacy
     /profile
+    /questions
+    /questions/[questionId]
+    /questions/ask
     /showcase
     /signup
     /talks
