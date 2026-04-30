@@ -34,6 +34,7 @@ import {
   LogIn,
   Menu,
   MessageSquare,
+  Sun,
   Trophy,
   UserPlus,
   Users,
@@ -45,6 +46,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import Avatar from "@/components/Avatar";
 import Footer from "@/components/Footer";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { SUMMER_COHORT_OPEN_EVENT } from "@/lib/summer-cohort";
 
 const STORAGE_KEY = "cursor-boston-sidebar-collapsed";
 
@@ -52,6 +54,7 @@ interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;
+  highlight?: boolean;
 }
 
 interface NavGroup {
@@ -65,6 +68,12 @@ interface NavGroup {
  * stays standalone.
  */
 const NAV_GROUPS: NavGroup[] = [
+  {
+    label: "Summer Cohort",
+    items: [
+      { href: "/summer-cohort", label: "Summer Cohort", icon: Sun, highlight: true },
+    ],
+  },
   {
     label: "Live",
     items: [
@@ -98,8 +107,25 @@ function isGroupActive(group: NavGroup, pathname: string): boolean {
   return group.items.some((item) => pathname === item.href);
 }
 
-function navLinkClass(pathname: string, href: string, collapsed: boolean) {
+function navLinkClass(
+  pathname: string,
+  href: string,
+  collapsed: boolean,
+  highlight = false
+) {
   const active = pathname === href;
+  if (highlight) {
+    return [
+      "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors",
+      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+      collapsed ? "justify-center px-2" : "",
+      active
+        ? "bg-emerald-600 text-white shadow-sm"
+        : "bg-emerald-500 text-white hover:bg-emerald-400",
+    ]
+      .filter(Boolean)
+      .join(" ");
+  }
   return [
     "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
@@ -242,8 +268,15 @@ export default function AppShell({ children }: { children: ReactNode }) {
                       <li key={item.href}>
                         <Link
                           href={item.href}
-                          onClick={() => setMobileOpen(false)}
-                          className={navLinkClass(pathname, item.href, false)}
+                          onClick={() => {
+                            setMobileOpen(false);
+                            if (item.highlight) {
+                              window.dispatchEvent(
+                                new CustomEvent(SUMMER_COHORT_OPEN_EVENT)
+                              );
+                            }
+                          }}
+                          className={navLinkClass(pathname, item.href, false, item.highlight)}
                         >
                           <Icon className="h-[1.125rem] w-[1.125rem] shrink-0 opacity-90" strokeWidth={2} />
                           <span className="truncate">{item.label}</span>
@@ -307,8 +340,15 @@ export default function AppShell({ children }: { children: ReactNode }) {
                         <Link
                           href={item.href}
                           title={item.label}
-                          onClick={() => setMobileOpen(false)}
-                          className={navLinkClass(pathname, item.href, true)}
+                          onClick={() => {
+                            setMobileOpen(false);
+                            if (item.highlight) {
+                              window.dispatchEvent(
+                                new CustomEvent(SUMMER_COHORT_OPEN_EVENT)
+                              );
+                            }
+                          }}
+                          className={navLinkClass(pathname, item.href, true, item.highlight)}
                         >
                           <Icon className="h-[1.125rem] w-[1.125rem] shrink-0 opacity-90" strokeWidth={2} />
                         </Link>
