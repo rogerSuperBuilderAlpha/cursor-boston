@@ -26,6 +26,7 @@ import {
   SUMMER_COHORT_RETURN_TO,
   type SummerCohortId,
 } from "@/lib/summer-cohort";
+import { CohortProgramBreakdown } from "./_components/CohortProgramBreakdown";
 
 interface ApplicationDto {
   userId: string | null;
@@ -274,23 +275,26 @@ function SummerCohortPageInner() {
           {appLoadError}
         </div>
       ) : application ? (
-        <section className="rounded-xl border border-emerald-300 bg-emerald-50 p-6 dark:border-emerald-900 dark:bg-emerald-950/30">
-          <div className="flex items-center gap-3">
-            <span className="inline-flex items-center rounded-full bg-emerald-500 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white">
-              Status: Pending
-            </span>
-          </div>
-          <p className="mt-3 text-sm text-neutral-700 dark:text-neutral-300">
-            We received your application for{" "}
-            <strong>
-              {application.cohorts.map(cohortLabel).join(" and ")}
-            </strong>
-            . We&apos;ll review and follow up by email.
-          </p>
-          <p className="mt-2 text-sm text-neutral-700 dark:text-neutral-300">
-            {KICKOFF_NOTE}
-          </p>
-        </section>
+        <>
+          <section className="rounded-xl border border-emerald-300 bg-emerald-50 p-6 dark:border-emerald-900 dark:bg-emerald-950/30">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex items-center rounded-full bg-emerald-500 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white">
+                Status: Pending
+              </span>
+            </div>
+            <p className="mt-3 text-sm text-neutral-700 dark:text-neutral-300">
+              We received your application for{" "}
+              <strong>
+                {application.cohorts.map(cohortLabel).join(" and ")}
+              </strong>
+              . We&apos;ll review and follow up by email.
+            </p>
+            <p className="mt-2 text-sm text-neutral-700 dark:text-neutral-300">
+              {KICKOFF_NOTE}
+            </p>
+          </section>
+          <CohortProgramBreakdown />
+        </>
       ) : (
         <section className="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
           <h2 className="text-lg font-semibold">Apply</h2>
