@@ -20,28 +20,48 @@ function getGitHubRedirectUri(request: NextRequest): string {
   return `${url.origin}/api/github/callback`;
 }
 
+function sanitizeReturnTo(value: string | undefined): string | null {
+  if (!value) return null;
+  if (!value.startsWith("/") || value.startsWith("//")) return null;
+  return value;
+}
+
+function buildCallbackRedirect(
+  request: NextRequest,
+  returnTo: string | null,
+  query: string
+): NextResponse {
+  const target = returnTo || "/profile";
+  const separator = target.includes("?") ? "&" : "?";
+  const response = NextResponse.redirect(
+    new URL(`${target}${separator}${query}`, request.url)
+  );
+  response.cookies.set("github_oauth_state", "", { maxAge: 0, path: "/" });
+  response.cookies.set("github_oauth_return_to", "", { maxAge: 0, path: "/" });
+  return response;
+}
+
 async function handleGitHubCallback(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const code = searchParams.get("code");
   const state = searchParams.get("state");
   const expectedState = request.cookies.get("github_oauth_state")?.value;
+  const returnTo = sanitizeReturnTo(
+    request.cookies.get("github_oauth_return_to")?.value
+  );
 
   if (!code || !state) {
-    return NextResponse.redirect(new URL("/profile?github=error&message=missing_params", request.url));
+    return buildCallbackRedirect(request, returnTo, "github=error&message=missing_params");
   }
 
   if (!expectedState || expectedState !== state) {
     logger.warn("GitHub OAuth state mismatch", { endpoint: "/api/github/callback" });
-    const response = NextResponse.redirect(
-      new URL("/profile?github=error&message=invalid_state", request.url)
-    );
-    response.cookies.set("github_oauth_state", "", { maxAge: 0, path: "/" });
-    return response;
+    return buildCallbackRedirect(request, returnTo, "github=error&message=invalid_state");
   }
 
   if (!GITHUB_CLIENT_ID || !GITHUB_CLIENT_SECRET) {
     logger.error("GitHub OAuth not properly configured. Missing required environment variables.");
-    return NextResponse.redirect(new URL("/profile?github=error&message=not_configured", request.url));
+    return buildCallbackRedirect(request, returnTo, "github=error&message=not_configured");
   }
 
   const redirectUri = getGitHubRedirectUri(request);
@@ -66,7 +86,7 @@ async function handleGitHubCallback(request: NextRequest) {
     if (!tokenResponse.ok) {
       const errorText = await tokenResponse.text();
       logger.error("GitHub token exchange failed", { status: tokenResponse.status, body: errorText });
-      return NextResponse.redirect(new URL("/profile?github=error&message=token_failed", request.url));
+      return buildCallbackRedirect(request, returnTo, "github=error&message=token_failed");
     }
 
     const tokenData = await tokenResponse.json();
@@ -78,7 +98,7 @@ async function handleGitHubCallback(request: NextRequest) {
         error_uri: tokenData.error_uri,
         redirect_uri_used: redirectUri,
       });
-      return NextResponse.redirect(new URL("/profile?github=error&message=token_failed", request.url));
+      return buildCallbackRedirect(request, returnTo, "github=error&message=token_failed");
     }
 
     // Get user info from GitHub
@@ -91,7 +111,7 @@ async function handleGitHubCallback(request: NextRequest) {
 
     if (!userResponse.ok) {
       logger.error("GitHub user fetch failed", { status: userResponse.status });
-      return NextResponse.redirect(new URL("/profile?github=error&message=user_fetch_failed", request.url));
+      return buildCallbackRedirect(request, returnTo, "github=error&message=user_fetch_failed");
     }
 
     const githubUser = await userResponse.json();
@@ -106,21 +126,13 @@ async function handleGitHubCallback(request: NextRequest) {
       html_url: githubUser.html_url,
     }));
 
-    const response = NextResponse.redirect(
-      new URL(`/profile?github=success&data=${githubData}`, request.url)
-    );
-    response.cookies.set("github_oauth_state", "", { maxAge: 0, path: "/" });
-    return response;
+    return buildCallbackRedirect(request, returnTo, `github=success&data=${githubData}`);
   } catch (error) {
     logger.logError(error, {
       endpoint: "/api/github/callback",
       method: "GET",
     });
-    const response = NextResponse.redirect(
-      new URL("/profile?github=error&message=unknown", request.url)
-    );
-    response.cookies.set("github_oauth_state", "", { maxAge: 0, path: "/" });
-    return response;
+    return buildCallbackRedirect(request, returnTo, "github=error&message=unknown");
   }
 }
 

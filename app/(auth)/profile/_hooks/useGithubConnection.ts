@@ -24,7 +24,8 @@ export function useGithubConnection(
   user: User | null,
   userProfileGithub?: GithubInfo | null,
   userProvider?: string,
-  refreshUserProfile?: () => Promise<void>
+  refreshUserProfile?: () => Promise<void>,
+  returnTo?: string
 ) {
   const router = useRouter();
   const [connecting, setConnecting] = useState(false);
@@ -32,6 +33,8 @@ export function useGithubConnection(
   const [error, setError] = useState<string | null>(null);
   const [connectedInfo, setConnectedInfo] = useState<GithubInfo | null>(null);
   const [wasDisconnected, setWasDisconnected] = useState(false);
+
+  const fallbackPath = returnTo || "/profile";
 
   // Priority: explicit disconnection > local state > userProfile
   const githubInfo = wasDisconnected ? null : (connectedInfo || userProfileGithub || null);
@@ -43,7 +46,10 @@ export function useGithubConnection(
       return;
     }
     setConnecting(true);
-    window.location.href = "/api/github/authorize";
+    const authorizeUrl = returnTo
+      ? `/api/github/authorize?returnTo=${encodeURIComponent(returnTo)}`
+      : "/api/github/authorize";
+    window.location.href = authorizeUrl;
   };
 
   const disconnect = async () => {
@@ -65,7 +71,7 @@ export function useGithubConnection(
   const handleOAuthSuccess = async (data: Record<string, string>) => {
     if (!user || !db) {
       setError("Please sign in to finish connecting GitHub.");
-      router.replace("/login?redirect=/profile");
+      router.replace(`/login?redirect=${encodeURIComponent(fallbackPath)}`);
       return;
     }
     try {
@@ -100,7 +106,7 @@ export function useGithubConnection(
       await refreshUserProfile?.();
       setConnectedInfo(githubUserInfo);
       setWasDisconnected(false);
-      router.replace("/profile", { scroll: false });
+      router.replace(fallbackPath, { scroll: false });
     } catch {
       setError("Failed to save GitHub connection");
     }
@@ -108,7 +114,7 @@ export function useGithubConnection(
 
   const handleOAuthError = () => {
     setError("Failed to connect GitHub. Please try again.");
-    router.replace("/profile");
+    router.replace(fallbackPath);
   };
 
   return {

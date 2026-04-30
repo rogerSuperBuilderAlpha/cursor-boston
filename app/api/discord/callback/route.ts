@@ -29,28 +29,48 @@ function getDiscordRedirectUri(request: NextRequest): string {
   return `${url.origin}/api/discord/callback`;
 }
 
+function sanitizeReturnTo(value: string | undefined): string | null {
+  if (!value) return null;
+  if (!value.startsWith("/") || value.startsWith("//")) return null;
+  return value;
+}
+
+function buildCallbackRedirect(
+  request: NextRequest,
+  returnTo: string | null,
+  query: string
+): NextResponse {
+  const target = returnTo || "/profile";
+  const separator = target.includes("?") ? "&" : "?";
+  const response = NextResponse.redirect(
+    new URL(`${target}${separator}${query}`, request.url)
+  );
+  response.cookies.set("discord_oauth_state", "", { maxAge: 0, path: "/" });
+  response.cookies.set("discord_oauth_return_to", "", { maxAge: 0, path: "/" });
+  return response;
+}
+
 async function handleDiscordCallback(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const code = searchParams.get("code");
   const state = searchParams.get("state");
   const expectedState = request.cookies.get("discord_oauth_state")?.value;
+  const returnTo = sanitizeReturnTo(
+    request.cookies.get("discord_oauth_return_to")?.value
+  );
 
   if (!code || !state) {
-    return NextResponse.redirect(new URL("/profile?discord=error&message=missing_params", request.url));
+    return buildCallbackRedirect(request, returnTo, "discord=error&message=missing_params");
   }
 
   if (!expectedState || expectedState !== state) {
     logger.warn("Discord OAuth state mismatch", { endpoint: "/api/discord/callback" });
-    const response = NextResponse.redirect(
-      new URL("/profile?discord=error&message=invalid_state", request.url)
-    );
-    response.cookies.set("discord_oauth_state", "", { maxAge: 0, path: "/" });
-    return response;
+    return buildCallbackRedirect(request, returnTo, "discord=error&message=invalid_state");
   }
 
   if (!DISCORD_CLIENT_ID || !DISCORD_CLIENT_SECRET || !DISCORD_SERVER_ID) {
     logger.error("Discord OAuth not properly configured. Missing required environment variables.");
-    return NextResponse.redirect(new URL("/profile?discord=error&message=not_configured", request.url));
+    return buildCallbackRedirect(request, returnTo, "discord=error&message=not_configured");
   }
 
   const redirectUri = getDiscordRedirectUri(request);
@@ -75,7 +95,7 @@ async function handleDiscordCallback(request: NextRequest) {
     if (!tokenResponse.ok) {
       const errorText = await tokenResponse.text();
       logger.error("Discord token exchange failed", { status: tokenResponse.status, body: errorText, redirect_uri: redirectUri });
-      return NextResponse.redirect(new URL("/profile?discord=error&message=token_failed", request.url));
+      return buildCallbackRedirect(request, returnTo, "discord=error&message=token_failed");
     }
 
     const tokenData = await tokenResponse.json();
@@ -89,7 +109,7 @@ async function handleDiscordCallback(request: NextRequest) {
 
     if (!userResponse.ok) {
       logger.error("Discord user fetch failed", { status: userResponse.status });
-      return NextResponse.redirect(new URL("/profile?discord=error&message=user_fetch_failed", request.url));
+      return buildCallbackRedirect(request, returnTo, "discord=error&message=user_fetch_failed");
     }
 
     const discordUser = await userResponse.json();
@@ -103,7 +123,7 @@ async function handleDiscordCallback(request: NextRequest) {
 
     if (!guildsResponse.ok) {
       logger.error("Discord guilds fetch failed", { status: guildsResponse.status });
-      return NextResponse.redirect(new URL("/profile?discord=error&message=guilds_fetch_failed", request.url));
+      return buildCallbackRedirect(request, returnTo, "discord=error&message=guilds_fetch_failed");
     }
 
     const guilds = await guildsResponse.json();
@@ -111,7 +131,7 @@ async function handleDiscordCallback(request: NextRequest) {
 
     if (!isMember) {
       // User is not a member of the Cursor Boston Discord
-      return NextResponse.redirect(new URL("/profile?discord=error&message=not_member", request.url));
+      return buildCallbackRedirect(request, returnTo, "discord=error&message=not_member");
     }
 
     // Return success with Discord user data encoded in URL
@@ -123,21 +143,13 @@ async function handleDiscordCallback(request: NextRequest) {
       avatar: discordUser.avatar,
     }));
 
-    const response = NextResponse.redirect(
-      new URL(`/profile?discord=success&data=${discordData}`, request.url)
-    );
-    response.cookies.set("discord_oauth_state", "", { maxAge: 0, path: "/" });
-    return response;
+    return buildCallbackRedirect(request, returnTo, `discord=success&data=${discordData}`);
   } catch (error) {
     logger.logError(error, {
       endpoint: "/api/discord/callback",
       method: "GET",
     });
-    const response = NextResponse.redirect(
-      new URL("/profile?discord=error&message=unknown", request.url)
-    );
-    response.cookies.set("discord_oauth_state", "", { maxAge: 0, path: "/" });
-    return response;
+    return buildCallbackRedirect(request, returnTo, "discord=error&message=unknown");
   }
 }
 
