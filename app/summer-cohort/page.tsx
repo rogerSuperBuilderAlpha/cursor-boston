@@ -8,6 +8,7 @@
 
 import {
   type FormEvent,
+  Suspense,
   useCallback,
   useEffect,
   useMemo,
@@ -59,7 +60,7 @@ function CohortDatesList() {
   );
 }
 
-export default function SummerCohortPage() {
+function SummerCohortPageInner() {
   const searchParams = useSearchParams();
   const { user, userProfile, loading, refreshUserProfile } = useAuth();
 
@@ -480,5 +481,19 @@ export default function SummerCohortPage() {
         </section>
       ) : null}
     </div>
+  );
+}
+
+export default function SummerCohortPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto w-full max-w-3xl px-4 py-10 text-sm text-neutral-500 md:px-6 md:py-14">
+          Loading…
+        </div>
+      }
+    >
+      <SummerCohortPageInner />
+    </Suspense>
   );
 }
