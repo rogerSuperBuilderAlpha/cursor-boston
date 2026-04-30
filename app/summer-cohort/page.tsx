@@ -89,6 +89,8 @@ function SummerCohortPageInner() {
   );
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [withdrawing, setWithdrawing] = useState(false);
+  const [withdrawError, setWithdrawError] = useState<string | null>(null);
 
   // Default name from auth profile once it loads.
   useEffect(() => {
@@ -214,6 +216,42 @@ function SummerCohortPageInner() {
     }
   };
 
+  const withdraw = async () => {
+    if (!user) return;
+    if (
+      typeof window !== "undefined" &&
+      !window.confirm(
+        "Withdraw your Summer Cohort application? This will remove your application from our system."
+      )
+    ) {
+      return;
+    }
+    setWithdrawError(null);
+    setWithdrawing(true);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch("/api/summer-cohort/apply", {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        setWithdrawError(
+          typeof json.error === "string" ? json.error : "Failed to withdraw."
+        );
+        return;
+      }
+      setApplication(null);
+      setName(user.displayName || "");
+      setPhone("");
+      setPickedCohorts(new Set(SUMMER_COHORTS.map((c) => c.id)));
+    } catch {
+      setWithdrawError("Network error. Please try again.");
+    } finally {
+      setWithdrawing(false);
+    }
+  };
+
   const cohortLabel = useMemo(() => {
     const map = new Map(SUMMER_COHORTS.map((c) => [c.id, c.label] as const));
     return (id: SummerCohortId) => map.get(id) || id;
@@ -292,6 +330,21 @@ function SummerCohortPageInner() {
             <p className="mt-2 text-sm text-neutral-700 dark:text-neutral-300">
               {KICKOFF_NOTE}
             </p>
+            <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-emerald-200 pt-4 dark:border-emerald-900">
+              <button
+                type="button"
+                onClick={withdraw}
+                disabled={withdrawing}
+                className="inline-flex items-center gap-2 rounded-lg border border-red-300 bg-white px-3 py-2 text-xs font-semibold text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50 dark:border-red-900 dark:bg-transparent dark:text-red-400 dark:hover:bg-red-950/30"
+              >
+                {withdrawing ? "Withdrawing…" : "Withdraw application"}
+              </button>
+              {withdrawError ? (
+                <span className="text-xs text-red-600 dark:text-red-400">
+                  {withdrawError}
+                </span>
+              ) : null}
+            </div>
           </section>
           <CohortProgramBreakdown />
         </>
