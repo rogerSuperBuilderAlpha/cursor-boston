@@ -23,6 +23,7 @@ import { useGithubConnection } from "@/app/(auth)/profile/_hooks/useGithubConnec
 import { useDiscordConnection } from "@/app/(auth)/profile/_hooks/useDiscordConnection";
 import {
   SUMMER_COHORTS,
+  SUMMER_COHORT_IMMERSION,
   SUMMER_COHORT_RETURN_TO,
   type SummerCohortId,
 } from "@/lib/summer-cohort";
@@ -36,6 +37,9 @@ interface ApplicationDto {
   cohorts: SummerCohortId[];
   siteId: string | null;
   status: "pending" | "admitted" | "rejected" | "waitlist";
+  isLocal: boolean | null;
+  wantsToPresent: boolean | null;
+  mayImmersionRsvped: boolean;
   createdAt: number | null;
   updatedAt: number | null;
 }
@@ -49,12 +53,17 @@ function CohortDatesList() {
       {SUMMER_COHORTS.map((cohort) => (
         <li
           key={cohort.id}
-          className="flex items-center justify-between gap-3 px-4 py-3 rounded-lg bg-neutral-100 border border-neutral-200 dark:bg-neutral-900 dark:border-neutral-800"
+          className="rounded-lg bg-neutral-100 border border-neutral-200 px-4 py-3 dark:bg-neutral-900 dark:border-neutral-800"
         >
-          <span className="text-sm font-semibold">{cohort.label}</span>
-          <span className="text-xs text-neutral-600 dark:text-neutral-300">
-            {cohort.startLabel} – {cohort.endLabel}
-          </span>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-sm font-semibold">{cohort.label}</span>
+            <span className="text-xs text-neutral-600 dark:text-neutral-300">
+              {cohort.startLabel} – {cohort.endLabel}
+            </span>
+          </div>
+          <div className="mt-1 text-xs font-medium text-emerald-700 dark:text-emerald-400">
+            {cohort.graduationLabel}
+          </div>
         </li>
       ))}
     </ul>
@@ -73,6 +82,44 @@ interface StatusPanelProps {
   withdrawError: string | null;
   onWithdraw: () => void;
   needsDiscord: boolean;
+}
+
+function MayImmersionCallout({ rsvped }: { rsvped: boolean }) {
+  if (rsvped) {
+    return (
+      <div className="mt-4 rounded-lg border-l-4 border-emerald-500 bg-emerald-50 p-3 text-sm text-emerald-900 dark:border-emerald-400 dark:bg-emerald-950/40 dark:text-emerald-200">
+        <strong>✓ {SUMMER_COHORT_IMMERSION.label} immersion event:</strong>{" "}
+        you&apos;re registered on Luma. We&apos;ll see you at the{" "}
+        {SUMMER_COHORT_IMMERSION.title}.
+      </div>
+    );
+  }
+  return (
+    <div className="mt-4 rounded-lg border-l-4 border-amber-500 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-400 dark:bg-amber-950/40 dark:text-amber-200">
+      <strong>Action needed — {SUMMER_COHORT_IMMERSION.label}:</strong> we
+      don&apos;t see you on the Luma list for the{" "}
+      {SUMMER_COHORT_IMMERSION.title}. Cohort 1 gets priority on the 80-person
+      cap, but you still need to RSVP.{" "}
+      <a
+        href={SUMMER_COHORT_IMMERSION.lumaUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="font-semibold underline decoration-amber-700/60 underline-offset-2 hover:decoration-amber-700 dark:decoration-amber-300/60"
+      >
+        Reserve your spot on Luma →
+      </a>
+    </div>
+  );
+}
+
+function DisclosuresMissingCallout() {
+  return (
+    <div className="mt-4 rounded-lg border-l-4 border-amber-500 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-400 dark:bg-amber-950/40 dark:text-amber-200">
+      <strong>Action needed:</strong> we added two new questions to the
+      application — your locality and your comfort with presenting/managing the
+      platform. Please update them in the form below.
+    </div>
+  );
 }
 
 function ApplicationStatusPanel({
@@ -130,6 +177,11 @@ function ApplicationStatusPanel({
             };
 
   const showDiscordCallout = status === "admitted" && needsDiscord;
+  const isInCohort1 = application.cohorts.includes("cohort-1");
+  const showImmersionCallout =
+    isInCohort1 && (status === "pending" || status === "admitted");
+  const disclosuresMissing =
+    application.isLocal === null || application.wantsToPresent === null;
 
   return (
     <section className={tone.panel}>
@@ -146,6 +198,12 @@ function ApplicationStatusPanel({
       <p className="mt-2 text-sm text-neutral-700 dark:text-neutral-300">
         {tone.body}
       </p>
+
+      {disclosuresMissing ? <DisclosuresMissingCallout /> : null}
+
+      {showImmersionCallout ? (
+        <MayImmersionCallout rsvped={application.mayImmersionRsvped} />
+      ) : null}
 
       {showDiscordCallout ? (
         <div className="mt-4 rounded-lg border-l-4 border-amber-500 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-400 dark:bg-amber-950/40 dark:text-amber-200">
@@ -209,8 +267,11 @@ function SummerCohortPageInner() {
   const [pickedCohorts, setPickedCohorts] = useState<Set<SummerCohortId>>(
     new Set(SUMMER_COHORTS.map((c) => c.id))
   );
+  const [isLocal, setIsLocal] = useState<boolean | null>(null);
+  const [wantsToPresent, setWantsToPresent] = useState<boolean | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
   const [withdrawing, setWithdrawing] = useState(false);
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
 
@@ -239,7 +300,18 @@ function SummerCohortPageInner() {
           throw new Error("load_failed");
         }
         const json = (await res.json()) as { application: ApplicationDto | null };
-        if (!cancelled) setApplication(json.application);
+        if (!cancelled) {
+          setApplication(json.application);
+          // Hydrate the form from the existing application so the edit
+          // experience pre-fills everything they already submitted.
+          if (json.application) {
+            setName(json.application.name || user.displayName || "");
+            setPhone(json.application.phone || "");
+            setPickedCohorts(new Set(json.application.cohorts));
+            setIsLocal(json.application.isLocal);
+            setWantsToPresent(json.application.wantsToPresent);
+          }
+        }
       } catch {
         if (!cancelled) setAppLoadError("Couldn't load your application status.");
       } finally {
@@ -299,6 +371,7 @@ function SummerCohortPageInner() {
     e.preventDefault();
     if (!user) return;
     setSubmitError(null);
+    setSubmitSuccess(null);
 
     const cohorts = Array.from(pickedCohorts);
     if (cohorts.length === 0) {
@@ -313,7 +386,18 @@ function SummerCohortPageInner() {
       setSubmitError("Please enter a phone number.");
       return;
     }
+    if (isLocal === null) {
+      setSubmitError("Tell us whether you're local and plan to attend live events.");
+      return;
+    }
+    if (wantsToPresent === null) {
+      setSubmitError(
+        "Tell us whether you're comfortable presenting and managing the platform if you win."
+      );
+      return;
+    }
 
+    const isUpdate = application !== null;
     setSubmitting(true);
     try {
       const token = await user.getIdToken();
@@ -323,7 +407,13 @@ function SummerCohortPageInner() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ name: name.trim(), phone: phone.trim(), cohorts }),
+        body: JSON.stringify({
+          name: name.trim(),
+          phone: phone.trim(),
+          cohorts,
+          isLocal,
+          wantsToPresent,
+        }),
       });
       const json = await res.json();
       if (!res.ok) {
@@ -331,6 +421,9 @@ function SummerCohortPageInner() {
         return;
       }
       setApplication(json.application as ApplicationDto);
+      if (isUpdate) {
+        setSubmitSuccess("Saved.");
+      }
     } catch {
       setSubmitError("Network error. Please try again.");
     } finally {
@@ -367,6 +460,9 @@ function SummerCohortPageInner() {
       setName(user.displayName || "");
       setPhone("");
       setPickedCohorts(new Set(SUMMER_COHORTS.map((c) => c.id)));
+      setIsLocal(null);
+      setWantsToPresent(null);
+      setSubmitSuccess(null);
     } catch {
       setWithdrawError("Network error. Please try again.");
     } finally {
@@ -434,112 +530,205 @@ function SummerCohortPageInner() {
         <div className="rounded-xl border border-red-300 bg-red-50 p-6 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
           {appLoadError}
         </div>
-      ) : application ? (
-        <>
-          <ApplicationStatusPanel
-            application={application}
-            cohortLabel={cohortLabel}
-            withdrawing={withdrawing}
-            withdrawError={withdrawError}
-            onWithdraw={withdraw}
-            needsDiscord={!discord.discordInfo}
-          />
-          <CohortProgramBreakdown />
-        </>
       ) : (
-        <section className="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
-          <h2 className="text-lg font-semibold">Apply</h2>
-          <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-            Fill this out and we&apos;ll be in touch.
-          </p>
-          <form onSubmit={submit} className="mt-5 space-y-4">
-            <div>
-              <label
-                htmlFor="cohort-name"
-                className="block text-sm font-medium"
-              >
-                Name
-              </label>
-              <input
-                id="cohort-name"
-                type="text"
-                required
-                maxLength={200}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 dark:border-neutral-700 dark:bg-neutral-950"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="cohort-email"
-                className="block text-sm font-medium"
-              >
-                Email
-              </label>
-              <input
-                id="cohort-email"
-                type="email"
-                value={user.email || ""}
-                readOnly
-                className="mt-1 w-full cursor-not-allowed rounded-lg border border-neutral-200 bg-neutral-100 px-3 py-2 text-sm text-neutral-600 dark:border-neutral-800 dark:bg-neutral-800/60 dark:text-neutral-400"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="cohort-phone"
-                className="block text-sm font-medium"
-              >
-                Phone
-              </label>
-              <input
-                id="cohort-phone"
-                type="tel"
-                required
-                maxLength={50}
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 dark:border-neutral-700 dark:bg-neutral-950"
-              />
-            </div>
-            <fieldset>
-              <legend className="block text-sm font-medium">
-                Which cohort(s)? Pick at least one.
-              </legend>
-              <div className="mt-2 space-y-2">
-                {SUMMER_COHORTS.map((cohort) => (
-                  <label
-                    key={cohort.id}
-                    className="flex items-center gap-3 rounded-lg border border-neutral-200 px-3 py-2.5 text-sm dark:border-neutral-800"
-                  >
+        <>
+          {application ? (
+            <ApplicationStatusPanel
+              application={application}
+              cohortLabel={cohortLabel}
+              withdrawing={withdrawing}
+              withdrawError={withdrawError}
+              onWithdraw={withdraw}
+              needsDiscord={!discord.discordInfo}
+            />
+          ) : null}
+          <section
+            className={`${application ? "mt-6" : ""} rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900`}
+          >
+            <h2 className="text-lg font-semibold">
+              {application ? "Your application" : "Apply"}
+            </h2>
+            <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+              {application
+                ? "Update anything here and hit Save. Your status stays the same."
+                : "Fill this out and we'll be in touch."}
+            </p>
+            <form onSubmit={submit} className="mt-5 space-y-4">
+              <div>
+                <label
+                  htmlFor="cohort-name"
+                  className="block text-sm font-medium"
+                >
+                  Name
+                </label>
+                <input
+                  id="cohort-name"
+                  type="text"
+                  required
+                  maxLength={200}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 dark:border-neutral-700 dark:bg-neutral-950"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="cohort-email"
+                  className="block text-sm font-medium"
+                >
+                  Email
+                </label>
+                <input
+                  id="cohort-email"
+                  type="email"
+                  value={user.email || ""}
+                  readOnly
+                  className="mt-1 w-full cursor-not-allowed rounded-lg border border-neutral-200 bg-neutral-100 px-3 py-2 text-sm text-neutral-600 dark:border-neutral-800 dark:bg-neutral-800/60 dark:text-neutral-400"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="cohort-phone"
+                  className="block text-sm font-medium"
+                >
+                  Phone
+                </label>
+                <input
+                  id="cohort-phone"
+                  type="tel"
+                  required
+                  maxLength={50}
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 dark:border-neutral-700 dark:bg-neutral-950"
+                />
+              </div>
+              <fieldset>
+                <legend className="block text-sm font-medium">
+                  Which cohort(s)? Pick at least one.
+                </legend>
+                <div className="mt-2 space-y-2">
+                  {SUMMER_COHORTS.map((cohort) => (
+                    <label
+                      key={cohort.id}
+                      className="flex items-center gap-3 rounded-lg border border-neutral-200 px-3 py-2.5 text-sm dark:border-neutral-800"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={pickedCohorts.has(cohort.id)}
+                        onChange={() => toggleCohort(cohort.id)}
+                        className="h-4 w-4 rounded border-neutral-300 text-emerald-500 focus:ring-emerald-500"
+                      />
+                      <span className="font-semibold">{cohort.label}</span>
+                      <span className="text-xs text-neutral-600 dark:text-neutral-400">
+                        {cohort.startLabel} – {cohort.endLabel}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+              <fieldset>
+                <legend className="block text-sm font-medium">
+                  Are you local to Boston and planning to attend the live
+                  events?
+                </legend>
+                <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
+                  It&apos;s completely fine to participate from outside Boston —
+                  most of the cohort is on Zoom. We just need to know who&apos;s
+                  local. <strong>Heads up:</strong> for the first 3 weeks
+                  (PM/comms/marketing tool weeks), in-person attendance at the
+                  live demo events is mandatory if you want to be eligible to
+                  win that week&apos;s vote.
+                </p>
+                <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <label className="flex items-center gap-3 rounded-lg border border-neutral-200 px-3 py-2.5 text-sm dark:border-neutral-800">
                     <input
-                      type="checkbox"
-                      checked={pickedCohorts.has(cohort.id)}
-                      onChange={() => toggleCohort(cohort.id)}
-                      className="h-4 w-4 rounded border-neutral-300 text-emerald-500 focus:ring-emerald-500"
+                      type="radio"
+                      name="cohort-is-local"
+                      checked={isLocal === true}
+                      onChange={() => setIsLocal(true)}
+                      className="h-4 w-4 border-neutral-300 text-emerald-500 focus:ring-emerald-500"
                     />
-                    <span className="font-semibold">{cohort.label}</span>
-                    <span className="text-xs text-neutral-600 dark:text-neutral-400">
-                      {cohort.startLabel} – {cohort.endLabel}
+                    <span>
+                      Yes — I&apos;m local and plan to attend live events
                     </span>
                   </label>
-                ))}
-              </div>
-            </fieldset>
-            {submitError ? (
-              <p className="text-sm text-red-600 dark:text-red-400">
-                {submitError}
-              </p>
-            ) : null}
-            <button
-              type="submit"
-              disabled={submitting}
-              className="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-400 disabled:opacity-50"
-            >
-              {submitting ? "Submitting…" : "Submit application"}
-            </button>
-          </form>
-        </section>
+                  <label className="flex items-center gap-3 rounded-lg border border-neutral-200 px-3 py-2.5 text-sm dark:border-neutral-800">
+                    <input
+                      type="radio"
+                      name="cohort-is-local"
+                      checked={isLocal === false}
+                      onChange={() => setIsLocal(false)}
+                      className="h-4 w-4 border-neutral-300 text-emerald-500 focus:ring-emerald-500"
+                    />
+                    <span>
+                      No — remote only (skipping the live events is fine)
+                    </span>
+                  </label>
+                </div>
+              </fieldset>
+              <fieldset>
+                <legend className="block text-sm font-medium">
+                  If you win a week-1/2/3 vote, are you comfortable presenting
+                  AND managing the platform for the rest of the cohort?
+                </legend>
+                <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
+                  Not everyone has to present — only people who are comfortable
+                  doing it AND comfortable maintaining the winning platform
+                  through the rest of the cohort. Say no and you can still
+                  participate fully; you just won&apos;t be eligible to win the
+                  vote that week.
+                </p>
+                <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <label className="flex items-center gap-3 rounded-lg border border-neutral-200 px-3 py-2.5 text-sm dark:border-neutral-800">
+                    <input
+                      type="radio"
+                      name="cohort-wants-to-present"
+                      checked={wantsToPresent === true}
+                      onChange={() => setWantsToPresent(true)}
+                      className="h-4 w-4 border-neutral-300 text-emerald-500 focus:ring-emerald-500"
+                    />
+                    <span>Yes — count me in to present and maintain</span>
+                  </label>
+                  <label className="flex items-center gap-3 rounded-lg border border-neutral-200 px-3 py-2.5 text-sm dark:border-neutral-800">
+                    <input
+                      type="radio"
+                      name="cohort-wants-to-present"
+                      checked={wantsToPresent === false}
+                      onChange={() => setWantsToPresent(false)}
+                      className="h-4 w-4 border-neutral-300 text-emerald-500 focus:ring-emerald-500"
+                    />
+                    <span>No — I&apos;ll participate but not present</span>
+                  </label>
+                </div>
+              </fieldset>
+              {submitError ? (
+                <p className="text-sm text-red-600 dark:text-red-400">
+                  {submitError}
+                </p>
+              ) : null}
+              {submitSuccess ? (
+                <p className="text-sm text-emerald-600 dark:text-emerald-400">
+                  {submitSuccess}
+                </p>
+              ) : null}
+              <button
+                type="submit"
+                disabled={submitting}
+                className="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-400 disabled:opacity-50"
+              >
+                {submitting
+                  ? application
+                    ? "Saving…"
+                    : "Submitting…"
+                  : application
+                    ? "Save updates"
+                    : "Submit application"}
+              </button>
+            </form>
+          </section>
+          {application ? <CohortProgramBreakdown /> : null}
+        </>
       )}
 
       {/* Connections panel — visible whenever the user is signed in. */}
