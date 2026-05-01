@@ -11,6 +11,7 @@ import { logger } from "@/lib/logger";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import {
   LUDWITT_FINALIZE_COOKIE,
+  LUDWITT_LINK_UID_COOKIE,
   LUDWITT_PKCE_COOKIE,
   LUDWITT_RETURN_TO_COOKIE,
   LUDWITT_STATE_COOKIE,
@@ -43,12 +44,23 @@ function clearOauthCookies(response: NextResponse) {
   response.cookies.set(LUDWITT_STATE_COOKIE, "", { maxAge: 0, path: "/" });
   response.cookies.set(LUDWITT_PKCE_COOKIE, "", { maxAge: 0, path: "/" });
   response.cookies.set(LUDWITT_RETURN_TO_COOKIE, "", { maxAge: 0, path: "/" });
+  response.cookies.set(LUDWITT_LINK_UID_COOKIE, "", { maxAge: 0, path: "/" });
 }
 
-function redirectError(request: NextRequest, message: string): NextResponse {
-  const response = NextResponse.redirect(
-    new URL(`/login?ludwitt=error&message=${encodeURIComponent(message)}`, request.url)
-  );
+function redirectError(
+  request: NextRequest,
+  message: string,
+  options?: { connectReturnTo?: string | null }
+): NextResponse {
+  const target =
+    options?.connectReturnTo ??
+    `/login?ludwitt=error&message=${encodeURIComponent(message)}`;
+  // For connect-mode (returnTo provided), append the error to the returnTo URL
+  // so the page that initiated the link can render a banner.
+  const url = options?.connectReturnTo
+    ? `${target}${target.includes("?") ? "&" : "?"}ludwitt=error&message=${encodeURIComponent(message)}`
+    : target;
+  const response = NextResponse.redirect(new URL(url, request.url));
   clearOauthCookies(response);
   return response;
 }
@@ -82,26 +94,28 @@ async function handleLudwittCallback(request: NextRequest): Promise<NextResponse
   const state = sp.get("state");
   const providerError = sp.get("error");
 
-  if (providerError) {
-    return redirectError(request, providerError);
-  }
-
   const expectedState = request.cookies.get(LUDWITT_STATE_COOKIE)?.value;
   const verifier = request.cookies.get(LUDWITT_PKCE_COOKIE)?.value;
   const returnTo = sanitizeReturnTo(
     request.cookies.get(LUDWITT_RETURN_TO_COOKIE)?.value
   );
+  const linkUid = request.cookies.get(LUDWITT_LINK_UID_COOKIE)?.value;
+  const isConnectFlow = Boolean(linkUid);
+  const errorOpts = isConnectFlow
+    ? { connectReturnTo: returnTo || "/profile" }
+    : undefined;
 
-  if (!code || !state) return redirectError(request, "missing_params");
+  if (providerError) return redirectError(request, providerError, errorOpts);
+  if (!code || !state) return redirectError(request, "missing_params", errorOpts);
   if (!expectedState || expectedState !== state)
-    return redirectError(request, "invalid_state");
-  if (!verifier) return redirectError(request, "invalid_state");
+    return redirectError(request, "invalid_state", errorOpts);
+  if (!verifier) return redirectError(request, "invalid_state", errorOpts);
 
   const clientId = getLudwittClientId();
   const clientSecret = getLudwittClientSecret();
   if (!clientId || !clientSecret) {
     logger.error("Ludwitt OAuth not configured");
-    return redirectError(request, "not_configured");
+    return redirectError(request, "not_configured", errorOpts);
   }
 
   const redirectUri = getLudwittRedirectUri(request);
@@ -127,12 +141,12 @@ async function handleLudwittCallback(request: NextRequest): Promise<NextResponse
         status: tokenRes.status,
         body: body.slice(0, 300),
       });
-      return redirectError(request, "token_failed");
+      return redirectError(request, "token_failed", errorOpts);
     }
     tokens = (await tokenRes.json()) as LudwittTokenResponse;
   } catch (err) {
     logger.logError(err, { stage: "token_exchange" });
-    return redirectError(request, "token_failed");
+    return redirectError(request, "token_failed", errorOpts);
   }
 
   // 2. Fetch userinfo
@@ -143,34 +157,44 @@ async function handleLudwittCallback(request: NextRequest): Promise<NextResponse
     });
     if (!uiRes.ok) {
       logger.warn("Ludwitt userinfo failed", { status: uiRes.status });
-      return redirectError(request, "userinfo_failed");
+      return redirectError(request, "userinfo_failed", errorOpts);
     }
     userinfo = (await uiRes.json()) as LudwittUserInfo;
   } catch (err) {
     logger.logError(err, { stage: "userinfo" });
-    return redirectError(request, "userinfo_failed");
+    return redirectError(request, "userinfo_failed", errorOpts);
   }
 
   if (!userinfo.email) {
-    return redirectError(request, "no_email");
+    return redirectError(request, "no_email", errorOpts);
   }
 
-  // 3. Resolve / create Firebase user by email (silent merge)
+  // 3. Resolve target Firebase uid:
+  //    - Connect flow: link to the already-signed-in user (uid from cookie)
+  //    - Sign-in flow: silent merge by email (or createUser)
   let uid: string;
   try {
-    uid = await resolveFirebaseUid({
-      email: userinfo.email,
-      name: userinfo.name,
-      picture: userinfo.picture,
-    });
+    if (isConnectFlow && linkUid) {
+      const adminAuth = getAdminAuth();
+      if (!adminAuth) throw new Error("admin_auth_unavailable");
+      // Validate the cookie-borne uid actually exists. Throws if missing.
+      await adminAuth.getUser(linkUid);
+      uid = linkUid;
+    } else {
+      uid = await resolveFirebaseUid({
+        email: userinfo.email,
+        name: userinfo.name,
+        picture: userinfo.picture,
+      });
+    }
   } catch (err) {
     logger.logError(err, { stage: "firebase_user", email: userinfo.email });
-    return redirectError(request, "firebase_user_failed");
+    return redirectError(request, "firebase_user_failed", errorOpts);
   }
 
   // 4. Persist tokens (server-only) + identity (public-safe)
   const db = getAdminDb();
-  if (!db) return redirectError(request, "not_configured");
+  if (!db) return redirectError(request, "not_configured", errorOpts);
   try {
     await saveLudwittTokens(uid, tokens);
     await db
@@ -192,10 +216,23 @@ async function handleLudwittCallback(request: NextRequest): Promise<NextResponse
       );
   } catch (err) {
     logger.logError(err, { stage: "persist_tokens", uid });
-    return redirectError(request, "token_persist_failed");
+    return redirectError(request, "token_persist_failed", errorOpts);
   }
 
-  // 5. Mint Firebase custom token
+  // 5. Connect flow: user is already signed in. Skip custom-token mint and
+  // redirect straight to returnTo with a success indicator.
+  if (isConnectFlow) {
+    const target = returnTo || "/profile";
+    const url = new URL(
+      `${target}${target.includes("?") ? "&" : "?"}ludwitt=success`,
+      request.url
+    );
+    const response = NextResponse.redirect(url);
+    clearOauthCookies(response);
+    return response;
+  }
+
+  // 6. Sign-in flow: mint Firebase custom token and hand to finalize page.
   let customToken: string;
   try {
     const adminAuth = getAdminAuth();
@@ -205,10 +242,9 @@ async function handleLudwittCallback(request: NextRequest): Promise<NextResponse
     });
   } catch (err) {
     logger.logError(err, { stage: "custom_token", uid });
-    return redirectError(request, "custom_token_failed");
+    return redirectError(request, "custom_token_failed", errorOpts);
   }
 
-  // 6. Hand the custom token to the finalize page via httpOnly cookie
   const finalizeUrl = new URL("/auth/ludwitt-finalize", request.url);
   if (returnTo) finalizeUrl.searchParams.set("returnTo", returnTo);
   const response = NextResponse.redirect(finalizeUrl);

@@ -11,6 +11,7 @@ import type { ReadonlyURLSearchParams } from "next/navigation";
 import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import type { useDiscordConnection } from "./useDiscordConnection";
 import type { useGithubConnection } from "./useGithubConnection";
+import type { useLudwittConnection } from "./useLudwittConnection";
 import type { useEmailManagement } from "./useEmailManagement";
 import type { Tab } from "../_types";
 
@@ -20,6 +21,7 @@ interface OAuthCallbackDeps {
   router: AppRouterInstance;
   discord: ReturnType<typeof useDiscordConnection>;
   github: ReturnType<typeof useGithubConnection>;
+  ludwitt: ReturnType<typeof useLudwittConnection>;
   email: ReturnType<typeof useEmailManagement>;
   refreshUserProfile: () => Promise<void>;
   setActiveTab: (tab: Tab) => void;
@@ -31,6 +33,7 @@ export function useOAuthCallbacks({
   router,
   discord,
   github,
+  ludwitt,
   email,
   refreshUserProfile,
   setActiveTab,
@@ -58,6 +61,14 @@ export function useOAuthCallbacks({
       } else if (githubStatus === "error") {
         github.handleOAuthError();
       }
+    }
+
+    // Ludwitt callback (connect-flow only — sign-in flow doesn't land here).
+    const ludwittStatus = searchParams.get("ludwitt");
+    if (ludwittStatus === "success") {
+      ludwitt.handleOAuthSuccess();
+    } else if (ludwittStatus === "error") {
+      ludwitt.handleOAuthError(searchParams.get("message"));
     }
 
     // Email verification callback

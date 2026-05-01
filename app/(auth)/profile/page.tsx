@@ -32,6 +32,7 @@ function ProfilePageContent() {
     data: { connectedAgents, loadingAgents },
     discord,
     github,
+    ludwitt,
     google,
     profileSettings,
     password,
@@ -72,6 +73,7 @@ function ProfilePageContent() {
     router,
     discord,
     github,
+    ludwitt,
     email: ctx.email,
     refreshUserProfile: ctx.refreshUserProfile,
     setActiveTab: (tab) => {

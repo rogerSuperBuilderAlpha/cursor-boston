@@ -21,6 +21,7 @@ export const LUDWITT_FINALIZE_COOKIE = "ludwitt_finalize_token";
 export const LUDWITT_STATE_COOKIE = "ludwitt_oauth_state";
 export const LUDWITT_PKCE_COOKIE = "ludwitt_oauth_pkce_verifier";
 export const LUDWITT_RETURN_TO_COOKIE = "ludwitt_oauth_return_to";
+export const LUDWITT_LINK_UID_COOKIE = "ludwitt_oauth_link_uid";
 
 export const LUDWITT_API_TIMEOUT_MS = 15_000;
 
