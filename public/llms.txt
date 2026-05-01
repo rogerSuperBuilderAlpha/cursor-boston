@@ -20,6 +20,7 @@ Licensed GPL-3.0-only.
     /accessibility
     /agents/claim/[token]
     /analytics
+    /auth/ludwitt-finalize
     /badges
     /blog
     /blog/[slug]
@@ -27,6 +28,7 @@ Licensed GPL-3.0-only.
     /certificate/verify/[certId]
     /cfp
     /code-of-conduct
+    /cohort-ai
     /cookbook
     /cookies
     /disclaimer

@@ -124,6 +124,13 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Ludwitt OAuth access/refresh tokens - server-side only (Admin SDK).
+    // Tokens NEVER reach the browser; only the public-safe ludwitt
+    // sub-object on users/{uid} is client-readable.
+    match /ludwittTokens/{uid} {
+      allow read, write: if false;
+    }
+
     // Materialized read models (analytics + public members directory) — Admin SDK only
     match /analytics_snapshots/{docId} {
       allow read, write: if false;
