@@ -19,13 +19,19 @@ jest.mock("@/lib/mailgun", () => ({
 const mockDocGet = jest.fn();
 const mockDocSet = jest.fn().mockResolvedValue(undefined);
 const mockOrderByGet = jest.fn();
+const mockLumaDocGet = jest.fn().mockResolvedValue({ exists: false });
 
 jest.mock("@/lib/firebase-admin", () => ({
   getAdminDb: jest.fn(() => ({
-    collection: () => ({
-      doc: () => ({ get: mockDocGet, set: mockDocSet }),
-      orderBy: () => ({ get: mockOrderByGet }),
-    }),
+    collection: (name: string) => {
+      if (name === "hackathonLumaRegistrants") {
+        return { doc: () => ({ get: mockLumaDocGet }) };
+      }
+      return {
+        doc: () => ({ get: mockDocGet, set: mockDocSet }),
+        orderBy: () => ({ get: mockOrderByGet }),
+      };
+    },
   })),
 }));
 
@@ -60,6 +66,16 @@ function makeGet() {
   });
 }
 
+/** Minimum payload that satisfies every required field. Tests override fields
+ *  by spreading on top. */
+const validBody = {
+  name: "x",
+  phone: "1",
+  cohorts: ["cohort-1"],
+  isLocal: true,
+  wantsToPresent: false,
+};
+
 describe("POST /api/summer-cohort/apply", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -74,24 +90,23 @@ describe("POST /api/summer-cohort/apply", () => {
         cohorts: ["cohort-1"],
         siteId: "cursor-boston",
         status: "pending",
+        isLocal: true,
+        wantsToPresent: false,
       }),
     });
     mockOrderByGet.mockResolvedValue({ docs: [] });
+    mockLumaDocGet.mockResolvedValue({ exists: false });
   });
 
   it("returns 401 when unauthenticated", async () => {
     mockGetVerifiedUser.mockResolvedValue(null);
-    const res = await POST(
-      makePost({ name: "x", phone: "1", cohorts: ["cohort-1"] })
-    );
+    const res = await POST(makePost(validBody));
     expect(res.status).toBe(401);
   });
 
   it("returns 400 when token has no email", async () => {
     mockGetVerifiedUser.mockResolvedValue({ uid: "u", name: "x" });
-    const res = await POST(
-      makePost({ name: "x", phone: "1", cohorts: ["cohort-1"] })
-    );
+    const res = await POST(makePost(validBody));
     expect(res.status).toBe(400);
   });
 
@@ -101,23 +116,37 @@ describe("POST /api/summer-cohort/apply", () => {
   });
 
   it("returns 400 when name is missing", async () => {
-    const res = await POST(makePost({ phone: "1", cohorts: ["cohort-1"] }));
+    const res = await POST(makePost({ ...validBody, name: undefined }));
     expect(res.status).toBe(400);
   });
 
   it("returns 400 when phone is missing", async () => {
-    const res = await POST(makePost({ name: "x", cohorts: ["cohort-1"] }));
+    const res = await POST(makePost({ ...validBody, phone: undefined }));
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 400 when isLocal is missing", async () => {
+    const { isLocal: _omit, ...without } = validBody;
+    void _omit;
+    const res = await POST(makePost(without));
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 400 when wantsToPresent is missing", async () => {
+    const { wantsToPresent: _omit, ...without } = validBody;
+    void _omit;
+    const res = await POST(makePost(without));
     expect(res.status).toBe(400);
   });
 
   it("returns 400 when no valid cohorts are selected", async () => {
-    const res = await POST(makePost({ name: "x", phone: "1", cohorts: [] }));
+    const res = await POST(makePost({ ...validBody, cohorts: [] }));
     expect(res.status).toBe(400);
   });
 
   it("returns 400 when cohorts contains only invalid ids", async () => {
     const res = await POST(
-      makePost({ name: "x", phone: "1", cohorts: ["cohort-99", "fake"] })
+      makePost({ ...validBody, cohorts: ["cohort-99", "fake"] })
     );
     expect(res.status).toBe(400);
   });
@@ -135,6 +164,8 @@ describe("POST /api/summer-cohort/apply", () => {
           cohorts: ["cohort-1", "cohort-2"],
           siteId: "cursor-boston",
           status: "pending",
+          isLocal: true,
+          wantsToPresent: true,
         }),
       });
     mockOrderByGet.mockResolvedValueOnce({
@@ -153,13 +184,18 @@ describe("POST /api/summer-cohort/apply", () => {
 
     const res = await POST(
       makePost({
+        ...validBody,
         name: "Test Applicant",
         phone: "555-1234",
         cohorts: ["cohort-1", "cohort-2", "cohort-1"], // dedupe
+        isLocal: true,
+        wantsToPresent: true,
       })
     );
     expect(res.status).toBe(200);
     expect(mockDocSet).toHaveBeenCalled();
+    const setCall = mockDocSet.mock.calls[0]?.[0] as Record<string, unknown>;
+    expect(setCall).toMatchObject({ isLocal: true, wantsToPresent: true });
     // Wait a microtask so the fire-and-forget email has a chance to dispatch.
     await new Promise((r) => setTimeout(r, 10));
     expect(mockSendEmail).toHaveBeenCalledTimes(1);
@@ -178,11 +214,20 @@ describe("POST /api/summer-cohort/apply", () => {
           cohorts: ["cohort-2"],
           siteId: "cursor-boston",
           status: "pending",
+          isLocal: false,
+          wantsToPresent: false,
         }),
       });
 
     const res = await POST(
-      makePost({ name: "Updated Name", phone: "555-9999", cohorts: ["cohort-2"] })
+      makePost({
+        ...validBody,
+        name: "Updated Name",
+        phone: "555-9999",
+        cohorts: ["cohort-2"],
+        isLocal: false,
+        wantsToPresent: false,
+      })
     );
     expect(res.status).toBe(200);
     expect(mockDocSet).toHaveBeenCalled();
@@ -195,6 +240,7 @@ describe("GET /api/summer-cohort/apply", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockGetVerifiedUser.mockResolvedValue(baseUser);
+    mockLumaDocGet.mockResolvedValue({ exists: false });
   });
 
   it("returns 401 when unauthenticated", async () => {
@@ -203,15 +249,16 @@ describe("GET /api/summer-cohort/apply", () => {
     expect(res.status).toBe(401);
   });
 
-  it("returns null application when no doc exists", async () => {
+  it("returns null application + RSVP status when no doc exists", async () => {
     mockDocGet.mockResolvedValue({ exists: false });
     const res = await GET(makeGet());
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.application).toBeNull();
+    expect(body.mayImmersionRsvped).toBe(false);
   });
 
-  it("returns serialized application when doc exists", async () => {
+  it("returns serialized application with new fields and RSVP=false by default", async () => {
     mockDocGet.mockResolvedValue({
       exists: true,
       data: () => ({
@@ -222,6 +269,8 @@ describe("GET /api/summer-cohort/apply", () => {
         cohorts: ["cohort-1"],
         siteId: "cursor-boston",
         status: "pending",
+        isLocal: true,
+        wantsToPresent: false,
         createdAt: { toMillis: () => 1717000000000 },
       }),
     });
@@ -233,7 +282,50 @@ describe("GET /api/summer-cohort/apply", () => {
       email: "applicant@example.com",
       cohorts: ["cohort-1"],
       status: "pending",
+      isLocal: true,
+      wantsToPresent: false,
+      mayImmersionRsvped: false,
       createdAt: 1717000000000,
     });
+  });
+
+  it("returns mayImmersionRsvped=true when the Luma doc exists", async () => {
+    mockDocGet.mockResolvedValue({
+      exists: true,
+      data: () => ({
+        userId: "user-123",
+        email: "applicant@example.com",
+        name: "Test Applicant",
+        phone: "555-1234",
+        cohorts: ["cohort-1"],
+        siteId: "cursor-boston",
+        status: "pending",
+      }),
+    });
+    mockLumaDocGet.mockResolvedValue({ exists: true });
+    const res = await GET(makeGet());
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.application.mayImmersionRsvped).toBe(true);
+  });
+
+  it("returns null isLocal/wantsToPresent for legacy applications missing those fields", async () => {
+    mockDocGet.mockResolvedValue({
+      exists: true,
+      data: () => ({
+        userId: "user-123",
+        email: "applicant@example.com",
+        name: "Test Applicant",
+        phone: "555-1234",
+        cohorts: ["cohort-1"],
+        siteId: "cursor-boston",
+        status: "pending",
+      }),
+    });
+    const res = await GET(makeGet());
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.application.isLocal).toBeNull();
+    expect(body.application.wantsToPresent).toBeNull();
   });
 });

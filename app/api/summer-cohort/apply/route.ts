@@ -14,6 +14,7 @@ import { sendEmail } from "@/lib/mailgun";
 import {
   SUMMER_COHORTS,
   SUMMER_COHORT_COLLECTION,
+  SUMMER_COHORT_IMMERSION,
   SUMMER_COHORT_NOTIFY_EMAIL,
   SUMMER_COHORT_SITE_ID,
   isValidCohortId,
@@ -26,7 +27,10 @@ export const dynamic = "force-dynamic";
 const MAX_NAME = 200;
 const MAX_PHONE = 50;
 
-function serializeApplication(data: Record<string, unknown>) {
+function serializeApplication(
+  data: Record<string, unknown>,
+  extras: { mayImmersionRsvped: boolean }
+) {
   const createdAt = data.createdAt;
   const updatedAt = data.updatedAt;
   return {
@@ -37,6 +41,10 @@ function serializeApplication(data: Record<string, unknown>) {
     cohorts: Array.isArray(data.cohorts) ? data.cohorts : [],
     siteId: data.siteId ?? null,
     status: data.status ?? "pending",
+    isLocal: typeof data.isLocal === "boolean" ? data.isLocal : null,
+    wantsToPresent:
+      typeof data.wantsToPresent === "boolean" ? data.wantsToPresent : null,
+    mayImmersionRsvped: extras.mayImmersionRsvped,
     createdAt:
       createdAt && typeof (createdAt as { toMillis?: () => number }).toMillis === "function"
         ? (createdAt as { toMillis: () => number }).toMillis()
@@ -46,6 +54,16 @@ function serializeApplication(data: Record<string, unknown>) {
         ? (updatedAt as { toMillis: () => number }).toMillis()
         : null,
   };
+}
+
+async function checkMayImmersionRsvp(
+  db: Firestore,
+  email: string | null | undefined
+): Promise<boolean> {
+  if (!email) return false;
+  const docId = `${SUMMER_COHORT_IMMERSION.eventId}__${email.trim().toLowerCase()}`;
+  const snap = await db.collection("hackathonLumaRegistrants").doc(docId).get();
+  return snap.exists;
 }
 
 async function handleGet(request: NextRequest) {
@@ -61,9 +79,17 @@ async function handleGet(request: NextRequest) {
 
   const snap = await db.collection(SUMMER_COHORT_COLLECTION).doc(user.uid).get();
   if (!snap.exists) {
-    return NextResponse.json({ application: null });
+    const mayImmersionRsvped = await checkMayImmersionRsvp(db, user.email);
+    return NextResponse.json({ application: null, mayImmersionRsvped });
   }
-  return NextResponse.json({ application: serializeApplication(snap.data() || {}) });
+  const data = snap.data() || {};
+  const mayImmersionRsvped = await checkMayImmersionRsvp(
+    db,
+    typeof data.email === "string" ? data.email : user.email
+  );
+  return NextResponse.json({
+    application: serializeApplication(data, { mayImmersionRsvped }),
+  });
 }
 
 async function handlePost(request: NextRequest) {
@@ -89,6 +115,9 @@ async function handlePost(request: NextRequest) {
   const name = typeof raw.name === "string" ? raw.name.trim() : "";
   const phone = typeof raw.phone === "string" ? raw.phone.trim() : "";
   const cohortsInput = Array.isArray(raw.cohorts) ? raw.cohorts : [];
+  const isLocal = typeof raw.isLocal === "boolean" ? raw.isLocal : null;
+  const wantsToPresent =
+    typeof raw.wantsToPresent === "boolean" ? raw.wantsToPresent : null;
 
   if (!name || name.length > MAX_NAME) {
     return NextResponse.json(
@@ -99,6 +128,21 @@ async function handlePost(request: NextRequest) {
   if (!phone || phone.length > MAX_PHONE) {
     return NextResponse.json(
       { error: `Phone is required and must be 1-${MAX_PHONE} characters.` },
+      { status: 400 }
+    );
+  }
+  if (isLocal === null) {
+    return NextResponse.json(
+      { error: "Tell us whether you're local and plan to attend live events." },
+      { status: 400 }
+    );
+  }
+  if (wantsToPresent === null) {
+    return NextResponse.json(
+      {
+        error:
+          "Tell us whether you're comfortable presenting and managing the platform if you win.",
+      },
       { status: 400 }
     );
   }
@@ -132,6 +176,8 @@ async function handlePost(request: NextRequest) {
       name,
       phone,
       cohorts,
+      isLocal,
+      wantsToPresent,
       siteId: SUMMER_COHORT_SITE_ID,
       updatedAt: FieldValue.serverTimestamp(),
     };
@@ -153,6 +199,8 @@ async function handlePost(request: NextRequest) {
         email: user.email,
         phone,
         cohorts,
+        isLocal,
+        wantsToPresent,
       }).catch((error) => {
         logger.logError(error, {
           endpoint: "/api/summer-cohort/apply",
@@ -160,7 +208,12 @@ async function handlePost(request: NextRequest) {
         });
       });
     }
-    return NextResponse.json({ application: serializeApplication(fresh.data() || {}) });
+    const mayImmersionRsvped = await checkMayImmersionRsvp(db, user.email);
+    return NextResponse.json({
+      application: serializeApplication(fresh.data() || {}, {
+        mayImmersionRsvped,
+      }),
+    });
   } catch (error) {
     logger.logError(error, {
       endpoint: "/api/summer-cohort/apply",
@@ -237,7 +290,14 @@ function escapeHtml(value: string): string {
 
 async function sendNewApplicationEmail(
   db: Firestore,
-  applicant: { name: string; email: string; phone: string; cohorts: SummerCohortId[] }
+  applicant: {
+    name: string;
+    email: string;
+    phone: string;
+    cohorts: SummerCohortId[];
+    isLocal: boolean;
+    wantsToPresent: boolean;
+  }
 ): Promise<void> {
   const snap = await db
     .collection(SUMMER_COHORT_COLLECTION)
@@ -279,13 +339,19 @@ async function sendNewApplicationEmail(
   const textLines: string[] = [];
   textLines.push("New Cursor Boston Summer Cohort application:");
   textLines.push("");
-  textLines.push(`  Name:    ${applicant.name}`);
-  textLines.push(`  Email:   ${applicant.email}`);
-  textLines.push(`  Phone:   ${applicant.phone}`);
+  textLines.push(`  Name:     ${applicant.name}`);
+  textLines.push(`  Email:    ${applicant.email}`);
+  textLines.push(`  Phone:    ${applicant.phone}`);
   textLines.push(
-    `  Cohorts: ${applicant.cohorts
+    `  Cohorts:  ${applicant.cohorts
       .map((id) => cohortLabel.get(id) || id)
       .join(", ")}`
+  );
+  textLines.push(
+    `  Local:    ${applicant.isLocal ? "Yes — plans to attend live events" : "No — remote / not attending live events"}`
+  );
+  textLines.push(
+    `  Present:  ${applicant.wantsToPresent ? "Yes — comfortable presenting + managing the platform" : "No — prefers not to present/manage"}`
   );
   textLines.push("");
   textLines.push(`Total applications: ${all.length}`);
@@ -331,6 +397,8 @@ async function sendNewApplicationEmail(
         <tr><td style="padding:2px 12px 2px 0;color:#666">Email</td><td>${escapeHtml(applicant.email)}</td></tr>
         <tr><td style="padding:2px 12px 2px 0;color:#666">Phone</td><td>${escapeHtml(applicant.phone)}</td></tr>
         <tr><td style="padding:2px 12px 2px 0;color:#666">Cohorts</td><td>${escapeHtml(applicant.cohorts.map((id) => cohortLabel.get(id) || id).join(", "))}</td></tr>
+        <tr><td style="padding:2px 12px 2px 0;color:#666">Local</td><td>${applicant.isLocal ? "Yes — plans to attend live events" : "No — remote / not attending live events"}</td></tr>
+        <tr><td style="padding:2px 12px 2px 0;color:#666">Present</td><td>${applicant.wantsToPresent ? "Yes — comfortable presenting + managing the platform" : "No — prefers not to present/manage"}</td></tr>
       </table>
       <p style="margin:20px 0 0;color:#444">Total applications: <strong>${all.length}</strong></p>
       ${htmlSections}

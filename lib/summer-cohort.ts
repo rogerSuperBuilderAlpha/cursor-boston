@@ -6,6 +6,8 @@
 
 import type { Timestamp } from "firebase/firestore";
 
+import { SPORTS_HACK_2026_EVENT_ID, SPORTS_HACK_2026_LUMA_URL } from "./sports-hack-2026";
+
 export const SUMMER_COHORT_SITE_ID = "cursor-boston";
 export const SUMMER_COHORT_COLLECTION = "summerCohortApplications";
 export const SUMMER_COHORT_NOTIFY_EMAIL = "roger@cursorboston.com";
@@ -23,6 +25,7 @@ export interface SummerCohort {
   end: string;
   startLabel: string;
   endLabel: string;
+  graduationLabel: string;
 }
 
 export const SUMMER_COHORTS: readonly SummerCohort[] = [
@@ -33,6 +36,7 @@ export const SUMMER_COHORTS: readonly SummerCohort[] = [
     end: "2026-06-19",
     startLabel: "Mon, May 11",
     endLabel: "Fri, Jun 19",
+    graduationLabel: "Graduation: Fri, Jun 19",
   },
   {
     id: "cohort-2",
@@ -41,6 +45,7 @@ export const SUMMER_COHORTS: readonly SummerCohort[] = [
     end: "2026-08-07",
     startLabel: "Mon, Jun 29",
     endLabel: "Fri, Aug 7",
+    graduationLabel: "Graduation: Fri, Aug 7",
   },
 ] as const;
 
@@ -58,6 +63,19 @@ export interface SummerCohortApplication {
   cohorts: SummerCohortId[];
   siteId: string;
   status: SummerCohortStatus;
+  /**
+   * Lives in/near Boston and plans to attend in-person events. Required for
+   * the first 3 weeks of in-person showcase events where in-person attendance
+   * is mandatory for vote winners. Optional on legacy applications submitted
+   * before this field was introduced.
+   */
+  isLocal?: boolean;
+  /**
+   * Comfortable presenting their work AND maintaining the platform for the
+   * rest of the cohort if they win the week-1/2/3 vote. Not required of every
+   * participant — the winner needs both.
+   */
+  wantsToPresent?: boolean;
   createdAt?: Timestamp | null;
   updatedAt?: Timestamp | null;
 }
@@ -124,6 +142,9 @@ export const SUMMER_COHORT_IMMERSION = {
   title: "Hult / Cursor Boston immersion event",
   description:
     "All cohort participants get a spot in the 80-person cap. Includes Cursor credits and the chance to win more at the hackathon.",
+  /** Same event as Sports Hack 2026 — Luma RSVPs go through that signup. */
+  eventId: SPORTS_HACK_2026_EVENT_ID,
+  lumaUrl: SPORTS_HACK_2026_LUMA_URL,
 } as const;
 
 export const SUMMER_COHORT_DEMO_DAY = {
