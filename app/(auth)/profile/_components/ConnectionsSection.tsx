@@ -6,6 +6,7 @@
 
 "use client";
 
+import { Sparkles } from "lucide-react";
 import {
   DiscordIcon,
   GitHubIcon,
@@ -20,10 +21,12 @@ export function ConnectionsSection() {
     data: { connectedAgents },
     discord,
     github,
+    ludwitt,
   } = useProfileContext();
 
   const discordInfo = discord.discordInfo;
   const githubInfo = github.githubInfo;
+  const ludwittInfo = ludwitt.ludwittInfo;
 
   return (
     <div className="mb-8">
@@ -98,6 +101,42 @@ export function ConnectionsSection() {
             </button>
           )}
         </div>
+
+        {/* Ludwitt */}
+        <div className="bg-neutral-900 rounded-xl p-4 border border-neutral-800 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center">
+              <Sparkles size={18} className="text-indigo-400" strokeWidth={2.25} />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-white">Ludwitt</p>
+              {ludwittInfo ? (
+                <p className="text-xs text-neutral-400">
+                  {ludwittInfo.email || ludwittInfo.name || "Connected"}
+                </p>
+              ) : (
+                <p className="text-xs text-neutral-500">Not connected</p>
+              )}
+            </div>
+          </div>
+          {ludwittInfo ? (
+            <button
+              onClick={ludwitt.disconnect}
+              disabled={ludwitt.disconnecting}
+              className="text-xs text-neutral-400 hover:text-red-400 transition-colors disabled:opacity-50"
+            >
+              {ludwitt.disconnecting ? "..." : "Disconnect"}
+            </button>
+          ) : (
+            <button
+              onClick={ludwitt.connect}
+              disabled={ludwitt.connecting}
+              className="text-xs text-emerald-400 hover:text-emerald-300 font-medium transition-colors disabled:opacity-50"
+            >
+              {ludwitt.connecting ? "..." : "Connect"}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Status badges */}
@@ -131,8 +170,10 @@ export function ConnectionsSection() {
         </div>
       )}
 
-      {(discord.error || github.error) && (
-        <p className="text-red-400 text-xs mt-2">{discord.error || github.error}</p>
+      {(discord.error || github.error || ludwitt.error) && (
+        <p className="text-red-400 text-xs mt-2">
+          {discord.error || github.error || ludwitt.error}
+        </p>
       )}
     </div>
   );

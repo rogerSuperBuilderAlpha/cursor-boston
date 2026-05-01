@@ -18,6 +18,7 @@ import { useBadges } from "../_hooks/useBadges";
 import { useDiscordConnection } from "../_hooks/useDiscordConnection";
 import { useGithubConnection } from "../_hooks/useGithubConnection";
 import { useGoogleConnection } from "../_hooks/useGoogleConnection";
+import { useLudwittConnection } from "../_hooks/useLudwittConnection";
 import { useMfaEnrollment } from "../_hooks/useMfaEnrollment";
 import { useEmailManagement } from "../_hooks/useEmailManagement";
 import { useProfileSettings } from "../_hooks/useProfileSettings";
@@ -39,6 +40,7 @@ export interface ProfileContextValue {
 
   discord: ReturnType<typeof useDiscordConnection>;
   github: ReturnType<typeof useGithubConnection>;
+  ludwitt: ReturnType<typeof useLudwittConnection>;
   google: ReturnType<typeof useGoogleConnection>;
   mfa: ReturnType<typeof useMfaEnrollment>;
   email: ReturnType<typeof useEmailManagement>;
@@ -85,6 +87,11 @@ export function ProfileProvider({
     user,
     userProfile?.github,
     userProfile?.provider,
+    refreshUserProfile
+  );
+  const ludwitt = useLudwittConnection(
+    user,
+    userProfile?.ludwitt,
     refreshUserProfile
   );
   const google = useGoogleConnection(user);
@@ -152,6 +159,7 @@ export function ProfileProvider({
     badges,
     discord,
     github,
+    ludwitt,
     google,
     mfa,
     email: emailMgmt,
