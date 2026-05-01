@@ -11,6 +11,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { AuthFormSkeleton } from "@/components/skeletons/AuthFormSkeleton";
+import { getLudwittErrorMessage } from "./_lib/ludwitt-errors";
 
 // Map Firebase error codes to user-friendly messages
 function getErrorMessage(error: unknown): string {
@@ -79,6 +80,12 @@ function LoginPageContent() {
 
   // Get redirect URL from query params, default to home
   const redirectUrl = searchParams.get("redirect") || "/";
+
+  // Show a friendly banner if the Ludwitt OAuth flow bounced us back with an error
+  const ludwittError =
+    searchParams.get("ludwitt") === "error"
+      ? getLudwittErrorMessage(searchParams.get("message"))
+      : null;
 
   // Redirect authenticated users away from login page
   useEffect(() => {
@@ -186,13 +193,23 @@ function LoginPageContent() {
 
         <div className="bg-white dark:bg-neutral-900 rounded-xl md:rounded-2xl p-5 md:p-8 border border-neutral-200 dark:border-neutral-800">
           {error && (
-            <div 
+            <div
               role="alert"
               aria-live="polite"
               id="form-error"
               className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm"
             >
               {error}
+            </div>
+          )}
+
+          {ludwittError && (
+            <div
+              role="alert"
+              aria-live="polite"
+              className="mb-6 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-400 text-sm"
+            >
+              {ludwittError}
             </div>
           )}
 
@@ -258,6 +275,28 @@ function LoginPageContent() {
               </svg>
               Continue with GitHub
             </button>
+
+            <a
+              href={`/api/ludwitt/authorize?returnTo=${encodeURIComponent(redirectUrl)}`}
+              className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium hover:opacity-90 transition-opacity"
+              aria-label="Sign in with Ludwitt"
+            >
+              <svg
+                className="w-5 h-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2.25}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                <path d="M2 17l10 5 10-5" />
+                <path d="M2 12l10 5 10-5" />
+              </svg>
+              Continue with Ludwitt
+            </a>
           </div>
 
           <div className="relative mb-6">

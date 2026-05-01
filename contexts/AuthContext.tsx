@@ -88,6 +88,15 @@ interface UserProfile {
     html_url: string;
     connectedAt: Date;
   };
+  ludwitt?: {
+    sub: string;
+    email: string;
+    name?: string;
+    picture?: string;
+    scope: string;
+    connectedAt: Date;
+    lastSignInAt?: Date;
+  };
   eduBadge?: boolean;
   /** Server-set when a merged PR adds the user's Hack-a-Sprint 2026 showcase submission. */
   hackASprint2026ShowcaseBadge?: boolean;
@@ -211,6 +220,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // If auth is not configured, just set loading to false
     if (!auth) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing "no external system" into React state
       setLoading(false);
       return;
     }
