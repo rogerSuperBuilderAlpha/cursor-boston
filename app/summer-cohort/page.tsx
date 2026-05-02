@@ -23,13 +23,20 @@ import { useGithubConnection } from "@/app/(auth)/profile/_hooks/useGithubConnec
 import { useDiscordConnection } from "@/app/(auth)/profile/_hooks/useDiscordConnection";
 import {
   SUMMER_COHORTS,
+  SUMMER_COHORT_C1_DEFAULT_TAB,
+  SUMMER_COHORT_C1_VOTE_WEEKS,
   SUMMER_COHORT_GOAL_PER_COHORT,
   SUMMER_COHORT_IMMERSION,
   SUMMER_COHORT_RETURN_TO,
   type SummerCohortId,
 } from "@/lib/summer-cohort";
 import { CohortProgramBreakdown } from "./_components/CohortProgramBreakdown";
-import { Week1BuildModule } from "./_components/Week1BuildModule";
+import { CohortTabs, type CohortTabId } from "./_components/CohortTabs";
+import { InfoTabPanel } from "./_components/InfoTabPanel";
+import { Week4LudwittPanel } from "./_components/Week4LudwittPanel";
+import { Week5StartupPanel } from "./_components/Week5StartupPanel";
+import { Week6OssPanel } from "./_components/Week6OssPanel";
+import { WeekVotePanel } from "./_components/WeekVotePanel";
 
 interface ApplicationDto {
   userId: string | null;
@@ -683,6 +690,10 @@ function SummerCohortPageInner() {
    *  expanding shows the editable form. */
   const [editingDetails, setEditingDetails] = useState(false);
 
+  const [activeTab, setActiveTab] = useState<CohortTabId>(
+    SUMMER_COHORT_C1_DEFAULT_TAB
+  );
+
   const openEditDetails = useCallback(() => {
     setEditingDetails(true);
     // Defer scroll one tick so the form has mounted.
@@ -901,6 +912,12 @@ function SummerCohortPageInner() {
     return (id: SummerCohortId) => map.get(id) || id;
   }, []);
 
+  const showTabs =
+    application?.status === "admitted" &&
+    application.cohorts.includes("cohort-1");
+  const myInfoVisible = !showTabs || activeTab === "my-info";
+  const cohort1Count = applicationCounts["cohort-1"] ?? 0;
+
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10 md:px-6 md:py-14">
       <header className="mb-8">
@@ -917,6 +934,7 @@ function SummerCohortPageInner() {
         </p>
       </header>
 
+      {!showTabs ? (
       <section aria-labelledby="cohort-dates-heading" className="mb-8">
         <h2
           id="cohort-dates-heading"
@@ -929,6 +947,7 @@ function SummerCohortPageInner() {
           {KICKOFF_NOTE}
         </p>
       </section>
+      ) : null}
 
       {/* Pre-apply teaser — visible until the user submits an application. */}
       {!application ? <WhatToExpectTeaser /> : null}
@@ -962,28 +981,69 @@ function SummerCohortPageInner() {
       ) : (
         <>
           {application ? (
-            <>
-              {application.status === "admitted" &&
-              application.cohorts.includes("cohort-1") ? (
-                <Week1BuildModule />
-              ) : null}
-              <ApplicationStatusPanel
-                application={application}
-                cohortLabel={cohortLabel}
-              />
-              <NextStepsCard
-                application={application}
-                needsDiscord={!discord.discordInfo}
-                onEditDetails={openEditDetails}
-              />
-              <ApplicationCounterCard
-                counts={applicationCounts}
-                pickedCohorts={application.cohorts}
-              />
-              <CohortProgramBreakdown />
-              <WinnerCommitmentsCard />
-            </>
+            showTabs ? (
+              <>
+                <ApplicationStatusPanel
+                  application={application}
+                  cohortLabel={cohortLabel}
+                />
+                <NextStepsCard
+                  application={application}
+                  needsDiscord={!discord.discordInfo}
+                  onEditDetails={openEditDetails}
+                />
+                <CohortTabs
+                  activeTab={activeTab}
+                  onChange={setActiveTab}
+                />
+                <div className="mt-4">
+                  {activeTab === "info" ? (
+                    <InfoTabPanel cohort1Count={cohort1Count} />
+                  ) : activeTab === "week-1" ? (
+                    <WeekVotePanel
+                      week={SUMMER_COHORT_C1_VOTE_WEEKS[0]}
+                      tabId="week-1"
+                    />
+                  ) : activeTab === "week-2" ? (
+                    <WeekVotePanel
+                      week={SUMMER_COHORT_C1_VOTE_WEEKS[1]}
+                      tabId="week-2"
+                    />
+                  ) : activeTab === "week-3" ? (
+                    <WeekVotePanel
+                      week={SUMMER_COHORT_C1_VOTE_WEEKS[2]}
+                      tabId="week-3"
+                    />
+                  ) : activeTab === "week-4" ? (
+                    <Week4LudwittPanel />
+                  ) : activeTab === "week-5" ? (
+                    <Week5StartupPanel />
+                  ) : activeTab === "week-6" ? (
+                    <Week6OssPanel />
+                  ) : null}
+                </div>
+              </>
+            ) : (
+              <>
+                <ApplicationStatusPanel
+                  application={application}
+                  cohortLabel={cohortLabel}
+                />
+                <NextStepsCard
+                  application={application}
+                  needsDiscord={!discord.discordInfo}
+                  onEditDetails={openEditDetails}
+                />
+                <ApplicationCounterCard
+                  counts={applicationCounts}
+                  pickedCohorts={application.cohorts}
+                />
+                <CohortProgramBreakdown />
+                <WinnerCommitmentsCard />
+              </>
+            )
           ) : null}
+          {myInfoVisible ? (
           <section
             className={`${application ? "mt-6" : ""} rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900`}
           >
@@ -1276,11 +1336,12 @@ function SummerCohortPageInner() {
             </form>
             )}
           </section>
+          ) : null}
         </>
       )}
 
       {/* Connections panel — visible whenever the user is signed in. */}
-      {user ? (
+      {user && myInfoVisible ? (
         <section
           aria-labelledby="connections-heading"
           className="mt-8 rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900"
