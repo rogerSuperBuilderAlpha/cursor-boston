@@ -157,12 +157,12 @@ export function Week1BuildModule() {
               </code>{" "}
               base branch of{" "}
               <a
-                href="https://github.com/cursor-boston/cursor-boston"
+                href="https://github.com/rogerSuperBuilderAlpha/cursor-boston"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-semibold underline decoration-emerald-600/60 underline-offset-2 hover:decoration-emerald-600"
               >
-                cursor-boston/cursor-boston
+                rogerSuperBuilderAlpha/cursor-boston
               </a>
               .
             </span>
@@ -196,7 +196,7 @@ export function Week1BuildModule() {
               </code>
               ) — see{" "}
               <a
-                href="https://github.com/cursor-boston/cursor-boston/blob/develop/docs/FIRST_CONTRIBUTION.md"
+                href="https://github.com/rogerSuperBuilderAlpha/cursor-boston/blob/develop/docs/FIRST_CONTRIBUTION.md"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-semibold underline decoration-emerald-600/60 underline-offset-2 hover:decoration-emerald-600"
