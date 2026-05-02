@@ -21,8 +21,6 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-const CRON_SECRET = process.env.CRON_SECRET;
-
 function getCronSecret(request: NextRequest): string | null {
   return (
     request.headers.get("x-cron-secret") ||
@@ -72,8 +70,9 @@ function escapeHtml(value: string): string {
 
 async function handleDigest(request: NextRequest): Promise<NextResponse> {
   const invocationId = crypto.randomUUID();
+  const cronSecret = process.env.CRON_SECRET;
 
-  if (!CRON_SECRET) {
+  if (!cronSecret) {
     logger.error("Hiring partners digest rejected: CRON_SECRET missing", {
       endpoint: "/api/internal/digest/weekly-hiring-partners",
       invocationId,
@@ -85,7 +84,7 @@ async function handleDigest(request: NextRequest): Promise<NextResponse> {
   }
 
   const secret = getCronSecret(request);
-  if (!secret || secret !== CRON_SECRET) {
+  if (!secret || secret !== cronSecret) {
     logger.warn("Hiring partners digest unauthorized", {
       endpoint: "/api/internal/digest/weekly-hiring-partners",
       invocationId,
