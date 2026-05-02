@@ -1,0 +1,8 @@
+{
+  "githubHandle": "test-trying-to-win",
+  "repoUrl": "https://github.com/example/test-pm-tool-trying-to-win",
+  "liveUrl": "https://test-trying-to-win.example.com",
+  "loomUrl": "https://www.loom.com/share/test-trying-to-win-loom",
+  "pitch": "Test submission with all required fields filled in and competeForWin set to true. Should appear in the Submissions list with the 'trying to win' badge.",
+  "competeForWin": true
+}
