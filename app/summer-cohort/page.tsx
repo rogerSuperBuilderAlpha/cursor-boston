@@ -23,6 +23,7 @@ import { useGithubConnection } from "@/app/(auth)/profile/_hooks/useGithubConnec
 import { useDiscordConnection } from "@/app/(auth)/profile/_hooks/useDiscordConnection";
 import {
   SUMMER_COHORTS,
+  SUMMER_COHORT_GOAL_PER_COHORT,
   SUMMER_COHORT_IMMERSION,
   SUMMER_COHORT_RETURN_TO,
   type SummerCohortId,
@@ -43,6 +44,8 @@ interface ApplicationDto {
   createdAt: number | null;
   updatedAt: number | null;
 }
+
+type ApplicationCounts = Partial<Record<SummerCohortId, number>>;
 
 const KICKOFF_NOTE =
   "First Zoom kickoffs: Cohort 1 on Mon May 11, Cohort 2 on Mon Jun 29. Watch your email and check back here for the meeting link and next steps.";
@@ -73,6 +76,87 @@ function CohortDatesList() {
 function scrollToConnections() {
   const el = document.getElementById("connections-heading");
   if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function WhatToExpectTeaser() {
+  return (
+    <section className="mb-8 rounded-xl border border-neutral-200 bg-neutral-50 p-6 dark:border-neutral-800 dark:bg-neutral-900/40">
+      <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500">
+        What to expect
+      </h2>
+      <p className="mt-3 text-sm text-neutral-700 dark:text-neutral-300">
+        Each cohort runs <strong>six weeks</strong>, with twice-weekly Zoom
+        for demos and Q&amp;A and periodic in-person sessions in Boston.
+        You&apos;ll build, present, vote on each other&apos;s work, ship to
+        real users, and close with a demo day in front of hiring partners.
+      </p>
+      <p className="mt-3 text-sm text-neutral-700 dark:text-neutral-300">
+        It&apos;s free. The only guarantee is the community itself — no jobs
+        promised, no specific outcomes. The full week-by-week breakdown is
+        shared once you apply.
+      </p>
+    </section>
+  );
+}
+
+interface CounterCardProps {
+  counts: ApplicationCounts;
+  pickedCohorts: SummerCohortId[];
+}
+
+function ApplicationCounterCard({ counts, pickedCohorts }: CounterCardProps) {
+  const pickedSet = new Set(pickedCohorts);
+  const missingCohort = SUMMER_COHORTS.find((c) => !pickedSet.has(c.id));
+  return (
+    <section className="mt-6 rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
+      <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500">
+        Applications so far
+      </h2>
+      <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+        Goal: <strong>{SUMMER_COHORT_GOAL_PER_COHORT} participants per cohort</strong>.
+        Multi-cohort participants are encouraged — same applicant pool, more
+        weeks to ship.
+      </p>
+      <ul className="mt-4 space-y-3">
+        {SUMMER_COHORTS.map((cohort) => {
+          const count = counts[cohort.id] ?? 0;
+          const pct = Math.min(
+            100,
+            Math.round((count / SUMMER_COHORT_GOAL_PER_COHORT) * 100)
+          );
+          return (
+            <li key={cohort.id}>
+              <div className="flex items-baseline justify-between gap-3 text-sm">
+                <span className="font-semibold">{cohort.label}</span>
+                <span className="tabular-nums text-neutral-700 dark:text-neutral-300">
+                  <strong>{count}</strong>
+                  <span className="text-neutral-500"> / {SUMMER_COHORT_GOAL_PER_COHORT}</span>
+                </span>
+              </div>
+              <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-800">
+                <div
+                  className="h-full rounded-full bg-emerald-500 transition-all"
+                  style={{ width: `${pct}%` }}
+                  aria-hidden="true"
+                />
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+      {missingCohort ? (
+        <p className="mt-4 text-sm text-neutral-700 dark:text-neutral-300">
+          Want to do both?{" "}
+          <strong>Add {missingCohort.label}</strong> in the form below — it
+          takes one click and helps us hit the goal.
+        </p>
+      ) : (
+        <p className="mt-4 text-sm text-emerald-700 dark:text-emerald-400">
+          Thanks for going all-in on both cohorts.
+        </p>
+      )}
+    </section>
+  );
 }
 
 interface StatusPanelProps {
@@ -259,6 +343,7 @@ function SummerCohortPageInner() {
   );
 
   const [application, setApplication] = useState<ApplicationDto | null>(null);
+  const [applicationCounts, setApplicationCounts] = useState<ApplicationCounts>({});
   const [appLoading, setAppLoading] = useState(false);
   const [appLoadError, setAppLoadError] = useState<string | null>(null);
 
@@ -299,9 +384,13 @@ function SummerCohortPageInner() {
         if (!res.ok) {
           throw new Error("load_failed");
         }
-        const json = (await res.json()) as { application: ApplicationDto | null };
+        const json = (await res.json()) as {
+          application: ApplicationDto | null;
+          applicationCounts?: ApplicationCounts;
+        };
         if (!cancelled) {
           setApplication(json.application);
+          setApplicationCounts(json.applicationCounts ?? {});
           // Hydrate the form from the existing application so the edit
           // experience pre-fills everything they already submitted.
           if (json.application) {
@@ -421,6 +510,9 @@ function SummerCohortPageInner() {
         return;
       }
       setApplication(json.application as ApplicationDto);
+      if (json.applicationCounts) {
+        setApplicationCounts(json.applicationCounts as ApplicationCounts);
+      }
       if (isUpdate) {
         setSubmitSuccess("Saved.");
       }
@@ -504,6 +596,9 @@ function SummerCohortPageInner() {
         </p>
       </section>
 
+      {/* Pre-apply teaser — visible until the user submits an application. */}
+      {!application ? <WhatToExpectTeaser /> : null}
+
       {/* Auth-gated states */}
       {loading ? (
         <div className="rounded-xl border border-neutral-200 p-6 text-sm text-neutral-500 dark:border-neutral-800">
@@ -533,14 +628,20 @@ function SummerCohortPageInner() {
       ) : (
         <>
           {application ? (
-            <ApplicationStatusPanel
-              application={application}
-              cohortLabel={cohortLabel}
-              withdrawing={withdrawing}
-              withdrawError={withdrawError}
-              onWithdraw={withdraw}
-              needsDiscord={!discord.discordInfo}
-            />
+            <>
+              <ApplicationStatusPanel
+                application={application}
+                cohortLabel={cohortLabel}
+                withdrawing={withdrawing}
+                withdrawError={withdrawError}
+                onWithdraw={withdraw}
+                needsDiscord={!discord.discordInfo}
+              />
+              <ApplicationCounterCard
+                counts={applicationCounts}
+                pickedCohorts={application.cohorts}
+              />
+            </>
           ) : null}
           <section
             className={`${application ? "mt-6" : ""} rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900`}

@@ -155,3 +155,6 @@ export const SUMMER_COHORT_DEMO_DAY = {
 
 export const SUMMER_COHORT_PHILOSOPHY =
   "The cohort succeeds or fails as a cohort. Goal: every participant lands a job offer. The tools each cohort builds are how they market themselves to hiring partners and the world.";
+
+/** Stretch target for applicants per cohort — drives the counter UI. */
+export const SUMMER_COHORT_GOAL_PER_COHORT = 100;

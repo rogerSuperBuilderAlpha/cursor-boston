@@ -66,6 +66,28 @@ async function checkMayImmersionRsvp(
   return snap.exists;
 }
 
+/**
+ * Count applications per cohort using the Firestore `count()` aggregation —
+ * one cheap aggregation query per cohort id. Returns an object keyed by
+ * cohort id with numeric counts.
+ */
+async function getApplicationCounts(
+  db: Firestore
+): Promise<Record<SummerCohortId, number>> {
+  const counts = {} as Record<SummerCohortId, number>;
+  await Promise.all(
+    SUMMER_COHORTS.map(async (cohort) => {
+      const snap = await db
+        .collection(SUMMER_COHORT_COLLECTION)
+        .where("cohorts", "array-contains", cohort.id)
+        .count()
+        .get();
+      counts[cohort.id] = snap.data().count;
+    })
+  );
+  return counts;
+}
+
 async function handleGet(request: NextRequest) {
   const user = await getVerifiedUser(request);
   if (!user) {
@@ -79,16 +101,27 @@ async function handleGet(request: NextRequest) {
 
   const snap = await db.collection(SUMMER_COHORT_COLLECTION).doc(user.uid).get();
   if (!snap.exists) {
-    const mayImmersionRsvped = await checkMayImmersionRsvp(db, user.email);
-    return NextResponse.json({ application: null, mayImmersionRsvped });
+    const [mayImmersionRsvped, applicationCounts] = await Promise.all([
+      checkMayImmersionRsvp(db, user.email),
+      getApplicationCounts(db),
+    ]);
+    return NextResponse.json({
+      application: null,
+      mayImmersionRsvped,
+      applicationCounts,
+    });
   }
   const data = snap.data() || {};
-  const mayImmersionRsvped = await checkMayImmersionRsvp(
-    db,
-    typeof data.email === "string" ? data.email : user.email
-  );
+  const [mayImmersionRsvped, applicationCounts] = await Promise.all([
+    checkMayImmersionRsvp(
+      db,
+      typeof data.email === "string" ? data.email : user.email
+    ),
+    getApplicationCounts(db),
+  ]);
   return NextResponse.json({
     application: serializeApplication(data, { mayImmersionRsvped }),
+    applicationCounts,
   });
 }
 
@@ -208,11 +241,15 @@ async function handlePost(request: NextRequest) {
         });
       });
     }
-    const mayImmersionRsvped = await checkMayImmersionRsvp(db, user.email);
+    const [mayImmersionRsvped, applicationCounts] = await Promise.all([
+      checkMayImmersionRsvp(db, user.email),
+      getApplicationCounts(db),
+    ]);
     return NextResponse.json({
       application: serializeApplication(fresh.data() || {}, {
         mayImmersionRsvped,
       }),
+      applicationCounts,
     });
   } catch (error) {
     logger.logError(error, {
