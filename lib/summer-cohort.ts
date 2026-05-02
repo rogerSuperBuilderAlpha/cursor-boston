@@ -162,6 +162,32 @@ export const SUMMER_COHORT_C1_ZOOM_URL_PLACEHOLDER =
 export const SUMMER_COHORT_C1_DISCORD_INVITE_URL_PLACEHOLDER =
   "https://discord.gg/PLACEHOLDER";
 
+/** Hard cap on Cohort 1 admits. Auto-admit-on-PR-merge respects this. */
+export const SUMMER_COHORT_C1_CAP = 100;
+
+/** PR-merge auto-admit deadline.
+ *  Pending Cohort 1 applicants who get a PR merged into the community repo
+ *  before this timestamp are automatically promoted to "admitted" — no need
+ *  to wait for the May 10 manual admit round.
+ *
+ *  May 9, 2026 11:59:59 PM ET (EDT = UTC-4) → 03:59:59 UTC on May 10. */
+export const SUMMER_COHORT_C1_AUTO_ADMIT_DEADLINE_MS = Date.UTC(
+  2026,
+  4, // May (0-indexed)
+  10,
+  3,
+  59,
+  59
+);
+export const SUMMER_COHORT_C1_AUTO_ADMIT_DEADLINE_LABEL =
+  "Fri, May 9 · 11:59pm ET";
+
+export function isWithinSummerCohortC1AutoAdmitWindow(
+  now: number = Date.now()
+): boolean {
+  return now <= SUMMER_COHORT_C1_AUTO_ADMIT_DEADLINE_MS;
+}
+
 export const SUMMER_COHORT_C1_WEEK_1 = {
   title: "Project Management Build",
   kickoffLabel: "Mon, May 11 · 6–7pm EST",
