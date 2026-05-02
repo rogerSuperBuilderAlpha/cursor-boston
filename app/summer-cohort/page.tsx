@@ -104,6 +104,105 @@ interface CounterCardProps {
   pickedCohorts: SummerCohortId[];
 }
 
+function WinnerCommitmentsCard() {
+  return (
+    <section className="mt-6 rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
+      <h2 className="text-base font-semibold">
+        If you win a week-1/2/3 vote
+      </h2>
+      <p className="mt-2 text-sm text-neutral-700 dark:text-neutral-300">
+        The week-1/2/3 winners maintain their platform for the rest of the
+        cohort — hosting it, dealing with real users, and doing a short demo.
+        Here&apos;s what that actually looks like.
+      </p>
+
+      <div className="mt-5 space-y-4 text-sm text-neutral-700 dark:text-neutral-300">
+        <div>
+          <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
+            You self-host. Zero cost.
+          </h3>
+          <p className="mt-1">
+            The program is free for everyone, including hosting for winners.
+            Free tiers handle it:
+          </p>
+          <ul className="mt-2 list-disc space-y-1 pl-5">
+            <li>
+              <strong>Vercel</strong> — free tier handles deploys; you
+              won&apos;t hit any limits at cohort scale unless you&apos;re
+              pushing 100+ times a day.
+            </li>
+            <li>
+              <strong>Firebase</strong> — free tier covers auth + Firestore +
+              storage; ~100 users won&apos;t come anywhere near the caps.
+            </li>
+            <li>
+              <strong>Domain</strong> — we&apos;ll hand you a{" "}
+              <code className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs dark:bg-neutral-800">
+                yourthing.cursorboston.com
+              </code>{" "}
+              subdomain. No DNS service to buy.
+            </li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
+            Managing real users is half the value
+          </h3>
+          <p className="mt-1">
+            Whatever you build will have actual users — your cohort. Operating
+            a platform with real people on it (handling questions, fixing what
+            breaks, deciding what to ship next) is part of the educational
+            experience. If you&apos;re already a senior operator, treat it as
+            a portfolio piece.
+          </p>
+        </div>
+
+        <div>
+          <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
+            Your demo can run locally
+          </h3>
+          <p className="mt-1">
+            For the showcase you submit a short Loom/Vidyard video.
+            You don&apos;t need to be live — running the platform on your
+            laptop during the demo is fine.
+          </p>
+        </div>
+
+        <div>
+          <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
+            You own everything you build
+          </h3>
+          <p className="mt-1">
+            Whether or not you submit to win, the code is yours. Keep it
+            private, open it, or evolve it into something else — your call.
+          </p>
+        </div>
+
+        <div>
+          <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
+            Totally fine to not submit to win
+          </h3>
+          <p className="mt-1">
+            You can participate fully without putting yourself up for the
+            vote. There are 60+ people in Cohort 1 — we&apos;re not going to
+            run short of volunteers. Everything else (building, voting, the
+            in-person events, the demo day with hiring partners) is still
+            yours. The only thing to skip is the &quot;submit to win&quot;
+            step.
+          </p>
+        </div>
+      </div>
+
+      <p className="mt-5 border-t border-neutral-200 pt-4 text-sm italic text-neutral-700 dark:border-neutral-800 dark:text-neutral-300">
+        It&apos;s like a pickup baseball game: bring your own bat and glove.
+        If the community elects you to lead, you also bring a few community
+        balls. That&apos;s it.
+      </p>
+    </section>
+  );
+}
+
 function ApplicationCounterCard({ counts, pickedCohorts }: CounterCardProps) {
   const pickedSet = new Set(pickedCohorts);
   const missingCohort = SUMMER_COHORTS.find((c) => !pickedSet.has(c.id));
@@ -162,57 +261,185 @@ function ApplicationCounterCard({ counts, pickedCohorts }: CounterCardProps) {
 interface StatusPanelProps {
   application: ApplicationDto;
   cohortLabel: (id: SummerCohortId) => string;
-  withdrawing: boolean;
-  withdrawError: string | null;
-  onWithdraw: () => void;
+}
+
+type StepState = "done" | "todo";
+
+interface StepItem {
+  state: StepState;
+  title: string;
+  body: React.ReactNode;
+}
+
+function NextStepsCard({
+  application,
+  needsDiscord,
+  onEditDetails,
+}: {
+  application: ApplicationDto;
   needsDiscord: boolean;
-}
+  onEditDetails: () => void;
+}) {
+  const status = application.status;
+  const isInCohort1 = application.cohorts.includes("cohort-1");
+  const showImmersion = isInCohort1 && (status === "pending" || status === "admitted");
+  const disclosuresMissing =
+    application.isLocal === null || application.wantsToPresent === null;
+  const showDiscord = status === "admitted" && needsDiscord;
 
-function MayImmersionCallout({ rsvped }: { rsvped: boolean }) {
-  if (rsvped) {
-    return (
-      <div className="mt-4 rounded-lg border-l-4 border-emerald-500 bg-emerald-50 p-3 text-sm text-emerald-900 dark:border-emerald-400 dark:bg-emerald-950/40 dark:text-emerald-200">
-        <strong>✓ {SUMMER_COHORT_IMMERSION.label} immersion event:</strong>{" "}
-        you&apos;re registered on Luma. We&apos;ll see you at the{" "}
-        {SUMMER_COHORT_IMMERSION.title}.
-      </div>
-    );
+  const items: StepItem[] = [];
+
+  // Disclosures
+  if (disclosuresMissing) {
+    items.push({
+      state: "todo",
+      title: "Fill in the two new questions",
+      body: (
+        <>
+          We added locality + comfort-with-presenting questions after you
+          applied.{" "}
+          <button
+            type="button"
+            onClick={onEditDetails}
+            className="font-semibold underline decoration-amber-700/60 underline-offset-2 hover:decoration-amber-700 dark:decoration-amber-300/60"
+          >
+            Update them in your details →
+          </button>
+        </>
+      ),
+    });
+  } else {
+    items.push({
+      state: "done",
+      title: "Locality + presenting comfort recorded",
+      body: (
+        <>
+          Local: <strong>{application.isLocal ? "yes" : "no"}</strong>.
+          Comfortable presenting and maintaining the platform if you win:{" "}
+          <strong>{application.wantsToPresent ? "yes" : "no"}</strong>.
+        </>
+      ),
+    });
   }
-  return (
-    <div className="mt-4 rounded-lg border-l-4 border-amber-500 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-400 dark:bg-amber-950/40 dark:text-amber-200">
-      <strong>Action needed — {SUMMER_COHORT_IMMERSION.label}:</strong> we
-      don&apos;t see you on the Luma list for the{" "}
-      {SUMMER_COHORT_IMMERSION.title}. Cohort 1 gets priority on the 80-person
-      cap, but you still need to RSVP.{" "}
-      <a
-        href={SUMMER_COHORT_IMMERSION.lumaUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="font-semibold underline decoration-amber-700/60 underline-offset-2 hover:decoration-amber-700 dark:decoration-amber-300/60"
-      >
-        Reserve your spot on Luma →
-      </a>
-    </div>
-  );
-}
 
-function DisclosuresMissingCallout() {
+  // May 26 RSVP — only relevant for cohort-1 in pending/admitted
+  if (showImmersion) {
+    if (application.mayImmersionRsvped) {
+      items.push({
+        state: "done",
+        title: `${SUMMER_COHORT_IMMERSION.label} immersion event — RSVP confirmed`,
+        body: (
+          <>
+            You&apos;re on the Luma list for the{" "}
+            {SUMMER_COHORT_IMMERSION.title}. See you there.
+          </>
+        ),
+      });
+    } else {
+      items.push({
+        state: "todo",
+        title: `RSVP for ${SUMMER_COHORT_IMMERSION.label} on Luma`,
+        body: (
+          <>
+            Cohort 1 gets priority on the 80-person cap, but you still need to
+            grab the seat.{" "}
+            <a
+              href={SUMMER_COHORT_IMMERSION.lumaUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold underline decoration-amber-700/60 underline-offset-2 hover:decoration-amber-700 dark:decoration-amber-300/60"
+            >
+              Reserve your spot →
+            </a>
+          </>
+        ),
+      });
+    }
+  }
+
+  // Discord — only when admitted
+  if (showDiscord) {
+    items.push({
+      state: "todo",
+      title: "Connect Discord",
+      body: (
+        <>
+          So we can add you to the cohort channel.{" "}
+          <button
+            type="button"
+            onClick={scrollToConnections}
+            className="font-semibold underline decoration-amber-700/60 underline-offset-2 hover:decoration-amber-700 dark:decoration-amber-300/60"
+          >
+            Jump to connections →
+          </button>
+        </>
+      ),
+    });
+  }
+
+  const allDone = items.every((i) => i.state === "done");
+
   return (
-    <div className="mt-4 rounded-lg border-l-4 border-amber-500 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-400 dark:bg-amber-950/40 dark:text-amber-200">
-      <strong>Action needed:</strong> we added two new questions to the
-      application — your locality and your comfort with presenting/managing the
-      platform. Please update them in the form below.
-    </div>
+    <section className="mt-6 rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
+      <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500">
+        What&apos;s next
+      </h2>
+      {allDone ? (
+        <p className="mt-2 text-sm text-emerald-700 dark:text-emerald-400">
+          Nothing on your plate right now. We&apos;ll email you with the next
+          step at each stage.
+        </p>
+      ) : null}
+      <ul className="mt-4 space-y-3">
+        {items.map((item, idx) => (
+          <li
+            key={idx}
+            className={`flex gap-3 rounded-lg border p-3 ${
+              item.state === "done"
+                ? "border-emerald-200 bg-emerald-50/50 dark:border-emerald-900 dark:bg-emerald-950/20"
+                : "border-amber-200 bg-amber-50/60 dark:border-amber-900 dark:bg-amber-950/20"
+            }`}
+          >
+            <span
+              aria-hidden="true"
+              className={`mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                item.state === "done"
+                  ? "bg-emerald-500 text-white"
+                  : "bg-amber-500 text-white"
+              }`}
+            >
+              {item.state === "done" ? "✓" : "!"}
+            </span>
+            <div className="min-w-0 flex-1 text-sm">
+              <p
+                className={`font-semibold ${
+                  item.state === "done"
+                    ? "text-emerald-900 dark:text-emerald-200"
+                    : "text-amber-900 dark:text-amber-200"
+                }`}
+              >
+                {item.title}
+              </p>
+              <p
+                className={`mt-0.5 ${
+                  item.state === "done"
+                    ? "text-emerald-800/90 dark:text-emerald-300/90"
+                    : "text-amber-900/90 dark:text-amber-200/90"
+                }`}
+              >
+                {item.body}
+              </p>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
 function ApplicationStatusPanel({
   application,
   cohortLabel,
-  withdrawing,
-  withdrawError,
-  onWithdraw,
-  needsDiscord,
 }: StatusPanelProps) {
   const status = application.status;
   const cohortText = application.cohorts.map(cohortLabel).join(" and ");
@@ -223,7 +450,6 @@ function ApplicationStatusPanel({
           panel:
             "rounded-xl border border-emerald-400 bg-emerald-50 p-6 dark:border-emerald-700 dark:bg-emerald-950/40",
           badge: "bg-emerald-500 text-white",
-          divider: "border-emerald-200 dark:border-emerald-900",
           label: "Status: Admitted",
           headline: `You're in! Welcome to ${cohortText || "the cohort"}.`,
           body:
@@ -234,7 +460,6 @@ function ApplicationStatusPanel({
             panel:
               "rounded-xl border border-amber-300 bg-amber-50 p-6 dark:border-amber-800 dark:bg-amber-950/30",
             badge: "bg-amber-500 text-white",
-            divider: "border-amber-200 dark:border-amber-900",
             label: "Status: Waitlist",
             headline: `You're on the waitlist for ${cohortText || "the cohort"}.`,
             body:
@@ -245,7 +470,6 @@ function ApplicationStatusPanel({
               panel:
                 "rounded-xl border border-neutral-300 bg-neutral-50 p-6 dark:border-neutral-700 dark:bg-neutral-900/60",
               badge: "bg-neutral-500 text-white",
-              divider: "border-neutral-200 dark:border-neutral-800",
               label: "Status: Not selected",
               headline: "We weren't able to fit you into this cohort round.",
               body: "Thanks for applying — we'd love for you to apply to a future cohort.",
@@ -254,18 +478,10 @@ function ApplicationStatusPanel({
               panel:
                 "rounded-xl border border-emerald-300 bg-emerald-50 p-6 dark:border-emerald-900 dark:bg-emerald-950/30",
               badge: "bg-emerald-500 text-white",
-              divider: "border-emerald-200 dark:border-emerald-900",
               label: "Status: Pending",
               headline: `We received your application for ${cohortText || "the cohort"}.`,
               body: "We'll review and follow up by email. " + KICKOFF_NOTE,
             };
-
-  const showDiscordCallout = status === "admitted" && needsDiscord;
-  const isInCohort1 = application.cohorts.includes("cohort-1");
-  const showImmersionCallout =
-    isInCohort1 && (status === "pending" || status === "admitted");
-  const disclosuresMissing =
-    application.isLocal === null || application.wantsToPresent === null;
 
   return (
     <section className={tone.panel}>
@@ -282,45 +498,6 @@ function ApplicationStatusPanel({
       <p className="mt-2 text-sm text-neutral-700 dark:text-neutral-300">
         {tone.body}
       </p>
-
-      {disclosuresMissing ? <DisclosuresMissingCallout /> : null}
-
-      {showImmersionCallout ? (
-        <MayImmersionCallout rsvped={application.mayImmersionRsvped} />
-      ) : null}
-
-      {showDiscordCallout ? (
-        <div className="mt-4 rounded-lg border-l-4 border-amber-500 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-400 dark:bg-amber-950/40 dark:text-amber-200">
-          <strong>Action needed:</strong> connect your Discord below so we can
-          add you to the cohort channel.{" "}
-          <button
-            type="button"
-            onClick={scrollToConnections}
-            className="underline decoration-amber-700/60 underline-offset-2 hover:decoration-amber-700 dark:decoration-amber-300/60"
-          >
-            Jump to connections
-          </button>
-          .
-        </div>
-      ) : null}
-
-      <div
-        className={`mt-4 flex flex-wrap items-center gap-3 border-t pt-4 ${tone.divider}`}
-      >
-        <button
-          type="button"
-          onClick={onWithdraw}
-          disabled={withdrawing}
-          className="inline-flex items-center gap-2 rounded-lg border border-red-300 bg-white px-3 py-2 text-xs font-semibold text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50 dark:border-red-900 dark:bg-transparent dark:text-red-400 dark:hover:bg-red-950/30"
-        >
-          {withdrawing ? "Withdrawing…" : "Withdraw application"}
-        </button>
-        {withdrawError ? (
-          <span className="text-xs text-red-600 dark:text-red-400">
-            {withdrawError}
-          </span>
-        ) : null}
-      </div>
     </section>
   );
 }
@@ -359,6 +536,18 @@ function SummerCohortPageInner() {
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
   const [withdrawing, setWithdrawing] = useState(false);
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
+  /** Existing applicants see the "Your details" card collapsed by default;
+   *  expanding shows the editable form. */
+  const [editingDetails, setEditingDetails] = useState(false);
+
+  const openEditDetails = useCallback(() => {
+    setEditingDetails(true);
+    // Defer scroll one tick so the form has mounted.
+    requestAnimationFrame(() => {
+      const el = document.getElementById("your-details-heading");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, []);
 
   // Default name from auth profile once it loads.
   useEffect(() => {
@@ -515,6 +704,7 @@ function SummerCohortPageInner() {
       }
       if (isUpdate) {
         setSubmitSuccess("Saved.");
+        setEditingDetails(false);
       }
     } catch {
       setSubmitError("Network error. Please try again.");
@@ -555,6 +745,7 @@ function SummerCohortPageInner() {
       setIsLocal(null);
       setWantsToPresent(null);
       setSubmitSuccess(null);
+      setEditingDetails(false);
     } catch {
       setWithdrawError("Network error. Please try again.");
     } finally {
@@ -632,28 +823,106 @@ function SummerCohortPageInner() {
               <ApplicationStatusPanel
                 application={application}
                 cohortLabel={cohortLabel}
-                withdrawing={withdrawing}
-                withdrawError={withdrawError}
-                onWithdraw={withdraw}
+              />
+              <NextStepsCard
+                application={application}
                 needsDiscord={!discord.discordInfo}
+                onEditDetails={openEditDetails}
               />
               <ApplicationCounterCard
                 counts={applicationCounts}
                 pickedCohorts={application.cohorts}
               />
+              <CohortProgramBreakdown />
+              <WinnerCommitmentsCard />
             </>
           ) : null}
           <section
             className={`${application ? "mt-6" : ""} rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900`}
           >
-            <h2 className="text-lg font-semibold">
-              {application ? "Your application" : "Apply"}
-            </h2>
-            <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-              {application
-                ? "Update anything here and hit Save. Your status stays the same."
-                : "Fill this out and we'll be in touch."}
-            </p>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2
+                  id="your-details-heading"
+                  className="text-lg font-semibold"
+                >
+                  {application ? "Your details" : "Apply"}
+                </h2>
+                <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+                  {application
+                    ? editingDetails
+                      ? "Update anything here and hit Save. Your status stays the same."
+                      : "What we have on file for your application."
+                    : "Fill this out and we'll be in touch."}
+                </p>
+              </div>
+              {application && !editingDetails ? (
+                <button
+                  type="button"
+                  onClick={() => setEditingDetails(true)}
+                  className="shrink-0 rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-xs font-semibold text-neutral-700 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:bg-transparent dark:text-neutral-300 dark:hover:bg-neutral-800"
+                >
+                  Edit
+                </button>
+              ) : null}
+            </div>
+
+            {application && !editingDetails ? (
+              <dl className="mt-5 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                    Name
+                  </dt>
+                  <dd className="mt-1">{application.name || "—"}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                    Email
+                  </dt>
+                  <dd className="mt-1 break-all">{application.email || "—"}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                    Phone
+                  </dt>
+                  <dd className="mt-1">{application.phone || "—"}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                    Cohorts
+                  </dt>
+                  <dd className="mt-1">
+                    {application.cohorts.length > 0
+                      ? application.cohorts.map(cohortLabel).join(" + ")
+                      : "—"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                    Local + attending live events
+                  </dt>
+                  <dd className="mt-1">
+                    {application.isLocal === null
+                      ? <span className="text-amber-700 dark:text-amber-400">Not set</span>
+                      : application.isLocal
+                        ? "Yes"
+                        : "No (remote)"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                    Comfortable presenting + maintaining
+                  </dt>
+                  <dd className="mt-1">
+                    {application.wantsToPresent === null
+                      ? <span className="text-amber-700 dark:text-amber-400">Not set</span>
+                      : application.wantsToPresent
+                        ? "Yes"
+                        : "No"}
+                  </dd>
+                </div>
+              </dl>
+            ) : (
             <form onSubmit={submit} className="mt-5 space-y-4">
               <div>
                 <label
@@ -813,22 +1082,53 @@ function SummerCohortPageInner() {
                   {submitSuccess}
                 </p>
               ) : null}
-              <button
-                type="submit"
-                disabled={submitting}
-                className="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-400 disabled:opacity-50"
-              >
-                {submitting
-                  ? application
-                    ? "Saving…"
-                    : "Submitting…"
-                  : application
-                    ? "Save updates"
-                    : "Submit application"}
-              </button>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-400 disabled:opacity-50"
+                  >
+                    {submitting
+                      ? application
+                        ? "Saving…"
+                        : "Submitting…"
+                      : application
+                        ? "Save updates"
+                        : "Submit application"}
+                  </button>
+                  {application && editingDetails ? (
+                    <button
+                      type="button"
+                      onClick={() => setEditingDetails(false)}
+                      disabled={submitting}
+                      className="inline-flex items-center gap-2 rounded-lg border border-neutral-300 bg-white px-4 py-2.5 text-sm font-semibold text-neutral-700 transition-colors hover:bg-neutral-50 disabled:opacity-50 dark:border-neutral-700 dark:bg-transparent dark:text-neutral-300 dark:hover:bg-neutral-800"
+                    >
+                      Cancel
+                    </button>
+                  ) : null}
+                </div>
+                {application ? (
+                  <div className="flex flex-wrap items-center gap-2">
+                    {withdrawError ? (
+                      <span className="text-xs text-red-600 dark:text-red-400">
+                        {withdrawError}
+                      </span>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={withdraw}
+                      disabled={withdrawing}
+                      className="inline-flex items-center gap-2 rounded-lg border border-red-300 bg-white px-3 py-2 text-xs font-semibold text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50 dark:border-red-900 dark:bg-transparent dark:text-red-400 dark:hover:bg-red-950/30"
+                    >
+                      {withdrawing ? "Withdrawing…" : "Withdraw application"}
+                    </button>
+                  </div>
+                ) : null}
+              </div>
             </form>
+            )}
           </section>
-          {application ? <CohortProgramBreakdown /> : null}
         </>
       )}
 
