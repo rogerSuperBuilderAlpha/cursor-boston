@@ -15,6 +15,10 @@
     {
       "path": "/api/internal/hunt/email-retry",
       "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/internal/digest/weekly-hiring-partners",
+      "schedule": "0 13 * * 1"
     }
   ]
 }

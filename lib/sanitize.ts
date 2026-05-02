@@ -12,30 +12,32 @@
  */
 
 /**
- * Sanitize plain text content by removing HTML tags and dangerous characters.
- * Preserves basic punctuation and whitespace.
- * @param input - The raw string to sanitize
- * @returns The sanitized string, or an empty string if input is not a string
+ * Normalize free-text user input for storage.
+ *
+ * Strips ASCII control characters (except newline), normalizes tabs and
+ * carriage returns to spaces, and trims surrounding whitespace. Does NOT
+ * strip HTML — values are expected to be rendered through React's JSX
+ * expressions, which auto-escape `<`, `>`, `"`, `'`, and `&`.
+ *
+ * Do NOT use the output of this function as:
+ *   - HTML (e.g. `dangerouslySetInnerHTML`) — use a dedicated HTML sanitizer.
+ *   - A URL (`href`, `src`) — use {@link sanitizeUrl}.
+ *   - A Firestore document ID — use {@link sanitizeDocId}.
+ *
+ * @param input - The raw string to normalize
+ * @returns The normalized string, or an empty string if input is not a string
  */
 export function sanitizeText(input: string): string {
   if (typeof input !== "string") {
     return "";
   }
-  
+
   return input
-    // Remove HTML tags
-    .replace(/<[^>]*>/g, "")
-    // Remove script-related content
-    .replace(/javascript:/gi, "")
-    .replace(/data:/gi, "")
-    .replace(/vbscript:/gi, "")
-    // Remove event handlers (onclick, onerror, etc.)
-    .replace(/on\w+\s*=/gi, "")
-    // Normalize whitespace (but preserve single spaces and newlines)
+    // Strip ASCII control chars except \t (0x09), \n (0x0A), \r (0x0D).
+    // Character class — no backtracking, no ReDoS.
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "")
+    // Normalize tabs and carriage returns to spaces; preserve newlines.
     .replace(/[\t\r]+/g, " ")
-    // Remove null bytes
-    .replace(/\0/g, "")
-    // Trim leading/trailing whitespace
     .trim();
 }
 
