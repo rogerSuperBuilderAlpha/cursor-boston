@@ -20,16 +20,27 @@ const mockDocGet = jest.fn();
 const mockDocSet = jest.fn().mockResolvedValue(undefined);
 const mockOrderByGet = jest.fn();
 const mockLumaDocGet = jest.fn().mockResolvedValue({ exists: false });
+/** Per-cohort counts returned by the `.where().count().get()` aggregation. */
+const cohortCountByQuery = new Map<string, number>();
+const mockCountGet = jest.fn();
 
 jest.mock("@/lib/firebase-admin", () => ({
   getAdminDb: jest.fn(() => ({
     collection: (name: string) => {
       if (name === "hackathonLumaRegistrants") {
-        return { doc: () => ({ get: mockLumaDocGet }) };
+        return {
+          doc: () => ({ get: mockLumaDocGet }),
+          where: () => ({ get: jest.fn().mockResolvedValue({ docs: [] }) }),
+        };
       }
       return {
         doc: () => ({ get: mockDocGet, set: mockDocSet }),
         orderBy: () => ({ get: mockOrderByGet }),
+        where: (_field: string, _op: string, value: unknown) => ({
+          count: () => ({
+            get: () => mockCountGet(value),
+          }),
+        }),
       };
     },
   })),
@@ -79,6 +90,12 @@ const validBody = {
 describe("POST /api/summer-cohort/apply", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    cohortCountByQuery.clear();
+    cohortCountByQuery.set("cohort-1", 17);
+    cohortCountByQuery.set("cohort-2", 4);
+    mockCountGet.mockImplementation(async (cohortId: string) => ({
+      data: () => ({ count: cohortCountByQuery.get(cohortId) ?? 0 }),
+    }));
     mockGetVerifiedUser.mockResolvedValue(baseUser);
     mockDocGet.mockResolvedValue({
       exists: false,
@@ -239,6 +256,12 @@ describe("POST /api/summer-cohort/apply", () => {
 describe("GET /api/summer-cohort/apply", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    cohortCountByQuery.clear();
+    cohortCountByQuery.set("cohort-1", 17);
+    cohortCountByQuery.set("cohort-2", 4);
+    mockCountGet.mockImplementation(async (cohortId: string) => ({
+      data: () => ({ count: cohortCountByQuery.get(cohortId) ?? 0 }),
+    }));
     mockGetVerifiedUser.mockResolvedValue(baseUser);
     mockLumaDocGet.mockResolvedValue({ exists: false });
   });
@@ -256,6 +279,7 @@ describe("GET /api/summer-cohort/apply", () => {
     const body = await res.json();
     expect(body.application).toBeNull();
     expect(body.mayImmersionRsvped).toBe(false);
+    expect(body.applicationCounts).toEqual({ "cohort-1": 17, "cohort-2": 4 });
   });
 
   it("returns serialized application with new fields and RSVP=false by default", async () => {
@@ -287,6 +311,7 @@ describe("GET /api/summer-cohort/apply", () => {
       mayImmersionRsvped: false,
       createdAt: 1717000000000,
     });
+    expect(body.applicationCounts).toEqual({ "cohort-1": 17, "cohort-2": 4 });
   });
 
   it("returns mayImmersionRsvped=true when the Luma doc exists", async () => {
