@@ -23,11 +23,11 @@
  * Requires: FIREBASE_SERVICE_ACCOUNT_JSON or GOOGLE_APPLICATION_CREDENTIALS
  * For --send: MAILGUN_API_KEY, MAILGUN_DOMAIN
  */
+import { spawnSync } from "child_process";
 import { readFileSync } from "fs";
 import { loadEnvConfig } from "@next/env";
 loadEnvConfig(process.cwd());
 
-import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "../lib/firebase-admin";
 import { sendEmail } from "../lib/mailgun";
 import { buildUnsubscribeUrl } from "../lib/unsubscribe-token";
@@ -43,7 +43,6 @@ import {
 
 const EVENT_ID = SUMMER_COHORT_IMMERSION.eventId;
 const COHORT_URL = "https://cursorboston.com/summer-cohort";
-const GITHUB_COL_KEY = "What is your GitHub username?";
 
 function escapeHtml(s: string): string {
   return s
@@ -53,12 +52,12 @@ function escapeHtml(s: string): string {
     .replace(/"/g, "&quot;");
 }
 
+/** We only need email + approval to compute the delta; the actual seed
+ *  (which needs name, GitHub login, etc.) is delegated to
+ *  scripts/seed-luma-registrants.ts so we don't duplicate parsing logic. */
 interface CsvRow {
   email: string;
-  name: string;
-  githubLogin: string | null;
   approval: string;
-  lumaCreatedAt: string;
 }
 
 function parseCsv(content: string): Record<string, string>[] {
@@ -109,45 +108,6 @@ function parseCsv(content: string): Record<string, string>[] {
   return out;
 }
 
-const INVALID_LOGIN_TOKENS = new Set([
-  "",
-  "n",
-  "no",
-  "none",
-  "na",
-  "n/a",
-  "-",
-  ".",
-  "unknown",
-]);
-
-function parseGithubLogin(raw: string | undefined): string | null {
-  if (!raw || typeof raw !== "string") return null;
-  let s = raw.trim();
-  if (!s) return null;
-  const lower = s.toLowerCase();
-  if (lower.startsWith("http://") || lower.startsWith("https://")) {
-    try {
-      const u = new URL(s.startsWith("http") ? s : `https://${s}`);
-      if (!u.hostname.includes("github.com")) return null;
-      const parts = u.pathname.split("/").filter(Boolean);
-      if (parts.length === 0) return null;
-      s = parts[0]!;
-    } catch {
-      return null;
-    }
-  } else if (lower.includes("github.com")) {
-    const idx = lower.indexOf("github.com");
-    const rest = s.slice(idx + "github.com".length).replace(/^[/:]+/, "");
-    const parts = rest.split("/").filter(Boolean);
-    if (parts.length === 0) return null;
-    s = parts[0]!;
-  }
-  s = s.replace(/^@+/, "");
-  if (INVALID_LOGIN_TOKENS.has(s.toLowerCase()) || s.length < 2) return null;
-  return s;
-}
-
 function loadCsvRows(csvPath: string): CsvRow[] {
   const raw = readFileSync(csvPath, "utf8");
   const rows = parseCsv(raw);
@@ -155,13 +115,9 @@ function loadCsvRows(csvPath: string): CsvRow[] {
   for (const r of rows) {
     const email = (r.email || "").trim().toLowerCase();
     if (!email) continue;
-    const name = [r.first_name, r.last_name].filter(Boolean).join(" ").trim() || (r.name || "").trim();
     out.push({
       email,
-      name,
-      githubLogin: parseGithubLogin(r[GITHUB_COL_KEY]),
       approval: (r.approval_status || "").toLowerCase(),
-      lumaCreatedAt: r.created_at || "",
     });
   }
   return out;
@@ -266,7 +222,6 @@ async function main() {
   const judgeEmails = getJudgeEmailsForEvent(EVENT_ID);
   const declinedEmails = getDeclinedEmailsForEvent(EVENT_ID);
   const csvEmails = new Set<string>();
-  const csvByEmail = new Map<string, CsvRow>();
   let csvDeclined = 0;
   let csvJudgeOrOpsDecline = 0;
   for (const row of csvRows) {
@@ -279,7 +234,6 @@ async function main() {
       continue;
     }
     csvEmails.add(row.email);
-    csvByEmail.set(row.email, row);
   }
   console.log(`CSV: ${csvRows.length} rows | accepted: ${csvEmails.size} | declined: ${csvDeclined} | judge/ops-declined: ${csvJudgeOrOpsDecline}`);
 
@@ -370,32 +324,30 @@ async function main() {
   }
   console.log(`\nEmail send complete: sent=${sent}, failed=${failed}`);
 
-  // 7. Seed Firestore (apply + prune). Mirrors `seed-luma-registrants.ts --apply --prune`.
-  let seeded = 0;
-  for (const email of csvEmails) {
-    const row = csvByEmail.get(email)!;
-    const docId = `${EVENT_ID}__${email}`;
-    await db.collection("hackathonLumaRegistrants").doc(docId).set(
-      {
-        eventId: EVENT_ID,
-        email,
-        name: row.name,
-        githubLogin: row.githubLogin,
-        lumaCreatedAt: row.lumaCreatedAt,
-        lumaApprovalStatus: row.approval,
-        updatedAt: FieldValue.serverTimestamp(),
-      },
-      { merge: true }
+  // 7. Delegate the actual Firestore seed to scripts/seed-luma-registrants.ts —
+  //    keeps the CSV→GitHub-login parsing logic in one place and avoids
+  //    duplicating the per-row writes here.
+  console.log("\nDelegating Firestore seed to scripts/seed-luma-registrants.ts…");
+  const seedResult = spawnSync(
+    "npx",
+    [
+      "tsx",
+      "scripts/seed-luma-registrants.ts",
+      "--apply",
+      "--prune",
+      "--event-id",
+      EVENT_ID,
+      "--csv",
+      csvPath,
+    ],
+    { stdio: "inherit" }
+  );
+  if (seedResult.status !== 0) {
+    console.error(
+      `Seed step failed (exit ${seedResult.status}). Emails were sent — re-run the seeder manually.`
     );
-    seeded++;
+    process.exit(seedResult.status ?? 1);
   }
-  let pruned = 0;
-  for (const email of dropped) {
-    const docId = `${EVENT_ID}__${email}`;
-    await db.collection("hackathonLumaRegistrants").doc(docId).delete();
-    pruned++;
-  }
-  console.log(`Firestore seed complete: seeded=${seeded}, pruned=${pruned}`);
 }
 
 main().catch((e) => {
