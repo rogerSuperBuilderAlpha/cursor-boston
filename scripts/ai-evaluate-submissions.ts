@@ -81,7 +81,8 @@ function githubHeaders(): Record<string, string> {
 async function fetchRepoReadme(repoUrl: string): Promise<string | null> {
   try {
     const url = new URL(repoUrl);
-    if (!url.hostname.includes("github.com")) return null;
+    const host = url.hostname.toLowerCase();
+    if (host !== "github.com" && host !== "www.github.com") return null;
     const parts = url.pathname.split("/").filter(Boolean);
     if (parts.length < 2) return null;
     const [owner, repo] = parts;

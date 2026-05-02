@@ -68,6 +68,7 @@ import {
 import { getGithubRepoPair, getGithubRepoWebBaseUrl } from "../lib/github-recent-merged-prs";
 import { getAdminAuth, getAdminDb } from "../lib/firebase-admin";
 import { sendEmail } from "../lib/mailgun";
+import { parseGithubLogin } from "./_lib/parse-github-login";
 
 const SITE_ORIGIN = process.env.NEXT_PUBLIC_APP_URL || "https://cursorboston.com";
 const SIGNUP_PATH = "/hackathons/hack-a-sprint-2026/signup";
@@ -95,17 +96,6 @@ const USER_ID_IN_CHUNK = 10;
 /** Update before send if the open PR queue size changed (see GitHub pulls tab). */
 const DAYOF_OPEN_PR_QUEUE_COUNT = 16;
 
-const INVALID_LOGIN_TOKENS = new Set([
-  "",
-  "n",
-  "no",
-  "none",
-  "na",
-  "n/a",
-  "-",
-  ".",
-  "unknown",
-]);
 
 type RegistrantTier =
   | "DECLINED"
@@ -172,33 +162,6 @@ function parseCsv(content: string): CsvRow[] {
 }
 
 /** Extract GitHub login from URL or bare login; returns null if unusable. */
-function parseGithubLogin(raw: string | undefined): string | null {
-  if (!raw || typeof raw !== "string") return null;
-  let s = raw.trim();
-  if (!s) return null;
-  const lower = s.toLowerCase();
-  if (lower.startsWith("http://") || lower.startsWith("https://")) {
-    try {
-      const u = new URL(s.startsWith("http") ? s : `https://${s}`);
-      if (!u.hostname.includes("github.com")) return null;
-      const parts = u.pathname.split("/").filter(Boolean);
-      if (parts.length === 0) return null;
-      s = parts[0]!;
-    } catch {
-      return null;
-    }
-  } else if (lower.includes("github.com")) {
-    const idx = lower.indexOf("github.com");
-    const rest = s.slice(idx + "github.com".length).replace(/^[/:]+/, "");
-    const parts = rest.split("/").filter(Boolean);
-    if (parts.length === 0) return null;
-    s = parts[0]!;
-  }
-  s = s.replace(/^@+/, "");
-  if (INVALID_LOGIN_TOKENS.has(s.toLowerCase()) || s.length < 2) return null;
-  return s;
-}
-
 function signedUpAtToMs(value: unknown): number {
   if (
     value &&

@@ -168,7 +168,8 @@
       "react": "$react",
       "react-dom": "$react-dom"
     },
-    "http-proxy-agent": "^7.0.0"
+    "http-proxy-agent": "^7.0.0",
+    "postcss": "^8.5.12"
   },
   "lint-staged": {
     "**/*.{ts,tsx}": [

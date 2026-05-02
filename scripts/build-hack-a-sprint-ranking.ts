@@ -18,6 +18,7 @@ import { readFileSync, writeFileSync } from "fs";
 import { homedir } from "os";
 import { join, resolve } from "path";
 import { DECLINED_EMAILS, JUDGE_EMAILS } from "../lib/hackathon-event-signup";
+import { parseGithubLogin } from "./_lib/parse-github-login";
 
 const REPO_OWNER = "rogerSuperBuilderAlpha";
 const REPO_NAME = "cursor-boston";
@@ -37,10 +38,6 @@ const GITHUB_LOGIN_CORRECTIONS: Record<string, string> = {
   aakashmkj: "aakashm1712",
   dannygarciadev: "DannyGarciaDEV",
 };
-
-const INVALID_LOGIN_TOKENS = new Set([
-  "", "n", "no", "none", "na", "n/a", "-", ".", "unknown",
-]);
 
 type CsvRow = Record<string, string>;
 
@@ -71,30 +68,6 @@ function parseCsv(content: string): CsvRow[] {
     for (let j = 0; j < header.length; j++) obj[header[j]!] = (line[j] ?? "").trim();
     return obj;
   });
-}
-
-function parseGithubLogin(raw: string): string | null {
-  if (!raw) return null;
-  let s = raw.trim();
-  const lower = s.toLowerCase();
-  if (lower.startsWith("http://") || lower.startsWith("https://")) {
-    try {
-      const u = new URL(s);
-      if (!u.hostname.includes("github.com")) return null;
-      const parts = u.pathname.split("/").filter(Boolean);
-      if (parts.length === 0) return null;
-      s = parts[0]!;
-    } catch { return null; }
-  } else if (lower.includes("github.com")) {
-    const idx = lower.indexOf("github.com");
-    const rest = s.slice(idx + "github.com".length).replace(/^[/:]+/, "");
-    const parts = rest.split("/").filter(Boolean);
-    if (parts.length === 0) return null;
-    s = parts[0]!;
-  }
-  s = s.replace(/^@+/, "");
-  if (INVALID_LOGIN_TOKENS.has(s.toLowerCase()) || s.length < 2) return null;
-  return s;
 }
 
 function resolveGithubLogin(lumaLogin: string): string {
