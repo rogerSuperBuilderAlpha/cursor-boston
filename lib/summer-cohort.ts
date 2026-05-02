@@ -153,6 +153,23 @@ export const SUMMER_COHORT_DEMO_DAY = {
     "Participants demo. Hiring partners share what their companies need and surface specific opportunities to apply to. No placement guarantees — placement depends on what the cohort builds and the partners' interest.",
 } as const;
 
+// TODO: swap in the real Zoom link before 2026-05-11.
+export const SUMMER_COHORT_C1_ZOOM_URL_PLACEHOLDER =
+  "https://zoom.us/j/PLACEHOLDER";
+
+export const SUMMER_COHORT_C1_WEEK_1 = {
+  title: "Project Management Build",
+  kickoffLabel: "Mon, May 11 · 6–7pm EST",
+  deadlineLabel: "Fri, May 15 · 5pm EST",
+  votingCallLabel: "Fri, May 15 · 6pm EST",
+  submissionBranch: "c1w1pm-submission",
+  submissionPath:
+    "content/summer-cohort/c1/w1-pm/submissions/<github-handle>.json",
+  presentMinutes: 2.5,
+  topNFromAi: 5,
+  wildcardSlots: 3,
+} as const;
+
 export const SUMMER_COHORT_PHILOSOPHY =
   "The cohort succeeds or fails as a cohort. Goal: every participant lands a job offer. The tools each cohort builds are how they market themselves to hiring partners and the world.";
 
