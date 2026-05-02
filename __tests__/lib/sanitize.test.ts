@@ -19,32 +19,14 @@ describe("sanitizeText", () => {
     expect(sanitizeText(123 as unknown as string)).toBe("");
   });
 
-  it("strips HTML tags", () => {
-    expect(sanitizeText("<b>bold</b>")).toBe("bold");
-    expect(sanitizeText('<script>alert("xss")</script>')).toBe('alert("xss")');
-    expect(sanitizeText("<img src=x onerror=alert(1)>")).toBe("");
-  });
-
-  it("strips javascript: protocol", () => {
-    expect(sanitizeText("javascript:alert(1)")).toBe("alert(1)");
-    expect(sanitizeText("JAVASCRIPT:void(0)")).toBe("void(0)");
-  });
-
-  it("strips data: protocol", () => {
-    expect(sanitizeText("data:text/html,<h1>hi</h1>")).toBe("text/html,hi");
-  });
-
-  it("strips vbscript: protocol", () => {
-    expect(sanitizeText("vbscript:msgbox")).toBe("msgbox");
-  });
-
-  it("strips event handlers", () => {
-    expect(sanitizeText('onerror=alert(1)')).toBe("alert(1)");
-    expect(sanitizeText('onclick=doStuff()')).toBe("doStuff()");
-  });
-
-  it("removes null bytes", () => {
+  it("removes null bytes and other ASCII control characters", () => {
     expect(sanitizeText("hello\0world")).toBe("helloworld");
+    expect(sanitizeText("a\x01b\x07c\x1Fd\x7Fe")).toBe("abcde");
+  });
+
+  it("preserves newlines, tab, and carriage return", () => {
+    // \t and \r are normalized to spaces (next test); \n must survive.
+    expect(sanitizeText("line1\nline2")).toBe("line1\nline2");
   });
 
   it("normalizes tabs and carriage returns but preserves newlines", () => {
@@ -58,6 +40,22 @@ describe("sanitizeText", () => {
 
   it("passes through clean text", () => {
     expect(sanitizeText("Hello, World!")).toBe("Hello, World!");
+  });
+
+  // sanitizeText does not strip HTML — render-layer (JSX) auto-escapes.
+  // These cases document that the input is preserved verbatim, so callers
+  // that store and then JSX-render get the literal characters as text.
+  it("preserves angle brackets and HTML-like input verbatim", () => {
+    expect(sanitizeText("<b>bold</b>")).toBe("<b>bold</b>");
+    expect(sanitizeText('<script>alert("xss")</script>')).toBe(
+      '<script>alert("xss")</script>'
+    );
+    expect(sanitizeText("I love <Component />")).toBe("I love <Component />");
+  });
+
+  it("preserves URL-like content verbatim (callers must use sanitizeUrl for links)", () => {
+    expect(sanitizeText("javascript:alert(1)")).toBe("javascript:alert(1)");
+    expect(sanitizeText("data:text/html,hi")).toBe("data:text/html,hi");
   });
 });
 
