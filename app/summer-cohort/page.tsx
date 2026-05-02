@@ -29,6 +29,7 @@ import {
   type SummerCohortId,
 } from "@/lib/summer-cohort";
 import { CohortProgramBreakdown } from "./_components/CohortProgramBreakdown";
+import { Week1BuildModule } from "./_components/Week1BuildModule";
 
 interface ApplicationDto {
   userId: string | null;
@@ -590,7 +591,7 @@ function ApplicationStatusPanel({
     status === "admitted"
       ? {
           panel:
-            "rounded-xl border border-emerald-400 bg-emerald-50 p-6 dark:border-emerald-700 dark:bg-emerald-950/40",
+            "mt-6 rounded-xl border border-emerald-400 bg-emerald-50 p-6 dark:border-emerald-700 dark:bg-emerald-950/40",
           badge: "bg-emerald-500 text-white",
           label: "Status: Admitted",
           headline: `You're in! Welcome to ${cohortText || "the cohort"}.`,
@@ -600,7 +601,7 @@ function ApplicationStatusPanel({
       : status === "waitlist"
         ? {
             panel:
-              "rounded-xl border border-amber-300 bg-amber-50 p-6 dark:border-amber-800 dark:bg-amber-950/30",
+              "mt-6 rounded-xl border border-amber-300 bg-amber-50 p-6 dark:border-amber-800 dark:bg-amber-950/30",
             badge: "bg-amber-500 text-white",
             label: "Status: Waitlist",
             headline: `You're on the waitlist for ${cohortText || "the cohort"}.`,
@@ -610,7 +611,7 @@ function ApplicationStatusPanel({
         : status === "rejected"
           ? {
               panel:
-                "rounded-xl border border-neutral-300 bg-neutral-50 p-6 dark:border-neutral-700 dark:bg-neutral-900/60",
+                "mt-6 rounded-xl border border-neutral-300 bg-neutral-50 p-6 dark:border-neutral-700 dark:bg-neutral-900/60",
               badge: "bg-neutral-500 text-white",
               label: "Status: Not selected",
               headline: "We weren't able to fit you into this cohort round.",
@@ -618,7 +619,7 @@ function ApplicationStatusPanel({
             }
           : {
               panel:
-                "rounded-xl border border-emerald-300 bg-emerald-50 p-6 dark:border-emerald-900 dark:bg-emerald-950/30",
+                "mt-6 rounded-xl border border-emerald-300 bg-emerald-50 p-6 dark:border-emerald-900 dark:bg-emerald-950/30",
               badge: "bg-emerald-500 text-white",
               label: "Status: Pending",
               headline: `We received your application for ${cohortText || "the cohort"}.`,
@@ -962,6 +963,10 @@ function SummerCohortPageInner() {
         <>
           {application ? (
             <>
+              {application.status === "admitted" &&
+              application.cohorts.includes("cohort-1") ? (
+                <Week1BuildModule />
+              ) : null}
               <ApplicationStatusPanel
                 application={application}
                 cohortLabel={cohortLabel}
