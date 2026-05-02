@@ -1,0 +1,8 @@
+{
+  "githubHandle": "test-just-submitting",
+  "repoUrl": "https://github.com/example/test-pm-tool-just-submitting",
+  "liveUrl": "https://test-just-submitting.example.com",
+  "loomUrl": "https://www.loom.com/share/test-just-submitting-loom",
+  "pitch": "Test submission with all required fields but competeForWin set to false. Should appear in the Submissions list with the plain 'submitted' badge — counted in merged total but not in the trying-to-win count.",
+  "competeForWin": false
+}
