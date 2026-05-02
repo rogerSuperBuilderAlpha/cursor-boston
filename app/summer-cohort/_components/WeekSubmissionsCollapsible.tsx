@@ -71,20 +71,19 @@ function buildExampleJson(
   photoUrl: string | null
 ): string {
   const handle = githubHandle ?? "your-handle";
-  const name = (displayName ?? "Your Name").replace(/"/g, '\\"');
-  const photo = photoUrl ?? "https://example.com/your-photo.jpg";
-  const liveLine = week.liveUrlRequired
-    ? `\n  "liveUrl": "https://yourthing.example.com",`
-    : "";
-  return `{
-  "githubHandle": "${handle}",
-  "name": "${name}",
-  "photoUrl": "${photo}",
-  "repoUrl": "https://github.com/${handle}/your-week-${week.week}-build",${liveLine}
-  "loomUrl": "https://www.loom.com/share/...",
-  "pitch": "One sentence on why you should win this week.",
-  "competeForWin": true
-}`;
+  const obj: Record<string, unknown> = {
+    githubHandle: handle,
+    name: displayName ?? "Your Name",
+    photoUrl: photoUrl ?? "https://example.com/your-photo.jpg",
+    repoUrl: `https://github.com/${handle}/your-week-${week.week}-build`,
+    ...(week.liveUrlRequired
+      ? { liveUrl: "https://yourthing.example.com" }
+      : {}),
+    loomUrl: "https://www.loom.com/share/...",
+    pitch: "One sentence on why you should win this week.",
+    competeForWin: true,
+  };
+  return JSON.stringify(obj, null, 2);
 }
 
 function buildSubmissionPath(
