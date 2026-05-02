@@ -170,6 +170,105 @@ export const SUMMER_COHORT_C1_WEEK_1 = {
   wildcardSlots: 3,
 } as const;
 
+// Vote-format week metadata (weeks 1, 2, 3). Each is the same submission
+// shape: open a PR adding a JSON pointer file, get AI-scored, top 5 + 3
+// wildcards present on Friday for the cohort vote. Dates and Zoom links are
+// placeholders for weeks 2 and 3 — finalize closer to date.
+export interface SummerCohortVoteWeek {
+  week: number;
+  title: string;
+  oneLiner: string;
+  kickoffLabel: string;
+  deadlineLabel: string;
+  votingCallLabel: string;
+  submissionBranch: string;
+  submissionPath: string;
+  liveUrlRequired: boolean;
+  winnerCommitment: string;
+  /** Free-form note rendered above the kickoff block (e.g. holiday / immersion overlap). */
+  weekNotes?: string;
+}
+
+export const SUMMER_COHORT_C1_VOTE_WEEKS: readonly SummerCohortVoteWeek[] = [
+  {
+    week: 1,
+    title: "Project Management Build",
+    oneLiner:
+      "Everyone builds a PM tool. The cohort picks a winner on Friday; the winner runs the cohort PM tool for the rest of the program.",
+    kickoffLabel: SUMMER_COHORT_C1_WEEK_1.kickoffLabel,
+    deadlineLabel: SUMMER_COHORT_C1_WEEK_1.deadlineLabel,
+    votingCallLabel: SUMMER_COHORT_C1_WEEK_1.votingCallLabel,
+    submissionBranch: SUMMER_COHORT_C1_WEEK_1.submissionBranch,
+    submissionPath: SUMMER_COHORT_C1_WEEK_1.submissionPath,
+    liveUrlRequired: true,
+    winnerCommitment:
+      "Winner maintains the cohort PM tool through the rest of the program — fixes bugs, ships changes the cohort asks for, keeps it running.",
+  },
+  {
+    week: 2,
+    title: "Communications Build",
+    oneLiner:
+      "Everyone builds a comms platform for the cohort. Same vote-and-pick-a-winner format. Winner runs comms for the rest of the cohort.",
+    kickoffLabel: "Mon, May 18 · 6–7pm EST",
+    deadlineLabel: "Fri, May 22 · 5pm EST",
+    votingCallLabel: "Fri, May 22 · 6pm EST",
+    submissionBranch: "c1w2comms-submission",
+    submissionPath:
+      "content/summer-cohort/c1/w2-comms/submissions/<github-handle>.json",
+    liveUrlRequired: true,
+    winnerCommitment:
+      "Winner maintains the cohort comms platform for the remaining weeks — onboarding new threads, fixing what breaks, keeping conversation flowing.",
+  },
+  {
+    week: 3,
+    title: "Marketing Build",
+    oneLiner:
+      "Everyone builds a marketing platform — typically a public site that promotes the cohort and the work. Same vote format; winner maintains it.",
+    kickoffLabel: "Mon, May 25 · 6–7pm EST",
+    deadlineLabel: "Fri, May 29 · 5pm EST",
+    votingCallLabel: "Fri, May 29 · 6pm EST",
+    submissionBranch: "c1w3mkt-submission",
+    submissionPath:
+      "content/summer-cohort/c1/w3-mkt/submissions/<github-handle>.json",
+    liveUrlRequired: true,
+    winnerCommitment:
+      "Winner maintains the cohort marketing site through demo day — keeping it up to date with what the cohort is shipping.",
+    weekNotes:
+      "Heads up: Mon May 25 is Memorial Day (US holiday) and Tue May 26 is the in-person immersion event at Hult. Plan your build time around both.",
+  },
+] as const;
+
+export const SUMMER_COHORT_C1_WEEK_4 = {
+  week: 4,
+  title: "Ludwitt Education Tool",
+  oneLiner:
+    "Everyone ships an education tool that gets merged into Ludwitt. As users consume credits via your tool, you earn a revenue share — every shipped tool earns its author fees in perpetuity.",
+  kickoffLabel: "Mon, Jun 1 · 6–7pm EST",
+  deadlineLabel: "Fri, Jun 5 · 5pm EST",
+  // No vote — every shipped + merged tool counts.
+} as const;
+
+export const SUMMER_COHORT_C1_WEEK_5 = {
+  week: 5,
+  title: "Your Own Startup",
+  oneLiner:
+    "Build whatever YOU want this week — your own startup project. No vote, no submission template; bring it to the Friday call for show-and-tell.",
+  kickoffLabel: "Mon, Jun 8 · 6–7pm EST",
+  showAndTellLabel: "Fri, Jun 12 · 6pm EST",
+} as const;
+
+export const SUMMER_COHORT_C1_WEEK_6 = {
+  week: 6,
+  title: "Open-Source PR",
+  oneLiner:
+    "Pick a major open-source project and land a merged PR upstream. Friday is also demo day with hiring partners — bring your merged PR URL.",
+  kickoffLabel: "Mon, Jun 15 · 6–7pm EST",
+  demoDayLabel: "Fri, Jun 19 · time TBD",
+} as const;
+
+/** Default tab when an admitted cohort-1 user lands on /summer-cohort. */
+export const SUMMER_COHORT_C1_DEFAULT_TAB = "week-1" as const;
+
 export const SUMMER_COHORT_PHILOSOPHY =
   "The cohort succeeds or fails as a cohort. Goal: every participant lands a job offer. The tools each cohort builds are how they market themselves to hiring partners and the world.";
 
