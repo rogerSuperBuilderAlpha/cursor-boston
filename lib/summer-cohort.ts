@@ -10,6 +10,7 @@ import { SPORTS_HACK_2026_EVENT_ID, SPORTS_HACK_2026_LUMA_URL } from "./sports-h
 
 export const SUMMER_COHORT_SITE_ID = "cursor-boston";
 export const SUMMER_COHORT_COLLECTION = "summerCohortApplications";
+export const SUMMER_COHORT_VOTES_COLLECTION = "summerCohortVotes";
 export const SUMMER_COHORT_NOTIFY_EMAIL = "roger@cursorboston.com";
 export const SUMMER_COHORT_LOCALSTORAGE_KEY =
   "cursor-boston-summer-cohort-modal-shown-date";
@@ -157,6 +158,10 @@ export const SUMMER_COHORT_DEMO_DAY = {
 export const SUMMER_COHORT_C1_ZOOM_URL_PLACEHOLDER =
   "https://zoom.us/j/PLACEHOLDER";
 
+// TODO: swap in the real Discord invite link before kickoff.
+export const SUMMER_COHORT_C1_DISCORD_INVITE_URL_PLACEHOLDER =
+  "https://discord.gg/PLACEHOLDER";
+
 export const SUMMER_COHORT_C1_WEEK_1 = {
   title: "Project Management Build",
   kickoffLabel: "Mon, May 11 · 6–7pm EST",
@@ -174,6 +179,12 @@ export const SUMMER_COHORT_C1_WEEK_1 = {
 // shape: open a PR adding a JSON pointer file, get AI-scored, top 5 + 3
 // wildcards present on Friday for the cohort vote. Dates and Zoom links are
 // placeholders for weeks 2 and 3 — finalize closer to date.
+export interface SummerCohortInspirationPlatform {
+  name: string;
+  url: string;
+  takeaway: string;
+}
+
 export interface SummerCohortVoteWeek {
   week: number;
   title: string;
@@ -187,6 +198,10 @@ export interface SummerCohortVoteWeek {
   winnerCommitment: string;
   /** Free-form note rendered above the kickoff block (e.g. holiday / immersion overlap). */
   weekNotes?: string;
+  /** Reference platforms participants can study. Frame is "what's worth
+   *  borrowing", not "rebuild this." */
+  inspirationScopeNote: string;
+  inspirationPlatforms: readonly SummerCohortInspirationPlatform[];
 }
 
 export const SUMMER_COHORT_C1_VOTE_WEEKS: readonly SummerCohortVoteWeek[] = [
@@ -203,6 +218,40 @@ export const SUMMER_COHORT_C1_VOTE_WEEKS: readonly SummerCohortVoteWeek[] = [
     liveUrlRequired: true,
     winnerCommitment:
       "Winner maintains the cohort PM tool through the rest of the program — fixes bugs, ships changes the cohort asks for, keeps it running.",
+    inspirationScopeNote:
+      "Don't try to rebuild Linear or Asana. The cohort is ~100 people shipping for 6 weeks — think \"how do we track who's shipping what each week and prep for Friday voting calls?\" Skip Gantt charts, time tracking, sprint estimation, and billing.",
+    inspirationPlatforms: [
+      {
+        name: "Linear",
+        url: "https://linear.app",
+        takeaway:
+          "Keyboard-first UX, fast issue triage, opinionated state model. Borrow the speed and the clarity, not the feature surface.",
+      },
+      {
+        name: "Trello",
+        url: "https://trello.com",
+        takeaway:
+          "Kanban as the whole product. Lean on this if your wedge is \"see at a glance who's shipping where.\"",
+      },
+      {
+        name: "Notion",
+        url: "https://notion.so",
+        takeaway:
+          "Docs and databases in one. Useful if cohort updates and project tracking want to live next to each other.",
+      },
+      {
+        name: "GitHub Projects",
+        url: "https://github.com/features/issues",
+        takeaway:
+          "Already where the code lives. The bar to beat is \"why open another tab?\"",
+      },
+      {
+        name: "Height",
+        url: "https://height.app",
+        takeaway:
+          "AI-first PM tool — auto-triage, smart filters. Shows what an LLM-native PM tool looks like.",
+      },
+    ],
   },
   {
     week: 2,
@@ -218,6 +267,40 @@ export const SUMMER_COHORT_C1_VOTE_WEEKS: readonly SummerCohortVoteWeek[] = [
     liveUrlRequired: true,
     winnerCommitment:
       "Winner maintains the cohort comms platform for the remaining weeks — onboarding new threads, fixing what breaks, keeping conversation flowing.",
+    inspirationScopeNote:
+      "Discord is already the cohort's chat backbone. Don't try to be Slack or Telegram from scratch. The bar to beat is \"what does a 100-person cohort need that Discord doesn't deliver?\" — maybe that's persistent project threads, peer-review queues, kudos, weekly digest. Pick a wedge.",
+    inspirationPlatforms: [
+      {
+        name: "Slack",
+        url: "https://slack.com",
+        takeaway:
+          "Channel + thread model, search, integrations. Borrow the clarity of channel taxonomy, not the enterprise feature pile.",
+      },
+      {
+        name: "Discord",
+        url: "https://discord.com",
+        takeaway:
+          "Already where the cohort hangs out. Study what's good — voice, presence, server identity — and what's bad — hard to thread, weak search.",
+      },
+      {
+        name: "Telegram",
+        url: "https://telegram.org",
+        takeaway:
+          "Mobile-first messaging at scale. Useful if your wedge is \"works great on a phone during commute.\"",
+      },
+      {
+        name: "Mattermost",
+        url: "https://mattermost.com",
+        takeaway:
+          "Open-source Slack analog. Worth a look if you want to study how a chat surface is structured under the hood.",
+      },
+      {
+        name: "Circle",
+        url: "https://circle.so",
+        takeaway:
+          "Community-platform feel — posts + threads + events, less \"chat,\" more \"forum.\" A different shape entirely.",
+      },
+    ],
   },
   {
     week: 3,
@@ -235,6 +318,40 @@ export const SUMMER_COHORT_C1_VOTE_WEEKS: readonly SummerCohortVoteWeek[] = [
       "Winner maintains the cohort marketing site through demo day — keeping it up to date with what the cohort is shipping.",
     weekNotes:
       "Heads up: Mon May 25 is Memorial Day (US holiday) and Tue May 26 is the in-person immersion event at Hult. Plan your build time around both.",
+    inspirationScopeNote:
+      "You're marketing 100 people and 6 weeks of builds — not running a media company. Skip A/B testing, lead-scoring, full CMS. The bar to beat is \"where does a hiring partner go on demo day to see what the cohort shipped?\"",
+    inspirationPlatforms: [
+      {
+        name: "Vercel",
+        url: "https://vercel.com",
+        takeaway:
+          "Easy deploys + MDX-friendly. The default if your wedge is \"a fast, content-rich public site I can keep editing.\"",
+      },
+      {
+        name: "Framer",
+        url: "https://framer.com",
+        takeaway:
+          "Design-led no-code. Lean on this if visual polish is your differentiator.",
+      },
+      {
+        name: "Notion (public pages)",
+        url: "https://notion.so",
+        takeaway:
+          "Quick wins for content-heavy cohort directories — every participant gets a page, no CMS needed.",
+      },
+      {
+        name: "Read.cv",
+        url: "https://read.cv",
+        takeaway:
+          "Profile-aggregator vibe — clean, opinionated. Useful if your wedge is \"the cohort's people page.\"",
+      },
+      {
+        name: "Substack",
+        url: "https://substack.com",
+        takeaway:
+          "Newsletter + article focus. Worth studying if you want \"weekly cohort digest\" to be your wedge.",
+      },
+    ],
   },
 ] as const;
 

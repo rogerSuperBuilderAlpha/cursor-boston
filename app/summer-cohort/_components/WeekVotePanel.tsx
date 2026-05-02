@@ -9,7 +9,7 @@
 import {
   Calendar,
   ExternalLink,
-  GitPullRequest,
+  Lightbulb,
   Trophy,
   Video,
 } from "lucide-react";
@@ -18,31 +18,35 @@ import {
   SUMMER_COHORT_C1_ZOOM_URL_PLACEHOLDER,
   type SummerCohortVoteWeek,
 } from "@/lib/summer-cohort";
+import { WeekSubmissionsCollapsible } from "./WeekSubmissionsCollapsible";
 
 const PRESENT_MINUTES = SUMMER_COHORT_C1_WEEK_1.presentMinutes;
 const TOP_N = SUMMER_COHORT_C1_WEEK_1.topNFromAi;
 const WILDCARDS = SUMMER_COHORT_C1_WEEK_1.wildcardSlots;
 
-function buildExampleJson(week: SummerCohortVoteWeek) {
-  const liveLine = week.liveUrlRequired
-    ? `\n  "liveUrl": "https://yourthing.example.com",`
-    : "";
-  return `{
-  "githubHandle": "your-handle",
-  "repoUrl": "https://github.com/your-handle/your-week-${week.week}-build",${liveLine}
-  "loomUrl": "https://www.loom.com/share/...",
-  "pitch": "One sentence on why you should win this week."
-}`;
-}
-
 interface WeekVotePanelProps {
   week: SummerCohortVoteWeek;
   tabId: string;
+  /** Lower-cased GitHub handle of the signed-in user, if connected — used by
+   *  the submissions collapsible to render "you're submitted" status. */
+  currentUserGithubHandle: string | null;
+  /** Display name from the user's Cursor Boston profile (userProfile.displayName). */
+  currentUserDisplayName: string | null;
+  /** Photo URL from the user's Cursor Boston profile (userProfile.photoURL). */
+  currentUserPhotoUrl: string | null;
+  /** Switches the parent CohortTabs to "my-info" so the user can connect GitHub. */
+  onSwitchToMyInfo: () => void;
 }
 
-export function WeekVotePanel({ week, tabId }: WeekVotePanelProps) {
+export function WeekVotePanel({
+  week,
+  tabId,
+  currentUserGithubHandle,
+  currentUserDisplayName,
+  currentUserPhotoUrl,
+  onSwitchToMyInfo,
+}: WeekVotePanelProps) {
   const zoomUrl = SUMMER_COHORT_C1_ZOOM_URL_PLACEHOLDER;
-  const requiredCount = week.liveUrlRequired ? 3 : 2;
 
   return (
     <section
@@ -51,7 +55,32 @@ export function WeekVotePanel({ week, tabId }: WeekVotePanelProps) {
       aria-labelledby={`tab-${tabId}`}
       className="rounded-xl border-2 border-emerald-400 bg-white p-6 dark:border-emerald-700 dark:bg-neutral-900"
     >
-      <div className="flex flex-wrap items-center gap-2">
+      {/* Kickoff Zoom — top of the module */}
+      <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-950/40">
+        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-neutral-500">
+          <Video className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden="true" />
+          Kickoff Zoom · {week.kickoffLabel}
+        </div>
+        <a
+          href={zoomUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-3 inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-400"
+        >
+          <Video className="h-4 w-4" strokeWidth={2.25} aria-hidden="true" />
+          Join the Zoom
+          <ExternalLink
+            className="h-3.5 w-3.5"
+            strokeWidth={2.25}
+            aria-hidden="true"
+          />
+        </a>
+        <p className="mt-2 text-xs text-neutral-500">
+          Stand-in link — we&apos;ll swap in the real Zoom URL before kickoff.
+        </p>
+      </div>
+
+      <div className="mt-6 flex flex-wrap items-center gap-2">
         <span className="inline-flex items-center rounded-full bg-emerald-500 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white">
           Cohort 1 · Week {week.week}
         </span>
@@ -72,160 +101,59 @@ export function WeekVotePanel({ week, tabId }: WeekVotePanelProps) {
         </div>
       ) : null}
 
-      {/* Kickoff */}
-      <div className="mt-6 rounded-lg border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-950/40">
-        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-neutral-500">
-          <Video className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden="true" />
-          Kickoff Zoom
-        </div>
-        <p className="mt-1 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-          {week.kickoffLabel}
-        </p>
-        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
-          We walk through the week, the rubric, and answer questions. Add it to
-          your calendar.
-        </p>
-        <a
-          href={zoomUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-3 inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-400"
-        >
-          <Video className="h-4 w-4" strokeWidth={2.25} aria-hidden="true" />
-          Join the Zoom
-          <ExternalLink
-            className="h-3.5 w-3.5"
-            strokeWidth={2.25}
-            aria-hidden="true"
-          />
-        </a>
-        <p className="mt-2 text-xs text-neutral-500">
-          Stand-in link — we&apos;ll swap in the real Zoom URL before kickoff.
-        </p>
+      {/* Submissions list (collapsible) — the focus of the week */}
+      <div className="mt-6">
+        <WeekSubmissionsCollapsible
+          week={week}
+          tabId={tabId}
+          currentUserGithubHandle={currentUserGithubHandle}
+          currentUserDisplayName={currentUserDisplayName}
+          currentUserPhotoUrl={currentUserPhotoUrl}
+          onSwitchToMyInfo={onSwitchToMyInfo}
+        />
       </div>
 
-      {/* What you submit */}
-      <div className="mt-6">
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-neutral-500">
-          What you submit
-        </h3>
-        <p className="mt-2 text-sm text-neutral-700 dark:text-neutral-300">
-          {requiredCount === 3
-            ? "All three are required to be considered for the week's win:"
-            : "Both are required to be considered for the week's win:"}
-        </p>
-        <ol className="mt-3 space-y-2 text-sm text-neutral-700 dark:text-neutral-300">
-          <li className="flex gap-3 rounded-lg border border-neutral-200 p-3 dark:border-neutral-800">
-            <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-xs font-bold text-white">
-              1
-            </span>
-            <div>
-              <p className="font-semibold text-neutral-900 dark:text-neutral-100">
-                Repo URL
-              </p>
-              <p className="mt-0.5">A public GitHub repo of your build.</p>
-            </div>
-          </li>
-          <li className="flex gap-3 rounded-lg border border-neutral-200 p-3 dark:border-neutral-800">
-            <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-xs font-bold text-white">
-              2
-            </span>
-            <div>
-              <p className="font-semibold text-neutral-900 dark:text-neutral-100">
-                Loom URL
-              </p>
-              <p className="mt-0.5">A short demo video of your build running.</p>
-            </div>
-          </li>
-          {week.liveUrlRequired ? (
-            <li className="flex gap-3 rounded-lg border border-neutral-200 p-3 dark:border-neutral-800">
-              <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-xs font-bold text-white">
-                3
-              </span>
-              <div>
-                <p className="font-semibold text-neutral-900 dark:text-neutral-100">
-                  Live URL
-                </p>
-                <p className="mt-0.5">
-                  Your deployed app, reachable on the public web.
-                </p>
-              </div>
-            </li>
-          ) : null}
-        </ol>
-      </div>
-
-      {/* PR mechanics */}
-      <div className="mt-6">
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-neutral-500">
-          How to submit
-        </h3>
-        <ol className="mt-3 space-y-2 text-sm text-neutral-700 dark:text-neutral-300">
-          <li className="flex gap-3">
-            <GitPullRequest
-              className="mt-0.5 h-4 w-4 shrink-0 text-neutral-500"
+      {/* Inspiration */}
+      {week.inspirationPlatforms.length > 0 ? (
+        <div className="mt-6 rounded-lg border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-950/40">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-neutral-500">
+            <Lightbulb
+              className="h-3.5 w-3.5"
               strokeWidth={2.25}
               aria-hidden="true"
             />
-            <span>
-              Open a PR against the{" "}
-              <code className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs font-semibold dark:bg-neutral-800">
-                {week.submissionBranch}
-              </code>{" "}
-              base branch of{" "}
-              <a
-                href="https://github.com/rogerSuperBuilderAlpha/cursor-boston"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-semibold underline decoration-emerald-600/60 underline-offset-2 hover:decoration-emerald-600"
+            Inspiration — what to study, not rebuild
+          </div>
+          <p className="mt-2 text-sm text-neutral-700 dark:text-neutral-300">
+            {week.inspirationScopeNote}
+          </p>
+          <ul className="mt-3 space-y-2 text-sm text-neutral-700 dark:text-neutral-300">
+            {week.inspirationPlatforms.map((platform) => (
+              <li
+                key={platform.name}
+                className="rounded-lg border border-neutral-200 bg-white p-3 dark:border-neutral-800 dark:bg-neutral-900"
               >
-                rogerSuperBuilderAlpha/cursor-boston
-              </a>
-              .
-            </span>
-          </li>
-          <li className="flex gap-3">
-            <span className="mt-0.5 h-4 w-4 shrink-0 text-neutral-500" aria-hidden="true">
-              ↳
-            </span>
-            <span>
-              Add a single JSON file at{" "}
-              <code className="break-all rounded bg-neutral-100 px-1.5 py-0.5 text-xs font-semibold dark:bg-neutral-800">
-                {week.submissionPath}
-              </code>
-              .
-            </span>
-          </li>
-          <li className="flex gap-3">
-            <span className="mt-0.5 h-4 w-4 shrink-0 text-neutral-500" aria-hidden="true">
-              ↳
-            </span>
-            <span>
-              Sign your commit with DCO (
-              <code className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs font-semibold dark:bg-neutral-800">
-                git commit -s
-              </code>
-              ) — see{" "}
-              <a
-                href="https://github.com/rogerSuperBuilderAlpha/cursor-boston/blob/develop/docs/FIRST_CONTRIBUTION.md"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-semibold underline decoration-emerald-600/60 underline-offset-2 hover:decoration-emerald-600"
-              >
-                FIRST_CONTRIBUTION.md
-              </a>{" "}
-              if you&apos;re new to this repo.
-            </span>
-          </li>
-        </ol>
-
-        <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-neutral-500">
-          File contents
-        </p>
-        <pre className="mt-2 overflow-x-auto rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-xs leading-relaxed text-neutral-800 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-200">
-          <code>{buildExampleJson(week)}</code>
-        </pre>
-      </div>
+                <a
+                  href={platform.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-semibold underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-500 dark:decoration-neutral-600 dark:hover:decoration-neutral-400"
+                >
+                  {platform.name}
+                  <ExternalLink
+                    className="ml-1 inline-block h-3 w-3"
+                    strokeWidth={2.25}
+                    aria-hidden="true"
+                  />
+                </a>
+                <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
+                  {platform.takeaway}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       {/* Deadline */}
       <div className="mt-6 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50/60 p-4 dark:border-amber-900 dark:bg-amber-950/20">
