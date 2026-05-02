@@ -30,6 +30,7 @@ import {
   SUMMER_COHORT_RETURN_TO,
   type SummerCohortId,
 } from "@/lib/summer-cohort";
+import { ClaimSpotByPRCard } from "./_components/ClaimSpotByPRCard";
 import { CohortProgramBreakdown } from "./_components/CohortProgramBreakdown";
 import { CohortTabs, type CohortTabId } from "./_components/CohortTabs";
 import { InfoTabPanel } from "./_components/InfoTabPanel";
@@ -854,6 +855,10 @@ function SummerCohortPageInner() {
                   application={application}
                   cohortLabel={cohortLabel}
                 />
+                {application.status === "pending" &&
+                application.cohorts.includes("cohort-1") ? (
+                  <ClaimSpotByPRCard />
+                ) : null}
                 <NextStepsCard
                   application={application}
                   needsDiscord={!discord.discordInfo}
