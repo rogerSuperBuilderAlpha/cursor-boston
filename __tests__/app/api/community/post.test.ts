@@ -109,13 +109,16 @@ describe("POST /api/community/post", () => {
     );
   });
 
-  it("sanitizes HTML from content", async () => {
+  it("preserves HTML-like input verbatim (render layer auto-escapes)", async () => {
+    // sanitizeText no longer strips angle brackets — JSX expressions
+    // auto-escape `<` and `>` at render time, so storing them verbatim is
+    // safe and avoids silently dropping legit input like "<Component />".
     const htmlContent = "<b>" + "A".repeat(100) + "</b>" + "B".repeat(50);
     const res = await POST(makeRequest({ content: htmlContent }));
     expect(res.status).toBe(200);
     expect(mockSet).toHaveBeenCalledWith(
       expect.objectContaining({
-        content: expect.not.stringContaining("<b>"),
+        content: htmlContent,
       })
     );
   });
