@@ -109,7 +109,6 @@ type Props = {
 
 const EMPTY: IntakeSurveyResponse = {
   email: "",
-  participantCode: "",
   cohort: "",
   consentToResearch: false,
 
@@ -250,22 +249,6 @@ export function IntakeSurveyForm({ defaultEmail, cohortId, onComplete }: Props) 
             onChange={(v) => update("email", v)}
             invalid={isMissing("email")}
           />
-
-          <Field label="Self-generated participant code" required invalid={isMissing("participantCode")}>
-            <input
-              type="text"
-              required
-              maxLength={INTAKE_LIMITS.participantCode}
-              value={r.participantCode}
-              onChange={(e) => update("participantCode", e.target.value)}
-              placeholder="e.g. last 4 of phone + first 2 letters of mother's first name"
-              className={INPUT_CLASS}
-            />
-            <p className="mt-1 text-xs text-neutral-500">
-              Pick a rule and use the same code on every wave so we can match
-              your responses across the program even if your email changes.
-            </p>
-          </Field>
 
           <Field label="Cohort" required invalid={isMissing("cohort")}>
             <input

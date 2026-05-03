@@ -138,7 +138,6 @@ export const SOCIAL_PLATFORM_OPTIONS = [
 // ---------------------------------------------------------------------------
 
 export const INTAKE_LIMITS = {
-  participantCode: 64,
   email: 320,
   shortText: 200,
   longText: 2000,
@@ -157,7 +156,6 @@ export const INTAKE_LIMITS = {
 export type IntakeSurveyResponse = {
   // Section 1: Linkage and consent
   email: string;
-  participantCode: string;
   cohort: string;
   consentToResearch: boolean;
 
@@ -277,7 +275,6 @@ export function validateIntakeSurvey(
 
   const data: IntakeSurveyResponse = {
     email: clampStr(r.email, INTAKE_LIMITS.email).toLowerCase(),
-    participantCode: clampStr(r.participantCode, INTAKE_LIMITS.participantCode),
     cohort: clampStr(r.cohort, 64),
     consentToResearch: r.consentToResearch === true,
 
@@ -339,7 +336,6 @@ export function validateIntakeSurvey(
   // conditional follow-ups is required so the dataset is analyzable.
   const errors: string[] = [];
   if (!data.email) errors.push("email");
-  if (!data.participantCode) errors.push("participantCode");
   if (!data.cohort) errors.push("cohort");
   if (!data.consentToResearch) errors.push("consentToResearch");
   if (data.age == null) errors.push("age");
