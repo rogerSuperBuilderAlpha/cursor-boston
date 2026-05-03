@@ -6,7 +6,8 @@
 
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   AI_TOOL_OPTIONS,
   CS_CREDENTIAL_OPTIONS,
@@ -19,6 +20,7 @@ import {
   LLM_FREQUENCY_OPTIONS,
   PROGRAMMING_LANGUAGE_OPTIONS,
   SOCIAL_PLATFORM_OPTIONS,
+  SUMMER_COHORT_INTAKE_VERSION,
   YEARS_PROGRAMMING_OPTIONS,
   type CsCredential,
   type CursorExperience,
@@ -30,6 +32,46 @@ import {
   type LlmFrequency,
   type YearsProgramming,
 } from "@/lib/summer-cohort-intake";
+
+// localStorage draft persistence — saves on every change so a refresh or
+// accidental nav doesn't lose the work. Keyed by uid + survey version so
+// stale drafts from a prior schema don't hydrate into a new form.
+function draftStorageKey(uid: string): string {
+  return `summer-cohort-intake-draft:${SUMMER_COHORT_INTAKE_VERSION}:${uid}`;
+}
+
+function loadDraft(uid: string): Partial<IntakeSurveyResponse> | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(draftStorageKey(uid));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object") {
+      return parsed as Partial<IntakeSurveyResponse>;
+    }
+  } catch {
+    // Corrupt JSON — fall through and ignore.
+  }
+  return null;
+}
+
+function saveDraft(uid: string, draft: IntakeSurveyResponse): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(draftStorageKey(uid), JSON.stringify(draft));
+  } catch {
+    // Quota exceeded or storage disabled — silently drop. Survey still works.
+  }
+}
+
+function clearDraft(uid: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(draftStorageKey(uid));
+  } catch {
+    // ignore
+  }
+}
 
 // Display labels for the enum string values. Keep these in the form layer —
 // the lib is data-only.
@@ -155,6 +197,7 @@ const EMPTY: IntakeSurveyResponse = {
 };
 
 export function IntakeSurveyForm({ defaultEmail, cohortId, onComplete }: Props) {
+  const { user } = useAuth();
   const [r, setR] = useState<IntakeSurveyResponse>(() => ({
     ...EMPTY,
     email: defaultEmail,
@@ -163,6 +206,31 @@ export function IntakeSurveyForm({ defaultEmail, cohortId, onComplete }: Props) 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [missingFields, setMissingFields] = useState<string[]>([]);
+  // Tracks whether we've already attempted to hydrate from localStorage so
+  // subsequent uid-stable renders don't re-overwrite user edits.
+  const hydratedRef = useRef(false);
+  const [hasDraft, setHasDraft] = useState(false);
+
+  // Hydrate from localStorage on mount once the uid is available. Defaults
+  // (defaultEmail, cohortId) stay as the fallback for fields the draft
+  // doesn't carry.
+  useEffect(() => {
+    if (hydratedRef.current) return;
+    if (!user?.uid) return;
+    const draft = loadDraft(user.uid);
+    hydratedRef.current = true;
+    if (!draft) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot hydration on mount, not a sync loop
+    setHasDraft(true);
+    setR((prev) => ({ ...prev, ...draft }));
+  }, [user?.uid]);
+
+  // Persist on every change once we've hydrated. Skipping pre-hydration
+  // prevents the initial empty state from overwriting a saved draft.
+  useEffect(() => {
+    if (!hydratedRef.current || !user?.uid) return;
+    saveDraft(user.uid, r);
+  }, [r, user?.uid]);
 
   const update = <K extends keyof IntakeSurveyResponse>(
     key: K,
@@ -183,13 +251,21 @@ export function IntakeSurveyForm({ defaultEmail, cohortId, onComplete }: Props) 
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) {
+      setError("You must be signed in to submit.");
+      return;
+    }
     setSubmitting(true);
     setError(null);
     setMissingFields([]);
     try {
+      const token = await user.getIdToken();
       const res = await fetch("/api/summer-cohort/intake-survey", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(r),
       });
       if (!res.ok) {
@@ -202,6 +278,9 @@ export function IntakeSurveyForm({ defaultEmail, cohortId, onComplete }: Props) 
         }
         return;
       }
+      // Submission landed — drop the local draft so a future re-fill (e.g.
+      // an edit pass) doesn't restore stale answers from the previous wave.
+      if (user?.uid) clearDraft(user.uid);
       onComplete();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Submit failed");
@@ -231,8 +310,14 @@ export function IntakeSurveyForm({ defaultEmail, cohortId, onComplete }: Props) 
         <p className="mt-2 text-xs text-neutral-500">
           You can update your answers later from this page if anything changes
           before kickoff. Required fields are marked with{" "}
-          <span className="text-red-500">*</span>.
+          <span className="text-red-500">*</span>. Your in-progress answers
+          are saved in this browser so a refresh won&apos;t lose them.
         </p>
+        {hasDraft ? (
+          <p className="mt-2 inline-flex items-center gap-2 rounded-md bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
+            Draft restored from this browser.
+          </p>
+        ) : null}
       </div>
 
       <form onSubmit={submit} className="space-y-10">
