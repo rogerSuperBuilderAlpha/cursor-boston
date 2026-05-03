@@ -25,6 +25,7 @@ import { fetchMergedPrCountsForLogins } from "@/lib/github-merged-pr-count";
 import { getGithubRepoPair } from "@/lib/github-recent-merged-prs";
 import { getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
+import { SUMMER_COHORT_COLLECTION } from "@/lib/summer-cohort";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -144,6 +145,8 @@ type LeaderboardEntry = {
   willBeLate: boolean;
   queuingForSpot: boolean;
   lumaRegistered: boolean;
+  /** True when the email matches a Cohort-1 application (status pending/admitted). */
+  isCohort1: boolean;
 };
 
 type LeaderboardPayload = {
@@ -165,6 +168,21 @@ async function buildLeaderboardPayload(eventId: string): Promise<LeaderboardPayl
 
   const judgeEmails = getJudgeEmailsForEvent(eventId);
   const declinedEmails = getDeclinedEmailsForEvent(eventId);
+
+  // Cohort-1 applicant emails (status pending/admitted only). Used to push
+  // cohort-1 attendees to the top of this event's leaderboard, since the
+  // May 26 immersion is the in-person event for the summer cohort.
+  const cohort1Emails = new Set<string>();
+  const cohortAppsSnap = await db.collection(SUMMER_COHORT_COLLECTION).get();
+  for (const doc of cohortAppsSnap.docs) {
+    const d = doc.data();
+    const cohorts = Array.isArray(d.cohorts) ? d.cohorts : [];
+    if (!cohorts.includes("cohort-1")) continue;
+    const status = typeof d.status === "string" ? d.status : "pending";
+    if (status !== "pending" && status !== "admitted") continue;
+    const email = typeof d.email === "string" ? d.email.trim().toLowerCase() : "";
+    if (email) cohort1Emails.add(email);
+  }
 
   const snap = await db
     .collection("hackathonEventSignups")
@@ -294,6 +312,7 @@ async function buildLeaderboardPayload(eventId: string): Promise<LeaderboardPayl
     const lumaGithubLogins: string[] = [];
     type LumaRow = {
       name: string;
+      email: string | null;
       githubLogin: string | null;
       lumaCreatedAt: string;
       mergedPrCount: number;
@@ -337,6 +356,7 @@ async function buildLeaderboardPayload(eventId: string): Promise<LeaderboardPayl
       if (ghLogin) lumaGithubLogins.push(ghLogin);
       lumaRows.push({
         name: typeof d.name === "string" ? d.name : "",
+        email: email || null,
         githubLogin: ghLogin,
         lumaCreatedAt: typeof d.lumaCreatedAt === "string" ? d.lumaCreatedAt : "",
         mergedPrCount: 0,
@@ -371,10 +391,14 @@ async function buildLeaderboardPayload(eventId: string): Promise<LeaderboardPayl
       willBeLate: boolean;
       queuingForSpot: boolean;
       lumaRegistered: boolean;
+      isCohort1: boolean;
     };
     const unified: UnifiedRow[] = [];
 
     for (const r of rows) {
+      const profile = userMap.get(r.userId);
+      const email =
+        typeof profile?.email === "string" ? profile.email.trim().toLowerCase() : "";
       unified.push({
         userId: r.userId,
         displayName: r.displayName,
@@ -389,9 +413,11 @@ async function buildLeaderboardPayload(eventId: string): Promise<LeaderboardPayl
         willBeLate: r.willBeLate,
         queuingForSpot: r.queuingForSpot,
         lumaRegistered: r.lumaRegistered,
+        isCohort1: email ? cohort1Emails.has(email) : false,
       });
     }
     for (const lr of lumaRows) {
+      const email = lr.email?.trim().toLowerCase() ?? "";
       unified.push({
         userId: null,
         displayName: lr.name || null,
@@ -408,6 +434,7 @@ async function buildLeaderboardPayload(eventId: string): Promise<LeaderboardPayl
         // Rows with no matching website signup came from the Luma collection directly —
         // they're on Luma by definition.
         lumaRegistered: true,
+        isCohort1: email ? cohort1Emails.has(email) : false,
       });
     }
 
@@ -415,8 +442,11 @@ async function buildLeaderboardPayload(eventId: string): Promise<LeaderboardPayl
     const confirmed = unified.filter((u) => u.confirmedAt != null);
     const waitlisted = unified.filter((u) => u.confirmedAt == null);
 
-    // Confirmed: sort by frozen rank (from ranking JSON), fallback to PRs desc → time asc
+    // Confirmed: cohort-1 first, then frozen rank, then PRs desc → time asc.
+    // Once frozen, cohort-1 still trumps the snapshot order so the leaderboard
+    // visibly prioritizes cohort builders for the May 26 immersion.
     confirmed.sort((a, b) => {
+      if (a.isCohort1 !== b.isCohort1) return a.isCohort1 ? -1 : 1;
       if (a.frozenRank != null && b.frozenRank != null) return a.frozenRank - b.frozenRank;
       if (a.frozenRank != null) return -1;
       if (b.frozenRank != null) return 1;
@@ -424,8 +454,9 @@ async function buildLeaderboardPayload(eventId: string): Promise<LeaderboardPayl
       return a.signedUpAtMs - b.signedUpAtMs;
     });
 
-    // Waitlisted: sort by all-time PRs desc (jockeying) → signup time asc
+    // Waitlisted: cohort-1 first, then PRs desc, then signup time asc.
     waitlisted.sort((a, b) => {
+      if (a.isCohort1 !== b.isCohort1) return a.isCohort1 ? -1 : 1;
       if (b.mergedPrCount !== a.mergedPrCount) return b.mergedPrCount - a.mergedPrCount;
       return a.signedUpAtMs - b.signedUpAtMs;
     });
@@ -450,6 +481,7 @@ async function buildLeaderboardPayload(eventId: string): Promise<LeaderboardPayl
         willBeLate: u.willBeLate,
         queuingForSpot: u.queuingForSpot,
         lumaRegistered: u.lumaRegistered,
+        isCohort1: u.isCohort1,
       };
     });
 
