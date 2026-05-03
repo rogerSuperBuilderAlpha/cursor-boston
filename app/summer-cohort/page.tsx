@@ -34,6 +34,7 @@ import { ClaimSpotByPRCard } from "./_components/ClaimSpotByPRCard";
 import { CohortProgramBreakdown } from "./_components/CohortProgramBreakdown";
 import { CohortTabs, type CohortTabId } from "./_components/CohortTabs";
 import { InfoTabPanel } from "./_components/InfoTabPanel";
+import { IntakeSurveyForm } from "./_components/IntakeSurveyForm";
 import { Week4LudwittPanel } from "./_components/Week4LudwittPanel";
 import { Week5StartupPanel } from "./_components/Week5StartupPanel";
 import { Week6OssPanel } from "./_components/Week6OssPanel";
@@ -463,6 +464,11 @@ function SummerCohortPageInner() {
   const [applicationCounts, setApplicationCounts] = useState<ApplicationCounts>({});
   const [appLoading, setAppLoading] = useState(false);
   const [appLoadError, setAppLoadError] = useState<string | null>(null);
+  // Intake survey gate state. Admitted Cohort 1 applicants must complete
+  // the intake survey before the tabbed dashboard is rendered.
+  const [intakeStatus, setIntakeStatus] = useState<
+    "unknown" | "loading" | "completed" | "incomplete" | "error"
+  >("unknown");
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -544,6 +550,39 @@ function SummerCohortPageInner() {
       cancelled = true;
     };
   }, [loading, user]);
+
+  // Fetch intake-survey status whenever the user is an admitted Cohort 1
+  // applicant. Non-admitted users never see the gate, so the effect short-
+  // circuits without touching state — `showSurveyGate` already requires
+  // `showTabs`, so a stale `intakeStatus` can't leak through to the UI.
+  useEffect(() => {
+    if (loading || !user) return;
+    if (
+      application?.status !== "admitted" ||
+      !application.cohorts.includes("cohort-1")
+    ) {
+      return;
+    }
+    let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch-on-mount, state set inside async callback
+    setIntakeStatus("loading");
+    (async () => {
+      try {
+        const token = await user.getIdToken();
+        const res = await fetch("/api/summer-cohort/intake-survey", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error(`status_${res.status}`);
+        const json = (await res.json()) as { completed: boolean };
+        if (!cancelled) setIntakeStatus(json.completed ? "completed" : "incomplete");
+      } catch {
+        if (!cancelled) setIntakeStatus("error");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [loading, user, application]);
 
   // Handle OAuth callbacks landed on this page.
   useEffect(() => {
@@ -705,7 +744,11 @@ function SummerCohortPageInner() {
   const showTabs =
     application?.status === "admitted" &&
     application.cohorts.includes("cohort-1");
-  const myInfoVisible = !showTabs || activeTab === "my-info";
+  // Tabs only render once the intake survey is completed. The gate is the
+  // form; treating "unknown" as gating prevents a flash of the dashboard
+  // before the intake-survey GET resolves.
+  const showSurveyGate = showTabs && intakeStatus !== "completed";
+  const myInfoVisible = (!showTabs && !showSurveyGate) || activeTab === "my-info";
   const cohort1Count = applicationCounts["cohort-1"] ?? 0;
 
   const localityDone =
@@ -776,7 +819,31 @@ function SummerCohortPageInner() {
       ) : (
         <>
           {application ? (
-            showTabs ? (
+            showSurveyGate ? (
+              <>
+                <ApplicationStatusPanel
+                  application={application}
+                  cohortLabel={cohortLabel}
+                />
+                {intakeStatus === "loading" || intakeStatus === "unknown" ? (
+                  <div className="mt-6 rounded-xl border border-neutral-200 p-6 text-sm text-neutral-500 dark:border-neutral-800">
+                    Loading intake survey…
+                  </div>
+                ) : intakeStatus === "error" ? (
+                  <div className="mt-6 rounded-xl border border-red-300 bg-red-50 p-6 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+                    Couldn&apos;t load the intake survey. Refresh the page.
+                  </div>
+                ) : (
+                  <div className="mt-6">
+                    <IntakeSurveyForm
+                      defaultEmail={user?.email ?? application.email ?? ""}
+                      cohortId={application.cohorts[0] ?? "cohort-1"}
+                      onComplete={() => setIntakeStatus("completed")}
+                    />
+                  </div>
+                )}
+              </>
+            ) : showTabs ? (
               <>
                 <ApplicationStatusPanel
                   application={application}
