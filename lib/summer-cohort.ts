@@ -109,9 +109,9 @@ export const SUMMER_COHORT_WEEKS: readonly SummerCohortWeek[] = [
   },
   {
     week: 3,
-    title: "Marketing platform",
+    title: "Vibe marketing platform",
     description:
-      "Everyone builds a marketing platform — for example a website to promote the cohort and everyone's work. Same voting format; winner maintains it.",
+      "Everyone builds a vibe marketing platform — not just an inbound site like Vercel/Notion, but a tool that does outbound on behalf of users (think Clay, ReplyGuy, 11x.ai). Surfaces the cohort's work in public AND handles the replies that come back. Same voting format; winner maintains it.",
     winnerCert: "Marketing Winner",
   },
   {
@@ -330,9 +330,9 @@ export const SUMMER_COHORT_C1_VOTE_WEEKS: readonly SummerCohortVoteWeek[] = [
   },
   {
     week: 3,
-    title: "Marketing Build",
+    title: "Vibe Marketing Build",
     oneLiner:
-      "Everyone builds a marketing platform — typically a public site that promotes the cohort and the work. Same vote format; winner maintains it.",
+      "Everyone builds a marketing platform that does outbound, not just inbound — gets the cohort's work into the public eye AND handles the replies that come back. Same vote format; winner maintains it.",
     kickoffLabel: "Mon, May 25 · 6–7pm EST",
     deadlineLabel: "Fri, May 29 · 5pm EST",
     votingCallLabel: "Fri, May 29 · 6pm EST",
@@ -341,41 +341,77 @@ export const SUMMER_COHORT_C1_VOTE_WEEKS: readonly SummerCohortVoteWeek[] = [
       "content/summer-cohort/c1/w3-mkt/submissions/<github-handle>.json",
     liveUrlRequired: true,
     winnerCommitment:
-      "Winner maintains the cohort marketing site through demo day — keeping it up to date with what the cohort is shipping.",
+      "Winner maintains the cohort marketing platform through demo day — keeping it up to date and running the outbound loop on what the cohort is shipping.",
     weekNotes:
       "Heads up: Mon May 25 is Memorial Day (US holiday) and Tue May 26 is the in-person immersion event at Hult. Plan your build time around both.",
     inspirationScopeNote:
-      "You're marketing 100 people and 6 weeks of builds — not running a media company. Skip A/B testing, lead-scoring, full CMS. The bar to beat is \"where does a hiring partner go on demo day to see what the cohort shipped?\"",
+      "Static landing pages are table stakes. The wedge this week is the new category that emerged in 2025 — \"vibe marketing\" (Greg Isenberg / Scott Brinker): platforms where humans set taste/direction and AI agents do the outreach. The bar to beat: a hiring partner on demo day sees what the cohort shipped (inbound), AND every cohort builder gets meaningful eyeballs they didn't ask for (outbound). Pattern to study: a cohort builder's project automatically posts on Mathblock and emails relevant professors when it's updated — combining inbound discoverability with outbound seeding. Skip A/B testing, lead-scoring, full CMS.",
     inspirationPlatforms: [
       {
         name: "Vercel",
         url: "https://vercel.com",
         takeaway:
-          "Easy deploys + MDX-friendly. The default if your wedge is \"a fast, content-rich public site I can keep editing.\"",
+          "Inbound table stakes — fast deploys + MDX. Use this as the substrate for the public-facing site, then layer the outbound loop on top.",
       },
       {
         name: "Framer",
         url: "https://framer.com",
         takeaway:
-          "Design-led no-code. Lean on this if visual polish is your differentiator.",
+          "Design-led no-code. Lean on this if visual polish on the inbound surface is your differentiator.",
+      },
+      {
+        name: "Clay",
+        url: "https://clay.com",
+        takeaway:
+          "Signal-based outbound: detects job changes, funding rounds, site visits, then enriches via 150+ providers and writes personalized email. The canonical \"growth-as-code\" tool — $1.25B valuation, 6× growth in 2024. Study the trigger model.",
+      },
+      {
+        name: "11x.ai (Alice)",
+        url: "https://11x.ai",
+        takeaway:
+          "Fully autonomous AI SDR — prospects, researches, emails 24/7. Study the loop: research → personalize → send → triage replies → book. The \"agent SDR\" archetype.",
+      },
+      {
+        name: "Artisan (Ava)",
+        url: "https://artisan.co",
+        takeaway:
+          "Autonomous outbound SDR with strong personalization. Same archetype as 11x; different bet on how much human supervision is in the loop.",
+      },
+      {
+        name: "ReplyGuy",
+        url: "https://replyguy.com",
+        takeaway:
+          "Monitors Reddit/X for keyword fit, drafts on-brand replies that mention the founder's product. Closest analog to \"posts on Mathblock when relevant\" — finds existing conversations and inserts you into them.",
+      },
+      {
+        name: "HeyReach",
+        url: "https://heyreach.io",
+        takeaway:
+          "Agentic LinkedIn outbound at scale — multi-account warmup + sequencing. The social channel of the outbound stack; complements email-only tools.",
+      },
+      {
+        name: "Smartlead / Instantly",
+        url: "https://smartlead.ai",
+        takeaway:
+          "Inbox-warming + multi-inbox cold-email infrastructure. Deliverability is now a primitive — these are the rails everyone else rides on. Learn how warming works even if you don't ship one.",
+      },
+      {
+        name: "Landbase (VibeGTM)",
+        url: "https://landbase.com",
+        takeaway:
+          "Describe a campaign in English, agent ships outbound in <20 min. Raised $30M Series A from Sound Ventures in Jan 2026. \"Prompt-to-campaign\" as a category — what \"vibe coding\" is to engineering.",
+      },
+      {
+        name: "Lindy",
+        url: "https://lindy.ai",
+        takeaway:
+          "Agent platform marketed specifically for vibe marketing — tone-preserving outbound + community management from one workflow. Good reference for the inbound-triage half of the loop.",
       },
       {
         name: "Notion (public pages)",
         url: "https://notion.so",
         takeaway:
-          "Quick wins for content-heavy cohort directories — every participant gets a page, no CMS needed.",
-      },
-      {
-        name: "Read.cv",
-        url: "https://read.cv",
-        takeaway:
-          "Profile-aggregator vibe — clean, opinionated. Useful if your wedge is \"the cohort's people page.\"",
-      },
-      {
-        name: "Substack",
-        url: "https://substack.com",
-        takeaway:
-          "Newsletter + article focus. Worth studying if you want \"weekly cohort digest\" to be your wedge.",
+          "Quick wins for content-heavy cohort directories — every participant gets a page, no CMS needed. Inbound-only, so layer outreach on top.",
       },
     ],
   },

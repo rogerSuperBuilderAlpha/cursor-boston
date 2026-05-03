@@ -27,7 +27,7 @@ const TABS: readonly TabSpec[] = [
   { id: "my-info", label: "My Info", shortLabel: "Me" },
   { id: "week-1", label: "Week 1: PM", shortLabel: "W1" },
   { id: "week-2", label: "Week 2: Comms", shortLabel: "W2" },
-  { id: "week-3", label: "Week 3: Marketing", shortLabel: "W3" },
+  { id: "week-3", label: "Week 3: Vibe Marketing", shortLabel: "W3" },
   { id: "week-4", label: "Week 4: Ludwitt", shortLabel: "W4" },
   { id: "week-5", label: "Week 5: Startup", shortLabel: "W5" },
   { id: "week-6", label: "Week 6: OSS PR", shortLabel: "W6" },
