@@ -26,13 +26,6 @@
  *
  * @param input - The raw string to normalize
  * @returns The normalized string, or an empty string if input is not a string
- * @example
- * // Strips invisible control characters but keeps everything else
- * sanitizeText("me\x00ow")  // "meow"
- *
- * @example
- * // Trims surrounding whitespace but keeps internal punctuation and HTML
- * sanitizeText("  <b>Hello, World!</b>  ")  // "<b>Hello, World!</b>"
  */
 export function sanitizeText(input: string): string {
   if (typeof input !== "string") {
@@ -49,31 +42,10 @@ export function sanitizeText(input: string): string {
 }
 
 /**
- * Sanitize a display name to a restricted character set.
- *
- * Allows only ASCII letters (a–z, A–Z), digits, whitespace, hyphens,
- * underscores, and periods. Everything else gets stripped — punctuation,
- * symbols, and non-ASCII letters like accents or non-Latin scripts.
- * Runs of whitespace collapse to a single space, and surrounding
- * whitespace is trimmed.
- *
- * Heads up: international names with accented or non-Latin characters
- * (e.g. "José", "李雷") will be partially or fully stripped. Make sure
- * that's the behavior you want before using this on user-facing name fields.
- *
- * Do NOT use the output of this function as:
- *   - A URL (`href`, `src`) — use {@link sanitizeUrl}.
- *   - A Firestore document ID — use {@link sanitizeDocId}.
- *
+ * Sanitize a display name.
+ * More restrictive than general text - only allows alphanumeric, spaces, and basic punctuation.
  * @param input - The raw display name to sanitize
- * @returns The sanitized name, or an empty string if input is not a string or contains no allowed characters.
- *
- * @example
- * sanitizeName("Hello,  World^^! ")  // "Hello World"
- *
- * @example
- * // Non-ASCII letters get stripped
- * sanitizeName("José Ñoño")  // "Jos oo"
+ * @returns The sanitized name containing only alphanumeric characters, spaces, hyphens, underscores, and periods
  */
 export function sanitizeName(input: string): string {
   if (typeof input !== "string") {
@@ -90,37 +62,10 @@ export function sanitizeName(input: string): string {
 }
 
 /**
- * Validate and normalize an HTTP or HTTPS URL.
- *
- * Trims whitespace, then parses the input with the WHATWG URL constructor.
- * Only `http:` and `https:` URLs are allowed — anything else (including
- * `javascript:`, `data:`, and `file:`) returns null. This blocks XSS via
- * clickable links and other URL-based injection.
- *
- * On success, the URL comes back normalized: lowercased host and protocol,
- * trailing slash added to bare hostnames, paths normalized, special
- * characters percent-encoded. The output may not match the input exactly
- * even when the URL is valid.
- *
- * Returns null for input that isn't a string, is empty after trimming,
- * fails to parse, or uses a disallowed protocol. Callers need to handle
- * the null case before using the result.
- *
- * Do NOT use the output of this function as:
- *   - A Firestore document ID — use {@link sanitizeDocId}.
- *
+ * Validate and sanitize a URL.
+ * Only allows http and https protocols.
  * @param input - The raw URL string to validate and sanitize
- * @returns The normalized URL string, or null if invalid or uses a disallowed protocol.
- *
- * @example
- * sanitizeUrl("HTTPS://Example.com")  // "https://example.com/"
- *
- * @example
- * // Blocks javascript: URLs to prevent XSS
- * sanitizeUrl("javascript:alert(1)")  // null
- *
- * @example
- * sanitizeUrl("not a url")  // null
+ * @returns The normalized URL string, or null if the URL is invalid or uses a dangerous protocol
  */
 export function sanitizeUrl(input: string): string | null {
   if (typeof input !== "string" || !input.trim()) {
@@ -145,41 +90,10 @@ export function sanitizeUrl(input: string): string | null {
 }
 
 /**
- * Validate a Firestore document ID.
- *
- * Firestore is strict about document IDs: ASCII letters (a–z, A–Z),
- * digits, hyphens, and underscores only, and 1500 bytes max. This
- * function trims whitespace and checks both rules — if anything fails,
- * it returns null. Unlike {@link sanitizeText} and {@link sanitizeName},
- * this function never modifies the input. It either returns the trimmed
- * string as-is or rejects it.
- *
- * Validation-only is on purpose. Silently transforming an ID could cause
- * data corruption (two different inputs mapping to the same ID). If you
- * get null back, treat it as an input error and surface it to the user
- * instead of retrying with a transformed value.
- *
- * Returns null for input that isn't a string, is empty after trimming,
- * has disallowed characters (spaces, periods, slashes, non-ASCII letters),
- * or exceeds 1500 characters.
- *
- * @param input - The raw document ID to validate
- * @returns The trimmed document ID if valid, or null if invalid.
- *
- * @example
- * sanitizeDocId("user-abc_123")  // "user-abc_123"
- *
- * @example
- * // Spaces and periods aren't allowed
- * sanitizeDocId("my user.id")  // null
- *
- * @example
- * // Non-ASCII characters get rejected
- * sanitizeDocId("user-josé")  // null
- *
- * @example
- * // Over the 1500-character limit
- * sanitizeDocId("a".repeat(1501))  // null
+ * Sanitize a Firestore document ID.
+ * IDs should only contain alphanumeric characters, hyphens, and underscores.
+ * @param input - The raw document ID to sanitize
+ * @returns The sanitized document ID, or null if invalid or exceeds 1500 characters
  */
 export function sanitizeDocId(input: string): string | null {
   if (typeof input !== "string" || !input.trim()) {
