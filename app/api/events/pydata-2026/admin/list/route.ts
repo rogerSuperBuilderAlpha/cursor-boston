@@ -1,0 +1,93 @@
+/**
+ * Copyright (C) 2026 Cursor Boston
+ * This file is part of Cursor Boston, licensed under GPL-3.0.
+ * See LICENSE file for details.
+ */
+
+import { NextRequest, NextResponse } from "next/server";
+import { getAdminDb } from "@/lib/firebase-admin";
+import { getVerifiedUser } from "@/lib/server-auth";
+import { withMiddleware, rateLimitConfigs } from "@/lib/middleware";
+import {
+  PYDATA_2026_REGISTRATIONS_COLLECTION,
+  type PydataRegistration,
+  type PydataRegistrationStatus,
+} from "@/lib/pydata-2026";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+function tsToMs(value: unknown): number | null {
+  if (value && typeof (value as { toMillis?: () => number }).toMillis === "function") {
+    return (value as { toMillis: () => number }).toMillis();
+  }
+  return null;
+}
+
+const VALID_STATUSES: ReadonlyArray<PydataRegistrationStatus> = [
+  "awaiting-badge",
+  "badge-ready",
+  "checked-in",
+  "cancelled",
+];
+
+async function handleGet(request: NextRequest) {
+  const user = await getVerifiedUser(request);
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (!user.isAdmin) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  const db = getAdminDb();
+  if (!db) {
+    return NextResponse.json({ error: "Server not configured" }, { status: 500 });
+  }
+
+  const snap = await db
+    .collection(PYDATA_2026_REGISTRATIONS_COLLECTION)
+    .orderBy("createdAt", "asc")
+    .get();
+
+  const registrations: PydataRegistration[] = snap.docs
+    .map((doc) => {
+      const data = doc.data() || {};
+      const createdMs = tsToMs(data.createdAt);
+      if (createdMs === null) return null;
+      const updatedMs = tsToMs(data.updatedAt) ?? createdMs;
+      const rawStatus = typeof data.status === "string" ? data.status : "awaiting-badge";
+      const status: PydataRegistrationStatus = VALID_STATUSES.includes(
+        rawStatus as PydataRegistrationStatus
+      )
+        ? (rawStatus as PydataRegistrationStatus)
+        : "awaiting-badge";
+      return {
+        uid: doc.id,
+        firstName: typeof data.firstName === "string" ? data.firstName : "",
+        lastName: typeof data.lastName === "string" ? data.lastName : "",
+        email: typeof data.email === "string" ? data.email : "",
+        organization: typeof data.organization === "string" ? data.organization : "",
+        attendingConfirmed: true as const,
+        status,
+        createdAt: createdMs,
+        updatedAt: updatedMs,
+      };
+    })
+    .filter((r): r is PydataRegistration => r !== null);
+
+  const counts = registrations.reduce(
+    (acc, r) => {
+      acc[r.status] = (acc[r.status] ?? 0) + 1;
+      return acc;
+    },
+    {} as Record<PydataRegistrationStatus, number>
+  );
+
+  return NextResponse.json({
+    total: registrations.length,
+    counts,
+    registrations,
+  });
+}
+
+export const GET = withMiddleware(rateLimitConfigs.standard, handleGet);

@@ -15,6 +15,10 @@ import {
   getLumaCheckoutEventId,
   getLumaCheckoutHref,
 } from "@/lib/luma-event";
+import {
+  PYDATA_2026_EVENT_SLUG,
+  PYDATA_2026_REGISTRATION_PATH,
+} from "@/lib/pydata-2026";
 
 // Type definitions for event data
 interface AgendaItem {
@@ -197,6 +201,7 @@ export default async function EventPage({
   }
 
   const websiteRegistration = WEBSITE_REGISTRATION_CONFIG[event.slug];
+  const isPyData = event.slug === PYDATA_2026_EVENT_SLUG;
 
   // Generate JSON-LD structured data
   const eventJsonLd = {
@@ -398,6 +403,30 @@ export default async function EventPage({
                 </div>
                 <p className="text-sm text-amber-600 dark:text-amber-400 mt-1 font-medium">
                   You must register on <strong>both</strong>: Luma (for door entry) <strong>and</strong> the website (for hackathon ranking &amp; prizes). One without the other won&apos;t get you in.
+                </p>
+              </div>
+            ) : isPyData ? (
+              <div className="flex flex-col gap-4">
+                <Link
+                  href={PYDATA_2026_REGISTRATION_PATH}
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-emerald-500 text-white rounded-lg text-base font-semibold hover:bg-emerald-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black w-full sm:w-auto"
+                >
+                  Register for badge
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+                </Link>
+                <a
+                  href={getLumaCheckoutHref(event)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/20 text-white/80 rounded-lg text-sm font-medium hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black w-full sm:w-auto luma-checkout--button"
+                  data-luma-action="checkout"
+                  data-luma-event-id={getLumaCheckoutEventId(event)}
+                >
+                  RSVP on Luma (for door entry)
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 17l9.2-9.2M17 17V7H7" /></svg>
+                </a>
+                <p className="text-sm text-amber-600 dark:text-amber-400 mt-1 font-medium">
+                  Both required: register here so we can hand your name to Moderna for badge issuance, then RSVP on Luma to receive the Envoy NDA email.
                 </p>
               </div>
             ) : (

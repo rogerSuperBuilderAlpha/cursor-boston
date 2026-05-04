@@ -16,6 +16,7 @@ loadEnvConfig(process.cwd());
 
 import { getAdminDb } from "../lib/firebase-admin";
 import { sendEmail } from "../lib/mailgun";
+import { syncMailgunSuppressions } from "../lib/mailgun-suppressions";
 import { buildUnsubscribeUrl } from "../lib/unsubscribe-token";
 
 // ---------------------------------------------------------------------------
@@ -161,6 +162,10 @@ async function main() {
     );
     process.exit(1);
   }
+
+  // Mirror Mailgun bounces + complaints onto eventContacts.unsubscribed
+  // before reading the list. No-op if MAILGUN_PRIVATE_API_KEY is unset.
+  await syncMailgunSuppressions(db);
 
   console.log("Loading contacts from eventContacts…");
   const snap = await db.collection("eventContacts").get();

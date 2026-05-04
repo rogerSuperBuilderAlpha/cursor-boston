@@ -12,6 +12,10 @@ import { useId, useMemo } from "react";
 import type { Event } from "@/types/events";
 import { partitionEventsForBrowse } from "@/lib/events-calendar-buckets";
 import { getLumaCheckoutHref } from "@/lib/luma-event";
+import {
+  PYDATA_2026_EVENT_SLUG,
+  PYDATA_2026_REGISTRATION_PATH,
+} from "@/lib/pydata-2026";
 import styles from "./EventsBrowse.module.css";
 
 type Props = {
@@ -201,6 +205,7 @@ export function EventsBrowse({ events, listingTodayYmd }: Props) {
 function FeaturedEventCard({ event }: { event: Event }) {
   const registerHref =
     event.lumaUrl?.trim() || getLumaCheckoutHref(event);
+  const isPyData = event.slug === PYDATA_2026_EVENT_SLUG;
 
   return (
     <div className="bg-white dark:bg-neutral-900 rounded-2xl overflow-hidden border border-neutral-200 dark:border-neutral-800">
@@ -269,10 +274,36 @@ function FeaturedEventCard({ event }: { event: Event }) {
               <span>{event.location}</span>
             </div>
           </div>
-          <div className="flex flex-col sm:flex-row gap-3 relative z-10">
+          <div className="flex flex-col sm:flex-row gap-3 relative z-10 flex-wrap">
+            {isPyData ? (
+              <Link
+                href={PYDATA_2026_REGISTRATION_PATH}
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 bg-emerald-500 text-white rounded-lg text-base font-semibold hover:bg-emerald-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black w-full sm:w-auto"
+              >
+                Register for badge
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </Link>
+            ) : null}
             <Link
               href={`/events/${event.slug}`}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 bg-neutral-900 text-white dark:bg-white dark:text-black rounded-lg text-base font-semibold hover:bg-neutral-700 dark:hover:bg-neutral-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black w-full sm:w-auto"
+              className={`inline-flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 rounded-lg text-base font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black w-full sm:w-auto ${
+                isPyData
+                  ? "border border-neutral-300 dark:border-neutral-700 text-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                  : "bg-neutral-900 text-white dark:bg-white dark:text-black hover:bg-neutral-700 dark:hover:bg-neutral-200"
+              }`}
             >
               View Details
               <svg
