@@ -5,7 +5,10 @@
  */
 
 export const HIRING_PARTNERS_COLLECTION = "hiringPartnerApplications";
-export const HIRING_PARTNERS_NOTIFY_EMAIL = "rogerhunt02052@gmail.com";
+export const HIRING_PARTNERS_NOTIFY_EMAIL: string[] = [
+  "rogerhunt02052@gmail.com",
+  "aaron@cursorboston.com",
+];
 export const HIRING_PARTNERS_CALENDLY_URL = "https://calendly.com/rogerhunt";
 export const HIRING_PARTNERS_RETURN_TO = "/partners";
 

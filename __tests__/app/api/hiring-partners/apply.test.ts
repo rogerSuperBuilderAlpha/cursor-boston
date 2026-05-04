@@ -127,7 +127,10 @@ describe("POST /api/hiring-partners/apply", () => {
     expect(mockSendEmail).toHaveBeenCalledTimes(1);
     expect(mockSendEmail).toHaveBeenCalledWith(
       expect.objectContaining({
-        to: "rogerhunt02052@gmail.com",
+        to: expect.arrayContaining([
+          "rogerhunt02052@gmail.com",
+          "aaron@cursorboston.com",
+        ]),
         subject: expect.stringContaining("Test Partner"),
       })
     );
