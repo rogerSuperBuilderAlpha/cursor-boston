@@ -176,6 +176,8 @@ export default function PyDataRegisterPage() {
           don&apos;t match.
         </p>
 
+        {!registration ? <ProcessExplainer /> : null}
+
         <div className="mt-10">
           {authLoading || loading ? (
             <div className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
@@ -197,6 +199,216 @@ export default function PyDataRegisterPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+type StepActor = "you" | "us" | "moderna";
+
+const ACTOR_PILL: Record<StepActor, { label: string; className: string }> = {
+  you: {
+    label: "You",
+    className:
+      "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+  },
+  us: {
+    label: "Cursor Boston",
+    className:
+      "border-sky-500/40 bg-sky-500/10 text-sky-700 dark:text-sky-300",
+  },
+  moderna: {
+    label: "Moderna / Envoy",
+    className:
+      "border-violet-500/40 bg-violet-500/10 text-violet-700 dark:text-violet-300",
+  },
+};
+
+type Step = {
+  when: string;
+  actor: StepActor;
+  title: string;
+  body: React.ReactNode;
+};
+
+const PROCESS_STEPS: Step[] = [
+  {
+    when: "Now",
+    actor: "you",
+    title: "Confirm attendance + RSVP on Luma",
+    body: (
+      <>
+        Fill out the form below with the name on your government-issued ID,
+        plus your email and (optionally) phone and company. Then RSVP on{" "}
+        <a
+          href={PYDATA_2026_LUMA_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-emerald-600 underline hover:text-emerald-500 dark:text-emerald-400"
+        >
+          Luma
+        </a>{" "}
+        if you haven&apos;t already — that&apos;s the door list.
+      </>
+    ),
+  },
+  {
+    when: "48 hours before the event",
+    actor: "us",
+    title: "We send the registration list to Moderna",
+    body: (
+      <>
+        Your name + email get handed to Jacqueline at Moderna in a CSV. After
+        this cutoff, no new registrations can be added. <strong>If you&apos;re
+        not on the list 48 hours ahead of time, you will be turned away at the
+        door</strong> with no chance to sign in.
+      </>
+    ),
+  },
+  {
+    when: "Within ~1–2 days after the cutoff",
+    actor: "moderna",
+    title: "Envoy emails you NDA paperwork",
+    body: (
+      <>
+        Watch your inbox for an email from{" "}
+        <code className="rounded bg-neutral-100 px-1 py-0.5 text-xs dark:bg-neutral-800">
+          Moderna HQ &lt;no-reply@envoy.com&gt;
+        </code>
+        . Check spam if you don&apos;t see it. The email contains a link to
+        sign Moderna&apos;s NDA online.
+      </>
+    ),
+  },
+  {
+    when: "Before May 13",
+    actor: "you",
+    title: "Sign the NDA → receive your QR code",
+    body: (
+      <>
+        Click the link, sign the paperwork, and submit. Envoy will then email
+        you a <strong>unique QR code</strong>. Save it to your phone — that QR
+        is your entry pass.
+      </>
+    ),
+  },
+  {
+    when: "Wednesday May 13 · 6:30 PM ET",
+    actor: "you",
+    title: "Show up at Moderna with your QR code + ID",
+    body: (
+      <>
+        At the door of <strong>325 Binney St, Cambridge</strong>:
+        <ul className="mt-2 list-disc space-y-1 pl-5">
+          <li>
+            Present the QR code on your phone (the one Envoy emailed you).
+          </li>
+          <li>
+            Show a <strong>government-issued ID</strong> (driver&apos;s
+            license, passport, etc.) with the same name you submitted here.
+          </li>
+        </ul>
+      </>
+    ),
+  },
+];
+
+function ProcessExplainer() {
+  return (
+    <section className="mt-10 rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
+      <h2 className="text-xl font-semibold tracking-tight">
+        What to expect — full process
+      </h2>
+      <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+        Moderna runs tighter security than most venues. Here&apos;s every step
+        between submitting this form and walking through the door, plus what
+        to do if something goes wrong.
+      </p>
+
+      <ol className="mt-6 space-y-5">
+        {PROCESS_STEPS.map((step, i) => {
+          const actor = ACTOR_PILL[step.actor];
+          return (
+            <li key={i} className="flex gap-4">
+              <div className="relative flex flex-col items-center">
+                <div className="z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-emerald-500 bg-emerald-500/10 text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+                  {i + 1}
+                </div>
+                {i < PROCESS_STEPS.length - 1 ? (
+                  <div className="absolute top-8 h-full w-px bg-emerald-500/30" />
+                ) : null}
+              </div>
+              <div className="min-w-0 pb-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-mono text-xs uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+                    {step.when}
+                  </span>
+                  <span
+                    className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold ${actor.className}`}
+                  >
+                    {actor.label}
+                  </span>
+                </div>
+                <h3 className="mt-1 text-base font-semibold text-foreground">
+                  {step.title}
+                </h3>
+                <div className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+                  {step.body}
+                </div>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+
+      <div className="mt-8 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">
+        <p className="font-semibold">If something goes sideways</p>
+        <ul className="mt-2 list-disc space-y-1.5 pl-5">
+          <li>
+            <strong>Envoy email never arrived?</strong> Check spam. If
+            it&apos;s still missing the day-of, you can sign the NDA on paper
+            at the door — but only if your name is already on the CSV from 48
+            hours prior. No paper sign-in for walk-ups.
+          </li>
+          <li>
+            <strong>Lost your QR code?</strong> Same fallback — paper sign-in
+            at the door, provided you&apos;re on the list.
+          </li>
+          <li>
+            <strong>Name on your ID doesn&apos;t match?</strong> Moderna will
+            turn you away. If you typed your name wrong above, click{" "}
+            <em>Edit details</em> after submitting and fix it before the
+            48-hour cutoff.
+          </li>
+          <li>
+            <strong>Need to cancel?</strong> Email{" "}
+            <a
+              href="mailto:hello@cursorboston.com"
+              className="underline font-medium"
+            >
+              hello@cursorboston.com
+            </a>{" "}
+            so we can free up the slot.
+          </li>
+        </ul>
+      </div>
+
+      <div className="mt-6 rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-700 dark:border-neutral-800 dark:bg-neutral-950/50 dark:text-neutral-300">
+        <p className="font-semibold text-foreground">A few extra rules</p>
+        <ul className="mt-2 list-disc space-y-1.5 pl-5">
+          <li>
+            <strong>Photos are fine</strong>, but don&apos;t include the
+            Moderna logo or branding in anything you post.
+          </li>
+          <li>
+            Bring a laptop, charger, Cursor IDE installed, and a registered
+            Cursor account. We&apos;re building during the second half.
+          </li>
+          <li>
+            Doors at 6:30 PM, talk at 7:00, hack starts ~8:05. We wrap by
+            9:30.
+          </li>
+        </ul>
+      </div>
+    </section>
   );
 }
 
