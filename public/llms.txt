@@ -35,6 +35,8 @@ Licensed GPL-3.0-only.
     /ecosystem
     /events
     /events/[slug]
+    /events/cursor-boston-pydata-2026/admin
+    /events/cursor-boston-pydata-2026/register
     /events/request
     /hackathons
     /hackathons/hack-a-sprint-2026
@@ -62,6 +64,7 @@ Licensed GPL-3.0-only.
     /pair
     /pair/[sessionId]
     /pair/requests
+    /partners
     /privacy
     /profile
     /questions
