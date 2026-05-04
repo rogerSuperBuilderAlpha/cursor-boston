@@ -16,7 +16,10 @@ import {
   HIRING_PARTNERS_COLLECTION,
   HIRING_PARTNERS_MAX,
   HIRING_PARTNERS_NOTIFY_EMAIL,
+  PARTNER_ENGINEER_EXPECTATION_ITEMS,
+  sanitizeEngineerExpectations,
   type HiringPartnerStatus,
+  type PartnerEngineerExpectationKey,
 } from "@/lib/hiring-partners";
 
 export const runtime = "nodejs";
@@ -32,6 +35,8 @@ interface PartnerApplicationDto {
   contactRole: string | null;
   rolesHiring: string | null;
   notes: string | null;
+  engineerExpectations: Record<PartnerEngineerExpectationKey, number> | Record<string, never>;
+  engineerRequirements: string | null;
   status: HiringPartnerStatus;
   createdAt: number | null;
   updatedAt: number | null;
@@ -56,6 +61,9 @@ function serializeApplication(data: Record<string, unknown>): PartnerApplication
     contactRole: typeof data.contactRole === "string" ? data.contactRole : null,
     rolesHiring: typeof data.rolesHiring === "string" ? data.rolesHiring : null,
     notes: typeof data.notes === "string" ? data.notes : null,
+    engineerExpectations: sanitizeEngineerExpectations(data.engineerExpectations),
+    engineerRequirements:
+      typeof data.engineerRequirements === "string" ? data.engineerRequirements : null,
     status,
     createdAt: toMillis(data.createdAt),
     updatedAt: toMillis(data.updatedAt),
@@ -115,6 +123,11 @@ async function handlePost(request: NextRequest) {
   const contactRole = trimOrEmpty(raw.contactRole, HIRING_PARTNERS_MAX.contactRole);
   const rolesHiring = trimOrEmpty(raw.rolesHiring, HIRING_PARTNERS_MAX.rolesHiring);
   const notes = trimOrEmpty(raw.notes, HIRING_PARTNERS_MAX.notes);
+  const engineerExpectations = sanitizeEngineerExpectations(raw.engineerExpectations);
+  const engineerRequirements = trimOrEmpty(
+    raw.engineerRequirements,
+    HIRING_PARTNERS_MAX.engineerRequirements
+  );
 
   if (!contactName) {
     return NextResponse.json({ error: "Please enter your name." }, { status: 400 });
@@ -141,6 +154,8 @@ async function handlePost(request: NextRequest) {
       contactRole,
       rolesHiring,
       notes,
+      engineerExpectations,
+      engineerRequirements,
       updatedAt: FieldValue.serverTimestamp(),
     };
     if (existing.exists) {
@@ -163,6 +178,8 @@ async function handlePost(request: NextRequest) {
         contactRole,
         rolesHiring,
         notes,
+        engineerExpectations,
+        engineerRequirements,
       }).catch((error) => {
         logger.logError(error, {
           endpoint: "/api/hiring-partners/apply",
@@ -203,6 +220,21 @@ interface NewApplicantPayload {
   contactRole: string;
   rolesHiring: string;
   notes: string;
+  engineerExpectations: Record<PartnerEngineerExpectationKey, number> | Record<string, never>;
+  engineerRequirements: string;
+}
+
+function formatEngineerExpectations(
+  exp: Record<PartnerEngineerExpectationKey, number> | Record<string, never>
+): string {
+  const lines = PARTNER_ENGINEER_EXPECTATION_ITEMS
+    .map((item) => {
+      const score = (exp as Record<string, number>)[item.key];
+      if (typeof score !== "number") return null;
+      return `    ${score}/7 — ${item.label}`;
+    })
+    .filter((s): s is string => s != null);
+  return lines.length === 0 ? "(skipped)" : "\n" + lines.join("\n");
 }
 
 async function sendNewApplicationEmail(applicant: NewApplicantPayload): Promise<void> {
@@ -215,6 +247,8 @@ async function sendNewApplicationEmail(applicant: NewApplicantPayload): Promise<
     ["Role / title", applicant.contactRole || "(not provided yet)"],
     ["Roles hiring", applicant.rolesHiring || "(not provided yet)"],
     ["Notes", applicant.notes || "(none)"],
+    ["$150k engineer profile", formatEngineerExpectations(applicant.engineerExpectations)],
+    ["Specific hiring requirements", applicant.engineerRequirements || "(none)"],
   ];
 
   const textLines = ["New Cursor Boston hiring partner application:", ""];
