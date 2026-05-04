@@ -10,6 +10,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
+  PYDATA_2026_CAPACITY,
   PYDATA_2026_EVENT_SLUG,
   PYDATA_2026_LUMA_URL,
   PYDATA_2026_REGISTRATION_PATH,
@@ -17,6 +18,14 @@ import {
 } from "@/lib/pydata-2026";
 
 const API_PATH = "/api/events/pydata-2026/registration";
+const CAPACITY_API_PATH = "/api/events/pydata-2026/capacity";
+
+type CapacityState = {
+  capacity: number;
+  claimed: number;
+  remaining: number;
+  full: boolean;
+};
 
 type FormState = {
   firstName: string;
@@ -57,6 +66,23 @@ export default function PyDataRegisterPage() {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [capacity, setCapacity] = useState<CapacityState | null>(null);
+
+  const loadCapacity = useCallback(async () => {
+    try {
+      const res = await fetch(CAPACITY_API_PATH);
+      if (!res.ok) return;
+      const json = (await res.json()) as CapacityState;
+      setCapacity(json);
+    } catch {
+      // Non-critical: banner just won't show live numbers
+    }
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot fetch on mount
+    void loadCapacity();
+  }, [loadCapacity]);
 
   const load = useCallback(async () => {
     if (!user) {
@@ -127,6 +153,7 @@ export default function PyDataRegisterPage() {
         throw new Error(json.error || "Could not submit");
       }
       await load();
+      void loadCapacity();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not submit");
     } finally {
@@ -169,6 +196,8 @@ export default function PyDataRegisterPage() {
           </a>{" "}
           for the door list.
         </p>
+        <CapacityBanner capacity={capacity} />
+
         <p className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-sm text-amber-800 dark:bg-amber-500/10 dark:text-amber-200">
           <strong>Use your full legal name</strong> exactly as it appears on the
           government-issued ID you&apos;ll bring to the door (driver&apos;s
@@ -253,13 +282,17 @@ const PROCESS_STEPS: Step[] = [
   {
     when: "48 hours before the event",
     actor: "us",
-    title: "We send the registration list to Moderna",
+    title: "We send the top 150 registrations to Moderna",
     body: (
       <>
-        Your name + email get handed to Jacqueline at Moderna in a CSV. After
-        this cutoff, no new registrations can be added. <strong>If you&apos;re
-        not on the list 48 hours ahead of time, you will be turned away at the
-        door</strong> with no chance to sign in.
+        We sort everyone by the time they hit submit on this page and send the
+        first <strong>{PYDATA_2026_CAPACITY}</strong> to Jacqueline at Moderna
+        in a CSV. After this cutoff, no new registrations can be added.{" "}
+        <strong>
+          If you&apos;re not on that list 48 hours ahead of time, you will be
+          turned away at the door
+        </strong>{" "}
+        with no chance to sign in. Luma RSVPs do not count toward the cap.
       </>
     ),
   },
@@ -310,6 +343,79 @@ const PROCESS_STEPS: Step[] = [
     ),
   },
 ];
+
+function CapacityBanner({ capacity }: { capacity: CapacityState | null }) {
+  // Always render a baseline cap banner — when live numbers haven't loaded
+  // yet (or the API hiccups), fall back to the static cap from the constant.
+  const claimed = capacity?.claimed ?? 0;
+  const cap = capacity?.capacity ?? PYDATA_2026_CAPACITY;
+  const remaining = capacity?.remaining ?? cap;
+  const full = capacity?.full ?? false;
+  const showLive = capacity !== null;
+  const lowSpots = showLive && !full && remaining <= 25;
+
+  const tone = full
+    ? {
+        wrap: "border-rose-500/40 bg-rose-500/10 text-rose-900 dark:bg-rose-500/15 dark:text-rose-200",
+        bar: "bg-rose-500",
+      }
+    : lowSpots
+      ? {
+          wrap: "border-amber-500/40 bg-amber-500/10 text-amber-900 dark:bg-amber-500/15 dark:text-amber-200",
+          bar: "bg-amber-500",
+        }
+      : {
+          wrap: "border-rose-500/40 bg-rose-500/5 text-rose-900 dark:bg-rose-500/10 dark:text-rose-200",
+          bar: "bg-rose-500",
+        };
+
+  const pct = Math.min(100, Math.round((claimed / cap) * 100));
+
+  return (
+    <div className={`mt-6 rounded-lg border px-4 py-4 ${tone.wrap}`}>
+      <p className="font-semibold">
+        Hard cap: {cap} attendees · first come, first served
+      </p>
+      <p className="mt-1 text-sm">
+        Spots are awarded by{" "}
+        <strong>order of registration on this page</strong> — Luma RSVPs do not
+        count toward the cap. Once we hit {cap}, the rest become a waitlist
+        even if they RSVP&apos;d on Luma months ago.
+      </p>
+      {showLive ? (
+        <div className="mt-3">
+          <div className="flex items-baseline justify-between gap-3 text-sm tabular-nums">
+            <span className="font-mono">
+              <strong>{claimed}</strong> / {cap} spots claimed
+            </span>
+            <span>
+              {full ? (
+                <strong>Cap reached — registrations now go to the waitlist.</strong>
+              ) : (
+                <>
+                  <strong>{remaining}</strong> spot{remaining === 1 ? "" : "s"}{" "}
+                  left
+                </>
+              )}
+            </span>
+          </div>
+          <div
+            className="mt-2 h-2 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/10"
+            role="progressbar"
+            aria-valuenow={claimed}
+            aria-valuemin={0}
+            aria-valuemax={cap}
+          >
+            <div
+              className={`h-full ${tone.bar} transition-all`}
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 function ProcessExplainer() {
   return (

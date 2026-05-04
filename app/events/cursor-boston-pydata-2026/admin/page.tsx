@@ -15,6 +15,8 @@ import {
   type PydataRegistrationStatus,
 } from "@/lib/pydata-2026";
 
+type RegistrationWithCap = PydataRegistration & { inCap: boolean };
+
 const API_PATH = "/api/events/pydata-2026/admin/list";
 
 const STATUS_LABEL: Record<PydataRegistrationStatus, string> = {
@@ -38,7 +40,10 @@ const STATUS_PILL: Record<PydataRegistrationStatus, string> = {
 type Response = {
   total: number;
   counts: Partial<Record<PydataRegistrationStatus, number>>;
-  registrations: PydataRegistration[];
+  capacity: number;
+  inCapCount: number;
+  waitlistCount: number;
+  registrations: RegistrationWithCap[];
 };
 
 function formatDate(ms: number): string {
@@ -68,10 +73,12 @@ function csvEscape(value: string): string {
  * two optional. Order and column names matter — don't reshuffle without
  * checking with her first.
  */
-function toModernaCsv(registrations: PydataRegistration[]): string {
+function toModernaCsv(registrations: RegistrationWithCap[]): string {
   const header = ["Full name", "Email", "Phone", "Company"].join(",");
+  // Only people inside the cap go to Moderna. inCap is server-computed:
+  // first PYDATA_2026_CAPACITY non-cancelled rows by createdAt asc.
   const rows = registrations
-    .filter((r) => r.status !== "cancelled")
+    .filter((r) => r.inCap)
     .map((r) =>
       [
         csvEscape(`${r.firstName} ${r.lastName}`.trim()),
@@ -84,7 +91,7 @@ function toModernaCsv(registrations: PydataRegistration[]): string {
 }
 
 /** Internal CSV with everything — for our own bookkeeping. */
-function toFullCsv(registrations: PydataRegistration[]): string {
+function toFullCsv(registrations: RegistrationWithCap[]): string {
   const header = [
     "First name",
     "Last name",
@@ -92,6 +99,7 @@ function toFullCsv(registrations: PydataRegistration[]): string {
     "Phone",
     "Organization",
     "Status",
+    "Cap status",
     "Confirmed at (ET)",
   ].join(",");
   const rows = registrations.map((r) =>
@@ -102,6 +110,7 @@ function toFullCsv(registrations: PydataRegistration[]): string {
       csvEscape(r.phone),
       csvEscape(r.organization),
       csvEscape(STATUS_LABEL[r.status]),
+      csvEscape(r.inCap ? "in-cap" : "waitlist"),
       csvEscape(formatDate(r.createdAt)),
     ].join(",")
   );
@@ -273,14 +282,29 @@ export default function PyDataAdminPage() {
         ) : data ? (
           <>
             <section className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <Stat label="Total registered" value={data.total} />
+              <Stat
+                label={`In cap (top ${data.capacity})`}
+                value={data.inCapCount}
+                accent={
+                  data.inCapCount >= data.capacity
+                    ? "rose"
+                    : data.inCapCount >= data.capacity - 25
+                      ? "amber"
+                      : "emerald"
+                }
+              />
+              <Stat label="Waitlist" value={data.waitlistCount} accent="amber" />
               <Stat
                 label="Awaiting badge"
                 value={data.counts["awaiting-badge"] ?? 0}
               />
-              <Stat label="Badge ready" value={data.counts["badge-ready"] ?? 0} />
               <Stat label="Checked in" value={data.counts["checked-in"] ?? 0} />
             </section>
+            <p className="mt-3 text-xs text-neutral-500 dark:text-neutral-400">
+              Cap of {data.capacity} is enforced by registration time
+              (createdAt asc). The &quot;CSV for Moderna&quot; download includes
+              only in-cap rows.
+            </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <input
@@ -332,11 +356,24 @@ export default function PyDataAdminPage() {
                         <td className="px-4 py-3 tabular-nums">{r.phone || "—"}</td>
                         <td className="px-4 py-3">{r.organization || "—"}</td>
                         <td className="px-4 py-3">
-                          <span
-                            className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold ${STATUS_PILL[r.status]}`}
-                          >
-                            {STATUS_LABEL[r.status]}
-                          </span>
+                          <div className="flex flex-col items-start gap-1">
+                            <span
+                              className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold ${STATUS_PILL[r.status]}`}
+                            >
+                              {STATUS_LABEL[r.status]}
+                            </span>
+                            {r.status !== "cancelled" ? (
+                              r.inCap ? (
+                                <span className="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                                  In cap
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:text-amber-400">
+                                  Waitlist
+                                </span>
+                              )
+                            ) : null}
+                          </div>
                         </td>
                         <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400 tabular-nums">
                           {formatDate(r.createdAt)}
@@ -354,9 +391,25 @@ export default function PyDataAdminPage() {
   );
 }
 
-function Stat({ label, value }: { label: string; value: number }) {
+function Stat({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: number;
+  accent?: "emerald" | "amber" | "rose";
+}) {
+  const accentClass =
+    accent === "rose"
+      ? "border-rose-500/30 bg-rose-500/5 dark:bg-rose-500/10"
+      : accent === "amber"
+        ? "border-amber-500/30 bg-amber-500/5 dark:bg-amber-500/10"
+        : accent === "emerald"
+          ? "border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-500/10"
+          : "border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900";
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+    <div className={`rounded-xl border p-4 ${accentClass}`}>
       <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
         {label}
       </p>

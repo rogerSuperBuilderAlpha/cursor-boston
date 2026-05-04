@@ -20,6 +20,13 @@ export const PYDATA_2026_REGISTRATION_PATH = `/events/${PYDATA_2026_EVENT_SLUG}/
 
 export const PYDATA_2026_REGISTRATIONS_COLLECTION = "pydataHack2026Registrations";
 
+/**
+ * Hard cap on attendees Moderna will admit. We hand Moderna the first
+ * PYDATA_2026_CAPACITY non-cancelled registrations sorted by createdAt;
+ * everyone else lands on a waitlist. Luma RSVPs do NOT count.
+ */
+export const PYDATA_2026_CAPACITY = 150;
+
 export const PYDATA_2026_LIMITS = {
   firstName: 80,
   lastName: 80,

@@ -9,6 +9,7 @@ import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { withMiddleware, rateLimitConfigs } from "@/lib/middleware";
 import {
+  PYDATA_2026_CAPACITY,
   PYDATA_2026_REGISTRATIONS_COLLECTION,
   type PydataRegistration,
   type PydataRegistrationStatus,
@@ -84,10 +85,25 @@ async function handleGet(request: NextRequest) {
     {} as Record<PydataRegistrationStatus, number>
   );
 
+  // First PYDATA_2026_CAPACITY non-cancelled rows (already sorted createdAt asc)
+  // are inside the cap; the rest are waitlist. Cancelled rows are skipped.
+  const eligibleSorted = registrations.filter((r) => r.status !== "cancelled");
+  const inCapEmails = new Set(
+    eligibleSorted.slice(0, PYDATA_2026_CAPACITY).map((r) => r.email)
+  );
+  const inCapCount = inCapEmails.size;
+  const waitlistCount = Math.max(0, eligibleSorted.length - inCapCount);
+
   return NextResponse.json({
     total: registrations.length,
     counts,
-    registrations,
+    capacity: PYDATA_2026_CAPACITY,
+    inCapCount,
+    waitlistCount,
+    registrations: registrations.map((r) => ({
+      ...r,
+      inCap: inCapEmails.has(r.email),
+    })),
   });
 }
 
