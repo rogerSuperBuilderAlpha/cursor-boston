@@ -62,11 +62,34 @@ function csvEscape(value: string): string {
   return value;
 }
 
-function toCsv(registrations: PydataRegistration[]): string {
+/**
+ * CSV format Jacqueline (Moderna PyData host) requires 48h before the event:
+ * 4 columns, "Full name | Email | Phone | Company". First two mandatory, last
+ * two optional. Order and column names matter — don't reshuffle without
+ * checking with her first.
+ */
+function toModernaCsv(registrations: PydataRegistration[]): string {
+  const header = ["Full name", "Email", "Phone", "Company"].join(",");
+  const rows = registrations
+    .filter((r) => r.status !== "cancelled")
+    .map((r) =>
+      [
+        csvEscape(`${r.firstName} ${r.lastName}`.trim()),
+        csvEscape(r.email),
+        csvEscape(r.phone),
+        csvEscape(r.organization),
+      ].join(",")
+    );
+  return [header, ...rows].join("\n");
+}
+
+/** Internal CSV with everything — for our own bookkeeping. */
+function toFullCsv(registrations: PydataRegistration[]): string {
   const header = [
     "First name",
     "Last name",
     "Email",
+    "Phone",
     "Organization",
     "Status",
     "Confirmed at (ET)",
@@ -76,6 +99,7 @@ function toCsv(registrations: PydataRegistration[]): string {
       csvEscape(r.firstName),
       csvEscape(r.lastName),
       csvEscape(r.email),
+      csvEscape(r.phone),
       csvEscape(r.organization),
       csvEscape(STATUS_LABEL[r.status]),
       csvEscape(formatDate(r.createdAt)),
@@ -125,23 +149,33 @@ export default function PyDataAdminPage() {
     const q = search.trim().toLowerCase();
     if (!q) return data.registrations;
     return data.registrations.filter((r) => {
-      const haystack = `${r.firstName} ${r.lastName} ${r.email} ${r.organization}`.toLowerCase();
+      const haystack = `${r.firstName} ${r.lastName} ${r.email} ${r.phone} ${r.organization}`.toLowerCase();
       return haystack.includes(q);
     });
   }, [data, search]);
 
-  const downloadCsv = () => {
-    if (!data) return;
-    const csv = toCsv(data.registrations);
+  const downloadFile = (filename: string, csv: string) => {
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `pydata-2026-registrations-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  const downloadModernaCsv = () => {
+    if (!data) return;
+    downloadFile(`pydata-2026-moderna-${today}.csv`, toModernaCsv(data.registrations));
+  };
+
+  const downloadFullCsv = () => {
+    if (!data) return;
+    downloadFile(`pydata-2026-full-${today}.csv`, toFullCsv(data.registrations));
   };
 
   return (
@@ -187,10 +221,19 @@ export default function PyDataAdminPage() {
               </button>
               <button
                 type="button"
-                onClick={downloadCsv}
+                onClick={downloadModernaCsv}
                 className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-400"
+                title="4-column CSV (Full name, Email, Phone, Company) for Moderna's Envoy registration. Excludes cancelled."
               >
-                Download CSV
+                CSV for Moderna
+              </button>
+              <button
+                type="button"
+                onClick={downloadFullCsv}
+                className="rounded-lg border border-neutral-300 px-3 py-1.5 text-xs font-semibold hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800"
+                title="Full export (status + timestamps) for our own records."
+              >
+                Full export
               </button>
             </div>
           ) : null}
@@ -258,6 +301,7 @@ export default function PyDataAdminPage() {
                   <tr>
                     <th className="px-4 py-3 font-medium">Name</th>
                     <th className="px-4 py-3 font-medium">Email</th>
+                    <th className="px-4 py-3 font-medium">Phone</th>
                     <th className="px-4 py-3 font-medium">Organization</th>
                     <th className="px-4 py-3 font-medium">Status</th>
                     <th className="px-4 py-3 font-medium">Confirmed (ET)</th>
@@ -267,7 +311,7 @@ export default function PyDataAdminPage() {
                   {filtered.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={5}
+                        colSpan={6}
                         className="px-4 py-10 text-center text-neutral-500"
                       >
                         {data.total === 0
@@ -285,6 +329,7 @@ export default function PyDataAdminPage() {
                           {r.firstName} {r.lastName}
                         </td>
                         <td className="px-4 py-3 break-all">{r.email}</td>
+                        <td className="px-4 py-3 tabular-nums">{r.phone || "—"}</td>
                         <td className="px-4 py-3">{r.organization || "—"}</td>
                         <td className="px-4 py-3">
                           <span

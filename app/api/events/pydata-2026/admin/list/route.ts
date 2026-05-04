@@ -66,6 +66,7 @@ async function handleGet(request: NextRequest) {
         firstName: typeof data.firstName === "string" ? data.firstName : "",
         lastName: typeof data.lastName === "string" ? data.lastName : "",
         email: typeof data.email === "string" ? data.email : "",
+        phone: typeof data.phone === "string" ? data.phone : "",
         organization: typeof data.organization === "string" ? data.organization : "",
         attendingConfirmed: true as const,
         status,
