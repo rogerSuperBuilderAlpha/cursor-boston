@@ -13,7 +13,9 @@ import {
   HIRING_PARTNERS_CALENDLY_URL,
   HIRING_PARTNERS_MAX,
   HIRING_PARTNERS_RETURN_TO,
+  PARTNER_ENGINEER_EXPECTATION_ITEMS,
   type HiringPartnerStatus,
+  type PartnerEngineerExpectationKey,
 } from "@/lib/hiring-partners";
 
 interface PartnerApplicationDto {
@@ -26,6 +28,8 @@ interface PartnerApplicationDto {
   contactRole: string | null;
   rolesHiring: string | null;
   notes: string | null;
+  engineerExpectations: Partial<Record<PartnerEngineerExpectationKey, number>>;
+  engineerRequirements: string | null;
   status: HiringPartnerStatus;
   createdAt: number | null;
   updatedAt: number | null;
@@ -126,6 +130,10 @@ export default function PartnersPage() {
   const [contactRole, setContactRole] = useState("");
   const [rolesHiring, setRolesHiring] = useState("");
   const [notes, setNotes] = useState("");
+  const [engineerExpectations, setEngineerExpectations] = useState<
+    Partial<Record<PartnerEngineerExpectationKey, number>>
+  >({});
+  const [engineerRequirements, setEngineerRequirements] = useState("");
 
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -162,6 +170,8 @@ export default function PartnersPage() {
           setContactRole(json.application.contactRole || "");
           setRolesHiring(json.application.rolesHiring || "");
           setNotes(json.application.notes || "");
+          setEngineerExpectations(json.application.engineerExpectations || {});
+          setEngineerRequirements(json.application.engineerRequirements || "");
         }
       } catch {
         if (!cancelled) setAppLoadError("Couldn't load your application.");
@@ -207,6 +217,8 @@ export default function PartnersPage() {
           contactRole: contactRole.trim(),
           rolesHiring: rolesHiring.trim(),
           notes: notes.trim(),
+          engineerExpectations,
+          engineerRequirements: engineerRequirements.trim(),
         }),
       });
       const json = await res.json();
@@ -410,6 +422,87 @@ export default function PartnersPage() {
                       className="mt-1 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 dark:border-neutral-700 dark:bg-neutral-950"
                     />
                   </div>
+                </div>
+              </div>
+
+              {/* $150k engineer profile — optional Likert + open requirements */}
+              <div className="rounded-lg border border-dashed border-neutral-300 p-4 dark:border-neutral-700">
+                <p className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                  $150k engineer profile — optional
+                </p>
+                <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+                  What does a $150k/year engineer look like to you? Rate how
+                  important each of the following is when evaluating a candidate
+                  at that level. <span className="font-medium">1 = nice to have</span>,{" "}
+                  <span className="font-medium">7 = critical</span>.
+                </p>
+
+                <div className="mt-4 space-y-3">
+                  {PARTNER_ENGINEER_EXPECTATION_ITEMS.map((item) => {
+                    const value = engineerExpectations[item.key];
+                    return (
+                      <div
+                        key={item.key}
+                        className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4"
+                      >
+                        <span className="flex-1 text-sm text-neutral-800 dark:text-neutral-200">
+                          {item.label}
+                        </span>
+                        <div className="flex items-center gap-1 text-xs text-neutral-500">
+                          <span className="hidden sm:inline">1</span>
+                          {[1, 2, 3, 4, 5, 6, 7].map((n) => (
+                            <label
+                              key={n}
+                              className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border border-neutral-300 hover:border-emerald-500 dark:border-neutral-700"
+                              style={
+                                value === n
+                                  ? { backgroundColor: "#10b981", color: "white", borderColor: "#10b981" }
+                                  : undefined
+                              }
+                            >
+                              <input
+                                type="radio"
+                                name={`hp-exp-${item.key}`}
+                                value={n}
+                                checked={value === n}
+                                onChange={() =>
+                                  setEngineerExpectations((prev) => ({
+                                    ...prev,
+                                    [item.key]: n,
+                                  }))
+                                }
+                                className="sr-only"
+                              />
+                              <span className="text-xs font-medium">{n}</span>
+                            </label>
+                          ))}
+                          <span className="hidden sm:inline">7</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-6">
+                  <label
+                    htmlFor="hp-engineer-requirements"
+                    className="block text-sm font-medium"
+                  >
+                    Specific hiring requirements at this level
+                  </label>
+                  <p className="mt-1 text-xs text-neutral-500">
+                    Anything not captured above — must-have technologies,
+                    certifications, dealbreakers, comp band specifics,
+                    location/visa constraints, etc.
+                  </p>
+                  <textarea
+                    id="hp-engineer-requirements"
+                    rows={4}
+                    maxLength={HIRING_PARTNERS_MAX.engineerRequirements}
+                    value={engineerRequirements}
+                    onChange={(e) => setEngineerRequirements(e.target.value)}
+                    className="mt-2 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 dark:border-neutral-700 dark:bg-neutral-950"
+                  />
                 </div>
               </div>
 
