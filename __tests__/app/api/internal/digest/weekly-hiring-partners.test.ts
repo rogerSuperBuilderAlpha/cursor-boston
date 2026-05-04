@@ -111,7 +111,12 @@ describe("GET /api/internal/digest/weekly-hiring-partners", () => {
     expect(json.emailSent).toBe(true);
     expect(mockSendEmail).toHaveBeenCalledTimes(1);
     const args = mockSendEmail.mock.calls[0][0];
-    expect(args.to).toBe("rogerhunt02052@gmail.com");
+    expect(args.to).toEqual(
+      expect.arrayContaining([
+        "rogerhunt02052@gmail.com",
+        "aaron@cursorboston.com",
+      ])
+    );
     expect(args.subject).toContain("2 pending");
     expect(args.text).toContain("Alice");
     expect(args.text).toContain("Bob");
