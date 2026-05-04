@@ -117,7 +117,7 @@ export default function RootLayout({
       <body className="antialiased bg-background text-foreground min-h-screen flex flex-col">
         <a
           href="#main-content"
-          className="sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:top-4 focus-visible:left-4 focus-visible:z-100 focus-visible:px-4 focus-visible:py-2 focus-visible:bg-foreground focus-visible:text-background focus-visible:rounded-lg focus-visible:font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-100 focus:px-4 focus:py-2 focus:bg-foreground focus:text-background focus:rounded-lg focus:font-semibold"
         >
           Skip to main content
         </a>
