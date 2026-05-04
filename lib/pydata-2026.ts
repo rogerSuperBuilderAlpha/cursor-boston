@@ -7,10 +7,10 @@
 /**
  * Constants + types for the May 13 Cursor Boston × PyData event at Moderna.
  *
- * The website registration captures the basics Moderna needs (first/last
- * name, email, organization) so we can hand the list to the host for
- * Envoy NDA + badge issuance. Status starts at "awaiting-badge" until
- * an organizer flips it to "badge-ready" or "checked-in" on the day-of.
+ * Captures the four columns Moderna needs in their CSV (full name, email,
+ * phone, company). Name parts must each be ≥2 chars because government-ID
+ * matching is enforced at the door — single-letter "F. Lastname" fails.
+ * Status starts "awaiting-badge" until an organizer flips it.
  */
 
 export const PYDATA_2026_EVENT_ID = "cursor-boston-pydata-2026";
@@ -24,7 +24,9 @@ export const PYDATA_2026_LIMITS = {
   firstName: 80,
   lastName: 80,
   email: 320,
+  phone: 40,
   organization: 200,
+  nameMin: 2,
 } as const;
 
 export type PydataRegistrationStatus =
@@ -38,6 +40,7 @@ export interface PydataRegistration {
   firstName: string;
   lastName: string;
   email: string;
+  phone: string;
   organization: string;
   attendingConfirmed: true;
   status: PydataRegistrationStatus;
@@ -49,13 +52,16 @@ export interface PydataRegistrationInput {
   firstName: string;
   lastName: string;
   email: string;
+  phone: string;
   organization: string;
   attendingConfirmed: true;
 }
 
 export type PydataValidationError =
   | "firstName-required"
+  | "firstName-too-short"
   | "lastName-required"
+  | "lastName-too-short"
   | "email-required"
   | "email-invalid"
   | "organization-required"
@@ -77,11 +83,16 @@ export function validatePydataRegistration(
   const firstName = clamp(r.firstName, PYDATA_2026_LIMITS.firstName);
   const lastName = clamp(r.lastName, PYDATA_2026_LIMITS.lastName);
   const email = clamp(r.email, PYDATA_2026_LIMITS.email).toLowerCase();
+  const phone = clamp(r.phone, PYDATA_2026_LIMITS.phone);
   const organization = clamp(r.organization, PYDATA_2026_LIMITS.organization);
   const attendingConfirmed = r.attendingConfirmed === true;
 
   if (!firstName) errors.push("firstName-required");
+  else if (firstName.length < PYDATA_2026_LIMITS.nameMin)
+    errors.push("firstName-too-short");
   if (!lastName) errors.push("lastName-required");
+  else if (lastName.length < PYDATA_2026_LIMITS.nameMin)
+    errors.push("lastName-too-short");
   if (!email) errors.push("email-required");
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.push("email-invalid");
   if (!organization) errors.push("organization-required");
@@ -90,6 +101,13 @@ export function validatePydataRegistration(
   if (errors.length > 0) return { ok: false, errors };
   return {
     ok: true,
-    data: { firstName, lastName, email, organization, attendingConfirmed: true },
+    data: {
+      firstName,
+      lastName,
+      email,
+      phone,
+      organization,
+      attendingConfirmed: true,
+    },
   };
 }

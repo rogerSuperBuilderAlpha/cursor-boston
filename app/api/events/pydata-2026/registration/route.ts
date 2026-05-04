@@ -39,6 +39,7 @@ function serializeDoc(uid: string, data: Record<string, unknown>): PydataRegistr
     firstName: typeof data.firstName === "string" ? data.firstName : "",
     lastName: typeof data.lastName === "string" ? data.lastName : "",
     email: typeof data.email === "string" ? data.email : "",
+    phone: typeof data.phone === "string" ? data.phone : "",
     organization: typeof data.organization === "string" ? data.organization : "",
     attendingConfirmed: true,
     status: (["awaiting-badge", "badge-ready", "checked-in", "cancelled"].includes(status)

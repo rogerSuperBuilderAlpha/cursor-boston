@@ -22,6 +22,7 @@ type FormState = {
   firstName: string;
   lastName: string;
   email: string;
+  phone: string;
   organization: string;
   attendingConfirmed: boolean;
 };
@@ -30,6 +31,7 @@ const EMPTY_FORM: FormState = {
   firstName: "",
   lastName: "",
   email: "",
+  phone: "",
   organization: "",
   attendingConfirmed: false,
 };
@@ -96,6 +98,7 @@ export default function PyDataRegisterPage() {
       firstName: prev.firstName || firstName,
       lastName: prev.lastName || lastName,
       email: prev.email || (user?.email ?? ""),
+      phone: prev.phone,
       organization: prev.organization,
       attendingConfirmed: prev.attendingConfirmed,
     }));
@@ -154,7 +157,8 @@ export default function PyDataRegisterPage() {
         </h1>
         <p className="mt-4 text-base text-neutral-600 dark:text-neutral-400">
           Wednesday May 13 · Moderna HQ, Cambridge. Confirm here so we can hand
-          your name to Moderna for badge issuance. You still need to RSVP on{" "}
+          your name to Moderna for Envoy registration and badge issuance. You
+          still need to RSVP on{" "}
           <a
             href={PYDATA_2026_LUMA_URL}
             target="_blank"
@@ -163,7 +167,13 @@ export default function PyDataRegisterPage() {
           >
             Luma
           </a>{" "}
-          for the door list and the Envoy NDA email.
+          for the door list.
+        </p>
+        <p className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-sm text-amber-800 dark:bg-amber-500/10 dark:text-amber-200">
+          <strong>Use your full legal name</strong> exactly as it appears on the
+          government-issued ID you&apos;ll bring to the door (driver&apos;s
+          license or passport). Moderna will turn you away if the names
+          don&apos;t match.
         </p>
 
         <div className="mt-10">
@@ -241,6 +251,7 @@ function RegistrationForm({
           <input
             type="text"
             required
+            minLength={2}
             maxLength={80}
             value={form.firstName}
             onChange={(e) => setForm((p) => ({ ...p, firstName: e.target.value }))}
@@ -253,6 +264,7 @@ function RegistrationForm({
           <input
             type="text"
             required
+            minLength={2}
             maxLength={80}
             value={form.lastName}
             onChange={(e) => setForm((p) => ({ ...p, lastName: e.target.value }))}
@@ -272,10 +284,25 @@ function RegistrationForm({
             autoComplete="email"
           />
           <span className="mt-1 block text-xs text-neutral-500 dark:text-neutral-400">
-            Use the same email you used on Luma so Moderna can match you.
+            Use the same email you used on Luma so Moderna can match you. The
+            Envoy NDA + QR code will be sent here from{" "}
+            <code>no-reply@envoy.com</code>.
           </span>
         </label>
-        <label className="block text-sm sm:col-span-2">
+        <label className="block text-sm">
+          <span className="font-medium">
+            Phone <span className="font-normal text-neutral-500">(optional)</span>
+          </span>
+          <input
+            type="tel"
+            maxLength={40}
+            value={form.phone}
+            onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
+            className={inputClass}
+            autoComplete="tel"
+          />
+        </label>
+        <label className="block text-sm">
           <span className="font-medium">Organization</span>
           <input
             type="text"
@@ -388,7 +415,15 @@ function AwaitingBadge({
             {registration.email}
           </dd>
         </div>
-        <div className="sm:col-span-2">
+        <div>
+          <dt className="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+            Phone
+          </dt>
+          <dd className="mt-1 text-neutral-900 dark:text-neutral-100">
+            {registration.phone || "—"}
+          </dd>
+        </div>
+        <div>
           <dt className="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
             Organization
           </dt>
@@ -399,10 +434,32 @@ function AwaitingBadge({
       </dl>
 
       <div className="mt-6 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-amber-800 dark:bg-amber-500/10 dark:text-amber-200">
-        <p className="font-semibold">Next: clear Moderna security</p>
-        <ol className="mt-2 list-decimal space-y-1 pl-5">
+        <p className="font-semibold">What to expect next</p>
+        <ol className="mt-2 list-decimal space-y-2 pl-5">
           <li>
-            RSVP on{" "}
+            We send your name + email to Moderna 48 hours before the event.
+          </li>
+          <li>
+            Moderna registers you in Envoy. You&apos;ll get an email from{" "}
+            <code>Moderna HQ &lt;no-reply@envoy.com&gt;</code> with NDA paperwork
+            to sign.
+          </li>
+          <li>
+            After signing, Envoy emails you a unique QR code. <strong>Bring
+            that QR code on your phone</strong> on May 13.
+          </li>
+          <li>
+            <strong>Bring a government-issued ID</strong> (driver&apos;s license
+            or passport) with the name <strong>{registration.firstName} {registration.lastName}</strong>.
+            If it doesn&apos;t match, you&apos;ll be turned away.
+          </li>
+          <li>
+            If you don&apos;t get the Envoy email but you registered on time,
+            you can still sign the NDA on paper at the door — but if your name
+            isn&apos;t on the list, you won&apos;t be admitted.
+          </li>
+          <li>
+            Don&apos;t forget to RSVP on{" "}
             <a
               href={PYDATA_2026_LUMA_URL}
               target="_blank"
@@ -412,14 +469,6 @@ function AwaitingBadge({
               Luma
             </a>{" "}
             if you haven&apos;t already.
-          </li>
-          <li>
-            Watch for an email from <code>no-reply@envoy.com</code> after Luma
-            approval. Complete the Envoy sign-in including NDA and signature.
-          </li>
-          <li>
-            Show your Envoy QR code at the door on May 13. <strong>No QR code, no
-            access.</strong>
           </li>
         </ol>
       </div>
