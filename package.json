@@ -92,7 +92,7 @@
     "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
-    "@anthropic-ai/sdk": "^0.91.1",
+    "@anthropic-ai/sdk": "^0.92.0",
     "@commitlint/cli": "^20.5.3",
     "@commitlint/config-conventional": "^20.5.3",
     "@eslint/compat": "^2.0.5",
@@ -112,14 +112,14 @@
     "@types/react-dom": "^18.2.0",
     "@types/react-syntax-highlighter": "^15.5.13",
     "cross-env": "^10.1.0",
-    "eslint": "^10.2.1",
+    "eslint": "^10.3.0",
     "eslint-config-next": "^16.2.4",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
     "firebase-tools": "^15.16.0",
-    "globals": "^17.5.0",
+    "globals": "^17.6.0",
     "husky": "^8.0.3",
     "jest": "^30.3.0",
     "jest-environment-jsdom": "^30.3.0",
@@ -131,6 +131,7 @@
     "typescript-eslint": "^8.58.0"
   },
   "overrides": {
+    "axios": "^1.16.0",
     "typescript-eslint": "^8.58.0",
     "eslint-plugin-import": {
       "eslint": "$eslint"
