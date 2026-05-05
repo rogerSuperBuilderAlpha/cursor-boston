@@ -11,11 +11,12 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { AuthFormSkeleton } from "@/components/skeletons/AuthFormSkeleton";
+import { ValidatedInput } from "@/components/ui/ValidatedInput";
 
 // Map Firebase error codes to user-friendly messages
 function getErrorMessage(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error);
-  
+
   if (message.includes("auth/email-already-in-use")) {
     return "An account with this email already exists. Please sign in instead.";
   }
@@ -37,8 +38,60 @@ function getErrorMessage(error: unknown): string {
   if (message.includes("auth/operation-not-allowed")) {
     return "This sign-in method is not enabled. Please try another method.";
   }
-  
+
   return "Something went wrong. Please try again.";
+}
+
+function getSignUpFieldErrors(error: string): {
+  emailError: string | null;
+  passwordError: string | null;
+  confirmPasswordError: string | null;
+  formError: string | null;
+} {
+  if (!error) {
+    return {
+      emailError: null,
+      passwordError: null,
+      confirmPasswordError: null,
+      formError: null,
+    };
+  }
+
+  if (error === "Passwords do not match") {
+    return {
+      emailError: null,
+      passwordError: null,
+      confirmPasswordError: error,
+      formError: null,
+    };
+  }
+
+  const normalizedError = error.toLowerCase();
+
+  if (normalizedError.includes("email")) {
+    return {
+      emailError: error,
+      passwordError: null,
+      confirmPasswordError: null,
+      formError: null,
+    };
+  }
+
+  if (normalizedError.includes("password")) {
+    return {
+      emailError: null,
+      passwordError: error,
+      confirmPasswordError: null,
+      formError: null,
+    };
+  }
+
+  return {
+    emailError: null,
+    passwordError: null,
+    confirmPasswordError: null,
+    formError: error,
+  };
 }
 
 function SignUpPageContent() {
@@ -51,6 +104,7 @@ function SignUpPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, loading: authLoading, signUp, signInWithGoogle, signInWithGithub } = useAuth();
+  const { emailError, passwordError, confirmPasswordError, formError } = getSignUpFieldErrors(error);
 
   // Get redirect URL from query params, default to home
   const redirectUrl = searchParams.get("redirect") || "/";
@@ -137,14 +191,14 @@ function SignUpPageContent() {
         </div>
 
         <div className="bg-white dark:bg-neutral-900 rounded-xl md:rounded-2xl p-5 md:p-8 border border-neutral-200 dark:border-neutral-800">
-          {error && (
-            <div 
+          {formError && (
+            <div
               role="alert"
               aria-live="polite"
               id="form-error"
               className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm"
             >
-              {error}
+              {formError}
             </div>
           )}
 
@@ -205,77 +259,50 @@ function SignUpPageContent() {
 
           {/* Email/Password Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium text-neutral-300 mb-2"
-              >
-                Name
-              </label>
-              <input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="w-full px-4 py-3 bg-neutral-100 dark:bg-neutral-800 border border-neutral-700 rounded-lg text-foreground text-base placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-foreground/20 focus:border-transparent"
-                placeholder="Your name"
-              />
-            </div>
+            <ValidatedInput
+              id="name"
+              label="Name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              placeholder="Your name"
+            />
 
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-neutral-300 mb-2"
-              >
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full px-4 py-3 bg-neutral-100 dark:bg-neutral-800 border border-neutral-700 rounded-lg text-foreground text-base placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-foreground/20 focus:border-transparent"
-                placeholder="you@example.com"
-              />
-            </div>
+            <ValidatedInput
+              id="email"
+              label="Email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              error={emailError}
+              placeholder="you@example.com"
+              showStatusIcon
+            />
 
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-neutral-300 mb-2"
-              >
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full px-4 py-3 bg-neutral-100 dark:bg-neutral-800 border border-neutral-700 rounded-lg text-foreground text-base placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-foreground/20 focus:border-transparent"
-                placeholder="At least 8 characters"
-              />
-            </div>
+            <ValidatedInput
+              id="password"
+              label="Password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              error={passwordError}
+              helperText="Use at least 8 characters."
+              placeholder="At least 8 characters"
+            />
 
-            <div>
-              <label
-                htmlFor="confirmPassword"
-                className="block text-sm font-medium text-neutral-300 mb-2"
-              >
-                Confirm Password
-              </label>
-              <input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                className="w-full px-4 py-3 bg-neutral-100 dark:bg-neutral-800 border border-neutral-700 rounded-lg text-foreground text-base placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-foreground/20 focus:border-transparent"
-                placeholder="Confirm your password"
-              />
-            </div>
+            <ValidatedInput
+              id="confirmPassword"
+              label="Confirm Password"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              error={confirmPasswordError}
+              placeholder="Confirm your password"
+            />
 
             <button
               type="submit"

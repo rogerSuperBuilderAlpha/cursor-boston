@@ -11,11 +11,12 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { AuthFormSkeleton } from "@/components/skeletons/AuthFormSkeleton";
+import { ValidatedInput } from "@/components/ui/ValidatedInput";
 
 // Map Firebase error codes to user-friendly messages
 function getErrorMessage(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error);
-  
+
   if (message.includes("auth/invalid-credential") || message.includes("auth/wrong-password")) {
     return "Invalid email or password. Please try again.";
   }
@@ -40,8 +41,30 @@ function getErrorMessage(error: unknown): string {
   if (message.includes("auth/invalid-email")) {
     return "Please enter a valid email address.";
   }
-  
+
   return "Something went wrong. Please try again.";
+}
+
+function getLoginFieldErrors(error: string): {
+  emailError: string | null;
+  passwordError: string | null;
+  formError: string | null;
+} {
+  if (!error) {
+    return { emailError: null, passwordError: null, formError: null };
+  }
+
+  const normalizedError = error.toLowerCase();
+
+  if (
+    normalizedError.includes("email") &&
+    !normalizedError.includes("password") &&
+    !normalizedError.includes("invalid email or password")
+  ) {
+    return { emailError: error, passwordError: null, formError: null };
+  }
+
+  return { emailError: null, passwordError: null, formError: error };
 }
 
 // Resolve email to primary email (handles aliases)
@@ -76,6 +99,7 @@ function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, loading: authLoading, signIn, signInWithGoogle, signInWithGithub, resetPassword } = useAuth();
+  const { emailError, passwordError, formError } = getLoginFieldErrors(error);
 
   // Get redirect URL from query params, default to home
   const redirectUrl = searchParams.get("redirect") || "/";
@@ -97,12 +121,12 @@ function LoginPageContent() {
     try {
       // Resolve email to primary (handles login with additional emails)
       const resolvedEmail = await resolveEmail(email);
-      
+
       // If the resolved email is different, show a message
       if (resolvedEmail.toLowerCase() !== email.toLowerCase().trim()) {
         setEmailAlias(email);
       }
-      
+
       await signIn(resolvedEmail, password);
       router.push(redirectUrl);
     } catch (err: unknown) {
@@ -185,19 +209,19 @@ function LoginPageContent() {
         </div>
 
         <div className="bg-white dark:bg-neutral-900 rounded-xl md:rounded-2xl p-5 md:p-8 border border-neutral-200 dark:border-neutral-800">
-          {error && (
-            <div 
+          {formError && (
+            <div
               role="alert"
               aria-live="polite"
               id="form-error"
               className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm"
             >
-              {error}
+              {formError}
             </div>
           )}
 
           {resetSent && (
-            <div 
+            <div
               role="status"
               aria-live="polite"
               className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 text-sm"
@@ -207,7 +231,7 @@ function LoginPageContent() {
           )}
 
           {emailAlias && (
-            <div 
+            <div
               role="status"
               aria-live="polite"
               className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg text-blue-400 text-sm"
@@ -273,45 +297,28 @@ function LoginPageContent() {
 
           {/* Email/Password Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-neutral-300 mb-2"
-              >
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                aria-describedby={error ? "form-error" : undefined}
-                aria-invalid={error ? "true" : undefined}
-                className="w-full px-4 py-3 bg-neutral-100 dark:bg-neutral-800 border border-neutral-700 rounded-lg text-foreground text-base placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-foreground/20 focus:border-transparent"
-                placeholder="you@example.com"
-              />
-            </div>
+            <ValidatedInput
+              id="email"
+              label="Email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              error={emailError}
+              placeholder="you@example.com"
+              showStatusIcon
+            />
 
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-neutral-300 mb-2"
-              >
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                aria-describedby={error ? "form-error" : undefined}
-                aria-invalid={error ? "true" : undefined}
-                className="w-full px-4 py-3 bg-neutral-100 dark:bg-neutral-800 border border-neutral-700 rounded-lg text-foreground text-base placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-foreground/20 focus:border-transparent"
-                placeholder="Enter your password"
-              />
-            </div>
+            <ValidatedInput
+              id="password"
+              label="Password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              error={passwordError}
+              placeholder="Enter your password"
+            />
 
             <div className="flex justify-end">
               <button
