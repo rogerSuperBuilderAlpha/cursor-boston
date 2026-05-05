@@ -127,17 +127,6 @@ jobs:
           fail_ci_if_error: false
           verbose: true
 
-      - name: Check coverage threshold
-        run: |
-          COVERAGE=$(cat coverage/coverage-summary.json | jq '.total.lines.pct')
-          echo "Current coverage: $COVERAGE%"
-          # Aligned with jest.config.js coverageThreshold (lines: 37).
-          # Ratchet this up as tests are added.
-          if (( $(echo "$COVERAGE < 37" | bc -l) )); then
-            echo "::error::Coverage is below 37% threshold"
-            exit 1
-          fi
-
   firestore-rules:
     name: Firestore rules tests
     runs-on: ubuntu-latest
