@@ -87,4 +87,48 @@ export const RARE_ARTIFACTS: ArtifactDefinition[] = [
     flavorOnFind:
       "Found neatly placed beside a road, as if their owner had simply stepped out of them. Your size, somehow.",
   },
+  {
+    id: "rare-iron-pact-collar",
+    name: "Iron Pact Collar",
+    rarity: "rare",
+    type: "defense",
+    baseStrength: 80,
+    description:
+      "A black-iron collar bound by an oath that survives the wearer.",
+    flavorOnFind:
+      "It rests on a velvet cushion in a glass case in a wayside chapel. The chapel is empty; the case is unlocked.",
+  },
+  {
+    id: "rare-firebreath-amulet",
+    name: "Firebreath Amulet",
+    rarity: "rare",
+    type: "offense",
+    baseStrength: 76,
+    description:
+      "A copper amulet that warms the wearer's tongue when held to the mouth.",
+    flavorOnFind:
+      "A man in a red cloak hands it to you wordlessly at a crossroads and walks on without looking back.",
+  },
+  {
+    id: "rare-greenkeepers-trowel",
+    name: "Greenkeeper's Trowel",
+    rarity: "rare",
+    type: "production",
+    baseStrength: 72,
+    description:
+      "A small steel trowel with a green-tinted blade that never dulls.",
+    flavorOnFind:
+      "Stuck in the dirt of a vegetable patch tended by no one your scouts can find. The vegetables are remarkably good.",
+  },
+  {
+    id: "rare-true-north-pendant",
+    name: "True-North Pendant",
+    rarity: "rare",
+    type: "utility",
+    baseStrength: 64,
+    description:
+      "A pendant whose stone always points home — wherever home happens to be.",
+    flavorOnFind:
+      "An old soldier ties it around the neck of your captain's horse and slips off into the trees.",
+  },
 ];

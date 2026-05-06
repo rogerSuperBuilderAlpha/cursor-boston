@@ -7,7 +7,7 @@
 // Stock narrative lines for casting a production spell. Production spells
 // affect the player globally for 100 turns, so the narrative leans toward
 // "something has shifted" rather than "this specific tile."
-export const SPELL_PRODUCE_NARRATIVES: string[] = [
+const HUMAN_SPELL_PRODUCE_NARRATIVES: string[] = [
   "Your battlemages convene at dusk and read the working aloud, voices rising and falling in unison.",
   "A great brass bell is rung once at the capital, and the mages take this as the moment the spell takes hold.",
   "Tonight the lamps in your camp burn a little brighter, and no one is quite sure why.",
@@ -58,4 +58,37 @@ export const SPELL_PRODUCE_NARRATIVES: string[] = [
   "A storm in the distance flickers but does not arrive. The mages have many such storms to thank.",
   "The chief mage walks home in the rain and is not wet when she arrives.",
   "By dawn the working is laid; by dusk the world has shifted by one small notch in your favor.",
+];
+
+const AI_SPELL_PRODUCE_NARRATIVES: string[] = [
+  "The chief mage burns a single page from the great working-book; the ash drifts upward instead of down.",
+  "A line of bells in the temple courtyard ring once each in sequence as the working settles.",
+  "The mage-council closes the casting with a single word; everyone in the room exhales at the same moment.",
+  "A faint smell of cedar fills the temple as the working takes; the smell lingers for a day.",
+  "The chief mage sets down her staff and stretches her hands until the knuckles crack; she smiles.",
+  "A trio of apprentices watches the casting from the doorway; one of them is clearly keeping notes.",
+  "The temple's torches burn pale gold through the binding and return to amber when the working is done.",
+  "A messenger arrives at the temple just as the casting ends; he is told to come back tomorrow.",
+  "The chief mage's familiar — a small grey cat — sleeps through the entire working and wakes the moment it ends.",
+  "Tonight the kitchen-fires hold their heat longer than usual; the cooks notice without comment.",
+  "Your standards across the territory all turn south at once for a single heartbeat, then resume their previous direction.",
+  "The temple's water-clock skips a tick during the binding; the chief mage notes this in her log.",
+  "A small bird flies through the temple window during the casting; it lands on the chief mage's shoulder and stays.",
+  "Wax from the working candles pools in a perfect six-pointed star; it stays that shape until morning.",
+  "The chief mage's apprentices wash the casting tools in cold water; the water steams faintly.",
+  "Smoke from the temple's brazier rises in a tight spiral for the duration of the working.",
+  "A line of footprints appears in the dust of the temple floor and is gone by the next morning.",
+  "An old story-teller in the city pauses mid-sentence as the working takes; he resumes a moment later in a different tale.",
+  "The chief mage rests her hand on the temple's central stone; the stone is warm where it should be cool.",
+  "A flock of pigeons rises from the temple roof at the moment of binding and circles three times.",
+  "The temple's bells ring once on their own; the bell-ringer is asleep in his quarters.",
+  "An apprentice falls asleep during the binding; the chief mage covers her with a cloak and continues without comment.",
+  "A page in the working-book glows faintly for an instant; only the chief mage sees it, and she does not say so.",
+  "The casting ends and the chief mage opens the temple doors; outside, the air is fresh and the night is clear.",
+  "A scribe records the casting in three separate ledgers; she signs each one with a different pen.",
+];
+
+export const SPELL_PRODUCE_NARRATIVES: string[] = [
+  ...HUMAN_SPELL_PRODUCE_NARRATIVES,
+  ...AI_SPELL_PRODUCE_NARRATIVES,
 ];

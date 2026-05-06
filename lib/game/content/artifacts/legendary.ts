@@ -29,4 +29,26 @@ export const LEGENDARY_ARTIFACTS: ArtifactDefinition[] = [
     flavorOnFind:
       "Planted in the center of an empty battlefield. Whatever battle was fought here, the histories do not record it. The banner welcomes you like an old friend.",
   },
+  {
+    id: "legendary-stillborn-storm",
+    name: "Stillborn Storm",
+    rarity: "legendary",
+    type: "offense",
+    baseStrength: 240,
+    description:
+      "A glass shard from a storm that never finished forming. The shard hums when held.",
+    flavorOnFind:
+      "It falls into your captain's hand from a clear sky. Three witnesses see it; only one of them tells the story.",
+  },
+  {
+    id: "legendary-aegis-of-the-quiet-king",
+    name: "Aegis of the Quiet King",
+    rarity: "legendary",
+    type: "defense",
+    baseStrength: 230,
+    description:
+      "A round shield bearing the crest of a king who never spoke a word and never lost a battle.",
+    flavorOnFind:
+      "It hangs above a stone bench in an empty hall. The hall has no doors and no roof, and the sun does not seem to move while you are inside it.",
+  },
 ];

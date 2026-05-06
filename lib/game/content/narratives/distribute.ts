@@ -7,7 +7,7 @@
 // Stock narrative lines for assigning a tile its land type. The structured
 // outcome carries which type was chosen — these lines are intentionally
 // neutral about military / food / magic so they don't have to be split.
-export const DISTRIBUTE_NARRATIVES: string[] = [
+const HUMAN_DISTRIBUTE_NARRATIVES: string[] = [
   "Surveyors stake out the boundary and hammer in the markers before the dew has burned off.",
   "Your stewards walk the land before noon and decide what it will be by the evening fire.",
   "An old farmer is asked his opinion on the soil; he gives it freely and at length.",
@@ -57,4 +57,32 @@ export const DISTRIBUTE_NARRATIVES: string[] = [
   "By dusk the land has a new name on the map and a new line in the ledger.",
   "An old man tells the story of the land's previous use, but no one is taking notes.",
   "The steward seals the writ with her ring and tucks it into the inside pocket of her coat.",
+];
+
+const AI_DISTRIBUTE_NARRATIVES: string[] = [
+  "A measuring chain is dragged across the field; the steward marks the corners with white stones.",
+  "The new charter is read out loud at the boundary, and a few villagers nod as if they expected it.",
+  "Workers carry the writ in a small wooden box from the manor to the boundary post.",
+  "The steward signs the assignment book with deliberate care; her clerk dusts it twice.",
+  "A small ceremony at the boundary; a single bell is rung, the writ is sealed, and the work begins.",
+  "The land's purpose is decided, the marker is placed, and the steward goes home to a hot supper.",
+  "An old shepherd watches from a stone wall and gives no opinion; the steward takes it as approval.",
+  "A line of carts brings tools to the new posting before the writ has fully dried.",
+  "The blacksmith brings a new hinge for the boundary gate; it is mounted before the writ is signed.",
+  "A boy is sent to fetch the manor's seal; he runs both ways and arrives back panting but proud.",
+  "The steward's seal cracks the wax in the shape of a small wheel; the writ is filed.",
+  "A hand-cart of stakes and rope is unloaded at the boundary; the laying-out begins immediately.",
+  "An apothecary tests the soil one last time, finds it suitable, and signs the second clause of the writ.",
+  "Three farmers from the village offer to do the boundary fencing; the steward writes their names down.",
+  "A pair of oxen is led onto the new field for the first ploughing; they accept the work without fuss.",
+  "The senior steward inspects the new posting and finds it acceptable; she says so without smiling.",
+  "A stack of timber is unloaded at the corner of the new field; the framing crew arrives within the hour.",
+  "An old veteran salutes the new boundary marker on his way past; the steward returns the salute.",
+  "The clerk records the new use in the regional ledger and signs it twice for the records department's pleasure.",
+  "A small dog watches the steward sign the writ; the steward gives it a piece of bread and the dog leaves.",
+];
+
+export const DISTRIBUTE_NARRATIVES: string[] = [
+  ...HUMAN_DISTRIBUTE_NARRATIVES,
+  ...AI_DISTRIBUTE_NARRATIVES,
 ];
