@@ -18,10 +18,26 @@ interface PlayerResponse {
   error?: string;
 }
 
+interface EligibilityResponse {
+  success: boolean;
+  githubLogin: string | null;
+  mergedPrCountThisWeek: number;
+  nextRolloverIso: string;
+  windowStartIso: string;
+  error?: { message?: string } | string;
+}
+
+interface Eligibility {
+  githubLogin: string | null;
+  mergedPrCountThisWeek: number;
+  nextRolloverIso: string;
+}
+
 export default function GameDashboardPage() {
   const { user, loading: authLoading } = useAuth();
   const [player, setPlayer] = useState<GamePlayer | null>(null);
   const [tiles, setTiles] = useState<GameTile[]>([]);
+  const [eligibility, setEligibility] = useState<Eligibility | null>(null);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,13 +51,26 @@ export default function GameDashboardPage() {
     setLoading(true);
     try {
       const token = await user.getIdToken();
-      const res = await fetch("/api/game/player", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = (await res.json()) as PlayerResponse;
+      const [playerRes, elgRes] = await Promise.all([
+        fetch("/api/game/player", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch("/api/game/eligibility", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
+      const data = (await playerRes.json()) as PlayerResponse;
       if (!data.success) throw new Error(data.error ?? "Failed to load player");
       setPlayer(data.player);
       setTiles(data.tiles ?? []);
+      const elgData = (await elgRes.json()) as EligibilityResponse;
+      if (elgData.success) {
+        setEligibility({
+          githubLogin: elgData.githubLogin,
+          mergedPrCountThisWeek: elgData.mergedPrCountThisWeek,
+          nextRolloverIso: elgData.nextRolloverIso,
+        });
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load player");
     } finally {
@@ -205,6 +234,8 @@ export default function GameDashboardPage() {
           )}
         </div>
 
+        {eligibility && <EligibilityBanner eligibility={eligibility} />}
+
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <Stat label="Phase" value={player.phase} />
           <Stat
@@ -244,6 +275,12 @@ export default function GameDashboardPage() {
             </>
           )}
           <Link
+            href="/game/artifacts"
+            className="px-5 py-2.5 border border-neutral-300 dark:border-neutral-700 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+          >
+            Artifacts
+          </Link>
+          <Link
             href="/game/leaderboard"
             className="px-5 py-2.5 border border-neutral-300 dark:border-neutral-700 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
           >
@@ -269,6 +306,92 @@ function Stat({ label, value }: { label: string; value: string }) {
         {label}
       </div>
       <div className="text-lg font-semibold capitalize">{value}</div>
+    </div>
+  );
+}
+
+function formatCountdown(msRemaining: number): string {
+  if (msRemaining <= 0) return "any moment now";
+  const totalSeconds = Math.floor(msRemaining / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (days > 0) return `${days}d ${hours}h ${minutes}m`;
+  if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`;
+  return `${minutes}m ${seconds}s`;
+}
+
+function EligibilityBanner({ eligibility }: { eligibility: Eligibility }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const rolloverAt = new Date(eligibility.nextRolloverIso).getTime();
+  const remaining = rolloverAt - now;
+  const eligible = eligibility.mergedPrCountThisWeek > 0;
+  const githubConnected = eligibility.githubLogin !== null;
+
+  if (!githubConnected) {
+    return (
+      <div className="mb-6 rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 p-4 text-sm leading-relaxed">
+        <div className="flex items-baseline justify-between gap-3 mb-1">
+          <strong className="text-amber-900 dark:text-amber-200">
+            ⚠ GitHub not connected
+          </strong>
+          <span className="text-xs text-amber-800 dark:text-amber-300 font-mono shrink-0">
+            Next rollover: {formatCountdown(remaining)}
+          </span>
+        </div>
+        <p className="text-amber-900 dark:text-amber-200">
+          Generals earns turns by tracking PRs you merge into this repo. Without
+          a connected GitHub account, the rollover can&apos;t see your merges.{" "}
+          <Link
+            href="/profile"
+            className="underline hover:no-underline font-medium"
+          >
+            Connect GitHub on your profile →
+          </Link>
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`mb-6 rounded-lg border p-4 text-sm leading-relaxed ${
+        eligible
+          ? "border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/20"
+          : "border-orange-300 dark:border-orange-700 bg-orange-50 dark:bg-orange-900/20"
+      }`}
+    >
+      <div className="flex items-baseline justify-between gap-3 mb-1">
+        <strong>
+          {eligible ? "✓" : "✗"} GitHub connected as{" "}
+          <span className="font-mono">{eligibility.githubLogin}</span>
+        </strong>
+        <span className="text-xs font-mono shrink-0">
+          Next rollover: {formatCountdown(remaining)}
+        </span>
+      </div>
+      {eligible ? (
+        <p>
+          You&apos;ve merged{" "}
+          <strong>
+            {eligibility.mergedPrCountThisWeek} PR
+            {eligibility.mergedPrCountThisWeek === 1 ? "" : "s"}
+          </strong>{" "}
+          this week. You&apos;ll receive 100 turns at the next rollover.
+        </p>
+      ) : (
+        <p>
+          You haven&apos;t merged a PR this week yet. Merge at least one before
+          the rollover (Sunday 00:00 EST) to earn 100 turns next week. No PR,
+          no turns.
+        </p>
+      )}
     </div>
   );
 }

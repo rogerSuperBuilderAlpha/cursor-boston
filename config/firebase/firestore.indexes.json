@@ -298,6 +298,14 @@
         { "fieldPath": "defenderId", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "game_artifacts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "ownerId", "order": "ASCENDING" },
+        { "fieldPath": "foundAtTurn", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

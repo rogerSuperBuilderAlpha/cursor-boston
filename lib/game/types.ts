@@ -152,6 +152,73 @@ export interface CombatTileInput {
   upgradeIds: string[];
 }
 
+// ──── v2: Artifacts (single-use, caste-agnostic, found on turn-spend) ────
+
+export type ArtifactRarity = "common" | "rare" | "epic" | "legendary";
+
+export type ArtifactType = "offense" | "defense" | "production" | "utility";
+
+export interface ArtifactDefinition {
+  id: string;
+  name: string;
+  rarity: ArtifactRarity;
+  type: ArtifactType;
+  // Strength applied when the artifact is used. Larger than caste spell
+  // baseStrength on average — these are supposed to be lucky breaks.
+  baseStrength: number;
+  description: string;
+  // One-line narrative when found and when used. Used by turn-report builders
+  // to produce flavor text without needing a separate lookup.
+  flavorOnFind: string;
+}
+
+export interface GameArtifact {
+  id: string; // instance id (uuid)
+  ownerId: string;
+  definitionId: string;
+  rarity: ArtifactRarity;
+  type: ArtifactType;
+  foundAtTurn: number;
+  foundDuringAction: string; // "explore" | "build" | "spell-arm" | etc.
+  used: boolean;
+  usedAtTurn?: number;
+  usedOnTileId?: string;
+  createdAt: Timestamp | Date;
+  updatedAt: Timestamp | Date;
+}
+
+// ──── v2: Turn reports ────
+
+export type TurnAction =
+  | "explore"
+  | "build"
+  | "distribute"
+  | "spell-arm"
+  | "spell-produce"
+  | "attack";
+
+export interface TurnReport {
+  // The player.turnsSpentTotal at the time this report was generated.
+  turnIndex: number;
+  action: TurnAction;
+  // How many turns this single report represents (1 for most actions; up to
+  // 6 for an attack that included an offense spell).
+  cost: number;
+  // One-line headline for the action.
+  summary: string;
+  // 1–4 lines of prose narrative.
+  narrative: string[];
+  // Structured outcome payload — interpreted by UI as needed.
+  outcome: Record<string, unknown>;
+  // Set when the player rolled an artifact this turn.
+  artifactFound?: {
+    definitionId: string;
+    name: string;
+    rarity: ArtifactRarity;
+    type: ArtifactType;
+  };
+}
+
 export interface CombatResult {
   outcome: AttackOutcome;
   unitsDeployed: UnitStack;
