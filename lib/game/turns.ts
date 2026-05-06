@@ -79,7 +79,17 @@ export function currentEligibilityWindow(
   return { start, end };
 }
 
-export function newPlayer(userId: string, createdAt: Date = new Date()): GamePlayer {
+export interface NewPlayerOptions {
+  initialPhase?: Phase;
+  tilesHeld?: number;
+  tilesExplored?: number;
+}
+
+export function newPlayer(
+  userId: string,
+  createdAt: Date = new Date(),
+  options: NewPlayerOptions = {}
+): GamePlayer {
   const shieldUntil = new Date(
     createdAt.getTime() + SHIELD_DURATION_WEEKS * 7 * MS_PER_DAY
   );
@@ -88,15 +98,15 @@ export function newPlayer(userId: string, createdAt: Date = new Date()): GamePla
     caste: null,
     turnsRemaining: WEEKLY_TURN_GRANT,
     turnsSpentTotal: 0,
-    phase: "explore",
-    tilesExplored: 0,
+    phase: options.initialPhase ?? "explore",
+    tilesExplored: options.tilesExplored ?? 0,
     shieldUntil,
     shieldDropAtTurn: SHIELD_TURN_THRESHOLD,
     productionSpellsActive: [],
     stats: {
       attacksWon: 0,
       attacksLost: 0,
-      tilesHeld: 100,
+      tilesHeld: options.tilesHeld ?? 100,
       unitsAlive: 0,
     },
     createdAt,

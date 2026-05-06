@@ -52,9 +52,18 @@ import type {
 import {
   axialFromTileId,
   neighborTileIds,
+  neighbors as axialNeighbors,
   spawnCenterForPlayerIndex,
   spawnPlayerLands,
+  tileIdFromAxial,
 } from "./world-gen";
+import {
+  type FrontierSample,
+  distanceToNearestOwned,
+  hexCentroid,
+  ringCoords,
+  riskScore,
+} from "./exploration";
 
 export const ATTACK_TURN_COST = 1;
 export const SPELL_TURN_COST = 5;
@@ -185,6 +194,26 @@ export class GameTileTypeError extends Error {
     this.name = "GameTileTypeError";
   }
 }
+export class GameFrontierExhaustedError extends Error {
+  constructor() {
+    super(
+      "Could not find an unclaimed tile on the frontier. The world is unusually crowded near you."
+    );
+    this.name = "GameFrontierExhaustedError";
+  }
+}
+export class GameArtifactNotFoundError extends Error {
+  constructor() {
+    super("Artifact not found");
+    this.name = "GameArtifactNotFoundError";
+  }
+}
+export class GameArtifactAlreadyUsedError extends Error {
+  constructor() {
+    super("Artifact has already been used");
+    this.name = "GameArtifactAlreadyUsedError";
+  }
+}
 
 const COLLECTIONS = {
   PLAYERS: "game_players",
@@ -278,8 +307,15 @@ export async function getTileServer(tileId: string): Promise<GameTile | null> {
   return snap.exists ? (snap.data() as GameTile) : null;
 }
 
-// Atomic spawn: claims 100 tiles for a brand-new player. Bumps a global
-// player-count cursor so two parallel spawns get different centers.
+// v2 — new players spawn with 25 already-revealed unassigned tiles, skipping
+// the v1 "explore" phase entirely. Existing v1 player records aren't touched.
+export const NEW_PLAYER_TILE_COUNT = 25;
+const NEW_PLAYER_CONTIGUOUS = 20;
+const NEW_PLAYER_EXCLAVES_MIN = 3;
+const NEW_PLAYER_EXCLAVES_MAX = 5;
+
+// Atomic spawn for a brand-new player. Bumps a global player-count cursor so
+// parallel spawns land on different centers.
 export async function createPlayerWithSpawnServer(
   userId: string,
   now: Date = new Date()
@@ -305,9 +341,19 @@ export async function createPlayerWithSpawnServer(
       center,
       claimedTileIds: new Set<string>(),
       rng: makeSeededRng(seed),
+      totalTiles: NEW_PLAYER_TILE_COUNT,
+      contiguousTarget: NEW_PLAYER_CONTIGUOUS,
+      exclavesMin: NEW_PLAYER_EXCLAVES_MIN,
+      exclavesMax: NEW_PLAYER_EXCLAVES_MAX,
     });
 
-    const player = newPlayer(userId, now);
+    const player = newPlayer(userId, now, {
+      // Skip the v1 "explore" phase entirely — new players land in
+      // distribute with all their tiles already revealed.
+      initialPhase: "distribute",
+      tilesHeld: spawn.tileIds.length,
+      tilesExplored: spawn.tileIds.length,
+    });
     tx.set(playerRef, player);
 
     for (const tileId of spawn.tileIds) {
@@ -318,12 +364,13 @@ export async function createPlayerWithSpawnServer(
         q,
         r,
         ownerId: userId,
-        type: "unrevealed" as LandType,
+        type: "unassigned" as LandType,
         level: 0,
         units: { ground: 0, siege: 0, air: 0 },
         armedDefenseSpellId: null,
         neighborTileIds: neighborTileIds(q, r),
         upgradeIds: [],
+        revealedAt: now,
         createdAt: now,
         updatedAt: now,
       });
@@ -1521,4 +1568,260 @@ export async function getPlayerEligibilityServer(
     nextRolloverIso: next.toISOString(),
     windowStartIso: window.start.toISOString(),
   };
+}
+
+// Maximum hex rings to scan when looking for an unclaimed frontier tile.
+// At our spacing this is roomy. If still nothing, refund the turn.
+const FRONTIER_MAX_RINGS = 12;
+
+/**
+ * Pick an unclaimed tile coord adjacent to the player's territory and return
+ * a FrontierSample describing it (distance, hostile-neighbor count, risk).
+ *
+ * The pre-fetch happens outside the transaction; the caller re-validates the
+ * pick is still unclaimed inside the transaction. Returns null if no
+ * unclaimed coord is found within FRONTIER_MAX_RINGS.
+ */
+async function pickFrontierCandidate(
+  db: Firestore,
+  userId: string,
+  ownedTileIds: ReadonlyArray<string>,
+  tilesHeld: number,
+  rng: () => number
+): Promise<FrontierSample | null> {
+  const center = hexCentroid([...ownedTileIds]);
+  const minRing = Math.max(1, 1 + Math.floor(tilesHeld / 40));
+
+  // Walk outward from minRing. For each ring, batch-getAll the coords and
+  // pick the first unclaimed one. Then a second getAll to count hostile
+  // neighbors at that coord.
+  for (let r = minRing; r <= FRONTIER_MAX_RINGS; r++) {
+    const coords = ringCoords(center, r);
+    // In-place shuffle so direction varies. Fisher-Yates with our seeded rng.
+    for (let i = coords.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      [coords[i], coords[j]] = [coords[j], coords[i]];
+    }
+    if (coords.length === 0) continue;
+
+    const refs = coords.map((c) =>
+      db.collection(COLLECTIONS.TILES).doc(tileIdFromAxial(c.q, c.r))
+    );
+    const snaps = await db.getAll(...refs);
+
+    for (let i = 0; i < snaps.length; i++) {
+      if (snaps[i].exists) continue;
+      const c = coords[i];
+      const tileId = tileIdFromAxial(c.q, c.r);
+
+      // Count hostile neighbors. getAll for the 6 neighbor refs.
+      const ns = axialNeighbors(c.q, c.r);
+      const neighborRefs = ns.map((n) =>
+        db.collection(COLLECTIONS.TILES).doc(tileIdFromAxial(n.q, n.r))
+      );
+      const neighborSnaps = await db.getAll(...neighborRefs);
+      let hostileCount = 0;
+      for (const ns of neighborSnaps) {
+        if (!ns.exists) continue;
+        const data = ns.data();
+        if (data && data.ownerId && data.ownerId !== userId) hostileCount++;
+      }
+
+      const distance = distanceToNearestOwned(c, [...ownedTileIds]);
+      const distanceFinite = Number.isFinite(distance) ? distance : 0;
+      return {
+        tile: c,
+        tileId,
+        distanceToCore: distanceFinite,
+        hostileNeighbors: hostileCount,
+        riskScore: riskScore({
+          hostileNeighbors: hostileCount,
+          distanceToCore: distanceFinite,
+        }),
+      };
+    }
+  }
+  return null;
+}
+
+/**
+ * Play-phase generative explore. Spends 1 turn to claim a brand-new tile
+ * adjacent to (or near) the player's territory. The further out the player
+ * pushes, the more likely the tile spawns next to enemy territory.
+ */
+export async function frontierExploreServer(
+  userId: string,
+  now: Date = new Date()
+): Promise<{
+  player: GamePlayer;
+  tile: GameTile;
+  report: TurnReport;
+  frontier: FrontierSample;
+}> {
+  const db = adminDbOrThrow();
+
+  // Pre-fetch outside txn: player's owned tiles for centroid + tilesHeld.
+  const ownedSnap = await db
+    .collection(COLLECTIONS.TILES)
+    .where("ownerId", "==", userId)
+    .get();
+  const ownedTileIds = ownedSnap.docs.map((d) => d.id);
+
+  // Seeded RNG for candidate picking; includes turn count so identical state
+  // doesn't always pick the same direction.
+  const playerSnapPre = await db
+    .collection(COLLECTIONS.PLAYERS)
+    .doc(userId)
+    .get();
+  if (!playerSnapPre.exists) throw new GamePlayerNotFoundError();
+  const playerPre = playerSnapPre.data() as GamePlayer;
+  const candidateRng = makeSeededRng(
+    `frontier:${userId}:${playerPre.turnsSpentTotal}`
+  );
+
+  const sample = await pickFrontierCandidate(
+    db,
+    userId,
+    ownedTileIds,
+    playerPre.stats.tilesHeld,
+    candidateRng
+  );
+  if (sample === null) throw new GameFrontierExhaustedError();
+
+  const tileRef = db.collection(COLLECTIONS.TILES).doc(sample.tileId);
+  const playerRef = db.collection(COLLECTIONS.PLAYERS).doc(userId);
+
+  return db.runTransaction(async (tx) => {
+    const [tileSnap, playerSnap] = await Promise.all([
+      tx.get(tileRef),
+      tx.get(playerRef),
+    ]);
+    if (!playerSnap.exists) throw new GamePlayerNotFoundError();
+
+    const player = playerSnap.data() as GamePlayer;
+    if (player.phase !== "play") {
+      throw new GameInvalidPhaseError("play", player.phase);
+    }
+    if (player.turnsRemaining < 1) {
+      throw new GameInsufficientTurnsError(1, player.turnsRemaining);
+    }
+    // Race: the candidate may have been claimed since we picked it.
+    if (tileSnap.exists) {
+      throw new GameFrontierExhaustedError();
+    }
+
+    const turnsSpentTotal = player.turnsSpentTotal + 1;
+    const artifact = rollAndStageArtifact(
+      tx,
+      db,
+      userId,
+      turnsSpentTotal,
+      "explore",
+      now
+    );
+
+    const tile: GameTile = {
+      tileId: sample.tileId,
+      q: sample.tile.q,
+      r: sample.tile.r,
+      ownerId: userId,
+      type: "unassigned",
+      level: 0,
+      units: { ground: 0, siege: 0, air: 0 },
+      armedDefenseSpellId: null,
+      neighborTileIds: neighborTileIds(sample.tile.q, sample.tile.r),
+      upgradeIds: [],
+      revealedAt: now,
+      createdAt: now,
+      updatedAt: now,
+    };
+    tx.set(tileRef, tile);
+
+    const updatedStats = {
+      ...player.stats,
+      tilesHeld: player.stats.tilesHeld + 1,
+    };
+    tx.update(playerRef, {
+      turnsRemaining: player.turnsRemaining - 1,
+      turnsSpentTotal,
+      stats: updatedStats,
+      updatedAt: now,
+    });
+
+    const report = buildExploreReport(
+      turnsSpentTotal,
+      tile,
+      artifact,
+      makeNarrativeRng(userId, turnsSpentTotal, "explore")
+    );
+    // Append a small line surfacing the frontier risk so the player sees the
+    // strategic context inline with the prose.
+    const riskLine =
+      sample.hostileNeighbors > 0
+        ? `Risk ${sample.riskScore}/100 — ${sample.hostileNeighbors} hostile neighbor${sample.hostileNeighbors === 1 ? "" : "s"} (distance from your core: ${sample.distanceToCore} hex${sample.distanceToCore === 1 ? "" : "es"}).`
+        : `Risk ${sample.riskScore}/100 — quiet frontier (distance from your core: ${sample.distanceToCore} hex${sample.distanceToCore === 1 ? "" : "es"}).`;
+    const reportWithRisk: TurnReport = {
+      ...report,
+      narrative: [...report.narrative, riskLine],
+      outcome: { ...report.outcome, frontier: sample },
+    };
+
+    return {
+      player: {
+        ...player,
+        turnsRemaining: player.turnsRemaining - 1,
+        turnsSpentTotal,
+        stats: updatedStats,
+        updatedAt: now,
+      },
+      tile,
+      report: reportWithRisk,
+      frontier: sample,
+    };
+  });
+}
+
+/**
+ * Spend an unused artifact. v2 PR 6c: the artifact is marked used and a
+ * report is returned. Actual gameplay effects (attack/defense bonuses,
+ * production-cap boosts) are deferred to PR 6d — this slice exists so
+ * players can see their inventory drain and the "Use" button does
+ * something coherent. Cost is 0 turns; the artifact itself is the cost.
+ */
+export async function spendArtifactServer(args: {
+  userId: string;
+  artifactId: string;
+  targetTileId?: string | null;
+  now?: Date;
+}): Promise<{ artifact: GameArtifact }> {
+  const now = args.now ?? new Date();
+  const db = adminDbOrThrow();
+  const artifactRef = db.collection(COLLECTIONS.ARTIFACTS).doc(args.artifactId);
+
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(artifactRef);
+    if (!snap.exists) throw new GameArtifactNotFoundError();
+    const artifact = snap.data() as GameArtifact;
+    if (artifact.ownerId !== args.userId) {
+      throw new GameArtifactNotFoundError();
+    }
+    if (artifact.used) throw new GameArtifactAlreadyUsedError();
+
+    // For now the only persisted effect is the used flag. PR 6d will branch
+    // on artifact.type and apply offense/defense/production effects.
+    const updated: GameArtifact = {
+      ...artifact,
+      used: true,
+      usedAtTurn: artifact.foundAtTurn,
+      usedOnTileId: args.targetTileId ?? undefined,
+      updatedAt: now,
+    };
+    tx.update(artifactRef, {
+      used: true,
+      usedAtTurn: artifact.foundAtTurn,
+      ...(args.targetTileId ? { usedOnTileId: args.targetTileId } : {}),
+      updatedAt: now,
+    });
+    return { artifact: updated };
+  });
 }

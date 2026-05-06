@@ -58,6 +58,8 @@ export default function ArtifactsInventoryPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | ArtifactType>("all");
+  const [usingId, setUsingId] = useState<string | null>(null);
+  const [flash, setFlash] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     if (!user) {
@@ -91,6 +93,41 @@ export default function ArtifactsInventoryPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch-on-mount, state set inside async callback
     refresh();
   }, [authLoading, refresh]);
+
+  const spendArtifact = useCallback(
+    async (artifactId: string, name: string) => {
+      if (!user) return;
+      setUsingId(artifactId);
+      setError(null);
+      setFlash(null);
+      try {
+        const token = await user.getIdToken();
+        const res = await fetch("/api/game/artifact/use", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ artifactId }),
+        });
+        const data = await res.json();
+        if (!data.success) {
+          const msg =
+            typeof data.error === "string"
+              ? data.error
+              : data.error?.message ?? "Use failed";
+          throw new Error(msg);
+        }
+        setFlash(`${name} expended.`);
+        await refresh();
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Use failed");
+      } finally {
+        setUsingId(null);
+      }
+    },
+    [user, refresh]
+  );
 
   if (authLoading || loading) {
     return (
@@ -156,13 +193,20 @@ export default function ArtifactsInventoryPage() {
             they&apos;re gone.
           </p>
           <p className="mt-2 text-xs text-neutral-600 dark:text-neutral-400">
-            Activation UI is being built — for now, this page tracks every
-            artifact you&apos;ve found.
+            Use an artifact to expend it from your inventory. Effect bonuses
+            (offense / defense / production multipliers) wire into combat and
+            spell math in the next slice — for now, &quot;Use&quot; just retires
+            the artifact so you can see the inventory drain coherently.
           </p>
         </div>
 
         {error && (
           <p className="mb-4 text-sm text-red-600 dark:text-red-400">{error}</p>
+        )}
+        {flash && (
+          <p className="mb-4 text-sm text-emerald-700 dark:text-emerald-400">
+            {flash}
+          </p>
         )}
 
         <div className="flex flex-wrap gap-2 mb-6">
@@ -231,12 +275,26 @@ export default function ArtifactsInventoryPage() {
                             <p className="text-xs italic text-neutral-500 mb-2">
                               {a.definition.flavorOnFind}
                             </p>
-                            <div className="text-xs text-neutral-500">
+                            <div className="text-xs text-neutral-500 mb-3">
                               Strength <strong>{a.definition.baseStrength}</strong>
                               {" · "}
                               Found turn {a.foundAtTurn}
                               {a.used && " · USED"}
                             </div>
+                            {!a.used && (
+                              <button
+                                onClick={() =>
+                                  spendArtifact(
+                                    a.id,
+                                    a.definition?.name ?? a.definitionId
+                                  )
+                                }
+                                disabled={usingId !== null}
+                                className="w-full px-3 py-1.5 text-xs font-semibold border border-neutral-400 dark:border-neutral-600 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 disabled:opacity-50 transition-colors"
+                              >
+                                {usingId === a.id ? "Using…" : "Use artifact"}
+                              </button>
+                            )}
                           </>
                         )}
                       </div>
