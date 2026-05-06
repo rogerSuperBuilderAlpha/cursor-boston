@@ -110,11 +110,16 @@ export default function GameDashboardPage() {
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center px-6">
-        <div className="max-w-md w-full text-center">
+        <div className="max-w-lg w-full text-center">
           <h1 className="text-3xl font-bold mb-4">Generals</h1>
-          <p className="text-neutral-600 dark:text-neutral-300 mb-6">
-            A turn-based campaign for the cursor-boston community. Sign in to
-            claim a hundred lands and begin building your army.
+          <p className="text-neutral-600 dark:text-neutral-300 mb-3">
+            A turn-based strategy game for the cursor-boston community. Sign in,
+            claim a hundred lands, and contest the world map.
+          </p>
+          <p className="text-neutral-500 dark:text-neutral-400 text-sm mb-6">
+            <strong>The catch:</strong> turns are gated by PR merges. Merge a PR
+            into this repo any time during a week and you&apos;ll receive 100
+            turns the following Sunday at midnight EST. No PR, no turns.
           </p>
           <Link
             href="/login"
@@ -130,12 +135,16 @@ export default function GameDashboardPage() {
   if (!player) {
     return (
       <div className="min-h-screen flex items-center justify-center px-6">
-        <div className="max-w-lg w-full text-center">
+        <div className="max-w-xl w-full text-center">
           <h1 className="text-3xl font-bold mb-4">Begin your campaign</h1>
-          <p className="text-neutral-600 dark:text-neutral-300 mb-6">
-            You haven&apos;t enlisted yet. Pressing the button below will spawn
-            your soul-bond region and seed it with 100 lands.
+          <p className="text-neutral-600 dark:text-neutral-300 mb-3">
+            You haven&apos;t enlisted yet. Pressing the button below will:
           </p>
+          <ul className="text-sm text-neutral-600 dark:text-neutral-400 mb-6 inline-block text-left list-disc ml-5">
+            <li>Claim 100 lands as your starting territory.</li>
+            <li>Grant you 100 starter turns to begin the setup ramp.</li>
+            <li>Drop a 3-week shield over you so no one can attack until you&apos;ve had a chance to develop your forces.</li>
+          </ul>
           {error && (
             <p className="mb-4 text-sm text-red-600 dark:text-red-400">{error}</p>
           )}
@@ -167,6 +176,34 @@ export default function GameDashboardPage() {
         {error && (
           <p className="mb-6 text-sm text-red-600 dark:text-red-400">{error}</p>
         )}
+
+        <div className="rounded-lg border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/10 p-4 mb-6 text-sm leading-relaxed">
+          {player.phase === "explore" && (
+            <p>
+              <strong>You&apos;re in the explore phase.</strong> Each turn you
+              spend on the setup page reveals one of your 100 lands. After all
+              100 are revealed, the game auto-advances to the distribute phase.
+            </p>
+          )}
+          {player.phase === "distribute" && (
+            <p>
+              <strong>You&apos;re in the distribute phase.</strong> Assign each
+              of your 100 lands a role: <em>military</em> (produces units),{" "}
+              <em>food</em> (raises your unit cap), or <em>magic</em>{" "}
+              (multiplies spell strength). Each change costs 1 turn. Pick a
+              caste from the setup page when you&apos;re ready to start playing.
+            </p>
+          )}
+          {player.phase === "play" && (
+            <p>
+              <strong>You&apos;re playing.</strong> Build units on military
+              tiles, arm defense spells, attack bordering enemies. Your shield
+              wall drops once <strong>both</strong> 3 weeks have passed since
+              you enlisted <strong>and</strong> you&apos;ve spent at least 300
+              turns. After that, you can attack and be attacked.
+            </p>
+          )}
+        </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <Stat label="Phase" value={player.phase} />

@@ -95,6 +95,14 @@ export default function LeaderboardPage() {
           <p className="mb-4 text-sm text-red-600 dark:text-red-400">{error}</p>
         )}
 
+        <div className="rounded-lg border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/10 p-4 mb-4 text-sm leading-relaxed">
+          <p>
+            Top 50 generals ranked by tiles held. Conquering a tile bumps your
+            number and drops your opponent&apos;s by the same amount. Your row
+            is highlighted.
+          </p>
+        </div>
+
         {rows.length === 0 ? (
           <p className="text-center text-neutral-500 py-12">No generals yet.</p>
         ) : (

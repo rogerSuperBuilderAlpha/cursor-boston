@@ -88,6 +88,14 @@ export default function AttackLogPage() {
           </Link>
         </div>
 
+        <div className="rounded-lg border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/10 p-4 mb-4 text-sm leading-relaxed">
+          <p>
+            Every attack you launched (<em>sent</em>) or received (<em>received</em>).
+            Each row shows the units sent, the outcome (captured / repelled /
+            stalemate), and casualties on both sides.
+          </p>
+        </div>
+
         <div className="flex gap-2 mb-6">
           {(["all", "sent", "received"] as Side[]).map((s) => (
             <button

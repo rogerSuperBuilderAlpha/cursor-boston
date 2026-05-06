@@ -256,6 +256,19 @@ function OwnTilePanel({
     <div className="space-y-6">
       <section>
         <h2 className="font-semibold mb-3">Build units</h2>
+        <div className="rounded-lg border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/10 p-3 mb-3 text-sm leading-relaxed space-y-1">
+          <p>
+            Each click spends 5 turns and produces 10 units of the chosen type
+            on this tile. Your <strong>total</strong> unit cap is the sum of
+            food-tile contributions plus any active production spells. If
+            you&apos;re at the cap, build will return an error.
+          </p>
+          <p className="text-xs text-neutral-500">
+            <strong>Unit RPS:</strong> Air beats Ground, Ground beats Siege,
+            Siege beats Air. Build a mix or specialize based on what your
+            opponents tend to field.
+          </p>
+        </div>
         {tile.type !== "military" ? (
           <p className="text-sm text-neutral-500">
             Only military tiles can build units. This tile is{" "}
@@ -279,6 +292,15 @@ function OwnTilePanel({
 
       <section>
         <h2 className="font-semibold mb-3">Arm a defense spell</h2>
+        <div className="rounded-lg border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/10 p-3 mb-3 text-sm leading-relaxed">
+          <p>
+            Pre-arming a defense spell costs 5 turns. The spell sits dormant on
+            this tile and triggers <em>automatically</em> the next time the tile
+            is attacked, then is consumed. Spell strength scales with your
+            magic-tile count. Tiles you expect to be attacked are good
+            candidates.
+          </p>
+        </div>
         {tile.type === "unrevealed" ? (
           <p className="text-sm text-neutral-500">Reveal this tile first.</p>
         ) : myDefenseSpells.length === 0 ? (
@@ -369,9 +391,34 @@ function EnemyTilePanel({
   return (
     <div className="space-y-4">
       <h2 className="font-semibold">Launch attack</h2>
+      <div className="rounded-lg border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/10 p-3 text-sm leading-relaxed space-y-1">
+        <p>
+          Pick a source tile that borders this enemy, choose how many ground /
+          siege / air units to send, optionally attach an offense spell.
+          Resolution is instant.
+        </p>
+        <p>
+          <strong>Composition matters most.</strong> Air beats Ground, Ground
+          beats Siege, Siege beats Air; the advantaged type does +50% damage
+          and takes 25% less. So if the defender is heavy siege, send air. If
+          they&apos;re heavy air, send ground. Mirror-matching is usually a bad
+          trade.
+        </p>
+        <p>
+          <strong>Capacity caps your force.</strong> A tile holds at most a
+          fixed number of units (base 500 + adjustments). You can only send up
+          to <em>(target capacity − defender units already there)</em>. Stuffed
+          tiles are unattackable.
+        </p>
+        <p>
+          <strong>If you win,</strong> the tile becomes yours and your
+          surviving attackers garrison it. <strong>If you lose or stalemate,</strong>{" "}
+          your survivors return to the source.
+        </p>
+      </div>
       {profile && (
         <p className="text-xs text-neutral-500">
-          You are <strong className="capitalize">{player.caste}</strong>. Air &gt; Ground &gt; Siege &gt; Air. Compose accordingly.
+          You are <strong className="capitalize">{player.caste}</strong>. Your caste tilts unit and spell strengths.
         </p>
       )}
 
