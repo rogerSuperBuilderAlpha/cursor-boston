@@ -6,7 +6,7 @@
 
 // Stock narrative lines for arming a defense spell on a tile. The line is
 // followed by structured outcome (which spell, which tile).
-export const SPELL_ARM_NARRATIVES: string[] = [
+const HUMAN_SPELL_ARM_NARRATIVES: string[] = [
   "Your battlemages walk the perimeter and chant the syllables that turn dirt into ward.",
   "A circle of salt is laid down by hand; it does not blow away in the wind.",
   "The mage-captain inscribes a sigil into the keystone of the tile and steps back without looking.",
@@ -57,4 +57,37 @@ export const SPELL_ARM_NARRATIVES: string[] = [
   "A child's drawing of a dragon is found tucked under the warded stone. The captain leaves it there.",
   "The captain's hands shake briefly as she finishes the binding. She closes her fist and the trembling stops.",
   "By morning the dew on the warded tile has formed a perfect ring. The villagers know not to step on it.",
+];
+
+const AI_SPELL_ARM_NARRATIVES: string[] = [
+  "An apprentice mage drops her chalk; the captain catches it before it touches the ground and nods her on.",
+  "A copper coin is buried at each of the four corners. None of them tarnish over the course of the binding.",
+  "The mage-captain hums under her breath through the entire working; the apprentices match her on the third measure.",
+  "A torch is lit at sundown and burns through the binding without growing shorter.",
+  "Three runes are carved into a beam above the door; the carver wets her thumb and presses it into the last cut.",
+  "A small boy is sent away with a coin and a warning; he comes back the next morning with both.",
+  "The mage-captain's apprentice reads the third line wrong; the captain corrects her with one finger to the page.",
+  "A wreath of holly is laid against the warded post; it does not wither for the next week.",
+  "The wind around the tile dies as the binding takes; the trees go absolutely still for the count of seven.",
+  "A line of salt is poured along the threshold; it does not blow away even when a cart passes.",
+  "The mage-captain places a single gold coin on the warded stone; it darkens to the color of pewter and stays.",
+  "An owl in a nearby tree hoots three times during the binding; the captain notes the time.",
+  "A scrap of parchment is burned at the corner of the tile; the smoke writes a word in the air, then fades.",
+  "The captain whispers to the warded post; the post is silent, but the captain seems satisfied.",
+  "A bell is rung once at the start of the binding and once at the end; in between there is no sound at all.",
+  "Six candles are lit and arranged in a hexagon; they burn down at exactly the same rate.",
+  "A loop of horsehair is laid over the threshold; the apprentice swears she sees it tighten when the binding takes.",
+  "An iron nail is driven into the post; the smith's apprentice does it on the third strike and the captain nods.",
+  "The mage-captain reads the last line aloud; the air seems to thicken for a heartbeat and then resume its color.",
+  "A small dish of milk is left at the warded stone; in the morning it is dry but not spilled.",
+  "Three colored ribbons are tied to a branch above the post; the colors are red, white, and a green so dark it is almost black.",
+  "An old veteran walks the perimeter once with his hand on the hilt of his sword; he does not draw it.",
+  "The mage-captain unlaces her sleeves to her elbows for the binding; she relaces them after.",
+  "A flat stone is set at the threshold; the captain steps over it and the air resists for an instant.",
+  "Two apprentices hold a length of cord taut across the doorway; the captain cuts it with a single word.",
+];
+
+export const SPELL_ARM_NARRATIVES: string[] = [
+  ...HUMAN_SPELL_ARM_NARRATIVES,
+  ...AI_SPELL_ARM_NARRATIVES,
 ];

@@ -57,4 +57,26 @@ export const EPIC_ARTIFACTS: ArtifactDefinition[] = [
     flavorOnFind:
       "Floating an inch above a stone altar, slowly rotating. It descends into your palm without resistance.",
   },
+  {
+    id: "epic-warding-of-elahor",
+    name: "Warding of Elahor",
+    rarity: "epic",
+    type: "defense",
+    baseStrength: 142,
+    description:
+      "A stone disc carved with a name no living tongue still pronounces.",
+    flavorOnFind:
+      "It is set into the floor of a chapel with no door. Walking out, you find the chapel has no walls either.",
+  },
+  {
+    id: "epic-stewards-key",
+    name: "Steward's Key",
+    rarity: "epic",
+    type: "production",
+    baseStrength: 128,
+    description:
+      "A small iron key that opens any granary it has been blessed for.",
+    flavorOnFind:
+      "Wrapped in oiled cloth, hanging from a peg in a granary that no one has used for forty years. The grain inside is fresh.",
+  },
 ];

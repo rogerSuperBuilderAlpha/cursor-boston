@@ -127,4 +127,56 @@ export const COMMON_ARTIFACTS: ArtifactDefinition[] = [
     flavorOnFind:
       "Tossed at your feet by a one-eyed traveler who simply nods and walks on.",
   },
+  {
+    id: "common-watchmans-whistle",
+    name: "Watchman's Whistle",
+    rarity: "common",
+    type: "defense",
+    baseStrength: 32,
+    description:
+      "A bone whistle whose note carries a mile and turns three corners.",
+    flavorOnFind:
+      "It hangs from a leather cord on a nail in an empty guardhouse. The cord is dry but the nail is fresh.",
+  },
+  {
+    id: "common-mendicants-mantle",
+    name: "Mendicant's Mantle",
+    rarity: "common",
+    type: "utility",
+    baseStrength: 26,
+    description: "A patched cloak that makes the wearer easier to overlook.",
+    flavorOnFind:
+      "A wandering monk leaves it folded on a roadside bench. He is not there to take it back.",
+  },
+  {
+    id: "common-quenchers-flask",
+    name: "Quencher's Flask",
+    rarity: "common",
+    type: "production",
+    baseStrength: 31,
+    description:
+      "A leather flask that fills itself with cold water by morning, every morning.",
+    flavorOnFind:
+      "An old beekeeper presses it into your hand without explanation and asks no payment.",
+  },
+  {
+    id: "common-chipped-warhammer",
+    name: "Chipped Warhammer",
+    rarity: "common",
+    type: "offense",
+    baseStrength: 37,
+    description: "An old hammer with a notch in the head that hits truer than it looks.",
+    flavorOnFind:
+      "It leans against a doorpost in an abandoned smithy, the haft still warm where someone gripped it last.",
+  },
+  {
+    id: "common-strawmans-cloak",
+    name: "Strawman's Cloak",
+    rarity: "common",
+    type: "defense",
+    baseStrength: 34,
+    description: "A scarecrow's cloak, threadbare but oddly bullet-shy.",
+    flavorOnFind:
+      "Hanging from a pole in an empty field. The crows give it a wide berth.",
+  },
 ];

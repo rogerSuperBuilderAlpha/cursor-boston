@@ -8,9 +8,10 @@
 // one line at random (seeded) and may layer on additional structured detail
 // (artifact found, hostile neighbors, etc.) before returning to the client.
 //
-// PR 6a seed: ~60 lines. PR 7 will scale to ~1000 via AI-generated bulk +
-// hand-curated contributor PRs.
-export const EXPLORE_NARRATIVES: string[] = [
+// HUMAN_EXPLORE_NARRATIVES + AI_EXPLORE_NARRATIVES are concatenated into the
+// final EXPLORE_NARRATIVES export. Contributor PRs are encouraged to replace
+// lines from the AI block with hand-curated ones in the HUMAN block.
+const HUMAN_EXPLORE_NARRATIVES: string[] = [
   "Your scouts crest a low ridge and look down on a stretch of land no banner has claimed in living memory.",
   "A trail of cold ash leads your party into a clearing where a single tree grows in the middle of a stone circle.",
   "The fog parts as your column rides through it, revealing a long valley still carrying the morning's first frost.",
@@ -71,4 +72,42 @@ export const EXPLORE_NARRATIVES: string[] = [
   "Your scouts find a stack of cut firewood, neatly arranged, beside a hearth that has not been used in a generation.",
   "The land here is gentle, well-watered, and oddly empty — the kind of place that should have been settled, and wasn't.",
   "Your party crosses an old battlefield. The grass grows greener on certain patches, and your captain insists everyone ride single file.",
+];
+
+const AI_EXPLORE_NARRATIVES: string[] = [
+  "A field of barley stands waist-high in the wind, planted by no one your scouts can name.",
+  "Three crossed pikes lean against a tree, polished to a soft shine. No one is in sight.",
+  "Your column tops a rise and finds the road below split in three; only one branch shows fresh wear.",
+  "A salt road runs east-west through this land, narrower than a cart-width and beaten flat.",
+  "The captain's horse pauses at the boundary line, then walks on without urging.",
+  "A wooden idol with a flat-eyed face watches the road from a wayside post; your scouts give it a wide berth.",
+  "Snowmelt has cut a new channel through the meadow; a heron stands in it, waiting.",
+  "An apple core sits on a fencepost. No tree in sight, and the core is fresh.",
+  "A flat stone in the center of the meadow has lines carved in it that look like a calendar.",
+  "Your scouts find a wooden crow nailed to a tree and decide not to ask.",
+  "A line of swallows skims the road ahead of your column, marking the way for as long as the road runs straight.",
+  "The land here used to be terraced. The terraces have softened with time but not disappeared.",
+  "A coil of fishing-line is wrapped around a thornbush at the side of the road, neat as a present.",
+  "The captain's scout returns with a cracked clay pipe; she keeps it for luck.",
+  "An old cow grazes at the boundary; she watches your column pass without blinking, chewing slowly.",
+  "A trail of brass thimbles leads from the wood to the road. The captain has theories.",
+  "A goat trail switchbacks up the western face of this land, used recently and often.",
+  "Your scouts report a three-pace ring of mushrooms in the meadow that wasn't there yesterday.",
+  "The wind here is so steady that the grass leans the same direction even at midday.",
+  "A child's chalk drawing on a flat rock shows a sun, a horse, and a man with a sword. The drawing is fresh.",
+  "Two roads cross at the heart of this land. Only one is on any of your maps.",
+  "An iron-bound trunk sits half-buried at the foot of an oak; you mark its position and leave it.",
+  "A spring rises here in three small jets that hit the same arc of stones each time.",
+  "The captain finds a clay tile inscribed with a single word in a script no one in the column can read.",
+  "A flock of geese rises from the marsh as your column passes; they fly a perfect V northwest.",
+  "An empty wagon-wheel sits on the side of the road, oiled, ready, and waiting for a wagon that hasn't come.",
+  "Your scouts find an iron horseshoe on a stump; the nails are new, the shoe is old.",
+  "A line of bees crosses the road every quarter mile, all heading the same direction.",
+  "Three willow saplings have been planted at the corner of a field, marking something that no longer needs a marker.",
+  "The captain's lead rider waves the column to a halt: a small herd of deer crossing in single file, taking their time.",
+];
+
+export const EXPLORE_NARRATIVES: string[] = [
+  ...HUMAN_EXPLORE_NARRATIVES,
+  ...AI_EXPLORE_NARRATIVES,
 ];
