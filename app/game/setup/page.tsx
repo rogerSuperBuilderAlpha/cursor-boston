@@ -9,7 +9,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import type { Caste, GamePlayer, GameTile, LandType } from "@/lib/game/types";
+import type { Caste, GamePlayer, MapTile, LandType } from "@/lib/game/types";
 
 const CASTES: Caste[] = ["white", "blue", "black", "red", "green"];
 const DISTRIBUTABLE: LandType[] = ["military", "food", "magic"];
@@ -17,7 +17,7 @@ const DISTRIBUTABLE: LandType[] = ["military", "food", "magic"];
 interface PlayerResponse {
   success: boolean;
   player: GamePlayer | null;
-  tiles: GameTile[];
+  tiles: MapTile[];
   error?: string;
 }
 
@@ -38,7 +38,7 @@ interface RevealLog {
 export default function GameSetupPage() {
   const { user, loading: authLoading } = useAuth();
   const [player, setPlayer] = useState<GamePlayer | null>(null);
-  const [tiles, setTiles] = useState<GameTile[]>([]);
+  const [tiles, setTiles] = useState<MapTile[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -260,7 +260,7 @@ function ExplorePanel({
   onExploreBatch,
 }: {
   player: GamePlayer;
-  tiles: GameTile[];
+  tiles: MapTile[];
   busy: boolean;
   recentReveals: RevealLog[];
   batchProgress: { done: number; total: number } | null;
@@ -405,7 +405,7 @@ function DistributePanel({
   onDistribute,
   onChooseCaste,
 }: {
-  tiles: GameTile[];
+  tiles: MapTile[];
   busy: boolean;
   onDistribute: (tileId: string, type: LandType) => void;
   onChooseCaste: (caste: Caste) => void;

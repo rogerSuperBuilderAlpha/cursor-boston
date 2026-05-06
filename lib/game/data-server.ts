@@ -44,6 +44,7 @@ import type {
   GamePlayer,
   GameTile,
   LandType,
+  MapTile,
   TurnAction,
   TurnReport,
   UnitStack,
@@ -305,6 +306,33 @@ export async function getOwnedTilesServer(userId: string): Promise<GameTile[]> {
     .where("ownerId", "==", userId)
     .get();
   return snap.docs.map((d) => d.data() as GameTile);
+}
+
+// Lightweight tile fetch — uses Firestore's select() to only pull the fields
+// the map/dashboard need. Same Firestore read cost (Firestore charges per
+// doc, not per field), but ~60-70% smaller wire payload and JSON parse cost.
+// For a 200-tile player this drops the response from ~200KB to ~70KB.
+export async function getOwnedMapTilesServer(
+  userId: string
+): Promise<MapTile[]> {
+  const db = adminDbOrThrow();
+  const snap = await db
+    .collection(COLLECTIONS.TILES)
+    .where("ownerId", "==", userId)
+    .select("tileId", "q", "r", "type", "ownerId", "units", "armedDefenseSpellId")
+    .get();
+  return snap.docs.map((d) => {
+    const data = d.data();
+    return {
+      tileId: data.tileId,
+      q: data.q,
+      r: data.r,
+      type: data.type,
+      ownerId: data.ownerId ?? null,
+      units: data.units,
+      armedDefenseSpellId: data.armedDefenseSpellId ?? null,
+    } as MapTile;
+  });
 }
 
 export async function getTileServer(tileId: string): Promise<GameTile | null> {

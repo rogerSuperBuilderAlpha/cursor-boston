@@ -16,7 +16,7 @@ import {
 } from "@/lib/game/turns";
 import type {
   GamePlayer,
-  GameTile,
+  MapTile,
   TurnReport,
   UnitType,
 } from "@/lib/game/types";
@@ -29,7 +29,7 @@ interface PlayerResponseError {
 interface PlayerResponse {
   success: boolean;
   player: GamePlayer | null;
-  tiles: GameTile[];
+  tiles: MapTile[];
   error?: PlayerResponseError | string;
 }
 
@@ -39,7 +39,7 @@ const TURNS_PER_CYCLE = 5;
 export default function RecruitPage() {
   const { user, loading: authLoading } = useAuth();
   const [player, setPlayer] = useState<GamePlayer | null>(null);
-  const [tiles, setTiles] = useState<GameTile[]>([]);
+  const [tiles, setTiles] = useState<MapTile[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);

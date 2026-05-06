@@ -11,15 +11,15 @@ import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import type {
   GamePlayer,
-  GameTile,
   LandType,
+  MapTile,
   TurnReport,
 } from "@/lib/game/types";
 
 interface PlayerResponse {
   success: boolean;
   player: GamePlayer | null;
-  tiles: GameTile[];
+  tiles: MapTile[];
   error?: string;
 }
 
@@ -41,7 +41,7 @@ interface Eligibility {
 export default function GameDashboardPage() {
   const { user, loading: authLoading } = useAuth();
   const [player, setPlayer] = useState<GamePlayer | null>(null);
-  const [tiles, setTiles] = useState<GameTile[]>([]);
+  const [tiles, setTiles] = useState<MapTile[]>([]);
   const [eligibility, setEligibility] = useState<Eligibility | null>(null);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -189,7 +189,7 @@ export default function GameDashboardPage() {
     async (
       targetType: LandType,
       count: number,
-      sourceFilter: (t: GameTile) => boolean,
+      sourceFilter: (t: MapTile) => boolean,
       sourceLabel: string
     ) => {
       if (!user) return;
@@ -740,7 +740,7 @@ function BulkUnassign({
   progress,
   onRun,
 }: {
-  tiles: GameTile[];
+  tiles: MapTile[];
   turnsRemaining: number;
   busy: boolean;
   progress: { done: number; total: number; artifactsFound: number } | null;

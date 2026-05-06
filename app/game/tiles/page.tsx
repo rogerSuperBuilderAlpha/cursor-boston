@@ -10,12 +10,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import type { GamePlayer, GameTile, LandType } from "@/lib/game/types";
+import type { GamePlayer, MapTile, LandType } from "@/lib/game/types";
 
 interface PlayerResponse {
   success: boolean;
   player: GamePlayer | null;
-  tiles: GameTile[];
+  tiles: MapTile[];
   error?: string;
 }
 
@@ -87,11 +87,11 @@ const TYPE_TEXT: Record<LandType, string> = {
 export default function TilesMapPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const [tiles, setTiles] = useState<GameTile[]>([]);
+  const [tiles, setTiles] = useState<MapTile[]>([]);
   const [player, setPlayer] = useState<GamePlayer | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<LandType | "all">("all");
-  const [hovered, setHovered] = useState<GameTile | null>(null);
+  const [hovered, setHovered] = useState<MapTile | null>(null);
 
   const refresh = useCallback(async () => {
     if (!user) {
