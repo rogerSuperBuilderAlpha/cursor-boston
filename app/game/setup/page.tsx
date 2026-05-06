@@ -21,6 +21,12 @@ interface PlayerResponse {
   error?: string;
 }
 
+interface RevealLog {
+  tileId: string;
+  type: LandType;
+  at: number; // Date.now()
+}
+
 export default function GameSetupPage() {
   const { user, loading: authLoading } = useAuth();
   const [player, setPlayer] = useState<GamePlayer | null>(null);
@@ -28,6 +34,8 @@ export default function GameSetupPage() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [recentReveals, setRecentReveals] = useState<RevealLog[]>([]);
+  const [batchProgress, setBatchProgress] = useState<{ done: number; total: number } | null>(null);
 
   const refresh = useCallback(async () => {
     setError(null);
@@ -86,6 +94,55 @@ export default function GameSetupPage() {
     [user, refresh]
   );
 
+  const runExploreBatch = useCallback(
+    async (count: number) => {
+      if (!user) return;
+      const total = Math.max(1, Math.min(100, Math.floor(count)));
+      setBusy(true);
+      setError(null);
+      setBatchProgress({ done: 0, total });
+      const collected: RevealLog[] = [];
+      try {
+        const token = await user.getIdToken();
+        for (let i = 0; i < total; i++) {
+          const res = await fetch("/api/game/setup/explore", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          const data = await res.json();
+          if (!data.success) {
+            const msg =
+              data.error?.message ?? data.error ?? "Exploration failed";
+            // out of turns or auto-advanced — stop cleanly
+            setError(`Stopped at ${i} / ${total}: ${msg}`);
+            break;
+          }
+          if (data.tile) {
+            collected.push({
+              tileId: data.tile.tileId,
+              type: data.tile.type,
+              at: Date.now(),
+            });
+          }
+          setBatchProgress({ done: i + 1, total });
+        }
+        setRecentReveals((prev) =>
+          [...collected.reverse(), ...prev].slice(0, 50)
+        );
+        await refresh();
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Action failed");
+      } finally {
+        setBusy(false);
+        setBatchProgress(null);
+      }
+    },
+    [user, refresh]
+  );
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -117,14 +174,18 @@ export default function GameSetupPage() {
   return (
     <div className="min-h-screen py-12 px-6">
       <div className="max-w-4xl mx-auto">
-        <div className="flex items-baseline justify-between mb-6">
+        <Link
+          href="/game"
+          className="inline-flex items-center gap-2 mb-6 px-4 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-sm font-medium"
+        >
+          ← Back to dashboard
+        </Link>
+        <div className="mb-6">
           <h1 className="text-3xl font-bold">Setup</h1>
-          <Link
-            href="/game"
-            className="text-sm text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
-          >
-            ← Dashboard
-          </Link>
+          <p className="text-sm text-neutral-500 mt-1">
+            Finish the setup ramp here, then return to the dashboard to manage
+            tiles, build units, and attack.
+          </p>
         </div>
 
         <div className="mb-6 flex flex-wrap gap-4 text-sm">
@@ -142,7 +203,9 @@ export default function GameSetupPage() {
             player={player}
             tiles={tiles}
             busy={busy}
-            onExplore={() => callApi("/api/game/setup/explore")}
+            recentReveals={recentReveals}
+            batchProgress={batchProgress}
+            onExploreBatch={runExploreBatch}
           />
         )}
 
@@ -181,36 +244,116 @@ function ExplorePanel({
   player,
   tiles,
   busy,
-  onExplore,
+  recentReveals,
+  batchProgress,
+  onExploreBatch,
 }: {
   player: GamePlayer;
   tiles: GameTile[];
   busy: boolean;
-  onExplore: () => void;
+  recentReveals: RevealLog[];
+  batchProgress: { done: number; total: number } | null;
+  onExploreBatch: (count: number) => void;
 }) {
   const unrevealed = tiles.filter((t) => t.type === "unrevealed").length;
+  const [batchInput, setBatchInput] = useState<string>("10");
+  const parsedBatch = Math.max(
+    1,
+    Math.min(
+      Math.min(unrevealed, player.turnsRemaining, 100),
+      Number.parseInt(batchInput, 10) || 1
+    )
+  );
+  const noTurns = player.turnsRemaining < 1;
+  const allRevealed = unrevealed === 0;
+
   return (
     <div>
       <div className="rounded-lg border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/10 p-4 mb-4 text-sm leading-relaxed">
         <p className="font-semibold mb-1">Step 1 of 3 — Explore</p>
         <p>
-          You spawned with 100 lands hidden under fog. Each click below burns 1
-          turn and reveals one of them. You won&apos;t see which tile gets
-          revealed in advance — exploration is blind, just like first-time
-          scouts. Once all 100 are revealed, you&apos;ll automatically move on
-          to the distribute phase.
+          You spawned with 100 lands hidden under fog. Each turn spent reveals
+          one of them. Use the batch input below to spend many turns at once —
+          handy if you want to blast through the setup ramp quickly. Once all
+          100 are revealed, you&apos;ll automatically move on to the distribute
+          phase.
         </p>
       </div>
       <p className="mb-4 text-sm text-neutral-600 dark:text-neutral-300">
-        {unrevealed} land{unrevealed === 1 ? "" : "s"} remain unrevealed.
+        <strong>{unrevealed}</strong> land{unrevealed === 1 ? "" : "s"} remain
+        unrevealed. You have <strong>{player.turnsRemaining}</strong> turns
+        available.
       </p>
-      <button
-        onClick={onExplore}
-        disabled={busy || player.turnsRemaining < 1 || unrevealed === 0}
-        className="px-6 py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-400 transition-colors disabled:opacity-50"
-      >
-        {busy ? "Revealing…" : "Explore next tile (1 turn)"}
-      </button>
+
+      <div className="flex flex-wrap items-end gap-3 mb-4">
+        <button
+          onClick={() => onExploreBatch(1)}
+          disabled={busy || noTurns || allRevealed}
+          className="px-6 py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-400 transition-colors disabled:opacity-50"
+        >
+          {busy && batchProgress?.total === 1 ? "Revealing…" : "Explore 1 tile (1 turn)"}
+        </button>
+        <div className="flex items-end gap-2">
+          <label className="block text-xs text-neutral-500">
+            Batch size
+            <input
+              type="number"
+              min={1}
+              max={Math.min(unrevealed, player.turnsRemaining, 100)}
+              value={batchInput}
+              onChange={(e) => setBatchInput(e.target.value)}
+              disabled={busy}
+              className="mt-1 block w-24 px-3 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800 disabled:opacity-50"
+            />
+          </label>
+          <button
+            onClick={() => onExploreBatch(parsedBatch)}
+            disabled={busy || noTurns || allRevealed || parsedBatch < 1}
+            className="px-5 py-2.5 border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors disabled:opacity-50"
+          >
+            {busy && batchProgress
+              ? `Revealing ${batchProgress.done} / ${batchProgress.total}…`
+              : `Explore ${parsedBatch} tile${parsedBatch === 1 ? "" : "s"} (${parsedBatch} turn${parsedBatch === 1 ? "" : "s"})`}
+          </button>
+        </div>
+      </div>
+
+      <RevealLogList reveals={recentReveals} />
+    </div>
+  );
+}
+
+function RevealLogList({ reveals }: { reveals: RevealLog[] }) {
+  if (reveals.length === 0) {
+    return (
+      <p className="text-xs text-neutral-500 italic mt-4">
+        Reveal log will appear here once you start exploring.
+      </p>
+    );
+  }
+  return (
+    <div className="mt-4">
+      <h3 className="text-sm font-semibold mb-2">Reveal log (newest first)</h3>
+      <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg max-h-64 overflow-y-auto">
+        <ul className="divide-y divide-neutral-200 dark:divide-neutral-800 text-sm">
+          {reveals.map((r, idx) => (
+            <li
+              key={`${r.tileId}-${r.at}-${idx}`}
+              className="px-3 py-2 flex items-center justify-between"
+            >
+              <span>
+                Revealed land <span className="font-mono">{r.tileId}</span>
+              </span>
+              <span className="text-xs text-neutral-500 capitalize">
+                {r.type}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <p className="text-xs text-neutral-500 mt-2">
+        Showing the last {reveals.length} reveal{reveals.length === 1 ? "" : "s"} from this session.
+      </p>
     </div>
   );
 }
