@@ -129,42 +129,59 @@ export default function RecruitPage() {
       unitsBuilt: 0,
       artifactsFound: 0,
     });
-    let unitsBuilt = 0;
-    let artifactsFound = 0;
     try {
       const token = await user.getIdToken();
-      // Round-robin across military tiles so units distribute evenly.
+      // Build a round-robin plan across military tiles so units distribute
+      // evenly. Aggregate consecutive cycles to the same tile into one entry
+      // so the server's plan stays small.
+      const cyclesPerTile: Map<string, number> = new Map();
       for (let i = 0; i < totalCycles; i++) {
         const tileId = militaryTiles[i % militaryTiles.length].tileId;
-        const res = await fetch("/api/game/build", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ tileId, unitType }),
-        });
-        const data = await res.json();
-        if (!data.success) {
-          const msg =
-            typeof data.error === "string"
-              ? data.error
-              : data.error?.message ?? "Recruit failed";
-          setError(`Stopped at ${i} / ${totalCycles}: ${msg}`);
-          break;
-        }
-        unitsBuilt += UNITS_PER_CYCLE;
-        if (data.report) {
-          const report = data.report as TurnReport;
-          if (report.artifactFound) artifactsFound++;
-          setRecentReports((prev) => [report, ...prev].slice(0, 25));
-        }
-        setProgress({
-          done: i + 1,
-          total: totalCycles,
-          unitsBuilt,
-          artifactsFound,
-        });
+        cyclesPerTile.set(tileId, (cyclesPerTile.get(tileId) ?? 0) + 1);
+      }
+      const plan = Array.from(cyclesPerTile.entries()).map(
+        ([tileId, cycles]) => ({ tileId, unitType, cycles })
+      );
+      const res = await fetch("/api/game/build/bulk", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ plan }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        const msg =
+          typeof data.error === "string"
+            ? data.error
+            : data.error?.message ?? "Recruit failed";
+        throw new Error(msg);
+      }
+      const reports: TurnReport[] = Array.isArray(data.reports)
+        ? data.reports
+        : [];
+      let artifactsFound = 0;
+      for (const r of reports) if (r.artifactFound) artifactsFound++;
+      const unitsBuilt =
+        typeof data.produced === "number"
+          ? data.produced
+          : reports.length * UNITS_PER_CYCLE;
+      if (reports.length > 0) {
+        setRecentReports((prev) =>
+          [...reports.slice().reverse(), ...prev].slice(0, 25)
+        );
+      }
+      setProgress({
+        done: reports.length,
+        total: totalCycles,
+        unitsBuilt,
+        artifactsFound,
+      });
+      if (data.stoppedEarly) {
+        setError(
+          `Stopped early after ${reports.length} / ${totalCycles}: ${data.stoppedEarly}`
+        );
       }
       await refresh();
     } catch (e) {
@@ -315,9 +332,7 @@ export default function RecruitPage() {
                 className="px-5 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
               >
                 {busy
-                  ? progress
-                    ? `Training ${progress.done} / ${progress.total} cycles…`
-                    : "Training…"
+                  ? "Training units…"
                   : `Recruit ${Math.min(
                       maxUnits,
                       Math.max(
