@@ -25,6 +25,14 @@ interface RevealLog {
   tileId: string;
   type: LandType;
   at: number; // Date.now()
+  summary?: string;
+  narrative?: string[];
+  artifactFound?: {
+    definitionId: string;
+    name: string;
+    rarity: "common" | "rare" | "epic" | "legendary";
+    type: "offense" | "defense" | "production" | "utility";
+  };
 }
 
 export default function GameSetupPage() {
@@ -125,6 +133,9 @@ export default function GameSetupPage() {
               tileId: data.tile.tileId,
               type: data.tile.type,
               at: Date.now(),
+              summary: data.report?.summary,
+              narrative: data.report?.narrative,
+              artifactFound: data.report?.artifactFound,
             });
           }
           setBatchProgress({ done: i + 1, total });
@@ -323,36 +334,66 @@ function ExplorePanel({
   );
 }
 
+const RARITY_COLORS: Record<string, string> = {
+  common: "text-neutral-500 dark:text-neutral-400",
+  rare: "text-blue-600 dark:text-blue-400",
+  epic: "text-purple-600 dark:text-purple-400",
+  legendary: "text-amber-600 dark:text-amber-400",
+};
+
 function RevealLogList({ reveals }: { reveals: RevealLog[] }) {
   if (reveals.length === 0) {
     return (
       <p className="text-xs text-neutral-500 italic mt-4">
-        Reveal log will appear here once you start exploring.
+        Field reports will appear here once you start exploring. Each spent
+        turn yields a brief narrative — and, with luck, an ancient artifact.
       </p>
     );
   }
   return (
     <div className="mt-4">
-      <h3 className="text-sm font-semibold mb-2">Reveal log (newest first)</h3>
-      <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg max-h-64 overflow-y-auto">
-        <ul className="divide-y divide-neutral-200 dark:divide-neutral-800 text-sm">
+      <h3 className="text-sm font-semibold mb-2">Field reports (newest first)</h3>
+      <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg max-h-96 overflow-y-auto">
+        <ul className="divide-y divide-neutral-200 dark:divide-neutral-800">
           {reveals.map((r, idx) => (
             <li
               key={`${r.tileId}-${r.at}-${idx}`}
-              className="px-3 py-2 flex items-center justify-between"
+              className="px-4 py-3 text-sm leading-relaxed"
             >
-              <span>
-                Revealed land <span className="font-mono">{r.tileId}</span>
-              </span>
-              <span className="text-xs text-neutral-500 capitalize">
-                {r.type}
-              </span>
+              <div className="flex items-baseline justify-between mb-1">
+                <span className="font-medium">
+                  {r.summary ?? `Revealed ${r.tileId}`}
+                </span>
+                <span className="text-xs text-neutral-500 capitalize ml-2 shrink-0">
+                  {r.type}
+                </span>
+              </div>
+              {r.narrative && r.narrative.length > 0 && (
+                <div className="text-neutral-600 dark:text-neutral-400 italic space-y-1">
+                  {r.narrative.map((line, lineIdx) => (
+                    <p key={lineIdx}>{line}</p>
+                  ))}
+                </div>
+              )}
+              {r.artifactFound && (
+                <div
+                  className={`mt-2 text-xs font-semibold uppercase tracking-wide ${
+                    RARITY_COLORS[r.artifactFound.rarity] ?? ""
+                  }`}
+                >
+                  {r.artifactFound.rarity} artifact found —{" "}
+                  <span className="normal-case">{r.artifactFound.name}</span>
+                </div>
+              )}
             </li>
           ))}
         </ul>
       </div>
       <p className="text-xs text-neutral-500 mt-2">
-        Showing the last {reveals.length} reveal{reveals.length === 1 ? "" : "s"} from this session.
+        Showing the last {reveals.length} report{reveals.length === 1 ? "" : "s"} from this session.{" "}
+        <Link href="/game/artifacts" className="underline hover:no-underline">
+          View artifact inventory →
+        </Link>
       </p>
     </div>
   );

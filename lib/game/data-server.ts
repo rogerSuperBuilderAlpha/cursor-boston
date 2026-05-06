@@ -12,24 +12,30 @@ import {
   resolveAttack,
 } from "./combat";
 import { SPELLS_BY_ID } from "./content";
+import { rollArtifact } from "./artifacts";
+import { buildExploreReport } from "./turn-report";
 import { notifyConquest } from "./discord-game";
 import { logger } from "@/lib/logger";
 import {
   PRODUCTION_SPELL_DURATION_TURNS,
   applyWeeklyGrant,
+  currentEligibilityWindow,
   effectiveUnitCap,
   isShieldActive,
   newPlayer,
+  nextRolloverInstant,
   priorWeekRangeUtc,
   pruneExpiredProductionSpells,
   weekStartIsoForRollover,
 } from "./turns";
 import type {
   Caste,
+  GameArtifact,
   GameAttack,
   GamePlayer,
   GameTile,
   LandType,
+  TurnReport,
   UnitStack,
   UnitType,
 } from "./types";
@@ -175,6 +181,7 @@ const COLLECTIONS = {
   TILES: "game_tiles",
   ATTACKS: "game_attacks",
   WORLD_META: "game_world_meta",
+  ARTIFACTS: "game_artifacts",
 } as const;
 
 const WORLD_META_DOC = "singleton";
@@ -281,7 +288,7 @@ export async function createPlayerWithSpawnServer(
 export async function exploreNextTileServer(
   userId: string,
   now: Date = new Date()
-): Promise<{ player: GamePlayer; tile: GameTile }> {
+): Promise<{ player: GamePlayer; tile: GameTile; report: TurnReport }> {
   const db = adminDbOrThrow();
 
   // Firestore transactions can't query — so pick a candidate tile outside the
@@ -321,6 +328,13 @@ export async function exploreNextTileServer(
 
     const tilesExplored = player.tilesExplored + 1;
     const phase = tilesExplored >= 100 ? "distribute" : player.phase;
+    const turnsSpentTotal = player.turnsSpentTotal + 1;
+
+    // Seeded artifact + narrative rolls. Seed includes turnsSpentTotal so each
+    // turn is independent; including userId keeps players' streams uncorrelated.
+    const artifactRng = makeSeededRng(`artifact:${userId}:${turnsSpentTotal}`);
+    const narrativeRng = makeSeededRng(`narrative:${userId}:${turnsSpentTotal}`);
+    const artifact = rollArtifact(artifactRng);
 
     tx.update(tileRef, {
       type: "unassigned" as LandType,
@@ -330,28 +344,69 @@ export async function exploreNextTileServer(
     tx.update(playerRef, {
       tilesExplored,
       turnsRemaining: player.turnsRemaining - 1,
-      turnsSpentTotal: player.turnsSpentTotal + 1,
+      turnsSpentTotal,
       phase,
       updatedAt: now,
     });
+
+    if (artifact) {
+      const artifactId = randomUUID();
+      const artifactRef = db.collection(COLLECTIONS.ARTIFACTS).doc(artifactId);
+      const artifactDoc: GameArtifact = {
+        id: artifactId,
+        ownerId: userId,
+        definitionId: artifact.id,
+        rarity: artifact.rarity,
+        type: artifact.type,
+        foundAtTurn: turnsSpentTotal,
+        foundDuringAction: "explore",
+        used: false,
+        createdAt: now,
+        updatedAt: now,
+      };
+      tx.set(artifactRef, artifactDoc);
+    }
+
+    const updatedTile: GameTile = {
+      ...tile,
+      type: "unassigned",
+      revealedAt: now,
+      updatedAt: now,
+    };
+
+    const report = buildExploreReport(
+      turnsSpentTotal,
+      updatedTile,
+      artifact,
+      narrativeRng
+    );
 
     return {
       player: {
         ...player,
         tilesExplored,
         turnsRemaining: player.turnsRemaining - 1,
-        turnsSpentTotal: player.turnsSpentTotal + 1,
+        turnsSpentTotal,
         phase,
         updatedAt: now,
       },
-      tile: {
-        ...tile,
-        type: "unassigned",
-        revealedAt: now,
-        updatedAt: now,
-      },
+      tile: updatedTile,
+      report,
     };
   });
+}
+
+export async function listArtifactsServer(
+  userId: string
+): Promise<GameArtifact[]> {
+  const db = adminDbOrThrow();
+  const snap = await db
+    .collection(COLLECTIONS.ARTIFACTS)
+    .where("ownerId", "==", userId)
+    .orderBy("foundAtTurn", "desc")
+    .limit(200)
+    .get();
+  return snap.docs.map((d) => d.data() as GameArtifact);
 }
 
 // Sets or changes a tile's type (military / food / magic). Costs 1 turn,
@@ -1236,4 +1291,77 @@ export async function adminGrantTurnsServer(
     });
     return granted;
   });
+}
+
+// Looks up the player's GitHub login (from the shared `users` collection) and
+// counts merged PRs in the eligibility window for the upcoming rollover.
+// This is read-only and used by the dashboard to show:
+//  - whether the player has a GitHub account connected at all
+//  - how many PRs they've already merged this week (towards next 100 turns)
+//  - the UTC instant of the next rollover
+export async function getPlayerEligibilityServer(
+  userId: string,
+  now: Date = new Date()
+): Promise<{
+  githubLogin: string | null;
+  mergedPrCountThisWeek: number;
+  nextRolloverIso: string;
+  windowStartIso: string;
+}> {
+  const db = adminDbOrThrow();
+
+  // Read the user doc to get the github login. The game never writes to this
+  // collection — read-only.
+  const userSnap = await db.collection("users").doc(userId).get();
+  const userData = userSnap.exists ? (userSnap.data() ?? {}) : {};
+  const githubLogin =
+    typeof (userData as { github?: { login?: string } }).github?.login === "string"
+      ? ((userData as { github: { login: string } }).github.login as string)
+      : null;
+
+  const window = currentEligibilityWindow(now);
+  const next = nextRolloverInstant(now);
+
+  let mergedPrCountThisWeek = 0;
+  // Only query the pullRequests collection if we know who to filter by.
+  // The collection is keyed off Firebase userId (set by the merge webhook).
+  try {
+    const prsSnap = await db
+      .collection("pullRequests")
+      .where("userId", "==", userId)
+      .where("state", "==", "merged")
+      .get();
+    for (const d of prsSnap.docs) {
+      const data = d.data();
+      const mergedAt = data.mergedAt;
+      let t: number | null = null;
+      if (
+        mergedAt &&
+        typeof (mergedAt as { toDate?: () => Date }).toDate === "function"
+      ) {
+        t = (mergedAt as { toDate: () => Date }).toDate().getTime();
+      } else if (mergedAt instanceof Date) {
+        t = mergedAt.getTime();
+      } else if (typeof mergedAt === "string") {
+        const parsed = Date.parse(mergedAt);
+        if (!Number.isNaN(parsed)) t = parsed;
+      }
+      if (t === null) continue;
+      if (t >= window.start.getTime() && t < window.end.getTime()) {
+        mergedPrCountThisWeek += 1;
+      }
+    }
+  } catch (err) {
+    logger.warn("getPlayerEligibilityServer: pullRequests query failed", {
+      userId,
+      err: err instanceof Error ? err.message : String(err),
+    });
+  }
+
+  return {
+    githubLogin,
+    mergedPrCountThisWeek,
+    nextRolloverIso: next.toISOString(),
+    windowStartIso: window.start.toISOString(),
+  };
 }

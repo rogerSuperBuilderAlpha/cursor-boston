@@ -11,11 +11,13 @@ import {
   WEEKLY_TURN_GRANT,
   applyWeeklyGrant,
   canSpendTurns,
+  currentEligibilityWindow,
   effectiveUnitCap,
   isShieldActive,
   isUnderdog,
   newPlayer,
   nextPhase,
+  nextRolloverInstant,
   priorWeekRangeUtc,
   pruneExpiredProductionSpells,
   shouldGrantWeeklyTurns,
@@ -49,6 +51,31 @@ describe("priorWeekRangeUtc", () => {
     const r = priorWeekRangeUtc("2026-05-03");
     expect(r.end.toISOString()).toBe("2026-05-03T05:00:00.000Z");
     expect(r.start.toISOString()).toBe("2026-04-26T05:00:00.000Z");
+  });
+});
+
+describe("nextRolloverInstant", () => {
+  it("from a Wednesday returns the upcoming Sunday at 05:00 UTC", () => {
+    const next = nextRolloverInstant(new Date("2026-05-06T12:00:00.000Z"));
+    expect(next.toISOString()).toBe("2026-05-10T05:00:00.000Z");
+  });
+
+  it("from Sunday before 05:00 UTC returns the same Sunday's 05:00 UTC", () => {
+    const next = nextRolloverInstant(new Date("2026-05-03T02:00:00.000Z"));
+    expect(next.toISOString()).toBe("2026-05-03T05:00:00.000Z");
+  });
+
+  it("from Sunday after 05:00 UTC returns the following Sunday", () => {
+    const next = nextRolloverInstant(new Date("2026-05-03T06:00:00.000Z"));
+    expect(next.toISOString()).toBe("2026-05-10T05:00:00.000Z");
+  });
+});
+
+describe("currentEligibilityWindow", () => {
+  it("is a 7-day window ending at the next rollover instant", () => {
+    const w = currentEligibilityWindow(new Date("2026-05-06T12:00:00.000Z"));
+    expect(w.end.toISOString()).toBe("2026-05-10T05:00:00.000Z");
+    expect(w.start.toISOString()).toBe("2026-05-03T05:00:00.000Z");
   });
 });
 
