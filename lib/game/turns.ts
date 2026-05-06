@@ -48,6 +48,37 @@ export function priorWeekRangeUtc(weekStartIso: string): { start: Date; end: Dat
   return { start, end };
 }
 
+// Returns the UTC instant of the NEXT rollover (Sunday 05:00 UTC = 00:00 EST)
+// strictly after `now`. Used for the dashboard countdown.
+export function nextRolloverInstant(now: Date = new Date()): Date {
+  const next = new Date(now.getTime());
+  // Days until next Sunday (1..7). If today is already Sunday but past 05:00 UTC,
+  // the next rollover is 7 days later.
+  const utcDay = next.getUTCDay();
+  const utcHours = next.getUTCHours();
+  const utcMinutes = next.getUTCMinutes();
+  let daysAhead = (7 - utcDay) % 7;
+  if (
+    daysAhead === 0 &&
+    (utcHours > 5 || (utcHours === 5 && utcMinutes > 0))
+  ) {
+    daysAhead = 7;
+  }
+  next.setUTCDate(next.getUTCDate() + daysAhead);
+  next.setUTCHours(5, 0, 0, 0);
+  return next;
+}
+
+// Returns the window of merged PRs that would unlock the NEXT rollover —
+// i.e. the 7 days ending at the next Sunday-05:00-UTC instant.
+export function currentEligibilityWindow(
+  now: Date = new Date()
+): { start: Date; end: Date } {
+  const end = nextRolloverInstant(now);
+  const start = new Date(end.getTime() - 7 * MS_PER_DAY);
+  return { start, end };
+}
+
 export function newPlayer(userId: string, createdAt: Date = new Date()): GamePlayer {
   const shieldUntil = new Date(
     createdAt.getTime() + SHIELD_DURATION_WEEKS * 7 * MS_PER_DAY

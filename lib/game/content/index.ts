@@ -5,6 +5,7 @@
  */
 
 import type {
+  ArtifactDefinition,
   BuildingDefinition,
   Caste,
   CasteProfile,
@@ -49,6 +50,8 @@ import { WHITE_OFFENSE_SPELL } from "./spells/white/offense";
 import { WHITE_PRODUCTION_SPELL } from "./spells/white/production";
 
 import { BUILDINGS } from "./buildings";
+
+import { ALL_ARTIFACTS, ARTIFACTS_BY_ID, ARTIFACTS_BY_RARITY } from "./artifacts";
 
 export const ALL_UNITS: UnitDefinition[] = [
   WHITE_GROUND_UNIT, WHITE_SIEGE_UNIT, WHITE_AIR_UNIT,
@@ -99,3 +102,6 @@ export function getSpellForCasteAndType(
 
 export { CASTE_PROFILES, getCasteProfile };
 export type { CasteProfile };
+
+export { ALL_ARTIFACTS, ARTIFACTS_BY_ID, ARTIFACTS_BY_RARITY };
+export type { ArtifactDefinition };
