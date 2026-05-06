@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { apiError, apiSuccess, parseRequestBody } from "@/lib/api-response";
 import { mapGameError } from "@/lib/game/api-error-map";
+import { parseBatchCount, runBatch } from "@/lib/game/api-batch";
 import { buildUnitsServer } from "@/lib/game/data-server";
 import type { UnitType } from "@/lib/game/types";
 import { getVerifiedUser } from "@/lib/server-auth";
@@ -21,6 +22,7 @@ export async function POST(request: NextRequest) {
     const bodyOrError = await parseRequestBody<{
       tileId?: unknown;
       unitType?: unknown;
+      count?: unknown;
     }>(request);
     if (bodyOrError instanceof NextResponse) return bodyOrError;
 
@@ -35,16 +37,18 @@ export async function POST(request: NextRequest) {
         400
       );
     }
+    const count = parseBatchCount(bodyOrError.count);
 
-    const result = await buildUnitsServer(
-      user.uid,
-      tileId,
-      unitTypeRaw as UnitType
+    const { reports, lastResult, stoppedEarly } = await runBatch(count, () =>
+      buildUnitsServer(user.uid, tileId, unitTypeRaw as UnitType)
     );
     return apiSuccess({
-      player: result.player,
-      tile: result.tile,
-      produced: result.produced,
+      player: lastResult.player,
+      tile: lastResult.tile,
+      produced: lastResult.produced,
+      report: lastResult.report,
+      reports,
+      stoppedEarly,
     });
   } catch (error) {
     return mapGameError(error);

@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { apiError, apiSuccess, parseRequestBody } from "@/lib/api-response";
 import { mapGameError } from "@/lib/game/api-error-map";
+import { parseBatchCount, runBatch } from "@/lib/game/api-batch";
 import { castProductionSpellServer } from "@/lib/game/data-server";
 import { getVerifiedUser } from "@/lib/server-auth";
 
@@ -15,15 +16,26 @@ export async function POST(request: NextRequest) {
     const user = await getVerifiedUser(request);
     if (!user) return apiError("Authentication required", 401);
 
-    const bodyOrError = await parseRequestBody<{ spellId?: unknown }>(request);
+    const bodyOrError = await parseRequestBody<{
+      spellId?: unknown;
+      count?: unknown;
+    }>(request);
     if (bodyOrError instanceof NextResponse) return bodyOrError;
 
     const spellId =
       typeof bodyOrError.spellId === "string" ? bodyOrError.spellId : null;
     if (!spellId) return apiError("spellId is required", 400);
+    const count = parseBatchCount(bodyOrError.count);
 
-    const player = await castProductionSpellServer(user.uid, spellId);
-    return apiSuccess({ player });
+    const { reports, lastResult, stoppedEarly } = await runBatch(count, () =>
+      castProductionSpellServer(user.uid, spellId)
+    );
+    return apiSuccess({
+      player: lastResult.player,
+      report: lastResult.report,
+      reports,
+      stoppedEarly,
+    });
   } catch (error) {
     return mapGameError(error);
   }

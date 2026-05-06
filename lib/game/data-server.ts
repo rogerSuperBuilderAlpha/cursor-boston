@@ -5,6 +5,7 @@
  */
 
 import { randomUUID } from "node:crypto";
+import type { Firestore, Transaction } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import {
   computeTileCapacity,
@@ -13,7 +14,14 @@ import {
 } from "./combat";
 import { SPELLS_BY_ID } from "./content";
 import { rollArtifact } from "./artifacts";
-import { buildExploreReport } from "./turn-report";
+import {
+  buildArmDefenseReport,
+  buildAttackReport,
+  buildBuildReport,
+  buildDistributeReport,
+  buildExploreReport,
+  buildProduceReport,
+} from "./turn-report";
 import { notifyConquest } from "./discord-game";
 import { logger } from "@/lib/logger";
 import {
@@ -29,12 +37,14 @@ import {
   weekStartIsoForRollover,
 } from "./turns";
 import type {
+  ArtifactDefinition,
   Caste,
   GameArtifact,
   GameAttack,
   GamePlayer,
   GameTile,
   LandType,
+  TurnAction,
   TurnReport,
   UnitStack,
   UnitType,
@@ -199,6 +209,52 @@ function adminDbOrThrow() {
   return db;
 }
 
+// Rolls (3% chance) for an artifact and stages a tx.set() to persist it if
+// found. Returns the rolled definition (for the report builder) or null.
+//
+// Each turn-spending action calls this exactly once per transaction. The
+// seed includes turnsSpentTotal so consecutive turns roll independently;
+// userId keeps players' streams uncorrelated.
+function rollAndStageArtifact(
+  tx: Transaction,
+  db: Firestore,
+  userId: string,
+  turnsSpentTotalAfter: number,
+  foundDuringAction: TurnAction,
+  now: Date
+): ArtifactDefinition | null {
+  const rng = makeSeededRng(`artifact:${userId}:${turnsSpentTotalAfter}`);
+  const artifact = rollArtifact(rng);
+  if (!artifact) return null;
+  const artifactId = randomUUID();
+  const artifactRef = db.collection(COLLECTIONS.ARTIFACTS).doc(artifactId);
+  const doc: GameArtifact = {
+    id: artifactId,
+    ownerId: userId,
+    definitionId: artifact.id,
+    rarity: artifact.rarity,
+    type: artifact.type,
+    foundAtTurn: turnsSpentTotalAfter,
+    foundDuringAction,
+    used: false,
+    createdAt: now,
+    updatedAt: now,
+  };
+  tx.set(artifactRef, doc);
+  return artifact;
+}
+
+// Seeded RNG distinct from the artifact-roll RNG so the same line isn't
+// always paired with the same drop. Each (player, turn, action) triplet maps
+// to a deterministic narrative for replay-ability.
+function makeNarrativeRng(
+  userId: string,
+  turnIndex: number,
+  action: TurnAction
+): () => number {
+  return makeSeededRng(`narrative:${userId}:${turnIndex}:${action}`);
+}
+
 export async function getPlayerServer(
   userId: string
 ): Promise<GamePlayer | null> {
@@ -330,11 +386,14 @@ export async function exploreNextTileServer(
     const phase = tilesExplored >= 100 ? "distribute" : player.phase;
     const turnsSpentTotal = player.turnsSpentTotal + 1;
 
-    // Seeded artifact + narrative rolls. Seed includes turnsSpentTotal so each
-    // turn is independent; including userId keeps players' streams uncorrelated.
-    const artifactRng = makeSeededRng(`artifact:${userId}:${turnsSpentTotal}`);
-    const narrativeRng = makeSeededRng(`narrative:${userId}:${turnsSpentTotal}`);
-    const artifact = rollArtifact(artifactRng);
+    const artifact = rollAndStageArtifact(
+      tx,
+      db,
+      userId,
+      turnsSpentTotal,
+      "explore",
+      now
+    );
 
     tx.update(tileRef, {
       type: "unassigned" as LandType,
@@ -349,24 +408,6 @@ export async function exploreNextTileServer(
       updatedAt: now,
     });
 
-    if (artifact) {
-      const artifactId = randomUUID();
-      const artifactRef = db.collection(COLLECTIONS.ARTIFACTS).doc(artifactId);
-      const artifactDoc: GameArtifact = {
-        id: artifactId,
-        ownerId: userId,
-        definitionId: artifact.id,
-        rarity: artifact.rarity,
-        type: artifact.type,
-        foundAtTurn: turnsSpentTotal,
-        foundDuringAction: "explore",
-        used: false,
-        createdAt: now,
-        updatedAt: now,
-      };
-      tx.set(artifactRef, artifactDoc);
-    }
-
     const updatedTile: GameTile = {
       ...tile,
       type: "unassigned",
@@ -378,7 +419,7 @@ export async function exploreNextTileServer(
       turnsSpentTotal,
       updatedTile,
       artifact,
-      narrativeRng
+      makeNarrativeRng(userId, turnsSpentTotal, "explore")
     );
 
     return {
@@ -420,7 +461,7 @@ export async function distributeTileServer(
   tileId: string,
   type: LandType,
   now: Date = new Date()
-): Promise<{ player: GamePlayer; tile: GameTile }> {
+): Promise<{ player: GamePlayer; tile: GameTile; report: TurnReport }> {
   if (!VALID_DISTRIBUTABLE_TYPES.has(type)) {
     throw new GameInvalidLandTypeError(type);
   }
@@ -449,21 +490,40 @@ export async function distributeTileServer(
       throw new GameInsufficientTurnsError(1, player.turnsRemaining);
     }
 
+    const turnsSpentTotal = player.turnsSpentTotal + 1;
+    const artifact = rollAndStageArtifact(
+      tx,
+      db,
+      userId,
+      turnsSpentTotal,
+      "distribute",
+      now
+    );
+
     tx.update(tileRef, { type, updatedAt: now });
     tx.update(playerRef, {
       turnsRemaining: player.turnsRemaining - 1,
-      turnsSpentTotal: player.turnsSpentTotal + 1,
+      turnsSpentTotal,
       updatedAt: now,
+    });
+
+    const report = buildDistributeReport({
+      turnIndex: turnsSpentTotal,
+      tileId,
+      newType: type,
+      artifactFound: artifact,
+      rng: makeNarrativeRng(userId, turnsSpentTotal, "distribute"),
     });
 
     return {
       player: {
         ...player,
         turnsRemaining: player.turnsRemaining - 1,
-        turnsSpentTotal: player.turnsSpentTotal + 1,
+        turnsSpentTotal,
         updatedAt: now,
       },
       tile: { ...tile, type, updatedAt: now },
+      report,
     };
   });
 }
@@ -572,7 +632,12 @@ export async function buildUnitsServer(
   tileId: string,
   unitType: UnitType,
   now: Date = new Date()
-): Promise<{ player: GamePlayer; tile: GameTile; produced: number }> {
+): Promise<{
+  player: GamePlayer;
+  tile: GameTile;
+  produced: number;
+  report: TurnReport;
+}> {
   const db = adminDbOrThrow();
   const counts = await getOwnedLandCounts(userId);
 
@@ -609,11 +674,21 @@ export async function buildUnitsServer(
       throw new GameUnitCapExceededError(cap, player.stats.unitsAlive);
     }
 
+    const turnsSpentTotal = player.turnsSpentTotal + BUILD_UNITS_TURN_COST;
+    const artifact = rollAndStageArtifact(
+      tx,
+      db,
+      userId,
+      turnsSpentTotal,
+      "build",
+      now
+    );
+
     const newUnits: UnitStack = { ...tile.units, [unitType]: tile.units[unitType] + BUILD_UNITS_PER_TURN };
     tx.update(tileRef, { units: newUnits, updatedAt: now });
     tx.update(playerRef, {
       turnsRemaining: player.turnsRemaining - BUILD_UNITS_TURN_COST,
-      turnsSpentTotal: player.turnsSpentTotal + BUILD_UNITS_TURN_COST,
+      turnsSpentTotal,
       stats: {
         ...player.stats,
         unitsAlive: player.stats.unitsAlive + BUILD_UNITS_PER_TURN,
@@ -621,11 +696,21 @@ export async function buildUnitsServer(
       updatedAt: now,
     });
 
+    const report = buildBuildReport({
+      turnIndex: turnsSpentTotal,
+      cost: BUILD_UNITS_TURN_COST,
+      tileId,
+      unitType,
+      unitsBuilt: BUILD_UNITS_PER_TURN,
+      artifactFound: artifact,
+      rng: makeNarrativeRng(userId, turnsSpentTotal, "build"),
+    });
+
     return {
       player: {
         ...player,
         turnsRemaining: player.turnsRemaining - BUILD_UNITS_TURN_COST,
-        turnsSpentTotal: player.turnsSpentTotal + BUILD_UNITS_TURN_COST,
+        turnsSpentTotal,
         stats: {
           ...player.stats,
           unitsAlive: player.stats.unitsAlive + BUILD_UNITS_PER_TURN,
@@ -634,6 +719,7 @@ export async function buildUnitsServer(
       },
       tile: { ...tile, units: newUnits, updatedAt: now },
       produced: BUILD_UNITS_PER_TURN,
+      report,
     };
   });
 }
@@ -645,7 +731,7 @@ export async function armDefenseSpellServer(
   tileId: string,
   spellId: string,
   now: Date = new Date()
-): Promise<{ player: GamePlayer; tile: GameTile }> {
+): Promise<{ player: GamePlayer; tile: GameTile; report: TurnReport }> {
   const db = adminDbOrThrow();
   const spell = SPELLS_BY_ID.get(spellId);
   if (!spell) throw new GameInvalidSpellError(`unknown spellId: ${spellId}`);
@@ -684,21 +770,42 @@ export async function armDefenseSpellServer(
       );
     }
 
+    const turnsSpentTotal = player.turnsSpentTotal + SPELL_TURN_COST;
+    const artifact = rollAndStageArtifact(
+      tx,
+      db,
+      userId,
+      turnsSpentTotal,
+      "spell-arm",
+      now
+    );
+
     tx.update(tileRef, { armedDefenseSpellId: spellId, updatedAt: now });
     tx.update(playerRef, {
       turnsRemaining: player.turnsRemaining - SPELL_TURN_COST,
-      turnsSpentTotal: player.turnsSpentTotal + SPELL_TURN_COST,
+      turnsSpentTotal,
       updatedAt: now,
+    });
+
+    const report = buildArmDefenseReport({
+      turnIndex: turnsSpentTotal,
+      cost: SPELL_TURN_COST,
+      tileId,
+      spellId,
+      spellName: spell.name,
+      artifactFound: artifact,
+      rng: makeNarrativeRng(userId, turnsSpentTotal, "spell-arm"),
     });
 
     return {
       player: {
         ...player,
         turnsRemaining: player.turnsRemaining - SPELL_TURN_COST,
-        turnsSpentTotal: player.turnsSpentTotal + SPELL_TURN_COST,
+        turnsSpentTotal,
         updatedAt: now,
       },
       tile: { ...tile, armedDefenseSpellId: spellId, updatedAt: now },
+      report,
     };
   });
 }
@@ -709,7 +816,7 @@ export async function castProductionSpellServer(
   userId: string,
   spellId: string,
   now: Date = new Date()
-): Promise<GamePlayer> {
+): Promise<{ player: GamePlayer; report: TurnReport }> {
   const db = adminDbOrThrow();
   const spell = SPELLS_BY_ID.get(spellId);
   if (!spell) throw new GameInvalidSpellError(`unknown spellId: ${spellId}`);
@@ -742,6 +849,17 @@ export async function castProductionSpellServer(
     }
 
     const newTurnsSpentTotal = player.turnsSpentTotal + SPELL_TURN_COST;
+    const expiresAtTurn = newTurnsSpentTotal + PRODUCTION_SPELL_DURATION_TURNS;
+
+    const artifact = rollAndStageArtifact(
+      tx,
+      db,
+      userId,
+      newTurnsSpentTotal,
+      "spell-produce",
+      now
+    );
+
     // Lazy sweep: drop entries whose expiresAtTurn already lapsed before
     // appending the fresh one. Keeps the array bounded — otherwise it grows
     // forever as the player casts production spells over time.
@@ -753,7 +871,7 @@ export async function castProductionSpellServer(
       ...stillActive,
       {
         spellId,
-        expiresAtTurn: newTurnsSpentTotal + PRODUCTION_SPELL_DURATION_TURNS,
+        expiresAtTurn,
       },
     ];
 
@@ -764,12 +882,25 @@ export async function castProductionSpellServer(
       updatedAt: now,
     });
 
+    const report = buildProduceReport({
+      turnIndex: newTurnsSpentTotal,
+      cost: SPELL_TURN_COST,
+      spellId,
+      spellName: spell.name,
+      expiresAtTurn,
+      artifactFound: artifact,
+      rng: makeNarrativeRng(userId, newTurnsSpentTotal, "spell-produce"),
+    });
+
     return {
-      ...player,
-      turnsRemaining: player.turnsRemaining - SPELL_TURN_COST,
-      turnsSpentTotal: newTurnsSpentTotal,
-      productionSpellsActive: newActive,
-      updatedAt: now,
+      player: {
+        ...player,
+        turnsRemaining: player.turnsRemaining - SPELL_TURN_COST,
+        turnsSpentTotal: newTurnsSpentTotal,
+        productionSpellsActive: newActive,
+        updatedAt: now,
+      },
+      report,
     };
   });
 }
@@ -790,6 +921,7 @@ export async function attackTileServer(args: {
   defenderPlayer: GamePlayer;
   sourceTile: GameTile;
   targetTile: GameTile;
+  report: TurnReport;
 }> {
   const now = args.now ?? new Date();
   if (!isValidUnitStack(args.units)) {
@@ -961,6 +1093,16 @@ export async function attackTileServer(args: {
     const attackerLossesTotal = sumStack(result.attackerLosses);
     const defenderLossesTotal = sumStack(result.defenderLosses);
 
+    const attackerTurnsSpentTotal = attacker.turnsSpentTotal + turnCost;
+    const artifact = rollAndStageArtifact(
+      tx,
+      db,
+      args.attackerId,
+      attackerTurnsSpentTotal,
+      "attack",
+      now
+    );
+
     tx.update(sourceRef, { units: updatedSourceUnits, updatedAt: now });
     tx.update(targetRef, {
       units: updatedTargetUnits,
@@ -1014,12 +1156,22 @@ export async function attackTileServer(args: {
     };
     tx.set(attackRef, attack);
 
+    const report = buildAttackReport({
+      turnIndex: attackerTurnsSpentTotal,
+      cost: turnCost,
+      targetTileId: args.targetTileId,
+      unitsSent: args.units,
+      combat: result,
+      artifactFound: artifact,
+      rng: makeNarrativeRng(args.attackerId, attackerTurnsSpentTotal, "attack"),
+    });
+
     return {
       attack,
       attackerPlayer: {
         ...attacker,
         turnsRemaining: attacker.turnsRemaining - turnCost,
-        turnsSpentTotal: attacker.turnsSpentTotal + turnCost,
+        turnsSpentTotal: attackerTurnsSpentTotal,
         stats: attackerStats,
         updatedAt: now,
       },
@@ -1036,6 +1188,7 @@ export async function attackTileServer(args: {
         lastAttackedAt: now,
         updatedAt: now,
       },
+      report,
     };
   });
 

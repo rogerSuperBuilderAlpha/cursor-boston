@@ -71,6 +71,7 @@ export async function POST(request: NextRequest) {
       attackerPlayer: result.attackerPlayer,
       sourceTile: result.sourceTile,
       targetTile: result.targetTile,
+      report: result.report,
     });
   } catch (error) {
     return mapGameError(error);

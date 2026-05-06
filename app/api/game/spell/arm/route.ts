@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { apiError, apiSuccess, parseRequestBody } from "@/lib/api-response";
 import { mapGameError } from "@/lib/game/api-error-map";
+import { parseBatchCount, runBatch } from "@/lib/game/api-batch";
 import { armDefenseSpellServer } from "@/lib/game/data-server";
 import { getVerifiedUser } from "@/lib/server-auth";
 
@@ -18,6 +19,7 @@ export async function POST(request: NextRequest) {
     const bodyOrError = await parseRequestBody<{
       tileId?: unknown;
       spellId?: unknown;
+      count?: unknown;
     }>(request);
     if (bodyOrError instanceof NextResponse) return bodyOrError;
 
@@ -27,9 +29,18 @@ export async function POST(request: NextRequest) {
       typeof bodyOrError.spellId === "string" ? bodyOrError.spellId : null;
     if (!tileId) return apiError("tileId is required", 400);
     if (!spellId) return apiError("spellId is required", 400);
+    const count = parseBatchCount(bodyOrError.count);
 
-    const result = await armDefenseSpellServer(user.uid, tileId, spellId);
-    return apiSuccess({ player: result.player, tile: result.tile });
+    const { reports, lastResult, stoppedEarly } = await runBatch(count, () =>
+      armDefenseSpellServer(user.uid, tileId, spellId)
+    );
+    return apiSuccess({
+      player: lastResult.player,
+      tile: lastResult.tile,
+      report: lastResult.report,
+      reports,
+      stoppedEarly,
+    });
   } catch (error) {
     return mapGameError(error);
   }
