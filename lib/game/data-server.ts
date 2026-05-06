@@ -225,10 +225,15 @@ const COLLECTIONS = {
 
 const WORLD_META_DOC = "singleton";
 
+// Land types you can distribute a tile to. "unassigned" is allowed so the
+// player can revert a tile back (and pay 1 turn for the privilege); they
+// would then pay another turn to re-assign it. "unrevealed" stays
+// non-distributable — a tile becomes unassigned via explore.
 const VALID_DISTRIBUTABLE_TYPES = new Set<LandType>([
   "military",
   "food",
   "magic",
+  "unassigned",
 ]);
 const VALID_CASTES = new Set<Caste>(["black", "red", "white", "green", "blue"]);
 
@@ -1254,14 +1259,18 @@ export async function getRecentAttacksServer(
   limit = 50
 ): Promise<GameAttack[]> {
   const db = adminDbOrThrow();
+  // Single-field where + in-memory sort. Composite indexes are declared in
+  // firestore.indexes.json but may not be deployed in every environment;
+  // attack volume per player is small enough that sorting in JS is trivial.
+  // The wider 500-doc safety limit exists so a chatty player still loads.
+  const fetchLimit = Math.max(limit, 500);
   const queries: Promise<GameAttack[]>[] = [];
   if (side === "sent" || side === "all") {
     queries.push(
       db
         .collection(COLLECTIONS.ATTACKS)
         .where("attackerId", "==", userId)
-        .orderBy("createdAt", "desc")
-        .limit(limit)
+        .limit(fetchLimit)
         .get()
         .then((snap) => snap.docs.map((d) => d.data() as GameAttack))
     );
@@ -1271,8 +1280,7 @@ export async function getRecentAttacksServer(
       db
         .collection(COLLECTIONS.ATTACKS)
         .where("defenderId", "==", userId)
-        .orderBy("createdAt", "desc")
-        .limit(limit)
+        .limit(fetchLimit)
         .get()
         .then((snap) => snap.docs.map((d) => d.data() as GameAttack))
     );
@@ -1288,11 +1296,23 @@ export async function getRecentAttacksServer(
     out.push(a);
   }
   out.sort((a, b) => {
-    const ta = a.createdAt instanceof Date ? a.createdAt.getTime() : 0;
-    const tb = b.createdAt instanceof Date ? b.createdAt.getTime() : 0;
+    const ta = toDate(a.createdAt).getTime();
+    const tb = toDate(b.createdAt).getTime();
     return tb - ta;
   });
   return out.slice(0, limit);
+}
+
+// Coerce Firestore Timestamps / Dates / null into a Date. Avoids the previous
+// bug where `instanceof Date` failed against admin-SDK Timestamps and the
+// sort silently fell back to all-zeros (= unstable order).
+function toDate(value: Date | { toDate?: () => Date } | undefined | null): Date {
+  if (!value) return new Date(0);
+  if (value instanceof Date) return value;
+  if (typeof (value as { toDate?: () => Date }).toDate === "function") {
+    return (value as { toDate: () => Date }).toDate();
+  }
+  return new Date(0);
 }
 
 // Admin testing helper. Places `count` units of `unitType` directly on `tileId`,

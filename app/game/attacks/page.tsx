@@ -14,7 +14,7 @@ import type { GameAttack } from "@/lib/game/types";
 interface AttacksResponse {
   success: boolean;
   attacks?: GameAttack[];
-  error?: string;
+  error?: { message?: string; code?: string } | string;
 }
 
 type Side = "all" | "sent" | "received";
@@ -40,7 +40,13 @@ export default function AttackLogPage() {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = (await res.json()) as AttacksResponse;
-        if (!data.success) throw new Error(data.error ?? "Failed to load");
+        if (!data.success) {
+          const msg =
+            typeof data.error === "string"
+              ? data.error
+              : data.error?.message ?? "Failed to load";
+          throw new Error(msg);
+        }
         setAttacks(data.attacks ?? []);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to load");
