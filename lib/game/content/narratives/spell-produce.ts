@@ -1,0 +1,61 @@
+/**
+ * Copyright (C) 2026 Cursor Boston
+ * This file is part of Cursor Boston, licensed under GPL-3.0.
+ * See LICENSE file for details.
+ */
+
+// Stock narrative lines for casting a production spell. Production spells
+// affect the player globally for 100 turns, so the narrative leans toward
+// "something has shifted" rather than "this specific tile."
+export const SPELL_PRODUCE_NARRATIVES: string[] = [
+  "Your battlemages convene at dusk and read the working aloud, voices rising and falling in unison.",
+  "A great brass bell is rung once at the capital, and the mages take this as the moment the spell takes hold.",
+  "Tonight the lamps in your camp burn a little brighter, and no one is quite sure why.",
+  "The crops in the eastern fields stand a finger's-width taller by morning. The farmers don't comment but they notice.",
+  "A column of blue smoke rises from the high tower for an hour and then settles into the evening air.",
+  "An old chant is sung in the temple. The chant has not been heard in a generation, but the mages know it.",
+  "Your captains report that the troops slept better than usual. They cannot explain why.",
+  "Wells across the territory run a hair clearer in the morning. The villagers fill more buckets than usual.",
+  "The mage-council finishes the binding at midnight; a single torch flares at the same moment, in every camp.",
+  "A flock of crows passes over the capital in formation. The chief mage takes this as proof the work has taken.",
+  "Forge-fires burn one shade brighter for the next hundred turns. The smiths don't ask; they just work.",
+  "The mage-captain reads the final word and the air in the tower sighs out slowly.",
+  "A copper coin is placed on each of your battle-standards as a charm. They will be removed when the spell expires.",
+  "A faint warmth settles across your territory like the first hour of spring after a long winter.",
+  "The tower's bells ring without being rung. Three short, two long. The mages note the time.",
+  "Tonight there is wine in the camp, and the wine tastes better than it has any right to.",
+  "A storm to the west breaks just before reaching your border, and turns aside as if politely waved off.",
+  "Your scouts report seeing more deer in the woods than usual. The chief mage smiles privately.",
+  "The chief mage sleeps for the first time in three days; her work is done, and the working will hold.",
+  "The mage-captain unbinds her hair, lets out a long breath, and walks alone to the river.",
+  "A soft hum, just at the edge of hearing, settles over the capital for the next hour.",
+  "Your apothecary reports that her tinctures have set faster than usual today. She doesn't ask why.",
+  "An old healer presses her ear to the ground and nods, satisfied. The work has taken root.",
+  "Lamp-flames bow once toward the chief mage's tower, then stand straight again.",
+  "The day's bread rises a little higher than usual; the bakers cross themselves and keep working.",
+  "A pair of swans glides up the river and lands on the temple pond. The mages let them stay.",
+  "The mage-council disperses without speaking. The work needs no announcement.",
+  "Your scouts report a strange quiet on the borders, the kind that comes when nothing dares move.",
+  "A child sees a star fall over the capital and tells her mother. Her mother nods and goes back to work.",
+  "The mage-captain folds the working into her cloak and walks out into the night.",
+  "Morning bread, morning water, morning roll-call — all of it goes a little smoother than usual.",
+  "A sense of patience settles over the troops; the line stands a little straighter at parade.",
+  "The chief mage signs the working into the great book and closes the cover with both hands.",
+  "Three apprentices watch the spell take hold, and only one of them has the wit to look pleased.",
+  "Your standards snap a little harder in the wind tonight, even when the air is still.",
+  "A captain reports that her squad sang on the march for the first time in months. She doesn't know why.",
+  "An old story is told around the fire — one nobody has remembered in years. The fire burns slow and warm.",
+  "A page falls out of the great working-book. The chief mage picks it up and tucks it carefully back in.",
+  "The chief mage looks tired. She refuses tea. She accepts a chair, and watches the moon for an hour.",
+  "By the time the spell takes hold, no one in the capital can quite say when it began.",
+  "A line of geese passes overhead in a perfect arrowhead. The chief mage notes the direction in her log.",
+  "Coin counters report that the day's tally came out cleaner than usual. They do not investigate further.",
+  "The mage-captain steps onto the temple roof and watches the working settle over the city like a slow snowfall.",
+  "Tonight no one in the capital has a nightmare. The chief mage takes this as confirmation.",
+  "The garrison's horses stand quietly through the casting; some of them turn their heads toward the tower as if listening.",
+  "A column of butterflies crosses the temple courtyard on its way somewhere else. The mages let them pass.",
+  "The mage-council toasts the working in plain water. The water tastes faintly of the river at sunrise.",
+  "A storm in the distance flickers but does not arrive. The mages have many such storms to thank.",
+  "The chief mage walks home in the rain and is not wet when she arrives.",
+  "By dawn the working is laid; by dusk the world has shifted by one small notch in your favor.",
+];
