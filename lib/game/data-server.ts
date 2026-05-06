@@ -400,13 +400,17 @@ export async function listArtifactsServer(
   userId: string
 ): Promise<GameArtifact[]> {
   const db = adminDbOrThrow();
+  // Single-field where + in-memory sort: avoids needing the composite index
+  // to be deployed before this code goes live. Inventories are small (player
+  // turn budgets cap them well below 1k) so the sort is trivial.
   const snap = await db
     .collection(COLLECTIONS.ARTIFACTS)
     .where("ownerId", "==", userId)
-    .orderBy("foundAtTurn", "desc")
-    .limit(200)
+    .limit(500)
     .get();
-  return snap.docs.map((d) => d.data() as GameArtifact);
+  const artifacts = snap.docs.map((d) => d.data() as GameArtifact);
+  artifacts.sort((a, b) => b.foundAtTurn - a.foundAtTurn);
+  return artifacts;
 }
 
 // Sets or changes a tile's type (military / food / magic). Costs 1 turn,
