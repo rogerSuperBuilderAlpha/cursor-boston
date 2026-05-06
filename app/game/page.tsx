@@ -131,45 +131,48 @@ export default function GameDashboardPage() {
   const handleFrontierExplore = useCallback(
     async (count: number) => {
       if (!user) return;
-      const total = Math.max(1, Math.min(100, Math.floor(count)));
+      // Bulk endpoint caps at 50 per call — match it on the client.
+      const total = Math.max(1, Math.min(50, Math.floor(count)));
       setExploring(true);
       setError(null);
       setExploreProgress({ done: 0, total, artifactsFound: 0 });
-      // Fire one request per tile so the user sees a live counter and each
-      // narrative + artifact roll lands as it happens. The server-side batch
-      // exists for scripting/API callers; the UI prefers per-tile feedback.
-      let artifactsFound = 0;
-      const collected: TurnReport[] = [];
       try {
         const token = await user.getIdToken();
-        for (let i = 0; i < total; i++) {
-          const res = await fetch("/api/game/explore", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ count: 1 }),
-          });
-          const data = await res.json();
-          if (!data.success) {
-            const msg =
-              typeof data.error === "string"
-                ? data.error
-                : data.error?.message ?? "Explore failed";
-            setError(`Stopped at ${i} / ${total}: ${msg}`);
-            break;
-          }
-          if (data.report) {
-            collected.push(data.report as TurnReport);
-            if ((data.report as TurnReport).artifactFound) artifactsFound++;
-            // Push the new report onto the head of the visible log live, not
-            // at the end — the user gets to watch the prose appear.
-            setRecentReports((prev) =>
-              [data.report as TurnReport, ...prev].slice(0, 50)
-            );
-          }
-          setExploreProgress({ done: i + 1, total, artifactsFound });
+        const res = await fetch("/api/game/explore/bulk", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ count: total }),
+        });
+        const data = await res.json();
+        if (!data.success) {
+          const msg =
+            typeof data.error === "string"
+              ? data.error
+              : data.error?.message ?? "Explore failed";
+          throw new Error(msg);
+        }
+        const reports: TurnReport[] = Array.isArray(data.reports)
+          ? data.reports
+          : [];
+        let artifactsFound = 0;
+        for (const r of reports) if (r.artifactFound) artifactsFound++;
+        if (reports.length > 0) {
+          setRecentReports((prev) =>
+            [...reports.slice().reverse(), ...prev].slice(0, 50)
+          );
+        }
+        setExploreProgress({
+          done: reports.length,
+          total,
+          artifactsFound,
+        });
+        if (data.stoppedEarly) {
+          setError(
+            `Claimed ${reports.length} / ${total}: ${data.stoppedEarly}`
+          );
         }
         await fetchPlayer();
       } catch (e) {
@@ -412,7 +415,7 @@ export default function GameDashboardPage() {
             onCountChange={setExploreCount}
             busy={exploring}
             progress={exploreProgress}
-            maxCount={Math.min(100, player.turnsRemaining)}
+            maxCount={Math.min(50, player.turnsRemaining)}
             onExplore={() => handleFrontierExplore(exploreCount)}
           />
         )}
@@ -578,7 +581,7 @@ function ExploreFrontier({
           <input
             type="number"
             min={1}
-            max={Math.min(100, safeMax)}
+            max={Math.min(50, safeMax)}
             value={count}
             onChange={(e) => {
               const n = Number.parseInt(e.target.value, 10);
@@ -594,9 +597,7 @@ function ExploreFrontier({
           className="px-5 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
         >
           {busy
-            ? progress
-              ? `Exploring ${progress.done} / ${progress.total}…`
-              : "Exploring…"
+            ? `Pushing the frontier (${count} tile${count === 1 ? "" : "s"})…`
             : `Explore ×${count}`}
         </button>
         <span className="text-xs text-neutral-500">
