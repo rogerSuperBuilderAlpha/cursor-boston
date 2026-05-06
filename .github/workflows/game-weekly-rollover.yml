@@ -1,0 +1,53 @@
+name: Game weekly rollover
+
+# Sunday 05:00 UTC = Sunday 00:00 EST (= end of Saturday in EST).
+# GitHub Actions cron is UTC-only; will be Sunday 01:00 EDT during DST,
+# which is acceptable for this game's rollover.
+#
+# Required repo secrets:
+#   GAME_ROLLOVER_URL    — full HTTPS URL of /api/game/rollover (e.g. https://cursor-boston.vercel.app/api/game/rollover)
+#   GAME_ROLLOVER_SECRET — must match the GAME_ROLLOVER_SECRET env var on the deployment
+
+on:
+  schedule:
+    - cron: '0 5 * * 0'
+  workflow_dispatch:
+    inputs:
+      weekStartIso:
+        description: 'Optional yyyy-mm-dd to override the week-start key (idempotency). Leave blank for current.'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  rollover:
+    name: POST /api/game/rollover
+    runs-on: ubuntu-latest
+    steps:
+      - name: Invoke rollover endpoint
+        env:
+          ROLLOVER_URL: ${{ secrets.GAME_ROLLOVER_URL }}
+          ROLLOVER_SECRET: ${{ secrets.GAME_ROLLOVER_SECRET }}
+          WEEK_START_OVERRIDE: ${{ inputs.weekStartIso }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ROLLOVER_URL:-}" ]; then
+            echo "::error::GAME_ROLLOVER_URL secret is not set"; exit 1
+          fi
+          if [ -z "${ROLLOVER_SECRET:-}" ]; then
+            echo "::error::GAME_ROLLOVER_SECRET secret is not set"; exit 1
+          fi
+          URL="$ROLLOVER_URL"
+          if [ -n "$WEEK_START_OVERRIDE" ]; then
+            if [[ "$URL" == *\?* ]]; then URL="${URL}&weekStartIso=${WEEK_START_OVERRIDE}"
+            else URL="${URL}?weekStartIso=${WEEK_START_OVERRIDE}"
+            fi
+          fi
+          echo "Posting to $URL"
+          curl --fail-with-body -sS \
+            -X POST \
+            -H "x-rollover-secret: $ROLLOVER_SECRET" \
+            -H "Content-Type: application/json" \
+            "$URL"
