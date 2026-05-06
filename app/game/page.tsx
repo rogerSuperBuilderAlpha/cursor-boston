@@ -183,14 +183,17 @@ export default function GameDashboardPage() {
   );
 
   const handleBulkDistribute = useCallback(
-    async (type: LandType, count: number) => {
+    async (
+      targetType: LandType,
+      count: number,
+      sourceFilter: (t: GameTile) => boolean,
+      sourceLabel: string
+    ) => {
       if (!user) return;
-      const unassigned = tiles
-        .filter((t) => t.type === "unassigned")
-        .map((t) => t.tileId);
-      const total = Math.min(unassigned.length, Math.max(1, Math.floor(count)));
+      const sources = tiles.filter(sourceFilter).map((t) => t.tileId);
+      const total = Math.min(sources.length, Math.max(1, Math.floor(count)));
       if (total === 0) {
-        setError("No unassigned tiles to distribute.");
+        setError(`No ${sourceLabel} tiles to distribute.`);
         return;
       }
       setDistributing(true);
@@ -200,14 +203,14 @@ export default function GameDashboardPage() {
       try {
         const token = await user.getIdToken();
         for (let i = 0; i < total; i++) {
-          const tileId = unassigned[i];
+          const tileId = sources[i];
           const res = await fetch("/api/game/setup/distribute", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify({ tileId, type }),
+            body: JSON.stringify({ tileId, type: targetType }),
           });
           const data = await res.json();
           if (!data.success) {
@@ -411,7 +414,37 @@ export default function GameDashboardPage() {
               onCountChange={setDistributeCount}
               busy={distributing}
               progress={distributeProgress}
-              onRun={() => handleBulkDistribute(distributeType, distributeCount)}
+              onRun={() =>
+                handleBulkDistribute(
+                  distributeType,
+                  distributeCount,
+                  (t) => t.type === "unassigned",
+                  "unassigned"
+                )
+              }
+            />
+          )}
+
+        {player.phase === "play" &&
+          tiles.some(
+            (t) =>
+              t.type === "military" ||
+              t.type === "food" ||
+              t.type === "magic"
+          ) && (
+            <BulkUnassign
+              tiles={tiles}
+              turnsRemaining={player.turnsRemaining}
+              busy={distributing}
+              progress={distributeProgress}
+              onRun={(sourceType, count) =>
+                handleBulkDistribute(
+                  "unassigned",
+                  count,
+                  (t) => t.type === sourceType,
+                  sourceType
+                )
+              }
             />
           )}
 
@@ -440,12 +473,20 @@ export default function GameDashboardPage() {
             </>
           )}
           {player.phase === "play" && (
-            <Link
-              href="/game/spells"
-              className="px-5 py-2.5 border border-neutral-300 dark:border-neutral-700 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-            >
-              Spells
-            </Link>
+            <>
+              <Link
+                href="/game/recruit"
+                className="px-5 py-2.5 border border-neutral-300 dark:border-neutral-700 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+              >
+                Recruit
+              </Link>
+              <Link
+                href="/game/spells"
+                className="px-5 py-2.5 border border-neutral-300 dark:border-neutral-700 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+              >
+                Spells
+              </Link>
+            </>
           )}
           <Link
             href="/game/artifacts"
@@ -665,6 +706,110 @@ function BulkDistribute({
           <div className="text-xs text-neutral-600 dark:text-neutral-400 flex justify-between">
             <span>
               {progress.done} / {progress.total} tiles assigned
+            </span>
+            <span>
+              {progress.artifactsFound} artifact
+              {progress.artifactsFound === 1 ? "" : "s"} found
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BulkUnassign({
+  tiles,
+  turnsRemaining,
+  busy,
+  progress,
+  onRun,
+}: {
+  tiles: GameTile[];
+  turnsRemaining: number;
+  busy: boolean;
+  progress: { done: number; total: number; artifactsFound: number } | null;
+  onRun: (sourceType: "military" | "food" | "magic", count: number) => void;
+}) {
+  const [sourceType, setSourceType] = useState<"military" | "food" | "magic">(
+    "military"
+  );
+  const [count, setCount] = useState(5);
+  const sourceCount = tiles.filter((t) => t.type === sourceType).length;
+  const max = Math.min(sourceCount, turnsRemaining);
+  const safeCount = Math.max(1, Math.min(max || 1, Math.floor(count)));
+  const pct = progress
+    ? Math.round((progress.done / Math.max(1, progress.total)) * 100)
+    : 0;
+  return (
+    <div className="rounded-lg border-2 border-rose-300 dark:border-rose-800 bg-rose-50/50 dark:bg-rose-900/10 p-4 mb-6">
+      <div className="flex items-baseline justify-between mb-2">
+        <h2 className="font-semibold">Bulk-revert tiles to unassigned</h2>
+        <span className="text-xs text-neutral-500">1 turn / tile</span>
+      </div>
+      <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-3 leading-relaxed">
+        Reset assigned tiles back to <em>unassigned</em>. Each revert costs 1
+        turn and rolls for an artifact, just like a fresh assignment. You&apos;ll
+        pay another turn each to re-assign them later, so use this when you
+        actually want to redistribute the territory mix.
+      </p>
+      <div className="flex flex-wrap items-center gap-3">
+        <label className="text-sm">
+          Source type:{" "}
+          <select
+            value={sourceType}
+            onChange={(e) =>
+              setSourceType(e.target.value as "military" | "food" | "magic")
+            }
+            disabled={busy}
+            className="ml-2 px-2 py-1 border border-neutral-300 dark:border-neutral-700 rounded bg-transparent capitalize"
+          >
+            <option value="military">military</option>
+            <option value="food">food</option>
+            <option value="magic">magic</option>
+          </select>
+        </label>
+        <label className="text-sm">
+          Count:{" "}
+          <input
+            type="number"
+            min={1}
+            max={Math.max(1, max)}
+            value={count}
+            onChange={(e) => {
+              const n = Number.parseInt(e.target.value, 10);
+              if (Number.isFinite(n)) setCount(n);
+            }}
+            disabled={busy}
+            className="w-20 px-2 py-1 ml-2 border border-neutral-300 dark:border-neutral-700 rounded bg-transparent"
+          />
+        </label>
+        <button
+          onClick={() => onRun(sourceType, safeCount)}
+          disabled={busy || max === 0}
+          className="px-5 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+        >
+          {busy
+            ? progress
+              ? `Reverting ${progress.done} / ${progress.total}…`
+              : "Reverting…"
+            : `Revert ${safeCount} ${sourceType} → unassigned`}
+        </button>
+        <span className="text-xs text-neutral-500">
+          ({sourceCount} {sourceType} tile{sourceCount === 1 ? "" : "s"} · cap {max})
+        </span>
+      </div>
+      {progress && (
+        <div className="mt-3 space-y-1">
+          <div className="h-2 w-full bg-rose-100 dark:bg-rose-950/40 rounded overflow-hidden">
+            <div
+              className="h-full bg-rose-500 transition-all duration-200"
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+          <div className="text-xs text-neutral-600 dark:text-neutral-400 flex justify-between">
+            <span>
+              {progress.done} / {progress.total} tiles reverted
             </span>
             <span>
               {progress.artifactsFound} artifact

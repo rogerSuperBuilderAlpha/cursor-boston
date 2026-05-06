@@ -12,7 +12,7 @@ import { distributeTileServer } from "@/lib/game/data-server";
 import type { LandType } from "@/lib/game/types";
 import { getVerifiedUser } from "@/lib/server-auth";
 
-const VALID_TYPES: LandType[] = ["military", "food", "magic"];
+const VALID_TYPES: LandType[] = ["military", "food", "magic", "unassigned"];
 
 export async function POST(request: NextRequest) {
   try {
