@@ -191,8 +191,18 @@ function ExplorePanel({
   const unrevealed = tiles.filter((t) => t.type === "unrevealed").length;
   return (
     <div>
-      <p className="mb-4 text-neutral-600 dark:text-neutral-300">
-        Each turn spent reveals one of your unrevealed lands. {unrevealed} remain.
+      <div className="rounded-lg border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/10 p-4 mb-4 text-sm leading-relaxed">
+        <p className="font-semibold mb-1">Step 1 of 3 — Explore</p>
+        <p>
+          You spawned with 100 lands hidden under fog. Each click below burns 1
+          turn and reveals one of them. You won&apos;t see which tile gets
+          revealed in advance — exploration is blind, just like first-time
+          scouts. Once all 100 are revealed, you&apos;ll automatically move on
+          to the distribute phase.
+        </p>
+      </div>
+      <p className="mb-4 text-sm text-neutral-600 dark:text-neutral-300">
+        {unrevealed} land{unrevealed === 1 ? "" : "s"} remain unrevealed.
       </p>
       <button
         onClick={onExplore}
@@ -226,6 +236,19 @@ function DistributePanel({
 
   return (
     <div>
+      <div className="rounded-lg border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/10 p-4 mb-4 text-sm leading-relaxed space-y-2">
+        <p className="font-semibold">Step 2 of 3 — Distribute</p>
+        <p>Assign each tile a role. Each change (including re-changes) costs 1 turn:</p>
+        <ul className="list-disc ml-5">
+          <li><strong>Military (M)</strong> — the only tiles that can produce units. More military = faster army-building.</li>
+          <li><strong>Food (F)</strong> — raises your <em>total</em> unit cap. Soft-capped: each food tile is +5 cap up to 50 tiles, then +2.5 each.</li>
+          <li><strong>Magic (G)</strong> — multiplies your spell strength when you cast. Same soft-cap shape.</li>
+        </ul>
+        <p className="text-neutral-600 dark:text-neutral-400">
+          A balanced empire usually wants ~30 military, ~30 food, ~30 magic. But specialize if you want — heavy military rushes early, heavy magic dominates spell-heavy castes.
+        </p>
+      </div>
+
       <div className="grid grid-cols-4 gap-3 mb-6 text-center text-sm">
         <Counter label="Military" value={counts.military} />
         <Counter label="Food" value={counts.food} />
@@ -234,6 +257,18 @@ function DistributePanel({
       </div>
 
       <div className="mb-6">
+        <div className="rounded-lg border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/10 p-4 mb-4 text-sm leading-relaxed space-y-2">
+          <p className="font-semibold">Step 3 of 3 — Pick a caste (permanent)</p>
+          <p>Each caste tilts your unit and spell strengths. You cannot change later.</p>
+          <ul className="list-disc ml-5">
+            <li><strong>White</strong> — defense / order. Strong ground units, strongest defense spells. Good for turtling.</li>
+            <li><strong>Blue</strong> — control / magic. Strong air units, strongest production spells (food cap boosts). Good for tempo.</li>
+            <li><strong>Black</strong> — sacrifice / swarm. Cheap balanced units, strong offense spells. Good for grinding wars.</li>
+            <li><strong>Red</strong> — aggression / fire. Strong siege, strongest offense spells. Good for blitzing.</li>
+            <li><strong>Green</strong> — growth. +20% tile capacity (so your tiles hold more units), strong ground swarms. Good for fortified expansion.</li>
+          </ul>
+        </div>
+
         <h2 className="font-semibold mb-3">Choose your caste to start playing</h2>
         <div className="flex flex-wrap gap-2">
           {CASTES.map((c) => (
@@ -248,8 +283,7 @@ function DistributePanel({
           ))}
         </div>
         <p className="text-xs text-neutral-500 mt-2">
-          Caste choice is permanent. You can keep distributing tiles after, but
-          choosing the caste advances you into the play phase.
+          You can keep redistributing tiles after picking a caste — but caste itself is locked permanently.
         </p>
       </div>
 

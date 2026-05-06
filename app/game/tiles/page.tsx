@@ -94,6 +94,14 @@ export default function TilesListPage() {
           </Link>
         </div>
 
+        <div className="rounded-lg border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/10 p-4 mb-4 text-sm leading-relaxed">
+          <p>
+            Every tile you own. Click any tile to manage it: build units (military
+            tiles only), arm a defense spell, or scout neighbors. The filter
+            chips below show how your tiles are distributed.
+          </p>
+        </div>
+
         <div className="flex flex-wrap gap-2 mb-6">
           {LAND_FILTERS.map((t) => (
             <button
