@@ -29,6 +29,13 @@ export const ATTACK_OPENINGS: string[] = [
   "The advance crossed the river before the enemy could raise an alarm.",
   "Your forward squads engaged before the main body had finished forming up.",
   "The column moved with the patience of a tide and the speed of a hawk.",
+  "The drums beat once, twice, and your forward line was already at a run.",
+  "A trumpet sounded at the camp's edge and the column was on the road inside the minute.",
+  "The captain raised her hand, dropped it, and the line stepped forward as one.",
+  "Your archers loosed the first volley before the enemy's banners had finished raising.",
+  "The vanguard crossed the boundary stones at a quiet jog and the rest followed.",
+  "Your column hit the road in a long thin line and accelerated as it went.",
+  "The senior captain gave the order from horseback and the line moved without hesitation.",
 ];
 
 export const ATTACK_MIDDLES: string[] = [
@@ -46,6 +53,12 @@ export const ATTACK_MIDDLES: string[] = [
   "After a bitter contest of inches that neither side enjoyed",
   "After a swift and decisive engagement",
   "After a battle that the historians will argue over for a generation",
+  "After a punishing exchange that neither captain expected to last so long",
+  "After a coordinated push from three angles that left the defenders no clean reply",
+  "After your siege machines did their work and the rest of the line stepped in",
+  "After the cavalry's first charge and the infantry's slow follow-up",
+  "After a long noon that neither side could call a victory until late",
+  "After your archers' second volley dropped the enemy line back a pace",
 ];
 
 export const ATTACK_CAPTURED_CLOSERS: string[] = [
