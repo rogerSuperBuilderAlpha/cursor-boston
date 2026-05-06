@@ -79,6 +79,26 @@ describe("currentEligibilityWindow", () => {
   });
 });
 
+describe("newPlayer with v2 options", () => {
+  it("accepts initialPhase, tilesHeld, tilesExplored overrides", () => {
+    const p = newPlayer("u-1", new Date("2026-05-06T00:00:00Z"), {
+      initialPhase: "distribute",
+      tilesHeld: 25,
+      tilesExplored: 25,
+    });
+    expect(p.phase).toBe("distribute");
+    expect(p.tilesExplored).toBe(25);
+    expect(p.stats.tilesHeld).toBe(25);
+  });
+
+  it("falls back to v1 defaults when no options passed", () => {
+    const p = newPlayer("u-1", new Date("2026-05-06T00:00:00Z"));
+    expect(p.phase).toBe("explore");
+    expect(p.tilesExplored).toBe(0);
+    expect(p.stats.tilesHeld).toBe(100);
+  });
+});
+
 describe("newPlayer", () => {
   it("starts at phase=explore with 100 turns and shield active", () => {
     const created = new Date("2026-05-01T12:00:00.000Z");
