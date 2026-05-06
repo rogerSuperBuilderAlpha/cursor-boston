@@ -9,7 +9,10 @@ import { apiError } from "@/lib/api-response";
 import { logger } from "@/lib/logger";
 import {
   GameAlreadyRevealedError,
+  GameArtifactAlreadyUsedError,
+  GameArtifactNotFoundError,
   GameCasteAlreadySetError,
+  GameFrontierExhaustedError,
   GameInsufficientTurnsError,
   GameInsufficientUnitsError,
   GameInvalidCasteError,
@@ -33,7 +36,8 @@ import {
 export function mapGameError(error: unknown): NextResponse {
   if (
     error instanceof GamePlayerNotFoundError ||
-    error instanceof GameTileNotFoundError
+    error instanceof GameTileNotFoundError ||
+    error instanceof GameArtifactNotFoundError
   ) {
     return apiError(error.message, 404);
   }
@@ -54,7 +58,9 @@ export function mapGameError(error: unknown): NextResponse {
     error instanceof GameNoUnrevealedTilesError ||
     error instanceof GameTileFullError ||
     error instanceof GameUnitCapExceededError ||
-    error instanceof GameTileTypeError
+    error instanceof GameTileTypeError ||
+    error instanceof GameFrontierExhaustedError ||
+    error instanceof GameArtifactAlreadyUsedError
   ) {
     return apiError(error.message, 409);
   }
