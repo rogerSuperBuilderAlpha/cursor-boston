@@ -12,10 +12,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   PYDATA_2026_CAPACITY,
   PYDATA_2026_EVENT_SLUG,
-  PYDATA_2026_LUMA_URL,
   PYDATA_2026_REGISTRATION_PATH,
   type PydataRegistration,
 } from "@/lib/pydata-2026";
+import { PyDataLumaButton } from "@/components/events/PyDataLumaButton";
 
 const API_PATH = "/api/events/pydata-2026/registration";
 const CAPACITY_API_PATH = "/api/events/pydata-2026/capacity";
@@ -184,17 +184,8 @@ export default function PyDataRegisterPage() {
         </h1>
         <p className="mt-4 text-base text-neutral-600 dark:text-neutral-400">
           Wednesday May 13 · Moderna HQ, Cambridge. Confirm here so we can hand
-          your name to Moderna for Envoy registration and badge issuance. You
-          still need to RSVP on{" "}
-          <a
-            href={PYDATA_2026_LUMA_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-emerald-600 underline hover:text-emerald-500 dark:text-emerald-400"
-          >
-            Luma
-          </a>{" "}
-          for the door list.
+          your name to Moderna for Envoy registration and badge issuance. This
+          form is what gets you on the door list.
         </p>
         <CapacityBanner capacity={capacity} />
 
@@ -262,20 +253,12 @@ const PROCESS_STEPS: Step[] = [
   {
     when: "Now",
     actor: "you",
-    title: "Confirm attendance + RSVP on Luma",
+    title: "Confirm attendance",
     body: (
       <>
         Fill out the form below with the name on your government-issued ID,
-        plus your email and (optionally) phone and company. Then RSVP on{" "}
-        <a
-          href={PYDATA_2026_LUMA_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-emerald-600 underline hover:text-emerald-500 dark:text-emerald-400"
-        >
-          Luma
-        </a>{" "}
-        if you haven&apos;t already — that&apos;s the door list.
+        plus your email and (optionally) phone and company. Submitting this
+        form is what puts you on the door list — Luma alone won&apos;t.
       </>
     ),
   },
@@ -776,30 +759,10 @@ function AwaitingBadge({
             you can still sign the NDA on paper at the door — but if your name
             isn&apos;t on the list, you won&apos;t be admitted.
           </li>
-          <li>
-            Don&apos;t forget to RSVP on{" "}
-            <a
-              href={PYDATA_2026_LUMA_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline"
-            >
-              Luma
-            </a>{" "}
-            if you haven&apos;t already.
-          </li>
         </ol>
       </div>
 
       <div className="mt-6 flex flex-wrap gap-3">
-        <a
-          href={PYDATA_2026_LUMA_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center justify-center rounded-lg bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-400"
-        >
-          Open Luma RSVP
-        </a>
         <button
           type="button"
           onClick={onEdit}
@@ -807,6 +770,7 @@ function AwaitingBadge({
         >
           Edit details
         </button>
+        <PyDataLumaButton variant="outline" label="Also RSVP on Luma" />
         <Link
           href={`/events/${PYDATA_2026_EVENT_SLUG}`}
           className="inline-flex items-center justify-center rounded-lg border border-neutral-300 px-5 py-2.5 text-sm font-semibold hover:bg-neutral-100 dark:border-neutral-600 dark:hover:bg-neutral-800"

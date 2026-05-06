@@ -21,6 +21,13 @@ export const PYDATA_2026_REGISTRATION_PATH = `/events/${PYDATA_2026_EVENT_SLUG}/
 export const PYDATA_2026_REGISTRATIONS_COLLECTION = "pydataHack2026Registrations";
 
 /**
+ * Event name written into eventContacts.eventNames by the Luma sync scripts
+ * (sync-event-contacts.ts derives this from the CSV filename). Lookups for
+ * "is this email on the pydata Luma list?" must match this string exactly.
+ */
+export const PYDATA_2026_LUMA_EVENT_NAME = "Cursor Boston-PyData Data Science Hack";
+
+/**
  * Hard cap on attendees Moderna will admit. We hand Moderna the first
  * PYDATA_2026_CAPACITY non-cancelled registrations sorted by createdAt;
  * everyone else lands on a waitlist. Luma RSVPs do NOT count.

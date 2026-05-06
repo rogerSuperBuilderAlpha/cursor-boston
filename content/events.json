@@ -14,8 +14,8 @@
         "mapUrl": null
       },
       "type": "hackathon",
-      "description": "Hands-on evening hackathon at Moderna HQ co-hosted by Cursor Boston and PyData Boston. A short talk from Eric Ma, then a focused build session on data-science workflows with Cursor. Pizza and Cursor credits. Wednesday May 13 in Cambridge — register on Luma; host approval and Envoy NDA sign-in required.",
-      "longDescription": "Cursor Boston and PyData Boston team up for an evening of data-science building at Moderna HQ in Cambridge.\n\nThe Format\n\nDoors open at 6:30 with networking and pizza. Welcome at 7:00, then a talk from Eric Ma at 7:15 on a practical data-science topic. At ~8:05 we break into the hack — build and explore data-science workflows in Cursor. Optional demos at ~9:10 and we wrap by 9:30.\n\nWhat You'll Get\n\nCommunity, learning, pizza, and Cursor credits (details TBA).\n\nImportant: Security & Access\n\nSign-up closes 48 hours prior — no sign-up, no entry. Moderna has tight security.\n\nRSVPs must include first name, last name, email, and organization. After approval you'll get an email from no-reply@envoy.com. Complete the Envoy sign-in including NDA and signature before arriving — you'll receive a QR code. No QR code, no access. When taking photos, do not include the Moderna logo or branding.\n\nPreparation\n\nBring a laptop, charger, Cursor IDE installed, and a registered Cursor account.\n\nHosts\n\nRoger Hunt, Jacqueline Valeri, Sebastian Wallkötter, Alexander Commodore.",
+      "description": "Hands-on evening hackathon at Moderna HQ co-hosted by Cursor Boston and PyData Boston. A short talk from Eric Ma, then a focused build session on data-science workflows with Cursor. Pizza and Cursor credits. Wednesday May 13 in Cambridge — register on cursorboston.com for Moderna door access; Envoy NDA sign-in required before arrival.",
+      "longDescription": "Cursor Boston and PyData Boston team up for an evening of data-science building at Moderna HQ in Cambridge.\n\nThe Format\n\nDoors open at 6:30 with networking and pizza. Welcome at 7:00, then a talk from Eric Ma at 7:15 on a practical data-science topic. At ~8:05 we break into the hack — build and explore data-science workflows in Cursor. Optional demos at ~9:10 and we wrap by 9:30.\n\nWhat You'll Get\n\nCommunity, learning, pizza, and Cursor credits (details TBA).\n\nImportant: Security & Access\n\nSign-up closes 48 hours prior — no sign-up, no entry. Moderna has tight security.\n\nRegistration on cursorboston.com is what gets you on the Moderna door list — full legal name, email, and organization. About 48 hours before the event we send Moderna a final attendee CSV; you'll then get an email from no-reply@envoy.com. Complete the Envoy sign-in including NDA and signature before arriving — you'll receive a QR code. No QR code, no access. When taking photos, do not include the Moderna logo or branding.\n\nPreparation\n\nBring a laptop, charger, Cursor IDE installed, and a registered Cursor account.\n\nHosts\n\nRoger Hunt, Jacqueline Valeri, Sebastian Wallkötter, Alexander Commodore.",
       "lumaCheckoutEventId": "evt-9PHCTsttlDD5wYW",
       "lumaEmbedSrc": "https://luma.com/embed/event/evt-9PHCTsttlDD5wYW/simple",
       "image": "/cursor-boston-logo.png",
@@ -77,7 +77,7 @@
         },
         {
           "question": "What's the Envoy / NDA step?",
-          "answer": "After your Luma approval you'll get an email from no-reply@envoy.com. Complete the sign-in (including NDA and signature) before the event. That generates the QR code you need to enter Moderna."
+          "answer": "After we send Moderna the final attendee CSV (48 hours before the event), you'll get an email from no-reply@envoy.com. Complete the sign-in (including NDA and signature) before the event. That generates the QR code you need to enter Moderna."
         },
         {
           "question": "Can I take photos?",
