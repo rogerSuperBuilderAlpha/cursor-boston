@@ -92,4 +92,29 @@ describe("rollArtifact", () => {
     const ids = ALL_ARTIFACTS.map((a) => a.id);
     expect(new Set(ids).size).toBe(ids.length);
   });
+
+  // Bulk endpoints (bulkDistributeTilesServer / bulkBuildUnitsServer /
+  // bulkFrontierExploreServer in data-server.ts) seed the per-step artifact
+  // RNG with `artifact:${userId}:${turnsSpentTotal_after_this_step}` — the
+  // same scheme the per-step path uses. This test pins that contract: given
+  // the same userId and turn index, both paths must produce the same
+  // artifact (or null).
+  it("artifact:userId:turn seeding is path-independent", () => {
+    const userId = "user-abc";
+    const startingTurnsSpent = 42;
+    // Bulk: 5 sequential steps post-increment turnsSpentTotal in memory.
+    const bulkResults = [];
+    for (let i = 1; i <= 5; i++) {
+      const seed = `artifact:${userId}:${startingTurnsSpent + i}`;
+      bulkResults.push(rollArtifact(makeSeededRng(seed))?.id ?? null);
+    }
+    // Per-step: 5 separate transactions, each commits then re-reads
+    // turnsSpentTotal before rolling.
+    const perStepResults = [];
+    for (let i = 1; i <= 5; i++) {
+      const seed = `artifact:${userId}:${startingTurnsSpent + i}`;
+      perStepResults.push(rollArtifact(makeSeededRng(seed))?.id ?? null);
+    }
+    expect(bulkResults).toEqual(perStepResults);
+  });
 });
