@@ -116,6 +116,11 @@ export default function Footer() {
                       Partners
                     </Link>
                   </li>
+                  <li>
+                    <Link href="/game" className="text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white text-sm transition-colors focus-visible:outline-none focus-visible:text-foreground focus-visible:underline">
+                      Generals
+                    </Link>
+                  </li>
                 </ul>
               </div>
 
