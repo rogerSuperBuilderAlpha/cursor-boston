@@ -12,7 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ALL_SPELLS, SPELLS_BY_ID } from "@/lib/game/content";
 import type {
   GamePlayer,
-  GameTile,
+  MapTile,
   SpellDefinition,
   TurnReport,
 } from "@/lib/game/types";
@@ -25,7 +25,7 @@ interface PlayerResponseError {
 interface PlayerResponse {
   success: boolean;
   player: GamePlayer | null;
-  tiles: GameTile[];
+  tiles: MapTile[];
   error?: PlayerResponseError | string;
 }
 
@@ -34,7 +34,7 @@ const SPELL_TURN_COST = 5;
 export default function SpellsPage() {
   const { user, loading: authLoading } = useAuth();
   const [player, setPlayer] = useState<GamePlayer | null>(null);
-  const [tiles, setTiles] = useState<GameTile[]>([]);
+  const [tiles, setTiles] = useState<MapTile[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -345,7 +345,7 @@ function SpellCard({
   canSpend: boolean;
   armTargetTileId: string;
   setArmTargetTileId: (id: string) => void;
-  armableTiles: GameTile[];
+  armableTiles: MapTile[];
   onCastProduction: () => void;
   onArmDefense: () => void;
 }) {

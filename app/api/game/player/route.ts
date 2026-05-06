@@ -9,7 +9,7 @@ import { apiError, apiSuccess } from "@/lib/api-response";
 import { mapGameError } from "@/lib/game/api-error-map";
 import {
   createPlayerWithSpawnServer,
-  getOwnedTilesServer,
+  getOwnedMapTilesServer,
   getPlayerServer,
 } from "@/lib/game/data-server";
 import { getVerifiedUser } from "@/lib/server-auth";
@@ -20,7 +20,10 @@ export async function GET(request: NextRequest) {
     if (!user) return apiError("Authentication required", 401);
     const player = await getPlayerServer(user.uid);
     if (!player) return apiSuccess({ player: null, tiles: [] });
-    const tiles = await getOwnedTilesServer(user.uid);
+    // Lightweight projection — strips neighborTileIds, upgradeIds, level,
+    // and timestamps from the per-tile payload. Tile detail page fetches
+    // the full GameTile separately via /api/game/tile/[tileId].
+    const tiles = await getOwnedMapTilesServer(user.uid);
     return apiSuccess({ player, tiles });
   } catch (error) {
     return mapGameError(error);
