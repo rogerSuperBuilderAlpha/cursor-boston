@@ -16,6 +16,7 @@ import {
 import type {
   GamePlayer,
   GameTile,
+  LandType,
   SpellDefinition,
   TurnReport,
   UnitStack,
@@ -212,6 +213,12 @@ export default function TileDetailPage({
             onArmSpell={(spellId) =>
               callApi("/api/game/spell/arm", { tileId: tile.tileId, spellId })
             }
+            onAssign={(targetType) =>
+              callApi("/api/game/setup/distribute", {
+                tileId: tile.tileId,
+                type: targetType,
+              })
+            }
           />
         ) : (
           <EnemyTilePanel
@@ -303,6 +310,7 @@ function OwnTilePanel({
   busy,
   onBuild,
   onArmSpell,
+  onAssign,
 }: {
   tile: GameTile;
   player: GamePlayer;
@@ -310,14 +318,83 @@ function OwnTilePanel({
   busy: boolean;
   onBuild: (unitType: UnitType) => void;
   onArmSpell: (spellId: string) => void;
+  onAssign: (newType: LandType) => void;
 }) {
   const canBuild =
     player.phase === "play" &&
     tile.type === "military" &&
     player.turnsRemaining >= 5;
 
+  // Distribute is allowed in distribute and play phases. Each (re-)assignment
+  // costs 1 turn. unrevealed tiles can't be assigned (must be revealed first).
+  const canAssign =
+    (player.phase === "distribute" || player.phase === "play") &&
+    tile.type !== "unrevealed" &&
+    player.turnsRemaining >= 1;
+
+  const assignableTypes: { type: LandType; label: string; hint: string }[] = [
+    {
+      type: "military",
+      label: "Military",
+      hint: "Builds units; raises tile capacity by +200 in combat.",
+    },
+    {
+      type: "food",
+      label: "Food",
+      hint: "Raises your global unit cap (+5 each up to 50, +2.5 above).",
+    },
+    {
+      type: "magic",
+      label: "Magic",
+      hint: "Multiplies spell strength.",
+    },
+    {
+      type: "unassigned",
+      label: "Unassigned",
+      hint: "Revert this tile so you can re-assign later (still costs 1 turn).",
+    },
+  ];
+
   return (
     <div className="space-y-6">
+      <section>
+        <h2 className="font-semibold mb-3">Assign land type</h2>
+        <div className="rounded-lg border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/10 p-3 mb-3 text-sm leading-relaxed">
+          <p>
+            Each (re-)assignment costs <strong>1 turn</strong> and rolls for an
+            artifact. This tile is currently{" "}
+            <strong className="capitalize">{tile.type}</strong>.
+          </p>
+        </div>
+        {tile.type === "unrevealed" ? (
+          <p className="text-sm text-neutral-500">Reveal this tile first.</p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {assignableTypes.map((a) => {
+              const isCurrent = tile.type === a.type;
+              return (
+                <button
+                  key={a.type}
+                  onClick={() => onAssign(a.type)}
+                  disabled={busy || !canAssign || isCurrent}
+                  title={a.hint}
+                  className={`px-3 py-2 text-sm rounded-lg border transition-colors disabled:opacity-50 ${
+                    isCurrent
+                      ? "border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 cursor-default"
+                      : "border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                  }`}
+                >
+                  <div className="font-medium">{a.label}</div>
+                  <div className="text-xs text-neutral-500 mt-0.5 leading-tight">
+                    {isCurrent ? "current" : "1 turn"}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
       <section>
         <h2 className="font-semibold mb-3">Build units</h2>
         <div className="rounded-lg border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/10 p-3 mb-3 text-sm leading-relaxed space-y-1">
