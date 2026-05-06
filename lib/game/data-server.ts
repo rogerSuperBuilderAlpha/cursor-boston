@@ -44,12 +44,14 @@ import type {
   GamePlayer,
   GameTile,
   LandType,
+  MapTile,
   TurnAction,
   TurnReport,
   UnitStack,
   UnitType,
 } from "./types";
 import {
+  type AxialCoord,
   axialFromTileId,
   neighborTileIds,
   neighbors as axialNeighbors,
@@ -304,6 +306,33 @@ export async function getOwnedTilesServer(userId: string): Promise<GameTile[]> {
     .where("ownerId", "==", userId)
     .get();
   return snap.docs.map((d) => d.data() as GameTile);
+}
+
+// Lightweight tile fetch — uses Firestore's select() to only pull the fields
+// the map/dashboard need. Same Firestore read cost (Firestore charges per
+// doc, not per field), but ~60-70% smaller wire payload and JSON parse cost.
+// For a 200-tile player this drops the response from ~200KB to ~70KB.
+export async function getOwnedMapTilesServer(
+  userId: string
+): Promise<MapTile[]> {
+  const db = adminDbOrThrow();
+  const snap = await db
+    .collection(COLLECTIONS.TILES)
+    .where("ownerId", "==", userId)
+    .select("tileId", "q", "r", "type", "ownerId", "units", "armedDefenseSpellId")
+    .get();
+  return snap.docs.map((d) => {
+    const data = d.data();
+    return {
+      tileId: data.tileId,
+      q: data.q,
+      r: data.r,
+      type: data.type,
+      ownerId: data.ownerId ?? null,
+      units: data.units,
+      armedDefenseSpellId: data.armedDefenseSpellId ?? null,
+    } as MapTile;
+  });
 }
 
 export async function getTileServer(tileId: string): Promise<GameTile | null> {
@@ -580,6 +609,159 @@ export async function distributeTileServer(
   });
 }
 
+// Bulk variant of distribute. Reads {player + N tile refs} in one batch via
+// getAll, validates and computes new types in memory, accumulates artifact
+// rolls + reports per step, then commits everything in one transaction.
+//
+// Stops cleanly with `stoppedEarly` if a step fails (out of turns, tile not
+// owned, etc.) — earlier successful steps are retained. Cap at 100 tiles per
+// call to keep us under Firestore's 500-ops-per-txn limit (worst case:
+// 1 player update + 100 tile updates + 100 artifact writes = 201 ops).
+export async function bulkDistributeTilesServer(
+  userId: string,
+  tileIds: ReadonlyArray<string>,
+  type: LandType,
+  now: Date = new Date()
+): Promise<{
+  player: GamePlayer;
+  tiles: GameTile[];
+  reports: TurnReport[];
+  stoppedEarly?: string;
+}> {
+  if (!VALID_DISTRIBUTABLE_TYPES.has(type)) {
+    throw new GameInvalidLandTypeError(type);
+  }
+  if (tileIds.length === 0) {
+    throw new Error("bulkDistributeTilesServer: tileIds must not be empty");
+  }
+  if (tileIds.length > 100) {
+    throw new Error(
+      `bulkDistributeTilesServer: at most 100 tiles per call (got ${tileIds.length})`
+    );
+  }
+
+  const db = adminDbOrThrow();
+  const playerRef = db.collection(COLLECTIONS.PLAYERS).doc(userId);
+  const tileRefs = tileIds.map((id) =>
+    db.collection(COLLECTIONS.TILES).doc(id)
+  );
+
+  return db.runTransaction(async (tx) => {
+    // Single batched read of player + every tile.
+    const snaps = await tx.getAll(playerRef, ...tileRefs);
+    const playerSnap = snaps[0];
+    const tileSnaps = snaps.slice(1);
+    if (!playerSnap.exists) throw new GamePlayerNotFoundError();
+    const player = playerSnap.data() as GamePlayer;
+
+    if (player.phase !== "distribute" && player.phase !== "play") {
+      throw new GameInvalidPhaseError("distribute|play", player.phase);
+    }
+
+    const reports: TurnReport[] = [];
+    const updatedTiles: GameTile[] = [];
+    let turnsRemaining = player.turnsRemaining;
+    let turnsSpentTotal = player.turnsSpentTotal;
+    let stoppedEarly: string | undefined;
+
+    for (let i = 0; i < tileIds.length; i++) {
+      const tileSnap = tileSnaps[i];
+      const tileId = tileIds[i];
+
+      // First-step failures throw (caller's error mapper picks the HTTP status).
+      // Subsequent failures stop the batch cleanly with stoppedEarly so the
+      // earlier-succeeded steps still commit.
+      const isFirst = i === 0;
+
+      if (!tileSnap.exists) {
+        if (isFirst) throw new GameTileNotFoundError();
+        stoppedEarly = `tile ${tileId} not found`;
+        break;
+      }
+      const tile = tileSnap.data() as GameTile;
+
+      if (tile.ownerId !== userId) {
+        if (isFirst) throw new GameTileNotOwnedError();
+        stoppedEarly = `tile ${tileId} not owned`;
+        break;
+      }
+      if (tile.type === "unrevealed") {
+        if (isFirst) throw new GameTileUnrevealedError();
+        stoppedEarly = `tile ${tileId} unrevealed`;
+        break;
+      }
+      if (turnsRemaining < 1) {
+        if (isFirst) {
+          throw new GameInsufficientTurnsError(1, turnsRemaining);
+        }
+        stoppedEarly = `out of turns at step ${i}`;
+        break;
+      }
+
+      // Skip no-op writes when the requested type matches current type. Still
+      // costs no turns and rolls no artifact — pure silent skip. Keeps the
+      // bulk caller from accidentally double-paying for the current state.
+      if (tile.type === type) {
+        // Append a no-op-ish report so the caller can see we visited.
+        // Cost 0 — no turn spent.
+        continue;
+      }
+
+      turnsRemaining -= 1;
+      turnsSpentTotal += 1;
+
+      const artifact = rollAndStageArtifact(
+        tx,
+        db,
+        userId,
+        turnsSpentTotal,
+        "distribute",
+        now
+      );
+
+      tx.update(tileRefs[i], { type, updatedAt: now });
+      const updatedTile: GameTile = { ...tile, type, updatedAt: now };
+      updatedTiles.push(updatedTile);
+
+      reports.push(
+        buildDistributeReport({
+          turnIndex: turnsSpentTotal,
+          tileId,
+          newType: type,
+          artifactFound: artifact,
+          rng: makeNarrativeRng(userId, turnsSpentTotal, "distribute"),
+        })
+      );
+    }
+
+    // Single player write at the end with the accumulated debits.
+    if (
+      turnsRemaining !== player.turnsRemaining ||
+      turnsSpentTotal !== player.turnsSpentTotal
+    ) {
+      tx.update(playerRef, {
+        turnsRemaining,
+        turnsSpentTotal,
+        updatedAt: now,
+      });
+    }
+
+    const updatedPlayer: GamePlayer = {
+      ...player,
+      turnsRemaining,
+      turnsSpentTotal,
+      updatedAt: now,
+    };
+
+    return {
+      player: updatedPlayer,
+      tiles: updatedTiles,
+      reports,
+      stoppedEarly,
+    };
+  });
+}
+
 // Locks the player's caste and advances phase from `distribute` → `play`.
 // Free of turn cost.
 export async function chooseCasteServer(
@@ -772,6 +954,200 @@ export async function buildUnitsServer(
       tile: { ...tile, units: newUnits, updatedAt: now },
       produced: BUILD_UNITS_PER_TURN,
       report,
+    };
+  });
+}
+
+export interface BulkBuildPlanEntry {
+  tileId: string;
+  unitType: UnitType;
+  cycles: number; // each cycle = BUILD_UNITS_TURN_COST turns + BUILD_UNITS_PER_TURN units
+}
+
+// Bulk build. Reads {player + 1 land-counts query + N military tile refs} once,
+// runs each plan entry's `cycles` build steps in memory (each step costs
+// BUILD_UNITS_TURN_COST turns and adds BUILD_UNITS_PER_TURN units), accumulates
+// artifact rolls + reports, and writes everything in one transaction.
+//
+// Stops cleanly with stoppedEarly if a step would exceed the unit cap or
+// the player runs out of turns mid-batch — earlier-succeeded steps still commit.
+//
+// Cap total cycles at 100 to stay under Firestore's 500-ops-per-txn limit
+// (worst case: 1 player + N tiles + 100 artifact creates ≈ 101+N writes).
+export async function bulkBuildUnitsServer(
+  userId: string,
+  plan: ReadonlyArray<BulkBuildPlanEntry>,
+  now: Date = new Date()
+): Promise<{
+  player: GamePlayer;
+  tiles: GameTile[];
+  produced: number;
+  reports: TurnReport[];
+  stoppedEarly?: string;
+}> {
+  if (plan.length === 0) {
+    throw new Error("bulkBuildUnitsServer: plan must not be empty");
+  }
+  const totalCycles = plan.reduce((sum, p) => sum + Math.max(0, p.cycles), 0);
+  if (totalCycles === 0) {
+    throw new Error("bulkBuildUnitsServer: total cycles must be > 0");
+  }
+  if (totalCycles > 100) {
+    throw new Error(
+      `bulkBuildUnitsServer: at most 100 cycles per call (got ${totalCycles})`
+    );
+  }
+  for (const p of plan) {
+    if (p.unitType !== "ground" && p.unitType !== "siege" && p.unitType !== "air") {
+      throw new Error(`bulkBuildUnitsServer: invalid unit type ${p.unitType}`);
+    }
+  }
+
+  const db = adminDbOrThrow();
+  // One owned-tiles query for the cap math, outside the txn.
+  const counts = await getOwnedLandCounts(userId);
+  const playerRef = db.collection(COLLECTIONS.PLAYERS).doc(userId);
+  // Dedupe tile refs in case the plan visits the same tile twice (round-robin
+  // over a small mil-tile pool will). We still issue one tx.update per tile
+  // at the end; the dedupe keeps the read set tight.
+  const uniqueTileIds = Array.from(new Set(plan.map((p) => p.tileId)));
+  const tileRefs = uniqueTileIds.map((id) =>
+    db.collection(COLLECTIONS.TILES).doc(id)
+  );
+
+  return db.runTransaction(async (tx) => {
+    const snaps = await tx.getAll(playerRef, ...tileRefs);
+    const playerSnap = snaps[0];
+    const tileSnaps = snaps.slice(1);
+    if (!playerSnap.exists) throw new GamePlayerNotFoundError();
+    const player = playerSnap.data() as GamePlayer;
+
+    if (player.phase !== "play") {
+      throw new GameInvalidPhaseError("play", player.phase);
+    }
+
+    // In-memory tile state keyed by tileId. We mutate copies as we go and
+    // commit them once at the end.
+    const tilesById = new Map<string, GameTile>();
+    for (let i = 0; i < uniqueTileIds.length; i++) {
+      const id = uniqueTileIds[i];
+      const snap = tileSnaps[i];
+      if (!snap.exists) throw new GameTileNotFoundError();
+      const tile = snap.data() as GameTile;
+      if (tile.ownerId !== userId) throw new GameTileNotOwnedError();
+      if (tile.type !== "military") {
+        throw new GameTileTypeError("military", tile.type);
+      }
+      tilesById.set(id, tile);
+    }
+
+    const cap = effectiveUnitCap(player, counts.food, counts.magic);
+    let unitsAlive = player.stats.unitsAlive;
+    let turnsRemaining = player.turnsRemaining;
+    let turnsSpentTotal = player.turnsSpentTotal;
+    let stoppedEarly: string | undefined;
+
+    const reports: TurnReport[] = [];
+    let stepIndex = 0;
+    let producedTotal = 0;
+
+    outer: for (const entry of plan) {
+      for (let c = 0; c < entry.cycles; c++) {
+        const isFirst = stepIndex === 0;
+
+        if (turnsRemaining < BUILD_UNITS_TURN_COST) {
+          if (isFirst) {
+            throw new GameInsufficientTurnsError(
+              BUILD_UNITS_TURN_COST,
+              turnsRemaining
+            );
+          }
+          stoppedEarly = `out of turns at cycle ${stepIndex}`;
+          break outer;
+        }
+        if (unitsAlive + BUILD_UNITS_PER_TURN > cap) {
+          if (isFirst) {
+            throw new GameUnitCapExceededError(cap, unitsAlive);
+          }
+          stoppedEarly = `unit cap reached at cycle ${stepIndex} (${unitsAlive}/${cap})`;
+          break outer;
+        }
+
+        turnsRemaining -= BUILD_UNITS_TURN_COST;
+        turnsSpentTotal += BUILD_UNITS_TURN_COST;
+        unitsAlive += BUILD_UNITS_PER_TURN;
+        producedTotal += BUILD_UNITS_PER_TURN;
+
+        const artifact = rollAndStageArtifact(
+          tx,
+          db,
+          userId,
+          turnsSpentTotal,
+          "build",
+          now
+        );
+
+        const before = tilesById.get(entry.tileId)!;
+        const after: GameTile = {
+          ...before,
+          units: {
+            ...before.units,
+            [entry.unitType]:
+              before.units[entry.unitType] + BUILD_UNITS_PER_TURN,
+          },
+          updatedAt: now,
+        };
+        tilesById.set(entry.tileId, after);
+
+        reports.push(
+          buildBuildReport({
+            turnIndex: turnsSpentTotal,
+            cost: BUILD_UNITS_TURN_COST,
+            tileId: entry.tileId,
+            unitType: entry.unitType,
+            unitsBuilt: BUILD_UNITS_PER_TURN,
+            artifactFound: artifact,
+            rng: makeNarrativeRng(userId, turnsSpentTotal, "build"),
+          })
+        );
+
+        stepIndex++;
+      }
+    }
+
+    // Stage tile writes once each (not per cycle).
+    for (const id of uniqueTileIds) {
+      const after = tilesById.get(id)!;
+      const ref = db.collection(COLLECTIONS.TILES).doc(id);
+      tx.update(ref, { units: after.units, updatedAt: now });
+    }
+
+    if (stepIndex > 0) {
+      tx.update(playerRef, {
+        turnsRemaining,
+        turnsSpentTotal,
+        stats: { ...player.stats, unitsAlive },
+        updatedAt: now,
+      });
+    }
+
+    const updatedPlayer: GamePlayer = {
+      ...player,
+      turnsRemaining,
+      turnsSpentTotal,
+      stats: { ...player.stats, unitsAlive },
+      updatedAt: now,
+    };
+    const updatedTiles: GameTile[] = uniqueTileIds.map(
+      (id) => tilesById.get(id)!
+    );
+
+    return {
+      player: updatedPlayer,
+      tiles: updatedTiles,
+      produced: producedTotal,
+      reports,
+      stoppedEarly,
     };
   });
 }
@@ -1797,6 +2173,291 @@ export async function frontierExploreServer(
       tile,
       report: reportWithRisk,
       frontier: sample,
+    };
+  });
+}
+
+// Pre-fetches up to `count` unclaimed frontier coords + their hostile-neighbor
+// counts via batched getAlls, then claims all of them in ONE transaction.
+// Each step inside the txn rolls its own artifact (seeded by per-step turn
+// index) and emits a TurnReport.
+//
+// Algorithm:
+//   1. Outside txn: walk rings outward from the player's centroid, getAll the
+//      coords on each ring, accumulate unclaimed coords until we have ≥ count
+//      (with a small buffer so we can survive a few being claimed by the time
+//      we re-validate inside the txn).
+//   2. Outside txn: one batched getAll for the unique union of all picked
+//      coords' neighbors, to compute hostile-neighbor counts (presentation).
+//   3. Inside txn: re-read the picked candidates; for each that's still
+//      unclaimed, run a step (turn debit, artifact roll, tile create, report).
+//      Skip + record stoppedEarly if too many were claimed by another player.
+//   4. One tx.update on the player at the end with accumulated turn debit.
+//
+// Caps batch at 50 to stay well under the 500-ops-per-txn limit and keep the
+// pre-fetch tractable in dense worlds.
+async function pickFrontierCandidatesBulk(
+  db: Firestore,
+  userId: string,
+  ownedTileIds: ReadonlyArray<string>,
+  tilesHeld: number,
+  count: number,
+  rng: () => number
+): Promise<FrontierSample[]> {
+  const center = hexCentroid([...ownedTileIds]);
+  const minRing = Math.max(1, 1 + Math.floor(tilesHeld / 40));
+  const overscan = Math.max(5, Math.ceil(count * 1.5));
+
+  // Walk rings outward, collecting unclaimed coords until we have enough.
+  const unclaimed: AxialCoord[] = [];
+  for (
+    let r = minRing;
+    r <= FRONTIER_MAX_RINGS && unclaimed.length < overscan;
+    r++
+  ) {
+    const coords = ringCoords(center, r);
+    for (let i = coords.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      [coords[i], coords[j]] = [coords[j], coords[i]];
+    }
+    if (coords.length === 0) continue;
+    const refs = coords.map((c) =>
+      db.collection(COLLECTIONS.TILES).doc(tileIdFromAxial(c.q, c.r))
+    );
+    const snaps = await db.getAll(...refs);
+    for (let i = 0; i < snaps.length; i++) {
+      if (!snaps[i].exists) unclaimed.push(coords[i]);
+      if (unclaimed.length >= overscan) break;
+    }
+  }
+
+  if (unclaimed.length === 0) return [];
+  const picked = unclaimed.slice(0, count);
+  const pickedTileIdSet = new Set(
+    picked.map((c) => tileIdFromAxial(c.q, c.r))
+  );
+
+  // Collect the union of all neighbor tileIds (deduped, excluding picked
+  // candidates themselves so we don't waste a read on a coord we already
+  // know is unclaimed). One batched getAll.
+  const neighborIds = new Set<string>();
+  for (const c of picked) {
+    for (const n of axialNeighbors(c.q, c.r)) {
+      const id = tileIdFromAxial(n.q, n.r);
+      if (!pickedTileIdSet.has(id)) neighborIds.add(id);
+    }
+  }
+  const neighborOwnerById = new Map<string, string>();
+  if (neighborIds.size > 0) {
+    const neighborRefs = Array.from(neighborIds).map((id) =>
+      db.collection(COLLECTIONS.TILES).doc(id)
+    );
+    const neighborSnaps = await db.getAll(...neighborRefs);
+    for (const ns of neighborSnaps) {
+      if (!ns.exists) continue;
+      const data = ns.data();
+      if (data && typeof data.ownerId === "string") {
+        neighborOwnerById.set(ns.id, data.ownerId as string);
+      }
+    }
+  }
+
+  return picked.map((c) => {
+    const tileId = tileIdFromAxial(c.q, c.r);
+    let hostileCount = 0;
+    for (const n of axialNeighbors(c.q, c.r)) {
+      const owner = neighborOwnerById.get(tileIdFromAxial(n.q, n.r));
+      if (owner && owner !== userId) hostileCount++;
+    }
+    const distance = distanceToNearestOwned(c, [...ownedTileIds]);
+    const distanceFinite = Number.isFinite(distance) ? distance : 0;
+    return {
+      tile: c,
+      tileId,
+      distanceToCore: distanceFinite,
+      hostileNeighbors: hostileCount,
+      riskScore: riskScore({
+        hostileNeighbors: hostileCount,
+        distanceToCore: distanceFinite,
+      }),
+    };
+  });
+}
+
+export async function bulkFrontierExploreServer(
+  userId: string,
+  count: number,
+  now: Date = new Date()
+): Promise<{
+  player: GamePlayer;
+  tiles: GameTile[];
+  reports: TurnReport[];
+  frontiers: FrontierSample[];
+  stoppedEarly?: string;
+}> {
+  if (count <= 0) {
+    throw new Error("bulkFrontierExploreServer: count must be > 0");
+  }
+  if (count > 50) {
+    throw new Error(
+      `bulkFrontierExploreServer: at most 50 tiles per call (got ${count})`
+    );
+  }
+  const db = adminDbOrThrow();
+
+  // Outside-txn reads: player doc + owned tiles for centroid.
+  const ownedSnap = await db
+    .collection(COLLECTIONS.TILES)
+    .where("ownerId", "==", userId)
+    .get();
+  const ownedTileIds = ownedSnap.docs.map((d) => d.id);
+
+  const playerSnapPre = await db
+    .collection(COLLECTIONS.PLAYERS)
+    .doc(userId)
+    .get();
+  if (!playerSnapPre.exists) throw new GamePlayerNotFoundError();
+  const playerPre = playerSnapPre.data() as GamePlayer;
+
+  const candidateRng = makeSeededRng(
+    `frontier-bulk:${userId}:${playerPre.turnsSpentTotal}`
+  );
+
+  const samples = await pickFrontierCandidatesBulk(
+    db,
+    userId,
+    ownedTileIds,
+    playerPre.stats.tilesHeld,
+    count,
+    candidateRng
+  );
+  if (samples.length === 0) throw new GameFrontierExhaustedError();
+
+  const playerRef = db.collection(COLLECTIONS.PLAYERS).doc(userId);
+  const candidateRefs = samples.map((s) =>
+    db.collection(COLLECTIONS.TILES).doc(s.tileId)
+  );
+
+  return db.runTransaction(async (tx) => {
+    const snaps = await tx.getAll(playerRef, ...candidateRefs);
+    const playerSnap = snaps[0];
+    const candidateSnaps = snaps.slice(1);
+    if (!playerSnap.exists) throw new GamePlayerNotFoundError();
+    const player = playerSnap.data() as GamePlayer;
+    if (player.phase !== "play") {
+      throw new GameInvalidPhaseError("play", player.phase);
+    }
+
+    let turnsRemaining = player.turnsRemaining;
+    let turnsSpentTotal = player.turnsSpentTotal;
+    let tilesHeld = player.stats.tilesHeld;
+    const reports: TurnReport[] = [];
+    const tilesCreated: GameTile[] = [];
+    const frontiers: FrontierSample[] = [];
+    let stoppedEarly: string | undefined;
+
+    for (let i = 0; i < samples.length; i++) {
+      const sample = samples[i];
+      const candidateSnap = candidateSnaps[i];
+      const isFirst = reports.length === 0;
+
+      // Race: another player might have claimed this coord between our
+      // pre-fetch and this txn. Skip and continue; surface a partial result
+      // if the entire batch races.
+      if (candidateSnap.exists) {
+        if (isFirst) {
+          // Don't throw — we may still have other candidates to claim.
+          continue;
+        }
+        continue;
+      }
+      if (turnsRemaining < 1) {
+        if (isFirst) {
+          throw new GameInsufficientTurnsError(1, turnsRemaining);
+        }
+        stoppedEarly = `out of turns at step ${reports.length}`;
+        break;
+      }
+
+      turnsRemaining -= 1;
+      turnsSpentTotal += 1;
+      tilesHeld += 1;
+
+      const artifact = rollAndStageArtifact(
+        tx,
+        db,
+        userId,
+        turnsSpentTotal,
+        "explore",
+        now
+      );
+
+      const tile: GameTile = {
+        tileId: sample.tileId,
+        q: sample.tile.q,
+        r: sample.tile.r,
+        ownerId: userId,
+        type: "unassigned",
+        level: 0,
+        units: { ground: 0, siege: 0, air: 0 },
+        armedDefenseSpellId: null,
+        neighborTileIds: neighborTileIds(sample.tile.q, sample.tile.r),
+        upgradeIds: [],
+        revealedAt: now,
+        createdAt: now,
+        updatedAt: now,
+      };
+      tx.set(candidateRefs[i], tile);
+      tilesCreated.push(tile);
+      frontiers.push(sample);
+
+      const baseReport = buildExploreReport(
+        turnsSpentTotal,
+        tile,
+        artifact,
+        makeNarrativeRng(userId, turnsSpentTotal, "explore")
+      );
+      const riskLine =
+        sample.hostileNeighbors > 0
+          ? `Risk ${sample.riskScore}/100 — ${sample.hostileNeighbors} hostile neighbor${sample.hostileNeighbors === 1 ? "" : "s"} (distance from your core: ${sample.distanceToCore} hex${sample.distanceToCore === 1 ? "" : "es"}).`
+          : `Risk ${sample.riskScore}/100 — quiet frontier (distance from your core: ${sample.distanceToCore} hex${sample.distanceToCore === 1 ? "" : "es"}).`;
+      reports.push({
+        ...baseReport,
+        narrative: [...baseReport.narrative, riskLine],
+        outcome: { ...baseReport.outcome, frontier: sample },
+      });
+    }
+
+    if (reports.length === 0) {
+      // All candidates were claimed by other players between pre-fetch and
+      // txn. Surface a clean error rather than a silent partial-of-zero.
+      throw new GameFrontierExhaustedError();
+    }
+
+    const claimedFromBatch = candidateSnaps.filter((s) => s.exists).length;
+    if (claimedFromBatch > 0 && !stoppedEarly) {
+      stoppedEarly = `${claimedFromBatch} candidate${claimedFromBatch === 1 ? "" : "s"} claimed by other players`;
+    }
+
+    tx.update(playerRef, {
+      turnsRemaining,
+      turnsSpentTotal,
+      stats: { ...player.stats, tilesHeld },
+      updatedAt: now,
+    });
+
+    return {
+      player: {
+        ...player,
+        turnsRemaining,
+        turnsSpentTotal,
+        stats: { ...player.stats, tilesHeld },
+        updatedAt: now,
+      },
+      tiles: tilesCreated,
+      reports,
+      frontiers,
+      stoppedEarly,
     };
   });
 }

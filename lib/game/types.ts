@@ -112,6 +112,20 @@ export interface GameTile {
   updatedAt: Timestamp | Date;
 }
 
+// Lightweight projection of GameTile for map-fetch payloads. Strips
+// neighborTileIds (~6 strings × N tiles), upgradeIds, level, and timestamps
+// — fields the dashboard/hex-map/recruit/spells pages don't use. Tile detail
+// page still fetches the full GameTile via /api/game/tile/[tileId].
+export interface MapTile {
+  tileId: string;
+  q: number;
+  r: number;
+  type: LandType;
+  ownerId: string | null;
+  units: UnitStack;
+  armedDefenseSpellId: string | null;
+}
+
 export interface GameAttack {
   id?: string;
   attackerId: string;

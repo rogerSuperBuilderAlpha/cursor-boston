@@ -17,11 +17,13 @@ import type {
   GamePlayer,
   GameTile,
   LandType,
+  MapTile,
   SpellDefinition,
   TurnReport,
   UnitStack,
   UnitType,
 } from "@/lib/game/types";
+import { neighborTileIds } from "@/lib/game/world-gen";
 
 interface TileResponse {
   success: boolean;
@@ -32,7 +34,7 @@ interface TileResponse {
 interface PlayerResponse {
   success: boolean;
   player: GamePlayer | null;
-  tiles: GameTile[];
+  tiles: MapTile[];
   error?: string;
 }
 
@@ -48,7 +50,7 @@ export default function TileDetailPage({
   const { user, loading: authLoading } = useAuth();
   const [tile, setTile] = useState<GameTile | null>(null);
   const [player, setPlayer] = useState<GamePlayer | null>(null);
-  const [ownedTiles, setOwnedTiles] = useState<GameTile[]>([]);
+  const [ownedTiles, setOwnedTiles] = useState<MapTile[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -482,7 +484,7 @@ function EnemyTilePanel({
 }: {
   tile: GameTile;
   player: GamePlayer;
-  ownedTiles: GameTile[];
+  ownedTiles: MapTile[];
   busy: boolean;
   onAttack: (
     sourceTileId: string,
@@ -490,9 +492,8 @@ function EnemyTilePanel({
     offenseSpellId: string | null
   ) => void;
 }) {
-  const myBorders = ownedTiles.filter((t) =>
-    t.neighborTileIds.includes(tile.tileId)
-  );
+  const targetBorders = new Set(neighborTileIds(tile.q, tile.r));
+  const myBorders = ownedTiles.filter((t) => targetBorders.has(t.tileId));
   const myCaste = player.caste;
   const offenseSpells = myCaste
     ? ALL_SPELLS.filter((s) => s.caste === myCaste && s.type === "offense")
