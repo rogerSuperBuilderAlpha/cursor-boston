@@ -18,6 +18,37 @@ const ASPECT_CLASS: Record<NonNullable<LumaEmbedProps["aspect"]>, string> = {
   portrait: "aspect-[3/4]",
 };
 
+/** Renders a luma event checkout embed within an iframe . 
+ * 
+ * **Luma API and Embed context:**
+ *  - Event ID Format : Expects a standard Luma event ID string (eg 'evt-xxxxxxxx').
+ *  - Rate limits and caching: Bcause this is a clinet-side iframe, luma API rate limits apply to the invdidual user's IP,
+ *    not the host server. No server-side caching is required for this component. 
+ *  - Fallback Behavior: If the Luma API is down, or the `embedId` points to a deleted/invalid event, 
+ *    the iframe acts as an isolated sandbox. It will gracefully display Luma's internal "Event not found" or 404 state without crashing the host application.
+ *
+ * @param {LumaEmbedProps} props - The properties for the LumaEmbed component.
+ * @param {string} props.embedId - The specific Luma Event ID to render.
+ * @param {string} props.title - Accessibility title for the iframe element.
+ * @param {string} [props.className] - Optional Tailwind CSS classes for the wrapper div.
+ * @param {"video" | "square" | "portrait"} [props.aspect="square"] - Defines the aspect ratio of the embed container.
+ * * @example
+ * // Standard square embed for a hackathon
+ * <LumaEmbed 
+ * embedId="evt-123456789" 
+ * title="Hackathon Registration" 
+ * />
+ *
+ * @example
+ * // Portrait embed with custom shadow and margin
+ * <LumaEmbed 
+ * embedId="evt-987654321" 
+ * title="Workshop Checkout" 
+ * aspect="portrait" 
+ * className="shadow-lg mt-4" 
+ * />
+ */
+
 export function LumaEmbed({
   embedId,
   title,
