@@ -439,6 +439,14 @@ export default function GameDashboardPage() {
               </Link>
             </>
           )}
+          {player.phase === "play" && (
+            <Link
+              href="/game/spells"
+              className="px-5 py-2.5 border border-neutral-300 dark:border-neutral-700 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+            >
+              Spells
+            </Link>
+          )}
           <Link
             href="/game/artifacts"
             className="px-5 py-2.5 border border-neutral-300 dark:border-neutral-700 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
