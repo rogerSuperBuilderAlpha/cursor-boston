@@ -266,6 +266,38 @@
         { "fieldPath": "eventId", "order": "ASCENDING" },
         { "fieldPath": "userId", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "game_tiles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "ownerId", "order": "ASCENDING" },
+        { "fieldPath": "type", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "game_tiles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "ownerId", "order": "ASCENDING" },
+        { "fieldPath": "updatedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "game_attacks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "attackerId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "game_attacks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "defenderId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

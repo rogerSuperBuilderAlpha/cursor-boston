@@ -357,5 +357,32 @@ service cloud.firestore {
       allow read: if request.auth != null;
       allow create, update, delete: if false;
     }
+
+    // Game — Players: authenticated users can read all player docs (leaderboard,
+    // scouting). All writes go through the Admin SDK via /api/game/* routes.
+    match /game_players/{userId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if false;
+    }
+
+    // Game — Tiles: authenticated users can read all tiles (the world is
+    // shared and visible). All writes go through the Admin SDK.
+    match /game_tiles/{tileId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if false;
+    }
+
+    // Game — Attacks: authenticated users can read attack records. All writes
+    // go through the Admin SDK via the attack endpoint (PR 3+).
+    match /game_attacks/{attackId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if false;
+    }
+
+    // Game — World metadata (singleton player-count cursor, etc.): Admin SDK only.
+    match /game_world_meta/{docId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if false;
+    }
   }
 }
