@@ -929,6 +929,200 @@ export async function buildUnitsServer(
   });
 }
 
+export interface BulkBuildPlanEntry {
+  tileId: string;
+  unitType: UnitType;
+  cycles: number; // each cycle = BUILD_UNITS_TURN_COST turns + BUILD_UNITS_PER_TURN units
+}
+
+// Bulk build. Reads {player + 1 land-counts query + N military tile refs} once,
+// runs each plan entry's `cycles` build steps in memory (each step costs
+// BUILD_UNITS_TURN_COST turns and adds BUILD_UNITS_PER_TURN units), accumulates
+// artifact rolls + reports, and writes everything in one transaction.
+//
+// Stops cleanly with stoppedEarly if a step would exceed the unit cap or
+// the player runs out of turns mid-batch — earlier-succeeded steps still commit.
+//
+// Cap total cycles at 100 to stay under Firestore's 500-ops-per-txn limit
+// (worst case: 1 player + N tiles + 100 artifact creates ≈ 101+N writes).
+export async function bulkBuildUnitsServer(
+  userId: string,
+  plan: ReadonlyArray<BulkBuildPlanEntry>,
+  now: Date = new Date()
+): Promise<{
+  player: GamePlayer;
+  tiles: GameTile[];
+  produced: number;
+  reports: TurnReport[];
+  stoppedEarly?: string;
+}> {
+  if (plan.length === 0) {
+    throw new Error("bulkBuildUnitsServer: plan must not be empty");
+  }
+  const totalCycles = plan.reduce((sum, p) => sum + Math.max(0, p.cycles), 0);
+  if (totalCycles === 0) {
+    throw new Error("bulkBuildUnitsServer: total cycles must be > 0");
+  }
+  if (totalCycles > 100) {
+    throw new Error(
+      `bulkBuildUnitsServer: at most 100 cycles per call (got ${totalCycles})`
+    );
+  }
+  for (const p of plan) {
+    if (p.unitType !== "ground" && p.unitType !== "siege" && p.unitType !== "air") {
+      throw new Error(`bulkBuildUnitsServer: invalid unit type ${p.unitType}`);
+    }
+  }
+
+  const db = adminDbOrThrow();
+  // One owned-tiles query for the cap math, outside the txn.
+  const counts = await getOwnedLandCounts(userId);
+  const playerRef = db.collection(COLLECTIONS.PLAYERS).doc(userId);
+  // Dedupe tile refs in case the plan visits the same tile twice (round-robin
+  // over a small mil-tile pool will). We still issue one tx.update per tile
+  // at the end; the dedupe keeps the read set tight.
+  const uniqueTileIds = Array.from(new Set(plan.map((p) => p.tileId)));
+  const tileRefs = uniqueTileIds.map((id) =>
+    db.collection(COLLECTIONS.TILES).doc(id)
+  );
+
+  return db.runTransaction(async (tx) => {
+    const snaps = await tx.getAll(playerRef, ...tileRefs);
+    const playerSnap = snaps[0];
+    const tileSnaps = snaps.slice(1);
+    if (!playerSnap.exists) throw new GamePlayerNotFoundError();
+    const player = playerSnap.data() as GamePlayer;
+
+    if (player.phase !== "play") {
+      throw new GameInvalidPhaseError("play", player.phase);
+    }
+
+    // In-memory tile state keyed by tileId. We mutate copies as we go and
+    // commit them once at the end.
+    const tilesById = new Map<string, GameTile>();
+    for (let i = 0; i < uniqueTileIds.length; i++) {
+      const id = uniqueTileIds[i];
+      const snap = tileSnaps[i];
+      if (!snap.exists) throw new GameTileNotFoundError();
+      const tile = snap.data() as GameTile;
+      if (tile.ownerId !== userId) throw new GameTileNotOwnedError();
+      if (tile.type !== "military") {
+        throw new GameTileTypeError("military", tile.type);
+      }
+      tilesById.set(id, tile);
+    }
+
+    const cap = effectiveUnitCap(player, counts.food, counts.magic);
+    let unitsAlive = player.stats.unitsAlive;
+    let turnsRemaining = player.turnsRemaining;
+    let turnsSpentTotal = player.turnsSpentTotal;
+    let stoppedEarly: string | undefined;
+
+    const reports: TurnReport[] = [];
+    let stepIndex = 0;
+    let producedTotal = 0;
+
+    outer: for (const entry of plan) {
+      for (let c = 0; c < entry.cycles; c++) {
+        const isFirst = stepIndex === 0;
+
+        if (turnsRemaining < BUILD_UNITS_TURN_COST) {
+          if (isFirst) {
+            throw new GameInsufficientTurnsError(
+              BUILD_UNITS_TURN_COST,
+              turnsRemaining
+            );
+          }
+          stoppedEarly = `out of turns at cycle ${stepIndex}`;
+          break outer;
+        }
+        if (unitsAlive + BUILD_UNITS_PER_TURN > cap) {
+          if (isFirst) {
+            throw new GameUnitCapExceededError(cap, unitsAlive);
+          }
+          stoppedEarly = `unit cap reached at cycle ${stepIndex} (${unitsAlive}/${cap})`;
+          break outer;
+        }
+
+        turnsRemaining -= BUILD_UNITS_TURN_COST;
+        turnsSpentTotal += BUILD_UNITS_TURN_COST;
+        unitsAlive += BUILD_UNITS_PER_TURN;
+        producedTotal += BUILD_UNITS_PER_TURN;
+
+        const artifact = rollAndStageArtifact(
+          tx,
+          db,
+          userId,
+          turnsSpentTotal,
+          "build",
+          now
+        );
+
+        const before = tilesById.get(entry.tileId)!;
+        const after: GameTile = {
+          ...before,
+          units: {
+            ...before.units,
+            [entry.unitType]:
+              before.units[entry.unitType] + BUILD_UNITS_PER_TURN,
+          },
+          updatedAt: now,
+        };
+        tilesById.set(entry.tileId, after);
+
+        reports.push(
+          buildBuildReport({
+            turnIndex: turnsSpentTotal,
+            cost: BUILD_UNITS_TURN_COST,
+            tileId: entry.tileId,
+            unitType: entry.unitType,
+            unitsBuilt: BUILD_UNITS_PER_TURN,
+            artifactFound: artifact,
+            rng: makeNarrativeRng(userId, turnsSpentTotal, "build"),
+          })
+        );
+
+        stepIndex++;
+      }
+    }
+
+    // Stage tile writes once each (not per cycle).
+    for (const id of uniqueTileIds) {
+      const after = tilesById.get(id)!;
+      const ref = db.collection(COLLECTIONS.TILES).doc(id);
+      tx.update(ref, { units: after.units, updatedAt: now });
+    }
+
+    if (stepIndex > 0) {
+      tx.update(playerRef, {
+        turnsRemaining,
+        turnsSpentTotal,
+        stats: { ...player.stats, unitsAlive },
+        updatedAt: now,
+      });
+    }
+
+    const updatedPlayer: GamePlayer = {
+      ...player,
+      turnsRemaining,
+      turnsSpentTotal,
+      stats: { ...player.stats, unitsAlive },
+      updatedAt: now,
+    };
+    const updatedTiles: GameTile[] = uniqueTileIds.map(
+      (id) => tilesById.get(id)!
+    );
+
+    return {
+      player: updatedPlayer,
+      tiles: updatedTiles,
+      produced: producedTotal,
+      reports,
+      stoppedEarly,
+    };
+  });
+}
+
 // Pre-arms a defense spell on one of the player's tiles. Triggered (and
 // consumed) when the tile is next attacked. Spell must match the player's caste.
 export async function armDefenseSpellServer(
