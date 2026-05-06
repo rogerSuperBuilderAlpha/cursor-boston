@@ -198,35 +198,51 @@ export default function GameDashboardPage() {
       }
       setDistributing(true);
       setError(null);
+      // Single bulk transaction — no per-step progress counter (the bulk txn
+      // commits everything atomically). Show an indeterminate state via
+      // distributeProgress.total so the existing progress UI reads as
+      // "Reverting…" until done.
       setDistributeProgress({ done: 0, total, artifactsFound: 0 });
-      let artifactsFound = 0;
       try {
         const token = await user.getIdToken();
-        for (let i = 0; i < total; i++) {
-          const tileId = sources[i];
-          const res = await fetch("/api/game/setup/distribute", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ tileId, type: targetType }),
-          });
-          const data = await res.json();
-          if (!data.success) {
-            const msg =
-              typeof data.error === "string"
-                ? data.error
-                : data.error?.message ?? "Distribute failed";
-            setError(`Stopped at ${i} / ${total}: ${msg}`);
-            break;
-          }
-          if (data.report) {
-            const report = data.report as TurnReport;
-            if (report.artifactFound) artifactsFound++;
-            setRecentReports((prev) => [report, ...prev].slice(0, 50));
-          }
-          setDistributeProgress({ done: i + 1, total, artifactsFound });
+        const res = await fetch("/api/game/distribute/bulk", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            tileIds: sources.slice(0, total),
+            type: targetType,
+          }),
+        });
+        const data = await res.json();
+        if (!data.success) {
+          const msg =
+            typeof data.error === "string"
+              ? data.error
+              : data.error?.message ?? "Distribute failed";
+          throw new Error(msg);
+        }
+        const reports: TurnReport[] = Array.isArray(data.reports)
+          ? data.reports
+          : [];
+        let artifactsFound = 0;
+        for (const r of reports) if (r.artifactFound) artifactsFound++;
+        if (reports.length > 0) {
+          setRecentReports((prev) =>
+            [...reports.slice().reverse(), ...prev].slice(0, 50)
+          );
+        }
+        setDistributeProgress({
+          done: reports.length,
+          total,
+          artifactsFound,
+        });
+        if (data.stoppedEarly) {
+          setError(
+            `Stopped early after ${reports.length} / ${total}: ${data.stoppedEarly}`
+          );
         }
         await fetchPlayer();
       } catch (e) {
@@ -686,9 +702,7 @@ function BulkDistribute({
           className="px-5 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
         >
           {busy
-            ? progress
-              ? `Assigning ${progress.done} / ${progress.total}…`
-              : "Assigning…"
+            ? `Assigning ${safeCount} tiles…`
             : `Assign ${safeCount} → ${type}`}
         </button>
         <span className="text-xs text-neutral-500">
@@ -790,9 +804,7 @@ function BulkUnassign({
           className="px-5 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
         >
           {busy
-            ? progress
-              ? `Reverting ${progress.done} / ${progress.total}…`
-              : "Reverting…"
+            ? `Reverting ${safeCount} tiles…`
             : `Revert ${safeCount} ${sourceType} → unassigned`}
         </button>
         <span className="text-xs text-neutral-500">

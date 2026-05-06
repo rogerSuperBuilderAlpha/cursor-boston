@@ -580,6 +580,159 @@ export async function distributeTileServer(
   });
 }
 
+// Bulk variant of distribute. Reads {player + N tile refs} in one batch via
+// getAll, validates and computes new types in memory, accumulates artifact
+// rolls + reports per step, then commits everything in one transaction.
+//
+// Stops cleanly with `stoppedEarly` if a step fails (out of turns, tile not
+// owned, etc.) — earlier successful steps are retained. Cap at 100 tiles per
+// call to keep us under Firestore's 500-ops-per-txn limit (worst case:
+// 1 player update + 100 tile updates + 100 artifact writes = 201 ops).
+export async function bulkDistributeTilesServer(
+  userId: string,
+  tileIds: ReadonlyArray<string>,
+  type: LandType,
+  now: Date = new Date()
+): Promise<{
+  player: GamePlayer;
+  tiles: GameTile[];
+  reports: TurnReport[];
+  stoppedEarly?: string;
+}> {
+  if (!VALID_DISTRIBUTABLE_TYPES.has(type)) {
+    throw new GameInvalidLandTypeError(type);
+  }
+  if (tileIds.length === 0) {
+    throw new Error("bulkDistributeTilesServer: tileIds must not be empty");
+  }
+  if (tileIds.length > 100) {
+    throw new Error(
+      `bulkDistributeTilesServer: at most 100 tiles per call (got ${tileIds.length})`
+    );
+  }
+
+  const db = adminDbOrThrow();
+  const playerRef = db.collection(COLLECTIONS.PLAYERS).doc(userId);
+  const tileRefs = tileIds.map((id) =>
+    db.collection(COLLECTIONS.TILES).doc(id)
+  );
+
+  return db.runTransaction(async (tx) => {
+    // Single batched read of player + every tile.
+    const snaps = await tx.getAll(playerRef, ...tileRefs);
+    const playerSnap = snaps[0];
+    const tileSnaps = snaps.slice(1);
+    if (!playerSnap.exists) throw new GamePlayerNotFoundError();
+    const player = playerSnap.data() as GamePlayer;
+
+    if (player.phase !== "distribute" && player.phase !== "play") {
+      throw new GameInvalidPhaseError("distribute|play", player.phase);
+    }
+
+    const reports: TurnReport[] = [];
+    const updatedTiles: GameTile[] = [];
+    let turnsRemaining = player.turnsRemaining;
+    let turnsSpentTotal = player.turnsSpentTotal;
+    let stoppedEarly: string | undefined;
+
+    for (let i = 0; i < tileIds.length; i++) {
+      const tileSnap = tileSnaps[i];
+      const tileId = tileIds[i];
+
+      // First-step failures throw (caller's error mapper picks the HTTP status).
+      // Subsequent failures stop the batch cleanly with stoppedEarly so the
+      // earlier-succeeded steps still commit.
+      const isFirst = i === 0;
+
+      if (!tileSnap.exists) {
+        if (isFirst) throw new GameTileNotFoundError();
+        stoppedEarly = `tile ${tileId} not found`;
+        break;
+      }
+      const tile = tileSnap.data() as GameTile;
+
+      if (tile.ownerId !== userId) {
+        if (isFirst) throw new GameTileNotOwnedError();
+        stoppedEarly = `tile ${tileId} not owned`;
+        break;
+      }
+      if (tile.type === "unrevealed") {
+        if (isFirst) throw new GameTileUnrevealedError();
+        stoppedEarly = `tile ${tileId} unrevealed`;
+        break;
+      }
+      if (turnsRemaining < 1) {
+        if (isFirst) {
+          throw new GameInsufficientTurnsError(1, turnsRemaining);
+        }
+        stoppedEarly = `out of turns at step ${i}`;
+        break;
+      }
+
+      // Skip no-op writes when the requested type matches current type. Still
+      // costs no turns and rolls no artifact — pure silent skip. Keeps the
+      // bulk caller from accidentally double-paying for the current state.
+      if (tile.type === type) {
+        // Append a no-op-ish report so the caller can see we visited.
+        // Cost 0 — no turn spent.
+        continue;
+      }
+
+      turnsRemaining -= 1;
+      turnsSpentTotal += 1;
+
+      const artifact = rollAndStageArtifact(
+        tx,
+        db,
+        userId,
+        turnsSpentTotal,
+        "distribute",
+        now
+      );
+
+      tx.update(tileRefs[i], { type, updatedAt: now });
+      const updatedTile: GameTile = { ...tile, type, updatedAt: now };
+      updatedTiles.push(updatedTile);
+
+      reports.push(
+        buildDistributeReport({
+          turnIndex: turnsSpentTotal,
+          tileId,
+          newType: type,
+          artifactFound: artifact,
+          rng: makeNarrativeRng(userId, turnsSpentTotal, "distribute"),
+        })
+      );
+    }
+
+    // Single player write at the end with the accumulated debits.
+    if (
+      turnsRemaining !== player.turnsRemaining ||
+      turnsSpentTotal !== player.turnsSpentTotal
+    ) {
+      tx.update(playerRef, {
+        turnsRemaining,
+        turnsSpentTotal,
+        updatedAt: now,
+      });
+    }
+
+    const updatedPlayer: GamePlayer = {
+      ...player,
+      turnsRemaining,
+      turnsSpentTotal,
+      updatedAt: now,
+    };
+
+    return {
+      player: updatedPlayer,
+      tiles: updatedTiles,
+      reports,
+      stoppedEarly,
+    };
+  });
+}
+
 // Locks the player's caste and advances phase from `distribute` → `play`.
 // Free of turn cost.
 export async function chooseCasteServer(
