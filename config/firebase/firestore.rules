@@ -239,6 +239,43 @@ service cloud.firestore {
       allow write: if false; // Only server-side writes for data integrity
     }
 
+    // Mentorship - Profiles: users can create/update their own profile, authenticated users can read active profiles
+    match /mentorship_profiles/{userId} {
+      allow read: if request.auth != null && (resource.data.isActive == true || request.auth.uid == userId);
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && request.auth.uid == userId;
+      allow delete: if false;
+    }
+
+    // Mentorship - Requests: create by fromUserId, read by participants, update by toUserId only
+    match /mentorship_requests/{requestId} {
+      allow create: if request.auth != null && request.resource.data.fromUserId == request.auth.uid;
+      allow read: if request.auth != null && (
+        resource.data.fromUserId == request.auth.uid || resource.data.toUserId == request.auth.uid
+      );
+      allow update: if request.auth != null && resource.data.toUserId == request.auth.uid;
+      allow delete: if request.auth != null && (
+        resource.data.fromUserId == request.auth.uid || resource.data.toUserId == request.auth.uid
+      );
+    }
+
+    // Mentorship - Pairings: read by mentor or mentee, created server-side when request is accepted
+    match /mentorship_pairings/{pairingId} {
+      allow read: if request.auth != null && (
+        resource.data.mentorId == request.auth.uid || resource.data.menteeId == request.auth.uid
+      );
+      allow create: if false; // Created server-side via Admin SDK when request is accepted
+      allow update: if false; // Goal/status updates are server-side only
+      allow delete: if false;
+    }
+
+    // Mentorship - Check-ins: participants can read, create by author, no updates
+    match /mentorship_check_ins/{checkInId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.authorId;
+      allow create: if false; // Created server-side via Admin SDK
+      allow update, delete: if false;
+    }
+
     // Pair Programming - Profiles: users can create/update their own profile, read active profiles
     match /pair_profiles/{userId} {
       allow read: if request.auth != null && (resource.data.isActive == true || request.auth.uid == userId);
