@@ -14,6 +14,7 @@ import { getClientIdentifier } from "@/lib/rate-limit";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 import { sanitizeText } from "@/lib/sanitize";
 import { getDisplayName } from "@/lib/utils";
+import { communityContract } from "@/lib/api-schemas/community";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -44,15 +45,22 @@ export async function POST(request: NextRequest) {
 
     const bodyOrError = await parseRequestBody(request);
     if (bodyOrError instanceof NextResponse) return bodyOrError;
-    const { content } = bodyOrError;
 
-    const sanitizedContent = sanitizeText(typeof content === "string" ? content : "");
-    if (sanitizedContent.length < 100 || sanitizedContent.length > 500) {
+    // Validate via the contract schema so the API surface and the runtime
+    // check stay in lockstep with the OpenAPI spec.
+    const sanitizedRaw = sanitizeText(
+      typeof bodyOrError.content === "string" ? bodyOrError.content : ""
+    );
+    const parsed = communityContract.createPost.body.safeParse({
+      content: sanitizedRaw,
+    });
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "Content must be between 100 and 500 characters" },
+        { error: parsed.error.issues[0]?.message ?? "Invalid request body" },
         { status: 400 }
       );
     }
+    const sanitizedContent = parsed.data.content;
 
     const authorName = getDisplayName(user);
 
