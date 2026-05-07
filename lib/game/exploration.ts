@@ -9,8 +9,12 @@ import {
   axialFromTileId,
   hexDistance,
   neighbors,
+  ringCoords,
   tileIdFromAxial,
 } from "./world-gen";
+
+// Re-exported for back-compat; canonical source is world-gen.
+export { ringCoords };
 
 // ───── Public types ─────
 
@@ -66,6 +70,25 @@ export function distanceToNearestOwned(
   return best;
 }
 
+/**
+ * Largest hex-distance from `center` to any tile in `ownedTileIds`. Returns 0
+ * if the player owns nothing or only the center itself. Used by the Monte
+ * Carlo phase of frontier exploration to anchor the outer-radius growth at
+ * the current edge of the player's blob.
+ */
+export function kingdomRadiusFromCentroid(
+  center: AxialCoord,
+  ownedTileIds: ReadonlyArray<string>
+): number {
+  let max = 0;
+  for (const id of ownedTileIds) {
+    const c = axialFromTileId(id);
+    const d = hexDistance(center, c);
+    if (d > max) max = d;
+  }
+  return max;
+}
+
 // ───── Frontier sampling ─────
 
 /**
@@ -91,27 +114,6 @@ export function riskScore(args: {
   // Distance contributes more slowly; 5 hexes from core ≈ +15, 20 hexes ≈ +30.
   const fromDistance = Math.min(30, args.distanceToCore * 1.5);
   return Math.round(Math.min(100, fromHostiles + fromDistance));
-}
-
-/**
- * Coords on the hex ring at exactly distance `r` from `center`. r=0 returns
- * just the center; r=1 returns 6 coords; r=2 returns 12; r=N returns 6N.
- *
- * Implemented as a brute-force scan of the bounding diamond — fine because
- * `r` is typically small (≤ 12).
- */
-export function ringCoords(center: AxialCoord, r: number): AxialCoord[] {
-  if (r <= 0) return [{ ...center }];
-  const out: AxialCoord[] = [];
-  for (let dq = -r; dq <= r; dq++) {
-    const drMin = Math.max(-r, -dq - r);
-    const drMax = Math.min(r, -dq + r);
-    for (let dr = drMin; dr <= drMax; dr++) {
-      const candidate = { q: center.q + dq, r: center.r + dr };
-      if (hexDistance(center, candidate) === r) out.push(candidate);
-    }
-  }
-  return out;
 }
 
 export interface SampleFrontierArgs {
