@@ -14,6 +14,7 @@ import {
 import { mapGameError } from "@/lib/game/api-error-map";
 import { getLeaderboardServer } from "@/lib/game/data-server";
 import { getVerifiedUser } from "@/lib/server-auth";
+import { gameContract } from "@/lib/api-schemas/game";
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,8 +22,16 @@ export async function GET(request: NextRequest) {
     if (!user) return apiError("Authentication required", 401);
 
     const url = new URL(request.url);
-    const limit = clampLimit(url.searchParams.get("limit"), DEFAULT_PAGE_LIMIT);
-    const cursor = parseCursor(url.searchParams.get("cursor"));
+    const queryParse = gameContract.getLeaderboard.query.safeParse({
+      limit: url.searchParams.get("limit") ?? undefined,
+      cursor: url.searchParams.get("cursor") ?? undefined,
+    });
+    if (!queryParse.success) {
+      return apiError(queryParse.error.issues[0]?.message ?? "Invalid query", 400);
+    }
+
+    const limit = clampLimit(queryParse.data.limit ?? null, DEFAULT_PAGE_LIMIT);
+    const cursor = parseCursor(queryParse.data.cursor ?? null);
 
     const { items, nextCursor, hasMore } = await getLeaderboardServer({
       limit,
