@@ -25,6 +25,11 @@ import {
 import { notifyConquest } from "./discord-game";
 import { logger } from "@/lib/logger";
 import {
+  paginateFirestoreQuery,
+  paginateInMemory,
+  type PaginatedQueryResult,
+} from "@/lib/firestore-pagination";
+import {
   PRODUCTION_SPELL_DURATION_TURNS,
   applyWeeklyGrant,
   currentEligibilityWindow,
@@ -692,21 +697,25 @@ export async function exploreNextTileServer(
   });
 }
 
-export async function listArtifactsServer(
-  userId: string
-): Promise<GameArtifact[]> {
+export async function listArtifactsServer(opts: {
+  userId: string;
+  limit: number;
+  cursor: string | null;
+}): Promise<PaginatedQueryResult<GameArtifact>> {
   const db = adminDbOrThrow();
-  // Single-field where + in-memory sort: avoids needing the composite index
-  // to be deployed before this code goes live. Inventories are small (player
-  // turn budgets cap them well below 1k) so the sort is trivial.
-  const snap = await db
-    .collection(COLLECTIONS.ARTIFACTS)
-    .where("ownerId", "==", userId)
-    .limit(500)
-    .get();
-  const artifacts = snap.docs.map((d) => d.data() as GameArtifact);
-  artifacts.sort((a, b) => b.foundAtTurn - a.foundAtTurn);
-  return artifacts;
+  const artifacts = db.collection(COLLECTIONS.ARTIFACTS);
+  // Composite index (ownerId ASC, foundAtTurn DESC) is declared in
+  // config/firebase/firestore.indexes.json — required for this orderBy.
+  const query = artifacts
+    .where("ownerId", "==", opts.userId)
+    .orderBy("foundAtTurn", "desc");
+  return paginateFirestoreQuery({
+    query,
+    collection: artifacts,
+    cursor: opts.cursor,
+    limit: opts.limit,
+    mapDoc: (d) => d.data() as GameArtifact,
+  });
 }
 
 // Sets or changes a tile's type (military / food / magic). Costs 1 turn,
@@ -1859,56 +1868,53 @@ export async function attackTileServer(args: {
   return result;
 }
 
-export async function getRecentAttacksServer(
-  userId: string,
-  side: "sent" | "received" | "all" = "all",
-  limit = 50
-): Promise<GameAttack[]> {
+export async function getRecentAttacksServer(opts: {
+  userId: string;
+  side: "sent" | "received" | "all";
+  limit: number;
+  cursor: string | null;
+}): Promise<PaginatedQueryResult<GameAttack>> {
   const db = adminDbOrThrow();
-  // Composite indexes (attackerId|defenderId, createdAt desc) are deployed
-  // (config/firebase/firestore.indexes.json), so we can orderBy + limit at the
-  // server. For side="all" we issue two queries and merge in JS — Firestore
-  // can't OR across fields. Final slice trims to `limit` after the merge.
-  const fetchLimit = Math.max(1, Math.min(100, limit));
-  const queries: Promise<GameAttack[]>[] = [];
-  if (side === "sent" || side === "all") {
-    queries.push(
-      db
-        .collection(COLLECTIONS.ATTACKS)
-        .where("attackerId", "==", userId)
-        .orderBy("createdAt", "desc")
-        .limit(fetchLimit)
-        .get()
-        .then((snap) => snap.docs.map((d) => d.data() as GameAttack))
-    );
+  const attacks = db.collection(COLLECTIONS.ATTACKS);
+
+  if (opts.side === "sent" || opts.side === "received") {
+    // Composite indexes (attackerId/defenderId ASC + createdAt DESC) are
+    // declared in config/firebase/firestore.indexes.json.
+    const field = opts.side === "sent" ? "attackerId" : "defenderId";
+    const query = attacks
+      .where(field, "==", opts.userId)
+      .orderBy("createdAt", "desc");
+    return paginateFirestoreQuery({
+      query,
+      collection: attacks,
+      cursor: opts.cursor,
+      limit: opts.limit,
+      mapDoc: (d) => d.data() as GameAttack,
+    });
   }
-  if (side === "received" || side === "all") {
-    queries.push(
-      db
-        .collection(COLLECTIONS.ATTACKS)
-        .where("defenderId", "==", userId)
-        .orderBy("createdAt", "desc")
-        .limit(fetchLimit)
-        .get()
-        .then((snap) => snap.docs.map((d) => d.data() as GameAttack))
-    );
-  }
-  const results = (await Promise.all(queries)).flat();
-  // Dedupe (sent+received can overlap if a player attacks themselves — should
-  // never happen, but guard).
+
+  // side="all" merges sent + received in memory because Firestore can't OR
+  // across two single-field equalities. Capped at 500 per side; for full
+  // history use side="sent" or side="received" with cursor pagination.
+  const SIDE_FETCH_CAP = 500;
+  const [sentSnap, receivedSnap] = await Promise.all([
+    attacks.where("attackerId", "==", opts.userId).limit(SIDE_FETCH_CAP).get(),
+    attacks.where("defenderId", "==", opts.userId).limit(SIDE_FETCH_CAP).get(),
+  ]);
   const seen = new Set<string>();
-  const out: GameAttack[] = [];
-  for (const a of results) {
+  const merged: GameAttack[] = [];
+  for (const doc of [...sentSnap.docs, ...receivedSnap.docs]) {
+    const a = doc.data() as GameAttack;
     if (a.id && seen.has(a.id)) continue;
     if (a.id) seen.add(a.id);
-    out.push(a);
+    merged.push(a);
   }
-  out.sort((a, b) => {
+  merged.sort((a, b) => {
     const ta = toDate(a.createdAt).getTime();
     const tb = toDate(b.createdAt).getTime();
     return tb - ta;
   });
-  return out.slice(0, limit);
+  return paginateInMemory(merged, opts.cursor, opts.limit);
 }
 
 // Coerce Firestore Timestamps / Dates / null into a Date. Avoids the previous
@@ -2131,16 +2137,20 @@ export async function setGeneralNameServer(
   });
 }
 
-export async function getLeaderboardServer(
-  limit = 50
-): Promise<GamePlayer[]> {
+export async function getLeaderboardServer(opts: {
+  limit: number;
+  cursor: string | null;
+}): Promise<PaginatedQueryResult<GamePlayer>> {
   const db = adminDbOrThrow();
-  const snap = await db
-    .collection(COLLECTIONS.PLAYERS)
-    .orderBy("stats.tilesHeld", "desc")
-    .limit(Math.max(1, Math.min(100, limit)))
-    .get();
-  return snap.docs.map((d) => d.data() as GamePlayer);
+  const players = db.collection(COLLECTIONS.PLAYERS);
+  const query = players.orderBy("stats.tilesHeld", "desc");
+  return paginateFirestoreQuery({
+    query,
+    collection: players,
+    cursor: opts.cursor,
+    limit: opts.limit,
+    mapDoc: (d) => d.data() as GamePlayer,
+  });
 }
 
 // Admin-only testing helper. Kept as a manual override even after the cron

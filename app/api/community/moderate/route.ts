@@ -23,12 +23,17 @@ import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { logger } from "@/lib/logger";
 import { parseRequestBody } from "@/lib/api-response";
+import {
+  clampLimit,
+  parseCursor,
+  paginateFirestoreQuery,
+  DEFAULT_PAGE_LIMIT,
+} from "@/lib/firestore-pagination";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const VALID_ACTIONS = new Set(["dismiss", "hide", "suspend"]);
-const LIST_PAGE_SIZE = 50;
 
 /**
  * GET /api/community/moderate
@@ -48,32 +53,43 @@ export async function GET(request: NextRequest) {
     if (!db) return NextResponse.json({ error: "Server not configured" }, { status: 500 });
 
     const status = request.nextUrl.searchParams.get("status") ?? "open";
-    let query = db.collection("communityReports").orderBy("createdAt", "asc");
+    const limit = clampLimit(
+      request.nextUrl.searchParams.get("limit"),
+      DEFAULT_PAGE_LIMIT
+    );
+    const cursor = parseCursor(request.nextUrl.searchParams.get("cursor"));
+
+    const collection = db.collection("communityReports");
+    let query = collection.orderBy("createdAt", "asc");
     if (status !== "all") {
       query = query.where("status", "==", status);
     }
-    const snap = await query.limit(LIST_PAGE_SIZE).get();
 
-    const reports = snap.docs.map((d) => {
-      const data = d.data();
-      return {
-        reportId: d.id,
-        reporterUid: data.reporterUid,
-        reporterDisplayName: data.reporterDisplayName,
-        targetMessageId: data.targetMessageId,
-        targetAuthorId: data.targetAuthorId,
-        reason: data.reason,
-        notes: data.notes,
-        status: data.status,
-        action: data.action ?? null,
-        actionedBy: data.actionedBy ?? null,
-        // Convert Firestore Timestamp → ISO string for client serialization
-        createdAt: data.createdAt?.toDate?.()?.toISOString() ?? null,
-        actionedAt: data.actionedAt?.toDate?.()?.toISOString() ?? null,
-      };
+    const { items, nextCursor, hasMore } = await paginateFirestoreQuery({
+      query,
+      collection,
+      cursor,
+      limit,
+      mapDoc: (d) => {
+        const data = d.data();
+        return {
+          reportId: d.id,
+          reporterUid: data.reporterUid,
+          reporterDisplayName: data.reporterDisplayName,
+          targetMessageId: data.targetMessageId,
+          targetAuthorId: data.targetAuthorId,
+          reason: data.reason,
+          notes: data.notes,
+          status: data.status,
+          action: data.action ?? null,
+          actionedBy: data.actionedBy ?? null,
+          createdAt: data.createdAt?.toDate?.()?.toISOString() ?? null,
+          actionedAt: data.actionedAt?.toDate?.()?.toISOString() ?? null,
+        };
+      },
     });
 
-    return NextResponse.json({ reports });
+    return NextResponse.json({ reports: items, nextCursor, hasMore });
   } catch (err) {
     logger.logError(err, { endpoint: "/api/community/moderate", area: "community-safety", method: "GET" });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

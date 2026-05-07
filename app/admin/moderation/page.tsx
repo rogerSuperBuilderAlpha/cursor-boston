@@ -40,6 +40,8 @@ export default function ModerationPage() {
 
   const [reports, setReports] = useState<Report[]>([]);
   const [fetching, setFetching] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
 
@@ -48,27 +50,61 @@ export default function ModerationPage() {
   // but is not present in the public UserProfile TS shape.
   const isAdmin = Boolean((userProfile as { isAdmin?: boolean } | null)?.isAdmin);
 
-  const refresh = useCallback(async () => {
-    if (!user) return;
-    setFetching(true);
-    setError(null);
-    try {
+  const fetchPage = useCallback(
+    async (cursor: string | null) => {
+      if (!user) return null;
       const token = await user.getIdToken();
-      const res = await fetch("/api/community/moderate?status=open", {
+      const params = new URLSearchParams();
+      params.set("status", "open");
+      params.set("limit", "20");
+      if (cursor) params.set("cursor", cursor);
+      const res = await fetch(`/api/community/moderate?${params}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error || `HTTP ${res.status}`);
       }
-      const data = (await res.json()) as { reports: Report[] };
+      return (await res.json()) as {
+        reports: Report[];
+        nextCursor: string | null;
+        hasMore: boolean;
+      };
+    },
+    [user]
+  );
+
+  const refresh = useCallback(async () => {
+    if (!user) return;
+    setFetching(true);
+    setError(null);
+    try {
+      const data = await fetchPage(null);
+      if (!data) return;
       setReports(data.reports);
+      setNextCursor(data.nextCursor);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Fetch failed");
     } finally {
       setFetching(false);
     }
-  }, [user]);
+  }, [user, fetchPage]);
+
+  const loadMore = useCallback(async () => {
+    if (!nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    setError(null);
+    try {
+      const data = await fetchPage(nextCursor);
+      if (!data) return;
+      setReports((prev) => [...prev, ...data.reports]);
+      setNextCursor(data.nextCursor);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Fetch failed");
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [nextCursor, loadingMore, fetchPage]);
 
   useEffect(() => {
     if (loading) return;
@@ -76,7 +112,7 @@ export default function ModerationPage() {
       router.push("/");
       return;
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch-on-mount; refresh() updates list state inside an async callback
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch-on-mount, state set inside async callback
     void refresh();
   }, [loading, user, isAdmin, refresh, router]);
 
@@ -198,6 +234,19 @@ export default function ModerationPage() {
           </article>
         ))}
       </div>
+
+      {nextCursor && (
+        <div className="flex justify-center mt-6">
+          <button
+            type="button"
+            onClick={() => void loadMore()}
+            disabled={loadingMore}
+            className="px-4 py-2 bg-zinc-800 text-white rounded text-sm hover:bg-zinc-700 disabled:opacity-50"
+          >
+            {loadingMore ? "Loading…" : "Load more"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

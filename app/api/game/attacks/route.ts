@@ -6,6 +6,11 @@
 
 import { NextRequest } from "next/server";
 import { apiError, apiSuccess } from "@/lib/api-response";
+import {
+  clampLimit,
+  parseCursor,
+  DEFAULT_PAGE_LIMIT,
+} from "@/lib/firestore-pagination";
 import { mapGameError } from "@/lib/game/api-error-map";
 import { getRecentAttacksServer } from "@/lib/game/data-server";
 import { getVerifiedUser } from "@/lib/server-auth";
@@ -25,13 +30,16 @@ export async function GET(request: NextRequest) {
 
     const url = new URL(request.url);
     const side = parseSide(url.searchParams.get("side"));
-    const limit = Math.min(
-      100,
-      Math.max(1, Number.parseInt(url.searchParams.get("limit") || "50", 10) || 50)
-    );
+    const limit = clampLimit(url.searchParams.get("limit"), DEFAULT_PAGE_LIMIT);
+    const cursor = parseCursor(url.searchParams.get("cursor"));
 
-    const attacks = await getRecentAttacksServer(user.uid, side, limit);
-    return apiSuccess({ attacks });
+    const { items, nextCursor, hasMore } = await getRecentAttacksServer({
+      userId: user.uid,
+      side,
+      limit,
+      cursor,
+    });
+    return apiSuccess({ attacks: items, nextCursor, hasMore });
   } catch (error) {
     return mapGameError(error);
   }
