@@ -57,7 +57,7 @@ const teamGuardedErrors = {
 
 const EventCheckinBody = z
   .object({
-    userId: z.string().min(1),
+    userId: z.string({ required_error: "userId required" }).min(1, "userId required"),
     checkedIn: z.boolean().optional(),
   })
   .openapi("HackathonEventCheckinBody");
@@ -71,7 +71,11 @@ const SignupPatchBody = z
   .openapi("HackathonEventSignupPatchBody");
 
 const InviteAcceptBody = z
-  .object({ inviteId: z.string().min(1) })
+  .object({
+    inviteId: z
+      .string({ required_error: "Invalid inviteId format" })
+      .min(1, "Invalid inviteId format"),
+  })
   .openapi("HackathonInviteAcceptBody");
 
 const PoolJoinBody = z
@@ -79,7 +83,11 @@ const PoolJoinBody = z
   .openapi("HackathonPoolJoinBody");
 
 const RequestAcceptBody = z
-  .object({ requestId: z.string().min(1) })
+  .object({
+    requestId: z
+      .string({ required_error: "Invalid requestId format" })
+      .min(1, "Invalid requestId format"),
+  })
   .openapi("HackathonRequestAcceptBody");
 
 const AiScoreBody = z
@@ -99,7 +107,9 @@ const ScoreBody = z
 
 const SubmissionRegisterBody = z
   .object({
-    repoUrl: z.string().min(1),
+    repoUrl: z
+      .string({ required_error: "repoUrl required" })
+      .min(1, "repoUrl required"),
     hackathonId: z.string().optional(),
   })
   .openapi("HackathonSubmissionRegisterBody");
@@ -109,13 +119,19 @@ const SubmissionSubmitBody = z
   .openapi("HackathonSubmissionSubmitBody");
 
 const TeamLeaveBody = z
-  .object({ teamId: z.string().min(1) })
+  .object({
+    teamId: z
+      .string({ required_error: "Invalid teamId" })
+      .min(1, "Invalid teamId"),
+  })
   .openapi("HackathonTeamLeaveBody");
 
 const TeamProfileBody = z
   .object({
-    teamId: z.string().min(1),
-    name: z.string().max(50).optional(),
+    teamId: z
+      .string({ required_error: "Invalid teamId" })
+      .min(1, "Invalid teamId"),
+    name: z.string().max(50, "Name must be at most 50 characters").optional(),
     logoUrl: z.string().optional(),
   })
   .openapi("HackathonTeamProfileBody");

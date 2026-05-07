@@ -82,7 +82,7 @@ const ReportBody = z
   .object({
     targetMessageId: z.string().min(1),
     reason: z.enum(["spam", "harassment", "hate", "self-harm", "other"]),
-    notes: z.string().max(500).optional(),
+    notes: z.string().optional(),
   })
   .openapi("CommunityReportBody");
 

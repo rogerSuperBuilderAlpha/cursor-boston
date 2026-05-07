@@ -61,7 +61,12 @@ export async function POST(request: NextRequest) {
     if (!sanitizedId) {
       return NextResponse.json({ error: "Invalid targetMessageId" }, { status: 400 });
     }
-    const trimmedNotes = notes ?? "";
+    // Truncate rather than reject — pre-existing behavior the test pins,
+    // and abuse reports are better captured silently than dropped.
+    const MAX_NOTES_LENGTH = 500;
+    const trimmedNotes = typeof notes === "string"
+      ? notes.slice(0, MAX_NOTES_LENGTH)
+      : "";
 
     const db = getAdminDb();
     if (!db) {

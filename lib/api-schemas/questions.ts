@@ -42,8 +42,14 @@ const ListQuery = PaginationQuerySchema.extend({
 
 const PostBody = z
   .object({
-    title: z.string().min(10).max(200),
-    body: z.string().min(20).max(5000),
+    title: z
+      .string()
+      .min(10, "Title must be at least 10 characters")
+      .max(200, "Title must be at most 200 characters"),
+    body: z
+      .string()
+      .min(20, "Body must be at least 20 characters")
+      .max(5000, "Body must be at most 5000 characters"),
     tags: z.array(z.string()).max(10).optional(),
   })
   .openapi("QuestionsPostBody");
@@ -51,7 +57,10 @@ const PostBody = z
 const AnswerBody = z
   .object({
     questionId: z.string().min(1),
-    body: z.string().min(20).max(5000),
+    body: z
+      .string()
+      .min(20, "Answer must be at least 20 characters")
+      .max(5000, "Answer must be at most 5000 characters"),
   })
   .openapi("QuestionsAnswerBody");
 
