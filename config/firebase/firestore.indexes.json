@@ -315,6 +315,22 @@
         { "fieldPath": "ownerId", "order": "ASCENDING" },
         { "fieldPath": "foundAtTurn", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "communityReports",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "talkSubmissions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

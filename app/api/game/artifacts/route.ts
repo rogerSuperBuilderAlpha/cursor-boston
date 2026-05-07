@@ -6,6 +6,11 @@
 
 import { NextRequest } from "next/server";
 import { apiError, apiSuccess } from "@/lib/api-response";
+import {
+  clampLimit,
+  parseCursor,
+  DEFAULT_PAGE_LIMIT,
+} from "@/lib/firestore-pagination";
 import { mapGameError } from "@/lib/game/api-error-map";
 import { listArtifactsServer } from "@/lib/game/data-server";
 import { ARTIFACTS_BY_ID } from "@/lib/game/content";
@@ -15,8 +20,17 @@ export async function GET(request: NextRequest) {
   try {
     const user = await getVerifiedUser(request);
     if (!user) return apiError("Authentication required", 401);
-    const artifacts = await listArtifactsServer(user.uid);
-    const enriched = artifacts.map((a) => {
+
+    const url = new URL(request.url);
+    const limit = clampLimit(url.searchParams.get("limit"), DEFAULT_PAGE_LIMIT);
+    const cursor = parseCursor(url.searchParams.get("cursor"));
+
+    const { items, nextCursor, hasMore } = await listArtifactsServer({
+      userId: user.uid,
+      limit,
+      cursor,
+    });
+    const enriched = items.map((a) => {
       const def = ARTIFACTS_BY_ID.get(a.definitionId);
       return {
         ...a,
@@ -31,7 +45,7 @@ export async function GET(request: NextRequest) {
           : null,
       };
     });
-    return apiSuccess({ artifacts: enriched });
+    return apiSuccess({ artifacts: enriched, nextCursor, hasMore });
   } catch (error) {
     return mapGameError(error);
   }

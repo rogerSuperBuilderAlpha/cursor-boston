@@ -6,6 +6,11 @@
 
 import { NextRequest } from "next/server";
 import { apiError, apiSuccess } from "@/lib/api-response";
+import {
+  clampLimit,
+  parseCursor,
+  DEFAULT_PAGE_LIMIT,
+} from "@/lib/firestore-pagination";
 import { mapGameError } from "@/lib/game/api-error-map";
 import { getLeaderboardServer } from "@/lib/game/data-server";
 import { getVerifiedUser } from "@/lib/server-auth";
@@ -16,16 +21,15 @@ export async function GET(request: NextRequest) {
     if (!user) return apiError("Authentication required", 401);
 
     const url = new URL(request.url);
-    const limit = Math.max(
-      1,
-      Math.min(
-        100,
-        Number.parseInt(url.searchParams.get("limit") || "50", 10) || 50
-      )
-    );
-    const players = await getLeaderboardServer(limit);
+    const limit = clampLimit(url.searchParams.get("limit"), DEFAULT_PAGE_LIMIT);
+    const cursor = parseCursor(url.searchParams.get("cursor"));
+
+    const { items, nextCursor, hasMore } = await getLeaderboardServer({
+      limit,
+      cursor,
+    });
     return apiSuccess({
-      players: players.map((p) => ({
+      players: items.map((p) => ({
         userId: p.userId,
         displayName: p.displayName ?? "",
         caste: p.caste,
@@ -35,6 +39,8 @@ export async function GET(request: NextRequest) {
         attacksWon: p.stats.attacksWon,
         attacksLost: p.stats.attacksLost,
       })),
+      nextCursor,
+      hasMore,
     });
   } catch (error) {
     return mapGameError(error);
