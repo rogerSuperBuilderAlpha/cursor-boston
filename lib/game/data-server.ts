@@ -266,7 +266,9 @@ function adminDbOrThrow() {
 }
 
 // Rolls (3% chance) for an artifact and stages a tx.set() to persist it if
-// found. Returns the rolled definition (for the report builder) or null.
+// found. Returns both the rolled definition (for the report builder) and the
+// persisted GameArtifact doc (for echoing back to the client so the inventory
+// can be patched without a refetch).
 //
 // Each turn-spending action calls this exactly once per transaction. The
 // seed includes turnsSpentTotal so consecutive turns roll independently;
@@ -278,7 +280,7 @@ function rollAndStageArtifact(
   turnsSpentTotalAfter: number,
   foundDuringAction: TurnAction,
   now: Date
-): ArtifactDefinition | null {
+): { definition: ArtifactDefinition; doc: GameArtifact } | null {
   const rng = makeSeededRng(`artifact:${userId}:${turnsSpentTotalAfter}`);
   const artifact = rollArtifact(rng);
   if (!artifact) return null;
@@ -297,7 +299,7 @@ function rollAndStageArtifact(
     updatedAt: now,
   };
   tx.set(artifactRef, doc);
-  return artifact;
+  return { definition: artifact, doc };
 }
 
 // Seeded RNG distinct from the artifact-roll RNG so the same line isn't
@@ -357,8 +359,8 @@ export async function getOwnedMapTilesServer(
 
 // Global map view. Returns every tile in the world with the lightweight
 // MapTile projection. The whole world today is ~500 tiles (one batch); if it
-// grows beyond a few thousand, switch to a viewport bounding-box query
-// (where q ∈ [minQ, maxQ] and r ∈ [minR, maxR]).
+// grows beyond a few thousand, callers should switch to
+// `getMapTilesInBoundsServer` (viewport bounding-box).
 export async function getAllMapTilesServer(): Promise<MapTile[]> {
   const db = adminDbOrThrow();
   const snap = await db
@@ -377,6 +379,55 @@ export async function getAllMapTilesServer(): Promise<MapTile[]> {
       armedDefenseSpellId: data.armedDefenseSpellId ?? null,
     } as MapTile;
   });
+}
+
+// Hard cap on the number of tiles a viewport bbox query may return. Keeps a
+// runaway zoomed-out fetch from accidentally pulling the whole world.
+const VIEWPORT_TILE_LIMIT = 5000;
+
+// Viewport-bounded version of getAllMapTilesServer. Single-field range query
+// on `q` (no composite index needed) plus an in-memory `r` filter — Firestore
+// only allows one inequality field per query in this style.
+//
+// At our hex spacing (~500 tiles per world today), the in-memory `r` filter
+// scans the full q-band; for a roughly square world this is approximately
+// the bbox area. For larger worlds add a composite index on (q ASC, r ASC)
+// and switch to two-field range; at 500 tiles the simple form is fine.
+export async function getMapTilesInBoundsServer(bounds: {
+  qMin: number;
+  qMax: number;
+  rMin: number;
+  rMax: number;
+}): Promise<MapTile[]> {
+  const db = adminDbOrThrow();
+  const snap = await db
+    .collection(COLLECTIONS.TILES)
+    .where("q", ">=", bounds.qMin)
+    .where("q", "<=", bounds.qMax)
+    .select("tileId", "q", "r", "type", "ownerId", "units", "armedDefenseSpellId")
+    .limit(VIEWPORT_TILE_LIMIT + 1)
+    .get();
+  if (snap.size > VIEWPORT_TILE_LIMIT) {
+    throw new Error(
+      `getMapTilesInBoundsServer: bbox returned more than ${VIEWPORT_TILE_LIMIT} tiles; narrow the range`
+    );
+  }
+  const out: MapTile[] = [];
+  for (const d of snap.docs) {
+    const data = d.data();
+    if (typeof data.r !== "number") continue;
+    if (data.r < bounds.rMin || data.r > bounds.rMax) continue;
+    out.push({
+      tileId: data.tileId,
+      q: data.q,
+      r: data.r,
+      type: data.type,
+      ownerId: data.ownerId ?? null,
+      units: data.units,
+      armedDefenseSpellId: data.armedDefenseSpellId ?? null,
+    } as MapTile);
+  }
+  return out;
 }
 
 export interface OwnerSummary {
@@ -541,7 +592,12 @@ export async function createPlayerWithSpawnServer(
 export async function exploreNextTileServer(
   userId: string,
   now: Date = new Date()
-): Promise<{ player: GamePlayer; tile: GameTile; report: TurnReport }> {
+): Promise<{
+  player: GamePlayer;
+  tile: GameTile;
+  report: TurnReport;
+  artifact: GameArtifact | null;
+}> {
   const db = adminDbOrThrow();
 
   // Firestore transactions can't query — so pick a candidate tile outside the
@@ -583,7 +639,7 @@ export async function exploreNextTileServer(
     const phase = tilesExplored >= 100 ? "distribute" : player.phase;
     const turnsSpentTotal = player.turnsSpentTotal + 1;
 
-    const artifact = rollAndStageArtifact(
+    const rolled = rollAndStageArtifact(
       tx,
       db,
       userId,
@@ -591,6 +647,7 @@ export async function exploreNextTileServer(
       "explore",
       now
     );
+    const artifact = rolled?.definition ?? null;
 
     tx.update(tileRef, {
       type: "unassigned" as LandType,
@@ -630,6 +687,7 @@ export async function exploreNextTileServer(
       },
       tile: updatedTile,
       report,
+      artifact: rolled?.doc ?? null,
     };
   });
 }
@@ -658,7 +716,12 @@ export async function distributeTileServer(
   tileId: string,
   type: LandType,
   now: Date = new Date()
-): Promise<{ player: GamePlayer; tile: GameTile; report: TurnReport }> {
+): Promise<{
+  player: GamePlayer;
+  tile: GameTile;
+  report: TurnReport;
+  artifact: GameArtifact | null;
+}> {
   if (!VALID_DISTRIBUTABLE_TYPES.has(type)) {
     throw new GameInvalidLandTypeError(type);
   }
@@ -688,7 +751,7 @@ export async function distributeTileServer(
     }
 
     const turnsSpentTotal = player.turnsSpentTotal + 1;
-    const artifact = rollAndStageArtifact(
+    const rolled = rollAndStageArtifact(
       tx,
       db,
       userId,
@@ -696,6 +759,7 @@ export async function distributeTileServer(
       "distribute",
       now
     );
+    const artifact = rolled?.definition ?? null;
 
     tx.update(tileRef, { type, updatedAt: now });
     tx.update(playerRef, {
@@ -721,6 +785,7 @@ export async function distributeTileServer(
       },
       tile: { ...tile, type, updatedAt: now },
       report,
+      artifact: rolled?.doc ?? null,
     };
   });
 }
@@ -742,6 +807,7 @@ export async function bulkDistributeTilesServer(
   player: GamePlayer;
   tiles: GameTile[];
   reports: TurnReport[];
+  artifacts: GameArtifact[];
   stoppedEarly?: string;
 }> {
   if (!VALID_DISTRIBUTABLE_TYPES.has(type)) {
@@ -776,6 +842,7 @@ export async function bulkDistributeTilesServer(
 
     const reports: TurnReport[] = [];
     const updatedTiles: GameTile[] = [];
+    const artifacts: GameArtifact[] = [];
     let turnsRemaining = player.turnsRemaining;
     let turnsSpentTotal = player.turnsSpentTotal;
     let stoppedEarly: string | undefined;
@@ -826,7 +893,7 @@ export async function bulkDistributeTilesServer(
       turnsRemaining -= 1;
       turnsSpentTotal += 1;
 
-      const artifact = rollAndStageArtifact(
+      const rolled = rollAndStageArtifact(
         tx,
         db,
         userId,
@@ -834,6 +901,8 @@ export async function bulkDistributeTilesServer(
         "distribute",
         now
       );
+      const artifact = rolled?.definition ?? null;
+      if (rolled) artifacts.push(rolled.doc);
 
       tx.update(tileRefs[i], { type, updatedAt: now });
       const updatedTile: GameTile = { ...tile, type, updatedAt: now };
@@ -873,6 +942,7 @@ export async function bulkDistributeTilesServer(
       player: updatedPlayer,
       tiles: updatedTiles,
       reports,
+      artifacts,
       stoppedEarly,
     };
   });
@@ -987,6 +1057,7 @@ export async function buildUnitsServer(
   tile: GameTile;
   produced: number;
   report: TurnReport;
+  artifact: GameArtifact | null;
 }> {
   const db = adminDbOrThrow();
   const counts = await getOwnedLandCounts(userId);
@@ -1025,7 +1096,7 @@ export async function buildUnitsServer(
     }
 
     const turnsSpentTotal = player.turnsSpentTotal + BUILD_UNITS_TURN_COST;
-    const artifact = rollAndStageArtifact(
+    const rolled = rollAndStageArtifact(
       tx,
       db,
       userId,
@@ -1033,6 +1104,7 @@ export async function buildUnitsServer(
       "build",
       now
     );
+    const artifact = rolled?.definition ?? null;
 
     const newUnits: UnitStack = { ...tile.units, [unitType]: tile.units[unitType] + BUILD_UNITS_PER_TURN };
     tx.update(tileRef, { units: newUnits, updatedAt: now });
@@ -1070,6 +1142,7 @@ export async function buildUnitsServer(
       tile: { ...tile, units: newUnits, updatedAt: now },
       produced: BUILD_UNITS_PER_TURN,
       report,
+      artifact: rolled?.doc ?? null,
     };
   });
 }
@@ -1099,6 +1172,7 @@ export async function bulkBuildUnitsServer(
   tiles: GameTile[];
   produced: number;
   reports: TurnReport[];
+  artifacts: GameArtifact[];
   stoppedEarly?: string;
 }> {
   if (plan.length === 0) {
@@ -1164,6 +1238,7 @@ export async function bulkBuildUnitsServer(
     let stoppedEarly: string | undefined;
 
     const reports: TurnReport[] = [];
+    const artifacts: GameArtifact[] = [];
     let stepIndex = 0;
     let producedTotal = 0;
 
@@ -1194,7 +1269,7 @@ export async function bulkBuildUnitsServer(
         unitsAlive += BUILD_UNITS_PER_TURN;
         producedTotal += BUILD_UNITS_PER_TURN;
 
-        const artifact = rollAndStageArtifact(
+        const rolled = rollAndStageArtifact(
           tx,
           db,
           userId,
@@ -1202,6 +1277,8 @@ export async function bulkBuildUnitsServer(
           "build",
           now
         );
+        const artifact = rolled?.definition ?? null;
+        if (rolled) artifacts.push(rolled.doc);
 
         const before = tilesById.get(entry.tileId)!;
         const after: GameTile = {
@@ -1263,6 +1340,7 @@ export async function bulkBuildUnitsServer(
       tiles: updatedTiles,
       produced: producedTotal,
       reports,
+      artifacts,
       stoppedEarly,
     };
   });
@@ -1275,7 +1353,12 @@ export async function armDefenseSpellServer(
   tileId: string,
   spellId: string,
   now: Date = new Date()
-): Promise<{ player: GamePlayer; tile: GameTile; report: TurnReport }> {
+): Promise<{
+  player: GamePlayer;
+  tile: GameTile;
+  report: TurnReport;
+  artifact: GameArtifact | null;
+}> {
   const db = adminDbOrThrow();
   const spell = SPELLS_BY_ID.get(spellId);
   if (!spell) throw new GameInvalidSpellError(`unknown spellId: ${spellId}`);
@@ -1318,7 +1401,7 @@ export async function armDefenseSpellServer(
     }
 
     const turnsSpentTotal = player.turnsSpentTotal + cost;
-    const artifact = rollAndStageArtifact(
+    const rolled = rollAndStageArtifact(
       tx,
       db,
       userId,
@@ -1326,6 +1409,7 @@ export async function armDefenseSpellServer(
       "spell-arm",
       now
     );
+    const artifact = rolled?.definition ?? null;
 
     tx.update(tileRef, { armedDefenseSpellId: spellId, updatedAt: now });
     tx.update(playerRef, {
@@ -1353,6 +1437,7 @@ export async function armDefenseSpellServer(
       },
       tile: { ...tile, armedDefenseSpellId: spellId, updatedAt: now },
       report,
+      artifact: rolled?.doc ?? null,
     };
   });
 }
@@ -1363,7 +1448,11 @@ export async function castProductionSpellServer(
   userId: string,
   spellId: string,
   now: Date = new Date()
-): Promise<{ player: GamePlayer; report: TurnReport }> {
+): Promise<{
+  player: GamePlayer;
+  report: TurnReport;
+  artifact: GameArtifact | null;
+}> {
   const db = adminDbOrThrow();
   const spell = SPELLS_BY_ID.get(spellId);
   if (!spell) throw new GameInvalidSpellError(`unknown spellId: ${spellId}`);
@@ -1401,7 +1490,7 @@ export async function castProductionSpellServer(
     const newTurnsSpentTotal = player.turnsSpentTotal + cost;
     const expiresAtTurn = newTurnsSpentTotal + PRODUCTION_SPELL_DURATION_TURNS;
 
-    const artifact = rollAndStageArtifact(
+    const rolled = rollAndStageArtifact(
       tx,
       db,
       userId,
@@ -1409,6 +1498,7 @@ export async function castProductionSpellServer(
       "spell-produce",
       now
     );
+    const artifact = rolled?.definition ?? null;
 
     // Lazy sweep: drop entries whose expiresAtTurn already lapsed before
     // appending the fresh one. Keeps the array bounded — otherwise it grows
@@ -1432,7 +1522,7 @@ export async function castProductionSpellServer(
       updatedAt: now,
     });
 
-    const report = buildProduceReport({
+      const report = buildProduceReport({
       turnIndex: newTurnsSpentTotal,
       cost,
       spellId,
@@ -1451,6 +1541,7 @@ export async function castProductionSpellServer(
         updatedAt: now,
       },
       report,
+      artifact: rolled?.doc ?? null,
     };
   });
 }
@@ -1472,6 +1563,7 @@ export async function attackTileServer(args: {
   sourceTile: GameTile;
   targetTile: GameTile;
   report: TurnReport;
+  artifact: GameArtifact | null;
 }> {
   const now = args.now ?? new Date();
   if (!isValidUnitStack(args.units)) {
@@ -1658,7 +1750,7 @@ export async function attackTileServer(args: {
     const defenderLossesTotal = sumStack(result.defenderLosses);
 
     const attackerTurnsSpentTotal = attacker.turnsSpentTotal + turnCost;
-    const artifact = rollAndStageArtifact(
+    const rolled = rollAndStageArtifact(
       tx,
       db,
       args.attackerId,
@@ -1666,6 +1758,7 @@ export async function attackTileServer(args: {
       "attack",
       now
     );
+    const artifact = rolled?.definition ?? null;
 
     tx.update(sourceRef, { units: updatedSourceUnits, updatedAt: now });
     tx.update(targetRef, {
@@ -1753,6 +1846,7 @@ export async function attackTileServer(args: {
         updatedAt: now,
       },
       report,
+      artifact: rolled?.doc ?? null,
     };
   });
 
@@ -1771,17 +1865,18 @@ export async function getRecentAttacksServer(
   limit = 50
 ): Promise<GameAttack[]> {
   const db = adminDbOrThrow();
-  // Single-field where + in-memory sort. Composite indexes are declared in
-  // firestore.indexes.json but may not be deployed in every environment;
-  // attack volume per player is small enough that sorting in JS is trivial.
-  // The wider 500-doc safety limit exists so a chatty player still loads.
-  const fetchLimit = Math.max(limit, 500);
+  // Composite indexes (attackerId|defenderId, createdAt desc) are deployed
+  // (config/firebase/firestore.indexes.json), so we can orderBy + limit at the
+  // server. For side="all" we issue two queries and merge in JS — Firestore
+  // can't OR across fields. Final slice trims to `limit` after the merge.
+  const fetchLimit = Math.max(1, Math.min(100, limit));
   const queries: Promise<GameAttack[]>[] = [];
   if (side === "sent" || side === "all") {
     queries.push(
       db
         .collection(COLLECTIONS.ATTACKS)
         .where("attackerId", "==", userId)
+        .orderBy("createdAt", "desc")
         .limit(fetchLimit)
         .get()
         .then((snap) => snap.docs.map((d) => d.data() as GameAttack))
@@ -1792,6 +1887,7 @@ export async function getRecentAttacksServer(
       db
         .collection(COLLECTIONS.ATTACKS)
         .where("defenderId", "==", userId)
+        .orderBy("createdAt", "desc")
         .limit(fetchLimit)
         .get()
         .then((snap) => snap.docs.map((d) => d.data() as GameAttack))
@@ -1904,9 +2000,6 @@ export async function runWeeklyRolloverServer(
   const db = adminDbOrThrow();
   const wkStart = weekStartIso ?? weekStartIsoForRollover(now);
   const window = priorWeekRangeUtc(wkStart);
-  const windowStart = window.start.getTime();
-  const windowEnd = window.end.getTime();
-
   const playersSnap = await db.collection(COLLECTIONS.PLAYERS).get();
   const summary: WeeklyRolloverSummary = {
     weekStartIso: wkStart,
@@ -1924,28 +2017,20 @@ export async function runWeeklyRolloverServer(
       continue;
     }
     try {
+      // Range-filter on mergedAt so we only read PRs that could possibly count
+      // for the current weekly window. Without this filter we'd read every
+      // merged PR in the user's lifetime — a runaway cost that grows with
+      // player tenure. Index: (userId, state, mergedAt) in firestore.indexes.json.
+      // .limit(1) because presence-in-window is all we need.
       const prsSnap = await db
         .collection("pullRequests")
         .where("userId", "==", player.userId)
         .where("state", "==", "merged")
+        .where("mergedAt", ">=", window.start)
+        .where("mergedAt", "<", window.end)
+        .limit(1)
         .get();
-      const inWindow = prsSnap.docs.some((d) => {
-        const data = d.data();
-        const mergedAt = data.mergedAt;
-        let t: number;
-        if (
-          mergedAt &&
-          typeof (mergedAt as { toMillis?: () => number }).toMillis ===
-            "function"
-        ) {
-          t = (mergedAt as { toMillis: () => number }).toMillis();
-        } else if (mergedAt instanceof Date) {
-          t = mergedAt.getTime();
-        } else {
-          return false;
-        }
-        return t >= windowStart && t < windowEnd;
-      });
+      const inWindow = !prsSnap.empty;
 
       if (!inWindow) {
         summary.skippedNoPrs += 1;
@@ -2114,34 +2199,18 @@ export async function getPlayerEligibilityServer(
   const next = nextRolloverInstant(now);
 
   let mergedPrCountThisWeek = 0;
-  // Only query the pullRequests collection if we know who to filter by.
-  // The collection is keyed off Firebase userId (set by the merge webhook).
+  // Range-filter on mergedAt so we only read PRs in the current window —
+  // bounded to ≤7 days regardless of player tenure. Index:
+  // (userId, state, mergedAt) in firestore.indexes.json.
   try {
     const prsSnap = await db
       .collection("pullRequests")
       .where("userId", "==", userId)
       .where("state", "==", "merged")
+      .where("mergedAt", ">=", window.start)
+      .where("mergedAt", "<", window.end)
       .get();
-    for (const d of prsSnap.docs) {
-      const data = d.data();
-      const mergedAt = data.mergedAt;
-      let t: number | null = null;
-      if (
-        mergedAt &&
-        typeof (mergedAt as { toDate?: () => Date }).toDate === "function"
-      ) {
-        t = (mergedAt as { toDate: () => Date }).toDate().getTime();
-      } else if (mergedAt instanceof Date) {
-        t = mergedAt.getTime();
-      } else if (typeof mergedAt === "string") {
-        const parsed = Date.parse(mergedAt);
-        if (!Number.isNaN(parsed)) t = parsed;
-      }
-      if (t === null) continue;
-      if (t >= window.start.getTime() && t < window.end.getTime()) {
-        mergedPrCountThisWeek += 1;
-      }
-    }
+    mergedPrCountThisWeek = prsSnap.size;
   } catch (err) {
     logger.warn("getPlayerEligibilityServer: pullRequests query failed", {
       userId,
@@ -2332,6 +2401,7 @@ export async function frontierExploreServer(
   tile: GameTile;
   report: TurnReport;
   frontier: FrontierSample;
+  artifact: GameArtifact | null;
 }> {
   const db = adminDbOrThrow();
 
@@ -2388,7 +2458,7 @@ export async function frontierExploreServer(
 
     const turnsSpentTotal = player.turnsSpentTotal + 1;
     const tilesExplored = player.tilesExplored + 1;
-    const artifact = rollAndStageArtifact(
+    const rolled = rollAndStageArtifact(
       tx,
       db,
       userId,
@@ -2396,6 +2466,7 @@ export async function frontierExploreServer(
       "explore",
       now
     );
+    const artifact = rolled?.definition ?? null;
 
     const tile: GameTile = {
       tileId: sample.tileId,
@@ -2456,6 +2527,7 @@ export async function frontierExploreServer(
       tile,
       report: reportWithRisk,
       frontier: sample,
+      artifact: rolled?.doc ?? null,
     };
   });
 }
@@ -2676,6 +2748,7 @@ export async function bulkFrontierExploreServer(
   tiles: GameTile[];
   reports: TurnReport[];
   frontiers: FrontierSample[];
+  artifacts: GameArtifact[];
   stoppedEarly?: string;
 }> {
   if (count <= 0) {
@@ -2739,6 +2812,7 @@ export async function bulkFrontierExploreServer(
     const reports: TurnReport[] = [];
     const tilesCreated: GameTile[] = [];
     const frontiers: FrontierSample[] = [];
+    const artifacts: GameArtifact[] = [];
     let stoppedEarly: string | undefined;
 
     for (let i = 0; i < samples.length; i++) {
@@ -2769,7 +2843,7 @@ export async function bulkFrontierExploreServer(
       tilesExplored += 1;
       tilesHeld += 1;
 
-      const artifact = rollAndStageArtifact(
+      const rolled = rollAndStageArtifact(
         tx,
         db,
         userId,
@@ -2777,6 +2851,8 @@ export async function bulkFrontierExploreServer(
         "explore",
         now
       );
+      const artifact = rolled?.definition ?? null;
+      if (rolled) artifacts.push(rolled.doc);
 
       const tile: GameTile = {
         tileId: sample.tileId,
@@ -2845,6 +2921,7 @@ export async function bulkFrontierExploreServer(
       tiles: tilesCreated,
       reports,
       frontiers,
+      artifacts,
       stoppedEarly,
     };
   });

@@ -294,7 +294,18 @@ export default function RecruitPage() {
           `Stopped early after ${reports.length} / ${totalCycles}: ${data.stoppedEarly}`
         );
       }
-      await refresh();
+      // Merge action response into local state instead of refetching
+      // /api/game/player + /api/game/world. Recruit only changes the player's
+      // own military tiles + player stats; world tiles + owners never move.
+      if (data.player) setPlayer(data.player as GamePlayer);
+      if (Array.isArray(data.tiles)) {
+        const updates = data.tiles as MapTile[];
+        setTiles((prev) => {
+          const byId = new Map(prev.map((t) => [t.tileId, t] as const));
+          for (const u of updates) byId.set(u.tileId, u);
+          return Array.from(byId.values());
+        });
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Recruit failed");
     } finally {
@@ -309,7 +320,6 @@ export default function RecruitPage() {
     selectedTileId,
     threatRankedMilitaryIds,
     unitType,
-    refresh,
   ]);
 
   if (authLoading || loading) {
