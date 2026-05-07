@@ -7,7 +7,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   useCallback,
   useEffect,
@@ -21,11 +20,13 @@ import {
   loadCachedMap,
   saveCachedMap,
   mayRefresh,
+  mergeTiles as mergeTilesIntoCache,
   msUntilRefresh,
   type CachedMapView,
   type CachedOwnerSummary,
 } from "@/lib/game/local-map-cache";
 import type { Caste, GamePlayer, MapTile, LandType } from "@/lib/game/types";
+import { TileActionsModal } from "./_components/TileActionsModal";
 
 interface PlayerResponse {
   success: boolean;
@@ -192,7 +193,6 @@ const CASTE_BORDER: Record<Caste, string> = {
 type ViewMode = "personal" | "world";
 
 export default function TilesMapPage() {
-  const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   // Cached personal view: { myTiles, borderTiles, owners, lastFetchedAt }.
   // Source of truth in `personal` mode; persisted to localStorage and
@@ -211,6 +211,9 @@ export default function TilesMapPage() {
   const [filter, setFilter] = useState<LandType | "all">("all");
   const [scope, setScope] = useState<ScopeFilter>("everyone");
   const [hovered, setHovered] = useState<MapTile | null>(null);
+  // Tile-actions modal: open when the user clicks a tile. Holds a tileId
+  // (not the MapTile itself) so it stays in sync with mutations.
+  const [modalTileId, setModalTileId] = useState<string | null>(null);
   // Re-renders the refresh button's countdown text every 30s while it's
   // gated. Cheap — only state-bumps when the cache has a recent fetch.
   const [, forceTick] = useState(0);
@@ -456,13 +459,13 @@ export default function TilesMapPage() {
       // movement still sets dragRef briefly, but click only fires when the
       // browser decides the pointer didn't move enough to be a drag.
       if (!player) return;
-      if (t.ownerId === player.userId) {
-        router.push(`/game/tiles/${encodeURIComponent(t.tileId)}`);
-        return;
+      // Open the actions modal for any owned tile (own or enemy). Unrevealed
+      // / unowned tiles have nothing to act on, so leave them as hover-only.
+      if (t.ownerId) {
+        setModalTileId(t.tileId);
       }
-      // Foreign tile — surface in hover card; no click-action wired yet.
     },
-    [player, router]
+    [player]
   );
 
   if (authLoading || loading) {
@@ -814,9 +817,11 @@ export default function TilesMapPage() {
                     )}
                   </div>
                 )}
-                {hovered.ownerId === player.userId && (
+                {hovered.ownerId && (
                   <div className="text-neutral-500 mt-1 italic">
-                    click to manage →
+                    {hovered.ownerId === player.userId
+                      ? "click to manage"
+                      : "click to attack"}
                   </div>
                 )}
               </div>
@@ -842,6 +847,34 @@ export default function TilesMapPage() {
           </span>
         </div>
       </div>
+
+      {modalTileId &&
+        player &&
+        (() => {
+          const t = tiles.find((x) => x.tileId === modalTileId);
+          if (!t) return null;
+          const ownerName = t.ownerId
+            ? ownersById.get(t.ownerId)?.displayName ?? null
+            : null;
+          return (
+            <TileActionsModal
+              tile={t}
+              player={player}
+              ownedTiles={ownTiles}
+              ownerName={ownerName}
+              onClose={() => setModalTileId(null)}
+              onTileUpdate={(updated) => {
+                if (!user) return;
+                // Push into the localStorage cache, then re-hydrate React
+                // state from the merged view so the map repaints with the
+                // change without waiting for a manual refresh.
+                const next = mergeTilesIntoCache(user.uid, [updated]);
+                if (next) setCachedView(next);
+              }}
+              onPlayerUpdate={(p) => setPlayer(p)}
+            />
+          );
+        })()}
     </div>
   );
 }
