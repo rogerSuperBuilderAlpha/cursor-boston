@@ -10,6 +10,7 @@ import { mapGameError } from "@/lib/game/api-error-map";
 import { parseBatchCount, runBatch } from "@/lib/game/api-batch";
 import { exploreNextTileServer } from "@/lib/game/data-server";
 import { getVerifiedUser } from "@/lib/server-auth";
+import { gameContract } from "@/lib/api-schemas/game";
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,9 +19,13 @@ export async function POST(request: NextRequest) {
 
     let count = 1;
     if (request.headers.get("content-length")) {
-      const body = await parseRequestBody<{ count?: unknown }>(request);
+      const body = await parseRequestBody(request);
       if (body instanceof NextResponse) return body;
-      count = parseBatchCount(body.count);
+      const parsed = gameContract.setupExplore.body.safeParse(body);
+      if (!parsed.success) {
+        return apiError(parsed.error.issues[0]?.message ?? "Invalid body", 400);
+      }
+      count = parseBatchCount(parsed.data.count);
     }
 
     const { reports, lastResult, stoppedEarly } = await runBatch(count, () =>

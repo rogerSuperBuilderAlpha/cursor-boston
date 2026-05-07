@@ -14,6 +14,7 @@ import {
   setGeneralNameServer,
 } from "@/lib/game/data-server";
 import { getVerifiedUser } from "@/lib/server-auth";
+import { gameContract } from "@/lib/api-schemas/game";
 
 export async function GET(request: NextRequest) {
   try {
@@ -37,13 +38,15 @@ export async function POST(request: NextRequest) {
   try {
     const user = await getVerifiedUser(request);
     if (!user) return apiError("Authentication required", 401);
-    const body = (await request.json().catch(() => ({}))) as {
-      displayName?: unknown;
-    };
-    if (typeof body.displayName !== "string") {
-      return apiError("displayName is required", 400);
+    const body = await request.json().catch(() => ({}));
+    const parsed = gameContract.createPlayer.body.safeParse(body);
+    if (!parsed.success) {
+      return apiError(parsed.error.issues[0]?.message ?? "Invalid body", 400);
     }
-    const result = await createPlayerWithSpawnServer(user.uid, body.displayName);
+    const result = await createPlayerWithSpawnServer(
+      user.uid,
+      parsed.data.displayName
+    );
     return apiSuccess(
       { player: result.player, tileIds: result.tileIds },
       201
@@ -59,13 +62,12 @@ export async function PATCH(request: NextRequest) {
   try {
     const user = await getVerifiedUser(request);
     if (!user) return apiError("Authentication required", 401);
-    const body = (await request.json().catch(() => ({}))) as {
-      displayName?: unknown;
-    };
-    if (typeof body.displayName !== "string") {
-      return apiError("displayName is required", 400);
+    const body = await request.json().catch(() => ({}));
+    const parsed = gameContract.renamePlayer.body.safeParse(body);
+    if (!parsed.success) {
+      return apiError(parsed.error.issues[0]?.message ?? "Invalid body", 400);
     }
-    const player = await setGeneralNameServer(user.uid, body.displayName);
+    const player = await setGeneralNameServer(user.uid, parsed.data.displayName);
     return apiSuccess({ player });
   } catch (error) {
     return mapGameError(error);

@@ -15,6 +15,10 @@ import { apiError, apiSuccess } from "@/lib/api-response";
 import { mapGameError } from "@/lib/game/api-error-map";
 import { runWeeklyRolloverServer } from "@/lib/game/data-server";
 
+// @contracts: gameContract.rollover (lib/api-schemas/game.ts)
+// Cron-only — uses x-rollover-secret header rather than Firebase Auth, so
+// no zod parse on the user side. The contract documents the response shape.
+
 function timingSafeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
   let mismatch = 0;

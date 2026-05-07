@@ -9,38 +9,25 @@ import { apiError, apiSuccess, parseRequestBody } from "@/lib/api-response";
 import { mapGameError } from "@/lib/game/api-error-map";
 import { parseBatchCount, runBatch } from "@/lib/game/api-batch";
 import { buildUnitsServer } from "@/lib/game/data-server";
-import type { UnitType } from "@/lib/game/types";
 import { getVerifiedUser } from "@/lib/server-auth";
-
-const VALID_UNIT_TYPES: UnitType[] = ["ground", "siege", "air"];
+import { gameContract } from "@/lib/api-schemas/game";
 
 export async function POST(request: NextRequest) {
   try {
     const user = await getVerifiedUser(request);
     if (!user) return apiError("Authentication required", 401);
 
-    const bodyOrError = await parseRequestBody<{
-      tileId?: unknown;
-      unitType?: unknown;
-      count?: unknown;
-    }>(request);
+    const bodyOrError = await parseRequestBody(request);
     if (bodyOrError instanceof NextResponse) return bodyOrError;
 
-    const tileId =
-      typeof bodyOrError.tileId === "string" ? bodyOrError.tileId : null;
-    const unitTypeRaw =
-      typeof bodyOrError.unitType === "string" ? bodyOrError.unitType : null;
-    if (!tileId) return apiError("tileId is required", 400);
-    if (!unitTypeRaw || !VALID_UNIT_TYPES.includes(unitTypeRaw as UnitType)) {
-      return apiError(
-        `unitType must be one of: ${VALID_UNIT_TYPES.join(", ")}`,
-        400
-      );
+    const parsed = gameContract.build.body.safeParse(bodyOrError);
+    if (!parsed.success) {
+      return apiError(parsed.error.issues[0]?.message ?? "Invalid body", 400);
     }
-    const count = parseBatchCount(bodyOrError.count);
+    const count = parseBatchCount(parsed.data.count);
 
     const { reports, lastResult, stoppedEarly } = await runBatch(count, () =>
-      buildUnitsServer(user.uid, tileId, unitTypeRaw as UnitType)
+      buildUnitsServer(user.uid, parsed.data.tileId, parsed.data.unitType)
     );
     return apiSuccess({
       player: lastResult.player,
