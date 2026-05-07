@@ -19,8 +19,8 @@ import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { logger } from "@/lib/logger";
-import { parseRequestBody } from "@/lib/api-response";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
+import { communityContract } from "@/lib/api-schemas/community";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,11 +35,21 @@ export async function POST(request: NextRequest) {
     const rl = await checkUpstashRateLimit(`community-block:${user.uid}`, BLOCK_RATE_LIMIT);
     if (!rl.success) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
 
-    const bodyOrError = await parseRequestBody(request);
-    if (bodyOrError instanceof NextResponse) return bodyOrError;
-    const { targetUid } = bodyOrError;
-
-    if (typeof targetUid !== "string" || !targetUid || targetUid === user.uid) {
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
+    }
+    const parsed = communityContract.block.body.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message ?? "Invalid body" },
+        { status: 400 }
+      );
+    }
+    const { targetUid } = parsed.data;
+    if (targetUid === user.uid) {
       return NextResponse.json({ error: "Invalid targetUid" }, { status: 400 });
     }
 
@@ -68,10 +78,16 @@ export async function DELETE(request: NextRequest) {
     const user = await getVerifiedUser(request);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const targetUid = request.nextUrl.searchParams.get("targetUid");
-    if (!targetUid) {
-      return NextResponse.json({ error: "Missing targetUid" }, { status: 400 });
+    const parsed = communityContract.unblock.query.safeParse({
+      targetUid: request.nextUrl.searchParams.get("targetUid") ?? undefined,
+    });
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message ?? "Missing targetUid" },
+        { status: 400 }
+      );
     }
+    const { targetUid } = parsed.data;
 
     const db = getAdminDb();
     if (!db) return NextResponse.json({ error: "Server not configured" }, { status: 500 });

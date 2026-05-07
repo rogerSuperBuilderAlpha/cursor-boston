@@ -43,6 +43,7 @@ const baseDocument = {
     { name: "community", description: "Community posts, replies, reactions, moderation" },
     { name: "game", description: "Strategy game endpoints (leaderboard, attacks, artifacts, turns)" },
     { name: "hackathons", description: "Hackathon pool, teams, submissions, and Hack-a-Sprint showcase" },
+    { name: "questions", description: "Q&A: questions, answers, votes, accept" },
   ],
 };
 
