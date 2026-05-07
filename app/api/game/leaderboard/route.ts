@@ -27,6 +27,7 @@ export async function GET(request: NextRequest) {
     return apiSuccess({
       players: players.map((p) => ({
         userId: p.userId,
+        displayName: p.displayName ?? "",
         caste: p.caste,
         phase: p.phase,
         tilesHeld: p.stats.tilesHeld,

@@ -62,6 +62,7 @@ export default function GameDashboardPage() {
     total: number;
     artifactsFound: number;
   } | null>(null);
+  const [nameInput, setNameInput] = useState("");
 
   const fetchPlayer = useCallback(async () => {
     setError(null);
@@ -105,28 +106,68 @@ export default function GameDashboardPage() {
     fetchPlayer();
   }, [authLoading, fetchPlayer]);
 
-  const handleCreatePlayer = useCallback(async () => {
-    if (!user) return;
-    setCreating(true);
-    setError(null);
-    try {
-      const token = await user.getIdToken();
-      const res = await fetch("/api/game/player", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const data = await res.json();
-      if (!data.success) throw new Error(data.error?.message ?? "Failed to create player");
-      await fetchPlayer();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to create player");
-    } finally {
-      setCreating(false);
-    }
-  }, [user, fetchPlayer]);
+  const handleCreatePlayer = useCallback(
+    async (displayName: string) => {
+      if (!user) return;
+      setCreating(true);
+      setError(null);
+      try {
+        const token = await user.getIdToken();
+        const res = await fetch("/api/game/player", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ displayName }),
+        });
+        const data = await res.json();
+        if (!data.success) {
+          const msg =
+            typeof data.error === "string"
+              ? data.error
+              : data.error?.message ?? "Failed to create player";
+          throw new Error(msg);
+        }
+        await fetchPlayer();
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Failed to create player");
+      } finally {
+        setCreating(false);
+      }
+    },
+    [user, fetchPlayer]
+  );
+
+  const handleSetName = useCallback(
+    async (displayName: string) => {
+      if (!user) return;
+      setError(null);
+      try {
+        const token = await user.getIdToken();
+        const res = await fetch("/api/game/player", {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ displayName }),
+        });
+        const data = await res.json();
+        if (!data.success) {
+          const msg =
+            typeof data.error === "string"
+              ? data.error
+              : data.error?.message ?? "Failed to save name";
+          throw new Error(msg);
+        }
+        await fetchPlayer();
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Failed to save name");
+      }
+    },
+    [user, fetchPlayer]
+  );
 
   const handleFrontierExplore = useCallback(
     async (count: number) => {
@@ -301,41 +342,131 @@ export default function GameDashboardPage() {
             into this repo any time during a week and you&apos;ll receive 100
             turns the following Sunday at midnight EST. No PR, no turns.
           </p>
-          <Link
-            href="/login"
-            className="inline-block px-6 py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-400 transition-colors"
-          >
-            Sign In
-          </Link>
+          <div className="flex flex-wrap gap-3 justify-center">
+            <Link
+              href="/login"
+              className="inline-block px-6 py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-400 transition-colors"
+            >
+              Sign In
+            </Link>
+            <Link
+              href="/game/help"
+              className="inline-block px-6 py-3 border border-neutral-300 dark:border-neutral-700 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+            >
+              How to play
+            </Link>
+          </div>
         </div>
       </div>
     );
   }
 
   if (!player) {
+    const trimmed = nameInput.trim();
+    const canSubmit = trimmed.length >= 3 && trimmed.length <= 32 && !creating;
     return (
       <div className="min-h-screen flex items-center justify-center px-6">
         <div className="max-w-xl w-full text-center">
           <h1 className="text-3xl font-bold mb-4">Begin your campaign</h1>
           <p className="text-neutral-600 dark:text-neutral-300 mb-3">
-            You haven&apos;t enlisted yet. Pressing the button below will:
+            You haven&apos;t enlisted yet. Name your general and we&apos;ll:
           </p>
           <ul className="text-sm text-neutral-600 dark:text-neutral-400 mb-6 inline-block text-left list-disc ml-5">
             <li>Claim a 25-tile starting cluster, all already revealed.</li>
-            <li>Grant you 100 starter turns to assign land types and pick a caste.</li>
+            <li>Grant you 300 starter turns — enough to assign every tile, pick a caste, recruit a real army, and still push the frontier before next Sunday&apos;s rollover.</li>
             <li>Drop a 3-week shield over you so no one can attack until you&apos;ve had a chance to develop your forces.</li>
-            <li>From there: push the frontier, build armies, raid neighbors.</li>
+            <li>From there: explore outward, develop the lands you take, build units, raid neighbors.</li>
           </ul>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (canSubmit) handleCreatePlayer(trimmed);
+            }}
+            className="mb-3"
+          >
+            <label
+              htmlFor="general-name"
+              className="block text-left text-xs uppercase tracking-wide text-neutral-500 mb-1"
+            >
+              Name your general
+            </label>
+            <input
+              id="general-name"
+              type="text"
+              value={nameInput}
+              onChange={(e) => setNameInput(e.target.value)}
+              placeholder="e.g. Captain Ash, The Quiet Hand"
+              maxLength={32}
+              className="w-full px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-sm"
+              autoComplete="off"
+            />
+            <p className="mt-1 text-xs text-neutral-500 text-left">
+              3-32 characters. Letters, digits, spaces, apostrophes, hyphens.
+            </p>
+          </form>
           {error && (
             <p className="mb-4 text-sm text-red-600 dark:text-red-400">{error}</p>
           )}
-          <button
-            onClick={handleCreatePlayer}
-            disabled={creating}
-            className="px-6 py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-400 transition-colors disabled:opacity-50"
+          <div className="flex flex-wrap gap-3 justify-center">
+            <button
+              onClick={() => handleCreatePlayer(trimmed)}
+              disabled={!canSubmit}
+              className="px-6 py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-400 transition-colors disabled:opacity-50"
+            >
+              {creating ? "Spawning…" : "Enlist as a general"}
+            </button>
+            <Link
+              href="/game/help"
+              className="px-6 py-3 border border-neutral-300 dark:border-neutral-700 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+            >
+              How to play
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Legacy gate: players who spawned before names were required get bounced
+  // through this picker on next visit.
+  if (!player.displayName) {
+    const trimmed = nameInput.trim();
+    const canSubmit = trimmed.length >= 3 && trimmed.length <= 32;
+    return (
+      <div className="min-h-screen flex items-center justify-center px-6">
+        <div className="max-w-md w-full text-center">
+          <h1 className="text-3xl font-bold mb-3">Name your general</h1>
+          <p className="text-neutral-600 dark:text-neutral-300 mb-6 text-sm leading-relaxed">
+            We retired anonymous IDs. Pick a name your fellow generals will see
+            on the map and the leaderboard. You can change it later.
+          </p>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (canSubmit) handleSetName(trimmed);
+            }}
           >
-            {creating ? "Spawning…" : "Enlist as a general"}
-          </button>
+            <input
+              type="text"
+              value={nameInput}
+              onChange={(e) => setNameInput(e.target.value)}
+              placeholder="e.g. Captain Ash"
+              maxLength={32}
+              autoFocus
+              className="w-full px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-sm mb-2"
+              autoComplete="off"
+            />
+            {error && (
+              <p className="mb-3 text-sm text-red-600 dark:text-red-400">{error}</p>
+            )}
+            <button
+              type="submit"
+              disabled={!canSubmit}
+              className="px-6 py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-400 transition-colors disabled:opacity-50"
+            >
+              Save name
+            </button>
+          </form>
         </div>
       </div>
     );
@@ -350,8 +481,22 @@ export default function GameDashboardPage() {
     <div className="min-h-screen py-12 px-6">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-baseline justify-between mb-8">
-          <h1 className="text-3xl font-bold">Generals — Dashboard</h1>
-          <span className="text-sm text-neutral-500">{user.email}</span>
+          <h1 className="text-3xl font-bold">{player.displayName}</h1>
+          <button
+            onClick={() => {
+              const next = window.prompt(
+                "Rename your general (3-32 chars)",
+                player.displayName
+              );
+              if (next && next.trim() && next.trim() !== player.displayName) {
+                handleSetName(next.trim());
+              }
+            }}
+            className="text-sm text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 underline"
+            title="Rename your general"
+          >
+            Rename
+          </button>
         </div>
 
         {error && (
@@ -518,6 +663,12 @@ export default function GameDashboardPage() {
             className="px-5 py-2.5 border border-neutral-300 dark:border-neutral-700 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
           >
             Leaderboard
+          </Link>
+          <Link
+            href="/game/help"
+            className="px-5 py-2.5 border border-neutral-300 dark:border-neutral-700 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+          >
+            Help &amp; Lore
           </Link>
           <button
             onClick={handleAdminGrant}

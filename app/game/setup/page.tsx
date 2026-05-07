@@ -9,9 +9,55 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  ALL_BUILDINGS,
+  CASTE_PROFILES,
+  getSpellForCasteAndType,
+  getUnitForCasteAndType,
+} from "@/lib/game/content";
 import type { Caste, GamePlayer, MapTile, LandType } from "@/lib/game/types";
 
 const CASTES: Caste[] = ["white", "blue", "black", "red", "green"];
+
+// Caste accent + lore text shown on the caste-pick card. Lore is intentionally
+// short (1 paragraph), matches the in-game restraint, and avoids real-world
+// references. Edit here when retuning caste identity; keep tone aligned with
+// docs/generals/LORE.md.
+const CASTE_PRESENTATION: Record<
+  Caste,
+  { swatch: string; tagline: string; lore: string }
+> = {
+  white: {
+    swatch: "#e5e7eb",
+    tagline: "Light · order · the long defense",
+    lore:
+      "White moves slowly and remembers everything. Their banners are old, their drills older, and their pikemen will hold a road for as many days as the road needs holding. Sanctuaries glow on the hilltops at dusk; the priests do not explain how.",
+  },
+  blue: {
+    swatch: "#60a5fa",
+    tagline: "Water · sky · the patient tide",
+    lore:
+      "Blue plays the long economy. Their captains are astronomers, their air corps moves on currents no scout can chart, and their production magic refills granaries through a winter no one can quite remember surviving. They win wars that began three seasons ago.",
+  },
+  black: {
+    swatch: "#a78bfa",
+    tagline: "Death · blood · the cost paid forward",
+    lore:
+      "Black armies are quiet at the edges and loud in the middle. Their reavers are bone-armored and tireless; their blood-tide spells fall on a battlefield like a price already settled. They take towns by walking through them. They keep no prisoners they can spare.",
+  },
+  red: {
+    swatch: "#f87171",
+    tagline: "Fire · forge · the short hot sentence",
+    lore:
+      "Red wars are decided in three days or three minutes. Their siege foundries turn out trebuchets that smell of pitch and bone-glue; their pyre-mortars throw heat that cracks stone. Their defenses are thin because their generals do not intend to need them.",
+  },
+  green: {
+    swatch: "#4ade80",
+    tagline: "Wood · growth · the held line",
+    lore:
+      "Green takes ground and keeps it. Their wardens build deeper than other castes, and their tiles hold more soldiers per acre because the soldiers eat from the land they stand on. Their air is weak; they don't intend to leave the ground.",
+  },
+};
 const DISTRIBUTABLE: LandType[] = ["military", "food", "magic"];
 
 interface PlayerResponse {
@@ -443,27 +489,17 @@ function DistributePanel({
       <div className="mb-6">
         <div className="rounded-lg border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/10 p-4 mb-4 text-sm leading-relaxed space-y-2">
           <p className="font-semibold">Step 3 of 3 — Pick a caste (permanent)</p>
-          <p>Each caste tilts your unit and spell strengths. You cannot change later.</p>
-          <ul className="list-disc ml-5">
-            <li><strong>White</strong> — defense / order. Strong ground units, strongest defense spells. Good for turtling.</li>
-            <li><strong>Blue</strong> — control / magic. Strong air units, strongest production spells (food cap boosts). Good for tempo.</li>
-            <li><strong>Black</strong> — sacrifice / swarm. Cheap balanced units, strong offense spells. Good for grinding wars.</li>
-            <li><strong>Red</strong> — aggression / fire. Strong siege, strongest offense spells. Good for blitzing.</li>
-            <li><strong>Green</strong> — growth. +20% tile capacity (so your tiles hold more units), strong ground swarms. Good for fortified expansion.</li>
-          </ul>
+          <p>Each card shows the lore, the three units you&apos;ll recruit, the three spells you&apos;ll cast, and the building upgrades available. The choice is locked the moment you pick.</p>
         </div>
 
-        <h2 className="font-semibold mb-3">Choose your caste to start playing</h2>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
           {CASTES.map((c) => (
-            <button
+            <CastePickCard
               key={c}
-              onClick={() => onChooseCaste(c)}
-              disabled={busy}
-              className="px-4 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors capitalize disabled:opacity-50"
-            >
-              {c}
-            </button>
+              caste={c}
+              busy={busy}
+              onChoose={() => onChooseCaste(c)}
+            />
           ))}
         </div>
         <p className="text-xs text-neutral-500 mt-2">
@@ -514,4 +550,196 @@ function Counter({ label, value }: { label: string; value: number }) {
       <div className="text-lg font-semibold">{value}</div>
     </div>
   );
+}
+
+function CastePickCard({
+  caste,
+  busy,
+  onChoose,
+}: {
+  caste: Caste;
+  busy: boolean;
+  onChoose: () => void;
+}) {
+  const presentation = CASTE_PRESENTATION[caste];
+  const profile = CASTE_PROFILES[caste];
+  const ground = getUnitForCasteAndType(caste, "ground");
+  const siege = getUnitForCasteAndType(caste, "siege");
+  const air = getUnitForCasteAndType(caste, "air");
+  const defense = getSpellForCasteAndType(caste, "defense");
+  const offense = getSpellForCasteAndType(caste, "offense");
+  const production = getSpellForCasteAndType(caste, "production");
+  const buildings = ALL_BUILDINGS.filter(
+    (b) => b.caste === caste || b.caste === "neutral"
+  );
+
+  return (
+    <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-4 bg-white dark:bg-neutral-950 flex flex-col">
+      <div className="flex items-center gap-3 mb-2">
+        <span
+          aria-hidden="true"
+          className="inline-block w-4 h-4 rounded-full border border-neutral-300 dark:border-neutral-700"
+          style={{ background: presentation.swatch }}
+        />
+        <h3 className="text-lg font-semibold capitalize">{caste}</h3>
+        <span className="text-xs text-neutral-500">{presentation.tagline}</span>
+      </div>
+
+      <p className="text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed mb-3">
+        {presentation.lore}
+      </p>
+
+      <div className="grid grid-cols-3 gap-2 text-xs mb-3">
+        <Stat label="Tile cap" value={`×${profile.tileCapacityMultiplier.toFixed(2)}`} />
+        <Stat
+          label="Strongest unit"
+          value={topKey(profile.unitTypeBonuses)}
+        />
+        <Stat
+          label="Strongest spell"
+          value={topKey(profile.spellTypeBonuses)}
+        />
+      </div>
+
+      <details className="mb-2 text-sm" open>
+        <summary className="cursor-pointer font-medium text-xs uppercase tracking-wide text-neutral-500">
+          Units
+        </summary>
+        <div className="mt-2 space-y-2">
+          <UnitLine unit={ground} bonus={profile.unitTypeBonuses.ground} />
+          <UnitLine unit={siege} bonus={profile.unitTypeBonuses.siege} />
+          <UnitLine unit={air} bonus={profile.unitTypeBonuses.air} />
+        </div>
+      </details>
+
+      <details className="mb-2 text-sm">
+        <summary className="cursor-pointer font-medium text-xs uppercase tracking-wide text-neutral-500">
+          Spells
+        </summary>
+        <div className="mt-2 space-y-2">
+          <SpellLine
+            spell={defense}
+            slot="defense"
+            bonus={profile.spellTypeBonuses.defense}
+          />
+          <SpellLine
+            spell={offense}
+            slot="offense"
+            bonus={profile.spellTypeBonuses.offense}
+          />
+          <SpellLine
+            spell={production}
+            slot="production"
+            bonus={profile.spellTypeBonuses.production}
+          />
+        </div>
+      </details>
+
+      <details className="mb-3 text-sm">
+        <summary className="cursor-pointer font-medium text-xs uppercase tracking-wide text-neutral-500">
+          Buildings ({buildings.length})
+        </summary>
+        <div className="mt-2 text-sm">
+          {buildings.length === 0 ? (
+            <p className="text-neutral-500 italic text-xs">
+              No building upgrades yet — coming in v2. Tile improvements
+              currently come from the artifact pool and from production spells.
+            </p>
+          ) : (
+            <ul className="space-y-1">
+              {buildings.map((b) => (
+                <li key={b.id} className="text-xs">
+                  <span className="font-medium">{b.name}</span>
+                  <span className="text-neutral-500"> — {b.description}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </details>
+
+      <button
+        onClick={onChoose}
+        disabled={busy}
+        className="mt-auto w-full px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-400 transition-colors capitalize disabled:opacity-50"
+      >
+        {busy ? "Locking…" : `Pick ${caste}`}
+      </button>
+    </div>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded border border-neutral-200 dark:border-neutral-800 p-1.5 text-center">
+      <div className="text-[10px] uppercase tracking-wide text-neutral-500">
+        {label}
+      </div>
+      <div className="text-sm font-semibold capitalize">{value}</div>
+    </div>
+  );
+}
+
+function UnitLine({
+  unit,
+  bonus,
+}: {
+  unit: ReturnType<typeof getUnitForCasteAndType>;
+  bonus: number;
+}) {
+  return (
+    <div className="border border-neutral-200 dark:border-neutral-800 rounded p-2">
+      <div className="flex items-baseline justify-between">
+        <span className="font-medium">{unit.name}</span>
+        <span className="text-[10px] uppercase tracking-wide text-neutral-500">
+          {unit.type} · ×{bonus.toFixed(2)}
+        </span>
+      </div>
+      <div className="text-xs text-neutral-500 mt-0.5">
+        ATK {unit.attack} · DEF {unit.defense} · HP {unit.hp}
+      </div>
+      <div className="text-xs text-neutral-600 dark:text-neutral-400 italic mt-1">
+        {unit.description}
+      </div>
+    </div>
+  );
+}
+
+function SpellLine({
+  spell,
+  slot,
+  bonus,
+}: {
+  spell: ReturnType<typeof getSpellForCasteAndType>;
+  slot: "defense" | "offense" | "production";
+  bonus: number;
+}) {
+  return (
+    <div className="border border-neutral-200 dark:border-neutral-800 rounded p-2">
+      <div className="flex items-baseline justify-between">
+        <span className="font-medium">{spell.name}</span>
+        <span className="text-[10px] uppercase tracking-wide text-neutral-500">
+          {slot} · ×{bonus.toFixed(2)}
+        </span>
+      </div>
+      <div className="text-xs text-neutral-500 mt-0.5">
+        Base strength {spell.baseStrength}
+      </div>
+      <div className="text-xs text-neutral-600 dark:text-neutral-400 italic mt-1">
+        {spell.description}
+      </div>
+    </div>
+  );
+}
+
+function topKey(record: Record<string, number>): string {
+  let bestKey = "";
+  let bestVal = -Infinity;
+  for (const [k, v] of Object.entries(record)) {
+    if (v > bestVal) {
+      bestVal = v;
+      bestKey = k;
+    }
+  }
+  return bestKey;
 }
