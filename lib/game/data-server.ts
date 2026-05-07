@@ -34,6 +34,7 @@ import {
   nextRolloverInstant,
   priorWeekRangeUtc,
   pruneExpiredProductionSpells,
+  validateGeneralName,
   weekStartIsoForRollover,
 } from "./turns";
 import type {
@@ -216,6 +217,18 @@ export class GameArtifactAlreadyUsedError extends Error {
     this.name = "GameArtifactAlreadyUsedError";
   }
 }
+export class GameInvalidNameError extends Error {
+  constructor(reason: string) {
+    super(`Invalid general name: ${reason}`);
+    this.name = "GameInvalidNameError";
+  }
+}
+export class GameNameTakenError extends Error {
+  constructor() {
+    super("That general name is already in use");
+    this.name = "GameNameTakenError";
+  }
+}
 
 const COLLECTIONS = {
   PLAYERS: "game_players",
@@ -335,6 +348,65 @@ export async function getOwnedMapTilesServer(
   });
 }
 
+// Global map view. Returns every tile in the world with the lightweight
+// MapTile projection. The whole world today is ~500 tiles (one batch); if it
+// grows beyond a few thousand, switch to a viewport bounding-box query
+// (where q ∈ [minQ, maxQ] and r ∈ [minR, maxR]).
+export async function getAllMapTilesServer(): Promise<MapTile[]> {
+  const db = adminDbOrThrow();
+  const snap = await db
+    .collection(COLLECTIONS.TILES)
+    .select("tileId", "q", "r", "type", "ownerId", "units", "armedDefenseSpellId")
+    .get();
+  return snap.docs.map((d) => {
+    const data = d.data();
+    return {
+      tileId: data.tileId,
+      q: data.q,
+      r: data.r,
+      type: data.type,
+      ownerId: data.ownerId ?? null,
+      units: data.units,
+      armedDefenseSpellId: data.armedDefenseSpellId ?? null,
+    } as MapTile;
+  });
+}
+
+export interface OwnerSummary {
+  userId: string;
+  displayName: string;
+  caste: Caste | null;
+  shielded: boolean;
+}
+
+// Owner-side metadata for the global map: name, caste, shield status. One
+// record per player; the client joins it onto tiles by ownerId.
+export async function getAllOwnerSummariesServer(
+  now: Date = new Date()
+): Promise<OwnerSummary[]> {
+  const db = adminDbOrThrow();
+  const snap = await db
+    .collection(COLLECTIONS.PLAYERS)
+    .select(
+      "userId",
+      "displayName",
+      "caste",
+      "shieldUntil",
+      "shieldDropAtTurn",
+      "turnsSpentTotal"
+    )
+    .get();
+  return snap.docs.map((d) => {
+    const data = d.data() as GamePlayer;
+    return {
+      userId: data.userId,
+      displayName: data.displayName ?? "",
+      caste: data.caste ?? null,
+      shielded: isShieldActive(data, now),
+    };
+  });
+}
+
 export async function getTileServer(tileId: string): Promise<GameTile | null> {
   const db = adminDbOrThrow();
   const snap = await db.collection(COLLECTIONS.TILES).doc(tileId).get();
@@ -352,9 +424,27 @@ const NEW_PLAYER_EXCLAVES_MAX = 5;
 // parallel spawns land on different centers.
 export async function createPlayerWithSpawnServer(
   userId: string,
+  rawDisplayName: string,
   now: Date = new Date()
 ): Promise<{ player: GamePlayer; tileIds: string[] }> {
   const db = adminDbOrThrow();
+  const cleanedName = (() => {
+    try {
+      return validateGeneralName(rawDisplayName);
+    } catch (e) {
+      throw new GameInvalidNameError(
+        e instanceof Error ? e.message : String(e)
+      );
+    }
+  })();
+  // Pre-flight uniqueness check outside the txn (transactions can't run
+  // queries). The set inside the txn still guards against same-user double
+  // spawn via GamePlayerAlreadyExistsError; a same-name race between two
+  // brand-new users in the same instant is vanishingly rare given the
+  // 4-player population, so we accept the small TOCTOU window.
+  const taken = await isGeneralNameTakenServer(cleanedName, userId);
+  if (taken) throw new GameNameTakenError();
+
   const playerRef = db.collection(COLLECTIONS.PLAYERS).doc(userId);
   const metaRef = db
     .collection(COLLECTIONS.WORLD_META)
@@ -387,8 +477,12 @@ export async function createPlayerWithSpawnServer(
       initialPhase: "distribute",
       tilesHeld: spawn.tileIds.length,
       tilesExplored: spawn.tileIds.length,
+      displayName: cleanedName,
     });
-    tx.set(playerRef, player);
+    tx.set(playerRef, {
+      ...player,
+      displayNameLower: cleanedName.toLowerCase(),
+    });
 
     for (const tileId of spawn.tileIds) {
       const tileRef = db.collection(COLLECTIONS.TILES).doc(tileId);
@@ -1853,6 +1947,61 @@ export async function runWeeklyRolloverServer(
     errorCount: summary.errors.length,
   });
   return summary;
+}
+
+// Case-insensitive uniqueness check. Excludes `excludeUserId` so a player
+// can re-save their own current name (no-op rename).
+export async function isGeneralNameTakenServer(
+  name: string,
+  excludeUserId?: string
+): Promise<boolean> {
+  const db = adminDbOrThrow();
+  const trimmed = name.trim();
+  if (!trimmed) return false;
+  const lower = trimmed.toLowerCase();
+  // Firestore can't do case-insensitive equality, so we store a derived field
+  // on write. Falls back to scanning — N is small (4 today, hundreds at peak).
+  // If the player count grows beyond a few thousand, denormalize to a
+  // game_player_names collection keyed by lowercased name.
+  const snap = await db
+    .collection(COLLECTIONS.PLAYERS)
+    .where("displayNameLower", "==", lower)
+    .limit(1)
+    .get();
+  if (snap.empty) return false;
+  const doc = snap.docs[0];
+  if (excludeUserId && doc.id === excludeUserId) return false;
+  return true;
+}
+
+export async function setGeneralNameServer(
+  userId: string,
+  rawName: string,
+  now: Date = new Date()
+): Promise<GamePlayer> {
+  const db = adminDbOrThrow();
+  const cleaned = (() => {
+    try {
+      return validateGeneralName(rawName);
+    } catch (e) {
+      throw new GameInvalidNameError(
+        e instanceof Error ? e.message : String(e)
+      );
+    }
+  })();
+  const taken = await isGeneralNameTakenServer(cleaned, userId);
+  if (taken) throw new GameNameTakenError();
+  const playerRef = db.collection(COLLECTIONS.PLAYERS).doc(userId);
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(playerRef);
+    if (!snap.exists) throw new GamePlayerNotFoundError();
+    tx.update(playerRef, {
+      displayName: cleaned,
+      displayNameLower: cleaned.toLowerCase(),
+      updatedAt: now,
+    });
+    return { ...(snap.data() as GamePlayer), displayName: cleaned, updatedAt: now };
+  });
 }
 
 export async function getLeaderboardServer(

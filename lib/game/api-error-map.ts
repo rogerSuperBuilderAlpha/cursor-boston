@@ -17,8 +17,10 @@ import {
   GameInsufficientUnitsError,
   GameInvalidCasteError,
   GameInvalidLandTypeError,
+  GameInvalidNameError,
   GameInvalidPhaseError,
   GameInvalidSpellError,
+  GameNameTakenError,
   GameNoUnrevealedTilesError,
   GameNotAdjacentError,
   GamePlayerAlreadyExistsError,
@@ -60,7 +62,8 @@ export function mapGameError(error: unknown): NextResponse {
     error instanceof GameUnitCapExceededError ||
     error instanceof GameTileTypeError ||
     error instanceof GameFrontierExhaustedError ||
-    error instanceof GameArtifactAlreadyUsedError
+    error instanceof GameArtifactAlreadyUsedError ||
+    error instanceof GameNameTakenError
   ) {
     return apiError(error.message, 409);
   }
@@ -69,7 +72,8 @@ export function mapGameError(error: unknown): NextResponse {
     error instanceof GameInvalidCasteError ||
     error instanceof GameInvalidSpellError ||
     error instanceof GameNotAdjacentError ||
-    error instanceof GameSelfAttackError
+    error instanceof GameSelfAttackError ||
+    error instanceof GameInvalidNameError
   ) {
     return apiError(error.message, 400);
   }
