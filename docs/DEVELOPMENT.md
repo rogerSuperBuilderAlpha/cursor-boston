@@ -211,6 +211,55 @@ For the full API endpoint reference, see [docs/API.md](API.md).
 
 ---
 
+## Errors and observability
+
+Errors are logged through `lib/logger.ts`. In dev they print to console; in production they additionally flow to **Sentry** when `SENTRY_DSN` is set.
+
+### Where errors come from
+
+- **API routes**: every route catches its own errors and calls `logger.logError(err, { endpoint: "/api/<...>", area: "<feature>" })`. The `area` tag is what surfaces in Sentry's filter dropdown — common values: `account-deletion`, `community-safety`, `react-boundary`, `mentorship`.
+- **React error boundaries**: `app/error.tsx`, `app/global-error.tsx`, `components/ErrorBoundary.tsx` catch render errors.
+- **Background jobs**: `lib/account-deletion/cascade.ts` tags each cascade step (`step: <collection>`) so a transient failure on `messageReactions` is visible without scanning every log line.
+
+### Activating Sentry
+
+The codebase ships *scaffolded* — Sentry hooks are wired but inactive until you install the package and set DSNs:
+
+1. `npm install @sentry/nextjs`
+2. Create a project at sentry.io and copy the DSNs into `.env.local`:
+   ```
+   SENTRY_DSN=https://...@sentry.io/...
+   NEXT_PUBLIC_SENTRY_DSN=https://...@sentry.io/...
+   ```
+3. (Optional) `npx @sentry/wizard@latest -i nextjs` to add source-map upload.
+4. Restart the dev server. Trigger a synthetic error from any API route and confirm it appears in Sentry within ~60s.
+
+The `instrumentation.ts` hook at the repo root and the dynamic-import shim in `lib/logger.ts` both no-op when `SENTRY_DSN` is unset, so installing the package without configuring it has zero runtime effect.
+
+### Adding a new logger call site
+
+```ts
+import { logger } from "@/lib/logger";
+
+try {
+  // ...
+} catch (err) {
+  logger.logError(err, {
+    endpoint: "/api/your/route",
+    area: "your-feature",   // becomes a Sentry tag
+    // step: "specific-substep",  // optional sub-tag
+    uid: user?.uid,
+  });
+  return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+}
+```
+
+### What gets scrubbed
+
+Both error messages and metadata pass through PII scrubbers before any external system sees them. Stripped: bearer tokens, base64 secrets, email addresses, server-side filesystem paths, common API-key prefixes (`sk_`, `ghp_`, `AIza...`), and metadata keys matching `/email|password|token|secret|cookie/i`. See `lib/logger.ts → sanitizeErrorMessage` and `scrubPii`.
+
+---
+
 ## Troubleshooting
 
 ### "Port 3000 is already in use"
