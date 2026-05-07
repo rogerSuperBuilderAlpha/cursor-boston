@@ -9,11 +9,11 @@ import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { logger } from "@/lib/logger";
-import { parseRequestBody } from "@/lib/api-response";
 import { getClientIdentifier } from "@/lib/rate-limit";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 import { sanitizeText, sanitizeDocId } from "@/lib/sanitize";
 import { getDisplayName } from "@/lib/utils";
+import { communityContract } from "@/lib/api-schemas/community";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -43,20 +43,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    const bodyOrError = await parseRequestBody(request);
-    if (bodyOrError instanceof NextResponse) return bodyOrError;
-    const { parentId, content } = bodyOrError;
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
+    }
+    const parsed = communityContract.createReply.body.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message ?? "Invalid body" },
+        { status: 400 }
+      );
+    }
+    const { parentId, content } = parsed.data;
 
     // Validate and sanitize parentId
     const sanitizedParentId = sanitizeDocId(parentId);
     if (!sanitizedParentId) {
       return NextResponse.json({ error: "Invalid parentId format" }, { status: 400 });
     }
-    
-    // Sanitize content to prevent XSS
-    const sanitizedContent = sanitizeText(typeof content === "string" ? content : "");
+
+    // Sanitize content to prevent XSS; sanitization can shorten content
+    // so we re-check the length bounds against the sanitized value.
+    const sanitizedContent = sanitizeText(content);
     if (sanitizedContent.length < 100 || sanitizedContent.length > 500) {
-      return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Content must be between 100 and 500 characters" },
+        { status: 400 }
+      );
     }
 
     const parentRef = db.collection("communityMessages").doc(sanitizedParentId);

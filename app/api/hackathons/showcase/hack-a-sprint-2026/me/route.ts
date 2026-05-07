@@ -26,6 +26,8 @@ import {
   profileMatchesHackathonJudgeCheckinException,
 } from "@/lib/hackathon-event-signup";
 
+// @contracts: hackathonsContract.hackASprintMe (lib/api-schemas/hackathons.ts)
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 

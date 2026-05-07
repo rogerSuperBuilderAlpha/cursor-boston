@@ -10,6 +10,7 @@ import { mapGameError } from "@/lib/game/api-error-map";
 import { getPlayerEligibilityServer } from "@/lib/game/data-server";
 import { getVerifiedUser } from "@/lib/server-auth";
 
+// @contracts: gameContract.getEligibility (lib/api-schemas/game.ts)
 export async function GET(request: NextRequest) {
   try {
     const user = await getVerifiedUser(request);

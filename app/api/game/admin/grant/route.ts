@@ -12,6 +12,7 @@ import { apiError, apiSuccess, parseRequestBody } from "@/lib/api-response";
 import { mapGameError } from "@/lib/game/api-error-map";
 import { adminGrantTurnsServer } from "@/lib/game/data-server";
 import { getVerifiedUser } from "@/lib/server-auth";
+import { gameContract } from "@/lib/api-schemas/game";
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,22 +20,22 @@ export async function POST(request: NextRequest) {
     if (!user) return apiError("Authentication required", 401);
     if (!user.isAdmin) return apiError("Admin only", 403);
 
-    const bodyOrError = await parseRequestBody<{
-      userId?: unknown;
-      weekStartIso?: unknown;
-    }>(request);
+    const bodyOrError = await parseRequestBody(request);
     if (bodyOrError instanceof NextResponse) return bodyOrError;
 
-    const targetUserId =
-      typeof bodyOrError.userId === "string" && bodyOrError.userId.length > 0
-        ? bodyOrError.userId
-        : user.uid;
-    const weekStartIso =
-      typeof bodyOrError.weekStartIso === "string"
-        ? bodyOrError.weekStartIso
-        : undefined;
+    const parsed = gameContract.adminGrant.body.safeParse(bodyOrError);
+    if (!parsed.success) {
+      return apiError(parsed.error.issues[0]?.message ?? "Invalid body", 400);
+    }
 
-    const player = await adminGrantTurnsServer(targetUserId, weekStartIso);
+    const targetUserId =
+      parsed.data.userId && parsed.data.userId.length > 0
+        ? parsed.data.userId
+        : user.uid;
+    const player = await adminGrantTurnsServer(
+      targetUserId,
+      parsed.data.weekStartIso
+    );
     return apiSuccess({ player });
   } catch (error) {
     return mapGameError(error);

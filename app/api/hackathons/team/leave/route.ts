@@ -11,6 +11,7 @@ import { getVerifiedUser } from "@/lib/server-auth";
 import { getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 import { sanitizeDocId } from "@/lib/sanitize";
+import { hackathonsContract } from "@/lib/api-schemas/hackathons";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -44,16 +45,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    let body: { teamId?: unknown };
+    let body: unknown;
     try {
-      body = (await request.json()) as { teamId?: unknown };
+      body = await request.json();
     } catch {
       return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
     }
-    const { teamId } = body;
-    
-    // Validate and sanitize teamId
-    const sanitizedTeamId = sanitizeDocId(typeof teamId === "string" ? teamId : "");
+    const parsed = hackathonsContract.teamLeave.body.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message ?? "Invalid body" },
+        { status: 400 }
+      );
+    }
+    const sanitizedTeamId = sanitizeDocId(parsed.data.teamId);
     if (!sanitizedTeamId) {
       return NextResponse.json({ error: "Invalid teamId format" }, { status: 400 });
     }

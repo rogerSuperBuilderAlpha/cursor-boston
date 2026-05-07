@@ -9,35 +9,25 @@ import { apiError, apiSuccess, parseRequestBody } from "@/lib/api-response";
 import { mapGameError } from "@/lib/game/api-error-map";
 import { parseBatchCount, runBatch } from "@/lib/game/api-batch";
 import { distributeTileServer } from "@/lib/game/data-server";
-import type { LandType } from "@/lib/game/types";
 import { getVerifiedUser } from "@/lib/server-auth";
-
-const VALID_TYPES: LandType[] = ["military", "food", "magic", "unassigned"];
+import { gameContract } from "@/lib/api-schemas/game";
 
 export async function POST(request: NextRequest) {
   try {
     const user = await getVerifiedUser(request);
     if (!user) return apiError("Authentication required", 401);
 
-    const bodyOrError = await parseRequestBody<{
-      tileId?: unknown;
-      type?: unknown;
-      count?: unknown;
-    }>(request);
+    const bodyOrError = await parseRequestBody(request);
     if (bodyOrError instanceof NextResponse) return bodyOrError;
 
-    const tileId =
-      typeof bodyOrError.tileId === "string" ? bodyOrError.tileId : null;
-    const typeRaw =
-      typeof bodyOrError.type === "string" ? bodyOrError.type : null;
-    if (!tileId) return apiError("tileId is required", 400);
-    if (!typeRaw || !VALID_TYPES.includes(typeRaw as LandType)) {
-      return apiError(`type must be one of: ${VALID_TYPES.join(", ")}`, 400);
+    const parsed = gameContract.setupDistribute.body.safeParse(bodyOrError);
+    if (!parsed.success) {
+      return apiError(parsed.error.issues[0]?.message ?? "Invalid body", 400);
     }
-    const count = parseBatchCount(bodyOrError.count);
+    const count = parseBatchCount(parsed.data.count);
 
     const { reports, lastResult, stoppedEarly } = await runBatch(count, () =>
-      distributeTileServer(user.uid, tileId, typeRaw as LandType)
+      distributeTileServer(user.uid, parsed.data.tileId, parsed.data.type)
     );
     return apiSuccess({
       player: lastResult.player,

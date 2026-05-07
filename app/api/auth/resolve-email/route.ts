@@ -7,17 +7,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb, getAdminAuth } from "@/lib/firebase-admin";
 import { parseRequestBody } from "@/lib/api-response";
+import { authContract } from "@/lib/api-schemas/auth";
 
 export async function POST(request: NextRequest) {
   try {
     const bodyOrError = await parseRequestBody(request);
     if (bodyOrError instanceof NextResponse) return bodyOrError;
-    const { email } = bodyOrError;
-    if (!email || typeof email !== "string") {
-      return NextResponse.json({ error: "Email is required" }, { status: 400 });
+
+    const parsed = authContract.resolveEmail.body.safeParse(bodyOrError);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message ?? "Email is required" },
+        { status: 400 }
+      );
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
+    const normalizedEmail = parsed.data.email.toLowerCase().trim();
 
     const adminDb = getAdminDb();
     const adminAuth = getAdminAuth();

@@ -9,6 +9,7 @@ import { getQuestionsService } from "@/lib/questions/service";
 import { logger } from "@/lib/logger";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 import type { QuestionSort } from "@/types/questions";
+import { questionsContract } from "@/lib/api-schemas/questions";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,11 +28,24 @@ export async function GET(request: NextRequest) {
     }
 
     const searchParams = request.nextUrl.searchParams;
-    const sort = (searchParams.get("sort") || "newest") as QuestionSort;
-    const tag = searchParams.get("tag") || undefined;
-    const search = searchParams.get("search") || undefined;
+    const queryParsed = questionsContract.list.query.safeParse({
+      sort: searchParams.get("sort") ?? undefined,
+      tag: searchParams.get("tag") ?? undefined,
+      search: searchParams.get("search") ?? undefined,
+      limit: searchParams.get("limit") ?? undefined,
+      cursor: searchParams.get("cursor") ?? undefined,
+    });
+    if (!queryParsed.success) {
+      return NextResponse.json(
+        { error: queryParsed.error.issues[0]?.message ?? "Invalid query" },
+        { status: 400 }
+      );
+    }
+    const sort = (queryParsed.data.sort || "newest") as QuestionSort;
+    const tag = queryParsed.data.tag || undefined;
+    const search = queryParsed.data.search || undefined;
     const limit = Math.min(Number(searchParams.get("limit")) || 20, 50);
-    const cursor = searchParams.get("cursor") || undefined;
+    const cursor = queryParsed.data.cursor || undefined;
 
     let service;
     try {

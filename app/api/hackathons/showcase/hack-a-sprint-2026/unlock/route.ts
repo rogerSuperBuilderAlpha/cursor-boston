@@ -6,6 +6,8 @@
 
 import { NextResponse } from "next/server";
 
+// @contracts: hackathonsContract.hackASprintUnlock (lib/api-schemas/hackathons.ts)
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 

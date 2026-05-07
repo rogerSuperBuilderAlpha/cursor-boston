@@ -14,7 +14,6 @@ import type { GamePlayer, GameTile, MapTile } from "@/lib/game/types";
 import {
   EnemyTilePanel,
   OwnTilePanel,
-  Stat,
 } from "./tile-action-panels";
 
 function asMapTile(t: GameTile): MapTile {
@@ -116,33 +115,37 @@ export function TileActionsModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
     >
       <div
-        className="bg-white dark:bg-neutral-900 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6"
+        className="bg-white dark:bg-neutral-900 rounded-lg shadow-xl max-w-2xl w-full max-h-[92vh] overflow-y-auto p-4"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <h2 className="text-xl font-bold font-mono">{tile.tileId}</h2>
-            <p className="text-sm text-neutral-500 capitalize">
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-baseline gap-3 flex-wrap">
+            <h2 className="text-lg font-bold font-mono">{tile.tileId}</h2>
+            <span className="text-sm text-neutral-500 capitalize">
               {isOwn
-                ? "Your tile"
+                ? "yours"
                 : tile.ownerId
                   ? ownerName
-                    ? `Held by ${ownerName}`
-                    : "Foreign tile"
-                  : "Unclaimed"}{" "}
-              — {tile.type}
-              {tile.armedDefenseSpellId && (
-                <span className="text-blue-600 dark:text-blue-400">
-                  {" · "}armed: {tile.armedDefenseSpellId}
-                </span>
-              )}
-            </p>
+                    ? `held by ${ownerName}`
+                    : "foreign"
+                  : "unclaimed"}
+              {" · "}
+              {tile.type}
+            </span>
+            <span className="text-sm font-mono">
+              G{tile.units.ground} S{tile.units.siege} A{tile.units.air}
+            </span>
+            {tile.armedDefenseSpellId && (
+              <span className="text-xs text-blue-600 dark:text-blue-400">
+                ⛨ {tile.armedDefenseSpellId}
+              </span>
+            )}
           </div>
           <button
             onClick={onClose}
@@ -154,19 +157,13 @@ export function TileActionsModal({
         </div>
 
         {error && (
-          <p className="mb-3 text-sm text-red-600 dark:text-red-400">{error}</p>
+          <p className="mb-2 text-sm text-red-600 dark:text-red-400">{error}</p>
         )}
-        {message && (
-          <p className="mb-3 text-sm text-emerald-600 dark:text-emerald-400">
+        {message && message !== "Done." && (
+          <p className="mb-2 text-sm text-emerald-600 dark:text-emerald-400">
             {message}
           </p>
         )}
-
-        <div className="grid grid-cols-3 gap-2 mb-5">
-          <Stat label="Ground" value={String(tile.units.ground)} />
-          <Stat label="Siege" value={String(tile.units.siege)} />
-          <Stat label="Air" value={String(tile.units.air)} />
-        </div>
 
         {isOwn ? (
           <OwnTilePanel
@@ -204,7 +201,7 @@ export function TileActionsModal({
           />
         )}
 
-        <div className="mt-5 pt-4 border-t border-neutral-200 dark:border-neutral-800 flex flex-wrap gap-x-4 gap-y-2 text-sm">
+        <div className="mt-4 pt-3 border-t border-neutral-200 dark:border-neutral-800 flex flex-wrap gap-x-4 gap-y-2 text-xs">
           {isOwn && (
             <Link
               href="/game/upgrades"

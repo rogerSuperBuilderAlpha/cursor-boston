@@ -9,29 +9,25 @@ import { apiError, apiSuccess, parseRequestBody } from "@/lib/api-response";
 import { mapGameError } from "@/lib/game/api-error-map";
 import { applyUpgradeServer } from "@/lib/game/data-server";
 import { getVerifiedUser } from "@/lib/server-auth";
+import { gameContract } from "@/lib/api-schemas/game";
 
 export async function POST(request: NextRequest) {
   try {
     const user = await getVerifiedUser(request);
     if (!user) return apiError("Authentication required", 401);
 
-    const bodyOrError = await parseRequestBody<{
-      targetId?: unknown;
-      upgradeId?: unknown;
-    }>(request);
+    const bodyOrError = await parseRequestBody(request);
     if (bodyOrError instanceof NextResponse) return bodyOrError;
 
-    const targetId =
-      typeof bodyOrError.targetId === "string" ? bodyOrError.targetId : null;
-    const upgradeId =
-      typeof bodyOrError.upgradeId === "string" ? bodyOrError.upgradeId : null;
-    if (!targetId) return apiError("targetId is required", 400);
-    if (!upgradeId) return apiError("upgradeId is required", 400);
+    const parsed = gameContract.upgradesApply.body.safeParse(bodyOrError);
+    if (!parsed.success) {
+      return apiError(parsed.error.issues[0]?.message ?? "Invalid body", 400);
+    }
 
     const { player } = await applyUpgradeServer({
       userId: user.uid,
-      targetId,
-      upgradeId,
+      targetId: parsed.data.targetId,
+      upgradeId: parsed.data.upgradeId,
     });
     return apiSuccess({ player });
   } catch (error) {
