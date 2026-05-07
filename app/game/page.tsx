@@ -22,6 +22,7 @@ interface PlayerResponse {
   success: boolean;
   player: GamePlayer | null;
   tiles: MapTile[];
+  isAdmin?: boolean;
   error?: string;
 }
 
@@ -56,9 +57,13 @@ interface Eligibility {
 
 export default function GameDashboardPage() {
   const { user, userProfile, loading: authLoading } = useAuth();
-  const isAdmin = Boolean(
-    (userProfile as { isAdmin?: boolean } | null)?.isAdmin
-  );
+  // Server fills this in from the player API response (token claims +
+  // legacy email allowlist). The Firestore profile field is never written
+  // to in this codebase, so we can't rely on userProfile.isAdmin alone.
+  const [serverIsAdmin, setServerIsAdmin] = useState(false);
+  const isAdmin =
+    serverIsAdmin ||
+    Boolean((userProfile as { isAdmin?: boolean } | null)?.isAdmin);
   const [player, setPlayer] = useState<GamePlayer | null>(null);
   const [tiles, setTiles] = useState<MapTile[]>([]);
   const [worldTiles, setWorldTiles] = useState<MapTile[]>([]);
@@ -113,6 +118,7 @@ export default function GameDashboardPage() {
       if (!data.success) throw new Error(data.error ?? "Failed to load player");
       setPlayer(data.player);
       setTiles(data.tiles ?? []);
+      setServerIsAdmin(Boolean(data.isAdmin));
       const elgData = (await elgRes.json()) as EligibilityResponse;
       if (elgData.success) {
         setEligibility({
