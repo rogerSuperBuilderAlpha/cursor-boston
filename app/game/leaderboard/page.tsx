@@ -25,14 +25,37 @@ interface LeaderRow {
 interface LeaderboardResponse {
   success: boolean;
   players?: LeaderRow[];
+  nextCursor?: string | null;
+  hasMore?: boolean;
   error?: string;
 }
+
+const PAGE_LIMIT = 20;
 
 export default function LeaderboardPage() {
   const { user, loading: authLoading } = useAuth();
   const [rows, setRows] = useState<LeaderRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const fetchPage = useCallback(
+    async (cursor: string | null): Promise<LeaderboardResponse | null> => {
+      if (!user) return null;
+      const token = await user.getIdToken();
+      const params = new URLSearchParams();
+      params.set("limit", String(PAGE_LIMIT));
+      if (cursor) params.set("cursor", cursor);
+      const res = await fetch(`/api/game/leaderboard?${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = (await res.json()) as LeaderboardResponse;
+      if (!data.success) throw new Error(data.error ?? "Failed to load");
+      return data;
+    },
+    [user]
+  );
 
   const refresh = useCallback(async () => {
     if (!user) {
@@ -41,19 +64,32 @@ export default function LeaderboardPage() {
     }
     setError(null);
     try {
-      const token = await user.getIdToken();
-      const res = await fetch("/api/game/leaderboard?limit=50", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = (await res.json()) as LeaderboardResponse;
-      if (!data.success) throw new Error(data.error ?? "Failed to load");
+      const data = await fetchPage(null);
+      if (!data) return;
       setRows(data.players ?? []);
+      setNextCursor(data.nextCursor ?? null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load");
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, fetchPage]);
+
+  const loadMore = useCallback(async () => {
+    if (!nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    setError(null);
+    try {
+      const data = await fetchPage(nextCursor);
+      if (!data) return;
+      setRows((prev) => [...prev, ...(data.players ?? [])]);
+      setNextCursor(data.nextCursor ?? null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load");
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [nextCursor, loadingMore, fetchPage]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -98,9 +134,9 @@ export default function LeaderboardPage() {
 
         <div className="rounded-lg border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/10 p-4 mb-4 text-sm leading-relaxed">
           <p>
-            Top 50 generals ranked by tiles held. Conquering a tile bumps your
-            number and drops your opponent&apos;s by the same amount. Your row
-            is highlighted.
+            Generals ranked by tiles held. Conquering a tile bumps your number
+            and drops your opponent&apos;s by the same amount. Your row is
+            highlighted.
           </p>
         </div>
 
@@ -146,6 +182,19 @@ export default function LeaderboardPage() {
               ))}
             </tbody>
           </table>
+        )}
+
+        {nextCursor && (
+          <div className="flex justify-center mt-6">
+            <button
+              type="button"
+              onClick={loadMore}
+              disabled={loadingMore}
+              className="px-6 py-2 border border-neutral-200 dark:border-neutral-700 rounded-lg text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors disabled:opacity-50"
+            >
+              {loadingMore ? "Loading…" : "Load more"}
+            </button>
+          </div>
         )}
       </div>
     </div>

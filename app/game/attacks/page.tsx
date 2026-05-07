@@ -14,17 +14,47 @@ import type { GameAttack } from "@/lib/game/types";
 interface AttacksResponse {
   success: boolean;
   attacks?: GameAttack[];
+  nextCursor?: string | null;
+  hasMore?: boolean;
   error?: { message?: string; code?: string } | string;
 }
 
 type Side = "all" | "sent" | "received";
+
+const PAGE_LIMIT = 20;
 
 export default function AttackLogPage() {
   const { user, loading: authLoading } = useAuth();
   const [attacks, setAttacks] = useState<GameAttack[]>([]);
   const [side, setSide] = useState<Side>("all");
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const fetchPage = useCallback(
+    async (s: Side, cursor: string | null): Promise<AttacksResponse | null> => {
+      if (!user) return null;
+      const token = await user.getIdToken();
+      const params = new URLSearchParams();
+      params.set("side", s);
+      params.set("limit", String(PAGE_LIMIT));
+      if (cursor) params.set("cursor", cursor);
+      const res = await fetch(`/api/game/attacks?${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = (await res.json()) as AttacksResponse;
+      if (!data.success) {
+        const msg =
+          typeof data.error === "string"
+            ? data.error
+            : data.error?.message ?? "Failed to load";
+        throw new Error(msg);
+      }
+      return data;
+    },
+    [user]
+  );
 
   const refresh = useCallback(
     async (s: Side) => {
@@ -35,31 +65,38 @@ export default function AttackLogPage() {
       setError(null);
       setLoading(true);
       try {
-        const token = await user.getIdToken();
-        const res = await fetch(`/api/game/attacks?side=${s}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = (await res.json()) as AttacksResponse;
-        if (!data.success) {
-          const msg =
-            typeof data.error === "string"
-              ? data.error
-              : data.error?.message ?? "Failed to load";
-          throw new Error(msg);
-        }
+        const data = await fetchPage(s, null);
+        if (!data) return;
         setAttacks(data.attacks ?? []);
+        setNextCursor(data.nextCursor ?? null);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to load");
       } finally {
         setLoading(false);
       }
     },
-    [user]
+    [user, fetchPage]
   );
+
+  const loadMore = useCallback(async () => {
+    if (!nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    setError(null);
+    try {
+      const data = await fetchPage(side, nextCursor);
+      if (!data) return;
+      setAttacks((prev) => [...prev, ...(data.attacks ?? [])]);
+      setNextCursor(data.nextCursor ?? null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load");
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [nextCursor, loadingMore, side, fetchPage]);
 
   useEffect(() => {
     if (authLoading) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch-on-mount, state set inside async callback
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch-on-mount + side-change refetch, state set inside async callback
     refresh(side);
   }, [authLoading, side, refresh]);
 
@@ -100,6 +137,10 @@ export default function AttackLogPage() {
             Each row shows the units sent, the outcome (captured / repelled /
             stalemate), and casualties on both sides.
           </p>
+          <p className="mt-2 text-xs text-neutral-600 dark:text-neutral-400">
+            Tip: select <em>sent</em> or <em>received</em> to page through your
+            full history; <em>all</em> shows a merged recent view.
+          </p>
         </div>
 
         <div className="flex gap-2 mb-6">
@@ -131,6 +172,19 @@ export default function AttackLogPage() {
             {attacks.map((a) => (
               <AttackRow key={a.id} attack={a} myUserId={user.uid} />
             ))}
+          </div>
+        )}
+
+        {nextCursor && (
+          <div className="flex justify-center mt-6">
+            <button
+              type="button"
+              onClick={loadMore}
+              disabled={loadingMore}
+              className="px-6 py-2 border border-neutral-200 dark:border-neutral-700 rounded-lg text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors disabled:opacity-50"
+            >
+              {loadingMore ? "Loading…" : "Load more"}
+            </button>
           </div>
         )}
       </div>

@@ -25,6 +25,11 @@ import {
 import { notifyConquest } from "./discord-game";
 import { logger } from "@/lib/logger";
 import {
+  paginateFirestoreQuery,
+  paginateInMemory,
+  type PaginatedQueryResult,
+} from "@/lib/firestore-pagination";
+import {
   PRODUCTION_SPELL_DURATION_TURNS,
   applyWeeklyGrant,
   currentEligibilityWindow,
@@ -437,6 +442,92 @@ export interface OwnerSummary {
   shielded: boolean;
 }
 
+// Personal map view: my tiles + the *enemy* tiles that share an edge with
+// any of my tiles + owner summaries for those enemies. Designed to be the
+// default fetch for /game/tiles, /game/spells, /game/recruit — the rest of
+// the world isn't relevant to those pages.
+//
+// Read cost: 1 query (own tiles) + 1 batched docRef.getAll() for the
+// border ring + 1 batched docRef.getAll() for owner summaries. For a
+// 25-tile spawn cluster: ~25 + ~30 + ~5 = ~60 reads (vs ~500 for the
+// full-world fetch). Scales with kingdom perimeter, not world size.
+export interface MyMapView {
+  myTiles: MapTile[];
+  borderTiles: MapTile[];
+  owners: OwnerSummary[];
+}
+
+export async function getMyMapServer(
+  userId: string,
+  now: Date = new Date()
+): Promise<MyMapView> {
+  const db = adminDbOrThrow();
+  const myTiles = await getOwnedMapTilesServer(userId);
+  if (myTiles.length === 0) {
+    return { myTiles: [], borderTiles: [], owners: [] };
+  }
+
+  // Build the set of neighbor tile ids that are NOT mine.
+  const myIds = new Set(myTiles.map((t) => t.tileId));
+  const neighborIds = new Set<string>();
+  for (const t of myTiles) {
+    for (const id of neighborTileIds(t.q, t.r)) {
+      if (!myIds.has(id)) neighborIds.add(id);
+    }
+  }
+
+  // Batch-fetch the border ring. We could pre-filter to only-existent docs,
+  // but db.getAll handles missing docs cheaply (returns non-existent
+  // snapshots) so a single round-trip is fine.
+  const borderTiles: MapTile[] = [];
+  const enemyOwnerIds = new Set<string>();
+  if (neighborIds.size > 0) {
+    const refs = [...neighborIds].map((id) =>
+      db.collection(COLLECTIONS.TILES).doc(id)
+    );
+    const snaps = await db.getAll(...refs);
+    for (const s of snaps) {
+      if (!s.exists) continue;
+      const data = s.data()!;
+      // Per spec: only enemy tiles. Skip unowned and self-owned border
+      // tiles entirely. Unowned-but-revealed neighbors don't load —
+      // there's no enemy presence there to display.
+      if (!data.ownerId || data.ownerId === userId) continue;
+      borderTiles.push({
+        tileId: data.tileId,
+        q: data.q,
+        r: data.r,
+        type: data.type,
+        ownerId: data.ownerId,
+        units: data.units,
+        armedDefenseSpellId: data.armedDefenseSpellId ?? null,
+      });
+      enemyOwnerIds.add(data.ownerId);
+    }
+  }
+
+  // Owner summaries for the enemies on our border.
+  const owners: OwnerSummary[] = [];
+  if (enemyOwnerIds.size > 0) {
+    const ownerRefs = [...enemyOwnerIds].map((uid) =>
+      db.collection(COLLECTIONS.PLAYERS).doc(uid)
+    );
+    const ownerSnaps = await db.getAll(...ownerRefs);
+    for (const s of ownerSnaps) {
+      if (!s.exists) continue;
+      const p = s.data() as GamePlayer;
+      owners.push({
+        userId: p.userId,
+        displayName: p.displayName ?? "",
+        caste: p.caste ?? null,
+        shielded: isShieldActive(p, now),
+      });
+    }
+  }
+
+  return { myTiles, borderTiles, owners };
+}
+
 // Owner-side metadata for the global map: name, caste, shield status. One
 // record per player; the client joins it onto tiles by ownerId.
 export async function getAllOwnerSummariesServer(
@@ -692,21 +783,25 @@ export async function exploreNextTileServer(
   });
 }
 
-export async function listArtifactsServer(
-  userId: string
-): Promise<GameArtifact[]> {
+export async function listArtifactsServer(opts: {
+  userId: string;
+  limit: number;
+  cursor: string | null;
+}): Promise<PaginatedQueryResult<GameArtifact>> {
   const db = adminDbOrThrow();
-  // Single-field where + in-memory sort: avoids needing the composite index
-  // to be deployed before this code goes live. Inventories are small (player
-  // turn budgets cap them well below 1k) so the sort is trivial.
-  const snap = await db
-    .collection(COLLECTIONS.ARTIFACTS)
-    .where("ownerId", "==", userId)
-    .limit(500)
-    .get();
-  const artifacts = snap.docs.map((d) => d.data() as GameArtifact);
-  artifacts.sort((a, b) => b.foundAtTurn - a.foundAtTurn);
-  return artifacts;
+  const artifacts = db.collection(COLLECTIONS.ARTIFACTS);
+  // Composite index (ownerId ASC, foundAtTurn DESC) is declared in
+  // config/firebase/firestore.indexes.json — required for this orderBy.
+  const query = artifacts
+    .where("ownerId", "==", opts.userId)
+    .orderBy("foundAtTurn", "desc");
+  return paginateFirestoreQuery({
+    query,
+    collection: artifacts,
+    cursor: opts.cursor,
+    limit: opts.limit,
+    mapDoc: (d) => d.data() as GameArtifact,
+  });
 }
 
 // Sets or changes a tile's type (military / food / magic). Costs 1 turn,
@@ -1859,56 +1954,53 @@ export async function attackTileServer(args: {
   return result;
 }
 
-export async function getRecentAttacksServer(
-  userId: string,
-  side: "sent" | "received" | "all" = "all",
-  limit = 50
-): Promise<GameAttack[]> {
+export async function getRecentAttacksServer(opts: {
+  userId: string;
+  side: "sent" | "received" | "all";
+  limit: number;
+  cursor: string | null;
+}): Promise<PaginatedQueryResult<GameAttack>> {
   const db = adminDbOrThrow();
-  // Composite indexes (attackerId|defenderId, createdAt desc) are deployed
-  // (config/firebase/firestore.indexes.json), so we can orderBy + limit at the
-  // server. For side="all" we issue two queries and merge in JS — Firestore
-  // can't OR across fields. Final slice trims to `limit` after the merge.
-  const fetchLimit = Math.max(1, Math.min(100, limit));
-  const queries: Promise<GameAttack[]>[] = [];
-  if (side === "sent" || side === "all") {
-    queries.push(
-      db
-        .collection(COLLECTIONS.ATTACKS)
-        .where("attackerId", "==", userId)
-        .orderBy("createdAt", "desc")
-        .limit(fetchLimit)
-        .get()
-        .then((snap) => snap.docs.map((d) => d.data() as GameAttack))
-    );
+  const attacks = db.collection(COLLECTIONS.ATTACKS);
+
+  if (opts.side === "sent" || opts.side === "received") {
+    // Composite indexes (attackerId/defenderId ASC + createdAt DESC) are
+    // declared in config/firebase/firestore.indexes.json.
+    const field = opts.side === "sent" ? "attackerId" : "defenderId";
+    const query = attacks
+      .where(field, "==", opts.userId)
+      .orderBy("createdAt", "desc");
+    return paginateFirestoreQuery({
+      query,
+      collection: attacks,
+      cursor: opts.cursor,
+      limit: opts.limit,
+      mapDoc: (d) => d.data() as GameAttack,
+    });
   }
-  if (side === "received" || side === "all") {
-    queries.push(
-      db
-        .collection(COLLECTIONS.ATTACKS)
-        .where("defenderId", "==", userId)
-        .orderBy("createdAt", "desc")
-        .limit(fetchLimit)
-        .get()
-        .then((snap) => snap.docs.map((d) => d.data() as GameAttack))
-    );
-  }
-  const results = (await Promise.all(queries)).flat();
-  // Dedupe (sent+received can overlap if a player attacks themselves — should
-  // never happen, but guard).
+
+  // side="all" merges sent + received in memory because Firestore can't OR
+  // across two single-field equalities. Capped at 500 per side; for full
+  // history use side="sent" or side="received" with cursor pagination.
+  const SIDE_FETCH_CAP = 500;
+  const [sentSnap, receivedSnap] = await Promise.all([
+    attacks.where("attackerId", "==", opts.userId).limit(SIDE_FETCH_CAP).get(),
+    attacks.where("defenderId", "==", opts.userId).limit(SIDE_FETCH_CAP).get(),
+  ]);
   const seen = new Set<string>();
-  const out: GameAttack[] = [];
-  for (const a of results) {
+  const merged: GameAttack[] = [];
+  for (const doc of [...sentSnap.docs, ...receivedSnap.docs]) {
+    const a = doc.data() as GameAttack;
     if (a.id && seen.has(a.id)) continue;
     if (a.id) seen.add(a.id);
-    out.push(a);
+    merged.push(a);
   }
-  out.sort((a, b) => {
+  merged.sort((a, b) => {
     const ta = toDate(a.createdAt).getTime();
     const tb = toDate(b.createdAt).getTime();
     return tb - ta;
   });
-  return out.slice(0, limit);
+  return paginateInMemory(merged, opts.cursor, opts.limit);
 }
 
 // Coerce Firestore Timestamps / Dates / null into a Date. Avoids the previous
@@ -2131,16 +2223,20 @@ export async function setGeneralNameServer(
   });
 }
 
-export async function getLeaderboardServer(
-  limit = 50
-): Promise<GamePlayer[]> {
+export async function getLeaderboardServer(opts: {
+  limit: number;
+  cursor: string | null;
+}): Promise<PaginatedQueryResult<GamePlayer>> {
   const db = adminDbOrThrow();
-  const snap = await db
-    .collection(COLLECTIONS.PLAYERS)
-    .orderBy("stats.tilesHeld", "desc")
-    .limit(Math.max(1, Math.min(100, limit)))
-    .get();
-  return snap.docs.map((d) => d.data() as GamePlayer);
+  const players = db.collection(COLLECTIONS.PLAYERS);
+  const query = players.orderBy("stats.tilesHeld", "desc");
+  return paginateFirestoreQuery({
+    query,
+    collection: players,
+    cursor: opts.cursor,
+    limit: opts.limit,
+    mapDoc: (d) => d.data() as GamePlayer,
+  });
 }
 
 // Admin-only testing helper. Kept as a manual override even after the cron

@@ -12,6 +12,38 @@ import { getClientIdentifier } from "@/lib/rate-limit";
 import { buildRateLimitHeaders, checkServerRateLimit } from "@/lib/rate-limit-server";
 import { sanitizeDocId } from "@/lib/sanitize";
 import { logger } from "@/lib/logger";
+import {
+  clampLimit,
+  parseCursor,
+  paginateFirestoreQuery,
+  DEFAULT_PAGE_LIMIT,
+} from "@/lib/firestore-pagination";
+
+const PAGINATABLE_STATUSES = new Set(["pending", "approved", "completed"]);
+
+function mapTalkSubmissionDoc(doc: { id: string; data: () => unknown }) {
+  const data = doc.data() as {
+    userId?: unknown;
+    title?: unknown;
+    status?: unknown;
+    createdAt?: unknown;
+  };
+  const status =
+    data.status === "approved"
+      ? "approved"
+      : data.status === "completed"
+      ? "completed"
+      : data.status === "pending"
+      ? "pending"
+      : "unknown";
+  return {
+    submissionId: doc.id,
+    userId: typeof data.userId === "string" ? data.userId : "",
+    title: typeof data.title === "string" ? data.title : "",
+    status,
+    createdAt: toIsoDate(data.createdAt),
+  };
+}
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -134,41 +166,56 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
+    // Single-status paginated mode: ?status=pending|approved|completed
+    // returns one bucket with cursor pagination. Default mode (no status)
+    // preserves the original "all three buckets" response so existing
+    // dashboards keep working unchanged.
+    const statusParam = request.nextUrl.searchParams.get("status");
+    if (statusParam && PAGINATABLE_STATUSES.has(statusParam)) {
+      const limit = clampLimit(
+        request.nextUrl.searchParams.get("limit"),
+        DEFAULT_PAGE_LIMIT
+      );
+      const cursor = parseCursor(request.nextUrl.searchParams.get("cursor"));
+      const collection = db.collection("talkSubmissions");
+      const query = collection
+        .where("status", "==", statusParam)
+        .orderBy("createdAt", "asc");
+
+      const { items, nextCursor, hasMore } = await paginateFirestoreQuery({
+        query,
+        collection,
+        cursor,
+        limit,
+        mapDoc: mapTalkSubmissionDoc,
+      });
+
+      return NextResponse.json({
+        talkSubmissions: items,
+        nextCursor,
+        hasMore,
+      });
+    }
+
     const [pendingSnapshot, approvedSnapshot, completedSnapshot] = await Promise.all([
       db.collection("talkSubmissions").where("status", "==", "pending").limit(100).get(),
       db.collection("talkSubmissions").where("status", "==", "approved").limit(100).get(),
       db.collection("talkSubmissions").where("status", "==", "completed").limit(100).get(),
     ]);
 
-    const talkSubmissions = [...pendingSnapshot.docs, ...approvedSnapshot.docs, ...completedSnapshot.docs]
-      .map((doc) => {
-        const data = doc.data() as {
-          userId?: unknown;
-          title?: unknown;
-          status?: unknown;
-          createdAt?: unknown;
-        };
-        const status =
-          data.status === "approved"
-            ? "approved"
-            : data.status === "completed"
-            ? "completed"
-            : data.status === "pending"
-            ? "pending"
-            : "unknown";
-
-        return {
-          submissionId: doc.id,
-          userId: typeof data.userId === "string" ? data.userId : "",
-          title: typeof data.title === "string" ? data.title : "",
-          status,
-          createdAt: toIsoDate(data.createdAt),
-        };
-      });
+    const talkSubmissions = [
+      ...pendingSnapshot.docs,
+      ...approvedSnapshot.docs,
+      ...completedSnapshot.docs,
+    ].map(mapTalkSubmissionDoc);
 
     await logTalkPendingAgeSummary(pendingSnapshot, "queue_read");
 
-    return NextResponse.json({ talkSubmissions });
+    return NextResponse.json({
+      talkSubmissions,
+      nextCursor: null,
+      hasMore: false,
+    });
   } catch (error) {
     logger.logError(error, {
       endpoint: "/api/talks/submission/moderate",
