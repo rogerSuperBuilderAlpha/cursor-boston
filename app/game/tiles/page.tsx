@@ -96,6 +96,13 @@ function hexPoints(cx: number, cy: number): string {
  * point `(x, y)` maps to SVG `(scale * (x + tx), scale * (y + ty))`. We
  * pick `tx, ty` to center the bbox at the origin and `scale` so the bbox
  * fits.
+ *
+ * Important: we only zoom *out* to fit — never zoom *in* past 1:1 on
+ * recenter. For small kingdoms (e.g. a 5-tile cluster) the natural fit
+ * scale is ~6×, which pegs to MAX_SCALE and pushes the surrounding world
+ * off-screen — leaving the user staring at one hex. Capping the fit at 1
+ * keeps neighboring tiles visible for context; the user can still wheel-
+ * zoom in afterward.
  */
 function fitTilesToViewport(
   tiles: ReadonlyArray<MapTile>
@@ -115,7 +122,9 @@ function fitTilesToViewport(
   const w = maxX - minX + 2 * VIEWPORT_PADDING;
   const h = maxY - minY + 2 * VIEWPORT_PADDING;
   const fit = Math.min(VIEWBOX_W / w, VIEWBOX_H / h) * FIT_MARGIN;
-  const scale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, fit));
+  // Clamp to [MIN_SCALE, 1] — never zoom in past 1:1 on recenter, only
+  // zoom out enough to make the kingdom fit.
+  const scale = Math.max(MIN_SCALE, Math.min(1, fit));
   return {
     scale,
     tx: -(minX + maxX) / 2,
@@ -598,12 +607,29 @@ export default function TilesMapPage() {
               </button>
               <button
                 onClick={() => {
-                  setDidFit(false); // re-trigger the fit effect
+                  setDidFit(false); // re-trigger the fit effect (your kingdom)
                 }}
-                className="px-2.5 py-1.5 text-xs hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-b-lg border-t border-neutral-200 dark:border-neutral-800"
+                className="px-2.5 py-1.5 text-xs hover:bg-neutral-100 dark:hover:bg-neutral-800 border-t border-neutral-200 dark:border-neutral-800"
                 title="Recenter on your territory"
               >
                 ⌖
+              </button>
+              <button
+                onClick={() => {
+                  // Snap to a fit-zoom of the entire world. Useful when the
+                  // recenter ⌖ left you zoomed in on a small kingdom and the
+                  // surrounding map looks empty.
+                  const fit = fitTilesToViewport(tiles);
+                  if (fit) {
+                    setTx(fit.tx);
+                    setTy(fit.ty);
+                    setScale(fit.scale);
+                  }
+                }}
+                className="px-2.5 py-1.5 text-xs hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-b-lg border-t border-neutral-200 dark:border-neutral-800"
+                title="Show the whole world"
+              >
+                🌐
               </button>
             </div>
 
