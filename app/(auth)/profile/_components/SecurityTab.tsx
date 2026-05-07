@@ -14,6 +14,7 @@ import { useGithubConnection } from "../_hooks/useGithubConnection";
 import { useGoogleConnection } from "../_hooks/useGoogleConnection";
 import { useMfaEnrollment } from "../_hooks/useMfaEnrollment";
 import { useEmailManagement } from "../_hooks/useEmailManagement";
+import { DataPrivacySection } from "./DataPrivacySection";
 import type { ConnectedAgent } from "../_types";
 
 interface AdditionalEmail {
@@ -352,6 +353,8 @@ function MfaSection({ mfa }: MfaSectionProps) {
         {mfa.success && <p className="text-emerald-400 text-sm">{mfa.success}</p>}
         <div id="mfa-recaptcha-container" />
       </div>
+
+      <DataPrivacySection />
     </div>
   );
 }

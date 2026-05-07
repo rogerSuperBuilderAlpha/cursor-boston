@@ -11,10 +11,12 @@ import {
   getMentorshipRequestsForUserServer,
 } from "@/lib/mentorship/data-server";
 import { parseRequestBody } from "@/lib/api-response";
+import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 
 const MAX_MESSAGE_LENGTH = 1000;
 const MAX_GOALS = 10;
 const MAX_GOAL_LENGTH = 200;
+const RATE_LIMIT = { windowMs: 60 * 60 * 1000, maxRequests: 5 } as const;
 
 /**
  * GET /api/mentorship/request
@@ -58,9 +60,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const rl = await checkUpstashRateLimit(`mentorship-request:${user.uid}`, RATE_LIMIT);
+    if (!rl.success) {
+      return NextResponse.json(
+        { success: false, error: "Too many mentorship requests. Try again later." },
+        { status: 429, headers: rl.retryAfter ? { "Retry-After": String(rl.retryAfter) } : undefined }
+      );
+    }
+
     const bodyOrError = await parseRequestBody(request);
     if (bodyOrError instanceof NextResponse) return bodyOrError;
-    const { toUserId, goals, message } = bodyOrError;
+    const { toUserId, goals, message, consentToShareProfile } = bodyOrError;
+
+    if (consentToShareProfile !== true) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "consentToShareProfile must be true. Sending a mentorship request shares your profile fields with the recipient.",
+        },
+        { status: 400 }
+      );
+    }
 
     if (!toUserId || typeof toUserId !== "string") {
       return NextResponse.json(

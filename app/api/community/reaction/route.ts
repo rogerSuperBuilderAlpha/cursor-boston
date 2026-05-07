@@ -10,7 +10,7 @@ import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { logger } from "@/lib/logger";
 import { parseRequestBody } from "@/lib/api-response";
-import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 import { sanitizeDocId } from "@/lib/sanitize";
 
 export const runtime = "nodejs";
@@ -18,23 +18,26 @@ export const dynamic = "force-dynamic";
 
 type ReactionType = "like" | "dislike";
 
-const COMMUNITY_RATE_LIMIT = { windowMs: 60 * 1000, maxRequests: 60 };
+// Per-user limit. Reactions are cheap so the cap is generous; the goal is to
+// stop tight-loop abuse from a single account, not normal use.
+const REACTION_RATE_LIMIT = { windowMs: 60 * 1000, maxRequests: 60 };
 
 export async function POST(request: NextRequest) {
   try {
-    // Rate limiting
-    const clientId = getClientIdentifier(request as unknown as Request);
-    const rateResult = checkRateLimit(`community-reaction:${clientId}`, COMMUNITY_RATE_LIMIT);
+    const user = await getVerifiedUser(request);
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const rateResult = await checkUpstashRateLimit(
+      `community-reaction:${user.uid}`,
+      REACTION_RATE_LIMIT
+    );
     if (!rateResult.success) {
       return NextResponse.json(
         { error: "Too many requests", retryAfterSeconds: rateResult.retryAfter },
         { status: 429, headers: { "Retry-After": String(rateResult.retryAfter || 60) } }
       );
-    }
-
-    const user = await getVerifiedUser(request);
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const db = getAdminDb();

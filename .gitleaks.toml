@@ -16,13 +16,33 @@ regex = '''(test-api-key|test-project|build-placeholder|release-build)'''
 regexTarget = "match"
 regexes = ['''(test-api-key|test-project|build-placeholder|release-build)''']
 
-# Paths to ignore
+# Catch committed Cursor referral URLs (April 2026 incident class — see
+# docs/security-incident-2026-04-11.md). Fires anywhere in the repo.
+[[rules]]
+id = "cursor-referral-url"
+description = "Cursor referral URL with embedded code"
+regex = '''cursor\.com/referral\?code=[A-Za-z0-9_\-]+'''
+keywords = ["referral", "cursor.com"]
+
+# Catch code-shaped values inside files whose names suggest they hold
+# credit / referral codes. Path filter is path-only; regex matches any
+# alphanumeric token >= 8 chars so a populated CSV/TXT will trip it.
+[[rules]]
+id = "credit-referral-file-content"
+description = "Code-shaped values inside credit/referral data files"
+regex = '''[A-Za-z0-9]{8,}'''
+path = '''(?i)(credit|referral).*\.(csv|tsv|txt|json)$'''
+
+# Paths to ignore. NOTE: the docs/ entry is narrowed to markdown-only —
+# the April 2026 incident slipped through because the prior `docs/`
+# allowlist suppressed scans on every file under docs/, including the
+# CSV that held the leaked codes.
 [allowlist]
 paths = [
   '''\.env\.local\.example''',
   '''__tests__/''',
   '''\.github/workflows/''',
-  '''docs/''',
+  '''docs/.*\.md$''',
 ]
 
 # Regexes to ignore (common false positives)

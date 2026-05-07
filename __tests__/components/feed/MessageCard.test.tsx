@@ -18,6 +18,12 @@ jest.mock("@/components/feed/ReplyCard", () => ({
     <div data-testid={`reply-${props.reply && (props.reply as { id: string }).id}`} />
   ),
 }));
+// ReportMessageMenu pulls in AuthContext → firebase auth at module load,
+// which fails in jsdom without a fetch shim. Mock inert here; its behavior
+// is covered by `__tests__/app/api/community/report.test.ts`.
+jest.mock("@/components/feed/ReportMessageMenu", () => ({
+  ReportMessageMenu: () => null,
+}));
 
 import { MessageCard } from "@/components/feed/MessageCard";
 
