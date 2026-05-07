@@ -12,11 +12,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import {
-  getMentorshipProfile,
-  getAllActiveMentorshipProfiles,
-} from "@/lib/mentorship/data";
-import { getTopMentorshipMatches } from "@/lib/mentorship/matching";
+import { getMentorshipProfile } from "@/lib/mentorship/data";
 import type {
   MentorshipProfile,
   MentorshipMatchScore,
@@ -62,8 +58,16 @@ export default function MentorshipPage() {
     async function fetchMatches() {
       if (!user || !profile || !profile.isActive || !db) return;
       try {
-        const allProfiles = await getAllActiveMentorshipProfiles();
-        const topMatches = getTopMentorshipMatches(profile, allProfiles, 20);
+        const token = await user.getIdToken();
+        const res = await fetch("/api/mentorship/matches", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (!data.success) {
+          console.error("Error fetching matches:", data.error);
+          return;
+        }
+        const topMatches: MentorshipMatchScore[] = data.matches;
         setMatches(topMatches);
 
         const profileMap: Record<string, PublicUser> = {};
