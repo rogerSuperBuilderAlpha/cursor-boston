@@ -214,7 +214,7 @@ export function QuestionsListing() {
               </div>
               <h3 className="text-lg font-medium text-foreground mb-1">No matches found</h3>
               <p className="text-neutral-500 mb-6">
-                No results for '{[search, tag].filter(Boolean).join(" and ")}'.
+                {`No results for '${[search, tag].filter(Boolean).join(" and ")}'.`}
               </p>
               <button
                 onClick={() => {
