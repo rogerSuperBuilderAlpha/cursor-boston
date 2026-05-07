@@ -54,7 +54,7 @@ interface WorldResponse {
   success: boolean;
   tiles?: MapTile[];
   owners?: OwnerSummary[];
-  error?: string;
+  error?: string | { message?: string };
 }
 
 const LAND_FILTERS: Array<LandType | "all"> = [
@@ -72,7 +72,10 @@ const HEX_SIZE = 28;
 const SQRT3 = Math.sqrt(3);
 const VIEWPORT_PADDING = HEX_SIZE * 1.5;
 
-const MIN_SCALE = 0.3;
+// MIN_SCALE has to be small enough that fit-to-viewport for large worlds
+// (1000+ tiles) doesn't get clamped. With scale 0.05, a 30k-pixel-wide
+// kingdom still fits in the 1200-unit viewBox.
+const MIN_SCALE = 0.05;
 const MAX_SCALE = 6;
 // SVG viewBox is fixed; pan/zoom is applied via inner <g> transform. These
 // constants drive the "fit to content" math when the user clicks recenter.
@@ -214,6 +217,9 @@ export default function TilesMapPage() {
   // Tile-actions modal: open when the user clicks a tile. Holds a tileId
   // (not the MapTile itself) so it stays in sync with mutations.
   const [modalTileId, setModalTileId] = useState<string | null>(null);
+  // Surfaced fetch error for the world snapshot. Shown inline so a failed
+  // toggle to 🌐 mode doesn't silently fall back to the personal view.
+  const [worldError, setWorldError] = useState<string | null>(null);
   // Re-renders the refresh button's countdown text every 30s while it's
   // gated. Cheap — only state-bumps when the cache has a recent fetch.
   const [, forceTick] = useState(0);
@@ -226,9 +232,18 @@ export default function TilesMapPage() {
   const [didFit, setDidFit] = useState(false);
   const [dragging, setDragging] = useState(false);
   const svgRef = useRef<SVGSVGElement | null>(null);
-  const dragRef = useRef<{ x: number; y: number; tx: number; ty: number } | null>(
-    null
-  );
+  // dragRef tracks the active drag (null when not dragging). `moved` is the
+  // total Manhattan distance the pointer has travelled since pointerdown,
+  // and `lastMoved` mirrors it through pointerup so the click handler can
+  // distinguish a tap from a drag-that-ended-here.
+  const dragRef = useRef<{
+    x: number;
+    y: number;
+    tx: number;
+    ty: number;
+    moved: number;
+  } | null>(null);
+  const lastDragMovedRef = useRef(0);
 
   // Always grab the current player object; cheap and we want fresh
   // turnsRemaining etc.
@@ -305,22 +320,37 @@ export default function TilesMapPage() {
   }, [cachedView]);
 
   // Whole-world snapshot for the 🌐 button. Lazy: only runs when the user
-  // explicitly switches modes.
+  // explicitly switches modes. Surfaces fetch errors inline so a failed
+  // request doesn't silently look like an empty world.
   const fetchWorldOnce = useCallback(async () => {
     if (!user) return;
     setRefreshing(true);
+    setWorldError(null);
     try {
       const token = await user.getIdToken();
       const res = await fetch("/api/game/world", {
         headers: { Authorization: `Bearer ${token}` },
+        cache: "no-store",
       });
-      const data = (await res.json()) as WorldResponse;
-      if (data.success) {
-        setWorldView({
-          tiles: data.tiles ?? [],
-          owners: data.owners ?? [],
-        });
+      if (!res.ok) {
+        throw new Error(`World fetch failed: HTTP ${res.status}`);
       }
+      const data = (await res.json()) as WorldResponse;
+      if (!data.success) {
+        const errMsg =
+          typeof data.error === "string"
+            ? data.error
+            : (data.error as { message?: string } | undefined)?.message;
+        throw new Error(errMsg ?? "World fetch failed");
+      }
+      const tiles = data.tiles ?? [];
+      const owners = data.owners ?? [];
+      if (tiles.length === 0) {
+        throw new Error("World fetch returned no tiles");
+      }
+      setWorldView({ tiles, owners });
+    } catch (e) {
+      setWorldError(e instanceof Error ? e.message : "World fetch failed");
     } finally {
       setRefreshing(false);
     }
@@ -421,37 +451,54 @@ export default function TilesMapPage() {
   const handlePointerDown = useCallback(
     (e: ReactPointerEvent<SVGSVGElement>) => {
       if (e.button !== 0 && e.pointerType === "mouse") return;
-      dragRef.current = { x: e.clientX, y: e.clientY, tx, ty };
+      dragRef.current = {
+        x: e.clientX,
+        y: e.clientY,
+        tx,
+        ty,
+        moved: 0,
+      };
+      lastDragMovedRef.current = 0;
       setDragging(true);
-      (e.currentTarget as Element).setPointerCapture(e.pointerId);
+      // Intentionally NOT calling setPointerCapture here. Pointer capture
+      // would redirect the subsequent `click` event to the SVG, which
+      // bypasses the per-tile <g onClick> handlers — which means clicks
+      // never register on tiles. We rely on document-level pointermove /
+      // pointerup listeners (attached in the effect below) so the drag
+      // survives the cursor leaving the SVG without needing capture.
     },
     [tx, ty]
   );
 
-  const handlePointerMove = useCallback(
-    (e: ReactPointerEvent<SVGSVGElement>) => {
+  // While `dragging`, listen on the document so the drag survives the
+  // cursor leaving the SVG. Clearing dragRef happens in pointerup; the
+  // last-known movement is mirrored to lastDragMovedRef so the per-tile
+  // click handler can suppress clicks that ended a drag.
+  useEffect(() => {
+    if (!dragging) return;
+    const onMove = (e: PointerEvent) => {
       const drag = dragRef.current;
       if (!drag) return;
-      const dx = (e.clientX - drag.x) / scale;
-      const dy = (e.clientY - drag.y) / scale;
-      setTx(drag.tx + dx);
-      setTy(drag.ty + dy);
-    },
-    [scale]
-  );
-
-  const handlePointerUp = useCallback(
-    (e: ReactPointerEvent<SVGSVGElement>) => {
+      const dxRaw = e.clientX - drag.x;
+      const dyRaw = e.clientY - drag.y;
+      drag.moved = Math.max(drag.moved, Math.abs(dxRaw) + Math.abs(dyRaw));
+      lastDragMovedRef.current = drag.moved;
+      setTx(drag.tx + dxRaw / scale);
+      setTy(drag.ty + dyRaw / scale);
+    };
+    const onUp = () => {
       dragRef.current = null;
       setDragging(false);
-      try {
-        (e.currentTarget as Element).releasePointerCapture(e.pointerId);
-      } catch {
-        /* already released */
-      }
-    },
-    []
-  );
+    };
+    document.addEventListener("pointermove", onMove);
+    document.addEventListener("pointerup", onUp);
+    document.addEventListener("pointercancel", onUp);
+    return () => {
+      document.removeEventListener("pointermove", onMove);
+      document.removeEventListener("pointerup", onUp);
+      document.removeEventListener("pointercancel", onUp);
+    };
+  }, [dragging, scale]);
 
   const handleTileClick = useCallback(
     (t: MapTile) => {
@@ -518,6 +565,19 @@ export default function TilesMapPage() {
             every tile in the world for context.
           </p>
         </div>
+
+        {worldError && mode === "world" && (
+          <div className="rounded-lg border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/10 p-3 mb-4 text-sm">
+            <strong className="text-red-700 dark:text-red-300">World fetch failed:</strong>{" "}
+            <span className="text-red-700 dark:text-red-300">{worldError}</span>
+            <button
+              onClick={() => void fetchWorldOnce()}
+              className="ml-3 px-2 py-1 text-xs rounded border border-red-300 dark:border-red-700 hover:bg-red-100 dark:hover:bg-red-900/30"
+            >
+              Retry
+            </button>
+          </div>
+        )}
 
         <PersonalMapToolbar
           mode={mode}
@@ -593,9 +653,6 @@ export default function TilesMapPage() {
               <svg
                 ref={svgRef}
                 onPointerDown={handlePointerDown}
-                onPointerMove={handlePointerMove}
-                onPointerUp={handlePointerUp}
-                onPointerCancel={handlePointerUp}
                 className="w-full h-auto block touch-none select-none"
                 style={{
                   // viewBox stays anchored at -W/2..W/2 in SVG units; we apply
@@ -647,14 +704,19 @@ export default function TilesMapPage() {
                             cur?.tileId === t.tileId ? null : cur
                           )
                         }
-                        onClick={(e) => {
-                          // Suppress click if a drag just ended this frame.
-                          if (Math.abs(e.movementX) + Math.abs(e.movementY) > 2)
+                        onClick={() => {
+                          // Suppress clicks that ended a drag. The threshold
+                          // (5 px) tolerates micro-movements during a real
+                          // tap. lastDragMovedRef is reset before each
+                          // pointerdown.
+                          if (lastDragMovedRef.current > 5) {
+                            lastDragMovedRef.current = 0;
                             return;
+                          }
                           handleTileClick(t);
                         }}
                         style={{
-                          cursor: isOwn ? "pointer" : "default",
+                          cursor: t.ownerId ? "pointer" : "default",
                         }}
                       >
                         <polygon

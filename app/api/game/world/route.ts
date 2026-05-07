@@ -28,10 +28,26 @@ function parseBbox(url: URL): {
   rMin: number;
   rMax: number;
 } | null {
-  const qMin = Number(url.searchParams.get("qMin"));
-  const qMax = Number(url.searchParams.get("qMax"));
-  const rMin = Number(url.searchParams.get("rMin"));
-  const rMax = Number(url.searchParams.get("rMax"));
+  // All four params must be explicitly present. Without this guard,
+  // Number(null) === 0 collapses a bare GET into a degenerate bbox of
+  // (0,0)..(0,0) — which matches exactly one tile (0_0) and silently
+  // breaks the "fetch whole world" code path.
+  const rawQMin = url.searchParams.get("qMin");
+  const rawQMax = url.searchParams.get("qMax");
+  const rawRMin = url.searchParams.get("rMin");
+  const rawRMax = url.searchParams.get("rMax");
+  if (
+    rawQMin === null ||
+    rawQMax === null ||
+    rawRMin === null ||
+    rawRMax === null
+  ) {
+    return null;
+  }
+  const qMin = Number(rawQMin);
+  const qMax = Number(rawQMax);
+  const rMin = Number(rawRMin);
+  const rMax = Number(rawRMax);
   if (
     !Number.isFinite(qMin) ||
     !Number.isFinite(qMax) ||

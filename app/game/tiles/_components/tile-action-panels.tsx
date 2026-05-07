@@ -7,7 +7,7 @@
 "use client";
 
 import { useState } from "react";
-import { ALL_SPELLS, getCasteProfile } from "@/lib/game/content";
+import { ALL_SPELLS } from "@/lib/game/content";
 import type {
   GamePlayer,
   LandType,
@@ -84,16 +84,11 @@ export function OwnTilePanel({
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <section>
-        <h2 className="font-semibold mb-3">Assign land type</h2>
-        <div className="rounded-lg border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/10 p-3 mb-3 text-sm leading-relaxed">
-          <p>
-            Each (re-)assignment costs <strong>1 turn</strong> and rolls for an
-            artifact. This tile is currently{" "}
-            <strong className="capitalize">{tile.type}</strong>.
-          </p>
-        </div>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500 mb-2">
+          Assign land type <span className="text-neutral-400 normal-case font-normal">— 1 turn</span>
+        </h2>
         {tile.type === "unrevealed" ? (
           <p className="text-sm text-neutral-500">Reveal this tile first.</p>
         ) : (
@@ -113,9 +108,11 @@ export function OwnTilePanel({
                   }`}
                 >
                   <div className="font-medium">{a.label}</div>
-                  <div className="text-xs text-neutral-500 mt-0.5 leading-tight">
-                    {isCurrent ? "current" : "1 turn"}
-                  </div>
+                  {isCurrent && (
+                    <div className="text-xs text-neutral-500 mt-0.5 leading-tight">
+                      current
+                    </div>
+                  )}
                 </button>
               );
             })}
@@ -124,23 +121,12 @@ export function OwnTilePanel({
       </section>
 
       <section>
-        <h2 className="font-semibold mb-3">Build units</h2>
-        <div className="rounded-lg border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/10 p-3 mb-3 text-sm leading-relaxed space-y-1">
-          <p>
-            Each click spends 5 turns and produces 10 units of the chosen type
-            on this tile. Your <strong>total</strong> unit cap is the sum of
-            food-tile contributions plus any active production spells. If
-            you&apos;re at the cap, build will return an error.
-          </p>
-          <p className="text-xs text-neutral-500">
-            <strong>Unit RPS:</strong> Air beats Ground, Ground beats Siege,
-            Siege beats Air. Build a mix or specialize based on what your
-            opponents tend to field.
-          </p>
-        </div>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500 mb-2">
+          Build units <span className="text-neutral-400 normal-case font-normal">— +10 / 5 turns. Air ▶ Ground ▶ Siege ▶ Air</span>
+        </h2>
         {tile.type !== "military" ? (
           <p className="text-sm text-neutral-500">
-            Only military tiles can build units. This tile is{" "}
+            Only military tiles. This tile is{" "}
             <strong className="capitalize">{tile.type}</strong>.
           </p>
         ) : (
@@ -152,7 +138,7 @@ export function OwnTilePanel({
                 disabled={busy || !canBuild}
                 className="px-4 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors capitalize disabled:opacity-50"
               >
-                +10 {u} (5 turns)
+                +10 {u}
               </button>
             ))}
           </div>
@@ -160,16 +146,9 @@ export function OwnTilePanel({
       </section>
 
       <section>
-        <h2 className="font-semibold mb-3">Arm a defense spell</h2>
-        <div className="rounded-lg border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/10 p-3 mb-3 text-sm leading-relaxed">
-          <p>
-            Pre-arming a defense spell costs 5 turns. The spell sits dormant on
-            this tile and triggers <em>automatically</em> the next time the tile
-            is attacked, then is consumed. Spell strength scales with your
-            magic-tile count. Tiles you expect to be attacked are good
-            candidates.
-          </p>
-        </div>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500 mb-2">
+          Arm defense spell <span className="text-neutral-400 normal-case font-normal">— 5 turns. Triggers when attacked.</span>
+        </h2>
         {tile.type === "unrevealed" ? (
           <p className="text-sm text-neutral-500">Reveal this tile first.</p>
         ) : myDefenseSpells.length === 0 ? (
@@ -188,10 +167,10 @@ export function OwnTilePanel({
                   player.turnsRemaining < 5 ||
                   tile.armedDefenseSpellId === s.id
                 }
-                className="px-4 py-2 border border-blue-300 dark:border-blue-700 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors disabled:opacity-50"
+                className="px-3 py-1.5 text-sm border border-blue-300 dark:border-blue-700 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors disabled:opacity-50"
                 title={s.description}
               >
-                {s.name} (5 turns)
+                {s.name}
               </button>
             ))}
           </div>
@@ -237,7 +216,6 @@ export function EnemyTilePanel({
     ? source.units.ground + source.units.siege + source.units.air
     : 0;
 
-  const profile = player.caste ? getCasteProfile(player.caste) : null;
   const canAttack =
     !!source &&
     sentTotal > 0 &&
@@ -257,38 +235,13 @@ export function EnemyTilePanel({
   }
 
   return (
-    <div className="space-y-4">
-      <h2 className="font-semibold">Launch attack</h2>
-      <div className="rounded-lg border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/10 p-3 text-sm leading-relaxed space-y-1">
-        <p>
-          Pick a source tile that borders this enemy, choose how many ground /
-          siege / air units to send, optionally attach an offense spell.
-          Resolution is instant.
-        </p>
-        <p>
-          <strong>Composition matters most.</strong> Air beats Ground, Ground
-          beats Siege, Siege beats Air; the advantaged type does +50% damage
-          and takes 25% less. So if the defender is heavy siege, send air. If
-          they&apos;re heavy air, send ground. Mirror-matching is usually a bad
-          trade.
-        </p>
-        <p>
-          <strong>Capacity caps your force.</strong> A tile holds at most a
-          fixed number of units (base 500 + adjustments). You can only send up
-          to <em>(target capacity − defender units already there)</em>. Stuffed
-          tiles are unattackable.
-        </p>
-        <p>
-          <strong>If you win,</strong> the tile becomes yours and your
-          surviving attackers garrison it. <strong>If you lose or stalemate,</strong>{" "}
-          your survivors return to the source.
-        </p>
-      </div>
-      {profile && (
-        <p className="text-xs text-neutral-500">
-          You are <strong className="capitalize">{player.caste}</strong>. Your caste tilts unit and spell strengths.
-        </p>
-      )}
+    <div className="space-y-3">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500">
+        Launch attack{" "}
+        <span className="text-neutral-400 normal-case font-normal">
+          — Air ▶ Ground ▶ Siege ▶ Air. 1 turn (+5 with spell).
+        </span>
+      </h2>
 
       <label className="block text-sm font-medium">
         Source tile
