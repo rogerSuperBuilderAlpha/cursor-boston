@@ -10,6 +10,11 @@ import {
   getCasteProfile,
   getUnitForCasteAndType,
 } from "./content";
+import {
+  buildingCapacityBonus,
+  effectiveUnitStats,
+  magicMultiplierBonusFromUpgrades,
+} from "./upgrades";
 import type {
   AttackOutcome,
   Caste,
@@ -52,11 +57,15 @@ const UNDERDOG_DEFENSE_BONUS = 0.25;
 const RNG_LOWER = 0.9;
 const RNG_RANGE = 0.2;
 
-export function magicMultiplier(magicLandCount: number): number {
+export function magicMultiplier(
+  magicLandCount: number,
+  activeUpgrades: Record<string, string> = {}
+): number {
   const n = Math.max(0, Math.floor(magicLandCount));
   const upToFifty = Math.min(n, 50);
   const above = Math.max(0, n - 50);
-  return 1 + 0.05 * upToFifty + 0.025 * above;
+  const base = 1 + 0.05 * upToFifty + 0.025 * above;
+  return base + magicMultiplierBonusFromUpgrades(activeUpgrades);
 }
 
 export function unitCapFromFoodLands(foodLandCount: number): number {
@@ -69,15 +78,25 @@ export function unitCapFromFoodLands(foodLandCount: number): number {
 export function computeTileCapacity(
   landType: LandType,
   caste: Caste | null,
-  upgradeIds: readonly string[] = []
+  upgradeIds: readonly string[] = [],
+  activeUpgrades: Record<string, string> = {}
 ): number {
   if (landType === "unrevealed" || landType === "unassigned") return 0;
   let cap = BASE_TILE_CAPACITY + LAND_TYPE_CAPACITY_DELTA[landType];
   const casteMult = caste ? getCasteProfile(caste).tileCapacityMultiplier : 1;
   cap = cap * casteMult;
+  // Per-tile building entries (upgradeIds from the tile doc) — kept for v1
+  // compatibility but currently empty in practice.
   for (const upgradeId of upgradeIds) {
     const b = BUILDINGS_BY_ID.get(upgradeId);
     if (b?.capacityBonus) cap += b.capacityBonus;
+  }
+  // Per-player building (the land type IS the building). Capacity bonus comes
+  // entirely from the player's active upgrade for that building.
+  if (caste && (landType === "military" || landType === "food" || landType === "magic")) {
+    const buildingId = `${caste}-${landType}`;
+    const b = BUILDINGS_BY_ID.get(buildingId);
+    if (b) cap += buildingCapacityBonus(b, activeUpgrades);
   }
   return Math.max(0, Math.round(cap));
 }
@@ -132,12 +151,17 @@ function applyLossFraction(units: UnitStack, fraction: number): UnitStack {
   };
 }
 
-function totalHpForStack(units: UnitStack, caste: Caste): number {
+function totalHpForStack(
+  units: UnitStack,
+  caste: Caste,
+  activeUpgrades: Record<string, string> = {}
+): number {
   const profile = getCasteProfile(caste);
   let total = 0;
   for (const t of UNIT_TYPES) {
     const def = getUnitForCasteAndType(caste, t);
-    total += units[t] * def.hp * profile.unitTypeBonuses[t];
+    const stats = effectiveUnitStats(def, activeUpgrades);
+    total += units[t] * stats.hp * profile.unitTypeBonuses[t];
   }
   return total;
 }
@@ -149,7 +173,8 @@ function compositionPower(
   ownUnits: UnitStack,
   ownCaste: Caste,
   opposingUnits: UnitStack,
-  mode: "attack" | "defense"
+  mode: "attack" | "defense",
+  activeUpgrades: Record<string, string> = {}
 ): number {
   const profile = getCasteProfile(ownCaste);
   const opposingTotal = sumStack(opposingUnits);
@@ -157,7 +182,8 @@ function compositionPower(
   for (const t of UNIT_TYPES) {
     if (ownUnits[t] === 0) continue;
     const def = getUnitForCasteAndType(ownCaste, t);
-    const stat = mode === "attack" ? def.attack : def.defense;
+    const stats = effectiveUnitStats(def, activeUpgrades);
+    const stat = mode === "attack" ? stats.attack : stats.defense;
     let rpsMult = 1;
     if (opposingTotal > 0) {
       const beatenShare = opposingUnits[RPS_BEATS[t]] / opposingTotal;
@@ -174,14 +200,19 @@ function spellContribution(
   spellId: string | null,
   expectedType: "offense" | "defense",
   casterCaste: Caste,
-  casterMagicLands: number
+  casterMagicLands: number,
+  casterActiveUpgrades: Record<string, string> = {}
 ): number {
   if (!spellId) return 0;
   const spell = SPELLS_BY_ID.get(spellId);
   if (!spell || spell.type !== expectedType) return 0;
   const profile = getCasteProfile(casterCaste);
   const casteBonus = profile.spellTypeBonuses[expectedType];
-  return spell.baseStrength * magicMultiplier(casterMagicLands) * casteBonus;
+  return (
+    spell.baseStrength *
+    magicMultiplier(casterMagicLands, casterActiveUpgrades) *
+    casteBonus
+  );
 }
 
 export function resolveAttack(
@@ -217,30 +248,37 @@ export function resolveAttack(
     };
   }
 
+  const attackerUpgrades = attacker.activeUpgrades ?? {};
+  const defenderUpgrades = defender.activeUpgrades ?? {};
+
   let attackPower = compositionPower(
     deployed,
     attacker.caste,
     defender.unitsOnTile,
-    "attack"
+    "attack",
+    attackerUpgrades
   );
   let defensePower = compositionPower(
     defender.unitsOnTile,
     defender.caste,
     deployed,
-    "defense"
+    "defense",
+    defenderUpgrades
   );
 
   attackPower += spellContribution(
     attacker.offenseSpellId,
     "offense",
     attacker.caste,
-    attacker.magicLandCount
+    attacker.magicLandCount,
+    attackerUpgrades
   );
   defensePower += spellContribution(
     defender.armedDefenseSpellId,
     "defense",
     defender.caste,
-    defender.magicLandCount
+    defender.magicLandCount,
+    defenderUpgrades
   );
 
   let underdogApplied = false;
@@ -263,8 +301,12 @@ export function resolveAttack(
   else if (finalDefense > finalAttack) outcome = "repelled";
   else outcome = "stalemate";
 
-  const attackerHp = totalHpForStack(deployed, attacker.caste);
-  const defenderHp = totalHpForStack(defender.unitsOnTile, defender.caste);
+  const attackerHp = totalHpForStack(deployed, attacker.caste, attackerUpgrades);
+  const defenderHp = totalHpForStack(
+    defender.unitsOnTile,
+    defender.caste,
+    defenderUpgrades
+  );
   const attackerLossFrac = attackerHp > 0 ? finalDefense / attackerHp : 0;
   const defenderLossFrac = defenderHp > 0 ? finalAttack / defenderHp : 0;
 

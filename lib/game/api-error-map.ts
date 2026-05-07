@@ -34,12 +34,21 @@ import {
   GameTileUnrevealedError,
   GameUnitCapExceededError,
 } from "./data-server";
+import {
+  UpgradeAlreadyActiveError,
+  UpgradeNotActiveError,
+  UpgradeNotFoundError,
+  UpgradeUnknownTargetError,
+  UpgradeWrongCasteError,
+} from "./upgrades";
 
 export function mapGameError(error: unknown): NextResponse {
   if (
     error instanceof GamePlayerNotFoundError ||
     error instanceof GameTileNotFoundError ||
-    error instanceof GameArtifactNotFoundError
+    error instanceof GameArtifactNotFoundError ||
+    error instanceof UpgradeNotFoundError ||
+    error instanceof UpgradeUnknownTargetError
   ) {
     return apiError(error.message, 404);
   }
@@ -63,7 +72,9 @@ export function mapGameError(error: unknown): NextResponse {
     error instanceof GameTileTypeError ||
     error instanceof GameFrontierExhaustedError ||
     error instanceof GameArtifactAlreadyUsedError ||
-    error instanceof GameNameTakenError
+    error instanceof GameNameTakenError ||
+    error instanceof UpgradeAlreadyActiveError ||
+    error instanceof UpgradeNotActiveError
   ) {
     return apiError(error.message, 409);
   }
@@ -73,7 +84,8 @@ export function mapGameError(error: unknown): NextResponse {
     error instanceof GameInvalidSpellError ||
     error instanceof GameNotAdjacentError ||
     error instanceof GameSelfAttackError ||
-    error instanceof GameInvalidNameError
+    error instanceof GameInvalidNameError ||
+    error instanceof UpgradeWrongCasteError
   ) {
     return apiError(error.message, 400);
   }

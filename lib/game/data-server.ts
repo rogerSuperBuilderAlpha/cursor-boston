@@ -37,6 +37,12 @@ import {
   validateGeneralName,
   weekStartIsoForRollover,
 } from "./turns";
+import {
+  UPGRADE_TURN_COST,
+  getActiveUpgrades,
+  validateApplyUpgrade,
+  validateRemoveUpgrade,
+} from "./upgrades";
 import type {
   ArtifactDefinition,
   Caste,
@@ -1285,14 +1291,17 @@ export async function armDefenseSpellServer(
         `spell ${spellId} requires caste ${spell.caste}`
       );
     }
-    if (player.turnsRemaining < SPELL_TURN_COST) {
-      throw new GameInsufficientTurnsError(
-        SPELL_TURN_COST,
-        player.turnsRemaining
+    if (player.stats.tilesHeld < spell.minTilesRequired) {
+      throw new GameInvalidSpellError(
+        `spell ${spellId} requires ${spell.minTilesRequired} tiles held; you have ${player.stats.tilesHeld}`
       );
     }
+    const cost = spell.turnCost;
+    if (player.turnsRemaining < cost) {
+      throw new GameInsufficientTurnsError(cost, player.turnsRemaining);
+    }
 
-    const turnsSpentTotal = player.turnsSpentTotal + SPELL_TURN_COST;
+    const turnsSpentTotal = player.turnsSpentTotal + cost;
     const artifact = rollAndStageArtifact(
       tx,
       db,
@@ -1304,14 +1313,14 @@ export async function armDefenseSpellServer(
 
     tx.update(tileRef, { armedDefenseSpellId: spellId, updatedAt: now });
     tx.update(playerRef, {
-      turnsRemaining: player.turnsRemaining - SPELL_TURN_COST,
+      turnsRemaining: player.turnsRemaining - cost,
       turnsSpentTotal,
       updatedAt: now,
     });
 
     const report = buildArmDefenseReport({
       turnIndex: turnsSpentTotal,
-      cost: SPELL_TURN_COST,
+      cost,
       tileId,
       spellId,
       spellName: spell.name,
@@ -1322,7 +1331,7 @@ export async function armDefenseSpellServer(
     return {
       player: {
         ...player,
-        turnsRemaining: player.turnsRemaining - SPELL_TURN_COST,
+        turnsRemaining: player.turnsRemaining - cost,
         turnsSpentTotal,
         updatedAt: now,
       },
@@ -1363,14 +1372,17 @@ export async function castProductionSpellServer(
         `spell ${spellId} requires caste ${spell.caste}`
       );
     }
-    if (player.turnsRemaining < SPELL_TURN_COST) {
-      throw new GameInsufficientTurnsError(
-        SPELL_TURN_COST,
-        player.turnsRemaining
+    if (player.stats.tilesHeld < spell.minTilesRequired) {
+      throw new GameInvalidSpellError(
+        `spell ${spellId} requires ${spell.minTilesRequired} tiles held; you have ${player.stats.tilesHeld}`
       );
     }
+    const cost = spell.turnCost;
+    if (player.turnsRemaining < cost) {
+      throw new GameInsufficientTurnsError(cost, player.turnsRemaining);
+    }
 
-    const newTurnsSpentTotal = player.turnsSpentTotal + SPELL_TURN_COST;
+    const newTurnsSpentTotal = player.turnsSpentTotal + cost;
     const expiresAtTurn = newTurnsSpentTotal + PRODUCTION_SPELL_DURATION_TURNS;
 
     const artifact = rollAndStageArtifact(
@@ -1398,7 +1410,7 @@ export async function castProductionSpellServer(
     ];
 
     tx.update(playerRef, {
-      turnsRemaining: player.turnsRemaining - SPELL_TURN_COST,
+      turnsRemaining: player.turnsRemaining - cost,
       turnsSpentTotal: newTurnsSpentTotal,
       productionSpellsActive: newActive,
       updatedAt: now,
@@ -1406,7 +1418,7 @@ export async function castProductionSpellServer(
 
     const report = buildProduceReport({
       turnIndex: newTurnsSpentTotal,
-      cost: SPELL_TURN_COST,
+      cost,
       spellId,
       spellName: spell.name,
       expiresAtTurn,
@@ -1417,7 +1429,7 @@ export async function castProductionSpellServer(
     return {
       player: {
         ...player,
-        turnsRemaining: player.turnsRemaining - SPELL_TURN_COST,
+        turnsRemaining: player.turnsRemaining - cost,
         turnsSpentTotal: newTurnsSpentTotal,
         productionSpellsActive: newActive,
         updatedAt: now,
@@ -1463,7 +1475,8 @@ export async function attackTileServer(args: {
     }
   }
 
-  const turnCost = ATTACK_TURN_COST + (args.offenseSpellId ? SPELL_TURN_COST : 0);
+  const turnCost =
+    ATTACK_TURN_COST + (offenseSpell ? offenseSpell.turnCost : 0);
 
   const db = adminDbOrThrow();
   const attackerRef = db.collection(COLLECTIONS.PLAYERS).doc(args.attackerId);
@@ -1539,6 +1552,14 @@ export async function attackTileServer(args: {
         `offense spell requires caste ${offenseSpell.caste}`
       );
     }
+    if (
+      offenseSpell &&
+      attacker.stats.tilesHeld < offenseSpell.minTilesRequired
+    ) {
+      throw new GameInvalidSpellError(
+        `offense spell ${offenseSpell.id} requires ${offenseSpell.minTilesRequired} tiles held`
+      );
+    }
     if (attacker.turnsRemaining < turnCost) {
       throw new GameInsufficientTurnsError(
         turnCost,
@@ -1549,10 +1570,13 @@ export async function attackTileServer(args: {
       throw new GameInsufficientUnitsError();
     }
 
+    const defenderActiveUpgrades = defender.activeUpgrades ?? {};
+    const attackerActiveUpgrades = attacker.activeUpgrades ?? {};
     const tileCapacity = computeTileCapacity(
       target.type,
       defender.caste,
-      target.upgradeIds
+      target.upgradeIds,
+      defenderActiveUpgrades
     );
     const defenderTotalOnTile = sumStack(target.units);
     const availableSpace = Math.max(0, tileCapacity - defenderTotalOnTile);
@@ -1577,6 +1601,7 @@ export async function attackTileServer(args: {
         offenseSpellId: args.offenseSpellId,
         magicLandCount: 0,
         unitsAlive: attacker.stats.unitsAlive,
+        activeUpgrades: attackerActiveUpgrades,
       },
       {
         caste: defender.caste,
@@ -1584,6 +1609,7 @@ export async function attackTileServer(args: {
         armedDefenseSpellId: target.armedDefenseSpellId,
         magicLandCount: 0,
         unitsAlive: defender.stats.unitsAlive,
+        activeUpgrades: defenderActiveUpgrades,
       },
       { capacity: tileCapacity, upgradeIds: target.upgradeIds },
       makeSeededRng(`attack-${attackId}`)
@@ -2653,5 +2679,109 @@ export async function spendArtifactServer(args: {
       updatedAt: now,
     });
     return { artifact: updated };
+  });
+}
+
+// ──── v2: Unit & building upgrades ────
+
+export async function applyUpgradeServer(args: {
+  userId: string;
+  targetId: string;
+  upgradeId: string;
+  now?: Date;
+}): Promise<{ player: GamePlayer }> {
+  const now = args.now ?? new Date();
+  const db = adminDbOrThrow();
+  const playerRef = db.collection(COLLECTIONS.PLAYERS).doc(args.userId);
+
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(playerRef);
+    if (!snap.exists) throw new GamePlayerNotFoundError();
+    const player = snap.data() as GamePlayer;
+
+    if (player.phase !== "play") {
+      throw new GameInvalidPhaseError("play", player.phase);
+    }
+    // Throws on any validation failure (caste mismatch, target unknown,
+    // already-active conflict).
+    validateApplyUpgrade({
+      player,
+      targetId: args.targetId,
+      upgradeId: args.upgradeId,
+    });
+    if (player.turnsRemaining < UPGRADE_TURN_COST) {
+      throw new GameInsufficientTurnsError(
+        UPGRADE_TURN_COST,
+        player.turnsRemaining
+      );
+    }
+
+    const turnsSpentTotal = player.turnsSpentTotal + UPGRADE_TURN_COST;
+    const active = { ...getActiveUpgrades(player), [args.targetId]: args.upgradeId };
+
+    tx.update(playerRef, {
+      activeUpgrades: active,
+      turnsRemaining: player.turnsRemaining - UPGRADE_TURN_COST,
+      turnsSpentTotal,
+      updatedAt: now,
+    });
+
+    return {
+      player: {
+        ...player,
+        activeUpgrades: active,
+        turnsRemaining: player.turnsRemaining - UPGRADE_TURN_COST,
+        turnsSpentTotal,
+        updatedAt: now,
+      },
+    };
+  });
+}
+
+export async function removeUpgradeServer(args: {
+  userId: string;
+  targetId: string;
+  now?: Date;
+}): Promise<{ player: GamePlayer }> {
+  const now = args.now ?? new Date();
+  const db = adminDbOrThrow();
+  const playerRef = db.collection(COLLECTIONS.PLAYERS).doc(args.userId);
+
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(playerRef);
+    if (!snap.exists) throw new GamePlayerNotFoundError();
+    const player = snap.data() as GamePlayer;
+
+    if (player.phase !== "play") {
+      throw new GameInvalidPhaseError("play", player.phase);
+    }
+    validateRemoveUpgrade({ player, targetId: args.targetId });
+    if (player.turnsRemaining < UPGRADE_TURN_COST) {
+      throw new GameInsufficientTurnsError(
+        UPGRADE_TURN_COST,
+        player.turnsRemaining
+      );
+    }
+
+    const turnsSpentTotal = player.turnsSpentTotal + UPGRADE_TURN_COST;
+    const active = { ...getActiveUpgrades(player) };
+    delete active[args.targetId];
+
+    tx.update(playerRef, {
+      activeUpgrades: active,
+      turnsRemaining: player.turnsRemaining - UPGRADE_TURN_COST,
+      turnsSpentTotal,
+      updatedAt: now,
+    });
+
+    return {
+      player: {
+        ...player,
+        activeUpgrades: active,
+        turnsRemaining: player.turnsRemaining - UPGRADE_TURN_COST,
+        turnsSpentTotal,
+        updatedAt: now,
+      },
+    };
   });
 }

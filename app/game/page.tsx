@@ -807,7 +807,7 @@ function deriveShieldStatus(player: GamePlayer): ShieldStatus {
   );
   const timeStillUp = msLeft > 0;
   const turnsStillUp = turnsLeft > 0;
-  const shielded = timeStillUp || turnsStillUp;
+  const shielded = timeStillUp && turnsStillUp;
   let bottleneck: ShieldStatus["bottleneck"] = "none";
   if (timeStillUp && turnsStillUp) bottleneck = "both";
   else if (timeStillUp) bottleneck = "time";
@@ -1409,7 +1409,7 @@ function ShieldCard({ shield }: { shield: ShieldStatus }) {
               turns to spend
             </div>
             <div className="text-neutral-500 italic mt-1">
-              Drops once <em>both</em> hit zero.
+              Drops once <em>either</em> hits zero.
             </div>
           </div>
         </>
@@ -1543,6 +1543,8 @@ function NavGrid({ phase }: { phase: GamePlayer["phase"] }) {
                 { href: "/game/tiles", label: "World map", primary: true },
                 { href: "/game/recruit", label: "Recruit" },
                 { href: "/game/spells", label: "Spells" },
+                { href: "/game/upgrades", label: "Upgrades" },
+                { href: "/game/artifacts", label: "Artifacts" },
                 { href: "/game/attacks", label: "Attack log" },
               ]
         }
@@ -1550,7 +1552,6 @@ function NavGrid({ phase }: { phase: GamePlayer["phase"] }) {
       <NavGroup
         label="Reference"
         items={[
-          { href: "/game/artifacts", label: "Artifacts" },
           { href: "/game/leaderboard", label: "Leaderboard" },
           { href: "/game/help", label: "Help & Lore" },
         ]}
@@ -1963,11 +1964,11 @@ function EligibilityBanner({ eligibility }: { eligibility: Eligibility }) {
   if (!githubConnected) {
     return (
       <div className="mb-6 rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 p-4 text-sm leading-relaxed">
-        <div className="flex items-baseline justify-between gap-3 mb-1">
+        <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1 sm:gap-3 mb-1">
           <strong className="text-amber-900 dark:text-amber-200">
             ⚠ GitHub not connected
           </strong>
-          <span className="text-xs text-amber-800 dark:text-amber-300 font-mono shrink-0">
+          <span className="text-xs text-amber-800 dark:text-amber-300 font-mono">
             Next rollover: {formatCountdown(remaining)}
           </span>
         </div>
@@ -1993,12 +1994,12 @@ function EligibilityBanner({ eligibility }: { eligibility: Eligibility }) {
           : "border-orange-300 dark:border-orange-700 bg-orange-50 dark:bg-orange-900/20"
       }`}
     >
-      <div className="flex items-baseline justify-between gap-3 mb-1">
+      <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1 sm:gap-3 mb-1">
         <strong>
           {eligible ? "✓" : "✗"} GitHub connected as{" "}
-          <span className="font-mono">{eligibility.githubLogin}</span>
+          <span className="font-mono break-all">{eligibility.githubLogin}</span>
         </strong>
-        <span className="text-xs font-mono shrink-0">
+        <span className="text-xs font-mono">
           Next rollover: {formatCountdown(remaining)}
         </span>
       </div>
