@@ -14,6 +14,7 @@ import {
   isHackathonEventSignupId,
 } from "@/lib/hackathon-event-signup";
 import { checkRateLimit, getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
+import { hackathonsContract } from "@/lib/api-schemas/hackathons";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -53,19 +54,26 @@ export async function POST(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: "Unknown event" }, { status: 404 });
     }
 
-    let body: Record<string, unknown>;
+    let body: unknown;
     try {
-      body = (await request.json()) as Record<string, unknown>;
+      body = await request.json();
     } catch {
       return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     }
+    const parsed = hackathonsContract.eventCheckin.body.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message ?? "Invalid body" },
+        { status: 400 }
+      );
+    }
 
-    const targetUserId = typeof body.userId === "string" ? body.userId.trim() : "";
+    const targetUserId = parsed.data.userId.trim();
     if (!targetUserId) {
       return NextResponse.json({ error: "userId required" }, { status: 400 });
     }
 
-    const checkedIn = body.checkedIn !== false;
+    const checkedIn = parsed.data.checkedIn !== false;
 
     const db = getAdminDb();
     if (!db) {

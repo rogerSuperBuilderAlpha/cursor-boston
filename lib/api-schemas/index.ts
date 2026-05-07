@@ -18,6 +18,7 @@ import { initContract } from "@ts-rest/core";
 import { authContract } from "./auth";
 import { communityContract } from "./community";
 import { gameContract } from "./game";
+import { hackathonsContract } from "./hackathons";
 
 const c = initContract();
 
@@ -25,6 +26,7 @@ export const apiContract = c.router({
   auth: authContract,
   community: communityContract,
   game: gameContract,
+  hackathons: hackathonsContract,
 });
 
 export type ApiContract = typeof apiContract;

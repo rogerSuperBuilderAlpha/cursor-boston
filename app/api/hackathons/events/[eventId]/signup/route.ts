@@ -26,6 +26,7 @@ import { getGithubRepoPair } from "@/lib/github-recent-merged-prs";
 import { getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 import { SUMMER_COHORT_COLLECTION } from "@/lib/summer-cohort";
+import { hackathonsContract } from "@/lib/api-schemas/hackathons";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -669,12 +670,20 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: "Unknown event" }, { status: 404 });
     }
 
-    let body: Record<string, unknown>;
+    let body: unknown;
     try {
-      body = (await request.json()) as Record<string, unknown>;
+      body = await request.json();
     } catch {
       return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     }
+    const parsed = hackathonsContract.eventSignupPatch.body.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message ?? "Invalid body" },
+        { status: 400 }
+      );
+    }
+    const parsedBody = parsed.data;
 
     const db = getAdminDb();
     if (!db) {
@@ -691,7 +700,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const data = snap.data() ?? {};
     const isConfirmed = Boolean(data.confirmedAt);
 
-    if (body.giveUpSpot === true) {
+    if (parsedBody.giveUpSpot === true) {
       if (!isConfirmed) {
         return NextResponse.json(
           { error: "Only confirmed attendees can give up their spot" },
@@ -708,34 +717,28 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     }
 
     const patch: Record<string, unknown> = {};
-    if (Object.prototype.hasOwnProperty.call(body, "willBeLate")) {
-      if (typeof body.willBeLate !== "boolean") {
-        return NextResponse.json({ error: "willBeLate must be a boolean" }, { status: 400 });
-      }
-      if (body.willBeLate && !isConfirmed) {
+    if (parsedBody.willBeLate !== undefined) {
+      if (parsedBody.willBeLate && !isConfirmed) {
         return NextResponse.json(
           { error: "Only confirmed attendees can mark that they will be late" },
           { status: 400 }
         );
       }
-      if (body.willBeLate) {
+      if (parsedBody.willBeLate) {
         patch.willBeLate = true;
       } else {
         patch.willBeLate = FieldValue.delete();
       }
     }
 
-    if (Object.prototype.hasOwnProperty.call(body, "queuingForSpot")) {
-      if (typeof body.queuingForSpot !== "boolean") {
-        return NextResponse.json({ error: "queuingForSpot must be a boolean" }, { status: 400 });
-      }
-      if (body.queuingForSpot && isConfirmed) {
+    if (parsedBody.queuingForSpot !== undefined) {
+      if (parsedBody.queuingForSpot && isConfirmed) {
         return NextResponse.json(
           { error: "Waitlisted attendees only can mark that they will queue for a spot" },
           { status: 400 }
         );
       }
-      if (body.queuingForSpot) {
+      if (parsedBody.queuingForSpot) {
         patch.queuingForSpot = true;
       } else {
         patch.queuingForSpot = FieldValue.delete();

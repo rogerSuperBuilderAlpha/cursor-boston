@@ -36,6 +36,8 @@ import {
 } from "@/lib/hackathon-event-signup";
 import { getJudgeUidSet } from "@/lib/hackathon-showcase";
 
+// @contracts: hackathonsContract.hackASprintSubmissions (lib/api-schemas/hackathons.ts)
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
