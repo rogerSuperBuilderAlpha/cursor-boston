@@ -752,10 +752,27 @@ export default function TilesMapPage() {
                 onClick={() => {
                   setDidFit(false); // re-trigger the fit effect for current mode
                 }}
-                className="px-2.5 py-1.5 text-xs hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-b-lg border-t border-neutral-200 dark:border-neutral-800"
+                className="px-2.5 py-1.5 text-xs hover:bg-neutral-100 dark:hover:bg-neutral-800 border-t border-neutral-200 dark:border-neutral-800"
                 title="Recenter on your territory"
               >
                 ⌖
+              </button>
+              <button
+                onClick={() => {
+                  // Snap to a fit-zoom of the entire world. Useful when the
+                  // recenter ⌖ left you zoomed in on a small kingdom and the
+                  // surrounding map looks empty.
+                  const fit = fitTilesToViewport(tiles);
+                  if (fit) {
+                    setTx(fit.tx);
+                    setTy(fit.ty);
+                    setScale(fit.scale);
+                  }
+                }}
+                className="px-2.5 py-1.5 text-xs hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-b-lg border-t border-neutral-200 dark:border-neutral-800"
+                title="Show the whole world"
+              >
+                🌐
               </button>
             </div>
 
