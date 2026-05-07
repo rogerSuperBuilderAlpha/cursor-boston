@@ -151,12 +151,18 @@ describe("MemberDirectory", () => {
         members: [member],
         filteredAndSortedMembers: [],
         loading: false,
+        searchQuery: "not-a-real-user",
       });
       render(<MemberDirectory />);
-      expect(screen.getByText("No members match your search.")).toBeInTheDocument();
+      expect(
+        screen.getByText('No members found matching "not-a-real-user"')
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText("Try different keywords or view all members.")
+      ).toBeInTheDocument();
     });
 
-    it("has a clear filters button in no-results state", async () => {
+    it("has a view-all-members action in no-results state", async () => {
       const member = buildMember();
       buildMockHook({
         members: [member],
@@ -165,7 +171,7 @@ describe("MemberDirectory", () => {
       });
       const user = userEvent.setup();
       render(<MemberDirectory />);
-      const clearBtn = screen.getByText("Clear filters");
+      const clearBtn = screen.getByText("View all members");
       await user.click(clearBtn);
       expect(mockHookReturn.clearFilters).toHaveBeenCalled();
       expect(mockPush).toHaveBeenCalledWith("/members", { scroll: false });

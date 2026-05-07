@@ -310,14 +310,19 @@ export function MemberDirectory({ initialSearch = "" }: MemberDirectoryProps) {
         ) : filteredAndSortedMembers.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-neutral-600 dark:text-neutral-400 text-lg mb-4">
-              No members match your search.
+              {`No members found matching "${searchQuery.trim()}"`}
             </p>
-            <button
-              onClick={handleClearFilters}
-              className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 underline"
-            >
-              Clear filters
-            </button>
+            <p className="text-neutral-500 dark:text-neutral-400 mb-3">
+              Try different keywords or view all members.
+            </p>
+            <div className="flex items-center justify-center gap-3">
+              <button
+                onClick={handleClearFilters}
+                className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 underline"
+              >
+                View all members
+              </button>
+            </div>
           </div>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
