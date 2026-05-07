@@ -60,10 +60,56 @@ describe("spawnCenterForPlayerIndex", () => {
     expect(seen.size).toBe(50);
   });
 
-  it("places centers at the configured spacing", () => {
-    const a = spawnCenterForPlayerIndex(0, 50);
-    const b = spawnCenterForPlayerIndex(1, 50);
-    expect(b.q - a.q).toBe(50);
+  it("places index 0 at the origin", () => {
+    expect(spawnCenterForPlayerIndex(0)).toEqual({ q: 0, r: 0 });
+  });
+
+  it("places ring-1 indices (1..6) at hex-distance `spacing` from origin", () => {
+    const seen = new Set<string>();
+    for (let i = 1; i <= 6; i++) {
+      const c = spawnCenterForPlayerIndex(i, 50);
+      expect(hexDistance({ q: 0, r: 0 }, c)).toBe(50);
+      seen.add(tileIdFromAxial(c.q, c.r));
+    }
+    expect(seen.size).toBe(6);
+  });
+
+  it("places ring-2 indices (7..18) at hex-distance 2*spacing from origin", () => {
+    const seen = new Set<string>();
+    for (let i = 7; i <= 18; i++) {
+      const c = spawnCenterForPlayerIndex(i, 50);
+      expect(hexDistance({ q: 0, r: 0 }, c)).toBe(100);
+      seen.add(tileIdFromAxial(c.q, c.r));
+    }
+    expect(seen.size).toBe(12);
+  });
+
+  it("places adjacent kingdoms at least `spacing` hexes apart", () => {
+    const centers: ReturnType<typeof spawnCenterForPlayerIndex>[] = [];
+    for (let i = 0; i < 19; i++) {
+      centers.push(spawnCenterForPlayerIndex(i, 50));
+    }
+    for (let i = 0; i < centers.length; i++) {
+      for (let j = i + 1; j < centers.length; j++) {
+        expect(hexDistance(centers[i], centers[j])).toBeGreaterThanOrEqual(50);
+      }
+    }
+  });
+
+  it("does not march along a single axis (kingdoms span q AND r axes)", () => {
+    // The old grid layout planted everyone with r=0 for the first 100 indices.
+    // The hex spiral should populate both axes within the first ring.
+    const qs = new Set<number>();
+    const rs = new Set<number>();
+    for (let i = 0; i < 7; i++) {
+      const c = spawnCenterForPlayerIndex(i, 50);
+      qs.add(c.q);
+      rs.add(c.r);
+    }
+    // At least 2 distinct r values among the first 7 — proves we're not
+    // clamped to r=0 like the old grid was.
+    expect(rs.size).toBeGreaterThan(1);
+    expect(qs.size).toBeGreaterThan(1);
   });
 });
 
