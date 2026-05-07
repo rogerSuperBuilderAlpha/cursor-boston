@@ -9,6 +9,13 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  loadCachedMap,
+  saveCachedMap,
+  mergeTiles as mergeTilesIntoCache,
+  type CachedMapView,
+  type CachedOwnerSummary,
+} from "@/lib/game/local-map-cache";
 import { effectiveUnitCap } from "@/lib/game/turns";
 import type {
   Caste,
@@ -33,10 +40,11 @@ interface OwnerSummary {
   shielded: boolean;
 }
 
-interface WorldResponse {
+interface MapMeResponse {
   success: boolean;
-  tiles?: MapTile[];
-  owners?: OwnerSummary[];
+  myTiles?: MapTile[];
+  borderTiles?: MapTile[];
+  owners?: CachedOwnerSummary[];
   error?: string;
 }
 
@@ -94,16 +102,22 @@ export default function GameDashboardPage() {
   const [renaming, setRenaming] = useState(false);
   const [renameInput, setRenameInput] = useState("");
 
-  // Merge updated tiles into the local owned-tile list by tileId. Used to
-  // patch state from action responses instead of triggering a full refetch.
-  const mergeOwnedTiles = useCallback((updates: MapTile[]) => {
-    if (updates.length === 0) return;
-    setTiles((prev) => {
-      const byId = new Map(prev.map((t) => [t.tileId, t] as const));
-      for (const u of updates) byId.set(u.tileId, u);
-      return Array.from(byId.values());
-    });
-  }, []);
+  // Merge updated tiles into the local owned-tile list by tileId AND into
+  // the localStorage map cache so the change persists across page nav.
+  // Used to patch state from action responses instead of triggering a full
+  // refetch.
+  const mergeOwnedTiles = useCallback(
+    (updates: MapTile[]) => {
+      if (updates.length === 0) return;
+      setTiles((prev) => {
+        const byId = new Map(prev.map((t) => [t.tileId, t] as const));
+        for (const u of updates) byId.set(u.tileId, u);
+        return Array.from(byId.values());
+      });
+      if (user) mergeTilesIntoCache(user.uid, updates);
+    },
+    [user]
+  );
 
   const fetchPlayer = useCallback(async () => {
     setError(null);
@@ -114,14 +128,11 @@ export default function GameDashboardPage() {
     setLoading(true);
     try {
       const token = await user.getIdToken();
-      const [playerRes, elgRes, worldRes] = await Promise.all([
+      const [playerRes, elgRes] = await Promise.all([
         fetch("/api/game/player", {
           headers: { Authorization: `Bearer ${token}` },
         }),
         fetch("/api/game/eligibility", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch("/api/game/world", {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -138,12 +149,30 @@ export default function GameDashboardPage() {
           nextRolloverIso: elgData.nextRolloverIso,
         });
       }
-      const worldData = (await worldRes.json()) as WorldResponse;
-      if (worldData.success) {
-        setWorldTiles(worldData.tiles ?? []);
-        const map = new Map<string, OwnerSummary>();
-        for (const o of worldData.owners ?? []) map.set(o.userId, o);
-        setWorldOwners(map);
+      // Map data — use the cache as source of truth. If absent, fetch from
+      // /api/game/map/me once. The dashboard only needs the border ring +
+      // owner summaries to compute the threat card; my tiles come from
+      // /api/game/player above.
+      const cached = loadCachedMap(user.uid);
+      if (cached) {
+        setWorldTiles(cached.borderTiles);
+        setWorldOwners(new Map(cached.owners.map((o) => [o.userId, o])));
+      } else {
+        const mapRes = await fetch("/api/game/map/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const mapData = (await mapRes.json()) as MapMeResponse;
+        if (mapData.success) {
+          const view: CachedMapView = {
+            myTiles: mapData.myTiles ?? [],
+            borderTiles: mapData.borderTiles ?? [],
+            owners: mapData.owners ?? [],
+            lastFetchedAt: Date.now(),
+          };
+          saveCachedMap(user.uid, view);
+          setWorldTiles(view.borderTiles);
+          setWorldOwners(new Map(view.owners.map((o) => [o.userId, o])));
+        }
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load player");

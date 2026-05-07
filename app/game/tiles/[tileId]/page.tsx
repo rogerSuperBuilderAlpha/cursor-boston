@@ -24,11 +24,24 @@ import type {
   UnitType,
 } from "@/lib/game/types";
 import { neighborTileIds } from "@/lib/game/world-gen";
+import { mergeTiles as mergeTilesIntoCache } from "@/lib/game/local-map-cache";
 
 interface TileResponse {
   success: boolean;
   tile?: GameTile;
   error?: { message: string } | string;
+}
+
+function asMapTile(t: GameTile): MapTile {
+  return {
+    tileId: t.tileId,
+    q: t.q,
+    r: t.r,
+    type: t.type,
+    ownerId: t.ownerId ?? null,
+    units: t.units,
+    armedDefenseSpellId: t.armedDefenseSpellId ?? null,
+  };
 }
 
 interface PlayerResponse {
@@ -126,6 +139,7 @@ export default function TileDetailPage({
         // Attack returns attackerPlayer/defenderPlayer instead of player.
         if (data.attackerPlayer)
           setPlayer(data.attackerPlayer as GamePlayer);
+        const tilesToCache: MapTile[] = [];
         if (data.tile) {
           const t = data.tile as GameTile;
           setTile(t);
@@ -143,8 +157,19 @@ export default function TileDetailPage({
             };
             return next;
           });
+          tilesToCache.push(asMapTile(t));
         }
-        if (data.targetTile) setTile(data.targetTile as GameTile);
+        if (data.targetTile) {
+          const t = data.targetTile as GameTile;
+          setTile(t);
+          tilesToCache.push(asMapTile(t));
+        }
+        // Push tile updates into the localStorage map cache so the world
+        // map + threat displays on other pages reflect this action without
+        // a manual refresh.
+        if (tilesToCache.length > 0 && user) {
+          mergeTilesIntoCache(user.uid, tilesToCache);
+        }
         // Pull TurnReport(s) off the response and push them on top of the
         // recent-reports stack. Both single-report (`report`) and batch
         // (`reports`) shapes are accepted.

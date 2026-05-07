@@ -15,6 +15,13 @@ import {
   PRODUCTION_SPELL_DURATION_TURNS,
 } from "@/lib/game/turns";
 import {
+  loadCachedMap,
+  saveCachedMap,
+  mergeTiles as mergeTilesIntoCache,
+  type CachedMapView,
+  type CachedOwnerSummary,
+} from "@/lib/game/local-map-cache";
+import {
   computeTileThreat,
   rankTileIdsByThreat,
   type ThreatOwnerInfo,
@@ -46,10 +53,11 @@ interface OwnerSummary {
   shielded: boolean;
 }
 
-interface WorldResponse {
+interface MapMeResponse {
   success: boolean;
-  tiles?: MapTile[];
-  owners?: OwnerSummary[];
+  myTiles?: MapTile[];
+  borderTiles?: MapTile[];
+  owners?: CachedOwnerSummary[];
   error?: PlayerResponseError | string;
 }
 
@@ -94,7 +102,10 @@ export default function RecruitPage() {
   const { user, loading: authLoading } = useAuth();
   const [player, setPlayer] = useState<GamePlayer | null>(null);
   const [tiles, setTiles] = useState<MapTile[]>([]);
-  const [worldTiles, setWorldTiles] = useState<MapTile[]>([]);
+  // Border-only enemy ring (sufficient for threat sort — all that matters
+  // for "most-threatened tile first" is adjacency). Hydrated from cache;
+  // kept fresh by action handlers across pages.
+  const [borderTiles, setBorderTiles] = useState<MapTile[]>([]);
   const [owners, setOwners] = useState<Map<string, OwnerSummary>>(new Map());
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -112,7 +123,7 @@ export default function RecruitPage() {
   } | null>(null);
   const [recentReports, setRecentReports] = useState<TurnReport[]>([]);
 
-  const refresh = useCallback(async () => {
+  const refreshPlayer = useCallback(async () => {
     if (!user) {
       setLoading(false);
       return;
@@ -120,15 +131,10 @@ export default function RecruitPage() {
     setError(null);
     try {
       const token = await user.getIdToken();
-      const [playerRes, worldRes] = await Promise.all([
-        fetch("/api/game/player", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch("/api/game/world", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ]);
-      const data = (await playerRes.json()) as PlayerResponse;
+      const res = await fetch("/api/game/player", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = (await res.json()) as PlayerResponse;
       if (!data.success) {
         const msg =
           typeof data.error === "string"
@@ -138,13 +144,6 @@ export default function RecruitPage() {
       }
       setPlayer(data.player);
       setTiles(data.tiles ?? []);
-      const worldData = (await worldRes.json()) as WorldResponse;
-      if (worldData.success) {
-        setWorldTiles(worldData.tiles ?? []);
-        const map = new Map<string, OwnerSummary>();
-        for (const o of worldData.owners ?? []) map.set(o.userId, o);
-        setOwners(map);
-      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load");
     } finally {
@@ -152,11 +151,45 @@ export default function RecruitPage() {
     }
   }, [user]);
 
+  // Cold-load: hydrate map from localStorage cache; only hit the server if
+  // there's no cache yet. Subsequent page visits skip the network round-
+  // trip entirely; action responses keep the cache fresh.
   useEffect(() => {
-    if (authLoading) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch-on-mount, state set inside async callback
-    refresh();
-  }, [authLoading, refresh]);
+    if (authLoading || !user) return;
+    let cancelled = false;
+    (async () => {
+      const cached = loadCachedMap(user.uid);
+      if (cached && !cancelled) {
+        setBorderTiles(cached.borderTiles);
+        setOwners(new Map(cached.owners.map((o) => [o.userId, o])));
+      } else {
+        try {
+          const token = await user.getIdToken();
+          const res = await fetch("/api/game/map/me", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = (await res.json()) as MapMeResponse;
+          if (!cancelled && data.success) {
+            const view: CachedMapView = {
+              myTiles: data.myTiles ?? [],
+              borderTiles: data.borderTiles ?? [],
+              owners: data.owners ?? [],
+              lastFetchedAt: Date.now(),
+            };
+            saveCachedMap(user.uid, view);
+            setBorderTiles(view.borderTiles);
+            setOwners(new Map(view.owners.map((o) => [o.userId, o])));
+          }
+        } catch {
+          /* surfaced via the player fetch error path if both fail */
+        }
+      }
+      if (!cancelled) await refreshPlayer();
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, user, refreshPlayer]);
 
   const militaryTiles = useMemo(
     () => tiles.filter((t) => t.type === "military"),
@@ -167,14 +200,15 @@ export default function RecruitPage() {
 
   // Threat-ranked military-tile ids. Drives the auto-route distribution and
   // the order tiles appear in the manual-override picker (most exposed at
-  // top is what a player wants to see).
+  // top is what a player wants to see). The threat model only cares about
+  // adjacency, so the border-tile slice is sufficient.
   const threatRankedMilitaryIds = useMemo(() => {
     if (!player) return [] as string[];
     const ownerInfo = new Map<string, ThreatOwnerInfo>();
     for (const [uid, o] of owners) ownerInfo.set(uid, { shielded: o.shielded });
     const threat = computeTileThreat({
       myTiles: militaryTiles,
-      worldTiles,
+      worldTiles: borderTiles,
       owners: ownerInfo,
       myUserId: player.userId,
     });
@@ -182,7 +216,7 @@ export default function RecruitPage() {
       militaryTiles.map((t) => t.tileId),
       threat
     );
-  }, [militaryTiles, worldTiles, owners, player]);
+  }, [militaryTiles, borderTiles, owners, player]);
 
   // Compute the player's current effective unit cap. This mirrors what the
   // server uses inside buildUnitsServer so the displayed numbers match what
@@ -294,9 +328,9 @@ export default function RecruitPage() {
           `Stopped early after ${reports.length} / ${totalCycles}: ${data.stoppedEarly}`
         );
       }
-      // Merge action response into local state instead of refetching
-      // /api/game/player + /api/game/world. Recruit only changes the player's
-      // own military tiles + player stats; world tiles + owners never move.
+      // Merge the action response into local state + the localStorage map
+      // cache. Recruit only mutates the player's own military tiles + player
+      // stats; world tiles + owners never move.
       if (data.player) setPlayer(data.player as GamePlayer);
       if (Array.isArray(data.tiles)) {
         const updates = data.tiles as MapTile[];
@@ -305,6 +339,7 @@ export default function RecruitPage() {
           for (const u of updates) byId.set(u.tileId, u);
           return Array.from(byId.values());
         });
+        if (user) mergeTilesIntoCache(user.uid, updates);
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Recruit failed");

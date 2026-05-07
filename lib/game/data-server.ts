@@ -442,6 +442,92 @@ export interface OwnerSummary {
   shielded: boolean;
 }
 
+// Personal map view: my tiles + the *enemy* tiles that share an edge with
+// any of my tiles + owner summaries for those enemies. Designed to be the
+// default fetch for /game/tiles, /game/spells, /game/recruit — the rest of
+// the world isn't relevant to those pages.
+//
+// Read cost: 1 query (own tiles) + 1 batched docRef.getAll() for the
+// border ring + 1 batched docRef.getAll() for owner summaries. For a
+// 25-tile spawn cluster: ~25 + ~30 + ~5 = ~60 reads (vs ~500 for the
+// full-world fetch). Scales with kingdom perimeter, not world size.
+export interface MyMapView {
+  myTiles: MapTile[];
+  borderTiles: MapTile[];
+  owners: OwnerSummary[];
+}
+
+export async function getMyMapServer(
+  userId: string,
+  now: Date = new Date()
+): Promise<MyMapView> {
+  const db = adminDbOrThrow();
+  const myTiles = await getOwnedMapTilesServer(userId);
+  if (myTiles.length === 0) {
+    return { myTiles: [], borderTiles: [], owners: [] };
+  }
+
+  // Build the set of neighbor tile ids that are NOT mine.
+  const myIds = new Set(myTiles.map((t) => t.tileId));
+  const neighborIds = new Set<string>();
+  for (const t of myTiles) {
+    for (const id of neighborTileIds(t.q, t.r)) {
+      if (!myIds.has(id)) neighborIds.add(id);
+    }
+  }
+
+  // Batch-fetch the border ring. We could pre-filter to only-existent docs,
+  // but db.getAll handles missing docs cheaply (returns non-existent
+  // snapshots) so a single round-trip is fine.
+  const borderTiles: MapTile[] = [];
+  const enemyOwnerIds = new Set<string>();
+  if (neighborIds.size > 0) {
+    const refs = [...neighborIds].map((id) =>
+      db.collection(COLLECTIONS.TILES).doc(id)
+    );
+    const snaps = await db.getAll(...refs);
+    for (const s of snaps) {
+      if (!s.exists) continue;
+      const data = s.data()!;
+      // Per spec: only enemy tiles. Skip unowned and self-owned border
+      // tiles entirely. Unowned-but-revealed neighbors don't load —
+      // there's no enemy presence there to display.
+      if (!data.ownerId || data.ownerId === userId) continue;
+      borderTiles.push({
+        tileId: data.tileId,
+        q: data.q,
+        r: data.r,
+        type: data.type,
+        ownerId: data.ownerId,
+        units: data.units,
+        armedDefenseSpellId: data.armedDefenseSpellId ?? null,
+      });
+      enemyOwnerIds.add(data.ownerId);
+    }
+  }
+
+  // Owner summaries for the enemies on our border.
+  const owners: OwnerSummary[] = [];
+  if (enemyOwnerIds.size > 0) {
+    const ownerRefs = [...enemyOwnerIds].map((uid) =>
+      db.collection(COLLECTIONS.PLAYERS).doc(uid)
+    );
+    const ownerSnaps = await db.getAll(...ownerRefs);
+    for (const s of ownerSnaps) {
+      if (!s.exists) continue;
+      const p = s.data() as GamePlayer;
+      owners.push({
+        userId: p.userId,
+        displayName: p.displayName ?? "",
+        caste: p.caste ?? null,
+        shielded: isShieldActive(p, now),
+      });
+    }
+  }
+
+  return { myTiles, borderTiles, owners };
+}
+
 // Owner-side metadata for the global map: name, caste, shield status. One
 // record per player; the client joins it onto tiles by ownerId.
 export async function getAllOwnerSummariesServer(

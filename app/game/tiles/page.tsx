@@ -11,11 +11,20 @@ import { useRouter } from "next/navigation";
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  loadCachedMap,
+  saveCachedMap,
+  mayRefresh,
+  msUntilRefresh,
+  type CachedMapView,
+  type CachedOwnerSummary,
+} from "@/lib/game/local-map-cache";
 import type { Caste, GamePlayer, MapTile, LandType } from "@/lib/game/types";
 
 interface PlayerResponse {
@@ -30,6 +39,14 @@ interface OwnerSummary {
   displayName: string;
   caste: Caste | null;
   shielded: boolean;
+}
+
+interface MapMeResponse {
+  success: boolean;
+  myTiles?: MapTile[];
+  borderTiles?: MapTile[];
+  owners?: CachedOwnerSummary[];
+  error?: string;
 }
 
 interface WorldResponse {
@@ -172,18 +189,31 @@ const CASTE_BORDER: Record<Caste, string> = {
   green: "#4ade80",
 };
 
+type ViewMode = "personal" | "world";
+
 export default function TilesMapPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const [tiles, setTiles] = useState<MapTile[]>([]);
-  const [ownersById, setOwnersById] = useState<Map<string, OwnerSummary>>(
-    new Map()
-  );
+  // Cached personal view: { myTiles, borderTiles, owners, lastFetchedAt }.
+  // Source of truth in `personal` mode; persisted to localStorage and
+  // mutated by action responses across the game pages.
+  const [cachedView, setCachedView] = useState<CachedMapView | null>(null);
+  // One-shot whole-world snapshot for the 🌐 button. Not persisted — every
+  // click re-fetches.
+  const [worldView, setWorldView] = useState<{
+    tiles: MapTile[];
+    owners: OwnerSummary[];
+  } | null>(null);
+  const [mode, setMode] = useState<ViewMode>("personal");
   const [player, setPlayer] = useState<GamePlayer | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<LandType | "all">("all");
   const [scope, setScope] = useState<ScopeFilter>("everyone");
   const [hovered, setHovered] = useState<MapTile | null>(null);
+  // Re-renders the refresh button's countdown text every 30s while it's
+  // gated. Cheap — only state-bumps when the cache has a recent fetch.
+  const [, forceTick] = useState(0);
 
   // Pan/zoom state — applied as an SVG transform on the rendered group.
   // Initial values are recomputed from the world bounding box on first load.
@@ -197,58 +227,155 @@ export default function TilesMapPage() {
     null
   );
 
-  const refresh = useCallback(async () => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
+  // Always grab the current player object; cheap and we want fresh
+  // turnsRemaining etc.
+  const fetchPlayer = useCallback(async () => {
+    if (!user) return;
     try {
       const token = await user.getIdToken();
-      const [playerRes, worldRes] = await Promise.all([
-        fetch("/api/game/player", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch("/api/game/world", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ]);
-      const playerData = (await playerRes.json()) as PlayerResponse;
-      const worldData = (await worldRes.json()) as WorldResponse;
-      if (playerData.success) setPlayer(playerData.player);
-      if (worldData.success) {
-        setTiles(worldData.tiles ?? []);
-        const map = new Map<string, OwnerSummary>();
-        for (const o of worldData.owners ?? []) map.set(o.userId, o);
-        setOwnersById(map);
-      }
-    } finally {
-      setLoading(false);
+      const res = await fetch("/api/game/player", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = (await res.json()) as PlayerResponse;
+      if (data.success) setPlayer(data.player);
+    } catch {
+      /* ignore */
     }
   }, [user]);
 
+  // Full personal-map fetch. Resets the rate-limit clock. Called on first
+  // visit (no cache) and when the user clicks the refresh button.
+  const refreshPersonalMap = useCallback(async () => {
+    if (!user) return;
+    setRefreshing(true);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch("/api/game/map/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = (await res.json()) as MapMeResponse;
+      if (data.success) {
+        const view: CachedMapView = {
+          myTiles: data.myTiles ?? [],
+          borderTiles: data.borderTiles ?? [],
+          owners: data.owners ?? [],
+          lastFetchedAt: Date.now(),
+        };
+        saveCachedMap(user.uid, view);
+        setCachedView(view);
+      }
+    } finally {
+      setRefreshing(false);
+    }
+  }, [user]);
+
+  // Cold load: hydrate from localStorage if present, otherwise fetch
+  // fresh. The cache stays valid until the user clicks refresh — no auto-
+  // expiry. Action handlers across the game pages keep it incrementally
+  // up-to-date.
   useEffect(() => {
-    if (authLoading) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch-on-mount
-    refresh();
-  }, [authLoading, refresh]);
+    if (authLoading || !user) return;
+    let cancelled = false;
+    (async () => {
+      const cached = loadCachedMap(user.uid);
+      if (cached) {
+        setCachedView(cached);
+      }
+      await fetchPlayer();
+      if (cancelled) return;
+      if (!cached) {
+        await refreshPersonalMap();
+      }
+      if (!cancelled) setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, user, fetchPlayer, refreshPersonalMap]);
+
+  // Tick the refresh-countdown UI once a minute so the disabled button's
+  // remaining-time text doesn't go stale.
+  useEffect(() => {
+    if (!cachedView) return;
+    const id = setInterval(() => forceTick((n) => n + 1), 30 * 1000);
+    return () => clearInterval(id);
+  }, [cachedView]);
+
+  // Whole-world snapshot for the 🌐 button. Lazy: only runs when the user
+  // explicitly switches modes.
+  const fetchWorldOnce = useCallback(async () => {
+    if (!user) return;
+    setRefreshing(true);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch("/api/game/world", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = (await res.json()) as WorldResponse;
+      if (data.success) {
+        setWorldView({
+          tiles: data.tiles ?? [],
+          owners: data.owners ?? [],
+        });
+      }
+    } finally {
+      setRefreshing(false);
+    }
+  }, [user]);
+
+  // Derive the tiles + owners we render from the active mode. In `personal`
+  // mode we union myTiles + borderTiles from the cache; in `world` mode we
+  // render the one-shot world snapshot. Owners comes from whichever bucket
+  // is active.
+  const tiles: MapTile[] = useMemo(
+    () =>
+      mode === "world" && worldView
+        ? worldView.tiles
+        : cachedView
+          ? [...cachedView.myTiles, ...cachedView.borderTiles]
+          : [],
+    [mode, worldView, cachedView]
+  );
+
+  const ownersById: Map<string, OwnerSummary> = useMemo(() => {
+    const ownersList =
+      mode === "world" && worldView
+        ? worldView.owners
+        : cachedView?.owners ?? [];
+    const m = new Map<string, OwnerSummary>();
+    for (const o of ownersList) m.set(o.userId, o as OwnerSummary);
+    return m;
+  }, [mode, worldView, cachedView]);
 
   // First-time fit: center the viewport on the player's own tiles so they
   // know where they are, and zoom so the *entire* kingdom fits. Runs once
   // when player + tiles are first available, or when the user clicks the
-  // recenter (⌖) button (which flips didFit back).
+  // recenter (⌖) button (which flips didFit back). In world mode we fit
+  // the whole world instead.
   /* eslint-disable react-hooks/set-state-in-effect -- one-shot fit on data arrival */
   useEffect(() => {
     if (didFit || !player || tiles.length === 0) return;
-    const own = tiles.filter((t) => t.ownerId === player.userId);
-    const fit = own.length > 0 ? fitTilesToViewport(own) : fitTilesToViewport(tiles);
+    const fitTarget =
+      mode === "world"
+        ? tiles
+        : tiles.filter((t) => t.ownerId === player.userId);
+    const source = fitTarget.length > 0 ? fitTarget : tiles;
+    const fit = fitTilesToViewport(source);
     if (fit) {
       setTx(fit.tx);
       setTy(fit.ty);
       setScale(fit.scale);
     }
     setDidFit(true);
-  }, [didFit, player, tiles]);
+  }, [didFit, player, tiles, mode]);
   /* eslint-enable react-hooks/set-state-in-effect */
+
+  // Re-fit on mode change so toggling Personal/World snaps to the right
+  // viewport.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- mode is a derived view-state trigger; one-shot reset of the fit-once latch
+    setDidFit(false);
+  }, [mode]);
 
   // Wheel zoom around the cursor.
   //
@@ -382,12 +509,28 @@ export default function TilesMapPage() {
 
         <div className="rounded-lg border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/10 p-4 mb-4 text-sm leading-relaxed">
           <p>
-            Drag to pan, scroll to zoom. Your tiles render in full color with
-            their land type; foreign tiles fade and pick up a caste-colored
-            ring. Generals still under the new-player shield show a lock —
-            they can&apos;t be attacked yet.
+            Drag to pan, scroll to zoom. <strong>Personal mode</strong> shows
+            your tiles + the enemy ring touching your borders, cached locally
+            so it loads instantly. <strong>World mode</strong> (🌐) fetches
+            every tile in the world for context.
           </p>
         </div>
+
+        <PersonalMapToolbar
+          mode={mode}
+          onModeChange={(next) => {
+            setMode(next);
+            if (next === "world" && !worldView) {
+              void fetchWorldOnce();
+            }
+          }}
+          cachedView={cachedView}
+          refreshing={refreshing}
+          onRefresh={() => {
+            if (cachedView && !mayRefresh(cachedView)) return;
+            void refreshPersonalMap();
+          }}
+        />
 
         <div className="flex flex-wrap gap-2 mb-3">
           <span className="text-xs uppercase tracking-wide text-neutral-500 self-center mr-1">
@@ -607,7 +750,7 @@ export default function TilesMapPage() {
               </button>
               <button
                 onClick={() => {
-                  setDidFit(false); // re-trigger the fit effect (your kingdom)
+                  setDidFit(false); // re-trigger the fit effect for current mode
                 }}
                 className="px-2.5 py-1.5 text-xs hover:bg-neutral-100 dark:hover:bg-neutral-800 border-t border-neutral-200 dark:border-neutral-800"
                 title="Recenter on your territory"
@@ -699,6 +842,85 @@ export default function TilesMapPage() {
           </span>
         </div>
       </div>
+    </div>
+  );
+}
+
+function PersonalMapToolbar({
+  mode,
+  onModeChange,
+  cachedView,
+  refreshing,
+  onRefresh,
+}: {
+  mode: "personal" | "world";
+  onModeChange: (next: "personal" | "world") => void;
+  cachedView: CachedMapView | null;
+  refreshing: boolean;
+  onRefresh: () => void;
+}) {
+  const ms = msUntilRefresh(cachedView);
+  const allowed = ms === 0;
+  // "5 min" rate-limit countdown. Round up to whole minutes for the button
+  // copy so the user sees a stable 5/4/3/2/1 progression.
+  const minutesLeft = Math.ceil(ms / 60_000);
+  const lastFetched = cachedView
+    ? new Date(cachedView.lastFetchedAt).toLocaleTimeString([], {
+        hour: "numeric",
+        minute: "2-digit",
+      })
+    : null;
+  return (
+    <div className="flex flex-wrap items-center gap-2 mb-4">
+      <span className="text-xs uppercase tracking-wide text-neutral-500 mr-1">
+        View
+      </span>
+      <button
+        onClick={() => onModeChange("personal")}
+        className={`px-3 py-1.5 rounded-lg text-sm border ${
+          mode === "personal"
+            ? "bg-emerald-500 text-white border-emerald-500"
+            : "border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+        }`}
+      >
+        Personal
+      </button>
+      <button
+        onClick={() => onModeChange("world")}
+        className={`px-3 py-1.5 rounded-lg text-sm border ${
+          mode === "world"
+            ? "bg-emerald-500 text-white border-emerald-500"
+            : "border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+        }`}
+        title="Fetch the whole world (no rate limit; rarely needed)"
+      >
+        🌐 Whole world
+      </button>
+      {mode === "personal" && (
+        <>
+          <button
+            onClick={onRefresh}
+            disabled={refreshing || !allowed}
+            className="px-3 py-1.5 rounded-lg text-sm border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed"
+            title={
+              !allowed
+                ? `Cooldown — refresh available in ~${minutesLeft} min`
+                : "Refetch your map from the server"
+            }
+          >
+            {refreshing
+              ? "Refreshing…"
+              : allowed
+                ? "↻ Refresh map"
+                : `↻ Refresh in ~${minutesLeft}m`}
+          </button>
+          {lastFetched && (
+            <span className="text-xs text-neutral-500">
+              Last fetched at {lastFetched}
+            </span>
+          )}
+        </>
+      )}
     </div>
   );
 }

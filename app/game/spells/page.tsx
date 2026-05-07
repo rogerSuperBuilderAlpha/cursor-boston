@@ -11,6 +11,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { ALL_SPELLS, SPELLS_BY_ID } from "@/lib/game/content";
 import {
+  loadCachedMap,
+  saveCachedMap,
+  mergeTiles as mergeTilesIntoCache,
+  type CachedMapView,
+  type CachedOwnerSummary,
+} from "@/lib/game/local-map-cache";
+import {
   computeTileThreat,
   rankTileIdsByThreat,
   type ThreatOwnerInfo,
@@ -43,13 +50,6 @@ interface OwnerSummary {
   shielded: boolean;
 }
 
-interface WorldResponse {
-  success: boolean;
-  tiles?: MapTile[];
-  owners?: OwnerSummary[];
-  error?: PlayerResponseError | string;
-}
-
 // 5 tiers, in display order. Min-tiles & turn-cost come from each spell's own
 // fields — this list is only used to render the row scaffolding so locked
 // tiers still appear with their requirement.
@@ -72,11 +72,22 @@ const TYPE_LABEL: Record<SpellType, string> = {
   production: "Production",
 };
 
+interface MapMeResponse {
+  success: boolean;
+  myTiles?: MapTile[];
+  borderTiles?: MapTile[];
+  owners?: CachedOwnerSummary[];
+  error?: PlayerResponseError | string;
+}
+
 export default function SpellsPage() {
   const { user, loading: authLoading } = useAuth();
   const [player, setPlayer] = useState<GamePlayer | null>(null);
   const [tiles, setTiles] = useState<MapTile[]>([]);
-  const [worldTiles, setWorldTiles] = useState<MapTile[]>([]);
+  // Border-only enemy tiles (sufficient for the threat calc — adjacency is
+  // all that matters). Hydrated from cache on mount, kept fresh by action
+  // handlers across the game pages.
+  const [borderTiles, setBorderTiles] = useState<MapTile[]>([]);
   const [owners, setOwners] = useState<Map<string, OwnerSummary>>(new Map());
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -89,7 +100,10 @@ export default function SpellsPage() {
   const [bulkSpellId, setBulkSpellId] = useState<string | null>(null);
   const [bulkN, setBulkN] = useState<number>(0);
 
-  const refresh = useCallback(async () => {
+  // Fetch only the player object; tile + owner data lives in the local-map
+  // cache (mutated in-place by action handlers, refreshed manually on the
+  // map page).
+  const refreshPlayer = useCallback(async () => {
     if (!user) {
       setLoading(false);
       return;
@@ -97,15 +111,10 @@ export default function SpellsPage() {
     setError(null);
     try {
       const token = await user.getIdToken();
-      const [playerRes, worldRes] = await Promise.all([
-        fetch("/api/game/player", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch("/api/game/world", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ]);
-      const data = (await playerRes.json()) as PlayerResponse;
+      const res = await fetch("/api/game/player", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = (await res.json()) as PlayerResponse;
       if (!data.success) {
         const msg =
           typeof data.error === "string"
@@ -115,13 +124,6 @@ export default function SpellsPage() {
       }
       setPlayer(data.player);
       setTiles(data.tiles ?? []);
-      const worldData = (await worldRes.json()) as WorldResponse;
-      if (worldData.success) {
-        setWorldTiles(worldData.tiles ?? []);
-        const map = new Map<string, OwnerSummary>();
-        for (const o of worldData.owners ?? []) map.set(o.userId, o);
-        setOwners(map);
-      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load");
     } finally {
@@ -129,11 +131,45 @@ export default function SpellsPage() {
     }
   }, [user]);
 
+  // Cold-load: hydrate map data from the localStorage cache; if absent,
+  // fetch /api/game/map/me once. After that, action responses keep the
+  // cache (and this page's state) up to date — no automatic refetches.
   useEffect(() => {
-    if (authLoading) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch-on-mount, state set inside async callback
-    refresh();
-  }, [authLoading, refresh]);
+    if (authLoading || !user) return;
+    let cancelled = false;
+    (async () => {
+      const cached = loadCachedMap(user.uid);
+      if (cached && !cancelled) {
+        setBorderTiles(cached.borderTiles);
+        setOwners(new Map(cached.owners.map((o) => [o.userId, o])));
+      } else {
+        try {
+          const token = await user.getIdToken();
+          const res = await fetch("/api/game/map/me", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = (await res.json()) as MapMeResponse;
+          if (!cancelled && data.success) {
+            const view: CachedMapView = {
+              myTiles: data.myTiles ?? [],
+              borderTiles: data.borderTiles ?? [],
+              owners: data.owners ?? [],
+              lastFetchedAt: Date.now(),
+            };
+            saveCachedMap(user.uid, view);
+            setBorderTiles(view.borderTiles);
+            setOwners(new Map(view.owners.map((o) => [o.userId, o])));
+          }
+        } catch {
+          /* surfaced via the player fetch error path if both fail */
+        }
+      }
+      if (!cancelled) await refreshPlayer();
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, user, refreshPlayer]);
 
   const callApi = useCallback(
     async (path: string, body: unknown) => {
@@ -167,28 +203,22 @@ export default function SpellsPage() {
             [...(data.reports as TurnReport[]), ...prev].slice(0, 25)
           );
         }
-        // Merge action response into local state instead of refetching
-        // /api/game/player + /api/game/world. Spell actions never change
-        // world tiles or owner summaries — only the casting player's state
-        // and (for arm) the targeted tile.
+        // Merge action response into local state + the localStorage cache.
+        // Spell actions never change world tiles or owner summaries — only
+        // the casting player's state and (for arm) the targeted tile(s).
         if (data.player) setPlayer(data.player as GamePlayer);
-        if (data.tile) {
-          const updated = data.tile as MapTile;
-          setTiles((prev) => {
-            const idx = prev.findIndex((t) => t.tileId === updated.tileId);
-            if (idx === -1) return [...prev, updated];
-            const next = prev.slice();
-            next[idx] = updated;
-            return next;
-          });
-        }
+        const tileUpdates: MapTile[] = [];
+        if (data.tile) tileUpdates.push(data.tile as MapTile);
         if (Array.isArray(data.tiles)) {
-          const updates = data.tiles as MapTile[];
+          tileUpdates.push(...(data.tiles as MapTile[]));
+        }
+        if (tileUpdates.length > 0) {
           setTiles((prev) => {
             const byId = new Map(prev.map((t) => [t.tileId, t] as const));
-            for (const u of updates) byId.set(u.tileId, u);
+            for (const u of tileUpdates) byId.set(u.tileId, u);
             return Array.from(byId.values());
           });
+          if (user) mergeTilesIntoCache(user.uid, tileUpdates);
         }
         return data;
       } catch (e) {
@@ -295,14 +325,16 @@ export default function SpellsPage() {
 
   const armedTiles = tiles.filter((t) => t.armedDefenseSpellId);
 
-  // Per-tile threat score, used to sort the bulk-arm preview.
+  // Per-tile threat score, used to sort the bulk-arm preview. The threat
+  // model only cares about adjacency, so the border-tile slice from the
+  // cache is sufficient (and dramatically cheaper than the whole world).
   const threatRanked = useMemo(() => {
     if (!player) return [] as string[];
     const ownerInfo = new Map<string, ThreatOwnerInfo>();
     for (const [uid, o] of owners) ownerInfo.set(uid, { shielded: o.shielded });
     const threat = computeTileThreat({
       myTiles: armableUnarmedTiles,
-      worldTiles,
+      worldTiles: borderTiles,
       owners: ownerInfo,
       myUserId: player.userId,
     });
@@ -310,7 +342,7 @@ export default function SpellsPage() {
       armableUnarmedTiles.map((t) => t.tileId),
       threat
     );
-  }, [armableUnarmedTiles, worldTiles, owners, player]);
+  }, [armableUnarmedTiles, borderTiles, owners, player]);
 
   if (authLoading || loading) {
     return (
