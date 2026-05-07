@@ -11,6 +11,7 @@ import Image from "next/image";
 import type { Message, ReactionType } from "@/types/feed";
 import { getInitials, formatRelativeDate } from "@/lib/utils";
 import { ReplyCard } from "./ReplyCard";
+import { ReportMessageMenu } from "./ReportMessageMenu";
 
 interface MessageCardProps {
   message: Message;
@@ -122,7 +123,7 @@ export function MessageCard({
                 {formatRelativeDate(message.createdAt)}
               </span>
             </div>
-            {isOwner && (
+            {isOwner ? (
               <div className="relative">
                 {showDeleteConfirm ? (
                   <div className="flex items-center gap-2">
@@ -167,7 +168,9 @@ export function MessageCard({
                   </button>
                 )}
               </div>
-            )}
+            ) : isLoggedIn ? (
+              <ReportMessageMenu messageId={message.id} />
+            ) : null}
           </div>
           {/* Reposter's comment */}
           <p className="text-neutral-700 dark:text-neutral-300 mt-1 whitespace-pre-wrap wrap-break-word">

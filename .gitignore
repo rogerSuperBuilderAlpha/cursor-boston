@@ -185,3 +185,13 @@ secrets/
 credentials/
 *.secret
 docs/seed-data/
+
+# Credit / referral code files (April 2026 incident class — see
+# docs/security-incident-2026-04-11.md). These files belong in Firestore
+# behind authentication, never in the repo.
+docs/*credit*/
+docs/*referral*/
+*credit*.csv
+*referral*.csv
+*.credits.csv
+*.referrals.csv

@@ -429,5 +429,34 @@ service cloud.firestore {
         && resource.data.ownerId == request.auth.uid;
       allow create, update, delete: if false;
     }
+
+    // Trust & safety: in-product abuse-report records on community
+    // user-generated content. Reporters can only create their own
+    // reports; only admins can list/triage. Server-side mutations via
+    // /api/community/moderate use Admin SDK and bypass these rules.
+    match /communityReports/{reportId} {
+      allow create: if request.auth != null
+                    && request.resource.data.reporterUid == request.auth.uid
+                    && request.resource.data.targetMessageId is string
+                    && request.resource.data.reason is string;
+      allow read, update, delete: if false; // Admin SDK only
+    }
+
+    // Trust & safety: per-user block list. Each blocker owns a
+    // subdocument tree of users they've blocked; clients can only
+    // read/write their own list. Feed filtering is enforced server-side.
+    match /userBlocks/{ownerUid}/blocked/{targetUid} {
+      allow read, write: if request.auth != null && request.auth.uid == ownerUid;
+    }
+    match /userBlocks/{ownerUid} {
+      allow read, write: if request.auth != null && request.auth.uid == ownerUid;
+    }
+
+    // Account-deletion progress docs. Server-only — clients should
+    // never see them. Listed so the registry-guard test classifies them
+    // explicitly.
+    match /accountDeletions/{uid} {
+      allow read, write: if false;
+    }
   }
 }

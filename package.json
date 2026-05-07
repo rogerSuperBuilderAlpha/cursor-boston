@@ -170,7 +170,10 @@
       "react-dom": "$react-dom"
     },
     "http-proxy-agent": "^7.0.0",
-    "postcss": "^8.5.12"
+    "postcss": "^8.5.12",
+    "basic-ftp": "^5.3.1",
+    "uuid": "^11.1.1",
+    "hono": "^4.12.16"
   },
   "lint-staged": {
     "**/*.{ts,tsx}": [

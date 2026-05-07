@@ -13,6 +13,9 @@ import {
   MentorshipRequestAlreadyRespondedError,
 } from "@/lib/mentorship/data-server";
 import { parseRequestBody } from "@/lib/api-response";
+import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
+
+const RESPOND_RATE_LIMIT = { windowMs: 60 * 1000, maxRequests: 10 };
 
 /**
  * POST /api/mentorship/respond
@@ -25,6 +28,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: "Authentication required" },
         { status: 401 }
+      );
+    }
+
+    const rl = await checkUpstashRateLimit(`mentorship-respond:${user.uid}`, RESPOND_RATE_LIMIT);
+    if (!rl.success) {
+      return NextResponse.json(
+        { success: false, error: "Too many responses. Try again shortly." },
+        { status: 429, headers: rl.retryAfter ? { "Retry-After": String(rl.retryAfter) } : undefined }
       );
     }
 
