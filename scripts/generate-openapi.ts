@@ -42,6 +42,7 @@ const baseDocument = {
     { name: "auth", description: "Authentication and email resolution" },
     { name: "community", description: "Community posts, replies, reactions, moderation" },
     { name: "game", description: "Strategy game endpoints (leaderboard, attacks, artifacts, turns)" },
+    { name: "hackathons", description: "Hackathon pool, teams, submissions, and Hack-a-Sprint showcase" },
   ],
 };
 

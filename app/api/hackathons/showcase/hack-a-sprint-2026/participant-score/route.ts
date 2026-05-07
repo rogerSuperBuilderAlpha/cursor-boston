@@ -20,6 +20,7 @@ import { getHackASprint2026Phase } from "@/lib/hackathon-asprint-2026-schedule";
 import { hackathonEventSignupDocId, profileMatchesHackathonJudgeCheckinException } from "@/lib/hackathon-event-signup";
 import { getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
+import { hackathonsContract } from "@/lib/api-schemas/hackathons";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -49,17 +50,22 @@ export async function POST(request: NextRequest) {
 
     const phase = getHackASprint2026Phase();
 
-    let body: { submissionId?: string; score?: number };
+    let body: unknown;
     try {
-      body = (await request.json()) as { submissionId?: string; score?: number };
+      body = await request.json();
     } catch {
       return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
     }
+    const parsed = hackathonsContract.hackASprintParticipantScore.body.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message ?? "Invalid body" },
+        { status: 400 }
+      );
+    }
 
-    const submissionId = String(body.submissionId ?? "")
-      .trim()
-      .toLowerCase();
-    const score = Number(body.score);
+    const submissionId = parsed.data.submissionId.trim().toLowerCase();
+    const score = parsed.data.score;
 
     if (!submissionId || !Number.isInteger(score) || score < 1 || score > 10) {
       return NextResponse.json(

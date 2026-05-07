@@ -13,6 +13,8 @@ import { sendEmail } from "@/lib/mailgun";
 import { getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 
+// @contracts: hackathonsContract.hackASprintCreditEmail (lib/api-schemas/hackathons.ts)
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 

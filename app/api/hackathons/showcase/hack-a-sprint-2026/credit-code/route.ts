@@ -9,6 +9,8 @@ import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { resolveHackASprint2026CreditForUser } from "@/lib/hackathon-asprint-2026-credit-eligibility";
 
+// @contracts: hackathonsContract.hackASprintCreditCode (lib/api-schemas/hackathons.ts)
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
