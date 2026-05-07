@@ -14,14 +14,7 @@ import {
 import { mapGameError } from "@/lib/game/api-error-map";
 import { getRecentAttacksServer } from "@/lib/game/data-server";
 import { getVerifiedUser } from "@/lib/server-auth";
-
-const VALID_SIDES = ["sent", "received", "all"] as const;
-type Side = (typeof VALID_SIDES)[number];
-
-function parseSide(raw: string | null): Side {
-  if (raw && (VALID_SIDES as readonly string[]).includes(raw)) return raw as Side;
-  return "all";
-}
+import { gameContract } from "@/lib/api-schemas/game";
 
 export async function GET(request: NextRequest) {
   try {
@@ -29,9 +22,17 @@ export async function GET(request: NextRequest) {
     if (!user) return apiError("Authentication required", 401);
 
     const url = new URL(request.url);
-    const side = parseSide(url.searchParams.get("side"));
-    const limit = clampLimit(url.searchParams.get("limit"), DEFAULT_PAGE_LIMIT);
-    const cursor = parseCursor(url.searchParams.get("cursor"));
+    const queryParse = gameContract.getAttacks.query.safeParse({
+      limit: url.searchParams.get("limit") ?? undefined,
+      cursor: url.searchParams.get("cursor") ?? undefined,
+      side: url.searchParams.get("side") ?? undefined,
+    });
+    if (!queryParse.success) {
+      return apiError(queryParse.error.issues[0]?.message ?? "Invalid query", 400);
+    }
+    const side = queryParse.data.side ?? "all";
+    const limit = clampLimit(queryParse.data.limit ?? null, DEFAULT_PAGE_LIMIT);
+    const cursor = parseCursor(queryParse.data.cursor ?? null);
 
     const { items, nextCursor, hasMore } = await getRecentAttacksServer({
       userId: user.uid,

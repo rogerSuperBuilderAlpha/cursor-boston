@@ -24,6 +24,11 @@ const ROOT = path.join(__dirname, "..");
 const API_DIR = path.join(ROOT, "app", "api");
 const EXEMPTIONS_PATH = path.join(__dirname, "contract-exemptions.json");
 const SCHEMA_IMPORT_RE = /from\s+["']@\/lib\/api-schemas/;
+// Marker comment for routes that have a contract entry but no runtime
+// inputs to validate (pure GETs with no body / query / path params).
+// Accept this as proof the route is contract-backed without forcing a
+// ceremonial unused import.
+const CONTRACT_MARKER_RE = /\/\/\s*@contracts:\s*[A-Za-z]/;
 
 // /api/docs serves Swagger UI HTML — no contract by design.
 const ALWAYS_EXEMPT = new Set(["docs"]);
@@ -54,7 +59,8 @@ for (const file of walk(API_DIR)) {
     .relative(API_DIR, file)
     .replace(/[\\/]route\.tsx?$/, "");
   const src = fs.readFileSync(file, "utf8");
-  const hasContract = SCHEMA_IMPORT_RE.test(src);
+  const hasContract =
+    SCHEMA_IMPORT_RE.test(src) || CONTRACT_MARKER_RE.test(src);
   if (hasContract) {
     withContract += 1;
     orphanedExemptions.delete(rel);

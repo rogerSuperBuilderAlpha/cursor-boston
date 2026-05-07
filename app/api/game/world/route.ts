@@ -14,6 +14,8 @@ import {
 } from "@/lib/game/data-server";
 import { getVerifiedUser } from "@/lib/server-auth";
 
+// @contracts: gameContract.getWorld (lib/api-schemas/game.ts)
+//
 // Global map fetch.
 //
 // Two modes (additive — back-compat preserved):
