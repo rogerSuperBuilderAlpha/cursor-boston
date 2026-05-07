@@ -167,14 +167,36 @@ export default function SpellsPage() {
             [...(data.reports as TurnReport[]), ...prev].slice(0, 25)
           );
         }
-        await refresh();
+        // Merge action response into local state instead of refetching
+        // /api/game/player + /api/game/world. Spell actions never change
+        // world tiles or owner summaries — only the casting player's state
+        // and (for arm) the targeted tile.
+        if (data.player) setPlayer(data.player as GamePlayer);
+        if (data.tile) {
+          const updated = data.tile as MapTile;
+          setTiles((prev) => {
+            const idx = prev.findIndex((t) => t.tileId === updated.tileId);
+            if (idx === -1) return [...prev, updated];
+            const next = prev.slice();
+            next[idx] = updated;
+            return next;
+          });
+        }
+        if (Array.isArray(data.tiles)) {
+          const updates = data.tiles as MapTile[];
+          setTiles((prev) => {
+            const byId = new Map(prev.map((t) => [t.tileId, t] as const));
+            for (const u of updates) byId.set(u.tileId, u);
+            return Array.from(byId.values());
+          });
+        }
         return data;
       } catch (e) {
         setError(e instanceof Error ? e.message : "Action failed");
         return null;
       }
     },
-    [user, refresh]
+    [user]
   );
 
   const castProduction = useCallback(

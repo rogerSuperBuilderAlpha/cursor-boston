@@ -118,7 +118,33 @@ export default function TileDetailPage({
         if (!data.success) {
           throw new Error(data.error?.message ?? data.error ?? "Action failed");
         }
-        await refresh();
+        // Merge action response into local state instead of refetching
+        // /api/game/player + /api/game/tile. Single-tile actions never need
+        // a full reload: the server returns the updated player + tile (and
+        // for attack: the targetTile).
+        if (data.player) setPlayer(data.player as GamePlayer);
+        // Attack returns attackerPlayer/defenderPlayer instead of player.
+        if (data.attackerPlayer)
+          setPlayer(data.attackerPlayer as GamePlayer);
+        if (data.tile) {
+          const t = data.tile as GameTile;
+          setTile(t);
+          // Also patch the owned-tiles mini-list if this tile is in it.
+          setOwnedTiles((prev) => {
+            const idx = prev.findIndex((p) => p.tileId === t.tileId);
+            if (idx === -1) return prev;
+            const next = prev.slice();
+            next[idx] = {
+              ...next[idx],
+              type: t.type,
+              ownerId: t.ownerId ?? null,
+              units: t.units,
+              armedDefenseSpellId: t.armedDefenseSpellId ?? null,
+            };
+            return next;
+          });
+        }
+        if (data.targetTile) setTile(data.targetTile as GameTile);
         // Pull TurnReport(s) off the response and push them on top of the
         // recent-reports stack. Both single-report (`report`) and batch
         // (`reports`) shapes are accepted.
@@ -140,7 +166,7 @@ export default function TileDetailPage({
         setBusy(false);
       }
     },
-    [user, refresh]
+    [user]
   );
 
   if (authLoading || loading) {

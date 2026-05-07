@@ -10,17 +10,52 @@ import { mapGameError } from "@/lib/game/api-error-map";
 import {
   getAllMapTilesServer,
   getAllOwnerSummariesServer,
+  getMapTilesInBoundsServer,
 } from "@/lib/game/data-server";
 import { getVerifiedUser } from "@/lib/server-auth";
 
-// Global map fetch: every tile in the world plus a per-owner summary
-// (displayName, caste, shielded). The client joins owner info onto tiles by
-// ownerId. Today this is ~500 tiles + 4 owners. If the population grows past
-// a few thousand tiles, switch to a viewport bounding-box query.
+// Global map fetch.
+//
+// Two modes (additive — back-compat preserved):
+//   • Bare GET → returns { tiles, owners } for the entire world. Legacy mode.
+//     Kept so existing callers don't break, but new clients should pass bbox.
+//   • GET ?qMin=&qMax=&rMin=&rMax= → returns { tiles } for the bbox only.
+//     No owners — fetch /api/game/owners separately (snapshot-cached on the
+//     client). Slashes per-action read cost from O(world) to O(viewport).
+function parseBbox(url: URL): {
+  qMin: number;
+  qMax: number;
+  rMin: number;
+  rMax: number;
+} | null {
+  const qMin = Number(url.searchParams.get("qMin"));
+  const qMax = Number(url.searchParams.get("qMax"));
+  const rMin = Number(url.searchParams.get("rMin"));
+  const rMax = Number(url.searchParams.get("rMax"));
+  if (
+    !Number.isFinite(qMin) ||
+    !Number.isFinite(qMax) ||
+    !Number.isFinite(rMin) ||
+    !Number.isFinite(rMax)
+  ) {
+    return null;
+  }
+  if (qMin > qMax || rMin > rMax) return null;
+  return { qMin, qMax, rMin, rMax };
+}
+
 export async function GET(request: NextRequest) {
   try {
     const user = await getVerifiedUser(request);
     if (!user) return apiError("Authentication required", 401);
+
+    const url = new URL(request.url);
+    const bbox = parseBbox(url);
+    if (bbox) {
+      const tiles = await getMapTilesInBoundsServer(bbox);
+      return apiSuccess({ tiles });
+    }
+
     const [tiles, owners] = await Promise.all([
       getAllMapTilesServer(),
       getAllOwnerSummariesServer(),
