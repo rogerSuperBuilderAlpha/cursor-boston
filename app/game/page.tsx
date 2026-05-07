@@ -94,6 +94,17 @@ export default function GameDashboardPage() {
   const [renaming, setRenaming] = useState(false);
   const [renameInput, setRenameInput] = useState("");
 
+  // Merge updated tiles into the local owned-tile list by tileId. Used to
+  // patch state from action responses instead of triggering a full refetch.
+  const mergeOwnedTiles = useCallback((updates: MapTile[]) => {
+    if (updates.length === 0) return;
+    setTiles((prev) => {
+      const byId = new Map(prev.map((t) => [t.tileId, t] as const));
+      for (const u of updates) byId.set(u.tileId, u);
+      return Array.from(byId.values());
+    });
+  }, []);
+
   const fetchPlayer = useCallback(async () => {
     setError(null);
     if (!user) {
@@ -202,12 +213,12 @@ export default function GameDashboardPage() {
               : data.error?.message ?? "Failed to save name";
           throw new Error(msg);
         }
-        await fetchPlayer();
+        if (data.player) setPlayer(data.player as GamePlayer);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to save name");
       }
     },
-    [user, fetchPlayer]
+    [user]
   );
 
   const handleFrontierExplore = useCallback(
@@ -256,7 +267,12 @@ export default function GameDashboardPage() {
             `Claimed ${reports.length} / ${total}: ${data.stoppedEarly}`
           );
         }
-        await fetchPlayer();
+        // Merge action response into local state instead of refetching the
+        // dashboard. The bulk-explore endpoint returns updated player + new
+        // tiles[]; refetching /api/game/player and /api/game/world here would
+        // double the read cost of every action.
+        if (data.player) setPlayer(data.player as GamePlayer);
+        if (Array.isArray(data.tiles)) mergeOwnedTiles(data.tiles as MapTile[]);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Explore failed");
       } finally {
@@ -264,7 +280,7 @@ export default function GameDashboardPage() {
         setExploreProgress(null);
       }
     },
-    [user, fetchPlayer]
+    [user, mergeOwnedTiles]
   );
 
   const handleBulkDistribute = useCallback(
@@ -329,7 +345,8 @@ export default function GameDashboardPage() {
             `Stopped early after ${reports.length} / ${total}: ${data.stoppedEarly}`
           );
         }
-        await fetchPlayer();
+        if (data.player) setPlayer(data.player as GamePlayer);
+        if (Array.isArray(data.tiles)) mergeOwnedTiles(data.tiles as MapTile[]);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Distribute failed");
       } finally {
@@ -337,7 +354,7 @@ export default function GameDashboardPage() {
         setDistributeProgress(null);
       }
     },
-    [user, tiles, fetchPlayer]
+    [user, tiles, mergeOwnedTiles]
   );
 
   const handleAdminGrant = useCallback(async () => {
@@ -355,11 +372,11 @@ export default function GameDashboardPage() {
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.error?.message ?? "Grant failed");
-      await fetchPlayer();
+      if (data.player) setPlayer(data.player as GamePlayer);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Grant failed");
     }
-  }, [user, fetchPlayer]);
+  }, [user]);
 
   if (authLoading || loading) {
     return (
