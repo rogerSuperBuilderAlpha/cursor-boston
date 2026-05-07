@@ -20,12 +20,14 @@ export async function GET(request: NextRequest) {
     const user = await getVerifiedUser(request);
     if (!user) return apiError("Authentication required", 401);
     const player = await getPlayerServer(user.uid);
-    if (!player) return apiSuccess({ player: null, tiles: [] });
-    // Lightweight projection — strips neighborTileIds, upgradeIds, level,
-    // and timestamps from the per-tile payload. Tile detail page fetches
-    // the full GameTile separately via /api/game/tile/[tileId].
+    // Surface server-evaluated admin status so the dashboard can gate the
+    // admin-only "Grant 100 turns" button. The client otherwise has no
+    // reliable way to read this — `users/{uid}.isAdmin` is never written;
+    // admin is decided by token claims + legacy email allowlist server-side.
+    const isAdmin = Boolean(user.isAdmin);
+    if (!player) return apiSuccess({ player: null, tiles: [], isAdmin });
     const tiles = await getOwnedMapTilesServer(user.uid);
-    return apiSuccess({ player, tiles });
+    return apiSuccess({ player, tiles, isAdmin });
   } catch (error) {
     return mapGameError(error);
   }
