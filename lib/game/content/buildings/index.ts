@@ -5,8 +5,9 @@
  */
 
 import type { BuildingDefinition } from "../../types";
+import { BUILDING_SEEDS } from "./seeds";
 
-// Reserved for v2. Contributor PRs add new building files alongside this and
-// append to the BUILDINGS array. v1 ships with zero buildings — this empty
-// array is the v2 contract.
-export const BUILDINGS: BuildingDefinition[] = [];
+// One building per (caste, landType). Upgrades reference these by id.
+// Land type IS the building — assigning a tile to "military" / "food" /
+// "magic" places that caste's corresponding building on the tile.
+export const BUILDINGS: BuildingDefinition[] = BUILDING_SEEDS;

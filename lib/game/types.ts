@@ -29,6 +29,8 @@ export interface UnitDefinition {
   description: string;
 }
 
+export type SpellTier = 1 | 2 | 3 | 4 | 5;
+
 export interface SpellDefinition {
   id: string;
   caste: Caste;
@@ -39,15 +41,53 @@ export interface SpellDefinition {
   // (caster's magic-land soft-cap) × (caster's caste spellTypeBonus).
   baseStrength: number;
   description: string;
+  // Tiered access: tier 1 is always castable; higher tiers gate by territory size.
+  tier: SpellTier;
+  // Minimum tiles held required to cast/arm this spell (0 for tier 1).
+  minTilesRequired: number;
+  // Turn cost to cast or arm. Tier 1 spells cost 5; higher tiers cost more.
+  turnCost: number;
 }
 
 export interface BuildingDefinition {
   id: string;
   caste: Caste | "neutral";
+  // Which land type this building represents. The land type IS the building —
+  // a "military" tile is the per-caste military building.
+  landType: LandType;
   name: string;
   description: string;
   capacityBonus?: number;
   unitTypeAffinity?: { type: UnitType; multiplier: number };
+}
+
+// ──── v2: Unit & building upgrades ────
+
+export type UpgradeTargetKind = "unit" | "building";
+
+export interface UpgradeEffects {
+  // Flat deltas applied on top of the base unit/building.
+  attackDelta?: number;
+  defenseDelta?: number;
+  hpDelta?: number;
+  capacityBonusDelta?: number;
+  // Multiplicative magic-multiplier bonus for the player when this building
+  // upgrade is active on any tile they own (rare; e.g. magic-tower upgrades).
+  magicMultiplierDelta?: number;
+}
+
+export interface UpgradeDefinition {
+  id: string;
+  caste: Caste;
+  targetKind: UpgradeTargetKind;
+  // Unit id (e.g. "white-ground-pikeman") or building id ("white-military").
+  targetId: string;
+  name: string;
+  description: string;
+  effects: UpgradeEffects;
+  // 1..3 — purely informational; used by UI to label the three options as
+  // Offensive / Defensive / Utility, but not enforced by content rules.
+  optionIndex: 1 | 2 | 3;
 }
 
 export interface CasteProfile {
@@ -94,6 +134,11 @@ export interface GamePlayer {
   // turnsRemaining bucket. Used to make rollover idempotent.
   lastWeeklyGrantWeekStart?: string;
   productionSpellsActive: ActiveProductionSpell[];
+  // Map from upgrade target id (unit id or building id) → active upgrade id.
+  // Only one upgrade per target is active at a time. Optional on the type so
+  // legacy player docs without the field still parse; readers must coalesce
+  // to {} via getActiveUpgrades(player) before use.
+  activeUpgrades?: Record<string, string>;
   stats: PlayerStats;
   createdAt: Timestamp | Date;
   updatedAt: Timestamp | Date;
@@ -155,6 +200,9 @@ export interface CombatAttackerInput {
   offenseSpellId: string | null;
   magicLandCount: number;
   unitsAlive: number;
+  // Player's active upgrades (target id → upgrade id). Optional for legacy
+  // call sites; resolveAttack coalesces to {} if absent.
+  activeUpgrades?: Record<string, string>;
 }
 
 export interface CombatDefenderInput {
@@ -163,6 +211,7 @@ export interface CombatDefenderInput {
   armedDefenseSpellId: string | null;
   magicLandCount: number;
   unitsAlive: number;
+  activeUpgrades?: Record<string, string>;
 }
 
 export interface CombatTileInput {

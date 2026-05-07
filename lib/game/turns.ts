@@ -170,13 +170,16 @@ export function spendTurns(
 }
 
 // Shield wall: untargetable AND can't initiate attacks for the first 3 weeks
-// after creation OR until 300 turns have been spent — whichever is later.
+// after creation OR until 300 turns have been spent — whichever comes first.
+// Once a general has spent 300 turns, they've engaged enough to be fair game,
+// even if the calendar window hasn't elapsed; conversely, an inactive player
+// stops being protected once the 3-week window closes.
 export function isShieldActive(player: GamePlayer, now: Date = new Date()): boolean {
   const shieldUntilDate = asDate(player.shieldUntil);
   const stillInShieldPeriod = now < shieldUntilDate;
   const stillUnderTurnThreshold =
     player.turnsSpentTotal < player.shieldDropAtTurn;
-  return stillInShieldPeriod || stillUnderTurnThreshold;
+  return stillInShieldPeriod && stillUnderTurnThreshold;
 }
 
 export function isUnderdog(
