@@ -11,11 +11,9 @@ import { useRouter } from "next/navigation";
 import {
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
-  type WheelEvent as ReactWheelEvent,
 } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Caste, GamePlayer, MapTile, LandType } from "@/lib/game/types";
@@ -57,7 +55,14 @@ const SQRT3 = Math.sqrt(3);
 const VIEWPORT_PADDING = HEX_SIZE * 1.5;
 
 const MIN_SCALE = 0.3;
-const MAX_SCALE = 4;
+const MAX_SCALE = 6;
+// SVG viewBox is fixed; pan/zoom is applied via inner <g> transform. These
+// constants drive the "fit to content" math when the user clicks recenter.
+const VIEWBOX_W = 1200;
+const VIEWBOX_H = 800;
+// Leave a small breathing room around the fit so the outermost tiles aren't
+// clipped at the edge.
+const FIT_MARGIN = 0.95;
 const ZOOM_STEP = 1.15;
 
 function axialToPixel(q: number, r: number): { x: number; y: number } {
@@ -80,6 +85,42 @@ function hexPoints(cx: number, cy: number): string {
   ]
     .map(([x, y]) => `${x.toFixed(2)},${y.toFixed(2)}`)
     .join(" ");
+}
+
+/**
+ * Compute pan/zoom values that fit `tiles` inside the SVG viewBox with a
+ * small margin. Returns `null` if `tiles` is empty.
+ *
+ * The viewBox is centered at (0, 0) with extent VIEWBOX_W × VIEWBOX_H. After
+ * applying `scale * translate(tx, ty)` to the inner <g>, an axial-pixel
+ * point `(x, y)` maps to SVG `(scale * (x + tx), scale * (y + ty))`. We
+ * pick `tx, ty` to center the bbox at the origin and `scale` so the bbox
+ * fits.
+ */
+function fitTilesToViewport(
+  tiles: ReadonlyArray<MapTile>
+): { scale: number; tx: number; ty: number } | null {
+  if (tiles.length === 0) return null;
+  let minX = Number.POSITIVE_INFINITY;
+  let maxX = Number.NEGATIVE_INFINITY;
+  let minY = Number.POSITIVE_INFINITY;
+  let maxY = Number.NEGATIVE_INFINITY;
+  for (const t of tiles) {
+    const { x, y } = axialToPixel(t.q, t.r);
+    if (x < minX) minX = x;
+    if (x > maxX) maxX = x;
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+  }
+  const w = maxX - minX + 2 * VIEWPORT_PADDING;
+  const h = maxY - minY + 2 * VIEWPORT_PADDING;
+  const fit = Math.min(VIEWBOX_W / w, VIEWBOX_H / h) * FIT_MARGIN;
+  const scale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, fit));
+  return {
+    scale,
+    tx: -(minX + maxX) / 2,
+    ty: -(minY + maxY) / 2,
+  };
 }
 
 const TYPE_FILL: Record<LandType, string> = {
@@ -105,6 +146,12 @@ const TYPE_TEXT: Record<LandType, string> = {
   food: "#fff",
   magic: "#fff",
 };
+
+// Foreign-tile fill — high luminance so it pops against own tiles' saturated
+// type fills and against the dark map background. The caste-colored border
+// at width 3.5 carries the faction info; an inner colored dot retains type
+// info ("that white-bordered tile is a military land").
+const FOREIGN_FILL = "#f8fafc";
 
 // Caste-keyed border accent for foreign tiles. Picked to match the in-game
 // palette (white = stone, blue = sky, black = bone, red = ember, green = moss).
@@ -176,88 +223,61 @@ export default function TilesMapPage() {
     refresh();
   }, [authLoading, refresh]);
 
-  // Bounding box of every tile we know about. Drives the initial fit-to-screen
-  // and the visible viewBox.
-  const bbox = useMemo(() => {
-    if (tiles.length === 0) return null;
-    let minX = Number.POSITIVE_INFINITY;
-    let maxX = Number.NEGATIVE_INFINITY;
-    let minY = Number.POSITIVE_INFINITY;
-    let maxY = Number.NEGATIVE_INFINITY;
-    for (const t of tiles) {
-      const { x, y } = axialToPixel(t.q, t.r);
-      if (x < minX) minX = x;
-      if (x > maxX) maxX = x;
-      if (y < minY) minY = y;
-      if (y > maxY) maxY = y;
-    }
-    return {
-      x: minX - VIEWPORT_PADDING,
-      y: minY - VIEWPORT_PADDING,
-      width: maxX - minX + 2 * VIEWPORT_PADDING,
-      height: maxY - minY + 2 * VIEWPORT_PADDING,
-    };
-  }, [tiles]);
-
   // First-time fit: center the viewport on the player's own tiles so they
-  // know where they are. Runs once when player + tiles are first available,
-  // or when the user clicks the recenter (⌖) button (which flips didFit back).
+  // know where they are, and zoom so the *entire* kingdom fits. Runs once
+  // when player + tiles are first available, or when the user clicks the
+  // recenter (⌖) button (which flips didFit back).
   /* eslint-disable react-hooks/set-state-in-effect -- one-shot fit on data arrival */
   useEffect(() => {
     if (didFit || !player || tiles.length === 0) return;
     const own = tiles.filter((t) => t.ownerId === player.userId);
-    if (own.length === 0) {
-      if (bbox) {
-        setTx(-(bbox.x + bbox.width / 2));
-        setTy(-(bbox.y + bbox.height / 2));
-        setScale(1);
-      }
-      setDidFit(true);
-      return;
+    const fit = own.length > 0 ? fitTilesToViewport(own) : fitTilesToViewport(tiles);
+    if (fit) {
+      setTx(fit.tx);
+      setTy(fit.ty);
+      setScale(fit.scale);
     }
-    let minX = Number.POSITIVE_INFINITY;
-    let maxX = Number.NEGATIVE_INFINITY;
-    let minY = Number.POSITIVE_INFINITY;
-    let maxY = Number.NEGATIVE_INFINITY;
-    for (const t of own) {
-      const { x, y } = axialToPixel(t.q, t.r);
-      if (x < minX) minX = x;
-      if (x > maxX) maxX = x;
-      if (y < minY) minY = y;
-      if (y > maxY) maxY = y;
-    }
-    setTx(-(minX + maxX) / 2);
-    setTy(-(minY + maxY) / 2);
-    setScale(1);
     setDidFit(true);
-  }, [didFit, player, tiles, bbox]);
+  }, [didFit, player, tiles]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   // Wheel zoom around the cursor.
-  const handleWheel = useCallback(
-    (e: ReactWheelEvent<SVGSVGElement>) => {
-      if (!svgRef.current) return;
+  //
+  // Attached via `addEventListener({ passive: false })` in an effect below
+  // — React's synthetic `onWheel` listener is passive by default, so
+  // `e.preventDefault()` is silently dropped and the page scrolls behind
+  // the map when the user tries to zoom. Stored in a ref so the effect's
+  // attach/detach doesn't depend on the latest closure.
+  const wheelStateRef = useRef({ scale, tx, ty });
+  useEffect(() => {
+    wheelStateRef.current = { scale, tx, ty };
+  }, [scale, tx, ty]);
+
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const onWheelNative = (e: WheelEvent) => {
       e.preventDefault();
+      const { scale: s, tx: ttx, ty: tty } = wheelStateRef.current;
+      // macOS pinch-to-zoom on trackpads also fires wheel events with
+      // ctrlKey=true; same handler covers both.
       const factor = e.deltaY < 0 ? ZOOM_STEP : 1 / ZOOM_STEP;
-      const next = Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale * factor));
-      if (next === scale) return;
-      // Convert cursor to SVG-local coordinates so the point under the cursor
-      // stays put across the zoom step.
-      const rect = svgRef.current.getBoundingClientRect();
+      const next = Math.max(MIN_SCALE, Math.min(MAX_SCALE, s * factor));
+      if (next === s) return;
+      const rect = svg.getBoundingClientRect();
       const cx = e.clientX - rect.left;
       const cy = e.clientY - rect.top;
-      // World-space cursor position before the zoom.
-      const worldX = (cx - rect.width / 2) / scale - tx;
-      const worldY = (cy - rect.height / 2) / scale - ty;
-      // Solve for new tx, ty so that worldX/worldY map back to the same cx/cy.
+      const worldX = (cx - rect.width / 2) / s - ttx;
+      const worldY = (cy - rect.height / 2) / s - tty;
       const newTx = (cx - rect.width / 2) / next - worldX;
       const newTy = (cy - rect.height / 2) / next - worldY;
       setScale(next);
       setTx(newTx);
       setTy(newTy);
-    },
-    [scale, tx, ty]
-  );
+    };
+    svg.addEventListener("wheel", onWheelNative, { passive: false });
+    return () => svg.removeEventListener("wheel", onWheelNative);
+  }, []);
 
   const handlePointerDown = useCallback(
     (e: ReactPointerEvent<SVGSVGElement>) => {
@@ -417,7 +437,6 @@ export default function TilesMapPage() {
             <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden bg-neutral-50 dark:bg-neutral-950">
               <svg
                 ref={svgRef}
-                onWheel={handleWheel}
                 onPointerDown={handlePointerDown}
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}
@@ -440,24 +459,29 @@ export default function TilesMapPage() {
                     const { x, y } = axialToPixel(t.q, t.r);
                     const matched = filter === "all" || t.type === filter;
                     const isOwn = t.ownerId === player.userId;
+                    const isForeign = !!t.ownerId && !isOwn;
                     const owner = t.ownerId
                       ? ownersById.get(t.ownerId) ?? null
                       : null;
-                    const fill = TYPE_FILL[t.type];
+                    // Foreign tiles use a near-white fill + thick caste-colored
+                    // border so they read as "not yours" in one glance, even on
+                    // a busy map. Type info is preserved via an inner colored
+                    // dot rendered below the polygon.
+                    const fill = isForeign ? FOREIGN_FILL : TYPE_FILL[t.type];
                     const stroke = isOwn
                       ? TYPE_STROKE[t.type]
                       : owner?.caste
                       ? CASTE_BORDER[owner.caste]
                       : "#737373";
+                    const strokeWidth = isOwn ? 1.5 : isForeign ? 3.5 : 2.25;
                     const text = TYPE_TEXT[t.type];
                     const armed = !!t.armedDefenseSpellId;
                     const totalUnits =
                       t.units.ground + t.units.siege + t.units.air;
-                    const opacity = !matched
-                      ? 0.12
-                      : isOwn
-                      ? 1
-                      : 0.6;
+                    // Filter dimming still applies, but the muddy 0.6 wash on
+                    // foreign tiles is gone — the bright fill carries the
+                    // visual weight on its own.
+                    const opacity = matched ? 1 : 0.12;
                     return (
                       <g
                         key={t.tileId}
@@ -482,8 +506,20 @@ export default function TilesMapPage() {
                           points={hexPoints(x, y)}
                           fill={fill}
                           stroke={stroke}
-                          strokeWidth={isOwn ? 1.5 : 2.25}
+                          strokeWidth={strokeWidth}
                         />
+                        {/* Inner type-dot on foreign tiles preserves the
+                            tactical info (military / food / magic) that the
+                            white fill would otherwise hide. */}
+                        {isForeign && (t.type === "military" || t.type === "food" || t.type === "magic") && (
+                          <circle
+                            cx={x}
+                            cy={y}
+                            r={5}
+                            fill={TYPE_FILL[t.type]}
+                            style={{ pointerEvents: "none" }}
+                          />
+                        )}
                         {isOwn && (
                           <text
                             x={x}
