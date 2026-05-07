@@ -4,6 +4,7 @@
  * See LICENSE file for details.
  */
 
+// @contracts: questionsContract.myVotes (lib/api-schemas/questions.ts)
 import { NextRequest, NextResponse } from "next/server";
 import { getVerifiedUser } from "@/lib/server-auth";
 import {
@@ -12,10 +13,10 @@ import {
   AnswerNotFoundError,
 } from "@/lib/questions/service";
 import { logger } from "@/lib/logger";
-import { parseRequestBody } from "@/lib/api-response";
 import { getClientIdentifier } from "@/lib/rate-limit";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 import { sanitizeDocId } from "@/lib/sanitize";
+import { questionsContract } from "@/lib/api-schemas/questions";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,32 +39,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const bodyOrError = await parseRequestBody(request);
-    if (bodyOrError instanceof NextResponse) return bodyOrError;
-
-    const { targetType, targetId: rawTargetId, questionId: rawQId, type } = bodyOrError as {
-      targetType?: string;
-      targetId?: string;
-      questionId?: string;
-      type?: string;
-    };
-
-    if (targetType !== "question" && targetType !== "answer") {
-      return NextResponse.json({ error: "targetType must be 'question' or 'answer'" }, { status: 400 });
+    let rawBody: unknown;
+    try {
+      rawBody = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
+    }
+    const parsed = questionsContract.vote.body.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message ?? "Invalid body" },
+        { status: 400 }
+      );
     }
 
-    const targetId = sanitizeDocId(rawTargetId ?? "");
+    const { targetType, type } = parsed.data;
+    const targetId = sanitizeDocId(parsed.data.targetId);
     if (!targetId) {
       return NextResponse.json({ error: "Invalid target ID" }, { status: 400 });
     }
 
-    if (type !== "up" && type !== "down") {
-      return NextResponse.json({ error: "type must be 'up' or 'down'" }, { status: 400 });
-    }
-
     let questionId: string | undefined;
     if (targetType === "answer") {
-      questionId = sanitizeDocId(rawQId ?? "") ?? undefined;
+      questionId = sanitizeDocId(parsed.data.questionId ?? "") ?? undefined;
       if (!questionId) {
         return NextResponse.json({ error: "questionId required for answer votes" }, { status: 400 });
       }

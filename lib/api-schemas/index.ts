@@ -19,6 +19,7 @@ import { authContract } from "./auth";
 import { communityContract } from "./community";
 import { gameContract } from "./game";
 import { hackathonsContract } from "./hackathons";
+import { questionsContract } from "./questions";
 
 const c = initContract();
 
@@ -27,6 +28,7 @@ export const apiContract = c.router({
   community: communityContract,
   game: gameContract,
   hackathons: hackathonsContract,
+  questions: questionsContract,
 });
 
 export type ApiContract = typeof apiContract;

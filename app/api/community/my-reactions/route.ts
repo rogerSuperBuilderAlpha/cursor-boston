@@ -9,6 +9,7 @@ import { getVerifiedUser } from "@/lib/server-auth";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getClientIdentifier, checkRateLimit } from "@/lib/rate-limit";
 import type { ReactionType } from "@/types/feed";
+import { communityContract } from "@/lib/api-schemas/community";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -41,10 +42,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const raw = request.nextUrl.searchParams.get("messageIds") || "";
+    const queryParsed = communityContract.myReactions.query.safeParse({
+      messageIds: request.nextUrl.searchParams.get("messageIds") ?? "",
+    });
+    if (!queryParsed.success) {
+      return NextResponse.json(
+        { error: queryParsed.error.issues[0]?.message ?? "Invalid query" },
+        { status: 400 }
+      );
+    }
     const messageIds = [
       ...new Set(
-        raw
+        queryParsed.data.messageIds
           .split(",")
           .map((s) => s.trim())
           .filter(Boolean)

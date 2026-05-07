@@ -18,16 +18,14 @@ import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { logger } from "@/lib/logger";
-import { parseRequestBody } from "@/lib/api-response";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 import { sanitizeDocId } from "@/lib/sanitize";
+import { communityContract } from "@/lib/api-schemas/community";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const REPORT_RATE_LIMIT = { windowMs: 60 * 60 * 1000, maxRequests: 10 };
-const VALID_REASONS = new Set(["spam", "harassment", "hate", "self-harm", "other"]);
-const MAX_NOTES_LENGTH = 500;
 
 export async function POST(request: NextRequest) {
   try {
@@ -44,21 +42,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const bodyOrError = await parseRequestBody(request);
-    if (bodyOrError instanceof NextResponse) return bodyOrError;
-    const { targetMessageId, reason, notes } = bodyOrError;
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
+    }
+    const parsed = communityContract.report.body.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message ?? "Invalid body" },
+        { status: 400 }
+      );
+    }
+    const { targetMessageId, reason, notes } = parsed.data;
 
     const sanitizedId = sanitizeDocId(targetMessageId);
     if (!sanitizedId) {
       return NextResponse.json({ error: "Invalid targetMessageId" }, { status: 400 });
     }
-    if (typeof reason !== "string" || !VALID_REASONS.has(reason)) {
-      return NextResponse.json(
-        { error: `reason must be one of: ${Array.from(VALID_REASONS).join(", ")}` },
-        { status: 400 }
-      );
-    }
-    const trimmedNotes = typeof notes === "string" ? notes.slice(0, MAX_NOTES_LENGTH) : "";
+    const trimmedNotes = notes ?? "";
 
     const db = getAdminDb();
     if (!db) {

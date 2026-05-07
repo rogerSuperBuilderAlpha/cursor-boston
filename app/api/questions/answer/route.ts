@@ -11,11 +11,11 @@ import {
   QuestionNotFoundError,
 } from "@/lib/questions/service";
 import { logger } from "@/lib/logger";
-import { parseRequestBody } from "@/lib/api-response";
 import { getClientIdentifier } from "@/lib/rate-limit";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 import { sanitizeText, sanitizeDocId } from "@/lib/sanitize";
 import { getDisplayName } from "@/lib/utils";
+import { questionsContract } from "@/lib/api-schemas/questions";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,20 +38,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const bodyOrError = await parseRequestBody(request);
-    if (bodyOrError instanceof NextResponse) return bodyOrError;
+    let rawBody: unknown;
+    try {
+      rawBody = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
+    }
+    const parsed = questionsContract.answer.body.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message ?? "Invalid body" },
+        { status: 400 }
+      );
+    }
 
-    const { questionId: rawQId, body } = bodyOrError as {
-      questionId?: string;
-      body?: string;
-    };
-
-    const questionId = sanitizeDocId(rawQId ?? "");
+    const questionId = sanitizeDocId(parsed.data.questionId);
     if (!questionId) {
       return NextResponse.json({ error: "Invalid question ID" }, { status: 400 });
     }
 
-    const sanitizedBody = sanitizeText(body ?? "");
+    // Sanitize answer body; sanitization can shorten content so re-check length.
+    const sanitizedBody = sanitizeText(parsed.data.body);
     if (sanitizedBody.length < 20 || sanitizedBody.length > 5000) {
       return NextResponse.json(
         { error: "Answer must be between 20 and 5000 characters" },

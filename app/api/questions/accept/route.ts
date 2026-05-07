@@ -13,9 +13,9 @@ import {
   UnauthorizedError,
 } from "@/lib/questions/service";
 import { logger } from "@/lib/logger";
-import { parseRequestBody } from "@/lib/api-response";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 import { sanitizeDocId } from "@/lib/sanitize";
+import { questionsContract } from "@/lib/api-schemas/questions";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,16 +38,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const bodyOrError = await parseRequestBody(request);
-    if (bodyOrError instanceof NextResponse) return bodyOrError;
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
+    }
+    const parsed = questionsContract.accept.body.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message ?? "Invalid body" },
+        { status: 400 }
+      );
+    }
 
-    const { questionId: rawQId, answerId: rawAId } = bodyOrError as {
-      questionId?: string;
-      answerId?: string;
-    };
-
-    const questionId = sanitizeDocId(rawQId ?? "");
-    const answerId = sanitizeDocId(rawAId ?? "");
+    const questionId = sanitizeDocId(parsed.data.questionId);
+    const answerId = sanitizeDocId(parsed.data.answerId);
     if (!questionId || !answerId) {
       return NextResponse.json({ error: "Invalid question or answer ID" }, { status: 400 });
     }

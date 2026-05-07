@@ -22,18 +22,16 @@ import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { logger } from "@/lib/logger";
-import { parseRequestBody } from "@/lib/api-response";
 import {
   clampLimit,
   parseCursor,
   paginateFirestoreQuery,
   DEFAULT_PAGE_LIMIT,
 } from "@/lib/firestore-pagination";
+import { communityContract } from "@/lib/api-schemas/community";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const VALID_ACTIONS = new Set(["dismiss", "hide", "suspend"]);
 
 /**
  * GET /api/community/moderate
@@ -52,7 +50,18 @@ export async function GET(request: NextRequest) {
     const db = getAdminDb();
     if (!db) return NextResponse.json({ error: "Server not configured" }, { status: 500 });
 
-    const status = request.nextUrl.searchParams.get("status") ?? "open";
+    const queryParsed = communityContract.moderateList.query.safeParse({
+      status: request.nextUrl.searchParams.get("status") ?? undefined,
+      limit: request.nextUrl.searchParams.get("limit") ?? undefined,
+      cursor: request.nextUrl.searchParams.get("cursor") ?? undefined,
+    });
+    if (!queryParsed.success) {
+      return NextResponse.json(
+        { error: queryParsed.error.issues[0]?.message ?? "Invalid query" },
+        { status: 400 }
+      );
+    }
+    const status = queryParsed.data.status ?? "open";
     const limit = clampLimit(
       request.nextUrl.searchParams.get("limit"),
       DEFAULT_PAGE_LIMIT
@@ -104,19 +113,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Admin access required" }, { status: 403 });
     }
 
-    const bodyOrError = await parseRequestBody(request);
-    if (bodyOrError instanceof NextResponse) return bodyOrError;
-    const { reportId, action } = bodyOrError;
-
-    if (typeof reportId !== "string" || !reportId) {
-      return NextResponse.json({ error: "reportId is required" }, { status: 400 });
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
     }
-    if (typeof action !== "string" || !VALID_ACTIONS.has(action)) {
+    const parsed = communityContract.moderateAction.body.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: `action must be one of: ${Array.from(VALID_ACTIONS).join(", ")}` },
+        { error: parsed.error.issues[0]?.message ?? "Invalid body" },
         { status: 400 }
       );
     }
+    const { reportId, action } = parsed.data;
 
     const db = getAdminDb();
     if (!db) return NextResponse.json({ error: "Server not configured" }, { status: 500 });
