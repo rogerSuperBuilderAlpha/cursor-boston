@@ -7,14 +7,20 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getCasteProfile } from "@/lib/game/content";
 import {
   effectiveUnitCap,
   PRODUCTION_SPELL_DURATION_TURNS,
 } from "@/lib/game/turns";
+import {
+  computeTileThreat,
+  rankTileIdsByThreat,
+  type ThreatOwnerInfo,
+} from "@/lib/game/threat";
 import type {
+  Caste,
   GamePlayer,
   MapTile,
   TurnReport,
@@ -33,18 +39,71 @@ interface PlayerResponse {
   error?: PlayerResponseError | string;
 }
 
+interface OwnerSummary {
+  userId: string;
+  displayName: string;
+  caste: Caste | null;
+  shielded: boolean;
+}
+
+interface WorldResponse {
+  success: boolean;
+  tiles?: MapTile[];
+  owners?: OwnerSummary[];
+  error?: PlayerResponseError | string;
+}
+
 const UNITS_PER_CYCLE = 10;
 const TURNS_PER_CYCLE = 5;
+
+/**
+ * Distribute `totalCycles` build-cycles across `tileIds` (in threat-ranked
+ * order, top-threat first), favoring earlier entries. Linear weights:
+ * rank 0 gets weight N, rank N-1 gets weight 1, total = N(N+1)/2. The top
+ * tile receives roughly N times the bottom tile's share, with remainder
+ * cycles falling to the most-threatened tiles first.
+ *
+ * Returns plan entries with `cycles > 0` only.
+ */
+function buildThreatPriorityPlan(
+  threatRankedTileIds: ReadonlyArray<string>,
+  totalCycles: number
+): Array<{ tileId: string; cycles: number }> {
+  const N = threatRankedTileIds.length;
+  if (N === 0 || totalCycles <= 0) return [];
+  const weights = threatRankedTileIds.map((_, i) => N - i);
+  const totalWeight = weights.reduce((a, b) => a + b, 0);
+  const cycles = threatRankedTileIds.map((_, i) =>
+    Math.floor((totalCycles * weights[i]) / totalWeight)
+  );
+  let assigned = cycles.reduce((a, b) => a + b, 0);
+  // Top-down remainder allocation so the most-threatened tile picks up the
+  // leftover when totalCycles doesn't divide evenly.
+  let cursor = 0;
+  while (assigned < totalCycles) {
+    cycles[cursor % N]++;
+    assigned++;
+    cursor++;
+  }
+  return threatRankedTileIds
+    .map((tileId, idx) => ({ tileId, cycles: cycles[idx] }))
+    .filter((p) => p.cycles > 0);
+}
 
 export default function RecruitPage() {
   const { user, loading: authLoading } = useAuth();
   const [player, setPlayer] = useState<GamePlayer | null>(null);
   const [tiles, setTiles] = useState<MapTile[]>([]);
+  const [worldTiles, setWorldTiles] = useState<MapTile[]>([]);
+  const [owners, setOwners] = useState<Map<string, OwnerSummary>>(new Map());
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [unitType, setUnitType] = useState<UnitType>("ground");
   const [requestedUnits, setRequestedUnits] = useState(50);
+  // "" → auto-route by threat across all military tiles. Otherwise the
+  // user has explicitly picked one tile and 100% of the recruit goes there.
+  const [selectedTileId, setSelectedTileId] = useState<string>("");
   const [progress, setProgress] = useState<{
     done: number;
     total: number;
@@ -61,10 +120,15 @@ export default function RecruitPage() {
     setError(null);
     try {
       const token = await user.getIdToken();
-      const res = await fetch("/api/game/player", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = (await res.json()) as PlayerResponse;
+      const [playerRes, worldRes] = await Promise.all([
+        fetch("/api/game/player", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch("/api/game/world", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
+      const data = (await playerRes.json()) as PlayerResponse;
       if (!data.success) {
         const msg =
           typeof data.error === "string"
@@ -74,6 +138,13 @@ export default function RecruitPage() {
       }
       setPlayer(data.player);
       setTiles(data.tiles ?? []);
+      const worldData = (await worldRes.json()) as WorldResponse;
+      if (worldData.success) {
+        setWorldTiles(worldData.tiles ?? []);
+        const map = new Map<string, OwnerSummary>();
+        for (const o of worldData.owners ?? []) map.set(o.userId, o);
+        setOwners(map);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load");
     } finally {
@@ -87,9 +158,31 @@ export default function RecruitPage() {
     refresh();
   }, [authLoading, refresh]);
 
-  const militaryTiles = tiles.filter((t) => t.type === "military");
+  const militaryTiles = useMemo(
+    () => tiles.filter((t) => t.type === "military"),
+    [tiles]
+  );
   const foodTiles = tiles.filter((t) => t.type === "food");
   const magicTiles = tiles.filter((t) => t.type === "magic");
+
+  // Threat-ranked military-tile ids. Drives the auto-route distribution and
+  // the order tiles appear in the manual-override picker (most exposed at
+  // top is what a player wants to see).
+  const threatRankedMilitaryIds = useMemo(() => {
+    if (!player) return [] as string[];
+    const ownerInfo = new Map<string, ThreatOwnerInfo>();
+    for (const [uid, o] of owners) ownerInfo.set(uid, { shielded: o.shielded });
+    const threat = computeTileThreat({
+      myTiles: militaryTiles,
+      worldTiles,
+      owners: ownerInfo,
+      myUserId: player.userId,
+    });
+    return rankTileIdsByThreat(
+      militaryTiles.map((t) => t.tileId),
+      threat
+    );
+  }, [militaryTiles, worldTiles, owners, player]);
 
   // Compute the player's current effective unit cap. This mirrors what the
   // server uses inside buildUnitsServer so the displayed numbers match what
@@ -106,17 +199,38 @@ export default function RecruitPage() {
   const maxCycles = Math.min(maxCyclesByCap, maxCyclesByTurns);
   const maxUnits = maxCycles * UNITS_PER_CYCLE;
 
+  // Final units rounded to a multiple of UNITS_PER_CYCLE and bounded by cap.
+  const effectiveUnits = useMemo(
+    () =>
+      Math.max(
+        UNITS_PER_CYCLE,
+        Math.min(
+          maxUnits,
+          Math.floor(requestedUnits / UNITS_PER_CYCLE) * UNITS_PER_CYCLE
+        )
+      ),
+    [maxUnits, requestedUnits]
+  );
+  const effectiveCycles = Math.max(0, Math.floor(effectiveUnits / UNITS_PER_CYCLE));
+
+  // Distribution preview, used to render a transparent "this is where the
+  // units are going" line above the recruit button. Auto-routes by threat
+  // unless the user explicitly picked a tile.
+  const planPreview = useMemo(() => {
+    if (effectiveCycles === 0) return [];
+    if (selectedTileId) {
+      return [{ tileId: selectedTileId, cycles: effectiveCycles }];
+    }
+    return buildThreatPriorityPlan(threatRankedMilitaryIds, effectiveCycles);
+  }, [effectiveCycles, selectedTileId, threatRankedMilitaryIds]);
+
   const handleRecruit = useCallback(async () => {
     if (!user || !player) return;
     if (militaryTiles.length === 0) {
       setError("You have no military tiles to recruit from.");
       return;
     }
-    const units = Math.max(
-      UNITS_PER_CYCLE,
-      Math.min(maxUnits, Math.floor(requestedUnits / UNITS_PER_CYCLE) * UNITS_PER_CYCLE)
-    );
-    const totalCycles = Math.floor(units / UNITS_PER_CYCLE);
+    const totalCycles = effectiveCycles;
     if (totalCycles === 0) {
       setError("Not enough turns or capacity to recruit any units.");
       return;
@@ -131,17 +245,14 @@ export default function RecruitPage() {
     });
     try {
       const token = await user.getIdToken();
-      // Build a round-robin plan across military tiles so units distribute
-      // evenly. Aggregate consecutive cycles to the same tile into one entry
-      // so the server's plan stays small.
-      const cyclesPerTile: Map<string, number> = new Map();
-      for (let i = 0; i < totalCycles; i++) {
-        const tileId = militaryTiles[i % militaryTiles.length].tileId;
-        cyclesPerTile.set(tileId, (cyclesPerTile.get(tileId) ?? 0) + 1);
-      }
-      const plan = Array.from(cyclesPerTile.entries()).map(
-        ([tileId, cycles]) => ({ tileId, unitType, cycles })
-      );
+      const planEntries = selectedTileId
+        ? [{ tileId: selectedTileId, cycles: totalCycles }]
+        : buildThreatPriorityPlan(threatRankedMilitaryIds, totalCycles);
+      const plan = planEntries.map(({ tileId, cycles }) => ({
+        tileId,
+        unitType,
+        cycles,
+      }));
       const res = await fetch("/api/game/build/bulk", {
         method: "POST",
         headers: {
@@ -190,7 +301,16 @@ export default function RecruitPage() {
       setBusy(false);
       setProgress(null);
     }
-  }, [user, player, militaryTiles, maxUnits, requestedUnits, unitType, refresh]);
+  }, [
+    user,
+    player,
+    militaryTiles,
+    effectiveCycles,
+    selectedTileId,
+    threatRankedMilitaryIds,
+    unitType,
+    refresh,
+  ]);
 
   if (authLoading || loading) {
     return (
@@ -296,57 +416,88 @@ export default function RecruitPage() {
               bulk-assign panel or any tile&apos;s detail page.
             </p>
           ) : (
-            <div className="flex flex-wrap items-center gap-3">
-              <label className="text-sm">
-                Unit type:{" "}
-                <select
-                  value={unitType}
-                  onChange={(e) => setUnitType(e.target.value as UnitType)}
-                  disabled={busy}
-                  className="ml-2 px-2 py-1 border border-neutral-300 dark:border-neutral-700 rounded bg-transparent capitalize"
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <label className="text-sm">
+                  Unit type:{" "}
+                  <select
+                    value={unitType}
+                    onChange={(e) => setUnitType(e.target.value as UnitType)}
+                    disabled={busy}
+                    className="ml-2 px-2 py-1 border border-neutral-300 dark:border-neutral-700 rounded bg-transparent capitalize"
+                  >
+                    <option value="ground">ground</option>
+                    <option value="siege">siege</option>
+                    <option value="air">air</option>
+                  </select>
+                </label>
+                <label className="text-sm">
+                  Units (multiple of {UNITS_PER_CYCLE}):{" "}
+                  <input
+                    type="number"
+                    step={UNITS_PER_CYCLE}
+                    min={UNITS_PER_CYCLE}
+                    max={Math.max(UNITS_PER_CYCLE, maxUnits)}
+                    value={requestedUnits}
+                    onChange={(e) => {
+                      const n = Number.parseInt(e.target.value, 10);
+                      if (Number.isFinite(n)) setRequestedUnits(n);
+                    }}
+                    disabled={busy}
+                    className="w-24 px-2 py-1 ml-2 border border-neutral-300 dark:border-neutral-700 rounded bg-transparent"
+                  />
+                </label>
+                <label className="text-sm">
+                  Distribute to:{" "}
+                  <select
+                    value={selectedTileId}
+                    onChange={(e) => setSelectedTileId(e.target.value)}
+                    disabled={busy || militaryTiles.length === 0}
+                    className="ml-2 px-2 py-1 border border-neutral-300 dark:border-neutral-700 rounded bg-transparent"
+                  >
+                    <option value="">
+                      Auto — most-threatened tiles first
+                    </option>
+                    {threatRankedMilitaryIds.map((tileId, idx) => (
+                      <option key={tileId} value={tileId}>
+                        {tileId}
+                        {idx === 0 ? " (top threat)" : ""}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button
+                  onClick={handleRecruit}
+                  disabled={busy || maxCycles === 0}
+                  className="px-5 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
                 >
-                  <option value="ground">ground</option>
-                  <option value="siege">siege</option>
-                  <option value="air">air</option>
-                </select>
-              </label>
-              <label className="text-sm">
-                Units (multiple of {UNITS_PER_CYCLE}):{" "}
-                <input
-                  type="number"
-                  step={UNITS_PER_CYCLE}
-                  min={UNITS_PER_CYCLE}
-                  max={Math.max(UNITS_PER_CYCLE, maxUnits)}
-                  value={requestedUnits}
-                  onChange={(e) => {
-                    const n = Number.parseInt(e.target.value, 10);
-                    if (Number.isFinite(n)) setRequestedUnits(n);
-                  }}
-                  disabled={busy}
-                  className="w-24 px-2 py-1 ml-2 border border-neutral-300 dark:border-neutral-700 rounded bg-transparent"
-                />
-              </label>
-              <button
-                onClick={handleRecruit}
-                disabled={busy || maxCycles === 0}
-                className="px-5 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
-              >
-                {busy
-                  ? "Training units…"
-                  : `Recruit ${Math.min(
-                      maxUnits,
-                      Math.max(
-                        UNITS_PER_CYCLE,
-                        Math.floor(requestedUnits / UNITS_PER_CYCLE) *
-                          UNITS_PER_CYCLE
-                      )
-                    )} ${unitType}`}
-              </button>
-              <span className="text-xs text-neutral-500">
-                ({TURNS_PER_CYCLE} turns / {UNITS_PER_CYCLE} units · across{" "}
-                {militaryTiles.length} tile
-                {militaryTiles.length === 1 ? "" : "s"})
-              </span>
+                  {busy
+                    ? "Training units…"
+                    : `Recruit ${effectiveUnits} ${unitType}`}
+                </button>
+              </div>
+              <p className="text-xs text-neutral-500">
+                {TURNS_PER_CYCLE} turns / {UNITS_PER_CYCLE} units · across{" "}
+                {militaryTiles.length} military tile
+                {militaryTiles.length === 1 ? "" : "s"}.
+              </p>
+              {planPreview.length > 0 && (
+                <div className="rounded-md border border-emerald-200 dark:border-emerald-900/50 bg-white dark:bg-neutral-950 px-3 py-2 text-xs">
+                  <div className="font-medium mb-1">
+                    {selectedTileId ? "Routing to" : "Auto-routing units"}
+                  </div>
+                  <ul className="font-mono text-[11px] space-y-0.5 text-neutral-700 dark:text-neutral-300">
+                    {planPreview.map(({ tileId, cycles }, idx) => (
+                      <li key={tileId}>
+                        {tileId} +{cycles * UNITS_PER_CYCLE}
+                        {!selectedTileId && idx === 0 && planPreview.length > 1
+                          ? "  (most-threatened)"
+                          : ""}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
 
