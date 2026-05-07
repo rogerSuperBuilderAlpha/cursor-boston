@@ -149,24 +149,24 @@ describe("isShieldActive", () => {
     expect(isShieldActive(p, created)).toBe(true);
   });
 
-  it("drops only after BOTH the time window has elapsed AND 300 turns have been spent", () => {
+  it("drops as soon as EITHER the time window elapses OR 300 turns have been spent", () => {
     const created = new Date("2026-05-01T00:00:00.000Z");
     const after3Weeks = new Date(
       created.getTime() + (SHIELD_DURATION_WEEKS * 7 + 1) * 24 * 60 * 60 * 1000
     );
     const p1 = newPlayer("u", created);
-    // 3 weeks passed but only 100 turns spent → still shielded
-    const stillShielded: GamePlayer = { ...p1, turnsSpentTotal: 100 };
-    expect(isShieldActive(stillShielded, after3Weeks)).toBe(true);
-    // 300 turns spent but only 1 week passed → still shielded
+    // 3 weeks passed but only 100 turns spent → time elapsed, drops
+    const timeElapsed: GamePlayer = { ...p1, turnsSpentTotal: 100 };
+    expect(isShieldActive(timeElapsed, after3Weeks)).toBe(false);
+    // 350 turns spent but only 1 week passed → turn threshold crossed, drops
     const oneWeekLater = new Date(
       created.getTime() + 7 * 24 * 60 * 60 * 1000
     );
-    const stillShielded2: GamePlayer = { ...p1, turnsSpentTotal: 350 };
-    expect(isShieldActive(stillShielded2, oneWeekLater)).toBe(true);
-    // BOTH conditions satisfied → drops
-    const dropped: GamePlayer = { ...p1, turnsSpentTotal: 350 };
-    expect(isShieldActive(dropped, after3Weeks)).toBe(false);
+    const turnsCrossed: GamePlayer = { ...p1, turnsSpentTotal: 350 };
+    expect(isShieldActive(turnsCrossed, oneWeekLater)).toBe(false);
+    // Both still under: within 3 weeks AND under 300 turns → still shielded
+    const stillShielded: GamePlayer = { ...p1, turnsSpentTotal: 100 };
+    expect(isShieldActive(stillShielded, oneWeekLater)).toBe(true);
   });
 });
 

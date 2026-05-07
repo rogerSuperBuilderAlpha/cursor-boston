@@ -29,7 +29,7 @@ interface PlayerResponse {
   error?: PlayerResponseError | string;
 }
 
-const SPELL_TURN_COST = 5;
+// Per-spell turn cost is now read from spell.turnCost (varies by tier 1..5).
 
 export default function SpellsPage() {
   const { user, loading: authLoading } = useAuth();
@@ -197,7 +197,7 @@ export default function SpellsPage() {
     );
   }
 
-  const canSpend = player.turnsRemaining >= SPELL_TURN_COST;
+  const tilesHeld = player.stats?.tilesHeld ?? 0;
 
   return (
     <div className="min-h-screen py-12 px-6">
@@ -216,26 +216,21 @@ export default function SpellsPage() {
 
         <div className="rounded-lg border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/10 p-4 mb-6 text-sm leading-relaxed">
           <p className="mb-2">
-            Each caste has three spells, one per type:
+            Each caste has three spell lines (defense / offense / production)
+            and <strong>five tiers</strong> per line. Higher tiers unlock as
+            your territory grows:
           </p>
-          <ul className="list-disc ml-5 space-y-1">
-            <li>
-              <strong>Defense</strong> — pre-armed on a specific tile, persists
-              until consumed by an attacker.
-            </li>
-            <li>
-              <strong>Offense</strong> — attached at attack time from a tile&apos;s
-              attack form (not cast here).
-            </li>
-            <li>
-              <strong>Production</strong> — cast globally; affects your unit cap
-              or magic multiplier for the next 100 turns.
-            </li>
+          <ul className="list-disc ml-5 space-y-0.5 text-xs">
+            <li>Tier 1 — always available, 5 turns.</li>
+            <li>Tier 2 — 500 tiles held, 8 turns.</li>
+            <li>Tier 3 — 1,500 tiles held, 12 turns.</li>
+            <li>Tier 4 — 5,000 tiles held, 18 turns.</li>
+            <li>Tier 5 — 20,000 tiles held, 25 turns.</li>
           </ul>
-          <p className="mt-2">
-            Casts and arms each cost <strong>{SPELL_TURN_COST} turns</strong>.
-            Strength is multiplied at runtime by your magic-land soft-cap and
-            your caste&apos;s spell-type bonus.
+          <p className="mt-2 text-xs text-neutral-600 dark:text-neutral-400">
+            You currently hold{" "}
+            <strong className="font-mono">{tilesHeld}</strong> tiles. Locked
+            tiers are listed but not castable.
           </p>
         </div>
 
@@ -249,20 +244,25 @@ export default function SpellsPage() {
 
         <h2 className="text-lg font-semibold mb-3">Your spells</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          {casteSpells.map((s) => (
-            <SpellCard
-              key={s.id}
-              spell={s}
-              busy={busyId !== null}
-              busyForThis={busyId === s.id}
-              canSpend={canSpend}
-              armTargetTileId={armTargetTileId}
-              setArmTargetTileId={setArmTargetTileId}
-              armableTiles={armableTiles}
-              onCastProduction={() => castProduction(s.id)}
-              onArmDefense={() => armDefense(s.id)}
-            />
-          ))}
+          {casteSpells.map((s) => {
+            const unlocked = tilesHeld >= s.minTilesRequired;
+            const affordable = player.turnsRemaining >= s.turnCost;
+            return (
+              <SpellCard
+                key={s.id}
+                spell={s}
+                busy={busyId !== null}
+                busyForThis={busyId === s.id}
+                unlocked={unlocked}
+                affordable={affordable}
+                armTargetTileId={armTargetTileId}
+                setArmTargetTileId={setArmTargetTileId}
+                armableTiles={armableTiles}
+                onCastProduction={() => castProduction(s.id)}
+                onArmDefense={() => armDefense(s.id)}
+              />
+            );
+          })}
         </div>
 
         <h2 className="text-lg font-semibold mb-3">Active production spells</h2>
@@ -332,7 +332,8 @@ function SpellCard({
   spell,
   busy,
   busyForThis,
-  canSpend,
+  unlocked,
+  affordable,
   armTargetTileId,
   setArmTargetTileId,
   armableTiles,
@@ -342,39 +343,58 @@ function SpellCard({
   spell: SpellDefinition;
   busy: boolean;
   busyForThis: boolean;
-  canSpend: boolean;
+  unlocked: boolean;
+  affordable: boolean;
   armTargetTileId: string;
   setArmTargetTileId: (id: string) => void;
   armableTiles: MapTile[];
   onCastProduction: () => void;
   onArmDefense: () => void;
 }) {
+  const canAct = unlocked && affordable;
+  const buttonLabel = !unlocked
+    ? `Unlocks at ${spell.minTilesRequired.toLocaleString()} tiles`
+    : !affordable
+      ? "Not enough turns"
+      : "";
   return (
-    <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-4 flex flex-col">
-      <div className="flex items-baseline justify-between mb-1">
+    <div
+      className={`border rounded-lg p-4 flex flex-col ${
+        unlocked
+          ? "border-neutral-200 dark:border-neutral-800"
+          : "border-neutral-200 dark:border-neutral-800 opacity-60"
+      }`}
+    >
+      <div className="flex items-baseline justify-between mb-1 gap-2">
         <h3 className="font-semibold">{spell.name}</h3>
-        <span className="text-xs uppercase tracking-wide text-neutral-500">
-          {spell.type}
+        <span className="text-xs uppercase tracking-wide text-neutral-500 shrink-0">
+          T{spell.tier} · {spell.type}
         </span>
       </div>
       <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-3">
         {spell.description}
       </p>
       <div className="text-xs text-neutral-500 mb-3">
-        Base strength <strong>{spell.baseStrength}</strong>
+        Strength <strong>{spell.baseStrength}</strong> · cost{" "}
+        <strong>{spell.turnCost}t</strong>
+        {!unlocked && (
+          <span className="ml-2 text-amber-600 dark:text-amber-400">
+            🔒 {spell.minTilesRequired.toLocaleString()} tiles
+          </span>
+        )}
       </div>
 
       {spell.type === "production" && (
         <button
           onClick={onCastProduction}
-          disabled={busy || !canSpend}
+          disabled={busy || !canAct}
           className="mt-auto w-full px-4 py-2 text-sm bg-emerald-500 text-white rounded-lg hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {busyForThis
             ? "Casting…"
-            : canSpend
-              ? `Cast (${SPELL_TURN_COST} turns)`
-              : "Not enough turns"}
+            : canAct
+              ? `Cast (${spell.turnCost} turns)`
+              : buttonLabel}
         </button>
       )}
 
@@ -383,7 +403,7 @@ function SpellCard({
           <select
             value={armTargetTileId}
             onChange={(e) => setArmTargetTileId(e.target.value)}
-            disabled={busy}
+            disabled={busy || !unlocked}
             className="w-full px-2 py-1.5 text-sm border border-neutral-300 dark:border-neutral-700 rounded bg-transparent"
           >
             <option value="">Pick a tile to arm…</option>
@@ -395,14 +415,14 @@ function SpellCard({
           </select>
           <button
             onClick={onArmDefense}
-            disabled={busy || !canSpend || !armTargetTileId}
+            disabled={busy || !canAct || !armTargetTileId}
             className="w-full px-4 py-2 text-sm bg-emerald-500 text-white rounded-lg hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {busyForThis
               ? "Arming…"
-              : canSpend
-                ? `Arm (${SPELL_TURN_COST} turns)`
-                : "Not enough turns"}
+              : canAct
+                ? `Arm (${spell.turnCost} turns)`
+                : buttonLabel}
           </button>
         </div>
       )}
