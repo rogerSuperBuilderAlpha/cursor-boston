@@ -9,6 +9,11 @@ import { SPELLS_BY_ID, getCasteProfile } from "./content";
 import type { ActiveProductionSpell, GamePlayer, Phase } from "./types";
 
 export const WEEKLY_TURN_GRANT = 100;
+// Initial bucket granted at spawn. Larger than the weekly grant so a fresh
+// general can clear setup (assign 25 lands, pick a caste) and still have a
+// substantial pool for early recruiting / first attacks before the next
+// Sunday rollover refills the bucket.
+export const STARTING_TURN_GRANT = 300;
 export const SHIELD_DURATION_WEEKS = 3;
 export const SHIELD_TURN_THRESHOLD = 300;
 export const UNDERDOG_SIZE_RATIO = 0.5;
@@ -83,6 +88,32 @@ export interface NewPlayerOptions {
   initialPhase?: Phase;
   tilesHeld?: number;
   tilesExplored?: number;
+  displayName?: string;
+}
+
+// 3-32 chars; letters, digits, spaces, apostrophes, hyphens. No leading/trailing
+// whitespace. Trimmed before storage. Returns the cleaned name on success.
+export const GENERAL_NAME_MIN = 3;
+export const GENERAL_NAME_MAX = 32;
+const GENERAL_NAME_PATTERN = /^[A-Za-z0-9][A-Za-z0-9 '\-]*[A-Za-z0-9]$/;
+
+export function validateGeneralName(raw: string): string {
+  if (typeof raw !== "string") {
+    throw new Error("Name must be a string");
+  }
+  const trimmed = raw.trim();
+  if (trimmed.length < GENERAL_NAME_MIN) {
+    throw new Error(`Name must be at least ${GENERAL_NAME_MIN} characters`);
+  }
+  if (trimmed.length > GENERAL_NAME_MAX) {
+    throw new Error(`Name must be at most ${GENERAL_NAME_MAX} characters`);
+  }
+  if (!GENERAL_NAME_PATTERN.test(trimmed)) {
+    throw new Error(
+      "Name may contain only letters, digits, spaces, apostrophes, and hyphens"
+    );
+  }
+  return trimmed;
 }
 
 export function newPlayer(
@@ -95,8 +126,9 @@ export function newPlayer(
   );
   return {
     userId,
+    displayName: options.displayName ?? "",
     caste: null,
-    turnsRemaining: WEEKLY_TURN_GRANT,
+    turnsRemaining: STARTING_TURN_GRANT,
     turnsSpentTotal: 0,
     phase: options.initialPhase ?? "explore",
     tilesExplored: options.tilesExplored ?? 0,

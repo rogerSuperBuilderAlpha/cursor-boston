@@ -77,6 +77,10 @@ export interface PlayerStats {
 
 export interface GamePlayer {
   userId: string;
+  // The name the player picked for their general. Empty string for legacy
+  // players who spawned before names were required — the dashboard forces
+  // them through the picker on next visit.
+  displayName: string;
   caste: Caste | null;
   casteLockedAt?: Timestamp | Date;
   turnsRemaining: number;

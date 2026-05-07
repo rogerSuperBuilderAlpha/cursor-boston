@@ -13,6 +13,7 @@ import type { Caste, Phase } from "@/lib/game/types";
 
 interface LeaderRow {
   userId: string;
+  displayName: string;
   caste: Caste | null;
   phase: Phase;
   tilesHeld: number;
@@ -130,8 +131,10 @@ export default function LeaderboardPage() {
                   <td className="py-2 pr-2 font-mono text-neutral-500">
                     {i + 1}
                   </td>
-                  <td className="py-2 pr-2 font-mono text-xs">
-                    {r.userId === user.uid ? "You" : r.userId.slice(0, 10) + "…"}
+                  <td className="py-2 pr-2 text-sm">
+                    {r.userId === user.uid
+                      ? `${r.displayName || "You"} (you)`
+                      : r.displayName || "—"}
                   </td>
                   <td className="py-2 pr-2 capitalize">{r.caste ?? "—"}</td>
                   <td className="py-2 pr-2 text-right">{r.tilesHeld}</td>

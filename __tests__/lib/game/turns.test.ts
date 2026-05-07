@@ -8,6 +8,7 @@ import {
   PRODUCTION_SPELL_DURATION_TURNS,
   SHIELD_DURATION_WEEKS,
   SHIELD_TURN_THRESHOLD,
+  STARTING_TURN_GRANT,
   WEEKLY_TURN_GRANT,
   applyWeeklyGrant,
   canSpendTurns,
@@ -100,13 +101,13 @@ describe("newPlayer with v2 options", () => {
 });
 
 describe("newPlayer", () => {
-  it("starts at phase=explore with 100 turns and shield active", () => {
+  it("starts at phase=explore with the starting turn grant and shield active", () => {
     const created = new Date("2026-05-01T12:00:00.000Z");
     const p = newPlayer("user-1", created);
     expect(p.userId).toBe("user-1");
     expect(p.phase).toBe("explore");
     expect(p.caste).toBeNull();
-    expect(p.turnsRemaining).toBe(WEEKLY_TURN_GRANT);
+    expect(p.turnsRemaining).toBe(STARTING_TURN_GRANT);
     expect(p.turnsSpentTotal).toBe(0);
     expect(p.tilesExplored).toBe(0);
     expect(p.shieldDropAtTurn).toBe(SHIELD_TURN_THRESHOLD);
@@ -118,13 +119,13 @@ describe("spendTurns", () => {
   it("debits turnsRemaining and credits turnsSpentTotal", () => {
     const p = newPlayer("u", new Date("2026-05-01T00:00:00.000Z"));
     const after = spendTurns(p, 30);
-    expect(after.turnsRemaining).toBe(70);
+    expect(after.turnsRemaining).toBe(STARTING_TURN_GRANT - 30);
     expect(after.turnsSpentTotal).toBe(30);
   });
 
   it("throws when over-spending", () => {
     const p = newPlayer("u", new Date("2026-05-01T00:00:00.000Z"));
-    expect(() => spendTurns(p, 200)).toThrow();
+    expect(() => spendTurns(p, STARTING_TURN_GRANT + 1)).toThrow();
   });
 
   it("rejects negative spending", () => {
@@ -136,8 +137,8 @@ describe("spendTurns", () => {
 describe("canSpendTurns", () => {
   it("returns true when player has enough", () => {
     const p = newPlayer("u", new Date("2026-05-01T00:00:00.000Z"));
-    expect(canSpendTurns(p, 100)).toBe(true);
-    expect(canSpendTurns(p, 101)).toBe(false);
+    expect(canSpendTurns(p, STARTING_TURN_GRANT)).toBe(true);
+    expect(canSpendTurns(p, STARTING_TURN_GRANT + 1)).toBe(false);
   });
 });
 
