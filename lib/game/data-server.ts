@@ -70,6 +70,7 @@ import {
   type FrontierSample,
   distanceToNearestOwned,
   hexCentroid,
+  kingdomRadiusFromCentroid,
   ringCoords,
   riskScore,
 } from "./exploration";
@@ -463,8 +464,23 @@ export async function createPlayerWithSpawnServer(
     ]);
     if (playerSnap.exists) throw new GamePlayerAlreadyExistsError();
 
-    const playerCount = (metaSnap.data()?.playerCount as number) ?? 0;
-    const center = spawnCenterForPlayerIndex(playerCount);
+    const startingPlayerCount = (metaSnap.data()?.playerCount as number) ?? 0;
+    // The hex-spiral can land on a coord that an existing kingdom (planted
+    // under the old left-to-right grid) already occupies. Walk the spiral
+    // forward until the candidate center tile itself is unclaimed; the
+    // BFS in spawnPlayerLands handles small local conflicts beyond that.
+    const SPAWN_INDEX_MAX_RETRIES = 32;
+    let playerCount = startingPlayerCount;
+    let center = spawnCenterForPlayerIndex(playerCount);
+    for (let attempt = 0; attempt < SPAWN_INDEX_MAX_RETRIES; attempt++) {
+      const candidateId = tileIdFromAxial(center.q, center.r);
+      const candidateSnap = await tx.get(
+        db.collection(COLLECTIONS.TILES).doc(candidateId)
+      );
+      if (!candidateSnap.exists) break;
+      playerCount += 1;
+      center = spawnCenterForPlayerIndex(playerCount);
+    }
 
     const seed = `spawn-${userId}-${playerCount}`;
     const spawn = spawnPlayerLands({
@@ -2145,30 +2161,140 @@ export async function getPlayerEligibilityServer(
 // At our spacing this is roomy. If still nothing, refund the turn.
 const FRONTIER_MAX_RINGS = 12;
 
+// After this many tiles ever claimed via explore (v1 setup + v2 frontier
+// combined), the candidate picker switches from "ring-walk outward from the
+// owned-centroid" (which tightly globs new claims onto existing territory)
+// to a Monte Carlo sampler whose radius grows with each additional explore.
+// Pre-threshold keeps the random-then-glob feel of the early game; past it,
+// drops scatter further afield until they eventually reach other kingdoms.
+const EXPLORE_MONTE_CARLO_THRESHOLD = 150;
+// Random samples to try before falling back to a deterministic ring walk.
+const MONTE_CARLO_MAX_SAMPLES = 24;
+
+// Look up the owner of each of `coord`'s 6 neighbors and count those owned
+// by anyone other than `userId`. One batched getAll.
+async function countHostileNeighbors(
+  db: Firestore,
+  coord: AxialCoord,
+  userId: string
+): Promise<number> {
+  const ns = axialNeighbors(coord.q, coord.r);
+  const refs = ns.map((n) =>
+    db.collection(COLLECTIONS.TILES).doc(tileIdFromAxial(n.q, n.r))
+  );
+  const snaps = await db.getAll(...refs);
+  let hostileCount = 0;
+  for (const ns of snaps) {
+    if (!ns.exists) continue;
+    const data = ns.data();
+    if (data && data.ownerId && data.ownerId !== userId) hostileCount++;
+  }
+  return hostileCount;
+}
+
+async function buildFrontierSample(
+  db: Firestore,
+  userId: string,
+  coord: AxialCoord,
+  ownedTileIds: ReadonlyArray<string>
+): Promise<FrontierSample> {
+  const tileId = tileIdFromAxial(coord.q, coord.r);
+  const hostileCount = await countHostileNeighbors(db, coord, userId);
+  const distance = distanceToNearestOwned(coord, [...ownedTileIds]);
+  const distanceFinite = Number.isFinite(distance) ? distance : 0;
+  return {
+    tile: coord,
+    tileId,
+    distanceToCore: distanceFinite,
+    hostileNeighbors: hostileCount,
+    riskScore: riskScore({
+      hostileNeighbors: hostileCount,
+      distanceToCore: distanceFinite,
+    }),
+  };
+}
+
 /**
- * Pick an unclaimed tile coord adjacent to the player's territory and return
- * a FrontierSample describing it (distance, hostile-neighbor count, risk).
+ * Pick an unclaimed tile coord and return a FrontierSample describing it
+ * (distance, hostile-neighbor count, risk).
+ *
+ * Two-phase behavior:
+ *   - tilesExplored < EXPLORE_MONTE_CARLO_THRESHOLD: walk hex rings outward
+ *     from the owned-centroid (existing behavior). Drops cluster onto the
+ *     player's territory, naturally globbing into a contiguous kingdom.
+ *   - tilesExplored >= EXPLORE_MONTE_CARLO_THRESHOLD: Monte Carlo sample
+ *     within a radius that grows by +1 per explore past the threshold,
+ *     anchored on the centroid. Drops scatter outward and eventually reach
+ *     other kingdoms. Falls back to a ring walk over the same radius if too
+ *     many random picks collide with claimed tiles.
  *
  * The pre-fetch happens outside the transaction; the caller re-validates the
- * pick is still unclaimed inside the transaction. Returns null if no
- * unclaimed coord is found within FRONTIER_MAX_RINGS.
+ * pick is still unclaimed inside the transaction.
  */
 async function pickFrontierCandidate(
   db: Firestore,
   userId: string,
   ownedTileIds: ReadonlyArray<string>,
   tilesHeld: number,
+  tilesExplored: number,
   rng: () => number
 ): Promise<FrontierSample | null> {
   const center = hexCentroid([...ownedTileIds]);
-  const minRing = Math.max(1, 1 + Math.floor(tilesHeld / 40));
 
-  // Walk outward from minRing. For each ring, batch-getAll the coords and
-  // pick the first unclaimed one. Then a second getAll to count hostile
-  // neighbors at that coord.
-  for (let r = minRing; r <= FRONTIER_MAX_RINGS; r++) {
+  if (tilesExplored < EXPLORE_MONTE_CARLO_THRESHOLD) {
+    const minRing = Math.max(1, 1 + Math.floor(tilesHeld / 40));
+    return await pickByRingWalk(
+      db,
+      userId,
+      ownedTileIds,
+      center,
+      minRing,
+      FRONTIER_MAX_RINGS,
+      rng
+    );
+  }
+
+  const kingdomRadius = kingdomRadiusFromCentroid(center, ownedTileIds);
+  const extra = tilesExplored - EXPLORE_MONTE_CARLO_THRESHOLD;
+  // +1 keeps us at least one ring outside the current blob even at threshold.
+  const maxRadius = kingdomRadius + extra + 1;
+
+  for (let i = 0; i < MONTE_CARLO_MAX_SAMPLES; i++) {
+    const r = 1 + Math.floor(rng() * maxRadius);
+    const ring = ringCoords(center, r);
+    if (ring.length === 0) continue;
+    const c = ring[Math.floor(rng() * ring.length)];
+    const tileId = tileIdFromAxial(c.q, c.r);
+    const snap = await db.collection(COLLECTIONS.TILES).doc(tileId).get();
+    if (!snap.exists) {
+      return await buildFrontierSample(db, userId, c, ownedTileIds);
+    }
+  }
+
+  // Fallback: deterministic ring walk over the same radius range. Ensures we
+  // return *something* if random samples all happened to hit claimed tiles.
+  return await pickByRingWalk(
+    db,
+    userId,
+    ownedTileIds,
+    center,
+    1,
+    maxRadius,
+    rng
+  );
+}
+
+async function pickByRingWalk(
+  db: Firestore,
+  userId: string,
+  ownedTileIds: ReadonlyArray<string>,
+  center: AxialCoord,
+  minRing: number,
+  maxRing: number,
+  rng: () => number
+): Promise<FrontierSample | null> {
+  for (let r = minRing; r <= maxRing; r++) {
     const coords = ringCoords(center, r);
-    // In-place shuffle so direction varies. Fisher-Yates with our seeded rng.
     for (let i = coords.length - 1; i > 0; i--) {
       const j = Math.floor(rng() * (i + 1));
       [coords[i], coords[j]] = [coords[j], coords[i]];
@@ -2182,34 +2308,12 @@ async function pickFrontierCandidate(
 
     for (let i = 0; i < snaps.length; i++) {
       if (snaps[i].exists) continue;
-      const c = coords[i];
-      const tileId = tileIdFromAxial(c.q, c.r);
-
-      // Count hostile neighbors. getAll for the 6 neighbor refs.
-      const ns = axialNeighbors(c.q, c.r);
-      const neighborRefs = ns.map((n) =>
-        db.collection(COLLECTIONS.TILES).doc(tileIdFromAxial(n.q, n.r))
+      return await buildFrontierSample(
+        db,
+        userId,
+        coords[i],
+        ownedTileIds
       );
-      const neighborSnaps = await db.getAll(...neighborRefs);
-      let hostileCount = 0;
-      for (const ns of neighborSnaps) {
-        if (!ns.exists) continue;
-        const data = ns.data();
-        if (data && data.ownerId && data.ownerId !== userId) hostileCount++;
-      }
-
-      const distance = distanceToNearestOwned(c, [...ownedTileIds]);
-      const distanceFinite = Number.isFinite(distance) ? distance : 0;
-      return {
-        tile: c,
-        tileId,
-        distanceToCore: distanceFinite,
-        hostileNeighbors: hostileCount,
-        riskScore: riskScore({
-          hostileNeighbors: hostileCount,
-          distanceToCore: distanceFinite,
-        }),
-      };
     }
   }
   return null;
@@ -2255,6 +2359,7 @@ export async function frontierExploreServer(
     userId,
     ownedTileIds,
     playerPre.stats.tilesHeld,
+    playerPre.tilesExplored,
     candidateRng
   );
   if (sample === null) throw new GameFrontierExhaustedError();
@@ -2282,6 +2387,7 @@ export async function frontierExploreServer(
     }
 
     const turnsSpentTotal = player.turnsSpentTotal + 1;
+    const tilesExplored = player.tilesExplored + 1;
     const artifact = rollAndStageArtifact(
       tx,
       db,
@@ -2315,6 +2421,7 @@ export async function frontierExploreServer(
     tx.update(playerRef, {
       turnsRemaining: player.turnsRemaining - 1,
       turnsSpentTotal,
+      tilesExplored,
       stats: updatedStats,
       updatedAt: now,
     });
@@ -2342,6 +2449,7 @@ export async function frontierExploreServer(
         ...player,
         turnsRemaining: player.turnsRemaining - 1,
         turnsSpentTotal,
+        tilesExplored,
         stats: updatedStats,
         updatedAt: now,
       },
@@ -2352,16 +2460,89 @@ export async function frontierExploreServer(
   });
 }
 
+// Walk hex rings outward from `center`, batched-getAll each ring, accumulate
+// unclaimed coords. Stops when we hit `target` unclaimed coords or `maxRing`.
+async function collectUnclaimedByRingWalk(
+  db: Firestore,
+  center: AxialCoord,
+  minRing: number,
+  maxRing: number,
+  target: number,
+  rng: () => number
+): Promise<AxialCoord[]> {
+  const out: AxialCoord[] = [];
+  for (let r = minRing; r <= maxRing && out.length < target; r++) {
+    const coords = ringCoords(center, r);
+    for (let i = coords.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      [coords[i], coords[j]] = [coords[j], coords[i]];
+    }
+    if (coords.length === 0) continue;
+    const refs = coords.map((c) =>
+      db.collection(COLLECTIONS.TILES).doc(tileIdFromAxial(c.q, c.r))
+    );
+    const snaps = await db.getAll(...refs);
+    for (let i = 0; i < snaps.length; i++) {
+      if (!snaps[i].exists) out.push(coords[i]);
+      if (out.length >= target) break;
+    }
+  }
+  return out;
+}
+
+// Random sample distinct (ring, slot) coords within `maxRadius` of `center`,
+// batch-getAll each batch, accumulate unclaimed coords. Stops at `target`
+// unclaimed coords or `maxSamples` random tries (whichever first).
+async function collectUnclaimedByMonteCarlo(
+  db: Firestore,
+  center: AxialCoord,
+  maxRadius: number,
+  target: number,
+  maxSamples: number,
+  rng: () => number
+): Promise<AxialCoord[]> {
+  if (maxRadius <= 0) return [];
+  const out: AxialCoord[] = [];
+  const seen = new Set<string>();
+  // Sample in small batches so we can stop early without over-fetching.
+  const BATCH_SIZE = 8;
+  let samplesUsed = 0;
+  while (out.length < target && samplesUsed < maxSamples) {
+    const batch: AxialCoord[] = [];
+    while (batch.length < BATCH_SIZE && samplesUsed < maxSamples) {
+      samplesUsed++;
+      const r = 1 + Math.floor(rng() * maxRadius);
+      const ring = ringCoords(center, r);
+      if (ring.length === 0) continue;
+      const c = ring[Math.floor(rng() * ring.length)];
+      const id = tileIdFromAxial(c.q, c.r);
+      if (seen.has(id)) continue;
+      seen.add(id);
+      batch.push(c);
+    }
+    if (batch.length === 0) break;
+    const refs = batch.map((c) =>
+      db.collection(COLLECTIONS.TILES).doc(tileIdFromAxial(c.q, c.r))
+    );
+    const snaps = await db.getAll(...refs);
+    for (let i = 0; i < snaps.length; i++) {
+      if (!snaps[i].exists) out.push(batch[i]);
+      if (out.length >= target) break;
+    }
+  }
+  return out;
+}
+
 // Pre-fetches up to `count` unclaimed frontier coords + their hostile-neighbor
 // counts via batched getAlls, then claims all of them in ONE transaction.
 // Each step inside the txn rolls its own artifact (seeded by per-step turn
 // index) and emits a TurnReport.
 //
 // Algorithm:
-//   1. Outside txn: walk rings outward from the player's centroid, getAll the
-//      coords on each ring, accumulate unclaimed coords until we have ≥ count
-//      (with a small buffer so we can survive a few being claimed by the time
-//      we re-validate inside the txn).
+//   1. Outside txn: collect unclaimed coords. Pre-threshold uses a centroid
+//      ring walk (existing behavior); post-threshold uses Monte Carlo within
+//      a radius that grows with `tilesExplored`, falling back to a ring walk
+//      over the same radius if the random tries don't fill the batch.
 //   2. Outside txn: one batched getAll for the unique union of all picked
 //      coords' neighbors, to compute hostile-neighbor counts (presentation).
 //   3. Inside txn: re-read the picked candidates; for each that's still
@@ -2376,33 +2557,60 @@ async function pickFrontierCandidatesBulk(
   userId: string,
   ownedTileIds: ReadonlyArray<string>,
   tilesHeld: number,
+  tilesExplored: number,
   count: number,
   rng: () => number
 ): Promise<FrontierSample[]> {
   const center = hexCentroid([...ownedTileIds]);
-  const minRing = Math.max(1, 1 + Math.floor(tilesHeld / 40));
   const overscan = Math.max(5, Math.ceil(count * 1.5));
+  const useMonteCarlo = tilesExplored >= EXPLORE_MONTE_CARLO_THRESHOLD;
 
-  // Walk rings outward, collecting unclaimed coords until we have enough.
-  const unclaimed: AxialCoord[] = [];
-  for (
-    let r = minRing;
-    r <= FRONTIER_MAX_RINGS && unclaimed.length < overscan;
-    r++
-  ) {
-    const coords = ringCoords(center, r);
-    for (let i = coords.length - 1; i > 0; i--) {
-      const j = Math.floor(rng() * (i + 1));
-      [coords[i], coords[j]] = [coords[j], coords[i]];
-    }
-    if (coords.length === 0) continue;
-    const refs = coords.map((c) =>
-      db.collection(COLLECTIONS.TILES).doc(tileIdFromAxial(c.q, c.r))
+  let unclaimed: AxialCoord[] = [];
+
+  if (!useMonteCarlo) {
+    const minRing = Math.max(1, 1 + Math.floor(tilesHeld / 40));
+    unclaimed = await collectUnclaimedByRingWalk(
+      db,
+      center,
+      minRing,
+      FRONTIER_MAX_RINGS,
+      overscan,
+      rng
     );
-    const snaps = await db.getAll(...refs);
-    for (let i = 0; i < snaps.length; i++) {
-      if (!snaps[i].exists) unclaimed.push(coords[i]);
-      if (unclaimed.length >= overscan) break;
+  } else {
+    const kingdomRadius = kingdomRadiusFromCentroid(center, ownedTileIds);
+    const extra = tilesExplored - EXPLORE_MONTE_CARLO_THRESHOLD;
+    const maxRadius = kingdomRadius + extra + 1;
+    unclaimed = await collectUnclaimedByMonteCarlo(
+      db,
+      center,
+      maxRadius,
+      overscan,
+      // Sample budget: enough to fill the batch with comfortable misses.
+      Math.max(MONTE_CARLO_MAX_SAMPLES, overscan * 4),
+      rng
+    );
+    if (unclaimed.length < count) {
+      // Fill any remaining slots from a deterministic ring walk over the
+      // same radius range so a sparse-RNG run still returns a usable batch.
+      const fallback = await collectUnclaimedByRingWalk(
+        db,
+        center,
+        1,
+        maxRadius,
+        overscan - unclaimed.length,
+        rng
+      );
+      const seen = new Set(
+        unclaimed.map((c) => tileIdFromAxial(c.q, c.r))
+      );
+      for (const c of fallback) {
+        const id = tileIdFromAxial(c.q, c.r);
+        if (!seen.has(id)) {
+          unclaimed.push(c);
+          seen.add(id);
+        }
+      }
     }
   }
 
@@ -2503,6 +2711,7 @@ export async function bulkFrontierExploreServer(
     userId,
     ownedTileIds,
     playerPre.stats.tilesHeld,
+    playerPre.tilesExplored,
     count,
     candidateRng
   );
@@ -2525,6 +2734,7 @@ export async function bulkFrontierExploreServer(
 
     let turnsRemaining = player.turnsRemaining;
     let turnsSpentTotal = player.turnsSpentTotal;
+    let tilesExplored = player.tilesExplored;
     let tilesHeld = player.stats.tilesHeld;
     const reports: TurnReport[] = [];
     const tilesCreated: GameTile[] = [];
@@ -2556,6 +2766,7 @@ export async function bulkFrontierExploreServer(
 
       turnsRemaining -= 1;
       turnsSpentTotal += 1;
+      tilesExplored += 1;
       tilesHeld += 1;
 
       const artifact = rollAndStageArtifact(
@@ -2617,6 +2828,7 @@ export async function bulkFrontierExploreServer(
     tx.update(playerRef, {
       turnsRemaining,
       turnsSpentTotal,
+      tilesExplored,
       stats: { ...player.stats, tilesHeld },
       updatedAt: now,
     });
@@ -2626,6 +2838,7 @@ export async function bulkFrontierExploreServer(
         ...player,
         turnsRemaining,
         turnsSpentTotal,
+        tilesExplored,
         stats: { ...player.stats, tilesHeld },
         updatedAt: now,
       },

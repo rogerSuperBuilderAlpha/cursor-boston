@@ -8,6 +8,7 @@ import {
   distanceToNearestOwned,
   hexCentroid,
   hostileSpawnProbability,
+  kingdomRadiusFromCentroid,
   riskScore,
   ringCoords,
   sampleFrontierTile,
@@ -36,6 +37,21 @@ describe("distanceToNearestOwned", () => {
   it("finds the closest owned tile", () => {
     const d = distanceToNearestOwned({ q: 5, r: 0 }, ["0_0", "3_0", "10_10"]);
     expect(d).toBe(2);
+  });
+});
+
+describe("kingdomRadiusFromCentroid", () => {
+  it("returns 0 for empty owned set", () => {
+    expect(kingdomRadiusFromCentroid({ q: 0, r: 0 }, [])).toBe(0);
+  });
+
+  it("returns 0 when only the centroid tile is owned", () => {
+    expect(kingdomRadiusFromCentroid({ q: 0, r: 0 }, ["0_0"])).toBe(0);
+  });
+
+  it("returns the max hex-distance from centroid to any owned tile", () => {
+    const owned = ["0_0", "3_0", "0_5", "-2_-2"];
+    expect(kingdomRadiusFromCentroid({ q: 0, r: 0 }, owned)).toBe(5);
   });
 });
 
