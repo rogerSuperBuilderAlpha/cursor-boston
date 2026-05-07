@@ -45,7 +45,7 @@ Here's how you can join the community:
 
 We're kicking things off with a **Cursor Workshop at Hult International Business School**. This hands-on session will cover:
 
-- Deep Research for Academic Writing
+
 - First Job Success with AI tools
 - Professional Software Development
 - Startup Acceleration
@@ -58,5 +58,5 @@ We're thrilled to be building this community in Boston. See you at our first eve
 
 *— The Cursor Boston Team*
 
-*P.S. The librarian keeps a spare key under the welcome mat. The password is the same as it ever was: the two words every treasure-seeker knows.*
+
 
