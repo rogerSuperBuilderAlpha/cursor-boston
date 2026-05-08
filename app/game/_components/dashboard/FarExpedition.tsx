@@ -7,6 +7,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Mirrors FAR_EXPEDITION_TURN_COST in lib/game/data-server.ts. Hardcoded
 // here because the dashboard runs on the client and data-server.ts pulls
@@ -30,6 +31,7 @@ interface SuccessResult {
  * defense floor until you grow tiles around it.
  */
 export function FarExpedition({ turnsRemaining, onSuccess }: FarExpeditionProps) {
+  const { user } = useAuth();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<SuccessResult | null>(null);
@@ -37,11 +39,19 @@ export function FarExpedition({ turnsRemaining, onSuccess }: FarExpeditionProps)
   const canAfford = turnsRemaining >= FAR_EXPEDITION_TURN_COST;
 
   async function run() {
+    if (!user) {
+      setError("Sign in to launch an expedition.");
+      return;
+    }
     setBusy(true);
     setError(null);
     setResult(null);
     try {
-      const res = await fetch("/api/game/explore/far", { method: "POST" });
+      const token = await user.getIdToken();
+      const res = await fetch("/api/game/explore/far", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const body = await res.json();
       if (!res.ok || !body?.success) {
         // apiError() shape is { success:false, error:{ message, code } }; some
