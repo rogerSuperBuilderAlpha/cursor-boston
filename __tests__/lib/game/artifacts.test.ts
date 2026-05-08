@@ -82,9 +82,22 @@ describe("rollArtifact", () => {
       expect(a.name).toBeTruthy();
       expect(a.description).toBeTruthy();
       expect(a.flavorOnFind).toBeTruthy();
-      expect(a.baseStrength).toBeGreaterThan(0);
       expect(["common", "rare", "epic", "legendary"]).toContain(a.rarity);
-      expect(["offense", "defense", "production", "utility"]).toContain(a.type);
+      expect([
+        "offense",
+        "defense",
+        "production",
+        "utility",
+        "intel",
+      ]).toContain(a.type);
+      // Intel artifacts deliver information, not a strength buff — baseStrength
+      // is unused for them and conventionally set to 0.
+      if (a.type === "intel") {
+        expect(a.baseStrength).toBe(0);
+        expect(a.intelDepth).toBeDefined();
+      } else {
+        expect(a.baseStrength).toBeGreaterThan(0);
+      }
     }
   });
 

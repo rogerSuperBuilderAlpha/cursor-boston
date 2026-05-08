@@ -79,4 +79,16 @@ export const EPIC_ARTIFACTS: ArtifactDefinition[] = [
     flavorOnFind:
       "Wrapped in oiled cloth, hanging from a peg in a granary that no one has used for forty years. The grain inside is fresh.",
   },
+  {
+    id: "epic-black-mirror",
+    name: "Black Mirror",
+    rarity: "epic",
+    type: "intel",
+    intelDepth: "kingdom",
+    baseStrength: 0,
+    description:
+      "A polished disc of black volcanic glass. Reveals the target tile and a kingdom-wide audit of its owner — army, magic lands, active spells, artifact count.",
+    flavorOnFind:
+      "It rests face-down on a bare stone table in a room with no door. Turning it over, you see a face that is not yours, and a kingdom that is not yet yours.",
+  },
 ];

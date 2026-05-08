@@ -28,21 +28,24 @@ import { newPlayer } from "@/lib/game/turns";
 import type { GamePlayer } from "@/lib/game/types";
 
 describe("upgrade content", () => {
-  it("registers exactly 90 upgrades (45 unit + 45 building)", () => {
-    expect(ALL_UPGRADES.length).toBe(90);
-    expect(ALL_UPGRADES.filter((u) => u.targetKind === "unit").length).toBe(45);
+  it("registers exactly 95 upgrades (45 unit + 45 building + 5 air-intel)", () => {
+    // Each caste gets a 4th 'intel' option on its air unit; 5 castes → 5 extra.
+    expect(ALL_UPGRADES.length).toBe(95);
+    expect(ALL_UPGRADES.filter((u) => u.targetKind === "unit").length).toBe(50);
     expect(ALL_UPGRADES.filter((u) => u.targetKind === "building").length).toBe(
       45
     );
+    expect(ALL_UPGRADES.filter((u) => u.intelPassive).length).toBe(5);
   });
 
-  it("provides exactly three options per target", () => {
+  it("non-air targets have exactly three options; air units have four", () => {
     const byTarget = new Map<string, number>();
     for (const u of ALL_UPGRADES) {
       byTarget.set(u.targetId, (byTarget.get(u.targetId) ?? 0) + 1);
     }
-    for (const [, count] of byTarget) {
-      expect(count).toBe(3);
+    for (const [targetId, count] of byTarget) {
+      const expected = targetId.includes("-air-") ? 4 : 3;
+      expect(count).toBe(expected);
     }
   });
 

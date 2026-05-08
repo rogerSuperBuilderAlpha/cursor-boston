@@ -29,7 +29,10 @@ export async function POST(request: NextRequest) {
       artifactId: parsed.data.artifactId,
       targetTileId: parsed.data.targetTileId ?? null,
     });
-    return apiSuccess({ artifact: result.artifact });
+    return apiSuccess({
+      artifact: result.artifact,
+      ...(result.intelReport ? { intelReport: result.intelReport } : {}),
+    });
   } catch (error) {
     return mapGameError(error);
   }
