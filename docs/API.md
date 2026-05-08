@@ -8,7 +8,7 @@
 
 All endpoints are under `/api/`. Authentication uses Firebase Auth ID tokens (Bearer) or session cookies. Spec: [`/openapi.json`](https://cursorboston.com/openapi.json) · interactive: [`/api/docs`](https://cursorboston.com/api/docs).
 
-**141 paths, 174 operations across 31 areas.**
+**142 paths, 175 operations across 31 areas.**
 
 ---
 
@@ -145,6 +145,7 @@ _Strategy game endpoints (leaderboard, attacks, artifacts, turns)._
 | POST | `/api/game/explore/bulk` | Yes | Bulk frontier-explore (count required) |
 | GET | `/api/game/leaderboard` | Yes | Get the leaderboard ranked by tiles held |
 | GET | `/api/game/map/me` | Yes | Get the current user's personal map view (own tiles + enemy ring) |
+| POST | `/api/game/npc-weekly` | No | Cron-only weekly NPC turn-spender |
 | GET | `/api/game/player` | Yes | Get the current user's game profile + visible tiles |
 | PATCH | `/api/game/player` | Yes | Rename the current user's general (display name) |
 | POST | `/api/game/player` | Yes | Create the current user's game profile |
