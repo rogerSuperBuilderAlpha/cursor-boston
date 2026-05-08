@@ -61,7 +61,11 @@ export function SpyAction({
       });
       const body = await res.json();
       if (!res.ok || !body?.success) {
-        throw new Error(body?.error ?? `HTTP ${res.status}`);
+        const msg =
+          (typeof body?.error === "object" && body?.error?.message) ||
+          (typeof body?.error === "string" && body.error) ||
+          `HTTP ${res.status}`;
+        throw new Error(msg);
       }
       setReport(body.intelReport ?? null);
       setDetected(Boolean(body.detected));
