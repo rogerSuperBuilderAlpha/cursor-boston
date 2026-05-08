@@ -2956,6 +2956,10 @@ export async function farExpeditionExploreServer(
   report: TurnReport;
   artifact: GameArtifact | null;
   targetEnemyTileId: string;
+  // Enemy tile this expedition landed beside. Returned so the client can
+  // patch its local map cache and the threat-box reflects the new bordering
+  // general without a full reload.
+  enemyTile: GameTile | null;
 }> {
   const db = adminDbOrThrow();
 
@@ -3028,6 +3032,7 @@ export async function farExpeditionExploreServer(
   // enemies favored, but distant raids possible" without the !=
   // inequality query.
   const enemies: Array<{ q: number; r: number; id: string }> = [];
+  const enemyTileById = new Map<string, GameTile>();
   const PER_KINGDOM_TILE_CAP = Math.ceil(FAR_EXPEDITION_ENEMY_SAMPLE_CAP / 2);
   const KINGDOMS_TO_SAMPLE = Math.min(3, enemyPlayerIds.length);
   for (let k = 0; k < KINGDOMS_TO_SAMPLE; k++) {
@@ -3041,6 +3046,7 @@ export async function farExpeditionExploreServer(
     for (const doc of tilesSnap.docs) {
       const t = doc.data() as GameTile;
       enemies.push({ q: t.q, r: t.r, id: t.tileId });
+      enemyTileById.set(t.tileId, t);
       if (enemies.length >= FAR_EXPEDITION_ENEMY_SAMPLE_CAP) break;
     }
     if (enemies.length >= FAR_EXPEDITION_ENEMY_SAMPLE_CAP) break;
@@ -3206,6 +3212,7 @@ export async function farExpeditionExploreServer(
       report,
       artifact: rolled?.doc ?? null,
       targetEnemyTileId,
+      enemyTile: enemyTileById.get(targetEnemyTileId) ?? null,
     };
   });
 }
