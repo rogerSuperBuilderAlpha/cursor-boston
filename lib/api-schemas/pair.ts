@@ -18,23 +18,39 @@ const c = initContract();
 
 const PassthroughOk = z.object({}).passthrough();
 
-const SessionTypeEnum = z.enum([
-  "teach-me",
-  "build-together",
-  "code-review",
-  "explore-topic",
-]);
+const SessionTypeEnum = z.enum(
+  ["teach-me", "build-together", "code-review", "explore-topic"],
+  { errorMap: () => ({ message: "Invalid session type" }) }
+);
 
 const ProfilePostBody = z
   .object({
-    skillsCanTeach: z.array(z.string().max(500)).max(20),
-    skillsWantToLearn: z.array(z.string().max(500)).max(20),
-    preferredLanguages: z.array(z.string().max(500)).max(20).optional(),
-    preferredFrameworks: z.array(z.string().max(500)).max(20).optional(),
-    timezone: z.string().min(1),
+    skillsCanTeach: z
+      .array(z.string({ invalid_type_error: "Invalid array items" }).max(500), {
+        invalid_type_error: "Skills arrays must be present",
+      })
+      .max(20, "Array exceeds max length of 20"),
+    skillsWantToLearn: z
+      .array(z.string({ invalid_type_error: "Invalid array items" }).max(500), {
+        invalid_type_error: "Skills arrays must be present",
+      })
+      .max(20, "Array exceeds max length of 20"),
+    preferredLanguages: z
+      .array(z.string({ invalid_type_error: "Invalid array items" }).max(500))
+      .max(20, "Array exceeds max length of 20")
+      .optional(),
+    preferredFrameworks: z
+      .array(z.string({ invalid_type_error: "Invalid array items" }).max(500))
+      .max(20, "Array exceeds max length of 20")
+      .optional(),
+    timezone: z
+      .string({ required_error: "Timezone is required" })
+      .min(1, "Timezone is required"),
     availability: z.array(z.unknown()).optional(),
-    sessionTypes: z.array(SessionTypeEnum).min(1),
-    bio: z.string().max(1000).optional(),
+    sessionTypes: z
+      .array(SessionTypeEnum)
+      .min(1, "At least one session type is required"),
+    bio: z.string().max(1000, "Bio must be at most 1000 characters").optional(),
     isActive: z.boolean().optional(),
   })
   .passthrough()
@@ -46,7 +62,9 @@ const RequestQuery = z.object({
 
 const RequestPostBody = z
   .object({
-    toUserId: z.string().min(1),
+    toUserId: z
+      .string({ required_error: "toUserId is required" })
+      .min(1, "toUserId is required"),
     sessionType: SessionTypeEnum,
     message: z.string().min(1).max(1000),
     proposedTime: z.string().optional(),
@@ -55,7 +73,9 @@ const RequestPostBody = z
 
 const RespondBody = z
   .object({
-    requestId: z.string().min(1),
+    requestId: z
+      .string({ required_error: "requestId is required" })
+      .min(1, "requestId is required"),
     action: z.enum(["accept", "decline"]),
   })
   .openapi("PairRespondBody");

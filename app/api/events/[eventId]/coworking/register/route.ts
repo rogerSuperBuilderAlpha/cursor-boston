@@ -63,7 +63,15 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
 
     // Get session ID from body
-    const body = await request.json().catch(() => null);
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { success: false, error: "Invalid JSON in request body" },
+        { status: 400 }
+      );
+    }
     const parsed = eventsContract.coworkingRegister.body.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(

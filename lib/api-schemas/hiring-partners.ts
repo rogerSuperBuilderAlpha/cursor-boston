@@ -18,17 +18,21 @@ const c = initContract();
 
 const PassthroughOk = z.object({}).passthrough();
 
+// All fields are accepted as `unknown` so the route's `trimOrEmpty`
+// helper can coerce non-string values (numbers, objects, arrays) into
+// empty strings without surfacing a 400 to the user. Type contracts here
+// describe shape only; the route owns sanitization.
 const ApplyBody = z
   .object({
-    contactName: z.string().optional(),
-    phone: z.string().optional(),
-    companyName: z.string().optional(),
-    companyWebsite: z.string().optional(),
-    contactRole: z.string().optional(),
-    rolesHiring: z.string().optional(),
-    notes: z.string().optional(),
+    contactName: z.unknown().optional(),
+    phone: z.unknown().optional(),
+    companyName: z.unknown().optional(),
+    companyWebsite: z.unknown().optional(),
+    contactRole: z.unknown().optional(),
+    rolesHiring: z.unknown().optional(),
+    notes: z.unknown().optional(),
     engineerExpectations: z.record(z.unknown()).optional(),
-    engineerRequirements: z.string().optional(),
+    engineerRequirements: z.unknown().optional(),
   })
   .passthrough()
   .openapi("HiringPartnerApplyBody");

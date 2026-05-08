@@ -38,6 +38,16 @@ jest.mock("@/lib/api-response", () => ({
       return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     }
   }),
+  ErrorCode: {
+    UNAUTHORIZED: "UNAUTHORIZED",
+    FORBIDDEN: "FORBIDDEN",
+    NOT_FOUND: "NOT_FOUND",
+    VALIDATION_ERROR: "VALIDATION_ERROR",
+    RATE_LIMITED: "RATE_LIMITED",
+    CONFLICT: "CONFLICT",
+    SERVER_ERROR: "SERVER_ERROR",
+    NOT_CONFIGURED: "NOT_CONFIGURED",
+  },
 }));
 
 const mockGetVerifiedAgent = getVerifiedAgent as jest.MockedFunction<
