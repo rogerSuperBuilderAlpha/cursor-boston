@@ -18,8 +18,11 @@ import {
 import type { Caste, SpellType } from "@/lib/game/types";
 
 describe("spell content", () => {
-  it("registers 75 spells (5 castes × 3 types × 5 tiers)", () => {
-    expect(ALL_SPELLS.length).toBe(75);
+  it("registers 75 tiered spells (5 castes × 3 types × 5 tiers) plus 5 single-tier intel spells", () => {
+    // 75 from defense/offense/production tier ladders + 1 intel spell per
+    // caste = 80.
+    expect(ALL_SPELLS.length).toBe(80);
+    expect(ALL_SPELLS.filter((s) => s.type === "intel").length).toBe(5);
   });
 
   it("spell ids are unique", () => {
@@ -27,7 +30,7 @@ describe("spell content", () => {
     expect(ids.size).toBe(ALL_SPELLS.length);
   });
 
-  it("every (caste, type) has exactly five tiers", () => {
+  it("every (caste, type) has exactly five tiers for the offense/defense/production trio", () => {
     const castes: Caste[] = ["white", "blue", "black", "red", "green"];
     const types: SpellType[] = ["defense", "offense", "production"];
     for (const c of castes) {
@@ -36,6 +39,16 @@ describe("spell content", () => {
         expect(tiers.length).toBe(5);
         expect(tiers.map((s) => s.tier)).toEqual([1, 2, 3, 4, 5]);
       }
+    }
+  });
+
+  it("each caste has exactly one intel spell, gated at 1500 tiles, with an intelScope set", () => {
+    const castes: Caste[] = ["white", "blue", "black", "red", "green"];
+    for (const c of castes) {
+      const intel = getSpellsForCasteAndType(c, "intel");
+      expect(intel.length).toBe(1);
+      expect(intel[0].minTilesRequired).toBe(1500);
+      expect(intel[0].intelScope).toBeDefined();
     }
   });
 

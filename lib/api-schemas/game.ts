@@ -594,6 +594,39 @@ export const gameContract = c.router(
       },
       metadata: { errorCodes: ["UNAUTHORIZED", "SERVER_ERROR"] as const },
     },
+    farExpedition: {
+      method: "POST",
+      path: "/api/game/explore/far",
+      summary:
+        "Spend 2 turns to plant a tile adjacent to a random enemy tile (Far Expedition).",
+      body: z.object({}).optional(),
+      responses: {
+        200: ActionOkResponse.extend({
+          targetEnemyTileId: z.string(),
+        }),
+        ...baseErrorResponses,
+      },
+      metadata: { errorCodes: ["UNAUTHORIZED", "SERVER_ERROR"] as const },
+    },
+    spy: {
+      method: "POST",
+      path: "/api/game/spy",
+      summary: "Cast an intel ('spy') spell on an enemy tile.",
+      body: z.object({
+        spellId: z.string().min(1),
+        targetTileId: z.string().min(1),
+      }),
+      responses: {
+        200: ActionOkResponse.extend({
+          intelReport: z.object({}).passthrough(),
+          detected: z.boolean(),
+        }),
+        ...actionErrorResponses,
+      },
+      metadata: {
+        errorCodes: ["UNAUTHORIZED", "VALIDATION_ERROR", "SERVER_ERROR"] as const,
+      },
+    },
     exploreBulk: {
       method: "POST",
       path: "/api/game/explore/bulk",
@@ -662,6 +695,7 @@ export const gameContract = c.router(
           sourceTile: GameTileSchema,
           targetTile: GameTileSchema,
           report: TurnReportSchema,
+          intelReport: z.object({}).passthrough().optional(),
         }),
         ...actionErrorResponses,
       },
@@ -678,6 +712,7 @@ export const gameContract = c.router(
         200: z.object({
           success: z.literal(true),
           artifact: GameArtifactSchema,
+          intelReport: z.object({}).passthrough().optional(),
         }),
         ...actionErrorResponses,
       },

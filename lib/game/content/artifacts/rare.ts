@@ -131,4 +131,16 @@ export const RARE_ARTIFACTS: ArtifactDefinition[] = [
     flavorOnFind:
       "An old soldier ties it around the neck of your captain's horse and slips off into the trees.",
   },
+  {
+    id: "rare-crystal-lens",
+    name: "Crystal Lens",
+    rarity: "rare",
+    type: "intel",
+    intelDepth: "ring",
+    baseStrength: 0,
+    description:
+      "A faceted lens that draws nearby places into focus. Reveals an enemy tile and all six surrounding tiles — units, types, owners.",
+    flavorOnFind:
+      "It rests on a velvet cloth in an empty inn. Looking through it, you see the road outside, and also the road three valleys over.",
+  },
 ];

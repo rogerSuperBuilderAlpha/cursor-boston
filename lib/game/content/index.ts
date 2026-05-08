@@ -36,18 +36,23 @@ import { WHITE_GROUND_UNIT } from "./units/white/ground";
 import { WHITE_SIEGE_UNIT } from "./units/white/siege";
 
 import { BLACK_DEFENSE_SPELLS } from "./spells/black/defense";
+import { BLACK_INTEL_SPELLS } from "./spells/black/intel";
 import { BLACK_OFFENSE_SPELLS } from "./spells/black/offense";
 import { BLACK_PRODUCTION_SPELLS } from "./spells/black/production";
 import { BLUE_DEFENSE_SPELLS } from "./spells/blue/defense";
+import { BLUE_INTEL_SPELLS } from "./spells/blue/intel";
 import { BLUE_OFFENSE_SPELLS } from "./spells/blue/offense";
 import { BLUE_PRODUCTION_SPELLS } from "./spells/blue/production";
 import { GREEN_DEFENSE_SPELLS } from "./spells/green/defense";
+import { GREEN_INTEL_SPELLS } from "./spells/green/intel";
 import { GREEN_OFFENSE_SPELLS } from "./spells/green/offense";
 import { GREEN_PRODUCTION_SPELLS } from "./spells/green/production";
 import { RED_DEFENSE_SPELLS } from "./spells/red/defense";
+import { RED_INTEL_SPELLS } from "./spells/red/intel";
 import { RED_OFFENSE_SPELLS } from "./spells/red/offense";
 import { RED_PRODUCTION_SPELLS } from "./spells/red/production";
 import { WHITE_DEFENSE_SPELLS } from "./spells/white/defense";
+import { WHITE_INTEL_SPELLS } from "./spells/white/intel";
 import { WHITE_OFFENSE_SPELLS } from "./spells/white/offense";
 import { WHITE_PRODUCTION_SPELLS } from "./spells/white/production";
 
@@ -66,10 +71,15 @@ export const ALL_UNITS: UnitDefinition[] = [
 
 export const ALL_SPELLS: SpellDefinition[] = [
   ...WHITE_DEFENSE_SPELLS, ...WHITE_OFFENSE_SPELLS, ...WHITE_PRODUCTION_SPELLS,
+  ...WHITE_INTEL_SPELLS,
   ...BLUE_DEFENSE_SPELLS, ...BLUE_OFFENSE_SPELLS, ...BLUE_PRODUCTION_SPELLS,
+  ...BLUE_INTEL_SPELLS,
   ...BLACK_DEFENSE_SPELLS, ...BLACK_OFFENSE_SPELLS, ...BLACK_PRODUCTION_SPELLS,
+  ...BLACK_INTEL_SPELLS,
   ...RED_DEFENSE_SPELLS, ...RED_OFFENSE_SPELLS, ...RED_PRODUCTION_SPELLS,
+  ...RED_INTEL_SPELLS,
   ...GREEN_DEFENSE_SPELLS, ...GREEN_OFFENSE_SPELLS, ...GREEN_PRODUCTION_SPELLS,
+  ...GREEN_INTEL_SPELLS,
 ];
 
 export const ALL_BUILDINGS: BuildingDefinition[] = BUILDINGS;

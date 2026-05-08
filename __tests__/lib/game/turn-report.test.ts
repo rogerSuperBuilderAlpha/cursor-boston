@@ -165,6 +165,7 @@ describe("buildAttackReport", () => {
       attackerLosses: { ground: 23, siege: 0, air: 0 },
       defenderLosses: { ground: 41, siege: 0, air: 0 },
       underdogApplied: false,
+      supplyMultiplier: 1,
       rng: { attackerRoll: 1, defenderRoll: 1 },
       appliedSpells: { offenseId: null, defenseId: null },
     };

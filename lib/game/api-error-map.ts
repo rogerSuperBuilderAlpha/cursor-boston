@@ -21,6 +21,7 @@ import {
   GameInvalidPhaseError,
   GameInvalidSpellError,
   GameNameTakenError,
+  GameNoEnemyKingdomsError,
   GameNoUnrevealedTilesError,
   GameNotAdjacentError,
   GamePlayerAlreadyExistsError,
@@ -71,6 +72,7 @@ export function mapGameError(error: unknown): NextResponse {
     error instanceof GameUnitCapExceededError ||
     error instanceof GameTileTypeError ||
     error instanceof GameFrontierExhaustedError ||
+    error instanceof GameNoEnemyKingdomsError ||
     error instanceof GameArtifactAlreadyUsedError ||
     error instanceof GameNameTakenError ||
     error instanceof UpgradeAlreadyActiveError ||
