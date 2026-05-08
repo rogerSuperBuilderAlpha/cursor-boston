@@ -136,6 +136,9 @@ Register at POST /api/agents/register to get a key.
 
 ## API (${endpointCount} endpoints)
 
+Machine-readable spec: https://cursorboston.com/openapi.json
+Interactive Swagger UI: https://cursorboston.com/api/docs
+
 ${formatEndpoints(sections)}
 ## Error Format
 
