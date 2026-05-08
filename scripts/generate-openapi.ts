@@ -85,6 +85,38 @@ openApiDoc.components = {
   securitySchemes: SECURITY_SCHEMES,
 };
 
+/**
+ * Per-operation security: ts-rest's generator doesn't propagate `security`
+ * from contract metadata into the spec. Heuristic: if an operation declares
+ * a 401 response, it requires authentication — emit `security: [bearerAuth,
+ * cookieAuth]` for it. Operations without 401 (public endpoints, cron
+ * routes that 403, webhooks with custom auth) are left as unauthenticated.
+ */
+const HTTP_METHODS = [
+  "get",
+  "post",
+  "put",
+  "patch",
+  "delete",
+  "options",
+  "head",
+] as const;
+
+let authedOps = 0;
+for (const pathItem of Object.values(openApiDoc.paths ?? {})) {
+  if (!pathItem || typeof pathItem !== "object") continue;
+  for (const method of HTTP_METHODS) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const op = (pathItem as Record<string, any>)[method];
+    if (!op || typeof op !== "object") continue;
+    const responses = (op.responses ?? {}) as Record<string, unknown>;
+    if ("401" in responses) {
+      op.security = [{ bearerAuth: [] }, { cookieAuth: [] }];
+      authedOps += 1;
+    }
+  }
+}
+
 mkdirSync(dirname(OUTPUT_PATH), { recursive: true });
 writeFileSync(OUTPUT_PATH, JSON.stringify(openApiDoc, null, 2) + "\n", "utf8");
 
@@ -95,5 +127,5 @@ const operationCount = Object.values(openApiDoc.paths ?? {}).reduce(
 console.log(
   `[openapi] Wrote ${OUTPUT_PATH} — ${
     Object.keys(openApiDoc.paths ?? {}).length
-  } paths, ${operationCount} operations.`
+  } paths, ${operationCount} operations (${authedOps} require auth).`
 );
