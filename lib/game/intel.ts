@@ -154,7 +154,10 @@ export async function buildIntelReportServer(args: {
   return report;
 }
 
-function pickWeakFace(units: UnitStack): UnitType | undefined {
+// Exported for unit tests. The "weak face" of a defender stack is the
+// unit type their dominant slot is countered by under the standard
+// air→ground→siege→air RPS — i.e. what an attacker should lead with.
+export function pickWeakFace(units: UnitStack): UnitType | undefined {
   let max = 0;
   let dominant: UnitType | undefined;
   for (const t of UNIT_TYPES) {
