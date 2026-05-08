@@ -27,6 +27,10 @@ export interface DashboardMutators {
     update: (prev: TurnReport[]) => TurnReport[]
   ) => void;
   mergeOwnedTiles: (updates: MapTile[]) => void;
+  /** Update enemy/border tiles in the dashboard's worldTiles state and the
+   *  localStorage map cache. Used by Far Expedition and Attack to surface
+   *  newly-adjacent enemy tiles in the threat box without a page reload. */
+  mergeBorderTiles: (updates: MapTile[]) => void;
 }
 
 /** Common error-message extraction for `data.error` (string | object). */
@@ -187,6 +191,89 @@ export async function bulkDistribute(
     mut.setError(e instanceof Error ? e.message : "Distribute failed");
   } finally {
     setProgress(null);
+  }
+}
+
+/**
+ * POST /api/game/explore/far — spend 2 turns to plant a tile next to a
+ * random enemy. Patches local state from the response so the threat box
+ * + supply UI reflect the new bordering general without a reload.
+ */
+export async function farExpedition(
+  user: User,
+  mut: DashboardMutators
+): Promise<{ tileId: string; enemyTileId: string } | null> {
+  mut.setError(null);
+  try {
+    const token = await user.getIdToken();
+    const res = await fetch("/api/game/explore/far", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    if (!data.success) {
+      throw new Error(asErrorMessage(data, "Far Expedition failed"));
+    }
+    if (data.player) mut.setPlayer(data.player as GamePlayer);
+    if (data.tile) mut.mergeOwnedTiles([data.tile as MapTile]);
+    // Order matters: the cache's border-tile router checks "does this tile
+    // touch one of mine?" against the snapshot of myTiles taken before the
+    // current merge. Adding the new owned tile first lets the enemy tile
+    // be recognized as a border tile in the second call.
+    if (data.enemyTile) mut.mergeBorderTiles([data.enemyTile as MapTile]);
+    if (data.report) {
+      mut.setRecentReports((prev) =>
+        [data.report as TurnReport, ...prev].slice(0, 50)
+      );
+    }
+    return {
+      tileId: (data.tile as MapTile | undefined)?.tileId ?? "",
+      enemyTileId: (data.targetEnemyTileId as string | undefined) ?? "",
+    };
+  } catch (e) {
+    mut.setError(e instanceof Error ? e.message : "Far Expedition failed");
+    return null;
+  }
+}
+
+/**
+ * POST /api/game/spy — cast the player's caste intel spell on a target
+ * enemy tile. Returns the IntelReport for inline display.
+ */
+export async function castIntelSpell(
+  user: User,
+  spellId: string,
+  targetTileId: string,
+  mut: DashboardMutators
+): Promise<{ intelReport: unknown; detected: boolean } | null> {
+  mut.setError(null);
+  try {
+    const token = await user.getIdToken();
+    const res = await fetch("/api/game/spy", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ spellId, targetTileId }),
+    });
+    const data = await res.json();
+    if (!data.success) {
+      throw new Error(asErrorMessage(data, "Spy spell failed"));
+    }
+    if (data.player) mut.setPlayer(data.player as GamePlayer);
+    if (data.report) {
+      mut.setRecentReports((prev) =>
+        [data.report as TurnReport, ...prev].slice(0, 50)
+      );
+    }
+    return {
+      intelReport: data.intelReport,
+      detected: Boolean(data.detected),
+    };
+  } catch (e) {
+    mut.setError(e instanceof Error ? e.message : "Spy spell failed");
+    return null;
   }
 }
 

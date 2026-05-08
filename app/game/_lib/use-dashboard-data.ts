@@ -18,7 +18,9 @@ import type {
 import {
   adminGrant,
   bulkDistribute,
+  castIntelSpell,
   createPlayer,
+  farExpedition,
   frontierExplore,
   setPlayerName,
   type DashboardMutators,
@@ -92,11 +94,33 @@ export function useDashboardData() {
     [user]
   );
 
+  /**
+   * Patch the dashboard's worldTiles (border ring) state + the
+   * localStorage cache. The cache lib auto-routes by ownerId, so we just
+   * forward updates and update local state for non-self owners.
+   */
+  const mergeBorderTiles = useCallback(
+    (updates: MapTile[]) => {
+      if (updates.length === 0 || !user) return;
+      const otherOwners = updates.filter((u) => u.ownerId && u.ownerId !== user.uid);
+      if (otherOwners.length > 0) {
+        setWorldTiles((prev) => {
+          const byId = new Map(prev.map((t) => [t.tileId, t] as const));
+          for (const u of otherOwners) byId.set(u.tileId, u);
+          return Array.from(byId.values());
+        });
+      }
+      mergeTilesIntoCache(user.uid, updates);
+    },
+    [user]
+  );
+
   const mut: DashboardMutators = {
     setError,
     setPlayer,
     setRecentReports,
     mergeOwnedTiles,
+    mergeBorderTiles,
   };
 
   const fetchPlayer = useCallback(async () => {
@@ -188,6 +212,21 @@ export function useDashboardData() {
     await adminGrant(user, { setError, setPlayer });
   }, [user]);
 
+  const handleFarExpedition = useCallback(async () => {
+    if (!user) return null;
+    return farExpedition(user, mut);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mut is rebuilt every render but its members are stable
+  }, [user, mergeOwnedTiles, mergeBorderTiles]);
+
+  const handleCastIntelSpell = useCallback(
+    async (spellId: string, targetTileId: string) => {
+      if (!user) return null;
+      return castIntelSpell(user, spellId, targetTileId, mut);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mut is rebuilt every render but its members are stable
+    [user]
+  );
+
   return {
     user,
     authLoading,
@@ -220,6 +259,8 @@ export function useDashboardData() {
     handleCreatePlayer,
     handleSetName,
     handleAdminGrant,
+    handleFarExpedition,
+    handleCastIntelSpell,
   };
 }
 

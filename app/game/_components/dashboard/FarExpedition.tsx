@@ -7,7 +7,6 @@
 "use client";
 
 import { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 
 // Mirrors FAR_EXPEDITION_TURN_COST in lib/game/data-server.ts. Hardcoded
 // here because the dashboard runs on the client and data-server.ts pulls
@@ -16,8 +15,7 @@ const FAR_EXPEDITION_TURN_COST = 2;
 
 interface FarExpeditionProps {
   turnsRemaining: number;
-  // Called after a successful far-expedition so the dashboard can refresh.
-  onSuccess: () => void;
+  onLaunch: () => Promise<{ tileId: string; enemyTileId: string } | null>;
 }
 
 interface SuccessResult {
@@ -29,9 +27,12 @@ interface SuccessResult {
  * Spend 2 turns to plant a tile next to a random enemy. The tile lands
  * isolated (no friendly neighbors) so it takes the supply system's −15%
  * defense floor until you grow tiles around it.
+ *
+ * Networking + cache patching live in the dashboard hook
+ * (`handleFarExpedition`); this component just renders + reports the
+ * outcome inline.
  */
-export function FarExpedition({ turnsRemaining, onSuccess }: FarExpeditionProps) {
-  const { user } = useAuth();
+export function FarExpedition({ turnsRemaining, onLaunch }: FarExpeditionProps) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<SuccessResult | null>(null);
@@ -39,34 +40,12 @@ export function FarExpedition({ turnsRemaining, onSuccess }: FarExpeditionProps)
   const canAfford = turnsRemaining >= FAR_EXPEDITION_TURN_COST;
 
   async function run() {
-    if (!user) {
-      setError("Sign in to launch an expedition.");
-      return;
-    }
     setBusy(true);
     setError(null);
     setResult(null);
     try {
-      const token = await user.getIdToken();
-      const res = await fetch("/api/game/explore/far", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const body = await res.json();
-      if (!res.ok || !body?.success) {
-        // apiError() shape is { success:false, error:{ message, code } }; some
-        // older endpoints return error as a string. Handle both.
-        const msg =
-          (typeof body?.error === "object" && body?.error?.message) ||
-          (typeof body?.error === "string" && body.error) ||
-          `HTTP ${res.status}`;
-        throw new Error(msg);
-      }
-      setResult({
-        tileId: body.tile?.tileId ?? "",
-        enemyTileId: body.targetEnemyTileId ?? "",
-      });
-      onSuccess();
+      const r = await onLaunch();
+      if (r) setResult(r);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {

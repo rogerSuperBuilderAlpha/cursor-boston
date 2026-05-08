@@ -70,6 +70,8 @@ export function DashboardView({ player, data }: DashboardViewProps) {
     handleBulkDistribute,
     handleSetName,
     handleAdminGrant,
+    handleFarExpedition,
+    handleCastIntelSpell,
     recentReports,
   } = data;
 
@@ -176,7 +178,7 @@ export function DashboardView({ player, data }: DashboardViewProps) {
             {player.phase === "play" && (
               <FarExpedition
                 turnsRemaining={player.turnsRemaining}
-                onSuccess={() => window.location.reload()}
+                onLaunch={handleFarExpedition}
               />
             )}
 
@@ -185,9 +187,7 @@ export function DashboardView({ player, data }: DashboardViewProps) {
                 caste={player.caste}
                 tilesHeld={player.stats.tilesHeld}
                 turnsRemaining={player.turnsRemaining}
-                onSuccess={() => {
-                  /* spy doesn't change tile state, no reload needed */
-                }}
+                onCast={handleCastIntelSpell}
               />
             )}
 

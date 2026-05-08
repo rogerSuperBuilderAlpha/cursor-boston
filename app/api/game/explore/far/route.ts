@@ -45,6 +45,7 @@ export async function POST(request: NextRequest) {
       tile: result.tile,
       report: result.report,
       targetEnemyTileId: result.targetEnemyTileId,
+      enemyTile: result.enemyTile,
     });
   } catch (error) {
     return mapGameError(error);

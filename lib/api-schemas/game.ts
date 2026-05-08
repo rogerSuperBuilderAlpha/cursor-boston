@@ -603,6 +603,11 @@ export const gameContract = c.router(
       responses: {
         200: ActionOkResponse.extend({
           targetEnemyTileId: z.string(),
+          // Returned so the client can patch its local map cache and have
+          // the threat box reflect the new bordering general without a
+          // full reload. Null only if the enemy tile was somehow not
+          // captured during selection (defensive — should not happen).
+          enemyTile: GameTileSchema.nullable(),
         }),
         ...baseErrorResponses,
       },

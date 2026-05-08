@@ -7,7 +7,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { getSpellsForCasteAndType } from "@/lib/game/content";
 import type { Caste, IntelReport } from "@/lib/game/types";
 
@@ -15,21 +14,23 @@ interface SpyActionProps {
   caste: Caste;
   tilesHeld: number;
   turnsRemaining: number;
-  onSuccess: () => void;
+  onCast: (
+    spellId: string,
+    targetTileId: string
+  ) => Promise<{ intelReport: unknown; detected: boolean } | null>;
 }
 
 /**
- * Cast the caste's intel ("spy") spell on a target enemy tile. The threat
- * box doesn't currently include a tile-picker UI, so this card takes a
- * tileId text input — players will typically paste from the map.
+ * Cast the caste's intel ("spy") spell on a target enemy tile. Networking
+ * + state mutation live in the dashboard hook (`handleCastIntelSpell`);
+ * this component just renders the form + the IntelReport inline.
  */
 export function SpyAction({
   caste,
   tilesHeld,
   turnsRemaining,
-  onSuccess,
+  onCast,
 }: SpyActionProps) {
-  const { user } = useAuth();
   const intelSpell = useMemo(() => {
     const all = getSpellsForCasteAndType(caste, "intel");
     return all[0] ?? null;
@@ -48,38 +49,16 @@ export function SpyAction({
 
   async function run() {
     if (!intelSpell || !targetTileId.trim()) return;
-    if (!user) {
-      setError("Sign in to cast a spy spell.");
-      return;
-    }
     setBusy(true);
     setError(null);
     setReport(null);
     setDetected(false);
     try {
-      const token = await user.getIdToken();
-      const res = await fetch("/api/game/spy", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          spellId: intelSpell.id,
-          targetTileId: targetTileId.trim(),
-        }),
-      });
-      const body = await res.json();
-      if (!res.ok || !body?.success) {
-        const msg =
-          (typeof body?.error === "object" && body?.error?.message) ||
-          (typeof body?.error === "string" && body.error) ||
-          `HTTP ${res.status}`;
-        throw new Error(msg);
+      const r = await onCast(intelSpell.id, targetTileId.trim());
+      if (r) {
+        setReport((r.intelReport as IntelReport) ?? null);
+        setDetected(r.detected);
       }
-      setReport(body.intelReport ?? null);
-      setDetected(Boolean(body.detected));
-      onSuccess();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -90,7 +69,7 @@ export function SpyAction({
   return (
     <div
       id="spy-action"
-      className="rounded-lg border-2 border-violet-300 dark:border-violet-800 bg-violet-50/50 dark:bg-violet-900/10 p-4 scroll-mt-24"
+      className="rounded-lg border-2 border-violet-300 dark:border-violet-800 bg-violet-50/50 dark:bg-violet-950/20 p-4 scroll-mt-24"
     >
       <div className="flex items-baseline justify-between mb-2">
         <h2 className="font-semibold">Spy: {intelSpell.name}</h2>
