@@ -317,6 +317,14 @@
       ]
     },
     {
+      "collectionGroup": "game_intel_effects",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "ownerId", "order": "ASCENDING" },
+        { "fieldPath": "kind", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "communityReports",
       "queryScope": "COLLECTION",
       "fields": [

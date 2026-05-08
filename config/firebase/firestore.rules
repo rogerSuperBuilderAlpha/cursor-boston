@@ -430,6 +430,18 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
+    // Game — Intel effects (v2): time-bounded combat modifiers produced by
+    // intel spells (alert-vs-caster from Black/Green spies; forge-sight-
+    // offense from Red Forge Sight). A player can only read effects they
+    // own (i.e. effects targeting them as defender, or their own attacker-
+    // side buffs). All writes go through the Admin SDK via /api/game/spy
+    // and /api/game/attack.
+    match /game_intel_effects/{effectId} {
+      allow read: if request.auth != null
+        && resource.data.ownerId == request.auth.uid;
+      allow create, update, delete: if false;
+    }
+
     // Trust & safety: in-product abuse-report records on community
     // user-generated content. Reporters can only create their own
     // reports; only admins can list/triage. Server-side mutations via
