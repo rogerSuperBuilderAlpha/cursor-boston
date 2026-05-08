@@ -331,6 +331,24 @@
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "mentorship_profiles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "isActive", "order": "ASCENDING" },
+        { "fieldPath": "role", "order": "ASCENDING" },
+        { "fieldPath": "normalizedExpertise", "arrayConfig": "CONTAINS" }
+      ]
+    },
+    {
+      "collectionGroup": "mentorship_profiles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "isActive", "order": "ASCENDING" },
+        { "fieldPath": "role", "order": "ASCENDING" },
+        { "fieldPath": "normalizedLearningGoals", "arrayConfig": "CONTAINS" }
+      ]
     }
   ],
   "fieldOverrides": []
