@@ -16,6 +16,7 @@ import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 import { sanitizeDocId } from "@/lib/sanitize";
 import { logger } from "@/lib/logger";
 import showcaseData from "@/content/showcase.json";
+import { showcaseContract } from "@/lib/api-schemas/showcase";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -215,15 +216,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    let body: Record<string, unknown>;
-    try {
-      body = (await request.json()) as Record<string, unknown>;
-    } catch {
+    const rawBody = await request.json().catch(() => null);
+    if (rawBody === null) {
       return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
     }
-    const sanitizedProjectId = sanitizeDocId(
-      typeof body.projectId === "string" ? body.projectId : ""
-    );
+    const parsed = showcaseContract.submissionCreate.body.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid projectId" }, { status: 400 });
+    }
+    const sanitizedProjectId = sanitizeDocId(parsed.data.projectId);
     if (!sanitizedProjectId) {
       return NextResponse.json({ error: "Invalid projectId" }, { status: 400 });
     }

@@ -12,6 +12,7 @@ import { getClientIdentifier } from "@/lib/rate-limit";
 import { buildRateLimitHeaders, checkServerRateLimit } from "@/lib/rate-limit-server";
 import { sanitizeDocId } from "@/lib/sanitize";
 import { logger } from "@/lib/logger";
+import { showcaseContract } from "@/lib/api-schemas/showcase";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -232,19 +233,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    let body: Record<string, unknown>;
-    try {
-      body = (await request.json()) as Record<string, unknown>;
-    } catch {
+    const rawBody = await request.json().catch(() => null);
+    if (rawBody === null) {
       return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
     }
-    const submissionId = sanitizeDocId(
-      typeof body.submissionId === "string" ? body.submissionId : ""
-    );
-    const action = body.action === "reject" ? "reject" : "approve";
+    const parsed = showcaseContract.submissionApprove.body.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid submissionId" }, { status: 400 });
+    }
+    const submissionId = sanitizeDocId(parsed.data.submissionId);
+    const action = parsed.data.action === "reject" ? "reject" : "approve";
     const reason =
-      typeof body.reason === "string" && body.reason.trim()
-        ? body.reason.trim()
+      typeof parsed.data.reason === "string" && parsed.data.reason.trim()
+        ? parsed.data.reason.trim()
         : undefined;
     if (!submissionId) {
       return NextResponse.json({ error: "Invalid submissionId" }, { status: 400 });

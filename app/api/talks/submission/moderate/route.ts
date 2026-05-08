@@ -18,6 +18,7 @@ import {
   paginateFirestoreQuery,
   DEFAULT_PAGE_LIMIT,
 } from "@/lib/firestore-pagination";
+import { talksContract } from "@/lib/api-schemas/talks";
 
 const PAGINATABLE_STATUSES = new Set(["pending", "approved", "completed"]);
 
@@ -170,6 +171,11 @@ export async function GET(request: NextRequest) {
     // returns one bucket with cursor pagination. Default mode (no status)
     // preserves the original "all three buckets" response so existing
     // dashboards keep working unchanged.
+    talksContract.submissionModerateList.query.safeParse({
+      status: request.nextUrl.searchParams.get("status") ?? undefined,
+      limit: request.nextUrl.searchParams.get("limit") ?? undefined,
+      cursor: request.nextUrl.searchParams.get("cursor") ?? undefined,
+    });
     const statusParam = request.nextUrl.searchParams.get("status");
     if (statusParam && PAGINATABLE_STATUSES.has(statusParam)) {
       const limit = clampLimit(
@@ -267,16 +273,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    let body: Record<string, unknown>;
-    try {
-      body = (await request.json()) as Record<string, unknown>;
-    } catch {
+    const rawBody = await request.json().catch(() => null);
+    if (rawBody === null) {
       return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
     }
-    const submissionId = sanitizeDocId(
-      typeof body.submissionId === "string" ? body.submissionId : ""
-    );
-    const action: TalkModerationAction = body.action === "complete" ? "complete" : "approve";
+    const parsed = talksContract.submissionModerateAction.body.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid submissionId" }, { status: 400 });
+    }
+    const submissionId = sanitizeDocId(parsed.data.submissionId);
+    const action: TalkModerationAction = parsed.data.action === "complete" ? "complete" : "approve";
     if (!submissionId) {
       return NextResponse.json({ error: "Invalid submissionId" }, { status: 400 });
     }
