@@ -2982,18 +2982,68 @@ export async function farExpeditionExploreServer(
   const ownedTileIds = ownedSnap.docs.map((d) => d.id);
   const center = hexCentroid([...ownedTileIds]);
 
-  // Sample enemy tiles. `!=` filters out null owners and the user themselves.
-  // Firestore's `!=` returns docs where the field exists and differs.
-  const enemySnap = await db
-    .collection(COLLECTIONS.TILES)
-    .where("ownerId", "!=", userId)
-    .limit(FAR_EXPEDITION_ENEMY_SAMPLE_CAP)
+  // Find enemy kingdoms via a player-list query rather than a tile-level
+  // inequality scan. `where("ownerId", "!=", userId)` previously failed
+  // sporadically depending on Firestore index state; a player query +
+  // per-player tile fetch is fully indexed via single-field equality.
+  const playersSnap = await db
+    .collection(COLLECTIONS.PLAYERS)
+    .where("phase", "==", "play")
     .get();
+  const enemyPlayerIds: string[] = [];
+  const enemyWeights: number[] = [];
+  for (const d of playersSnap.docs) {
+    const p = d.data() as GamePlayer;
+    if (p.userId === userId) continue;
+    if (!p.userId) continue;
+    if (p.stats.tilesHeld <= 0) continue;
+    enemyPlayerIds.push(p.userId);
+    // Weight by tilesHeld so populous kingdoms are more likely raid targets.
+    enemyWeights.push(p.stats.tilesHeld);
+  }
+  if (enemyPlayerIds.length === 0) throw new GameNoEnemyKingdomsError();
+
+  const rngEnemyPick = makeSeededRng(
+    `far-expedition-enemy-pick:${userId}:${playerPre.turnsSpentTotal}`
+  );
+  function pickEnemy(): string | null {
+    const total = enemyWeights.reduce((s, w) => s + w, 0);
+    if (total <= 0) return null;
+    let pick = rngEnemyPick() * total;
+    for (let i = 0; i < enemyPlayerIds.length; i++) {
+      pick -= enemyWeights[i];
+      if (pick <= 0) {
+        const id = enemyPlayerIds[i];
+        // Don't re-pick this enemy on the next call.
+        enemyWeights[i] = 0;
+        return id;
+      }
+    }
+    return null;
+  }
+
+  // Pull tiles from up to a few enemy kingdoms in priority order. Each
+  // kingdom contributes up to FAR_EXPEDITION_ENEMY_SAMPLE_CAP / 2 tiles so
+  // we always have variety. The weighting + cap together preserve "closer
+  // enemies favored, but distant raids possible" without the !=
+  // inequality query.
   const enemies: Array<{ q: number; r: number; id: string }> = [];
-  for (const doc of enemySnap.docs) {
-    const t = doc.data() as GameTile;
-    if (!t.ownerId) continue;
-    enemies.push({ q: t.q, r: t.r, id: t.tileId });
+  const PER_KINGDOM_TILE_CAP = Math.ceil(FAR_EXPEDITION_ENEMY_SAMPLE_CAP / 2);
+  const KINGDOMS_TO_SAMPLE = Math.min(3, enemyPlayerIds.length);
+  for (let k = 0; k < KINGDOMS_TO_SAMPLE; k++) {
+    const enemyId = pickEnemy();
+    if (!enemyId) break;
+    const tilesSnap = await db
+      .collection(COLLECTIONS.TILES)
+      .where("ownerId", "==", enemyId)
+      .limit(PER_KINGDOM_TILE_CAP)
+      .get();
+    for (const doc of tilesSnap.docs) {
+      const t = doc.data() as GameTile;
+      enemies.push({ q: t.q, r: t.r, id: t.tileId });
+      if (enemies.length >= FAR_EXPEDITION_ENEMY_SAMPLE_CAP) break;
+    }
+    if (enemies.length >= FAR_EXPEDITION_ENEMY_SAMPLE_CAP) break;
   }
   if (enemies.length === 0) throw new GameNoEnemyKingdomsError();
 

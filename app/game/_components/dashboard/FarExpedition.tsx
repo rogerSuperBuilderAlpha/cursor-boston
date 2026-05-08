@@ -44,7 +44,13 @@ export function FarExpedition({ turnsRemaining, onSuccess }: FarExpeditionProps)
       const res = await fetch("/api/game/explore/far", { method: "POST" });
       const body = await res.json();
       if (!res.ok || !body?.success) {
-        throw new Error(body?.error ?? `HTTP ${res.status}`);
+        // apiError() shape is { success:false, error:{ message, code } }; some
+        // older endpoints return error as a string. Handle both.
+        const msg =
+          (typeof body?.error === "object" && body?.error?.message) ||
+          (typeof body?.error === "string" && body.error) ||
+          `HTTP ${res.status}`;
+        throw new Error(msg);
       }
       setResult({
         tileId: body.tile?.tileId ?? "",
