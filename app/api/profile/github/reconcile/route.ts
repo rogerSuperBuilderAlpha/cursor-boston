@@ -4,6 +4,8 @@
  * See LICENSE file for details.
  */
 
+// @contracts: profileContract.githubReconcile (lib/api-schemas/profile.ts)
+
 import { NextRequest, NextResponse } from "next/server";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { getAdminDb } from "@/lib/firebase-admin";

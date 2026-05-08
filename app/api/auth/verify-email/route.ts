@@ -8,15 +8,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 import { logApiError } from "@/lib/logger";
+import { authContract } from "@/lib/api-schemas/auth";
 
 export async function GET(request: NextRequest) {
   try {
-    const token = request.nextUrl.searchParams.get("token");
-    if (!token) {
+    const queryParsed = authContract.verifyEmail.query.safeParse({
+      token: request.nextUrl.searchParams.get("token") ?? undefined,
+    });
+    if (!queryParsed.success) {
       return NextResponse.redirect(
         new URL("/profile?emailVerification=error&message=missing_token", request.url)
       );
     }
+    const token = queryParsed.data.token;
 
     // Validate token format (64 hex characters = 32 bytes)
     // This prevents database queries with malformed tokens

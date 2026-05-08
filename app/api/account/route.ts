@@ -34,13 +34,13 @@ import { logger } from "@/lib/logger";
 import { parseRequestBody } from "@/lib/api-response";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 import { deleteUserData } from "@/lib/account-deletion/cascade";
+import { accountContract } from "@/lib/api-schemas/account";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const DELETE_RATE_LIMIT = { windowMs: 24 * 60 * 60 * 1000, maxRequests: 1 };
 const FRESH_AUTH_WINDOW_S = 5 * 60; // 5 minutes
-const REQUIRED_CONFIRMATION = "DELETE";
 
 export async function DELETE(request: NextRequest) {
   try {
@@ -86,10 +86,10 @@ export async function DELETE(request: NextRequest) {
 
     const bodyOrError = await parseRequestBody(request);
     if (bodyOrError instanceof NextResponse) return bodyOrError;
-    const { confirmText } = bodyOrError;
-    if (confirmText !== REQUIRED_CONFIRMATION) {
+    const parsed = accountContract.deleteAccount.body.safeParse(bodyOrError);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: `Type ${REQUIRED_CONFIRMATION} to confirm.` },
+        { error: parsed.error.issues[0]?.message ?? "Type DELETE to confirm." },
         { status: 400 }
       );
     }

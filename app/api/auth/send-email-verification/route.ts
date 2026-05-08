@@ -12,6 +12,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { logApiError } from "@/lib/logger";
 import { parseRequestBody } from "@/lib/api-response";
 import { sendEmail } from "@/lib/mailgun";
+import { authContract } from "@/lib/api-schemas/auth";
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,12 +23,15 @@ export async function POST(request: NextRequest) {
 
     const bodyOrError = await parseRequestBody(request);
     if (bodyOrError instanceof NextResponse) return bodyOrError;
-    const { email } = bodyOrError;
-    if (!email || typeof email !== "string") {
-      return NextResponse.json({ error: "Email is required" }, { status: 400 });
+    const parsed = authContract.sendEmailVerification.body.safeParse(bodyOrError);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message ?? "Email is required" },
+        { status: 400 }
+      );
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
+    const normalizedEmail = parsed.data.email.toLowerCase().trim();
 
     // Validate email length to prevent ReDoS attacks
     if (normalizedEmail.length > 254) {

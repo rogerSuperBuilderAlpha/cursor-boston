@@ -8,13 +8,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { getVerifiedUser } from "@/lib/server-auth";
 import {
   getMentorshipProfileServer,
-  getAllActiveMentorshipProfilesServer,
+  getMentorshipMatchCandidatesServer,
 } from "@/lib/mentorship/data-server";
 import { getTopMentorshipMatches } from "@/lib/mentorship/matching";
 
 /**
  * GET /api/mentorship/matches
- * Get top mentor/mentee matches for the authenticated user
+ * Get top mentor/mentee matches for the authenticated user.
+ *
+ * Read cost is bounded: rather than scanning every active profile,
+ * `getMentorshipMatchCandidatesServer` issues 1-2 narrow Firestore
+ * queries (`array-contains-any` against denormalized lowercase skill
+ * arrays) capped at 100 candidates per direction.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -34,8 +39,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const allProfiles = await getAllActiveMentorshipProfilesServer();
-    const matches = getTopMentorshipMatches(userProfile, allProfiles, 20);
+    const candidates = await getMentorshipMatchCandidatesServer(userProfile);
+    const matches = getTopMentorshipMatches(userProfile, candidates, 20);
 
     return NextResponse.json({ success: true, matches });
   } catch (error) {

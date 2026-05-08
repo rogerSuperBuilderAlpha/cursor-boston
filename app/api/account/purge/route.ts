@@ -21,6 +21,8 @@
  * if that synchronous run fails partway through.
  */
 
+// @contracts: accountContract.purge (lib/api-schemas/account.ts)
+
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "crypto";
 import { getAdminDb } from "@/lib/firebase-admin";

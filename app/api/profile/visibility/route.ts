@@ -4,12 +4,15 @@
  * See LICENSE file for details.
  */
 
+// @contracts: profileContract.visibilityGet (lib/api-schemas/profile.ts)
+
 import { NextRequest, NextResponse } from "next/server";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 import { getClientIdentifier } from "@/lib/rate-limit";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
+import { profileContract } from "@/lib/api-schemas/profile";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -43,38 +46,27 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    let body: Record<string, unknown>;
+    let rawBody: unknown;
     try {
-      body = (await request.json()) as Record<string, unknown>;
+      rawBody = await request.json();
     } catch {
       return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
     }
-    
-    // Allowed visibility fields to update
-    const allowedFields = [
-      "isPublic",
-      "showEmail",
-      "showBio",
-      "showLocation",
-      "showCompany",
-      "showJobTitle",
-      "showDiscord",
-      "showGithubBadge",
-      "showEventsAttended",
-      "showTalksGiven",
-      "showWebsite",
-      "showLinkedIn",
-      "showTwitter",
-      "showGithub",
-      "showSubstack",
-      "showMemberSince",
-    ];
+    const parsed = profileContract.visibilityPatch.body.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message ?? "Invalid body" },
+        { status: 400 }
+      );
+    }
+    const body = parsed.data;
 
-    // Build visibility updates
+    // Build visibility updates from validated body — only boolean fields
+    // declared in the contract make it through.
     const visibilityUpdates: Record<string, boolean> = {};
-    for (const field of allowedFields) {
-      if (typeof body[field] === "boolean") {
-        visibilityUpdates[`visibility.${field}`] = body[field];
+    for (const [field, value] of Object.entries(body)) {
+      if (typeof value === "boolean") {
+        visibilityUpdates[`visibility.${field}`] = value;
       }
     }
 

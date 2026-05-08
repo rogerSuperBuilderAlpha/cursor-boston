@@ -44,6 +44,8 @@ const baseDocument = {
     { name: "game", description: "Strategy game endpoints (leaderboard, attacks, artifacts, turns)" },
     { name: "hackathons", description: "Hackathon pool, teams, submissions, and Hack-a-Sprint showcase" },
     { name: "questions", description: "Q&A: questions, answers, votes, accept" },
+    { name: "account", description: "Account lifecycle: GDPR delete, scheduled purge" },
+    { name: "profile", description: "User profile: data, visibility, subscription, GitHub reconcile" },
   ],
 };
 

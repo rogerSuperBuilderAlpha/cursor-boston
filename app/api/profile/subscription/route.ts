@@ -4,11 +4,14 @@
  * See LICENSE file for details.
  */
 
+// @contracts: profileContract.subscriptionGet (lib/api-schemas/profile.ts)
+
 import { NextRequest, NextResponse } from "next/server";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { profileContract } from "@/lib/api-schemas/profile";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -116,16 +119,17 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    let body: { subscribed?: boolean };
+    let body: unknown;
     try {
       body = await request.json();
     } catch {
       return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     }
 
-    if (typeof body.subscribed !== "boolean") {
+    const parsed = profileContract.subscriptionPatch.body.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "subscribed must be a boolean" },
+        { error: parsed.error.issues[0]?.message ?? "subscribed must be a boolean" },
         { status: 400 }
       );
     }
@@ -139,7 +143,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    if (body.subscribed) {
+    if (parsed.data.subscribed) {
       await result.ref.update({
         unsubscribed: false,
         unsubscribedAt: FieldValue.delete(),
@@ -152,7 +156,7 @@ export async function PATCH(request: NextRequest) {
       });
     }
 
-    return NextResponse.json({ subscribed: body.subscribed });
+    return NextResponse.json({ subscribed: parsed.data.subscribed });
   } catch {
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
