@@ -7,6 +7,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { getSpellsForCasteAndType } from "@/lib/game/content";
 import type { Caste, IntelReport } from "@/lib/game/types";
 
@@ -28,6 +29,7 @@ export function SpyAction({
   turnsRemaining,
   onSuccess,
 }: SpyActionProps) {
+  const { user } = useAuth();
   const intelSpell = useMemo(() => {
     const all = getSpellsForCasteAndType(caste, "intel");
     return all[0] ?? null;
@@ -46,14 +48,22 @@ export function SpyAction({
 
   async function run() {
     if (!intelSpell || !targetTileId.trim()) return;
+    if (!user) {
+      setError("Sign in to cast a spy spell.");
+      return;
+    }
     setBusy(true);
     setError(null);
     setReport(null);
     setDetected(false);
     try {
+      const token = await user.getIdToken();
       const res = await fetch("/api/game/spy", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           spellId: intelSpell.id,
           targetTileId: targetTileId.trim(),
