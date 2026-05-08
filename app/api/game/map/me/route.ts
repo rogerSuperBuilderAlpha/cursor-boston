@@ -10,6 +10,8 @@ import { mapGameError } from "@/lib/game/api-error-map";
 import { getMyMapServer } from "@/lib/game/data-server";
 import { getVerifiedUser } from "@/lib/server-auth";
 
+// @contracts: gameContract.getMyMap (lib/api-schemas/game.ts)
+//
 // Personal map view: only own tiles + the enemy ring touching them, plus
 // owner summaries for those enemies. Replaces the unbounded /api/game/world
 // fetch on the busy game pages — read cost scales with kingdom perimeter,

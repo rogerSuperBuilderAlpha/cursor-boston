@@ -9,6 +9,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { SUMMER_COHORT_VOTES_COLLECTION } from "@/lib/summer-cohort";
+import { summerCohortContract } from "@/lib/api-schemas/summer-cohort";
 
 const VALID_WEEK_IDS = new Set(["week-1", "week-2", "week-3"]);
 
@@ -46,7 +47,16 @@ function isValidWeekId(value: unknown): value is string {
  * voted handles for that week.
  */
 export async function GET(request: NextRequest) {
-  const weekId = request.nextUrl.searchParams.get("weekId");
+  const parsedQuery = summerCohortContract.votesGet.query.safeParse({
+    weekId: request.nextUrl.searchParams.get("weekId") ?? undefined,
+  });
+  if (!parsedQuery.success) {
+    return NextResponse.json(
+      { error: "weekId must be one of week-1, week-2, week-3" },
+      { status: 400 }
+    );
+  }
+  const weekId = parsedQuery.data.weekId;
   if (!isValidWeekId(weekId)) {
     return NextResponse.json(
       { error: "weekId must be one of week-1, week-2, week-3" },
@@ -117,10 +127,22 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const obj =
-    body && typeof body === "object" ? (body as Record<string, unknown>) : {};
-  const weekId = obj.weekId;
-  const submitterHandle = obj.submitterHandle;
+  const parsedBody = summerCohortContract.votesPost.body.safeParse(body);
+  if (!parsedBody.success) {
+    const issue = parsedBody.error.issues[0];
+    if (issue?.path?.[0] === "submitterHandle") {
+      return NextResponse.json(
+        { error: "submitterHandle must be a valid GitHub handle" },
+        { status: 400 }
+      );
+    }
+    return NextResponse.json(
+      { error: "weekId must be one of week-1, week-2, week-3" },
+      { status: 400 }
+    );
+  }
+  const weekId = parsedBody.data.weekId;
+  const submitterHandle = parsedBody.data.submitterHandle;
 
   if (!isValidWeekId(weekId)) {
     return NextResponse.json(

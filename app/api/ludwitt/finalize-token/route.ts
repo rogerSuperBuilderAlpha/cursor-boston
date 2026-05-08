@@ -8,6 +8,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { withMiddleware, rateLimitConfigs } from "@/lib/middleware";
 import { LUDWITT_FINALIZE_COOKIE } from "@/lib/ludwitt-config";
 
+// @contracts: ludwittContract.finalizeToken (lib/api-schemas/ludwitt.ts)
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 

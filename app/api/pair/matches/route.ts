@@ -12,6 +12,8 @@ import {
 } from "@/lib/pair-programming/data-server";
 import { getTopMatches } from "@/lib/pair-programming/matching";
 
+// @contracts: pairContract.matches (lib/api-schemas/pair.ts)
+
 /**
  * GET /api/pair/matches
  * Get top matches for the authenticated user

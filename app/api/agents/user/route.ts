@@ -9,6 +9,8 @@ import { getVerifiedUser } from "@/lib/server-auth";
 import { getAgentsByOwner } from "@/lib/agents";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 
+// @contracts: agentsContract.user (lib/api-schemas/agents.ts)
+
 // Rate limit config for user agent listing
 const USER_AGENTS_RATE_LIMIT = {
   windowMs: 60 * 1000, // 1 minute

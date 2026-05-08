@@ -12,6 +12,8 @@ import { getVerifiedUser } from "@/lib/server-auth";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { deleteLudwittTokens } from "@/lib/ludwitt-tokens";
 
+// @contracts: ludwittContract.disconnect (lib/api-schemas/ludwitt.ts)
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 

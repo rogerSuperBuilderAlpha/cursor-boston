@@ -12,10 +12,8 @@ import {
 } from "@/lib/mentorship/data-server";
 import { parseRequestBody } from "@/lib/api-response";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
+import { mentorshipContract } from "@/lib/api-schemas/mentorship";
 
-const MAX_MESSAGE_LENGTH = 1000;
-const MAX_GOALS = 10;
-const MAX_GOAL_LENGTH = 200;
 const RATE_LIMIT = { windowMs: 60 * 60 * 1000, maxRequests: 5 } as const;
 
 /**
@@ -70,25 +68,29 @@ export async function POST(request: NextRequest) {
 
     const bodyOrError = await parseRequestBody(request);
     if (bodyOrError instanceof NextResponse) return bodyOrError;
-    const { toUserId, goals, message, consentToShareProfile } = bodyOrError;
-
-    if (consentToShareProfile !== true) {
+    const parsed = mentorshipContract.requestPost.body.safeParse(bodyOrError);
+    if (!parsed.success) {
+      // Preserve the consent-specific error message that downstream tests
+      // and UI strings rely on.
+      const consentIssue = parsed.error.issues.find(
+        (issue) => issue.path[0] === "consentToShareProfile"
+      );
+      if (consentIssue) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "consentToShareProfile must be true. Sending a mentorship request shares your profile fields with the recipient.",
+          },
+          { status: 400 }
+        );
+      }
       return NextResponse.json(
-        {
-          success: false,
-          error:
-            "consentToShareProfile must be true. Sending a mentorship request shares your profile fields with the recipient.",
-        },
+        { success: false, error: parsed.error.issues[0]?.message ?? "Invalid body" },
         { status: 400 }
       );
     }
-
-    if (!toUserId || typeof toUserId !== "string") {
-      return NextResponse.json(
-        { success: false, error: "toUserId is required" },
-        { status: 400 }
-      );
-    }
+    const { toUserId, goals, message } = parsed.data;
 
     if (toUserId === user.uid) {
       return NextResponse.json(
@@ -97,37 +99,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!Array.isArray(goals) || goals.length === 0) {
+    if (!goals.every((g: string) => g.trim().length > 0)) {
       return NextResponse.json(
-        { success: false, error: "At least one goal is required" },
+        { success: false, error: "Each goal must be a non-empty string under 200 characters" },
         { status: 400 }
       );
     }
 
-    if (goals.length > MAX_GOALS) {
-      return NextResponse.json(
-        { success: false, error: `Cannot specify more than ${MAX_GOALS} goals` },
-        { status: 400 }
-      );
-    }
-
-    if (!goals.every((g: unknown) => typeof g === "string" && g.trim().length > 0 && g.length <= MAX_GOAL_LENGTH)) {
-      return NextResponse.json(
-        { success: false, error: `Each goal must be a non-empty string under ${MAX_GOAL_LENGTH} characters` },
-        { status: 400 }
-      );
-    }
-
-    if (!message || typeof message !== "string" || message.trim().length === 0) {
+    if (message.trim().length === 0) {
       return NextResponse.json(
         { success: false, error: "Message is required" },
-        { status: 400 }
-      );
-    }
-
-    if (message.length > MAX_MESSAGE_LENGTH) {
-      return NextResponse.json(
-        { success: false, error: `Message cannot exceed ${MAX_MESSAGE_LENGTH} characters` },
         { status: 400 }
       );
     }

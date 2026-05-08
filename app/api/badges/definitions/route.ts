@@ -7,6 +7,8 @@
 import { NextResponse } from "next/server";
 import { BADGE_DEFINITIONS } from "@/lib/badges/definitions";
 
+// @contracts: badgesContract.definitions (lib/api-schemas/badges.ts)
+
 export const runtime = "nodejs";
 
 /**

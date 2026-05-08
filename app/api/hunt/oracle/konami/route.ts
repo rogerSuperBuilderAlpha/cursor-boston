@@ -7,6 +7,8 @@
 import { NextResponse } from "next/server";
 import { getKonamiToken } from "@/lib/treasure-hunt-paths";
 
+// @contracts: huntContract.oracleKonami (lib/api-schemas/hunt.ts)
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 

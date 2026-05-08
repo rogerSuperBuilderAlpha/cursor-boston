@@ -12,6 +12,8 @@ import {
   treasureHuntEnabled,
 } from "@/lib/treasure-hunt-eligibility";
 
+// @contracts: huntContract.status (lib/api-schemas/hunt.ts)
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
