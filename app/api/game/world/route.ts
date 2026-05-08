@@ -71,14 +71,31 @@ export async function GET(request: NextRequest) {
     const bbox = parseBbox(url);
     if (bbox) {
       const tiles = await getMapTilesInBoundsServer(bbox);
-      return apiSuccess({ tiles });
+      const res = apiSuccess({ tiles });
+      // Bbox-keyed responses are identical for all users → CDN-cacheable.
+      // 60s shared cache + 120s stale-while-revalidate keeps refresh storms
+      // off Firestore while bounding staleness to 1 minute.
+      res.headers.set(
+        "Cache-Control",
+        "public, max-age=30, s-maxage=60, stale-while-revalidate=120"
+      );
+      return res;
     }
 
     const [tiles, owners] = await Promise.all([
       getAllMapTilesServer(),
       getAllOwnerSummariesServer(),
     ]);
-    return apiSuccess({ tiles, owners });
+    const res = apiSuccess({ tiles, owners });
+    // Bare GET returns the same global snapshot for every caller. Cache
+    // aggressively at the edge — at 3K+ tiles this is by far the most
+    // expensive read path. Once the 🌐 world view migrates to bbox + a
+    // separate owners endpoint, this branch can be capped to bbox-only.
+    res.headers.set(
+      "Cache-Control",
+      "public, max-age=30, s-maxage=60, stale-while-revalidate=120"
+    );
+    return res;
   } catch (error) {
     return mapGameError(error);
   }
