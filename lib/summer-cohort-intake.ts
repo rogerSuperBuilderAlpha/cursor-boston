@@ -5,18 +5,21 @@
  */
 
 /**
- * Summer Cohort intake survey — pilot instrument (c1-v1).
+ * Summer Cohort intake survey (c1-v1).
  *
- * Three jobs at intake (per the research design):
- *   1. Linkage — reconnect each respondent across waves
- *   2. Antecedent conditions the variance puzzle predicts will matter
- *   3. Demographic controls a scale-validation reviewer will demand
+ * **NOT a research instrument.** Cursor Boston's research IRB is still
+ * pending; this form is collected for operational use only — the team uses
+ * the responses to build tools that help cohort participants ship faster
+ * (track progress, surface stuck points, route help, etc.).
  *
- * Construct measurement (algorithmacy item pool, AI literacy scales,
- * coordination self-ratings, personality controls) is intentionally OUT.
- * Those belong at later waves once content review is done.
+ * Once the IRB is approved we'll send a separate, fully-optional research
+ * survey. This form is not that.
  *
- * Target completion time: 4–7 minutes for the median respondent.
+ * `consentToResearch` remains in the schema for forward compatibility but
+ * is NOT required at submit time on this wave; operational submissions
+ * persist it as false.
+ *
+ * Target completion time: ~5 minutes.
  */
 
 export const SUMMER_COHORT_INTAKE_COLLECTION = "summerCohortIntakeSurveys";
@@ -337,7 +340,8 @@ export function validateIntakeSurvey(
   const errors: string[] = [];
   if (!data.email) errors.push("email");
   if (!data.cohort) errors.push("cohort");
-  if (!data.consentToResearch) errors.push("consentToResearch");
+  // consentToResearch is intentionally NOT required on this wave — the form
+  // is operational, not research. See file header.
   if (data.age == null) errors.push("age");
   if (!data.gender) errors.push("gender");
   if (data.gender === "prefer-self-describe" && !data.genderSelfDescribed) {

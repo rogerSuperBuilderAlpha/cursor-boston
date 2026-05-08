@@ -298,18 +298,28 @@ export function IntakeSurveyForm({ defaultEmail, cohortId, onComplete }: Props) 
     <section className="rounded-xl border border-emerald-300 bg-emerald-50/50 p-6 dark:border-emerald-900 dark:bg-emerald-950/20">
       <div className="mb-6">
         <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
-          Required before kickoff
+          ~5 min · helps us help you
         </div>
         <h2 className="mt-3 text-xl font-bold">Intake Survey</h2>
         <p className="mt-2 text-sm text-neutral-700 dark:text-neutral-300">
-          You&apos;ve been admitted to Cohort 1. Before you see the cohort
-          dashboard, we need ~5 minutes for an intake survey. This is a research
-          instrument — your responses help us study how the program changes
-          participants&apos; experience with AI tools.
+          Quick onboarding so the team can build tools that help you ship
+          faster — track progress, surface where people get stuck, route help
+          to the right person, and make the next six weeks smoother and more
+          fun.
         </p>
+        <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+          <p className="font-semibold">Heads up: this is NOT research.</p>
+          <p className="mt-1">
+            Cursor Boston&apos;s research IRB is still pending. This form is
+            for operational use only — it is not part of any experimental or
+            research project. Once IRB is approved, we&apos;ll send a separate,
+            fully-optional research survey; you can decide then whether you
+            want to participate.
+          </p>
+        </div>
         <p className="mt-2 text-xs text-neutral-500">
-          You can update your answers later from this page if anything changes
-          before kickoff. Required fields are marked with{" "}
+          You can update your answers later from this page if anything changes.
+          Required fields are marked with{" "}
           <span className="text-red-500">*</span>. Your in-progress answers
           are saved in this browser so a refresh won&apos;t lose them.
         </p>
@@ -322,11 +332,11 @@ export function IntakeSurveyForm({ defaultEmail, cohortId, onComplete }: Props) 
 
       <form onSubmit={submit} className="space-y-10">
         {/* ----------------------------------------------------------------
-            Section 1: Linkage and consent
+            Section 1: Linkage (email + cohort)
            ---------------------------------------------------------------- */}
         <fieldset className="space-y-4">
           <legend className="text-sm font-semibold uppercase tracking-wider text-neutral-500">
-            1. Linkage &amp; consent
+            1. Your contact info
           </legend>
 
           <FieldEmail
@@ -343,24 +353,6 @@ export function IntakeSurveyForm({ defaultEmail, cohortId, onComplete }: Props) 
               className={READONLY_INPUT_CLASS}
             />
           </Field>
-
-          <label className={`flex items-start gap-2 rounded-lg border p-3 text-sm ${isMissing("consentToResearch") ? "border-red-400 bg-red-50 dark:bg-red-950/30" : "border-neutral-300 dark:border-neutral-700"}`}>
-            <input
-              type="checkbox"
-              checked={r.consentToResearch}
-              onChange={(e) => update("consentToResearch", e.target.checked)}
-              className="mt-1"
-            />
-            <span>
-              <span className="font-medium">I consent to research use of program data.</span>{" "}
-              <span className="text-neutral-600 dark:text-neutral-400">
-                Responses are aggregated and de-identified for analysis. The IRB
-                protocol summary will be shared with respondents before
-                publication.
-              </span>{" "}
-              <span className="text-red-500">*</span>
-            </span>
-          </label>
         </fieldset>
 
         {/* ----------------------------------------------------------------
