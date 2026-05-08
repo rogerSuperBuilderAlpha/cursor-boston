@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendEmail } from "@/lib/mailgun";
 import { parseRequestBody } from "@/lib/api-response";
+import { notifyAdminContract } from "@/lib/api-schemas/notify-admin";
 
 function escapeHtml(text: string | undefined): string {
   if (!text) return "";
@@ -24,11 +25,14 @@ export async function POST(request: NextRequest) {
   try {
     const bodyOrError = await parseRequestBody(request);
     if (bodyOrError instanceof NextResponse) return bodyOrError;
-    const { name, email, title, description, category, duration, experience, bio, linkedIn, twitter, previousTalks, submissionId } = bodyOrError;
-
-    if (!name || !email || !title) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    const parsed = notifyAdminContract.talk.body.safeParse(bodyOrError);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
     }
+    const { name, email, title, description, category, duration, experience, bio, linkedIn, twitter, previousTalks, submissionId } = parsed.data;
 
     await sendEmail({
       to: ADMIN_EMAIL,

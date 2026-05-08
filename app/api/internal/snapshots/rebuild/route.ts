@@ -19,6 +19,8 @@ import {
   MEMBERS_SNAPSHOT_CACHE_TTL_MS,
 } from "@/lib/members-public-snapshot";
 
+// @contracts: internalContract.snapshotsRebuildGet, internalContract.snapshotsRebuildPost (lib/api-schemas/internal.ts)
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;

@@ -18,6 +18,8 @@ import {
   type IntakeSurveyDoc,
 } from "@/lib/summer-cohort-intake";
 
+// @contracts: summerCohortContract.intakeSurveyGet, summerCohortContract.intakeSurveyPost (lib/api-schemas/summer-cohort.ts) — body shape is owned by lib/summer-cohort-intake#validateIntakeSurvey for backwards-compat with the existing field-list contract.
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 

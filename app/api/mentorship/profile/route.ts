@@ -11,11 +11,11 @@ import {
   createOrUpdateMentorshipProfileServer,
 } from "@/lib/mentorship/data-server";
 import { parseRequestBody } from "@/lib/api-response";
-import type { MentorshipProfile, MentorshipRole } from "@/lib/mentorship/types";
-
-const VALID_ROLES: MentorshipRole[] = ["mentor", "mentee", "both"];
-const MAX_ARRAY_LENGTH = 20;
-const MAX_STRING_LENGTH = 200;
+import type {
+  MentorshipAvailability,
+  MentorshipProfile,
+} from "@/lib/mentorship/types";
+import { mentorshipContract } from "@/lib/api-schemas/mentorship";
 
 /**
  * GET /api/mentorship/profile
@@ -58,6 +58,13 @@ export async function POST(request: NextRequest) {
 
     const bodyOrError = await parseRequestBody(request);
     if (bodyOrError instanceof NextResponse) return bodyOrError;
+    const parsed = mentorshipContract.profilePost.body.safeParse(bodyOrError);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0]?.message ?? "Invalid body" },
+        { status: 400 }
+      );
+    }
     const {
       role,
       expertise,
@@ -68,55 +75,7 @@ export async function POST(request: NextRequest) {
       bio,
       maxMentees,
       isActive,
-    } = bodyOrError;
-
-    if (!role || !VALID_ROLES.includes(role)) {
-      return NextResponse.json(
-        { success: false, error: "role must be 'mentor', 'mentee', or 'both'" },
-        { status: 400 }
-      );
-    }
-
-    if (!timezone || typeof timezone !== "string") {
-      return NextResponse.json(
-        { success: false, error: "timezone is required" },
-        { status: 400 }
-      );
-    }
-
-    const arraysToCheck = [
-      expertise || [],
-      learningGoals || [],
-      preferredLanguages || [],
-    ];
-    if (arraysToCheck.some((a) => !Array.isArray(a) || a.length > MAX_ARRAY_LENGTH)) {
-      return NextResponse.json(
-        { success: false, error: `Arrays cannot exceed ${MAX_ARRAY_LENGTH} items` },
-        { status: 400 }
-      );
-    }
-
-    const allStrings = [...(expertise || []), ...(learningGoals || []), ...(preferredLanguages || [])];
-    if (!allStrings.every((s: unknown) => typeof s === "string" && s.length <= MAX_STRING_LENGTH)) {
-      return NextResponse.json(
-        { success: false, error: "Array items must be strings under 200 characters" },
-        { status: 400 }
-      );
-    }
-
-    if (bio && typeof bio === "string" && bio.length > 1000) {
-      return NextResponse.json(
-        { success: false, error: "Bio cannot exceed 1000 characters" },
-        { status: 400 }
-      );
-    }
-
-    if (maxMentees !== undefined && (typeof maxMentees !== "number" || maxMentees < 1 || maxMentees > 10)) {
-      return NextResponse.json(
-        { success: false, error: "maxMentees must be between 1 and 10" },
-        { status: 400 }
-      );
-    }
+    } = parsed.data;
 
     const profile: Omit<MentorshipProfile, "userId" | "createdAt" | "updatedAt"> = {
       role,
@@ -124,7 +83,9 @@ export async function POST(request: NextRequest) {
       learningGoals: (learningGoals || []).map((s: string) => s.trim()).filter(Boolean),
       preferredLanguages: (preferredLanguages || []).map((s: string) => s.trim()).filter(Boolean),
       timezone: timezone.trim(),
-      availability: Array.isArray(availability) ? availability : [],
+      availability: Array.isArray(availability)
+        ? (availability as MentorshipAvailability[])
+        : [],
       bio: bio ? String(bio).trim().slice(0, 1000) : undefined,
       maxMentees: maxMentees ?? undefined,
       isActive: isActive !== undefined ? Boolean(isActive) : true,

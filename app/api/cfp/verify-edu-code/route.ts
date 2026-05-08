@@ -10,6 +10,7 @@ import { getAdminDb } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 import { logApiError } from "@/lib/logger";
 import { parseRequestBody } from "@/lib/api-response";
+import { cfpContract } from "@/lib/api-schemas/cfp";
 
 function isValidEduEmail(email: string): boolean {
   return email.toLowerCase().trim().endsWith(".edu");
@@ -24,13 +25,14 @@ export async function POST(request: NextRequest) {
 
     const bodyOrError = await parseRequestBody(request);
     if (bodyOrError instanceof NextResponse) return bodyOrError;
-    const { email, code } = bodyOrError;
-    if (!email || typeof email !== "string" || !code || typeof code !== "string") {
+    const parsed = cfpContract.verifyEduCode.body.safeParse(bodyOrError);
+    if (!parsed.success) {
       return NextResponse.json(
         { error: "Email and code are required" },
         { status: 400 }
       );
     }
+    const { email, code } = parsed.data;
 
     const normalizedEmail = email.toLowerCase().trim();
     const normalizedCode = code.trim().replace(/\s/g, "");

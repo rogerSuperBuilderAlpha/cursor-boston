@@ -26,6 +26,8 @@ import { withLoggingMiddleware, withRateLimitMiddleware, rateLimitConfigs } from
 import { logger } from "@/lib/logger";
 import { getClientIdentifier } from "@/lib/rate-limit";
 
+// @contracts: githubContract.webhook (lib/api-schemas/github.ts) — body is HMAC-verified before any contract validation.
+
 // Disable body parsing to get raw body for signature verification
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

@@ -7,6 +7,8 @@
 import { randomBytes } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 
+// @contracts: githubContract.authorize (lib/api-schemas/github.ts)
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 

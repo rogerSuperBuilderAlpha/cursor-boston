@@ -13,6 +13,7 @@ import {
   PairRequestAlreadyRespondedError,
 } from "@/lib/pair-programming/data-server";
 import { parseRequestBody } from "@/lib/api-response";
+import { pairContract } from "@/lib/api-schemas/pair";
 
 /**
  * POST /api/pair/respond
@@ -30,21 +31,14 @@ export async function POST(request: NextRequest) {
 
     const bodyOrError = await parseRequestBody(request);
     if (bodyOrError instanceof NextResponse) return bodyOrError;
-    const { requestId, action } = bodyOrError;
-
-    if (!requestId || typeof requestId !== "string") {
+    const parsed = pairContract.respond.body.safeParse(bodyOrError);
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: "requestId is required" },
+        { success: false, error: parsed.error.issues[0]?.message ?? "Invalid body" },
         { status: 400 }
       );
     }
-
-    if (action !== "accept" && action !== "decline") {
-      return NextResponse.json(
-        { success: false, error: "Action must be 'accept' or 'decline'" },
-        { status: 400 }
-      );
-    }
+    const { requestId, action } = parsed.data;
 
     const result = await respondToPairRequestServer(requestId, user.uid, action);
 

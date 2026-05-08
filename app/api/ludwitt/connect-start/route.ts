@@ -19,6 +19,8 @@ import {
   getLudwittRedirectUri,
 } from "@/lib/ludwitt-config";
 
+// @contracts: ludwittContract.connectStart (lib/api-schemas/ludwitt.ts)
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 

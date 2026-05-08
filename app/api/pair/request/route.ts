@@ -10,18 +10,8 @@ import {
   createPairRequestServer,
   getPairRequestsForUserServer,
 } from "@/lib/pair-programming/data-server";
-import type { SessionType } from "@/lib/pair-programming/types";
-
 import { parseRequestBody } from "@/lib/api-response";
-
-const VALID_SESSION_TYPES: SessionType[] = [
-  "teach-me",
-  "build-together",
-  "code-review",
-  "explore-topic",
-];
-
-const MAX_MESSAGE_LENGTH = 1000;
+import { pairContract } from "@/lib/api-schemas/pair";
 
 /**
  * GET /api/pair/request
@@ -71,32 +61,18 @@ export async function POST(request: NextRequest) {
 
     const bodyOrError = await parseRequestBody(request);
     if (bodyOrError instanceof NextResponse) return bodyOrError;
-    const { toUserId, sessionType, message, proposedTime } = bodyOrError;
-
-    if (!toUserId || typeof toUserId !== "string") {
+    const parsed = pairContract.requestPost.body.safeParse(bodyOrError);
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: "toUserId is required" },
+        { success: false, error: parsed.error.issues[0]?.message ?? "Invalid body" },
         { status: 400 }
       );
     }
+    const { toUserId, sessionType, message, proposedTime } = parsed.data;
 
-    if (!sessionType || !VALID_SESSION_TYPES.includes(sessionType)) {
-      return NextResponse.json(
-        { success: false, error: "Invalid session type" },
-        { status: 400 }
-      );
-    }
-
-    if (!message || typeof message !== "string" || message.trim().length === 0) {
+    if (message.trim().length === 0) {
       return NextResponse.json(
         { success: false, error: "Message is required" },
-        { status: 400 }
-      );
-    }
-
-    if (message.length > MAX_MESSAGE_LENGTH) {
-      return NextResponse.json(
-        { success: false, error: `Message cannot exceed ${MAX_MESSAGE_LENGTH} characters` },
         { status: 400 }
       );
     }
