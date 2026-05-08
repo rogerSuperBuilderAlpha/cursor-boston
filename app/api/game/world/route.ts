@@ -12,6 +12,10 @@ import {
   getAllOwnerSummariesServer,
   getMapTilesInBoundsServer,
 } from "@/lib/game/data-server";
+import {
+  filterSnapshotToBbox,
+  readWorldSnapshotServer,
+} from "@/lib/game/world-snapshot";
 import { getVerifiedUser } from "@/lib/server-auth";
 
 // @contracts: gameContract.getWorld (lib/api-schemas/game.ts)
@@ -19,21 +23,21 @@ import { getVerifiedUser } from "@/lib/server-auth";
 // Global map fetch.
 //
 // Two modes (additive — back-compat preserved):
-//   • Bare GET → returns { tiles, owners } for the entire world. Legacy mode.
-//     Kept so existing callers don't break, but new clients should pass bbox.
+//   • Bare GET → returns { tiles, owners } for the entire world.
 //   • GET ?qMin=&qMax=&rMin=&rMax= → returns { tiles } for the bbox only.
-//     No owners — fetch /api/game/owners separately (snapshot-cached on the
-//     client). Slashes per-action read cost from O(world) to O(viewport).
+//
+// Both modes prefer the periodic `game_world_snapshots/latest` doc — a
+// single read instead of scanning ~3K tiles + every player. The route
+// falls back to live queries only if no snapshot exists yet (e.g. first
+// deploy before the cron has run). Snapshot rebuild lives at
+// `/api/internal/snapshots/rebuild?only=game-world` and is also kicked
+// off at the end of the weekly NPC cron.
 function parseBbox(url: URL): {
   qMin: number;
   qMax: number;
   rMin: number;
   rMax: number;
 } | null {
-  // All four params must be explicitly present. Without this guard,
-  // Number(null) === 0 collapses a bare GET into a degenerate bbox of
-  // (0,0)..(0,0) — which matches exactly one tile (0_0) and silently
-  // breaks the "fetch whole world" code path.
   const rawQMin = url.searchParams.get("qMin");
   const rawQMax = url.searchParams.get("qMax");
   const rawRMin = url.searchParams.get("rMin");
@@ -62,6 +66,10 @@ function parseBbox(url: URL): {
   return { qMin, qMax, rMin, rMax };
 }
 
+const SNAPSHOT_CACHE = "public, max-age=60, s-maxage=300, stale-while-revalidate=600";
+const LIVE_FALLBACK_CACHE =
+  "public, max-age=30, s-maxage=60, stale-while-revalidate=120";
+
 export async function GET(request: NextRequest) {
   try {
     const user = await getVerifiedUser(request);
@@ -69,32 +77,34 @@ export async function GET(request: NextRequest) {
 
     const url = new URL(request.url);
     const bbox = parseBbox(url);
-    if (bbox) {
-      const tiles = await getMapTilesInBoundsServer(bbox);
-      const res = apiSuccess({ tiles });
-      // Bbox-keyed responses are identical for all users → CDN-cacheable.
-      // 60s shared cache + 120s stale-while-revalidate keeps refresh storms
-      // off Firestore while bounding staleness to 1 minute.
-      res.headers.set(
-        "Cache-Control",
-        "public, max-age=30, s-maxage=60, stale-while-revalidate=120"
-      );
+
+    const cached = await readWorldSnapshotServer();
+    if (cached) {
+      const tiles = bbox
+        ? filterSnapshotToBbox(cached.snapshot, bbox)
+        : cached.snapshot.tiles;
+      const body = bbox ? { tiles } : { tiles, owners: cached.snapshot.owners };
+      const res = apiSuccess(body);
+      res.headers.set("Cache-Control", SNAPSHOT_CACHE);
+      if (cached.isStale) res.headers.set("X-World-Snapshot-Stale", "true");
+      res.headers.set("X-World-Snapshot-GeneratedAt", cached.snapshot.generatedAt);
       return res;
     }
 
+    // Fallback path — only on first request after a fresh deploy or if the
+    // snapshot collection was wiped. Cron will repopulate it within minutes.
+    if (bbox) {
+      const tiles = await getMapTilesInBoundsServer(bbox);
+      const res = apiSuccess({ tiles });
+      res.headers.set("Cache-Control", LIVE_FALLBACK_CACHE);
+      return res;
+    }
     const [tiles, owners] = await Promise.all([
       getAllMapTilesServer(),
       getAllOwnerSummariesServer(),
     ]);
     const res = apiSuccess({ tiles, owners });
-    // Bare GET returns the same global snapshot for every caller. Cache
-    // aggressively at the edge — at 3K+ tiles this is by far the most
-    // expensive read path. Once the 🌐 world view migrates to bbox + a
-    // separate owners endpoint, this branch can be capped to bbox-only.
-    res.headers.set(
-      "Cache-Control",
-      "public, max-age=30, s-maxage=60, stale-while-revalidate=120"
-    );
+    res.headers.set("Cache-Control", LIVE_FALLBACK_CACHE);
     return res;
   } catch (error) {
     return mapGameError(error);

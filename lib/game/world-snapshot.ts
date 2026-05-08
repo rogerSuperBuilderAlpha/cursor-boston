@@ -1,0 +1,271 @@
+/**
+ * Copyright (C) 2026 Cursor Boston
+ * This file is part of Cursor Boston, licensed under GPL-3.0.
+ * See LICENSE file for details.
+ */
+
+// Periodic denormalized snapshot of the entire game world. The map read
+// path (`/api/game/world` and `/api/game/map/me`) reads this single doc
+// instead of scanning `game_tiles` + `game_players` on every request.
+//
+// Doc cost (per Firestore pricing): 1 read per fetch instead of ~3K reads
+// at today's tile count. At 1K humans this is the difference between
+// $50/yr and $500+/yr in just-the-map costs.
+//
+// Doc shape lives at `game_world_snapshots/latest`.
+//
+// Staleness budget: 5 minutes (TTL_MS). Game is weekly-paced; player
+// actions update local client state from their own response so a player's
+// own changes are reflected immediately. Staleness only affects how soon
+// other players' changes (incoming attacks, captures) become visible.
+
+import type { Firestore } from "firebase-admin/firestore";
+import { getAdminDb } from "@/lib/firebase-admin";
+import { logger } from "@/lib/logger";
+import { isShieldActive } from "./turns";
+import type { Caste, GamePlayer, MapTile } from "./types";
+import { neighborTileIds } from "./world-gen";
+
+export const WORLD_SNAPSHOT_COLLECTION = "game_world_snapshots";
+export const WORLD_SNAPSHOT_DOC = "latest";
+// Soft TTL — readers tolerate serving stale snapshots a bit past this
+// window (CDN cache will revalidate eventually). The cron / weekly-NPC
+// hooks rebuild well within this budget so the staleness flag is rare.
+export const WORLD_SNAPSHOT_TTL_MS = 5 * 60 * 1000;
+
+export interface WorldSnapshotOwner {
+  userId: string;
+  displayName: string;
+  caste: Caste | null;
+  shielded: boolean;
+}
+
+export interface WorldSnapshot {
+  tiles: MapTile[];
+  owners: WorldSnapshotOwner[];
+  // Wall-clock time the snapshot was assembled. Used for the
+  // `X-World-Snapshot-Stale` response header.
+  generatedAt: string; // ISO
+  tileCount: number;
+  ownerCount: number;
+}
+
+interface StoredWorldSnapshot {
+  tiles: MapTile[];
+  owners: WorldSnapshotOwner[];
+  generatedAt: FirebaseFirestore.Timestamp | Date;
+  expiresAt: FirebaseFirestore.Timestamp | Date;
+  tileCount: number;
+  ownerCount: number;
+}
+
+// Reads every tile and every player to build a snapshot. Mirrors the
+// projections used by `getAllMapTilesServer` and `getAllOwnerSummariesServer`,
+// so the snapshot's payload is identical to what those functions returned
+// pre-snapshot — just delivered in one doc.
+export async function computeWorldSnapshot(
+  db: Firestore,
+  now: Date = new Date()
+): Promise<WorldSnapshot> {
+  const [tilesSnap, playersSnap] = await Promise.all([
+    db
+      .collection("game_tiles")
+      .select("tileId", "q", "r", "type", "ownerId", "units", "armedDefenseSpellId")
+      .get(),
+    db
+      .collection("game_players")
+      .select(
+        "userId",
+        "displayName",
+        "caste",
+        "shieldUntil",
+        "shieldDropAtTurn",
+        "turnsSpentTotal"
+      )
+      .get(),
+  ]);
+
+  const tiles: MapTile[] = tilesSnap.docs.map((d) => {
+    const data = d.data();
+    return {
+      tileId: data.tileId,
+      q: data.q,
+      r: data.r,
+      type: data.type,
+      ownerId: data.ownerId ?? null,
+      units: data.units,
+      armedDefenseSpellId: data.armedDefenseSpellId ?? null,
+    };
+  });
+
+  const owners: WorldSnapshotOwner[] = playersSnap.docs.map((d) => {
+    const p = d.data() as GamePlayer;
+    return {
+      userId: p.userId,
+      displayName: p.displayName ?? "",
+      caste: p.caste ?? null,
+      shielded: isShieldActive(p, now),
+    };
+  });
+
+  return {
+    tiles,
+    owners,
+    generatedAt: now.toISOString(),
+    tileCount: tiles.length,
+    ownerCount: owners.length,
+  };
+}
+
+// Reads + writes the snapshot doc. Idempotent. Logs the size so we can
+// monitor when we approach the 1MB Firestore doc limit (will need
+// sharding around ~12K tiles — see comment at end of file).
+export async function rebuildWorldSnapshotServer(
+  now: Date = new Date()
+): Promise<{ tileCount: number; ownerCount: number; bytes: number }> {
+  const db = getAdminDb();
+  if (!db) throw new Error("Firebase Admin not initialized");
+
+  const snapshot = await computeWorldSnapshot(db, now);
+  const stored: StoredWorldSnapshot = {
+    tiles: snapshot.tiles,
+    owners: snapshot.owners,
+    generatedAt: now,
+    expiresAt: new Date(now.getTime() + WORLD_SNAPSHOT_TTL_MS),
+    tileCount: snapshot.tileCount,
+    ownerCount: snapshot.ownerCount,
+  };
+
+  const ref = db.collection(WORLD_SNAPSHOT_COLLECTION).doc(WORLD_SNAPSHOT_DOC);
+  await ref.set(stored);
+
+  // Approximate size as JSON; close enough for capacity monitoring without
+  // pulling in a Firestore-byte-counter library. Firestore's 1MB limit is
+  // on the binary-encoded doc, which is typically ~70-90% of JSON length.
+  const bytes = JSON.stringify(stored).length;
+
+  logger.info("Game world snapshot rebuilt", {
+    tileCount: snapshot.tileCount,
+    ownerCount: snapshot.ownerCount,
+    approxBytes: bytes,
+    capacityPctOf1MB: Math.round((bytes / (1024 * 1024)) * 100),
+  });
+
+  return {
+    tileCount: snapshot.tileCount,
+    ownerCount: snapshot.ownerCount,
+    bytes,
+  };
+}
+
+// Reads the snapshot doc. Returns null if no snapshot exists yet (e.g.
+// before the first cron run). Caller falls back to live queries.
+export async function readWorldSnapshotServer(): Promise<{
+  snapshot: WorldSnapshot;
+  isStale: boolean;
+} | null> {
+  const db = getAdminDb();
+  if (!db) return null;
+
+  const ref = db.collection(WORLD_SNAPSHOT_COLLECTION).doc(WORLD_SNAPSHOT_DOC);
+  const doc = await ref.get();
+  if (!doc.exists) return null;
+
+  const data = doc.data() as StoredWorldSnapshot | undefined;
+  if (!data || !Array.isArray(data.tiles) || !Array.isArray(data.owners)) {
+    return null;
+  }
+
+  const generatedAt =
+    data.generatedAt instanceof Date
+      ? data.generatedAt
+      : data.generatedAt?.toDate?.() ?? new Date(0);
+  const expiresAt =
+    data.expiresAt instanceof Date
+      ? data.expiresAt
+      : data.expiresAt?.toDate?.() ?? new Date(0);
+
+  return {
+    snapshot: {
+      tiles: data.tiles,
+      owners: data.owners,
+      generatedAt: generatedAt.toISOString(),
+      tileCount: data.tileCount ?? data.tiles.length,
+      ownerCount: data.ownerCount ?? data.owners.length,
+    },
+    isStale: Date.now() >= expiresAt.getTime(),
+  };
+}
+
+// Filters the snapshot down to a bbox. Pure in-memory — no Firestore read.
+export function filterSnapshotToBbox(
+  snapshot: WorldSnapshot,
+  bounds: { qMin: number; qMax: number; rMin: number; rMax: number }
+): MapTile[] {
+  return snapshot.tiles.filter(
+    (t) =>
+      t.q >= bounds.qMin &&
+      t.q <= bounds.qMax &&
+      t.r >= bounds.rMin &&
+      t.r <= bounds.rMax
+  );
+}
+
+// Builds the personal map view (my tiles + enemy border + owner summaries
+// for those enemies) entirely from the snapshot. Pure in-memory — no
+// Firestore reads. Mirrors the shape returned by `getMyMapServer` so the
+// route can swap implementations without changing the API contract.
+//
+// Staleness contract: the snapshot may be up to WORLD_SNAPSHOT_TTL_MS
+// behind reality. Action handlers return live updated tiles in their own
+// responses, so a player's own builds/attacks/etc. are reflected
+// immediately on the client; only OTHER players' changes ride the
+// snapshot delay.
+export function deriveMyMapFromSnapshot(
+  snapshot: WorldSnapshot,
+  userId: string
+): {
+  myTiles: MapTile[];
+  borderTiles: MapTile[];
+  owners: WorldSnapshotOwner[];
+} {
+  const tilesById = new Map<string, MapTile>();
+  for (const t of snapshot.tiles) tilesById.set(t.tileId, t);
+
+  const myTiles: MapTile[] = [];
+  for (const t of snapshot.tiles) {
+    if (t.ownerId === userId) myTiles.push(t);
+  }
+
+  const myIds = new Set(myTiles.map((t) => t.tileId));
+  const borderTiles: MapTile[] = [];
+  const enemyOwnerIds = new Set<string>();
+  const seen = new Set<string>();
+
+  for (const t of myTiles) {
+    for (const nid of neighborTileIds(t.q, t.r)) {
+      if (myIds.has(nid)) continue;
+      if (seen.has(nid)) continue;
+      seen.add(nid);
+      const neighbor = tilesById.get(nid);
+      if (!neighbor) continue; // unrevealed
+      if (!neighbor.ownerId || neighbor.ownerId === userId) continue;
+      borderTiles.push(neighbor);
+      enemyOwnerIds.add(neighbor.ownerId);
+    }
+  }
+
+  const owners: WorldSnapshotOwner[] = [];
+  for (const o of snapshot.owners) {
+    if (enemyOwnerIds.has(o.userId)) owners.push(o);
+  }
+
+  return { myTiles, borderTiles, owners };
+}
+
+// Future work: when the world grows past ~12K tiles the snapshot doc will
+// approach Firestore's 1MB hard limit. Shard by `tileId.charCodeAt(0) % N`
+// into `game_world_snapshots/shard-{n}` and fan-out reads. Owners stay
+// unsharded (player count grows much slower than tile count). The reader
+// API can stay the same — `readWorldSnapshotServer` just gets all shards
+// in parallel.

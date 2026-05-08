@@ -32,6 +32,7 @@ import {
 } from "./turns";
 import { computeTileCapacity, makeSeededRng } from "./combat";
 import { getSpellForCasteAndType } from "./content";
+import { rebuildWorldSnapshotServer } from "./world-snapshot";
 import type {
   GamePlayer,
   GameTile,
@@ -624,6 +625,19 @@ export async function runNpcWeeklyServer(
     skippedAlreadyGranted: summary.skippedAlreadyGranted,
     totals: summary.totals,
   });
+
+  // The cron has touched many tiles + player docs; rebuild the world
+  // snapshot now so the next read by any human serves fresh data without
+  // waiting up to 5 min for the periodic snapshot cron.
+  if (!dryRun && summary.granted > 0) {
+    try {
+      await rebuildWorldSnapshotServer();
+    } catch (e) {
+      logger.warn("World snapshot rebuild after NPC weekly failed", {
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
+  }
 
   return summary;
 }
