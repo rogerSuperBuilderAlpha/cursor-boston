@@ -21,7 +21,16 @@ export async function GET(request: NextRequest) {
     const user = await getVerifiedUser(request);
     if (!user) return apiError("Authentication required", 401);
     const { myTiles, borderTiles, owners } = await getMyMapServer(user.uid);
-    return apiSuccess({ myTiles, borderTiles, owners });
+    const res = apiSuccess({ myTiles, borderTiles, owners });
+    // Per-user response — browser-only cache. Action handlers update local
+    // state from their own responses, so rapid refresh-button mashing is the
+    // only thing that benefits here. 30s caps reads at ≤2/min/user even
+    // under aggressive refresh, while keeping post-attack staleness short.
+    res.headers.set(
+      "Cache-Control",
+      "private, max-age=30, must-revalidate"
+    );
+    return res;
   } catch (error) {
     return mapGameError(error);
   }

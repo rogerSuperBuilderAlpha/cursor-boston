@@ -135,9 +135,11 @@ export function useTilesData() {
     setWorldError(null);
     try {
       const token = await user.getIdToken();
+      // Honor the route's Cache-Control (public, s-maxage=60). The world
+      // snapshot is identical for every caller, so a CDN/browser hit is
+      // exactly the same data — no reason to bypass cache here.
       const res = await fetch("/api/game/world", {
         headers: { Authorization: `Bearer ${token}` },
-        cache: "no-store",
       });
       if (!res.ok) {
         throw new Error(`World fetch failed: HTTP ${res.status}`);
