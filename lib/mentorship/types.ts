@@ -36,6 +36,14 @@ export interface MentorshipProfile {
   isActive: boolean;
   createdAt: Timestamp | Date;
   updatedAt: Timestamp | Date;
+  /**
+   * Lowercase+trim copies of `expertise` / `learningGoals`, denormalized
+   * onto the doc so candidate-fetch can use Firestore `array-contains-any`
+   * without case-sensitivity gotchas. Written by the profile-upsert path;
+   * legacy docs without these fields fall back to a full scan.
+   */
+  normalizedExpertise?: string[];
+  normalizedLearningGoals?: string[];
 }
 
 export interface MentorshipGoal {

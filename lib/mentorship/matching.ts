@@ -94,8 +94,27 @@ export function calculateMentorshipMatchScore(
   };
 }
 
-function normalizeSkill(s: string): string {
+/**
+ * Lowercase + trim a skill/goal string so case + whitespace differences
+ * don't block matches. Exported so candidate queries (Firestore
+ * `array-contains-any`) and the score function agree on representation.
+ */
+export function normalizeSkill(s: string): string {
   return s.toLowerCase().trim();
+}
+
+/** Normalize an array of skills + drop empties/dupes. */
+export function normalizeSkills(skills: ReadonlyArray<string>): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const s of skills) {
+    const n = normalizeSkill(s);
+    if (n && !seen.has(n)) {
+      seen.add(n);
+      out.push(n);
+    }
+  }
+  return out;
 }
 
 function getTimezoneDifference(tz1: string, tz2: string): number | null {
