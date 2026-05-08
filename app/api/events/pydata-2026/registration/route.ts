@@ -17,6 +17,8 @@ import {
   type PydataRegistrationStatus,
 } from "@/lib/pydata-2026";
 
+// @contracts: eventsContract.pydataRegistrationGet, eventsContract.pydataRegistrationPost (lib/api-schemas/events.ts)
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 

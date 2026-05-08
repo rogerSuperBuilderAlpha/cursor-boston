@@ -9,6 +9,7 @@ import {
   fetchSummerCohortSubmissions,
   getVoteWeekById,
 } from "@/lib/summer-cohort-submissions";
+import { summerCohortContract } from "@/lib/api-schemas/summer-cohort";
 
 interface RouteParams {
   params: Promise<{ weekId: string }>;
@@ -21,7 +22,14 @@ interface RouteParams {
  */
 export async function GET(_req: Request, { params }: RouteParams) {
   const { weekId } = await params;
-  const week = getVoteWeekById(weekId);
+  const parsedParams = summerCohortContract.submissionsByWeek.pathParams.safeParse({ weekId });
+  if (!parsedParams.success) {
+    return NextResponse.json(
+      { error: "Unknown weekId — vote-format weeks are week-1, week-2, week-3." },
+      { status: 404 }
+    );
+  }
+  const week = getVoteWeekById(parsedParams.data.weekId);
   if (!week) {
     return NextResponse.json(
       { error: "Unknown weekId — vote-format weeks are week-1, week-2, week-3." },

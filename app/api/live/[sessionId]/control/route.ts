@@ -13,6 +13,7 @@ import {
   LiveSessionUnauthorizedError,
 } from "@/lib/live-sessions/data-server";
 import type { LiveSessionControlAction } from "@/lib/live-sessions/types";
+import { liveContract } from "@/lib/api-schemas/live";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -39,20 +40,15 @@ export async function POST(
     }
 
     const { sessionId } = await context.params;
-    let body: {
-      action?: unknown;
-      entryId?: unknown;
-      targetIndex?: unknown;
-    };
-    try {
-      body = (await request.json()) as {
-        action?: unknown;
-        entryId?: unknown;
-        targetIndex?: unknown;
-      };
-    } catch {
+    const rawBody = await request.json().catch(() => null);
+    if (rawBody === null) {
       return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
     }
+    const parsed = liveContract.sessionControl.body.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+    }
+    const body = parsed.data;
 
     if (!VALID_ACTIONS.includes(body.action as LiveSessionControlAction)) {
       return NextResponse.json({ error: "Invalid action" }, { status: 400 });

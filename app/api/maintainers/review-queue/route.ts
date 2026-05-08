@@ -13,6 +13,8 @@ import {
 } from "@/lib/maintainer-github-queue";
 import { getClientIdentifier, checkRateLimit } from "@/lib/rate-limit";
 
+// @contracts: maintainersContract.reviewQueue (lib/api-schemas/maintainers.ts)
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 

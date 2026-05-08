@@ -17,6 +17,7 @@ import {
   LIVE_TALK_DURATIONS,
   type LiveTalkDurationMinutes,
 } from "@/lib/live-sessions/types";
+import { liveContract } from "@/lib/api-schemas/live";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -61,18 +62,16 @@ export async function POST(
       return NextResponse.json({ error: "Session ID is required" }, { status: 400 });
     }
 
-    let body: {
-      talkTitle?: unknown;
-      durationMinutes?: unknown;
-    };
-    try {
-      body = (await request.json()) as {
-        talkTitle?: unknown;
-        durationMinutes?: unknown;
-      };
-    } catch {
+    const rawBody = await request.json().catch(() => null);
+    if (rawBody === null) {
       return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
     }
+    // Contract validates the basic shape; per-field bound checks below
+    // preserve the existing detailed error messages.
+    const parsed = liveContract.queueJoin.body.safeParse(rawBody);
+    const body = parsed.success
+      ? parsed.data
+      : (rawBody as { talkTitle?: unknown; durationMinutes?: unknown });
 
     const talkTitle = normalizeTalkTitle(body.talkTitle);
     const durationMinutes = normalizeDuration(body.durationMinutes);

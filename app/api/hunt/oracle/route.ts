@@ -8,6 +8,8 @@ import { NextResponse } from "next/server";
 import { createHash } from "crypto";
 import { getOracleAnswer } from "@/lib/treasure-hunt-paths";
 
+// @contracts: huntContract.oracle (lib/api-schemas/hunt.ts)
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 

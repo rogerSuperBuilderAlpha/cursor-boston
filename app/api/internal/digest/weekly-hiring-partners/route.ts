@@ -17,6 +17,8 @@ import {
   HIRING_PARTNERS_NOTIFY_EMAIL,
 } from "@/lib/hiring-partners";
 
+// @contracts: internalContract.weeklyHiringPartnersDigestGet, internalContract.weeklyHiringPartnersDigestPost (lib/api-schemas/internal.ts)
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;

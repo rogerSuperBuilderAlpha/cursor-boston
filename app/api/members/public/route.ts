@@ -12,6 +12,8 @@ import {
 } from "@/lib/members-public-snapshot";
 import type { PublicMember } from "@/types/members";
 
+// @contracts: membersContract.publicList (lib/api-schemas/members.ts)
+
 export const runtime = "nodejs";
 
 const REVALIDATE_SECONDS = 300;

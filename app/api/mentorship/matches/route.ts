@@ -12,6 +12,8 @@ import {
 } from "@/lib/mentorship/data-server";
 import { getTopMentorshipMatches } from "@/lib/mentorship/matching";
 
+// @contracts: mentorshipContract.matches (lib/api-schemas/mentorship.ts)
+
 /**
  * GET /api/mentorship/matches
  * Get top mentor/mentee matches for the authenticated user.

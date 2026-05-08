@@ -11,6 +11,7 @@ import { getAdminDb } from "@/lib/firebase-admin";
 import { getClientIdentifier } from "@/lib/rate-limit";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 import { logApiError } from "@/lib/logger";
+import { agentsContract } from "@/lib/api-schemas/agents";
 
 interface RouteContext {
   params: Promise<{ token: string }>;
@@ -54,11 +55,12 @@ export async function GET(
 
     const { token } = await context.params;
 
-    if (!token) {
+    const parsedParams = agentsContract.claimGet.pathParams.safeParse({ token });
+    if (!parsedParams.success) {
       return NextResponse.json(
         {
           success: false,
-          error: "Claim token is required",
+          error: parsedParams.error.issues[0]?.message ?? "Claim token is required",
         },
         { status: 400 }
       );
@@ -179,11 +181,12 @@ export async function POST(
 
     const { token } = await context.params;
 
-    if (!token) {
+    const parsedParams = agentsContract.claimGet.pathParams.safeParse({ token });
+    if (!parsedParams.success) {
       return NextResponse.json(
         {
           success: false,
-          error: "Claim token is required",
+          error: parsedParams.error.issues[0]?.message ?? "Claim token is required",
         },
         { status: 400 }
       );

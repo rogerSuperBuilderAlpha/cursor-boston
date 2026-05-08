@@ -21,6 +21,7 @@ import {
   type HiringPartnerStatus,
   type PartnerEngineerExpectationKey,
 } from "@/lib/hiring-partners";
+import { hiringPartnersContract } from "@/lib/api-schemas/hiring-partners";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -115,7 +116,14 @@ async function handlePost(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const raw = (body || {}) as Record<string, unknown>;
+  const parsed = hiringPartnersContract.applyPost.body.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Invalid body" },
+      { status: 400 }
+    );
+  }
+  const raw = parsed.data as Record<string, unknown>;
   const contactName = trimOrEmpty(raw.contactName, HIRING_PARTNERS_MAX.contactName);
   const phone = trimOrEmpty(raw.phone, HIRING_PARTNERS_MAX.phone);
   const companyName = trimOrEmpty(raw.companyName, HIRING_PARTNERS_MAX.companyName);

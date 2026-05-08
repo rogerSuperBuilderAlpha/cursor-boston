@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withMiddleware, rateLimitConfigs } from "@/lib/middleware";
 import { logger } from "@/lib/logger";
+import { githubContract } from "@/lib/api-schemas/github";
 
 const GITHUB_CLIENT_ID = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID;
 const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
@@ -43,8 +44,12 @@ function buildCallbackRedirect(
 
 async function handleGitHubCallback(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
-  const code = searchParams.get("code");
-  const state = searchParams.get("state");
+  const parsedQuery = githubContract.callback.query.safeParse({
+    code: searchParams.get("code") ?? undefined,
+    state: searchParams.get("state") ?? undefined,
+  });
+  const code = parsedQuery.success ? parsedQuery.data.code ?? null : null;
+  const state = parsedQuery.success ? parsedQuery.data.state ?? null : null;
   const expectedState = request.cookies.get("github_oauth_state")?.value;
   const returnTo = sanitizeReturnTo(
     request.cookies.get("github_oauth_return_to")?.value

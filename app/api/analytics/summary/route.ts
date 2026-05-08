@@ -11,6 +11,8 @@ import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 import type { AnalyticsSummary } from "@/lib/analytics-snapshot-compute";
 import { EMPTY_ANALYTICS_SUMMARY } from "@/lib/analytics-snapshot-compute";
 
+// @contracts: analyticsContract.summary (lib/api-schemas/analytics.ts)
+
 const RATE_LIMIT = { windowMs: 60 * 1000, maxRequests: 60 };
 
 /** Re-export type for consumers (e.g. AnalyticsDashboard). */

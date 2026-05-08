@@ -14,6 +14,7 @@ import {
 } from "@/lib/mentorship/data-server";
 import { parseRequestBody } from "@/lib/api-response";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
+import { mentorshipContract } from "@/lib/api-schemas/mentorship";
 
 const RESPOND_RATE_LIMIT = { windowMs: 60 * 1000, maxRequests: 10 };
 
@@ -41,21 +42,14 @@ export async function POST(request: NextRequest) {
 
     const bodyOrError = await parseRequestBody(request);
     if (bodyOrError instanceof NextResponse) return bodyOrError;
-    const { requestId, action } = bodyOrError;
-
-    if (!requestId || typeof requestId !== "string") {
+    const parsed = mentorshipContract.respond.body.safeParse(bodyOrError);
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: "requestId is required" },
+        { success: false, error: parsed.error.issues[0]?.message ?? "Invalid body" },
         { status: 400 }
       );
     }
-
-    if (action !== "accept" && action !== "decline") {
-      return NextResponse.json(
-        { success: false, error: "action must be 'accept' or 'decline'" },
-        { status: 400 }
-      );
-    }
+    const { requestId, action } = parsed.data;
 
     const result = await respondToMentorshipRequestServer(requestId, user.uid, action);
 

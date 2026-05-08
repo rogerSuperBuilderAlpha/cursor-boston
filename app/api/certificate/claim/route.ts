@@ -22,6 +22,8 @@ import {
 } from "@/lib/certificate";
 import { logger } from "@/lib/logger";
 
+// @contracts: certificateContract.claim (lib/api-schemas/certificate.ts)
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 

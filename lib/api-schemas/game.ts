@@ -485,6 +485,23 @@ export const gameContract = c.router(
       responses: { 200: WorldOk, ...baseErrorResponses },
       metadata: { errorCodes: ["UNAUTHORIZED", "SERVER_ERROR"] as const },
     },
+    getMyMap: {
+      method: "GET",
+      path: "/api/game/map/me",
+      summary: "Get the current user's personal map view (own tiles + enemy ring)",
+      description:
+        "Returns the user's owned tiles plus the enemy-owned border ring touching them, with owner summaries for those enemies. Read cost scales with kingdom perimeter rather than world size.",
+      responses: {
+        200: z.object({
+          success: z.literal(true),
+          myTiles: z.array(GameTileSchema),
+          borderTiles: z.array(GameTileSchema),
+          owners: z.array(z.object({}).passthrough()),
+        }),
+        ...baseErrorResponses,
+      },
+      metadata: { errorCodes: ["UNAUTHORIZED", "SERVER_ERROR"] as const },
+    },
     getTile: {
       method: "GET",
       path: "/api/game/tile/:tileId",

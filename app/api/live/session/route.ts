@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { sanitizeText } from "@/lib/sanitize";
 import { createLiveSessionServer } from "@/lib/live-sessions/data-server";
+import { liveContract } from "@/lib/api-schemas/live";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -47,13 +48,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    let body: { title?: unknown };
-    try {
-      body = (await request.json()) as { title?: unknown };
-    } catch {
+    const rawBody = await request.json().catch(() => null);
+    if (rawBody === null) {
       return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
     }
-    const title = normalizeSessionTitle(body.title);
+    const parsedBody = liveContract.sessionCreate.body.safeParse(rawBody);
+    if (!parsedBody.success) {
+      return NextResponse.json(
+        { error: `Title must be a string up to ${MAX_TITLE_LENGTH} characters` },
+        { status: 400 }
+      );
+    }
+    const title = normalizeSessionTitle(parsedBody.data.title);
 
     if (!title) {
       return NextResponse.json(

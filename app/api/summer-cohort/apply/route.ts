@@ -20,6 +20,7 @@ import {
   isValidCohortId,
   type SummerCohortId,
 } from "@/lib/summer-cohort";
+import { summerCohortContract } from "@/lib/api-schemas/summer-cohort";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -144,7 +145,10 @@ async function handlePost(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const raw = (body || {}) as Record<string, unknown>;
+  // Contract validation runs alongside the existing per-field guards below
+  // (which produce specific user-facing error messages we want to preserve).
+  const parsedBody = summerCohortContract.applyPost.body.safeParse(body);
+  const raw = (parsedBody.success ? parsedBody.data : (body || {})) as Record<string, unknown>;
   const name = typeof raw.name === "string" ? raw.name.trim() : "";
   const phone = typeof raw.phone === "string" ? raw.phone.trim() : "";
   const cohortsInput = Array.isArray(raw.cohorts) ? raw.cohorts : [];
