@@ -32,15 +32,36 @@ const ResolveEmailBody = z
   .openapi("AuthResolveEmailBody", { example: { email: "user+alias@example.com" } });
 
 const ChangePrimaryEmailBody = z
-  .object({ newPrimaryEmail: z.string().min(1) })
+  .object({
+    newPrimaryEmail: z
+      .string({
+        required_error: "New primary email is required",
+        invalid_type_error: "New primary email is required",
+      })
+      .min(1, "New primary email is required"),
+  })
   .openapi("AuthChangePrimaryEmailBody");
 
 const RemoveEmailBody = z
-  .object({ email: z.string().min(1) })
+  .object({
+    email: z
+      .string({
+        required_error: "Email is required",
+        invalid_type_error: "Email is required",
+      })
+      .min(1, "Email is required"),
+  })
   .openapi("AuthRemoveEmailBody");
 
 const SendEmailVerificationBody = z
-  .object({ email: z.string().min(1) })
+  .object({
+    email: z
+      .string({
+        required_error: "Email is required",
+        invalid_type_error: "Email is required",
+      })
+      .min(1, "Email is required"),
+  })
   .openapi("AuthSendEmailVerificationBody");
 
 const VerifyEmailQuery = z.object({ token: z.string().min(1) });

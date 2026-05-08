@@ -30,7 +30,12 @@ const ProfileDataQuery = z
   .openapi("ProfileDataQuery");
 
 const SubscriptionPatchBody = z
-  .object({ subscribed: z.boolean() })
+  .object({
+    subscribed: z.boolean({
+      required_error: "subscribed must be a boolean",
+      invalid_type_error: "subscribed must be a boolean",
+    }),
+  })
   .openapi("ProfileSubscriptionPatchBody");
 
 const SocialLinksSchema = z
