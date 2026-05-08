@@ -24,6 +24,8 @@ import { ArmyCard } from "./ArmyCard";
 import { ThreatCard } from "./ThreatCard";
 import { ShieldCard } from "./ShieldCard";
 import { ExploreFrontier } from "./ExploreFrontier";
+import { FarExpedition } from "./FarExpedition";
+import { SpyAction } from "./SpyAction";
 import { BulkDistribute } from "./BulkDistribute";
 import { BulkUnassign } from "./BulkUnassign";
 import { MiniMap } from "./MiniMap";
@@ -168,6 +170,24 @@ export function DashboardView({ player, data }: DashboardViewProps) {
                 progress={exploreProgress}
                 maxCount={Math.min(50, player.turnsRemaining)}
                 onExplore={() => handleFrontierExplore(exploreCount)}
+              />
+            )}
+
+            {player.phase === "play" && (
+              <FarExpedition
+                turnsRemaining={player.turnsRemaining}
+                onSuccess={() => window.location.reload()}
+              />
+            )}
+
+            {player.phase === "play" && player.caste && (
+              <SpyAction
+                caste={player.caste}
+                tilesHeld={player.stats.tilesHeld}
+                turnsRemaining={player.turnsRemaining}
+                onSuccess={() => {
+                  /* spy doesn't change tile state, no reload needed */
+                }}
               />
             )}
 

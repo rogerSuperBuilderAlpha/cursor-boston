@@ -7,7 +7,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { apiError, apiSuccess, parseRequestBody } from "@/lib/api-response";
 import { mapGameError } from "@/lib/game/api-error-map";
-import { attackTileServer } from "@/lib/game/data-server";
+import { castIntelSpellServer } from "@/lib/game/data-server";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { gameContract } from "@/lib/api-schemas/game";
 
@@ -19,25 +19,21 @@ export async function POST(request: NextRequest) {
     const bodyOrError = await parseRequestBody(request);
     if (bodyOrError instanceof NextResponse) return bodyOrError;
 
-    const parsed = gameContract.attack.body.safeParse(bodyOrError);
+    const parsed = gameContract.spy.body.safeParse(bodyOrError);
     if (!parsed.success) {
       return apiError(parsed.error.issues[0]?.message ?? "Invalid body", 400);
     }
 
-    const result = await attackTileServer({
-      attackerId: user.uid,
-      sourceTileId: parsed.data.sourceTileId,
-      targetTileId: parsed.data.targetTileId,
-      units: parsed.data.units,
-      offenseSpellId: parsed.data.offenseSpellId ?? null,
-    });
+    const result = await castIntelSpellServer(
+      user.uid,
+      parsed.data.spellId,
+      parsed.data.targetTileId
+    );
     return apiSuccess({
-      attack: result.attack,
-      attackerPlayer: result.attackerPlayer,
-      sourceTile: result.sourceTile,
-      targetTile: result.targetTile,
+      player: result.player,
       report: result.report,
-      ...(result.intelReport ? { intelReport: result.intelReport } : {}),
+      intelReport: result.intelReport,
+      detected: result.detected,
     });
   } catch (error) {
     return mapGameError(error);

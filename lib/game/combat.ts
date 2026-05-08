@@ -7,6 +7,7 @@
 import {
   BUILDINGS_BY_ID,
   SPELLS_BY_ID,
+  UPGRADES_BY_ID,
   getCasteProfile,
   getUnitForCasteAndType,
 } from "./content";
@@ -16,6 +17,7 @@ import {
   magicMultiplierBonusFromUpgrades,
 } from "./upgrades";
 import type {
+  AirIntelPassive,
   AttackOutcome,
   Caste,
   CombatAttackerInput,
@@ -23,6 +25,7 @@ import type {
   CombatResult,
   CombatTileInput,
   LandType,
+  SpellTier,
   UnitStack,
   UnitType,
 } from "./types";
@@ -56,6 +59,19 @@ const UNDERDOG_SIZE_RATIO = 0.5;
 const UNDERDOG_DEFENSE_BONUS = 0.25;
 const RNG_LOWER = 0.9;
 const RNG_RANGE = 0.2;
+
+// Supply: each friendly neighbor contributes 5% × type weight × caste mult,
+// then clamped between the isolation floor and the cap.
+const SUPPLY_PER_WEIGHT = 0.05;
+const SUPPLY_ISOLATION_FLOOR = 0.85;
+const SUPPLY_MAX = 1.5;
+const SUPPLY_TYPE_WEIGHTS: Record<LandType, number> = {
+  unrevealed: 0,
+  unassigned: 0,
+  military: 1.0,
+  magic: 0.6,
+  food: 0.3,
+};
 
 export function magicMultiplier(
   magicLandCount: number,
@@ -196,6 +212,61 @@ function compositionPower(
   return total;
 }
 
+// Forge Scouts (Red air-intel passive): +5% offense when attacker air ≥
+// defender air. Stacks multiplicatively with offense spell contribution.
+const FORGE_SCOUTS_BONUS = 0.05;
+
+// Defender's heaviest unit type → attacker's best counter under the
+// air→ground→siege→air rock-paper-scissors. Mirrors lib/game/intel.ts.
+const RPS_COUNTERS: Record<UnitType, UnitType> = {
+  ground: "air",
+  siege: "ground",
+  air: "siege",
+};
+
+function findActiveAirIntelPassive(
+  attackerCaste: Caste,
+  attackerUpgrades: Record<string, string>
+): AirIntelPassive | null {
+  const airTargetId = `${attackerCaste}-air-`;
+  for (const [targetId, upgradeId] of Object.entries(attackerUpgrades)) {
+    if (!targetId.startsWith(airTargetId)) continue;
+    const def = UPGRADES_BY_ID.get(upgradeId);
+    if (def?.intelPassive) return def.intelPassive;
+  }
+  return null;
+}
+
+function pickWeakFaceFromUnits(units: UnitStack): UnitType | undefined {
+  let max = 0;
+  let dominant: UnitType | undefined;
+  for (const t of UNIT_TYPES) {
+    if (units[t] > max) {
+      max = units[t];
+      dominant = t;
+    }
+  }
+  return dominant ? RPS_COUNTERS[dominant] : undefined;
+}
+
+// Defensive supply multiplier from friendly neighbors. Empty array → -15% floor.
+// Caste profile decides how aggressively neighbor weight stacks: Green 1.5×,
+// Blue 0.75×, etc.
+export function computeSupplyMultiplier(
+  caste: Caste,
+  friendlyNeighbors: ReadonlyArray<{ landType: LandType }>
+): number {
+  if (friendlyNeighbors.length === 0) return SUPPLY_ISOLATION_FLOOR;
+  let typeWeight = 0;
+  for (const n of friendlyNeighbors) {
+    typeWeight += SUPPLY_TYPE_WEIGHTS[n.landType] ?? 0;
+  }
+  const rawSupply = SUPPLY_PER_WEIGHT * typeWeight;
+  const casteBonus = getCasteProfile(caste).supplyMultiplier;
+  const supplyMult = 1.0 + rawSupply * casteBonus;
+  return Math.min(SUPPLY_MAX, Math.max(SUPPLY_ISOLATION_FLOOR, supplyMult));
+}
+
 function spellContribution(
   spellId: string | null,
   expectedType: "offense" | "defense",
@@ -243,6 +314,7 @@ export function resolveAttack(
       attackerLosses: emptyStack(),
       defenderLosses: emptyStack(),
       underdogApplied: false,
+      supplyMultiplier: 1,
       rng: { attackerRoll: 0, defenderRoll: 0 },
       appliedSpells,
     };
@@ -250,6 +322,11 @@ export function resolveAttack(
 
   const attackerUpgrades = attacker.activeUpgrades ?? {};
   const defenderUpgrades = defender.activeUpgrades ?? {};
+
+  const airIntelPassive = findActiveAirIntelPassive(
+    attacker.caste,
+    attackerUpgrades
+  );
 
   let attackPower = compositionPower(
     deployed,
@@ -273,6 +350,22 @@ export function resolveAttack(
     attacker.magicLandCount,
     attackerUpgrades
   );
+
+  // Red Forge Scouts: +5% offense when attacker air ≥ defender air.
+  let forgeScoutsBonusApplied = false;
+  if (
+    airIntelPassive === "red-forge-scouts" &&
+    deployed.air >= defender.unitsOnTile.air
+  ) {
+    attackPower *= 1 + FORGE_SCOUTS_BONUS;
+    forgeScoutsBonusApplied = true;
+  }
+
+  // Active intel effects (Red Forge Sight spell adds an offense bonus
+  // pre-resolved by the caller and passed in as a number).
+  if (attacker.intelOffenseBonus && attacker.intelOffenseBonus > 0) {
+    attackPower *= 1 + attacker.intelOffenseBonus;
+  }
   defensePower += spellContribution(
     defender.armedDefenseSpellId,
     "defense",
@@ -280,6 +373,19 @@ export function resolveAttack(
     defender.magicLandCount,
     defenderUpgrades
   );
+
+  // Supply: scale defense by how cohesive the defender's territory is around
+  // this tile. Skipped when callers don't supply neighbor info (legacy/tests).
+  let supplyMult = 1;
+  if (tile.friendlyNeighbors !== undefined) {
+    supplyMult = computeSupplyMultiplier(defender.caste, tile.friendlyNeighbors);
+    defensePower *= supplyMult;
+  }
+
+  // Alert-vs-caster intel effects (Black Vein of Truth, Green Root Whisper).
+  if (defender.intelDefenseBonus && defender.intelDefenseBonus > 0) {
+    defensePower *= 1 + defender.intelDefenseBonus;
+  }
 
   let underdogApplied = false;
   if (
@@ -316,6 +422,26 @@ export function resolveAttack(
       ? { ...defender.unitsOnTile }
       : applyLossFraction(defender.unitsOnTile, defenderLossFrac);
 
+  let airIntel: CombatResult["airIntel"];
+  if (airIntelPassive) {
+    airIntel = { sourcePassive: airIntelPassive };
+    if (airIntelPassive === "white-hawks-eye" && deployed.air >= 1) {
+      const tier = defenderSpellTier(defender.armedDefenseSpellId);
+      if (tier !== null) airIntel.defenseSpellTier = tier;
+    }
+    if (airIntelPassive === "red-forge-scouts") {
+      airIntel.forgeScoutsBonusApplied = forgeScoutsBonusApplied;
+      if (deployed.air >= defender.unitsOnTile.air) {
+        const wf = pickWeakFaceFromUnits(defender.unitsOnTile);
+        if (wf) airIntel.weakFace = wf;
+      }
+    }
+    // blue-sky-reader, black-crowfeast, green-crow-network: their reveals
+    // need state outside the combat function (neighbor tile data, recruit
+    // queue, kingdom-wide visibility) — surfaced by the attack server when
+    // it stitches the post-resolve report.
+  }
+
   return {
     outcome,
     unitsDeployed: deployed,
@@ -325,7 +451,15 @@ export function resolveAttack(
     attackerLosses,
     defenderLosses,
     underdogApplied,
+    supplyMultiplier: supplyMult,
     rng: { attackerRoll, defenderRoll },
     appliedSpells,
+    ...(airIntel ? { airIntel } : {}),
   };
+}
+
+function defenderSpellTier(spellId: string | null): SpellTier | null {
+  if (!spellId) return null;
+  const spell = SPELLS_BY_ID.get(spellId);
+  return spell ? spell.tier : null;
 }

@@ -12,8 +12,13 @@ import {
   makeSeededRng,
   resolveAttack,
 } from "./combat";
-import { SPELLS_BY_ID } from "./content";
+import { ARTIFACTS_BY_ID, SPELLS_BY_ID } from "./content";
 import { rollArtifact } from "./artifacts";
+import { buildIntelReportServer } from "./intel";
+import {
+  readAttackContextEffects,
+  recordIntelEffectInTx,
+} from "./intel-effects";
 import {
   buildArmDefenseReport,
   buildAttackReport,
@@ -55,6 +60,7 @@ import type {
   GameAttack,
   GamePlayer,
   GameTile,
+  IntelReport,
   LandType,
   MapTile,
   TurnAction,
@@ -84,6 +90,10 @@ export const ATTACK_TURN_COST = 1;
 export const SPELL_TURN_COST = 5;
 export const BUILD_UNITS_TURN_COST = 5;
 export const BUILD_UNITS_PER_TURN = 10;
+// Far expedition: 2× the normal explore cost. Lands a tile adjacent to a
+// random enemy tile, marked isolatedSpawn so the supply system applies the
+// -15% defense floor until the player grows neighbors around it.
+export const FAR_EXPEDITION_TURN_COST = 2;
 
 export class GamePlayerNotFoundError extends Error {
   constructor() {
@@ -239,6 +249,14 @@ export class GameNameTakenError extends Error {
   constructor() {
     super("That general name is already in use");
     this.name = "GameNameTakenError";
+  }
+}
+export class GameNoEnemyKingdomsError extends Error {
+  constructor() {
+    super(
+      "No enemy kingdoms exist on the map. Far Expedition needs an enemy to land beside."
+    );
+    this.name = "GameNoEnemyKingdomsError";
   }
 }
 
@@ -1537,6 +1555,212 @@ export async function armDefenseSpellServer(
   });
 }
 
+/**
+ * Casts an intel ("spy") spell. Spends the spell's turn cost and returns an
+ * IntelReport scoped per the spell's intelScope. Black's Vein of Truth also
+ * pays a blood cost: 1 air unit subtracted from the caster's unitsAlive.
+ *
+ * Detection side effects (Black/Green alerting the defender for a few turns)
+ * are NOT yet wired — the intel snapshot is returned and the report flags
+ * `detected: true`. Wiring the defender-side buff is a follow-up.
+ */
+export async function castIntelSpellServer(
+  userId: string,
+  spellId: string,
+  targetTileId: string,
+  now: Date = new Date()
+): Promise<{
+  player: GamePlayer;
+  report: TurnReport;
+  artifact: GameArtifact | null;
+  intelReport: IntelReport;
+  detected: boolean;
+}> {
+  const db = adminDbOrThrow();
+  const spell = SPELLS_BY_ID.get(spellId);
+  if (!spell) throw new GameInvalidSpellError(`unknown spellId: ${spellId}`);
+  if (spell.type !== "intel") {
+    throw new GameInvalidSpellError(`spell ${spellId} is not an intel spell`);
+  }
+  if (!spell.intelScope) {
+    throw new GameInvalidSpellError(
+      `intel spell ${spellId} has no scope configured`
+    );
+  }
+
+  const playerRef = db.collection(COLLECTIONS.PLAYERS).doc(userId);
+  const tileRef = db.collection(COLLECTIONS.TILES).doc(targetTileId);
+
+  const txResult = await db.runTransaction(async (tx) => {
+    const [playerSnap, tileSnap] = await Promise.all([
+      tx.get(playerRef),
+      tx.get(tileRef),
+    ]);
+    if (!playerSnap.exists) throw new GamePlayerNotFoundError();
+    if (!tileSnap.exists) throw new GameTileNotFoundError();
+    const player = playerSnap.data() as GamePlayer;
+    const tile = tileSnap.data() as GameTile;
+
+    if (player.phase !== "play") {
+      throw new GameInvalidPhaseError("play", player.phase);
+    }
+    if (player.caste === null || spell.caste !== player.caste) {
+      throw new GameInvalidSpellError(
+        `spell ${spellId} requires caste ${spell.caste}`
+      );
+    }
+    if (player.stats.tilesHeld < spell.minTilesRequired) {
+      throw new GameInvalidSpellError(
+        `spell ${spellId} requires ${spell.minTilesRequired} tiles held; you have ${player.stats.tilesHeld}`
+      );
+    }
+    if (tile.ownerId === userId) {
+      throw new GameSelfAttackError();
+    }
+
+    const cost = spell.turnCost;
+    if (player.turnsRemaining < cost) {
+      throw new GameInsufficientTurnsError(cost, player.turnsRemaining);
+    }
+
+    // Black's Vein of Truth: 1 air unit blood cost. We deduct from
+    // stats.unitsAlive (kingdom-wide aggregate) since per-tile sourcing would
+    // require an extra parameter. If the player has 0 units, the spell still
+    // resolves — the cost just floors at 0 (lore: the blood is owed).
+    const bloodCost = spellId === "black-intel-vein-of-truth-t2" ? 1 : 0;
+
+    const turnsSpentTotal = player.turnsSpentTotal + cost;
+    const rolled = rollAndStageArtifact(
+      tx,
+      db,
+      userId,
+      turnsSpentTotal,
+      "spell-arm",
+      now
+    );
+    const artifact = rolled?.definition ?? null;
+
+    const updatedStats = {
+      ...player.stats,
+      unitsAlive: Math.max(0, player.stats.unitsAlive - bloodCost),
+    };
+    tx.update(playerRef, {
+      turnsRemaining: player.turnsRemaining - cost,
+      turnsSpentTotal,
+      stats: updatedStats,
+      updatedAt: now,
+    });
+
+    // Persist time-bounded intel effects produced by this cast. All three
+    // expire 5 caster turns after cast (see INTEL_EFFECT_DURATION_CASTER_TURNS).
+    if (spellId === "black-intel-vein-of-truth-t2" && tile.ownerId) {
+      recordIntelEffectInTx({
+        tx,
+        db,
+        kind: "alert-vs-caster",
+        ownerId: tile.ownerId,
+        casterId: userId,
+        magnitude: 0.2,
+        casterTurnsSpentTotalAtCast: turnsSpentTotal,
+        now,
+      });
+    } else if (spellId === "green-intel-root-whisper-t2" && tile.ownerId) {
+      recordIntelEffectInTx({
+        tx,
+        db,
+        kind: "alert-vs-caster",
+        ownerId: tile.ownerId,
+        casterId: userId,
+        magnitude: 0.1,
+        casterTurnsSpentTotalAtCast: turnsSpentTotal,
+        now,
+      });
+    } else if (spellId === "red-intel-forge-sight-t2") {
+      recordIntelEffectInTx({
+        tx,
+        db,
+        kind: "forge-sight-offense",
+        ownerId: userId,
+        casterId: userId,
+        targetTileId,
+        magnitude: 0.1,
+        casterTurnsSpentTotalAtCast: turnsSpentTotal,
+        now,
+      });
+    }
+
+    return {
+      player: {
+        ...player,
+        turnsRemaining: player.turnsRemaining - cost,
+        turnsSpentTotal,
+        stats: updatedStats,
+        updatedAt: now,
+      },
+      cost,
+      turnsSpentTotal,
+      artifactDef: artifact,
+      artifactDoc: rolled?.doc ?? null,
+    };
+  });
+
+  const intelReport = await buildIntelReportServer({
+    db,
+    targetTileId,
+    scope: spell.intelScope,
+    source: "spell",
+    sourceId: spell.id,
+    capturedAtTurn: txResult.turnsSpentTotal,
+    attackerCaste: spell.caste,
+  });
+
+  // Black & Green spies are detected by the defender; the alert is now
+  // persisted and applied at attack time (see recordIntelEffectInTx above).
+  const detected =
+    spellId === "black-intel-vein-of-truth-t2" ||
+    spellId === "green-intel-root-whisper-t2";
+
+  const baseReport: TurnReport = {
+    turnIndex: txResult.turnsSpentTotal,
+    action: "spell-arm",
+    cost: txResult.cost,
+    summary: `Cast ${spell.name} on ${targetTileId}`,
+    narrative: [
+      `${spell.name}: ${spell.description}`,
+      detected
+        ? "The defender felt the touch of the spy. They will be on edge."
+        : "The intel returns silently; nothing on the wind suggests you were noticed.",
+    ],
+    outcome: {
+      spellId: spell.id,
+      spellName: spell.name,
+      targetTileId,
+      detected,
+      intelScope: spell.intelScope,
+    },
+  };
+  const report = txResult.artifactDef
+    ? {
+        ...baseReport,
+        narrative: [...baseReport.narrative, txResult.artifactDef.flavorOnFind],
+        artifactFound: {
+          definitionId: txResult.artifactDef.id,
+          name: txResult.artifactDef.name,
+          rarity: txResult.artifactDef.rarity,
+          type: txResult.artifactDef.type,
+        },
+      }
+    : baseReport;
+
+  return {
+    player: txResult.player,
+    report,
+    artifact: txResult.artifactDoc,
+    intelReport,
+    detected,
+  };
+}
+
 // Casts a production spell. Lasts PRODUCTION_SPELL_DURATION_TURNS turns from
 // the moment of casting (measured by turnsSpentTotal).
 export async function castProductionSpellServer(
@@ -1659,6 +1883,10 @@ export async function attackTileServer(args: {
   targetTile: GameTile;
   report: TurnReport;
   artifact: GameArtifact | null;
+  // Set when the attacker's air-unit intel passive triggered a post-attack
+  // reveal. Currently produced for Blue Sky Reader (air > defender air → ring
+  // intel) and Black Crowfeast (failed attack with air ≥ 5 → kingdom intel).
+  intelReport?: IntelReport;
 }> {
   const now = args.now ?? new Date();
   if (!isValidUnitStack(args.units)) {
@@ -1698,6 +1926,20 @@ export async function attackTileServer(args: {
   const defenderRef = db.collection(COLLECTIONS.PLAYERS).doc(defenderId);
   const attackId = randomUUID();
   const attackRef = db.collection(COLLECTIONS.ATTACKS).doc(attackId);
+
+  // Read attacker's current turn count out of the txn so we can filter
+  // intel-effect expirations. Slightly stale by the time the txn runs but
+  // adequate — effect expirations are coarse (5 caster turns).
+  const attackerPreSnap = await attackerRef.get();
+  if (!attackerPreSnap.exists) throw new GamePlayerNotFoundError();
+  const attackerPre = attackerPreSnap.data() as GamePlayer;
+  const intelContext = await readAttackContextEffects({
+    db,
+    attackerId: args.attackerId,
+    attackerTurnsSpentTotal: attackerPre.turnsSpentTotal,
+    defenderId,
+    defenderTileId: args.targetTileId,
+  });
 
   if (offenseSpell) {
     // We can't validate caste-match yet without reading the player; deferred
@@ -1788,6 +2030,21 @@ export async function attackTileServer(args: {
       throw new GameTileFullError(availableSpace, sentTotal);
     }
 
+    // Read the 6 neighbor tiles to compute supply. Hex coords are immutable,
+    // so deriving IDs from (q, r) is canonical even if neighborTileIds drifts.
+    const neighborIds = neighborTileIds(target.q, target.r);
+    const neighborSnaps = await Promise.all(
+      neighborIds.map((id) => tx.get(db.collection(COLLECTIONS.TILES).doc(id)))
+    );
+    const friendlyNeighbors: Array<{ landType: LandType }> = [];
+    for (const snap of neighborSnaps) {
+      if (!snap.exists) continue;
+      const t = snap.data() as GameTile;
+      if (t.ownerId !== defenderId) continue;
+      if (t.type === "unrevealed" || t.type === "unassigned") continue;
+      friendlyNeighbors.push({ landType: t.type });
+    }
+
     // Compute defender food/magic land counts for spell scaling. We accept the
     // pre-txn `getOwnedLandCounts` cost only on the defender; the magic count
     // is what's needed by spellContribution inside resolveAttack. Use the
@@ -1805,6 +2062,7 @@ export async function attackTileServer(args: {
         magicLandCount: 0,
         unitsAlive: attacker.stats.unitsAlive,
         activeUpgrades: attackerActiveUpgrades,
+        intelOffenseBonus: intelContext.forgeSightOffenseBonus,
       },
       {
         caste: defender.caste,
@@ -1813,8 +2071,13 @@ export async function attackTileServer(args: {
         magicLandCount: 0,
         unitsAlive: defender.stats.unitsAlive,
         activeUpgrades: defenderActiveUpgrades,
+        intelDefenseBonus: intelContext.alertVsCasterDefenseBonus,
       },
-      { capacity: tileCapacity, upgradeIds: target.upgradeIds },
+      {
+        capacity: tileCapacity,
+        upgradeIds: target.upgradeIds,
+        friendlyNeighbors,
+      },
       makeSeededRng(`attack-${attackId}`)
     );
 
@@ -1942,8 +2205,45 @@ export async function attackTileServer(args: {
       },
       report,
       artifact: rolled?.doc ?? null,
+      // Snapshot for post-txn air-intel reveals.
+      _airIntelContext: {
+        airDeployed: result.unitsDeployed.air,
+        defenderAirAtAttack: target.units.air,
+        outcome: result.outcome,
+        sourcePassive: result.airIntel?.sourcePassive ?? null,
+        attackerTurnsSpentTotal,
+      },
     };
   });
+
+  // Build a post-attack intel report if a Blue/Black air-intel passive fired.
+  // We do this OUTSIDE the txn — buildIntelReportServer runs its own reads,
+  // and the data is informational so a tiny window of staleness is fine.
+  let intelReport: IntelReport | undefined;
+  const ctx = result._airIntelContext;
+  if (ctx.sourcePassive === "blue-sky-reader" && ctx.airDeployed > ctx.defenderAirAtAttack) {
+    intelReport = await buildIntelReportServer({
+      db,
+      targetTileId: args.targetTileId,
+      scope: "ring",
+      source: "passive",
+      sourceId: "blue-sky-reader",
+      capturedAtTurn: ctx.attackerTurnsSpentTotal,
+    });
+  } else if (
+    ctx.sourcePassive === "black-crowfeast" &&
+    ctx.outcome === "repelled" &&
+    ctx.airDeployed >= 5
+  ) {
+    intelReport = await buildIntelReportServer({
+      db,
+      targetTileId: args.targetTileId,
+      scope: "kingdom",
+      source: "passive",
+      sourceId: "black-crowfeast",
+      capturedAtTurn: ctx.attackerTurnsSpentTotal,
+    });
+  }
 
   // Fire-and-forget Discord notification on conquest. Wrapped in try/catch
   // inside notifyConquest itself; the caller never blocks on it.
@@ -1951,7 +2251,9 @@ export async function attackTileServer(args: {
     notifyConquest({ attack: result.attack });
   }
 
-  return result;
+  // Strip the internal-only context off the response.
+  const { _airIntelContext: _, ...publicResult } = result;
+  return { ...publicResult, ...(intelReport ? { intelReport } : {}) };
 }
 
 export async function getRecentAttacksServer(opts: {
@@ -2628,6 +2930,236 @@ export async function frontierExploreServer(
   });
 }
 
+// Maximum enemy tiles sampled when picking a Far Expedition target. Higher =
+// more variety but more reads; 250 is plenty for current game scale.
+const FAR_EXPEDITION_ENEMY_SAMPLE_CAP = 250;
+// We try up to this many enemy candidates before giving up. Each candidate has
+// 6 potential drop coords, so 8 candidates ≈ 48 unclaimed-checks worst case.
+const FAR_EXPEDITION_MAX_TRIES = 8;
+
+/**
+ * Far Expedition: spend 2 turns to plant a tile adjacent to a random enemy
+ * tile, weighted toward enemies closer to the caster's centroid. The new tile
+ * lands with `isolatedSpawn: true` and (because it has no friendly neighbors
+ * yet) takes the -15% supply floor until the player builds tiles around it.
+ *
+ * Always available as a strategic choice — not gated on the normal frontier
+ * being exhausted. Throws GameNoEnemyKingdomsError if no enemy tiles exist
+ * (e.g. early game with one player).
+ */
+export async function farExpeditionExploreServer(
+  userId: string,
+  now: Date = new Date()
+): Promise<{
+  player: GamePlayer;
+  tile: GameTile;
+  report: TurnReport;
+  artifact: GameArtifact | null;
+  targetEnemyTileId: string;
+}> {
+  const db = adminDbOrThrow();
+
+  const playerSnapPre = await db
+    .collection(COLLECTIONS.PLAYERS)
+    .doc(userId)
+    .get();
+  if (!playerSnapPre.exists) throw new GamePlayerNotFoundError();
+  const playerPre = playerSnapPre.data() as GamePlayer;
+  if (playerPre.phase !== "play") {
+    throw new GameInvalidPhaseError("play", playerPre.phase);
+  }
+  if (playerPre.turnsRemaining < FAR_EXPEDITION_TURN_COST) {
+    throw new GameInsufficientTurnsError(
+      FAR_EXPEDITION_TURN_COST,
+      playerPre.turnsRemaining
+    );
+  }
+
+  const ownedSnap = await db
+    .collection(COLLECTIONS.TILES)
+    .where("ownerId", "==", userId)
+    .get();
+  const ownedTileIds = ownedSnap.docs.map((d) => d.id);
+  const center = hexCentroid([...ownedTileIds]);
+
+  // Sample enemy tiles. `!=` filters out null owners and the user themselves.
+  // Firestore's `!=` returns docs where the field exists and differs.
+  const enemySnap = await db
+    .collection(COLLECTIONS.TILES)
+    .where("ownerId", "!=", userId)
+    .limit(FAR_EXPEDITION_ENEMY_SAMPLE_CAP)
+    .get();
+  const enemies: Array<{ q: number; r: number; id: string }> = [];
+  for (const doc of enemySnap.docs) {
+    const t = doc.data() as GameTile;
+    if (!t.ownerId) continue;
+    enemies.push({ q: t.q, r: t.r, id: t.tileId });
+  }
+  if (enemies.length === 0) throw new GameNoEnemyKingdomsError();
+
+  const rng = makeSeededRng(
+    `far-expedition:${userId}:${playerPre.turnsSpentTotal}`
+  );
+
+  // Weight enemies by inverse hex distance from the caster's centroid (closer
+  // = more likely, but the long tail still admits distant raids). Build a
+  // cumulative weights array for O(log n) sampling, then walk it for retries
+  // by zeroing out the picked entry.
+  const weights = enemies.map((e) => 1 / (1 + Math.abs(e.q - center.q) + Math.abs(e.r - center.r)));
+  let unclaimedCoord: AxialCoord | null = null;
+  let pickedEnemyId: string | null = null;
+
+  for (let attempt = 0; attempt < FAR_EXPEDITION_MAX_TRIES; attempt++) {
+    const totalWeight = weights.reduce((s, w) => s + w, 0);
+    if (totalWeight <= 0) break;
+    let pick = rng() * totalWeight;
+    let idx = 0;
+    for (let i = 0; i < weights.length; i++) {
+      pick -= weights[i];
+      if (pick <= 0) {
+        idx = i;
+        break;
+      }
+    }
+    const enemy = enemies[idx];
+    weights[idx] = 0; // don't re-pick this enemy
+    if (!enemy) break;
+
+    const candidateCoords = axialNeighbors(enemy.q, enemy.r);
+    for (let i = candidateCoords.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      [candidateCoords[i], candidateCoords[j]] = [
+        candidateCoords[j],
+        candidateCoords[i],
+      ];
+    }
+    const refs = candidateCoords.map((c) =>
+      db.collection(COLLECTIONS.TILES).doc(tileIdFromAxial(c.q, c.r))
+    );
+    const snaps = await db.getAll(...refs);
+    for (let i = 0; i < snaps.length; i++) {
+      if (snaps[i].exists) continue;
+      unclaimedCoord = candidateCoords[i];
+      pickedEnemyId = enemy.id;
+      break;
+    }
+    if (unclaimedCoord) break;
+  }
+
+  if (!unclaimedCoord || !pickedEnemyId) {
+    throw new GameFrontierExhaustedError();
+  }
+
+  const tileId = tileIdFromAxial(unclaimedCoord.q, unclaimedCoord.r);
+  const tileRef = db.collection(COLLECTIONS.TILES).doc(tileId);
+  const playerRef = db.collection(COLLECTIONS.PLAYERS).doc(userId);
+  const targetEnemyTileId = pickedEnemyId;
+  const dropCoord = unclaimedCoord;
+
+  return db.runTransaction(async (tx) => {
+    const [tileSnap, playerSnap] = await Promise.all([
+      tx.get(tileRef),
+      tx.get(playerRef),
+    ]);
+    if (!playerSnap.exists) throw new GamePlayerNotFoundError();
+
+    const player = playerSnap.data() as GamePlayer;
+    if (player.phase !== "play") {
+      throw new GameInvalidPhaseError("play", player.phase);
+    }
+    if (player.turnsRemaining < FAR_EXPEDITION_TURN_COST) {
+      throw new GameInsufficientTurnsError(
+        FAR_EXPEDITION_TURN_COST,
+        player.turnsRemaining
+      );
+    }
+    // Race: another player may have claimed this coord since the pre-fetch.
+    if (tileSnap.exists) {
+      throw new GameFrontierExhaustedError();
+    }
+
+    const turnsSpentTotal = player.turnsSpentTotal + FAR_EXPEDITION_TURN_COST;
+    const tilesExplored = player.tilesExplored + 1;
+    const rolled = rollAndStageArtifact(
+      tx,
+      db,
+      userId,
+      turnsSpentTotal,
+      "explore",
+      now
+    );
+    const artifact = rolled?.definition ?? null;
+
+    const tile: GameTile = {
+      tileId,
+      q: dropCoord.q,
+      r: dropCoord.r,
+      ownerId: userId,
+      type: "unassigned",
+      level: 0,
+      units: { ground: 0, siege: 0, air: 0 },
+      armedDefenseSpellId: null,
+      neighborTileIds: neighborTileIds(dropCoord.q, dropCoord.r),
+      upgradeIds: [],
+      isolatedSpawn: true,
+      revealedAt: now,
+      createdAt: now,
+      updatedAt: now,
+    };
+    tx.set(tileRef, tile);
+
+    const updatedStats = {
+      ...player.stats,
+      tilesHeld: player.stats.tilesHeld + 1,
+    };
+    tx.update(playerRef, {
+      turnsRemaining: player.turnsRemaining - FAR_EXPEDITION_TURN_COST,
+      turnsSpentTotal,
+      tilesExplored,
+      stats: updatedStats,
+      updatedAt: now,
+    });
+
+    const baseReport = buildExploreReport(
+      turnsSpentTotal,
+      tile,
+      artifact,
+      makeSeededRng(`far-narr:${userId}:${turnsSpentTotal}`)
+    );
+    const report: TurnReport = {
+      ...baseReport,
+      action: "explore",
+      cost: FAR_EXPEDITION_TURN_COST,
+      summary: `Far Expedition — landed at ${tileId} beside enemy ${targetEnemyTileId}`,
+      narrative: [
+        ...baseReport.narrative,
+        `Forward base planted next to enemy tile ${targetEnemyTileId}. The tile is isolated — supply runs at the −15% floor until friendly neighbors arrive.`,
+      ],
+      outcome: {
+        ...baseReport.outcome,
+        farExpedition: true,
+        targetEnemyTileId,
+        isolated: true,
+      },
+    };
+
+    return {
+      player: {
+        ...player,
+        turnsRemaining: player.turnsRemaining - FAR_EXPEDITION_TURN_COST,
+        turnsSpentTotal,
+        tilesExplored,
+        stats: updatedStats,
+        updatedAt: now,
+      },
+      tile,
+      report,
+      artifact: rolled?.doc ?? null,
+      targetEnemyTileId,
+    };
+  });
+}
+
 // Walk hex rings outward from `center`, batched-getAll each ring, accumulate
 // unclaimed coords. Stops when we hit `target` unclaimed coords or `maxRing`.
 async function collectUnclaimedByRingWalk(
@@ -3035,12 +3567,16 @@ export async function spendArtifactServer(args: {
   artifactId: string;
   targetTileId?: string | null;
   now?: Date;
-}): Promise<{ artifact: GameArtifact }> {
+}): Promise<{ artifact: GameArtifact; intelReport?: IntelReport }> {
   const now = args.now ?? new Date();
   const db = adminDbOrThrow();
   const artifactRef = db.collection(COLLECTIONS.ARTIFACTS).doc(args.artifactId);
 
-  return db.runTransaction(async (tx) => {
+  // First mark the artifact used in a transaction so the inventory state is
+  // consistent. Intel artifacts then run a follow-up read pass to build the
+  // report; the report doesn't need transactional consistency with the
+  // artifact-used flag (it's a snapshot of public state at "now").
+  const result = await db.runTransaction(async (tx) => {
     const snap = await tx.get(artifactRef);
     if (!snap.exists) throw new GameArtifactNotFoundError();
     const artifact = snap.data() as GameArtifact;
@@ -3049,8 +3585,13 @@ export async function spendArtifactServer(args: {
     }
     if (artifact.used) throw new GameArtifactAlreadyUsedError();
 
-    // For now the only persisted effect is the used flag. PR 6d will branch
-    // on artifact.type and apply offense/defense/production effects.
+    const def = ARTIFACTS_BY_ID.get(artifact.definitionId) ?? null;
+    if (def?.type === "intel" && !args.targetTileId) {
+      throw new GameInvalidSpellError(
+        "Intel artifacts must be spent on a target tile"
+      );
+    }
+
     const updated: GameArtifact = {
       ...artifact,
       used: true,
@@ -3064,8 +3605,30 @@ export async function spendArtifactServer(args: {
       ...(args.targetTileId ? { usedOnTileId: args.targetTileId } : {}),
       updatedAt: now,
     });
-    return { artifact: updated };
+    return { artifact: updated, definition: def };
   });
+
+  if (result.definition?.type !== "intel" || !args.targetTileId) {
+    return { artifact: result.artifact };
+  }
+
+  // Read player to source capturedAtTurn from turnsSpentTotal.
+  const playerSnap = await db
+    .collection(COLLECTIONS.PLAYERS)
+    .doc(args.userId)
+    .get();
+  const player = playerSnap.exists ? (playerSnap.data() as GamePlayer) : null;
+  const capturedAtTurn = player?.turnsSpentTotal ?? 0;
+
+  const intelReport = await buildIntelReportServer({
+    db,
+    targetTileId: args.targetTileId,
+    scope: result.definition.intelDepth ?? "tile",
+    source: "artifact",
+    sourceId: result.definition.id,
+    capturedAtTurn,
+  });
+  return { artifact: result.artifact, intelReport };
 }
 
 // ──── v2: Unit & building upgrades ────

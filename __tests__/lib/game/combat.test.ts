@@ -5,6 +5,7 @@
  */
 
 import {
+  computeSupplyMultiplier,
   computeTileCapacity,
   magicMultiplier,
   makeSeededRng,
@@ -425,6 +426,317 @@ describe("resolveAttack — outcome and losses", () => {
       makeSeededRng("mirror")
     );
     expect(["captured", "repelled", "stalemate"]).toContain(result.outcome);
+  });
+});
+
+describe("computeSupplyMultiplier", () => {
+  it("returns the -15% isolation floor with zero friendly neighbors", () => {
+    expect(computeSupplyMultiplier("green", [])).toBeCloseTo(0.85, 5);
+    expect(computeSupplyMultiplier("blue", [])).toBeCloseTo(0.85, 5);
+    expect(computeSupplyMultiplier("red", [])).toBeCloseTo(0.85, 5);
+  });
+
+  it("Green with 6 military neighbors yields the +45% cap", () => {
+    const six = Array(6).fill({ landType: "military" as const });
+    // 6 × 1.0 weight × 5% × 1.5 caste = 0.45 → 1.45
+    expect(computeSupplyMultiplier("green", six)).toBeCloseTo(1.45, 5);
+  });
+
+  it("Black with 6 military neighbors stays modest (+15%)", () => {
+    const six = Array(6).fill({ landType: "military" as const });
+    // 6 × 1.0 × 5% × 0.5 = 0.15 → 1.15
+    expect(computeSupplyMultiplier("black", six)).toBeCloseTo(1.15, 5);
+  });
+
+  it("White scales between Green and Red on the same neighbors", () => {
+    const six = Array(6).fill({ landType: "military" as const });
+    const white = computeSupplyMultiplier("white", six);
+    const green = computeSupplyMultiplier("green", six);
+    const red = computeSupplyMultiplier("red", six);
+    expect(white).toBeGreaterThan(red);
+    expect(white).toBeLessThan(green);
+    // 6 × 1.0 × 5% × 1.25 = 0.375 → 1.375
+    expect(white).toBeCloseTo(1.375, 5);
+  });
+
+  it("food neighbors contribute 30% as much as military", () => {
+    const sixMilitary = Array(6).fill({ landType: "military" as const });
+    const sixFood = Array(6).fill({ landType: "food" as const });
+    const milGain =
+      computeSupplyMultiplier("red", sixMilitary) - 1; // 0.30
+    const foodGain =
+      computeSupplyMultiplier("red", sixFood) - 1; // 0.30 × 0.3 = 0.09
+    expect(foodGain).toBeCloseTo(milGain * 0.3, 5);
+  });
+
+  it("clamps to a 1.50 hard cap regardless of caste/type stacking", () => {
+    // 12 imaginary military neighbors with Green would compute to 1.90
+    const twelve = Array(12).fill({ landType: "military" as const });
+    expect(computeSupplyMultiplier("green", twelve)).toBeCloseTo(1.5, 5);
+  });
+});
+
+describe("resolveAttack — supply", () => {
+  it("isolated defender (empty friendlyNeighbors) takes -15% defense vs same tile w/o supply", () => {
+    const baseline = resolveAttack(
+      defaultAttacker({ caste: "red", units: stack(50, 50, 50) }),
+      defaultDefender({ caste: "white", unitsOnTile: stack(50, 50, 50) }),
+      { capacity: 2000, upgradeIds: [] },
+      makeSeededRng("supply-iso")
+    );
+    const isolated = resolveAttack(
+      defaultAttacker({ caste: "red", units: stack(50, 50, 50) }),
+      defaultDefender({ caste: "white", unitsOnTile: stack(50, 50, 50) }),
+      { capacity: 2000, upgradeIds: [], friendlyNeighbors: [] },
+      makeSeededRng("supply-iso")
+    );
+    expect(isolated.supplyMultiplier).toBeCloseTo(0.85, 5);
+    expect(isolated.defensePower).toBeCloseTo(baseline.defensePower * 0.85, 1);
+  });
+
+  it("Green with 6 military neighbors gains +45% defense vs the no-supply baseline", () => {
+    const baseline = resolveAttack(
+      defaultAttacker({ caste: "red", units: stack(50, 50, 50) }),
+      defaultDefender({ caste: "green", unitsOnTile: stack(50, 50, 50) }),
+      { capacity: 2000, upgradeIds: [] },
+      makeSeededRng("supply-green")
+    );
+    const cohesive = resolveAttack(
+      defaultAttacker({ caste: "red", units: stack(50, 50, 50) }),
+      defaultDefender({ caste: "green", unitsOnTile: stack(50, 50, 50) }),
+      {
+        capacity: 2000,
+        upgradeIds: [],
+        friendlyNeighbors: Array(6).fill({ landType: "military" }),
+      },
+      makeSeededRng("supply-green")
+    );
+    expect(cohesive.supplyMultiplier).toBeCloseTo(1.45, 5);
+    expect(cohesive.defensePower).toBeCloseTo(baseline.defensePower * 1.45, 1);
+  });
+
+  it("supply stacks multiplicatively with the underdog bonus", () => {
+    const tile = {
+      capacity: 2000,
+      upgradeIds: [],
+      friendlyNeighbors: Array(6).fill({ landType: "military" as const }),
+    };
+    const result = resolveAttack(
+      defaultAttacker({ unitsAlive: 1000 }),
+      defaultDefender({
+        caste: "white",
+        unitsOnTile: stack(50, 50, 50),
+        unitsAlive: 100,
+      }),
+      tile,
+      makeSeededRng("supply-underdog")
+    );
+    expect(result.underdogApplied).toBe(true);
+    expect(result.supplyMultiplier).toBeCloseTo(1.375, 5);
+  });
+
+  it("legacy callers (no friendlyNeighbors) get supplyMultiplier=1.0 and unchanged defense", () => {
+    const r = resolveAttack(
+      defaultAttacker(),
+      defaultDefender(),
+      { capacity: 2000, upgradeIds: [] },
+      makeSeededRng("supply-legacy")
+    );
+    expect(r.supplyMultiplier).toBe(1);
+  });
+});
+
+describe("resolveAttack — intel-effect bonuses", () => {
+  it("applies attacker.intelOffenseBonus multiplicatively to attackPower", () => {
+    const tile = defaultTile(2000);
+    const baseline = resolveAttack(
+      defaultAttacker({ caste: "red" }),
+      defaultDefender({ caste: "white" }),
+      tile,
+      makeSeededRng("forge-sight-base")
+    );
+    const buffed = resolveAttack(
+      defaultAttacker({ caste: "red", intelOffenseBonus: 0.1 }),
+      defaultDefender({ caste: "white" }),
+      tile,
+      makeSeededRng("forge-sight-base")
+    );
+    expect(buffed.attackPower).toBeCloseTo(baseline.attackPower * 1.1, 1);
+  });
+
+  it("applies defender.intelDefenseBonus multiplicatively to defensePower", () => {
+    const tile = defaultTile(2000);
+    const baseline = resolveAttack(
+      defaultAttacker({ caste: "red" }),
+      defaultDefender({ caste: "white" }),
+      tile,
+      makeSeededRng("alert-base")
+    );
+    const alerted = resolveAttack(
+      defaultAttacker({ caste: "red" }),
+      defaultDefender({ caste: "white", intelDefenseBonus: 0.2 }),
+      tile,
+      makeSeededRng("alert-base")
+    );
+    expect(alerted.defensePower).toBeCloseTo(baseline.defensePower * 1.2, 1);
+  });
+
+  it("alert-vs-caster bonus stacks with supply", () => {
+    const sixMilitary = Array(6).fill({ landType: "military" as const });
+    const tile = {
+      capacity: 2000,
+      upgradeIds: [],
+      friendlyNeighbors: sixMilitary,
+    };
+    const baseline = resolveAttack(
+      defaultAttacker({ caste: "red" }),
+      defaultDefender({ caste: "green" }),
+      tile,
+      makeSeededRng("alert-stack")
+    );
+    const alerted = resolveAttack(
+      defaultAttacker({ caste: "red" }),
+      defaultDefender({ caste: "green", intelDefenseBonus: 0.2 }),
+      tile,
+      makeSeededRng("alert-stack")
+    );
+    // Green supply 1.45 × alert 1.20 = 1.74; baseline already includes supply.
+    expect(alerted.defensePower).toBeCloseTo(baseline.defensePower * 1.2, 1);
+    expect(baseline.supplyMultiplier).toBeCloseTo(1.45, 5);
+  });
+
+  it("Forge Sight stacks multiplicatively with Forge Scouts air-upgrade", () => {
+    const tile = defaultTile(2000);
+    const baseline = resolveAttack(
+      defaultAttacker({ caste: "red" }),
+      defaultDefender({ caste: "white", unitsOnTile: stack(100, 0, 0) }),
+      tile,
+      makeSeededRng("forge-stack")
+    );
+    const stacked = resolveAttack(
+      defaultAttacker({
+        caste: "red",
+        intelOffenseBonus: 0.1,
+        activeUpgrades: { "red-air-phoenix-talon": "red-air-phoenix-talon-upgrade-4-intel" },
+      }),
+      defaultDefender({ caste: "white", unitsOnTile: stack(100, 0, 0) }),
+      tile,
+      makeSeededRng("forge-stack")
+    );
+    // Forge Sight 1.10 × Forge Scouts 1.05 = 1.155
+    expect(stacked.attackPower).toBeCloseTo(baseline.attackPower * 1.155, 1);
+    expect(stacked.airIntel?.forgeScoutsBonusApplied).toBe(true);
+  });
+
+  it("zero intel bonus is a no-op", () => {
+    const tile = defaultTile(2000);
+    const a = resolveAttack(
+      defaultAttacker({ intelOffenseBonus: 0 }),
+      defaultDefender({ intelDefenseBonus: 0 }),
+      tile,
+      makeSeededRng("zero")
+    );
+    const b = resolveAttack(
+      defaultAttacker(),
+      defaultDefender(),
+      tile,
+      makeSeededRng("zero")
+    );
+    expect(a.attackPower).toBe(b.attackPower);
+    expect(a.defensePower).toBe(b.defensePower);
+  });
+});
+
+describe("resolveAttack — air-intel passives", () => {
+  it("White Hawk's Eye reveals the defender's armed-spell tier when air ≥ 1", () => {
+    const tile = defaultTile(2000);
+    const result = resolveAttack(
+      defaultAttacker({
+        caste: "white",
+        units: stack(50, 50, 10),
+        activeUpgrades: { "white-air-pegasus-knight": "white-air-pegasus-knight-upgrade-4-intel" },
+      }),
+      defaultDefender({
+        caste: "white",
+        unitsOnTile: stack(50, 50, 50),
+        armedDefenseSpellId: "white-defense-aegis-t4",
+      }),
+      tile,
+      makeSeededRng("hawks-eye")
+    );
+    expect(result.airIntel?.sourcePassive).toBe("white-hawks-eye");
+    expect(result.airIntel?.defenseSpellTier).toBe(4);
+  });
+
+  it("White Hawk's Eye omits the tier reveal if no air units are deployed", () => {
+    const tile = defaultTile(2000);
+    const result = resolveAttack(
+      defaultAttacker({
+        caste: "white",
+        units: stack(50, 50, 0),
+        activeUpgrades: { "white-air-pegasus-knight": "white-air-pegasus-knight-upgrade-4-intel" },
+      }),
+      defaultDefender({
+        caste: "white",
+        armedDefenseSpellId: "white-defense-aegis-t4",
+      }),
+      tile,
+      makeSeededRng("hawks-eye-no-air")
+    );
+    expect(result.airIntel?.sourcePassive).toBe("white-hawks-eye");
+    expect(result.airIntel?.defenseSpellTier).toBeUndefined();
+  });
+
+  it("Red Forge Scouts adds +5% offense and a weak-face hint when attacker air ≥ defender air", () => {
+    const tile = defaultTile(2000);
+    const baseline = resolveAttack(
+      defaultAttacker({ caste: "red", units: stack(50, 50, 50) }),
+      defaultDefender({ caste: "white", unitsOnTile: stack(100, 0, 0) }),
+      tile,
+      makeSeededRng("forge-scouts")
+    );
+    const scouted = resolveAttack(
+      defaultAttacker({
+        caste: "red",
+        units: stack(50, 50, 50),
+        activeUpgrades: { "red-air-phoenix-talon": "red-air-phoenix-talon-upgrade-4-intel" },
+      }),
+      defaultDefender({ caste: "white", unitsOnTile: stack(100, 0, 0) }),
+      tile,
+      makeSeededRng("forge-scouts")
+    );
+    expect(scouted.airIntel?.sourcePassive).toBe("red-forge-scouts");
+    expect(scouted.airIntel?.forgeScoutsBonusApplied).toBe(true);
+    // Defender is mostly ground → counter is air.
+    expect(scouted.airIntel?.weakFace).toBe("air");
+    expect(scouted.attackPower).toBeCloseTo(baseline.attackPower * 1.05, 1);
+  });
+
+  it("Red Forge Scouts withholds the bonus and weak-face when the air count is dominated", () => {
+    const tile = defaultTile(2000);
+    const result = resolveAttack(
+      defaultAttacker({
+        caste: "red",
+        units: stack(50, 50, 1),
+        activeUpgrades: { "red-air-phoenix-talon": "red-air-phoenix-talon-upgrade-4-intel" },
+      }),
+      defaultDefender({ caste: "white", unitsOnTile: stack(0, 0, 200) }),
+      tile,
+      makeSeededRng("forge-scouts-dominated")
+    );
+    expect(result.airIntel?.forgeScoutsBonusApplied).toBe(false);
+    expect(result.airIntel?.weakFace).toBeUndefined();
+  });
+
+  it("attackers with no intel upgrade get no airIntel field", () => {
+    const tile = defaultTile(2000);
+    const result = resolveAttack(
+      defaultAttacker({ caste: "white" }),
+      defaultDefender({ caste: "white", armedDefenseSpellId: "white-defense-sanctuary" }),
+      tile,
+      makeSeededRng("no-intel")
+    );
+    expect(result.airIntel).toBeUndefined();
   });
 });
 

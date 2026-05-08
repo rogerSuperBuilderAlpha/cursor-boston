@@ -179,4 +179,16 @@ export const COMMON_ARTIFACTS: ArtifactDefinition[] = [
     flavorOnFind:
       "Hanging from a pole in an empty field. The crows give it a wide berth.",
   },
+  {
+    id: "common-whispered-map",
+    name: "Whispered Map",
+    rarity: "common",
+    type: "intel",
+    intelDepth: "tile",
+    baseStrength: 0,
+    description:
+      "A square of cured leather that re-draws itself when held over a place. Reveals the units, armed spell, and land type on a single enemy tile.",
+    flavorOnFind:
+      "It rolls open in your hand without prompting. The lines of ink seem damp; they dry into the shape of a place you have never been.",
+  },
 ];

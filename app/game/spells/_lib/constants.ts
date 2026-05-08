@@ -19,13 +19,16 @@ export const TIERS: Array<{ tier: 1 | 2 | 3 | 4 | 5; minTiles: number }> = [
 
 // Column order in the tier × type table. Defense first because that's the
 // only column with bulk-arm UX, and reading "what should I cast right now"
-// usually starts with "what's keeping me alive".
+// usually starts with "what's keeping me alive". Intel is excluded from this
+// table — there's only one intel spell per caste, surfaced from the
+// threat-box "Spy" card instead.
 export const TYPE_COLUMNS: SpellType[] = ["defense", "offense", "production"];
 
 export const TYPE_LABEL: Record<SpellType, string> = {
   defense: "Defense",
   offense: "Offense",
   production: "Production",
+  intel: "Intel",
 };
 
 export const RARITY_TEXT: Record<string, string> = {

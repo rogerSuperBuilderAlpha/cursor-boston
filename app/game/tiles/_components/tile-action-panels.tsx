@@ -186,6 +186,7 @@ export function EnemyTilePanel({
   ownedTiles,
   busy,
   onAttack,
+  onSpy,
 }: {
   tile: MapTile;
   player: GamePlayer;
@@ -196,6 +197,9 @@ export function EnemyTilePanel({
     units: UnitStack,
     offenseSpellId: string | null
   ) => void;
+  // Optional: when present, renders a Spy section that casts the player's
+  // caste intel spell on this tile. Wires straight to /api/game/spy.
+  onSpy?: (spellId: string) => void;
 }) {
   const targetBorders = new Set(neighborTileIds(tile.q, tile.r));
   const myBorders = ownedTiles.filter((t) => targetBorders.has(t.tileId));
@@ -203,6 +207,17 @@ export function EnemyTilePanel({
   const offenseSpells = myCaste
     ? ALL_SPELLS.filter((s) => s.caste === myCaste && s.type === "offense")
     : [];
+  const intelSpell = myCaste
+    ? ALL_SPELLS.find((s) => s.caste === myCaste && s.type === "intel")
+    : null;
+  const intelTilesGateMet =
+    intelSpell !== undefined && intelSpell !== null
+      ? player.stats.tilesHeld >= intelSpell.minTilesRequired
+      : false;
+  const intelTurnsAffordable =
+    intelSpell !== undefined && intelSpell !== null
+      ? player.turnsRemaining >= intelSpell.turnCost
+      : false;
 
   const [sourceTileId, setSourceTileId] = useState(myBorders[0]?.tileId ?? "");
   const [ground, setGround] = useState(0);
@@ -226,88 +241,124 @@ export function EnemyTilePanel({
     player.phase === "play" &&
     player.turnsRemaining >= 1 + (offenseSpellId ? 5 : 0);
 
+  const spySection = onSpy && intelSpell ? (
+    <div className="rounded-lg border border-violet-200 dark:border-violet-900 bg-violet-50/50 dark:bg-violet-950/20 p-4 space-y-2">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
+        Spy: {intelSpell.name}{" "}
+        <span className="text-neutral-400 normal-case font-normal">
+          — {intelSpell.turnCost} turns
+        </span>
+      </h2>
+      <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
+        {intelSpell.description}
+      </p>
+      <button
+        onClick={() => onSpy(intelSpell.id)}
+        disabled={busy || !intelTilesGateMet || !intelTurnsAffordable}
+        className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-500 transition-colors disabled:opacity-50 text-sm font-medium"
+      >
+        {busy ? "Casting…" : "Cast spy"}
+      </button>
+      {!intelTilesGateMet && (
+        <p className="text-xs text-neutral-500">
+          Needs {intelSpell.minTilesRequired} tiles held (you have{" "}
+          {player.stats.tilesHeld}).
+        </p>
+      )}
+    </div>
+  ) : null;
+
   if (myBorders.length === 0) {
     return (
-      <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 p-6 text-center text-sm text-neutral-500">
-        None of your tiles border this enemy tile, so you can&apos;t attack it.
+      <div className="space-y-4">
+        <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 p-6 text-center text-sm text-neutral-500">
+          None of your tiles border this enemy tile, so you can&apos;t attack
+          it.
+          {onSpy && intelSpell ? " You can still spy on it from anywhere." : ""}
+        </div>
+        {spySection}
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500">
-        Launch attack{" "}
-        <span className="text-neutral-400 normal-case font-normal">
-          — Air ▶ Ground ▶ Siege ▶ Air. 1 turn (+5 with spell).
-        </span>
-      </h2>
+    <div className="space-y-4">
+      <div className="space-y-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500">
+          Launch attack{" "}
+          <span className="text-neutral-400 normal-case font-normal">
+            — Air ▶ Ground ▶ Siege ▶ Air. 1 turn (+5 with spell).
+          </span>
+        </h2>
 
-      <label className="block text-sm font-medium">
-        Source tile
-        <select
-          value={sourceTileId}
-          onChange={(e) => setSourceTileId(e.target.value)}
-          className="mt-1 block w-full px-3 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800"
+        <label className="block text-sm font-medium">
+          Source tile
+          <select
+            value={sourceTileId}
+            onChange={(e) => setSourceTileId(e.target.value)}
+            className="mt-1 block w-full px-3 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800"
+          >
+            {myBorders.map((t) => (
+              <option key={t.tileId} value={t.tileId}>
+                {t.tileId} — G{t.units.ground} S{t.units.siege} A{t.units.air}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <div className="grid grid-cols-3 gap-3">
+          <UnitInput
+            label={`Ground / ${source?.units.ground ?? 0}`}
+            value={ground}
+            max={source?.units.ground ?? 0}
+            onChange={setGround}
+          />
+          <UnitInput
+            label={`Siege / ${source?.units.siege ?? 0}`}
+            value={siege}
+            max={source?.units.siege ?? 0}
+            onChange={setSiege}
+          />
+          <UnitInput
+            label={`Air / ${source?.units.air ?? 0}`}
+            value={air}
+            max={source?.units.air ?? 0}
+            onChange={setAir}
+          />
+        </div>
+
+        <label className="block text-sm font-medium">
+          Offense spell (optional, +5 turns)
+          <select
+            value={offenseSpellId}
+            onChange={(e) => setOffenseSpellId(e.target.value)}
+            className="mt-1 block w-full px-3 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800"
+          >
+            <option value="">— none —</option>
+            {offenseSpells.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <button
+          onClick={() =>
+            onAttack(
+              sourceTileId,
+              { ground, siege, air },
+              offenseSpellId || null
+            )
+          }
+          disabled={busy || !canAttack}
+          className="w-full px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-500 transition-colors disabled:opacity-50"
         >
-          {myBorders.map((t) => (
-            <option key={t.tileId} value={t.tileId}>
-              {t.tileId} — G{t.units.ground} S{t.units.siege} A{t.units.air}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <div className="grid grid-cols-3 gap-3">
-        <UnitInput
-          label={`Ground / ${source?.units.ground ?? 0}`}
-          value={ground}
-          max={source?.units.ground ?? 0}
-          onChange={setGround}
-        />
-        <UnitInput
-          label={`Siege / ${source?.units.siege ?? 0}`}
-          value={siege}
-          max={source?.units.siege ?? 0}
-          onChange={setSiege}
-        />
-        <UnitInput
-          label={`Air / ${source?.units.air ?? 0}`}
-          value={air}
-          max={source?.units.air ?? 0}
-          onChange={setAir}
-        />
+          {busy ? "Resolving…" : `Send ${sentTotal} units (cost ${1 + (offenseSpellId ? 5 : 0)} turns)`}
+        </button>
       </div>
 
-      <label className="block text-sm font-medium">
-        Offense spell (optional, +5 turns)
-        <select
-          value={offenseSpellId}
-          onChange={(e) => setOffenseSpellId(e.target.value)}
-          className="mt-1 block w-full px-3 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800"
-        >
-          <option value="">— none —</option>
-          {offenseSpells.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <button
-        onClick={() =>
-          onAttack(
-            sourceTileId,
-            { ground, siege, air },
-            offenseSpellId || null
-          )
-        }
-        disabled={busy || !canAttack}
-        className="w-full px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-500 transition-colors disabled:opacity-50"
-      >
-        {busy ? "Resolving…" : `Send ${sentTotal} units (cost ${1 + (offenseSpellId ? 5 : 0)} turns)`}
-      </button>
+      {spySection}
     </div>
   );
 }
