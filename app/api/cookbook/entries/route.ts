@@ -24,6 +24,7 @@ import {
   type CookbookCategory,
   type WorksWithTag,
 } from "@/types/cookbook";
+import { cookbookContract } from "@/lib/api-schemas/cookbook";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -143,6 +144,16 @@ export async function GET(request: NextRequest) {
     }
 
     const searchParams = request.nextUrl.searchParams;
+    // Contract-level validation — currently lenient (all fields optional);
+    // the values we read below preserve the original parse / clamp logic.
+    cookbookContract.entries.query.safeParse({
+      limit: searchParams.get("limit") ?? undefined,
+      cursor: searchParams.get("cursor") ?? undefined,
+      category: searchParams.get("category") ?? undefined,
+      worksWith: searchParams.get("worksWith") ?? undefined,
+      search: searchParams.get("search") ?? undefined,
+      sort: searchParams.get("sort") ?? undefined,
+    });
     const category = searchParams.get("category");
     const worksWith = searchParams.get("worksWith");
     const searchRaw = searchParams.get("search")?.trim().toLowerCase() || "";
@@ -318,10 +329,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const rawBody = await request.json();
+    const rawBody = await request.json().catch(() => null);
     if (!isNonNullObject(rawBody)) {
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
     }
+    // Contract-level shape parse runs alongside the existing detailed
+    // sanitize / length / category checks below (which preserve the
+    // original error wording).
+    cookbookContract.createEntry.body.safeParse(rawBody);
     const body = rawBody;
     const rawTitle = body.title?.trim() || "";
     const rawDescription = body.description?.trim() || "";

@@ -18,10 +18,15 @@ import { initContract } from "@ts-rest/core";
 import { accountContract } from "./account";
 import { authContract } from "./auth";
 import { communityContract } from "./community";
+import { cookbookContract } from "./cookbook";
+import { eventsContract } from "./events";
 import { gameContract } from "./game";
 import { hackathonsContract } from "./hackathons";
+import { liveContract } from "./live";
 import { profileContract } from "./profile";
 import { questionsContract } from "./questions";
+import { showcaseContract } from "./showcase";
+import { talksContract } from "./talks";
 
 const c = initContract();
 
@@ -29,10 +34,15 @@ export const apiContract = c.router({
   account: accountContract,
   auth: authContract,
   community: communityContract,
+  cookbook: cookbookContract,
+  events: eventsContract,
   game: gameContract,
   hackathons: hackathonsContract,
+  live: liveContract,
   profile: profileContract,
   questions: questionsContract,
+  showcase: showcaseContract,
+  talks: talksContract,
 });
 
 export type ApiContract = typeof apiContract;

@@ -10,6 +10,8 @@ import { getVerifiedUser } from "@/lib/server-auth";
 import { withMiddleware, rateLimitConfigs } from "@/lib/middleware";
 import { PYDATA_2026_LUMA_EVENT_NAME } from "@/lib/pydata-2026";
 
+// @contracts: eventsContract.pydataLumaStatus (lib/api-schemas/events.ts)
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 

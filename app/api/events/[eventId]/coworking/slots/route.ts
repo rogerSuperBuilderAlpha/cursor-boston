@@ -10,6 +10,8 @@ import { getSessionsWithStatus } from "@/lib/coworking";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 import { sanitizeDocId } from "@/lib/sanitize";
 
+// @contracts: eventsContract.coworkingSlots (lib/api-schemas/events.ts)
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 

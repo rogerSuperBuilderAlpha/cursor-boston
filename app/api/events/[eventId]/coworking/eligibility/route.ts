@@ -9,6 +9,8 @@ import { getVerifiedUser } from "@/lib/server-auth";
 import { checkCoworkingEligibility } from "@/lib/coworking";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 
+// @contracts: eventsContract.coworkingEligibility (lib/api-schemas/events.ts)
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 

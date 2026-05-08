@@ -41,11 +41,16 @@ const baseDocument = {
   tags: [
     { name: "auth", description: "Authentication and email resolution" },
     { name: "community", description: "Community posts, replies, reactions, moderation" },
+    { name: "cookbook", description: "Prompt cookbook entries and votes" },
+    { name: "events", description: "Coworking sessions and PyData 2026 ticketing" },
     { name: "game", description: "Strategy game endpoints (leaderboard, attacks, artifacts, turns)" },
     { name: "hackathons", description: "Hackathon pool, teams, submissions, and Hack-a-Sprint showcase" },
+    { name: "live", description: "Live lightning-talks sessions, emcee control, and audience queue" },
     { name: "questions", description: "Q&A: questions, answers, votes, accept" },
     { name: "account", description: "Account lifecycle: GDPR delete, scheduled purge" },
     { name: "profile", description: "User profile: data, visibility, subscription, GitHub reconcile" },
+    { name: "showcase", description: "Showcase project submissions, moderation, and votes" },
+    { name: "talks", description: "Talk-submission moderation queue" },
   ],
 };
 

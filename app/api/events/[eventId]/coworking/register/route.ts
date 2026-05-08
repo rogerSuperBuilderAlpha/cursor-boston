@@ -14,6 +14,7 @@ import {
 } from "@/lib/coworking";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 import { sanitizeDocId } from "@/lib/sanitize";
+import { eventsContract } from "@/lib/api-schemas/events";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -62,18 +63,15 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
 
     // Get session ID from body
-    let body: Record<string, unknown>;
-    try {
-      body = (await request.json()) as Record<string, unknown>;
-    } catch {
+    const body = await request.json().catch(() => null);
+    const parsed = eventsContract.coworkingRegister.body.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: "Invalid JSON in request body" },
+        { success: false, error: "Session ID is required" },
         { status: 400 }
       );
     }
-    const sessionId = sanitizeDocId(
-      typeof body.sessionId === "string" ? body.sessionId : ""
-    );
+    const sessionId = sanitizeDocId(parsed.data.sessionId);
     if (!sessionId) {
       return NextResponse.json(
         { success: false, error: "Session ID is required" },

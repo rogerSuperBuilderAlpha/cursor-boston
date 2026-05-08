@@ -11,6 +11,8 @@ import {
   PYDATA_2026_REGISTRATIONS_COLLECTION,
 } from "@/lib/pydata-2026";
 
+// @contracts: eventsContract.pydataCapacity (lib/api-schemas/events.ts)
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
