@@ -12,6 +12,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import Link from "next/link";
@@ -489,6 +490,10 @@ function SummerCohortPageInner() {
   const [activeTab, setActiveTab] = useState<CohortTabId>(
     SUMMER_COHORT_C1_DEFAULT_TAB
   );
+  // Tracks whether we've auto-switched the user to the intake-survey tab on
+  // first land — one-shot so a user who explicitly navigates to another tab
+  // doesn't get yanked back.
+  const autoSwitchedToSurveyRef = useRef(false);
 
   const openEditDetails = useCallback(() => {
     setEditingDetails(true);
@@ -583,6 +588,32 @@ function SummerCohortPageInner() {
       cancelled = true;
     };
   }, [loading, user, application]);
+
+  // Auto-switch incomplete admits to the intake-survey tab on first land.
+  // One-shot via the ref so users who navigate away aren't yanked back.
+  useEffect(() => {
+    if (autoSwitchedToSurveyRef.current) return;
+    if (intakeStatus !== "incomplete") return;
+    if (
+      application?.status !== "admitted" ||
+      !application.cohorts.includes("cohort-1")
+    ) {
+      return;
+    }
+    autoSwitchedToSurveyRef.current = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot redirect on first paint
+    setActiveTab("intake-survey");
+  }, [intakeStatus, application]);
+
+  // If the survey was the active tab and the user just submitted it (status
+  // flipped to "completed" → tab disappears), snap to the default tab so we
+  // don't leave them staring at an empty panel.
+  useEffect(() => {
+    if (intakeStatus === "completed" && activeTab === "intake-survey") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- post-submit cleanup
+      setActiveTab(SUMMER_COHORT_C1_DEFAULT_TAB);
+    }
+  }, [intakeStatus, activeTab]);
 
   // Handle OAuth callbacks landed on this page.
   useEffect(() => {
@@ -744,11 +775,11 @@ function SummerCohortPageInner() {
   const showTabs =
     application?.status === "admitted" &&
     application.cohorts.includes("cohort-1");
-  // Tabs only render once the intake survey is completed. The gate is the
-  // form; treating "unknown" as gating prevents a flash of the dashboard
-  // before the intake-survey GET resolves.
-  const showSurveyGate = showTabs && intakeStatus !== "completed";
-  const myInfoVisible = (!showTabs && !showSurveyGate) || activeTab === "my-info";
+  // Soft gate: the intake survey is now a tab, not a blocker. The tab
+  // appears (with a callout banner above the tabs) until the user has
+  // submitted. Once submitted, the tab disappears.
+  const showIntakeSurveyTab = showTabs && intakeStatus === "incomplete";
+  const myInfoVisible = !showTabs || activeTab === "my-info";
   const cohort1Count = applicationCounts["cohort-1"] ?? 0;
 
   const localityDone =
@@ -819,31 +850,7 @@ function SummerCohortPageInner() {
       ) : (
         <>
           {application ? (
-            showSurveyGate ? (
-              <>
-                <ApplicationStatusPanel
-                  application={application}
-                  cohortLabel={cohortLabel}
-                />
-                {intakeStatus === "loading" || intakeStatus === "unknown" ? (
-                  <div className="mt-6 rounded-xl border border-neutral-200 p-6 text-sm text-neutral-500 dark:border-neutral-800">
-                    Loading intake survey…
-                  </div>
-                ) : intakeStatus === "error" ? (
-                  <div className="mt-6 rounded-xl border border-red-300 bg-red-50 p-6 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
-                    Couldn&apos;t load the intake survey. Refresh the page.
-                  </div>
-                ) : (
-                  <div className="mt-6">
-                    <IntakeSurveyForm
-                      defaultEmail={user?.email ?? application.email ?? ""}
-                      cohortId={application.cohorts[0] ?? "cohort-1"}
-                      onComplete={() => setIntakeStatus("completed")}
-                    />
-                  </div>
-                )}
-              </>
-            ) : showTabs ? (
+            showTabs ? (
               <>
                 <ApplicationStatusPanel
                   application={application}
@@ -855,12 +862,50 @@ function SummerCohortPageInner() {
                   onEditDetails={openEditDetails}
                   hideDoneItems={moveCompletedSetupToInfo}
                 />
+                {showIntakeSurveyTab && activeTab !== "intake-survey" ? (
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("intake-survey")}
+                    className="mt-6 flex w-full items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-left transition-colors hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/30 dark:hover:bg-amber-900/40"
+                  >
+                    <span aria-hidden className="mt-0.5 inline-block h-2.5 w-2.5 shrink-0 rounded-full bg-amber-500" />
+                    <span className="flex-1">
+                      <span className="block text-sm font-semibold text-amber-900 dark:text-amber-100">
+                        Quick intake survey — ~5 min
+                      </span>
+                      <span className="mt-0.5 block text-xs text-amber-800 dark:text-amber-200">
+                        Helps the team build tools to make the next six weeks
+                        smoother. Not research — IRB pending.
+                      </span>
+                    </span>
+                    <span className="text-xs font-semibold text-amber-900 dark:text-amber-100">
+                      Take it →
+                    </span>
+                  </button>
+                ) : null}
                 <CohortTabs
                   activeTab={activeTab}
                   onChange={setActiveTab}
+                  showIntakeSurvey={showIntakeSurveyTab}
                 />
                 <div className="mt-4">
-                  {activeTab === "info" ? (
+                  {activeTab === "intake-survey" ? (
+                    intakeStatus === "loading" || intakeStatus === "unknown" ? (
+                      <div className="rounded-xl border border-neutral-200 p-6 text-sm text-neutral-500 dark:border-neutral-800">
+                        Loading intake survey…
+                      </div>
+                    ) : intakeStatus === "error" ? (
+                      <div className="rounded-xl border border-red-300 bg-red-50 p-6 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+                        Couldn&apos;t load the intake survey. Refresh the page.
+                      </div>
+                    ) : (
+                      <IntakeSurveyForm
+                        defaultEmail={user?.email ?? application.email ?? ""}
+                        cohortId={application.cohorts[0] ?? "cohort-1"}
+                        onComplete={() => setIntakeStatus("completed")}
+                      />
+                    )
+                  ) : activeTab === "info" ? (
                     <InfoTabPanel
                       cohort1Count={cohort1Count}
                       application={
