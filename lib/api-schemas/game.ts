@@ -294,6 +294,15 @@ const RolloverQuery = z.object({
   weekStartIso: z.string().optional(),
 });
 
+const NpcWeeklyQuery = z.object({
+  weekStartIso: z.string().optional(),
+  // "1" enables a no-write planning pass (used by the workflow's manual
+  // dispatch input).
+  dryRun: z.string().optional(),
+  // Optional limit on number of NPCs processed (for incremental backfills).
+  limit: z.string().optional(),
+});
+
 const SetupCasteBody = z
   .object({ caste: SetupCasteEnum })
   .openapi("GameSetupCasteBody");
@@ -732,6 +741,26 @@ export const gameContract = c.router(
       description:
         "Authenticated by an `x-rollover-secret` header rather than Firebase Auth. Idempotent for a given `weekStartIso`.",
       query: RolloverQuery,
+      body: z.object({}).optional(),
+      responses: {
+        200: z.object({
+          success: z.literal(true),
+          summary: z.object({}).passthrough(),
+        }),
+        403: ApiErrorSchema.openapi({
+          description: "Missing/invalid rollover secret",
+        }),
+        500: ApiErrorSchema,
+      },
+      metadata: { errorCodes: ["FORBIDDEN", "SERVER_ERROR"] as const },
+    },
+    npcWeekly: {
+      method: "POST",
+      path: "/api/game/npc-weekly",
+      summary: "Cron-only weekly NPC turn-spender",
+      description:
+        "Authenticated by the same `x-rollover-secret` header used by the human rollover. Iterates every NPC, applies the weekly grant, and spends ~all 100 turns per persona-driven action plan. Idempotent for a given `weekStartIso`.",
+      query: NpcWeeklyQuery,
       body: z.object({}).optional(),
       responses: {
         200: z.object({

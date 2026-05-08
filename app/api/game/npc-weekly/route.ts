@@ -4,6 +4,8 @@
  * See LICENSE file for details.
  */
 
+// @contracts: gameContract.npcWeekly (lib/api-schemas/game.ts)
+//
 // Cron-only: invoked from .github/workflows/game-npc-weekly.yml at
 // Sunday 05:30 UTC (= 30 min after the human-player rollover). Authenticated
 // by the `x-rollover-secret` header matching GAME_ROLLOVER_SECRET. Idempotent
