@@ -99,6 +99,13 @@ export const userOwnedCollections: ReadonlyArray<UserOwnedCollection> = [
   // covers ownerId; the casterId column is a foreign key so it'll naturally
   // disappear when the caster's effects are deleted on their side.
   { collection: "game_intel_effects", mode: "fieldEqualsUid", field: "ownerId", behavior: { type: "delete" } },
+  // Community feed: events authored by the deleted user (player join,
+  // caste pick, attacks they initiated). Hard-delete so the deleted
+  // user's name + UID don't continue to appear in the public feed.
+  { collection: "game_community_events", mode: "fieldEqualsUid", field: "actorUserId", behavior: { type: "delete" } },
+  // Community chat: messages authored by the deleted user. Hard-delete
+  // so private messages don't linger after a GDPR Article 17 request.
+  { collection: "game_community_messages", mode: "fieldEqualsUid", field: "userId", behavior: { type: "delete" } },
 
   // ---------------------------------------------------------------------
   // fieldEqualsUid — anonymize (preserve thread/content; scrub author)

@@ -18,6 +18,7 @@ import {
 } from "./combat";
 import { ARTIFACTS_BY_ID, SPELLS_BY_ID } from "./content";
 import { rollArtifact } from "./artifacts";
+import { logCommunityEventInTx } from "./community";
 import { buildIntelReportServer } from "./intel";
 import {
   deleteIntelEffectsInTx,
@@ -307,6 +308,13 @@ const COLLECTIONS = {
   ATTACKS: "game_attacks",
   WORLD_META: "game_world_meta",
   ARTIFACTS: "game_artifacts",
+  // Community feed: append-only event log of player actions (joins,
+  // caste picks, attacks, milestones). Read by the dashboard's
+  // CommunityPanel. Writes are Admin-SDK only.
+  COMMUNITY_EVENTS: "game_community_events",
+  // Community chat: free-form messages from authenticated players,
+  // moderated by author or by an admin (delete-only).
+  COMMUNITY_MESSAGES: "game_community_messages",
 } as const;
 
 const WORLD_META_DOC = "singleton";
@@ -748,6 +756,21 @@ export async function createPlayerWithSpawnServer(
       { merge: true }
     );
 
+    // Community feed: announce the new general so existing players see
+    // who just joined. Caste is null at this point (set later via
+    // chooseCasteServer); we still log a join entry for funnel-tracking.
+    logCommunityEventInTx(
+      tx,
+      db,
+      {
+        kind: "player_join",
+        actorUserId: userId,
+        actorDisplayName: cleanedName,
+        actorCaste: null,
+      },
+      now
+    );
+
     return { player, tileIds: spawn.tileIds };
   });
 }
@@ -1177,6 +1200,19 @@ export async function changeCasteServer(
       updatedAt: now,
     };
     tx.update(playerRef, updates);
+    logCommunityEventInTx(
+      tx,
+      db,
+      {
+        kind: "caste_change",
+        actorUserId: userId,
+        actorDisplayName: player.displayName,
+        actorCaste: newCaste,
+        fromCaste: player.caste,
+        toCaste: newCaste,
+      },
+      now
+    );
     return { ...player, ...updates };
   });
 }
@@ -1210,6 +1246,17 @@ export async function chooseCasteServer(
       updatedAt: now,
     };
     tx.update(playerRef, updates);
+    logCommunityEventInTx(
+      tx,
+      db,
+      {
+        kind: "caste_pick",
+        actorUserId: userId,
+        actorDisplayName: player.displayName,
+        actorCaste: caste,
+      },
+      now
+    );
     return { ...player, ...updates };
   });
 }
@@ -2301,6 +2348,40 @@ export async function attackTileServer(args: {
       updatedAt: now,
     });
     tx.update(defenderRef, { stats: defenderStats, updatedAt: now });
+
+    // Community feed: announce the attack and any 1k-tile milestone
+    // crossed by the attacker as a result of this capture.
+    logCommunityEventInTx(
+      tx,
+      db,
+      {
+        kind: "attack",
+        actorUserId: args.attackerId,
+        actorDisplayName: attacker.displayName,
+        actorCaste: attacker.caste,
+        targetUserId: defenderId,
+        targetDisplayName: defender.displayName,
+        tileId: args.targetTileId,
+        outcome: result.outcome,
+      },
+      now
+    );
+    if (
+      attacker.stats.tilesHeld < 1000 &&
+      attackerStats.tilesHeld >= 1000
+    ) {
+      logCommunityEventInTx(
+        tx,
+        db,
+        {
+          kind: "milestone_1k_tiles",
+          actorUserId: args.attackerId,
+          actorDisplayName: attacker.displayName,
+          actorCaste: attacker.caste,
+        },
+        now
+      );
+    }
 
     const attack: GameAttack = {
       id: attackId,

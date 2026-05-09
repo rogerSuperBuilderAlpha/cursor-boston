@@ -443,6 +443,46 @@ const UpgradesRemoveBody = z
   })
   .openapi("GameUpgradesRemoveBody");
 
+// Community feed + chat schemas. Denormalized at write-time so the
+// renderer doesn't need to join against game_players.
+const CommunityEventKindEnum = z.enum([
+  "player_join",
+  "caste_pick",
+  "caste_change",
+  "attack",
+  "milestone_1k_tiles",
+]);
+const AttackOutcomeEnum = z.enum(["captured", "repelled", "stalemate"]);
+
+const CommunityEventSchema = z
+  .object({
+    id: z.string(),
+    kind: CommunityEventKindEnum,
+    actorUserId: z.string(),
+    actorDisplayName: z.string(),
+    actorCaste: SetupCasteEnum.nullable(),
+    targetUserId: z.string().optional(),
+    targetDisplayName: z.string().optional(),
+    tileId: z.string().optional(),
+    outcome: AttackOutcomeEnum.optional(),
+    fromCaste: SetupCasteEnum.optional(),
+    toCaste: SetupCasteEnum.optional(),
+  })
+  .passthrough()
+  .openapi("GameCommunityEvent");
+
+const CommunityMessageSchema = z
+  .object({
+    id: z.string(),
+    userId: z.string(),
+    displayName: z.string(),
+    caste: SetupCasteEnum.nullable(),
+    body: z.string(),
+    deletedByAdmin: z.boolean().optional(),
+  })
+  .passthrough()
+  .openapi("GameCommunityMessage");
+
 const WorldQuery = z
   .object({
     qMin: z.string().regex(/^-?\d+$/).optional(),
@@ -1051,6 +1091,95 @@ export const gameContract = c.router(
           "UNAUTHORIZED",
           "FORBIDDEN",
           "VALIDATION_ERROR",
+          "SERVER_ERROR",
+        ] as const,
+      },
+    },
+
+    // Community feed + chat — append-only event log + global chat board
+    // surfaced in the dashboard's CommunityPanel.
+    getCommunityFeed: {
+      method: "GET",
+      path: "/api/game/community/feed",
+      summary: "Recent community events (player joins, caste picks, attacks)",
+      description:
+        "Returns the most recent 50 community-events ordered by createdAt desc. CDN-cached for ~30s.",
+      query: z.object({}).optional(),
+      responses: {
+        200: z.object({
+          success: z.literal(true),
+          events: z.array(CommunityEventSchema),
+        }),
+        ...baseErrorResponses,
+      },
+      metadata: { errorCodes: ["UNAUTHORIZED", "SERVER_ERROR"] as const },
+    },
+    getCommunityChat: {
+      method: "GET",
+      path: "/api/game/community/chat",
+      summary: "Recent community chat messages",
+      description:
+        "Returns the most recent 50 non-deleted chat messages ordered by createdAt desc.",
+      query: z.object({}).optional(),
+      responses: {
+        200: z.object({
+          success: z.literal(true),
+          messages: z.array(CommunityMessageSchema),
+        }),
+        ...baseErrorResponses,
+      },
+      metadata: { errorCodes: ["UNAUTHORIZED", "SERVER_ERROR"] as const },
+    },
+    postCommunityChat: {
+      method: "POST",
+      path: "/api/game/community/chat",
+      summary: "Post a chat message (rate-limited: 10 / 60s per user)",
+      body: z.object({
+        body: z.string().min(1).max(500),
+      }),
+      responses: {
+        200: z.object({
+          success: z.literal(true),
+          message: CommunityMessageSchema,
+        }),
+        429: ApiErrorSchema.openapi({
+          description: "Rate-limited; retry-after in body",
+        }),
+        ...actionErrorResponses,
+      },
+      metadata: {
+        errorCodes: [
+          "UNAUTHORIZED",
+          "VALIDATION_ERROR",
+          "RATE_LIMITED",
+          "SERVER_ERROR",
+        ] as const,
+      },
+    },
+    deleteCommunityChat: {
+      method: "DELETE",
+      path: "/api/game/community/chat/:messageId",
+      summary: "Delete a chat message (own or admin)",
+      description:
+        "Soft-delete: sets deletedAt + deletedByAdmin. Author can delete their own; admins can delete any.",
+      pathParams: z.object({ messageId: z.string().min(1) }),
+      body: z.object({}).optional(),
+      responses: {
+        200: z.object({
+          success: z.literal(true),
+          message: CommunityMessageSchema,
+        }),
+        403: ApiErrorSchema.openapi({
+          description: "Not the author and not an admin",
+        }),
+        404: ApiErrorSchema.openapi({ description: "Message not found" }),
+        ...baseErrorResponses,
+      },
+      metadata: {
+        errorCodes: [
+          "UNAUTHORIZED",
+          "FORBIDDEN",
+          "NOT_FOUND",
           "SERVER_ERROR",
         ] as const,
       },
