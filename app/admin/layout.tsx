@@ -30,6 +30,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               <Link href="/admin/moderation" className="hover:text-white">
                 Moderation
               </Link>
+              <Link href="/admin/summer-cohort" className="hover:text-white">
+                Summer cohort
+              </Link>
             </nav>
           </div>
           <Link href="/" className="text-sm text-zinc-400 hover:text-white">

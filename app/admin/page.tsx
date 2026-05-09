@@ -33,6 +33,11 @@ export default function AdminIndexPage() {
             Community moderation queue →
           </Link>
         </li>
+        <li>
+          <Link href="/admin/summer-cohort" className="text-emerald-400 hover:underline">
+            Summer cohort dashboard →
+          </Link>
+        </li>
       </ul>
     </div>
   );
