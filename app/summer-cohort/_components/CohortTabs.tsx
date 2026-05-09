@@ -9,6 +9,8 @@
 export type CohortTabId =
   | "info"
   | "intake-survey"
+  | "setup"
+  | "game"
   | "week-1"
   | "week-2"
   | "week-3"
@@ -27,6 +29,8 @@ const ALL_TABS: readonly TabSpec[] = [
   { id: "info", label: "Cohort Info", shortLabel: "Cohort" },
   { id: "intake-survey", label: "Intake Survey", shortLabel: "Survey" },
   { id: "my-info", label: "My Info", shortLabel: "Me" },
+  { id: "setup", label: "Setup Instructions", shortLabel: "Setup" },
+  { id: "game", label: "Game", shortLabel: "Game" },
   { id: "week-1", label: "Week 1: PM", shortLabel: "W1" },
   { id: "week-2", label: "Week 2: Comms", shortLabel: "W2" },
   { id: "week-3", label: "Week 3: Vibe Marketing", shortLabel: "W3" },
