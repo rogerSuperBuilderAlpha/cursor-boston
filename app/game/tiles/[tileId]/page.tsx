@@ -13,6 +13,7 @@ import { computeSupplyMultiplier } from "@/lib/game/combat";
 import { ALL_SPELLS, UPGRADES_BY_ID } from "@/lib/game/content";
 import type {
   Caste,
+  GameArtifact,
   GamePlayer,
   GameTile,
   IntelReport,
@@ -81,6 +82,10 @@ export default function TileDetailPage({
   const [ownersByUserId, setOwnersByUserId] = useState<
     Map<string, { caste: Caste | null; displayName: string }>
   >(() => new Map());
+  // Lifted-up artifact inventory. Both panels need it so they can show
+  // "Use artifact" buttons inline. Refreshed on initial load and on each
+  // /api/game/artifact/use response (which returns the updated artifact).
+  const [artifacts, setArtifacts] = useState<GameArtifact[]>([]);
 
   const refresh = useCallback(async () => {
     if (!user) {
@@ -90,16 +95,23 @@ export default function TileDetailPage({
     setError(null);
     try {
       const token = await user.getIdToken();
-      const [tileRes, playerRes] = await Promise.all([
+      const [tileRes, playerRes, artifactsRes] = await Promise.all([
         fetch(`/api/game/tile/${encodeURIComponent(tileId)}`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
         fetch("/api/game/player", {
           headers: { Authorization: `Bearer ${token}` },
         }),
+        fetch("/api/game/artifacts?limit=100", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
       ]);
       const tileData = (await tileRes.json()) as TileResponse;
       const playerData = (await playerRes.json()) as PlayerResponse;
+      const artifactsData = (await artifactsRes.json()) as {
+        success: boolean;
+        artifacts?: GameArtifact[];
+      };
       if (!tileData.success) {
         const msg =
           typeof tileData.error === "string"
@@ -110,6 +122,9 @@ export default function TileDetailPage({
       setTile(tileData.tile ?? null);
       setPlayer(playerData.player);
       setOwnedTiles(playerData.tiles ?? []);
+      if (artifactsData.success && Array.isArray(artifactsData.artifacts)) {
+        setArtifacts(artifactsData.artifacts.filter((a) => !a.used));
+      }
       // Pull cached enemy-border and owner snapshots from the dashboard's
       // localStorage cache. Best-effort: if the cache is missing the relevant
       // tiles, the supply readout simply won't render.
@@ -216,7 +231,24 @@ export default function TileDetailPage({
         if (data.intelReport) {
           setIntelReport(data.intelReport as IntelReport);
         }
-        setMessage(data.stoppedEarly ? `Stopped: ${data.stoppedEarly}` : "Done.");
+        // /api/game/artifact/use returns the updated artifact (used=true).
+        // Drop it from the local inventory so the button disappears.
+        if (data.artifact) {
+          const a = data.artifact as GameArtifact;
+          setArtifacts((prev) =>
+            prev.filter((x) => x.id !== a.id).concat(a.used ? [] : [a])
+          );
+        }
+        // Prefer the report's summary line over a generic "Done." so the
+        // action banner explains what just happened ("Tile changed to military
+        // · 1 turn spent").
+        const summary =
+          (newOnes[0] as { summary?: string } | undefined)?.summary ?? null;
+        setMessage(
+          data.stoppedEarly
+            ? `Stopped: ${data.stoppedEarly}`
+            : summary ?? "Done."
+        );
         return data;
       } catch (e) {
         setError(e instanceof Error ? e.message : "Action failed");
@@ -394,6 +426,7 @@ export default function TileDetailPage({
             tile={tile}
             player={player}
             myDefenseSpells={myDefenseSpells}
+            artifacts={artifacts}
             busy={busy}
             onBuild={(unitType) =>
               callApi("/api/game/build", { tileId: tile.tileId, unitType })
@@ -407,12 +440,19 @@ export default function TileDetailPage({
                 type: targetType,
               })
             }
+            onUseArtifact={(artifactId) =>
+              callApi("/api/game/artifact/use", {
+                artifactId,
+                targetTileId: tile.tileId,
+              })
+            }
           />
         ) : (
           <EnemyTilePanel
             tile={tile}
             player={player}
             ownedTiles={ownedTiles}
+            artifacts={artifacts}
             busy={busy}
             onAttack={(sourceTileId, units, offenseSpellId) =>
               callApi("/api/game/attack", {
@@ -425,6 +465,12 @@ export default function TileDetailPage({
             onSpy={(spellId) =>
               callApi("/api/game/spy", {
                 spellId,
+                targetTileId: tile.tileId,
+              })
+            }
+            onUseArtifact={(artifactId) =>
+              callApi("/api/game/artifact/use", {
+                artifactId,
                 targetTileId: tile.tileId,
               })
             }
