@@ -34,8 +34,11 @@ import {
 import { ClaimSpotByPRCard } from "./_components/ClaimSpotByPRCard";
 import { CohortProgramBreakdown } from "./_components/CohortProgramBreakdown";
 import { CohortTabs, type CohortTabId } from "./_components/CohortTabs";
+import { GamePromoPanel } from "./_components/GamePromoPanel";
 import { InfoTabPanel } from "./_components/InfoTabPanel";
 import { IntakeSurveyForm } from "./_components/IntakeSurveyForm";
+import { SetupInstructionsPanel } from "./_components/SetupInstructionsPanel";
+import { SetupReadinessModal } from "./_components/SetupReadinessModal";
 import { Week4LudwittPanel } from "./_components/Week4LudwittPanel";
 import { Week5StartupPanel } from "./_components/Week5StartupPanel";
 import { Week6OssPanel } from "./_components/Week6OssPanel";
@@ -789,6 +792,16 @@ function SummerCohortPageInner() {
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10 md:px-6 md:py-14">
+      {showTabs ? (
+        <SetupReadinessModal
+          needsDiscord={!discord.discordInfo}
+          needsGithub={!github.githubInfo?.login}
+          needsSurvey={intakeStatus === "incomplete"}
+          onConnectDiscord={discord.connect}
+          onConnectGithub={github.connect}
+          onGoToSurvey={() => setActiveTab("intake-survey")}
+        />
+      ) : null}
       <header className="mb-8">
         <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
           <Sun className="h-3.5 w-3.5" strokeWidth={2.25} />
@@ -957,6 +970,10 @@ function SummerCohortPageInner() {
                     <Week5StartupPanel />
                   ) : activeTab === "week-6" ? (
                     <Week6OssPanel />
+                  ) : activeTab === "setup" ? (
+                    <SetupInstructionsPanel />
+                  ) : activeTab === "game" ? (
+                    <GamePromoPanel />
                   ) : null}
                 </div>
                 <CohortCodeOfConductFooter />

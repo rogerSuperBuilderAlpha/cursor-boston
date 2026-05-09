@@ -15,7 +15,7 @@ import type {
   TurnReport,
   UnitType,
 } from "@/lib/game/types";
-import { UNITS_PER_CYCLE } from "./constants";
+import { MIN_UNITS_PER_CYCLE_RECRUITABLE } from "./constants";
 import { buildThreatPriorityPlan } from "./threat-priority-plan";
 import type { RecruitProgress } from "./types";
 
@@ -30,7 +30,9 @@ interface RecruitArgs {
   unitType: UnitType;
   totalCycles: number;
   selectedTileId: string;
-  threatRankedMilitaryIds: string[];
+  // Threat-ranked recruitable tile ids (military + food + magic). Drives
+  // the auto-route distribution when no specific tile is selected.
+  threatRankedRecruitableIds: string[];
 }
 
 /**
@@ -54,7 +56,7 @@ export function useRecruitAction({
       unitType,
       totalCycles,
       selectedTileId,
-      threatRankedMilitaryIds,
+      threatRankedRecruitableIds,
     }: RecruitArgs) => {
       if (!user) return;
       if (totalCycles === 0) {
@@ -73,7 +75,7 @@ export function useRecruitAction({
         const token = await user.getIdToken();
         const planEntries = selectedTileId
           ? [{ tileId: selectedTileId, cycles: totalCycles }]
-          : buildThreatPriorityPlan(threatRankedMilitaryIds, totalCycles);
+          : buildThreatPriorityPlan(threatRankedRecruitableIds, totalCycles);
         const plan = planEntries.map(({ tileId, cycles }) => ({
           tileId,
           unitType,
@@ -100,10 +102,12 @@ export function useRecruitAction({
           : [];
         let artifactsFound = 0;
         for (const r of reports) if (r.artifactFound) artifactsFound++;
+        // Conservative fallback when the server didn't return data.produced.
+        // Per-tile yield varies (5–10), so we bound below.
         const unitsBuilt =
           typeof data.produced === "number"
             ? data.produced
-            : reports.length * UNITS_PER_CYCLE;
+            : reports.length * MIN_UNITS_PER_CYCLE_RECRUITABLE;
         if (reports.length > 0) {
           setRecentReports((prev) =>
             [...reports.slice().reverse(), ...prev].slice(0, 25)

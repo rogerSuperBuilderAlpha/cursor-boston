@@ -29,6 +29,9 @@ export const TYPE_LABEL: Record<SpellType, string> = {
   offense: "Offense",
   production: "Production",
   intel: "Intel",
+  siege: "Siege",
+  disarm: "Disarm",
+  attrition: "Attrition",
 };
 
 export const RARITY_TEXT: Record<string, string> = {

@@ -18,11 +18,16 @@ import {
 import type { Caste, SpellType } from "@/lib/game/types";
 
 describe("spell content", () => {
-  it("registers 75 tiered spells (5 castes × 3 types × 5 tiers) plus 5 single-tier intel spells", () => {
+  it("registers 75 tiered spells + 5 intel + 15 sim-feature spells (siege/disarm/attrition tier-1 per caste)", () => {
     // 75 from defense/offense/production tier ladders + 1 intel spell per
-    // caste = 80.
-    expect(ALL_SPELLS.length).toBe(80);
+    // caste (5) + 3 new kinds (siege, disarm, attrition) × 5 castes (15)
+    // = 95 total. The new kinds are tier-1 only in V1; higher tiers can
+    // be added as content follow-ups.
+    expect(ALL_SPELLS.length).toBe(95);
     expect(ALL_SPELLS.filter((s) => s.type === "intel").length).toBe(5);
+    expect(ALL_SPELLS.filter((s) => s.type === "siege").length).toBe(5);
+    expect(ALL_SPELLS.filter((s) => s.type === "disarm").length).toBe(5);
+    expect(ALL_SPELLS.filter((s) => s.type === "attrition").length).toBe(5);
   });
 
   it("spell ids are unique", () => {
