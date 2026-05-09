@@ -59,10 +59,18 @@ export function recommendNext(
       tone: "primary",
     };
   }
-  if (army.total === 0 && counts.military > 0) {
+  if (
+    army.total === 0 &&
+    counts.military + counts.food + counts.magic > 0
+  ) {
+    const recruitable = counts.military + counts.food + counts.magic;
+    const detail =
+      counts.military > 0
+        ? `${counts.military} military land${counts.military === 1 ? "" : "s"}`
+        : `${recruitable} recruitable land${recruitable === 1 ? "" : "s"}`;
     return {
       title: "Recruit your first army",
-      body: `You have ${counts.military} military land${counts.military === 1 ? "" : "s"} and a unit cap of ${unitCap}. A recruit batch costs 5 turns.`,
+      body: `You have ${detail} and a unit cap of ${unitCap}. A recruit batch costs 5 turns (military trains 10 units/cycle; food and magic train 5).`,
       ctaLabel: "Recruit →",
       ctaHref: "/game/recruit",
       tone: "primary",

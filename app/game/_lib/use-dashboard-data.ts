@@ -24,12 +24,15 @@ import {
   attack,
   bulkDistribute,
   castIntelSpell,
+  castSpell,
   createPlayer,
   distributeTile,
   farExpedition,
+  flyover,
   frontierExplore,
   recruitUnits,
   setPlayerName,
+  siege,
   spendArtifact,
   type DashboardMutators,
 } from "./dashboard-actions";
@@ -307,6 +310,41 @@ export function useDashboardData() {
     [user]
   );
 
+  const handleSiege = useCallback(
+    async (sourceTileId: string, targetTileId: string) => {
+      if (!user) return null;
+      return siege(user, { sourceTileId, targetTileId }, mut);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mut is rebuilt every render but its members are stable
+    [user]
+  );
+
+  const handleFlyover = useCallback(
+    async (
+      sourceTileId: string,
+      targetTileId: string,
+      units: UnitStack
+    ) => {
+      if (!user) return null;
+      return flyover(user, { sourceTileId, targetTileId, units }, mut);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mut is rebuilt every render but its members are stable
+    [user]
+  );
+
+  const handleCastSpell = useCallback(
+    async (spellId: string, sourceTileId: string, targetTileId: string) => {
+      if (!user) return null;
+      return castSpell(
+        user,
+        { spellId, sourceTileId, targetTileId },
+        mut
+      );
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mut is rebuilt every render but its members are stable
+    [user]
+  );
+
   return {
     user,
     authLoading,
@@ -347,6 +385,9 @@ export function useDashboardData() {
     handleArmDefenseSpell,
     handleDistributeTile,
     handleUseArtifact,
+    handleSiege,
+    handleFlyover,
+    handleCastSpell,
   };
 }
 

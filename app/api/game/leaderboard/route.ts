@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
     const queryParse = gameContract.getLeaderboard.query.safeParse({
       limit: url.searchParams.get("limit") ?? undefined,
       cursor: url.searchParams.get("cursor") ?? undefined,
+      audience: url.searchParams.get("audience") ?? undefined,
     });
     if (!queryParse.success) {
       return apiError(queryParse.error.issues[0]?.message ?? "Invalid query", 400);
@@ -32,10 +33,12 @@ export async function GET(request: NextRequest) {
 
     const limit = clampLimit(queryParse.data.limit ?? null, DEFAULT_PAGE_LIMIT);
     const cursor = parseCursor(queryParse.data.cursor ?? null);
+    const audience = queryParse.data.audience ?? "all";
 
     const { items, nextCursor, hasMore } = await getLeaderboardServer({
       limit,
       cursor,
+      audience,
     });
     return apiSuccess({
       players: items.map((p) => ({

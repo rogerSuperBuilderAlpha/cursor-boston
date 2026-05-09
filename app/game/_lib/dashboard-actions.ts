@@ -540,6 +540,179 @@ export async function spendArtifact(
   }
 }
 
+/**
+ * POST /api/game/siege — soften a target tile's standing-defense floor.
+ * 5-turn cost, stacking up to SIEGE_DEBUFF_MAX_MAGNITUDE.
+ */
+export async function siege(
+  user: User,
+  args: { sourceTileId: string; targetTileId: string },
+  mut: DashboardMutators
+): Promise<{
+  reportSummary: string;
+  siegeTotalMagnitude: number;
+} | null> {
+  mut.setError(null);
+  try {
+    const token = await user.getIdToken();
+    const res = await fetch("/api/game/siege", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(args),
+    });
+    const data = await res.json();
+    if (!data.success) {
+      throw new Error(asErrorMessage(data, "Siege failed"));
+    }
+    if (data.player) mut.setPlayer(data.player as GamePlayer);
+    if (data.report) {
+      mut.setRecentReports((prev) =>
+        [data.report as TurnReport, ...prev].slice(0, 50)
+      );
+    }
+    return {
+      reportSummary:
+        (data.report as { summary?: string } | undefined)?.summary ?? "Siege",
+      siegeTotalMagnitude:
+        typeof data.siegeTotalMagnitude === "number"
+          ? data.siegeTotalMagnitude
+          : 0,
+    };
+  } catch (e) {
+    mut.setError(e instanceof Error ? e.message : "Siege failed");
+    return null;
+  }
+}
+
+/**
+ * POST /api/game/flyover — air-only raid that attrits defenders without
+ * taking the tile. Always resolves to "repelled" / "stalemate"; attacker
+ * losses are doubled.
+ */
+export async function flyover(
+  user: User,
+  args: {
+    sourceTileId: string;
+    targetTileId: string;
+    units: UnitStack;
+  },
+  mut: DashboardMutators
+): Promise<{
+  reportSummary: string;
+  combat: CombatResult | null;
+  report: TurnReport | null;
+  targetTile: GameTile | null;
+} | null> {
+  mut.setError(null);
+  try {
+    const token = await user.getIdToken();
+    const res = await fetch("/api/game/flyover", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(args),
+    });
+    const data = await res.json();
+    if (!data.success) {
+      throw new Error(asErrorMessage(data, "Flyover failed"));
+    }
+    if (data.attackerPlayer) mut.setPlayer(data.attackerPlayer as GamePlayer);
+    if (data.sourceTile) {
+      mut.mergeOwnedTiles([asMapTile(data.sourceTile as GameTile)]);
+    }
+    if (data.targetTile) {
+      mut.mergeBorderTiles([asMapTile(data.targetTile as GameTile)]);
+    }
+    if (data.report) {
+      mut.setRecentReports((prev) =>
+        [data.report as TurnReport, ...prev].slice(0, 50)
+      );
+    }
+    return {
+      reportSummary:
+        (data.report as { summary?: string } | undefined)?.summary ?? "Flyover",
+      combat: (data.combat as CombatResult | undefined) ?? null,
+      report: (data.report as TurnReport | undefined) ?? null,
+      targetTile: (data.targetTile as GameTile | undefined) ?? null,
+    };
+  } catch (e) {
+    mut.setError(e instanceof Error ? e.message : "Flyover failed");
+    return null;
+  }
+}
+
+/**
+ * POST /api/game/spell/cast — cast a standalone siege/disarm/attrition
+ * spell. Server rolls dice; the response carries the kind-specific outcome.
+ */
+export async function castSpell(
+  user: User,
+  args: {
+    spellId: string;
+    sourceTileId: string;
+    targetTileId: string;
+  },
+  mut: DashboardMutators
+): Promise<{
+  reportSummary: string;
+  siege?: { magnitudeApplied: number; totalMagnitudeAfter: number };
+  disarm?: { fractionApplied: number };
+  attrition?: { unitsKilled: UnitStack };
+} | null> {
+  mut.setError(null);
+  try {
+    const token = await user.getIdToken();
+    const res = await fetch("/api/game/spell/cast", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(args),
+    });
+    const data = await res.json();
+    if (!data.success) {
+      throw new Error(asErrorMessage(data, "Spell cast failed"));
+    }
+    if (data.player) mut.setPlayer(data.player as GamePlayer);
+    if (data.report) {
+      mut.setRecentReports((prev) =>
+        [data.report as TurnReport, ...prev].slice(0, 50)
+      );
+    }
+    // Attrition mutates the target tile; merge into the border-tile cache
+    // so the threat row reflects the new defender unit count without a
+    // page reload.
+    if (data.attrition?.targetTile) {
+      mut.mergeBorderTiles([
+        asMapTile(data.attrition.targetTile as GameTile),
+      ]);
+    }
+    return {
+      reportSummary:
+        (data.report as { summary?: string } | undefined)?.summary ??
+        "Spell cast",
+      ...(data.siege ? { siege: data.siege } : {}),
+      ...(data.disarm ? { disarm: data.disarm } : {}),
+      ...(data.attrition
+        ? {
+            attrition: {
+              unitsKilled: data.attrition.unitsKilled as UnitStack,
+            },
+          }
+        : {}),
+    };
+  } catch (e) {
+    mut.setError(e instanceof Error ? e.message : "Spell cast failed");
+    return null;
+  }
+}
+
 /** POST /api/game/admin/grant — admin-only manual 100-turn override. */
 export async function adminGrant(
   user: User,

@@ -99,6 +99,28 @@ export function BattleReport({
   // Modifier lines — only emit the ones that actually applied. RNG always
   // shows because there's always a roll.
   const modifiers: string[] = [];
+  // Tile-type combat modifiers (May 2026 mechanics rework).
+  if (
+    combat.sourceLandTypeMultiplier !== undefined &&
+    combat.sourceLandTypeMultiplier !== 1
+  ) {
+    modifiers.push(
+      `Source tile · ×${combat.sourceLandTypeMultiplier.toFixed(2)} on attack`
+    );
+  }
+  if (
+    combat.targetLandTypeMultiplier !== undefined &&
+    combat.targetLandTypeMultiplier !== 1
+  ) {
+    modifiers.push(
+      `Target tile · ×${combat.targetLandTypeMultiplier.toFixed(2)} on defense`
+    );
+  }
+  if (combat.standingDefenseAdded && combat.standingDefenseAdded > 0) {
+    modifiers.push(
+      `Standing defense · +${combat.standingDefenseAdded.toFixed(0)} (tile garrison)`
+    );
+  }
   if (combat.underdogApplied) {
     modifiers.push(
       `Underdog bonus active · ×${(1 + UNDERDOG_DEFENSE_BONUS).toFixed(2)} on defense`
@@ -111,18 +133,24 @@ export function BattleReport({
   }
   if (combat.appliedSpells.offenseId) {
     const s = SPELLS_BY_ID.get(combat.appliedSpells.offenseId);
+    const magicBonus = combat.magicTileOffenseSpellBonusApplied
+      ? " (magic-tile ×1.25)"
+      : "";
     modifiers.push(
       s
-        ? `Offense spell · ${s.name} · T${s.tier}`
-        : `Offense spell · ${combat.appliedSpells.offenseId}`
+        ? `Offense spell · ${s.name} · T${s.tier}${magicBonus}`
+        : `Offense spell · ${combat.appliedSpells.offenseId}${magicBonus}`
     );
   }
   if (combat.appliedSpells.defenseId) {
     const s = SPELLS_BY_ID.get(combat.appliedSpells.defenseId);
+    const magicBonus = combat.magicTileDefenseSpellBonusApplied
+      ? " (magic-tile ×1.25)"
+      : "";
     modifiers.push(
       s
-        ? `Defense spell triggered · ${s.name} · T${s.tier}`
-        : `Defense spell triggered · ${combat.appliedSpells.defenseId}`
+        ? `Defense spell triggered · ${s.name} · T${s.tier}${magicBonus}`
+        : `Defense spell triggered · ${combat.appliedSpells.defenseId}${magicBonus}`
     );
   }
   if (combat.airIntel?.weakFace) {

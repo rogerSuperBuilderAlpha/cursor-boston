@@ -8,24 +8,34 @@ import { randomUUID } from "node:crypto";
 import type { Firestore, Transaction } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import {
+  applyFlyoverModifiers,
   computeTileCapacity,
+  distributeUnitKills,
   makeSeededRng,
+  realizedSpellMagnitude,
   resolveAttack,
+  rollSpellEffectiveness,
 } from "./combat";
 import { ARTIFACTS_BY_ID, SPELLS_BY_ID } from "./content";
 import { rollArtifact } from "./artifacts";
 import { buildIntelReportServer } from "./intel";
 import {
+  deleteIntelEffectsInTx,
   readAttackContextEffects,
+  recordDefenseDisarmInTx,
   recordIntelEffectInTx,
+  recordSiegeDebuffInTx,
 } from "./intel-effects";
 import {
   buildArmDefenseReport,
   buildAttackReport,
   buildBuildReport,
+  buildCastSpellReport,
   buildDistributeReport,
   buildExploreReport,
+  buildFlyoverReport,
   buildProduceReport,
+  buildSiegeReport,
 } from "./turn-report";
 import { notifyConquest } from "./discord-game";
 import { logger } from "@/lib/logger";
@@ -53,21 +63,23 @@ import {
   validateApplyUpgrade,
   validateRemoveUpgrade,
 } from "./upgrades";
-import type {
-  ArtifactDefinition,
-  Caste,
-  CombatResult,
-  GameArtifact,
-  GameAttack,
-  GamePlayer,
-  GameTile,
-  IntelReport,
-  LandType,
-  MapTile,
-  TurnAction,
-  TurnReport,
-  UnitStack,
-  UnitType,
+import {
+  SIEGE_ACTION_MAGNITUDE,
+  SIEGE_DEBUFF_MAX_MAGNITUDE,
+  type ArtifactDefinition,
+  type Caste,
+  type CombatResult,
+  type GameArtifact,
+  type GameAttack,
+  type GamePlayer,
+  type GameTile,
+  type IntelReport,
+  type LandType,
+  type MapTile,
+  type TurnAction,
+  type TurnReport,
+  type UnitStack,
+  type UnitType,
 } from "./types";
 import {
   type AxialCoord,
@@ -90,7 +102,29 @@ import {
 export const ATTACK_TURN_COST = 1;
 export const SPELL_TURN_COST = 5;
 export const BUILD_UNITS_TURN_COST = 5;
+// Siege action: a deterministic infrastructure-degrading move. Costs 5
+// turns, applies SIEGE_ACTION_MAGNITUDE (0.10) to the target's
+// standing-defense floor, stacks up to SIEGE_DEBUFF_MAX_MAGNITUDE.
+export const SIEGE_TURN_COST = 5;
+// Recruit rate is per-land-type as of the May 2026 mechanics rework:
+// food/magic tiles now recruit at half the military rate, since training
+// soldiers is what military tiles are *for*. The gate that limited recruit
+// to military-only was removed at the same time.
+//
+// `BUILD_UNITS_PER_TURN` is kept exported as the military baseline so any
+// external consumer reading "the recruit rate" still sees a sensible value;
+// internal cycle math uses `unitsPerTurnForLand(landType)`.
 export const BUILD_UNITS_PER_TURN = 10;
+export const BUILD_UNITS_PER_TURN_BY_LAND: Record<LandType, number> = {
+  unrevealed: 0,
+  unassigned: 0,
+  military: 10,
+  food: 5,
+  magic: 5,
+};
+export function unitsPerTurnForLand(landType: LandType): number {
+  return BUILD_UNITS_PER_TURN_BY_LAND[landType] ?? 0;
+}
 // Far expedition: 2× the normal explore cost. Lands a tile adjacent to a
 // random enemy tile, marked isolatedSpawn so the supply system applies the
 // -15% defense floor until the player grows neighbors around it.
@@ -1159,8 +1193,10 @@ async function getOwnedLandCounts(
   return counts;
 }
 
-// Builds units of `unitType` on `tileId`. Tile must be military and owned by
-// player. Costs BUILD_UNITS_TURN_COST and produces BUILD_UNITS_PER_TURN units.
+// Builds units of `unitType` on `tileId`. Tile must be owned by the player
+// and be a recruitable land type (military, food, or magic). Costs
+// BUILD_UNITS_TURN_COST and produces unitsPerTurnForLand(tile.type) units —
+// military trains 10/turn, food/magic 5/turn (May 2026 mechanics rework).
 export async function buildUnitsServer(
   userId: string,
   tileId: string,
@@ -1191,7 +1227,10 @@ export async function buildUnitsServer(
     const tile = tileSnap.data() as GameTile;
 
     if (tile.ownerId !== userId) throw new GameTileNotOwnedError();
-    if (tile.type !== "military") {
+    const unitsThisCycle = unitsPerTurnForLand(tile.type);
+    if (unitsThisCycle <= 0) {
+      // unrevealed/unassigned tiles can't recruit. Reuse the existing
+      // tile-type error so clients see a familiar shape.
       throw new GameTileTypeError("military", tile.type);
     }
     if (player.phase !== "play") {
@@ -1205,7 +1244,7 @@ export async function buildUnitsServer(
     }
 
     const cap = effectiveUnitCap(player, counts.food, counts.magic);
-    if (player.stats.unitsAlive + BUILD_UNITS_PER_TURN > cap) {
+    if (player.stats.unitsAlive + unitsThisCycle > cap) {
       throw new GameUnitCapExceededError(cap, player.stats.unitsAlive);
     }
 
@@ -1220,14 +1259,14 @@ export async function buildUnitsServer(
     );
     const artifact = rolled?.definition ?? null;
 
-    const newUnits: UnitStack = { ...tile.units, [unitType]: tile.units[unitType] + BUILD_UNITS_PER_TURN };
+    const newUnits: UnitStack = { ...tile.units, [unitType]: tile.units[unitType] + unitsThisCycle };
     tx.update(tileRef, { units: newUnits, updatedAt: now });
     tx.update(playerRef, {
       turnsRemaining: player.turnsRemaining - BUILD_UNITS_TURN_COST,
       turnsSpentTotal,
       stats: {
         ...player.stats,
-        unitsAlive: player.stats.unitsAlive + BUILD_UNITS_PER_TURN,
+        unitsAlive: player.stats.unitsAlive + unitsThisCycle,
       },
       updatedAt: now,
     });
@@ -1237,7 +1276,7 @@ export async function buildUnitsServer(
       cost: BUILD_UNITS_TURN_COST,
       tileId,
       unitType,
-      unitsBuilt: BUILD_UNITS_PER_TURN,
+      unitsBuilt: unitsThisCycle,
       artifactFound: artifact,
       rng: makeNarrativeRng(userId, turnsSpentTotal, "build"),
     });
@@ -1249,12 +1288,12 @@ export async function buildUnitsServer(
         turnsSpentTotal,
         stats: {
           ...player.stats,
-          unitsAlive: player.stats.unitsAlive + BUILD_UNITS_PER_TURN,
+          unitsAlive: player.stats.unitsAlive + unitsThisCycle,
         },
         updatedAt: now,
       },
       tile: { ...tile, units: newUnits, updatedAt: now },
-      produced: BUILD_UNITS_PER_TURN,
+      produced: unitsThisCycle,
       report,
       artifact: rolled?.doc ?? null,
     };
@@ -1264,13 +1303,16 @@ export async function buildUnitsServer(
 export interface BulkBuildPlanEntry {
   tileId: string;
   unitType: UnitType;
-  cycles: number; // each cycle = BUILD_UNITS_TURN_COST turns + BUILD_UNITS_PER_TURN units
+  // Each cycle = BUILD_UNITS_TURN_COST turns + unitsPerTurnForLand(tile.type)
+  // units. Military tiles produce 10/cycle, food/magic 5/cycle.
+  cycles: number;
 }
 
-// Bulk build. Reads {player + 1 land-counts query + N military tile refs} once,
-// runs each plan entry's `cycles` build steps in memory (each step costs
-// BUILD_UNITS_TURN_COST turns and adds BUILD_UNITS_PER_TURN units), accumulates
-// artifact rolls + reports, and writes everything in one transaction.
+// Bulk build. Reads {player + 1 land-counts query + N tile refs} once, runs
+// each plan entry's `cycles` build steps in memory (each step costs
+// BUILD_UNITS_TURN_COST turns and adds unitsPerTurnForLand(tile.type) units),
+// accumulates artifact rolls + reports, and writes everything in one
+// transaction.
 //
 // Stops cleanly with stoppedEarly if a step would exceed the unit cap or
 // the player runs out of turns mid-batch — earlier-succeeded steps still commit.
@@ -1339,7 +1381,9 @@ export async function bulkBuildUnitsServer(
       if (!snap.exists) throw new GameTileNotFoundError();
       const tile = snap.data() as GameTile;
       if (tile.ownerId !== userId) throw new GameTileNotOwnedError();
-      if (tile.type !== "military") {
+      if (unitsPerTurnForLand(tile.type) <= 0) {
+        // unrevealed/unassigned can't recruit. Reuse the existing tile-type
+        // error shape for client compatibility.
         throw new GameTileTypeError("military", tile.type);
       }
       tilesById.set(id, tile);
@@ -1359,6 +1403,8 @@ export async function bulkBuildUnitsServer(
     outer: for (const entry of plan) {
       for (let c = 0; c < entry.cycles; c++) {
         const isFirst = stepIndex === 0;
+        const before = tilesById.get(entry.tileId)!;
+        const unitsThisCycle = unitsPerTurnForLand(before.type);
 
         if (turnsRemaining < BUILD_UNITS_TURN_COST) {
           if (isFirst) {
@@ -1370,7 +1416,7 @@ export async function bulkBuildUnitsServer(
           stoppedEarly = `out of turns at cycle ${stepIndex}`;
           break outer;
         }
-        if (unitsAlive + BUILD_UNITS_PER_TURN > cap) {
+        if (unitsAlive + unitsThisCycle > cap) {
           if (isFirst) {
             throw new GameUnitCapExceededError(cap, unitsAlive);
           }
@@ -1380,8 +1426,8 @@ export async function bulkBuildUnitsServer(
 
         turnsRemaining -= BUILD_UNITS_TURN_COST;
         turnsSpentTotal += BUILD_UNITS_TURN_COST;
-        unitsAlive += BUILD_UNITS_PER_TURN;
-        producedTotal += BUILD_UNITS_PER_TURN;
+        unitsAlive += unitsThisCycle;
+        producedTotal += unitsThisCycle;
 
         const rolled = rollAndStageArtifact(
           tx,
@@ -1394,13 +1440,12 @@ export async function bulkBuildUnitsServer(
         const artifact = rolled?.definition ?? null;
         if (rolled) artifacts.push(rolled.doc);
 
-        const before = tilesById.get(entry.tileId)!;
         const after: GameTile = {
           ...before,
           units: {
             ...before.units,
             [entry.unitType]:
-              before.units[entry.unitType] + BUILD_UNITS_PER_TURN,
+              before.units[entry.unitType] + unitsThisCycle,
           },
           updatedAt: now,
         };
@@ -1412,7 +1457,7 @@ export async function bulkBuildUnitsServer(
             cost: BUILD_UNITS_TURN_COST,
             tileId: entry.tileId,
             unitType: entry.unitType,
-            unitsBuilt: BUILD_UNITS_PER_TURN,
+            unitsBuilt: unitsThisCycle,
             artifactFound: artifact,
             rng: makeNarrativeRng(userId, turnsSpentTotal, "build"),
           })
@@ -2068,6 +2113,8 @@ export async function attackTileServer(args: {
         unitsAlive: attacker.stats.unitsAlive,
         activeUpgrades: attackerActiveUpgrades,
         intelOffenseBonus: intelContext.forgeSightOffenseBonus,
+        sourceLandType: source.type,
+        preCastOffenseBonus: intelContext.preCastOffenseBonus,
       },
       {
         caste: defender.caste,
@@ -2077,14 +2124,28 @@ export async function attackTileServer(args: {
         unitsAlive: defender.stats.unitsAlive,
         activeUpgrades: defenderActiveUpgrades,
         intelDefenseBonus: intelContext.alertVsCasterDefenseBonus,
+        defenseDisarmFraction: intelContext.defenseDisarmFraction,
       },
       {
         capacity: tileCapacity,
         upgradeIds: target.upgradeIds,
         friendlyNeighbors,
+        landType: target.type,
+        siegeDebuffMagnitude: intelContext.siegeDebuffMagnitude,
       },
       makeSeededRng(`attack-${attackId}`)
     );
+
+    // Consume single-use effects (pre-cast offense, defense disarm) that
+    // were folded into this resolution. Siege debuffs are TTL-only and
+    // remain in the collection until they expire.
+    if (intelContext.consumeEffectIds.length > 0) {
+      deleteIntelEffectsInTx({
+        tx,
+        db,
+        effectIds: intelContext.consumeEffectIds,
+      });
+    }
 
     const survivors = subtractStack(result.unitsDeployed, result.attackerLosses);
     const sourceAfterDispatch = subtractStack(source.units, args.units);
@@ -2264,6 +2325,816 @@ export async function attackTileServer(args: {
   // Strip the internal-only context off the response.
   const { _airIntelContext: _, ...publicResult } = result;
   return { ...publicResult, ...(intelReport ? { intelReport } : {}) };
+}
+
+/**
+ * Read-only projection of what `attackTileServer` would do if called with the
+ * same arguments right now. Runs `resolveAttack` with a fixed-midpoint RNG so
+ * the result is the deterministic "expected" outcome — no telescope-into-future
+ * exploit is possible (the same seed string is used for every preview, so the
+ * RNG draws are always the midpoint of [0.9, 1.1] = 1.0). No writes, no turn
+ * deduction, no transaction. Same validation rules as the real attack except:
+ *   - Player turn-cost not enforced (preview is free).
+ *   - Insufficient units → returned as a soft hint via `combat.unitsDeployed`,
+ *     which clamps to source.units in resolveAttack.
+ *
+ * Returns the projected CombatResult plus enough context for the sim panel to
+ * render active prep effects and defender info.
+ */
+export async function attackPreviewServer(args: {
+  attackerId: string;
+  sourceTileId: string;
+  targetTileId: string;
+  units: UnitStack;
+  offenseSpellId: string | null;
+  now?: Date;
+}): Promise<{
+  combat: CombatResult;
+  source: GameTile;
+  target: GameTile;
+  defender: {
+    userId: string;
+    displayName: string;
+    caste: Caste | null;
+    shielded: boolean;
+  };
+  effects: {
+    forgeSightOffenseBonus: number;
+    alertVsCasterDefenseBonus: number;
+    siegeDebuffMagnitude: number;
+    preCastOffenseBonus: number;
+    defenseDisarmFraction: number;
+  };
+}> {
+  const now = args.now ?? new Date();
+  if (!isValidUnitStack(args.units)) {
+    throw new Error("Invalid units stack: must be {ground, siege, air} non-negative integers");
+  }
+
+  let offenseSpell = null;
+  if (args.offenseSpellId) {
+    offenseSpell = SPELLS_BY_ID.get(args.offenseSpellId) ?? null;
+    if (!offenseSpell || offenseSpell.type !== "offense") {
+      throw new GameInvalidSpellError(
+        `spellId ${args.offenseSpellId} is not a valid offense spell`
+      );
+    }
+  }
+
+  const db = adminDbOrThrow();
+  const attackerRef = db.collection(COLLECTIONS.PLAYERS).doc(args.attackerId);
+  const sourceRef = db.collection(COLLECTIONS.TILES).doc(args.sourceTileId);
+  const targetRef = db.collection(COLLECTIONS.TILES).doc(args.targetTileId);
+
+  const [attackerSnap, sourceSnap, targetSnap] = await Promise.all([
+    attackerRef.get(),
+    sourceRef.get(),
+    targetRef.get(),
+  ]);
+  if (!attackerSnap.exists) throw new GamePlayerNotFoundError();
+  if (!sourceSnap.exists) throw new GameTileNotFoundError();
+  if (!targetSnap.exists) throw new GameTileNotFoundError();
+
+  const attacker = attackerSnap.data() as GamePlayer;
+  const source = sourceSnap.data() as GameTile;
+  const target = targetSnap.data() as GameTile;
+
+  if (attacker.phase !== "play") {
+    throw new GameInvalidPhaseError("play", attacker.phase);
+  }
+  if (attacker.caste === null) {
+    throw new GameInvalidPhaseError("play (caste required)", attacker.phase);
+  }
+  if (source.ownerId !== args.attackerId) throw new GameTileNotOwnedError();
+  if (!target.ownerId) throw new GameSelfAttackError();
+  if (target.ownerId === args.attackerId) throw new GameSelfAttackError();
+  if (!source.neighborTileIds.includes(args.targetTileId)) {
+    throw new GameNotAdjacentError();
+  }
+  if (offenseSpell && offenseSpell.caste !== attacker.caste) {
+    throw new GameInvalidSpellError(
+      `offense spell requires caste ${offenseSpell.caste}`
+    );
+  }
+  if (
+    offenseSpell &&
+    attacker.stats.tilesHeld < offenseSpell.minTilesRequired
+  ) {
+    throw new GameInvalidSpellError(
+      `offense spell ${offenseSpell.id} requires ${offenseSpell.minTilesRequired} tiles held`
+    );
+  }
+
+  const defenderId = target.ownerId;
+  const defenderSnap = await db
+    .collection(COLLECTIONS.PLAYERS)
+    .doc(defenderId)
+    .get();
+  if (!defenderSnap.exists) throw new GamePlayerNotFoundError();
+  const defender = defenderSnap.data() as GamePlayer;
+  if (defender.caste === null) {
+    throw new GameInvalidPhaseError("defender must be in play", defender.phase);
+  }
+  if (isShieldActive(attacker, now)) throw new GameShieldedError("attacker");
+  if (isShieldActive(defender, now)) throw new GameShieldedError("defender");
+
+  const intelContext = await readAttackContextEffects({
+    db,
+    attackerId: args.attackerId,
+    attackerTurnsSpentTotal: attacker.turnsSpentTotal,
+    defenderId,
+    defenderTileId: args.targetTileId,
+  });
+
+  const defenderActiveUpgrades = defender.activeUpgrades ?? {};
+  const attackerActiveUpgrades = attacker.activeUpgrades ?? {};
+  const tileCapacity = computeTileCapacity(
+    target.type,
+    defender.caste,
+    target.upgradeIds,
+    defenderActiveUpgrades
+  );
+
+  // Read the 6 neighbor tiles to compute supply (mirrors attackTileServer).
+  const nIds = neighborTileIds(target.q, target.r);
+  const neighborSnaps = await Promise.all(
+    nIds.map((id) => db.collection(COLLECTIONS.TILES).doc(id).get())
+  );
+  const friendlyNeighbors: Array<{ landType: LandType }> = [];
+  for (const snap of neighborSnaps) {
+    if (!snap.exists) continue;
+    const t = snap.data() as GameTile;
+    if (t.ownerId !== defenderId) continue;
+    if (t.type === "unrevealed" || t.type === "unassigned") continue;
+    friendlyNeighbors.push({ landType: t.type });
+  }
+
+  // Fixed-midpoint RNG: every draw returns 0.5 → finalAttack/Defense both
+  // get ×1.0 multipliers. Using a constant rather than makeSeededRng so the
+  // result is identical across previews and players can't fish for outcomes.
+  const midpointRng = (): number => 0.5;
+
+  // Clamp requested units to what's actually on the source tile so the
+  // projection reflects what the player could actually deploy. The real
+  // attack call rejects over-spec; here we soft-clamp instead so the panel
+  // stays useful while a player tweaks numbers.
+  const clampedUnits: UnitStack = {
+    ground: Math.min(args.units.ground, source.units.ground),
+    siege: Math.min(args.units.siege, source.units.siege),
+    air: Math.min(args.units.air, source.units.air),
+  };
+
+  const combat = resolveAttack(
+    {
+      caste: attacker.caste,
+      units: clampedUnits,
+      offenseSpellId: args.offenseSpellId,
+      magicLandCount: 0,
+      unitsAlive: attacker.stats.unitsAlive,
+      activeUpgrades: attackerActiveUpgrades,
+      intelOffenseBonus: intelContext.forgeSightOffenseBonus,
+      sourceLandType: source.type,
+      preCastOffenseBonus: intelContext.preCastOffenseBonus,
+    },
+    {
+      caste: defender.caste,
+      unitsOnTile: target.units,
+      armedDefenseSpellId: target.armedDefenseSpellId,
+      magicLandCount: 0,
+      unitsAlive: defender.stats.unitsAlive,
+      activeUpgrades: defenderActiveUpgrades,
+      intelDefenseBonus: intelContext.alertVsCasterDefenseBonus,
+      defenseDisarmFraction: intelContext.defenseDisarmFraction,
+    },
+    {
+      capacity: tileCapacity,
+      upgradeIds: target.upgradeIds,
+      friendlyNeighbors,
+      landType: target.type,
+      siegeDebuffMagnitude: intelContext.siegeDebuffMagnitude,
+    },
+    midpointRng
+  );
+
+  return {
+    combat,
+    source,
+    target,
+    defender: {
+      userId: defenderId,
+      displayName: defender.displayName,
+      caste: defender.caste,
+      shielded: isShieldActive(defender, now),
+    },
+    effects: {
+      forgeSightOffenseBonus: intelContext.forgeSightOffenseBonus,
+      alertVsCasterDefenseBonus: intelContext.alertVsCasterDefenseBonus,
+      siegeDebuffMagnitude: intelContext.siegeDebuffMagnitude,
+      preCastOffenseBonus: intelContext.preCastOffenseBonus,
+      defenseDisarmFraction: intelContext.defenseDisarmFraction,
+    },
+  };
+}
+
+/**
+ * Siege a target tile to soften its standing-defense floor. Costs
+ * SIEGE_TURN_COST. Records a `siege-debuff` IntelEffect of
+ * SIEGE_ACTION_MAGNITUDE that stacks with prior sieges (read-time clamp at
+ * SIEGE_DEBUFF_MAX_MAGNITUDE). Source must be owned and adjacent to target.
+ */
+export async function siegeTileServer(args: {
+  attackerId: string;
+  sourceTileId: string;
+  targetTileId: string;
+  now?: Date;
+}): Promise<{
+  player: GamePlayer;
+  report: TurnReport;
+  siegeTotalMagnitude: number;
+}> {
+  const now = args.now ?? new Date();
+  const db = adminDbOrThrow();
+  const attackerRef = db.collection(COLLECTIONS.PLAYERS).doc(args.attackerId);
+  const sourceRef = db.collection(COLLECTIONS.TILES).doc(args.sourceTileId);
+  const targetRef = db.collection(COLLECTIONS.TILES).doc(args.targetTileId);
+
+  // Pre-read target outside the txn to derive defenderId for shielded check.
+  const targetPreSnap = await targetRef.get();
+  if (!targetPreSnap.exists) throw new GameTileNotFoundError();
+  const targetPre = targetPreSnap.data() as GameTile;
+  if (!targetPre.ownerId) throw new GameSelfAttackError();
+  if (targetPre.ownerId === args.attackerId) throw new GameSelfAttackError();
+  const defenderId = targetPre.ownerId;
+  const defenderRef = db.collection(COLLECTIONS.PLAYERS).doc(defenderId);
+
+  // Read existing siege magnitude pre-tx so we can return the post-cast
+  // total. Slight staleness is fine — same justification as
+  // readAttackContextEffects.
+  const attackerPreSnap = await attackerRef.get();
+  if (!attackerPreSnap.exists) throw new GamePlayerNotFoundError();
+  const attackerPre = attackerPreSnap.data() as GamePlayer;
+  const intelContext = await readAttackContextEffects({
+    db,
+    attackerId: args.attackerId,
+    attackerTurnsSpentTotal: attackerPre.turnsSpentTotal,
+    defenderId,
+    defenderTileId: args.targetTileId,
+  });
+  const projectedTotal = Math.min(
+    SIEGE_DEBUFF_MAX_MAGNITUDE,
+    intelContext.siegeDebuffMagnitude + SIEGE_ACTION_MAGNITUDE
+  );
+
+  return db.runTransaction(async (tx) => {
+    const [attackerSnap, defenderSnap, sourceSnap, targetSnap] =
+      await Promise.all([
+        tx.get(attackerRef),
+        tx.get(defenderRef),
+        tx.get(sourceRef),
+        tx.get(targetRef),
+      ]);
+    if (!attackerSnap.exists) throw new GamePlayerNotFoundError();
+    if (!defenderSnap.exists) throw new GamePlayerNotFoundError();
+    if (!sourceSnap.exists) throw new GameTileNotFoundError();
+    if (!targetSnap.exists) throw new GameTileNotFoundError();
+
+    const attacker = attackerSnap.data() as GamePlayer;
+    const defender = defenderSnap.data() as GamePlayer;
+    const source = sourceSnap.data() as GameTile;
+    const target = targetSnap.data() as GameTile;
+
+    if (target.ownerId !== defenderId) throw new GameSelfAttackError();
+    if (attacker.phase !== "play") {
+      throw new GameInvalidPhaseError("play", attacker.phase);
+    }
+    if (source.ownerId !== args.attackerId) throw new GameTileNotOwnedError();
+    if (!source.neighborTileIds.includes(args.targetTileId)) {
+      throw new GameNotAdjacentError();
+    }
+    if (isShieldActive(attacker, now)) throw new GameShieldedError("attacker");
+    if (isShieldActive(defender, now)) throw new GameShieldedError("defender");
+    if (attacker.turnsRemaining < SIEGE_TURN_COST) {
+      throw new GameInsufficientTurnsError(
+        SIEGE_TURN_COST,
+        attacker.turnsRemaining
+      );
+    }
+
+    const turnsSpentTotal = attacker.turnsSpentTotal + SIEGE_TURN_COST;
+
+    recordSiegeDebuffInTx({
+      tx,
+      db,
+      attackerId: args.attackerId,
+      targetTileId: args.targetTileId,
+      magnitude: SIEGE_ACTION_MAGNITUDE,
+      attackerTurnsSpentTotal: turnsSpentTotal,
+      now,
+    });
+
+    tx.update(attackerRef, {
+      turnsRemaining: attacker.turnsRemaining - SIEGE_TURN_COST,
+      turnsSpentTotal,
+      updatedAt: now,
+    });
+
+    const report = buildSiegeReport({
+      turnIndex: turnsSpentTotal,
+      cost: SIEGE_TURN_COST,
+      targetTileId: args.targetTileId,
+      magnitudeApplied: SIEGE_ACTION_MAGNITUDE,
+      totalMagnitudeAfter: projectedTotal,
+      rng: makeNarrativeRng(args.attackerId, turnsSpentTotal, "siege"),
+    });
+
+    const updatedPlayer: GamePlayer = {
+      ...attacker,
+      turnsRemaining: attacker.turnsRemaining - SIEGE_TURN_COST,
+      turnsSpentTotal,
+      updatedAt: now,
+    };
+
+    return {
+      player: updatedPlayer,
+      report,
+      siegeTotalMagnitude: projectedTotal,
+    };
+  });
+}
+
+/**
+ * Air-only raid that attrits defenders without taking the tile. Reuses
+ * resolveAttack for the math, then post-processes:
+ *   - Forces outcome to "repelled" or "stalemate" (never "captured").
+ *   - Doubles attacker losses, clamped to deployed.
+ * Tile ownership is never transferred; defender unit losses are committed.
+ * Costs ATTACK_TURN_COST (1 turn) — same as a regular attack. No
+ * artifact-rolling or attack-record write — flyovers are softening moves,
+ * not the main bout.
+ */
+export async function flyoverTileServer(args: {
+  attackerId: string;
+  sourceTileId: string;
+  targetTileId: string;
+  units: UnitStack;
+  now?: Date;
+}): Promise<{
+  attackerPlayer: GamePlayer;
+  sourceTile: GameTile;
+  targetTile: GameTile;
+  report: TurnReport;
+  combat: CombatResult;
+}> {
+  const now = args.now ?? new Date();
+  if (!isValidUnitStack(args.units)) {
+    throw new Error("Invalid units stack: must be {ground, siege, air} non-negative integers");
+  }
+  if (sumStack(args.units) === 0) {
+    throw new Error("Must send at least 1 unit");
+  }
+  if (args.units.ground !== 0 || args.units.siege !== 0) {
+    throw new Error("Flyover requires air units only (ground=0, siege=0)");
+  }
+
+  const turnCost = ATTACK_TURN_COST;
+  const db = adminDbOrThrow();
+  const attackerRef = db.collection(COLLECTIONS.PLAYERS).doc(args.attackerId);
+  const sourceRef = db.collection(COLLECTIONS.TILES).doc(args.sourceTileId);
+  const targetRef = db.collection(COLLECTIONS.TILES).doc(args.targetTileId);
+
+  const targetPreSnap = await targetRef.get();
+  if (!targetPreSnap.exists) throw new GameTileNotFoundError();
+  const targetPre = targetPreSnap.data() as GameTile;
+  if (!targetPre.ownerId) throw new GameSelfAttackError();
+  if (targetPre.ownerId === args.attackerId) throw new GameSelfAttackError();
+  const defenderId = targetPre.ownerId;
+  const defenderRef = db.collection(COLLECTIONS.PLAYERS).doc(defenderId);
+
+  const attackerPreSnap = await attackerRef.get();
+  if (!attackerPreSnap.exists) throw new GamePlayerNotFoundError();
+  const attackerPre = attackerPreSnap.data() as GamePlayer;
+  const intelContext = await readAttackContextEffects({
+    db,
+    attackerId: args.attackerId,
+    attackerTurnsSpentTotal: attackerPre.turnsSpentTotal,
+    defenderId,
+    defenderTileId: args.targetTileId,
+  });
+
+  return db.runTransaction(async (tx) => {
+    const [attackerSnap, defenderSnap, sourceSnap, targetSnap] =
+      await Promise.all([
+        tx.get(attackerRef),
+        tx.get(defenderRef),
+        tx.get(sourceRef),
+        tx.get(targetRef),
+      ]);
+    if (!attackerSnap.exists) throw new GamePlayerNotFoundError();
+    if (!defenderSnap.exists) throw new GamePlayerNotFoundError();
+    if (!sourceSnap.exists) throw new GameTileNotFoundError();
+    if (!targetSnap.exists) throw new GameTileNotFoundError();
+
+    const attacker = attackerSnap.data() as GamePlayer;
+    const defender = defenderSnap.data() as GamePlayer;
+    const source = sourceSnap.data() as GameTile;
+    const target = targetSnap.data() as GameTile;
+
+    if (target.ownerId !== defenderId) throw new GameSelfAttackError();
+    if (attacker.phase !== "play") {
+      throw new GameInvalidPhaseError("play", attacker.phase);
+    }
+    if (attacker.caste === null) {
+      throw new GameInvalidPhaseError("play (caste required)", attacker.phase);
+    }
+    if (defender.caste === null) {
+      throw new GameInvalidPhaseError(
+        "defender must be in play",
+        defender.phase
+      );
+    }
+    if (isShieldActive(attacker, now)) throw new GameShieldedError("attacker");
+    if (isShieldActive(defender, now)) throw new GameShieldedError("defender");
+    if (source.ownerId !== args.attackerId) throw new GameTileNotOwnedError();
+    if (!source.neighborTileIds.includes(args.targetTileId)) {
+      throw new GameNotAdjacentError();
+    }
+    if (attacker.turnsRemaining < turnCost) {
+      throw new GameInsufficientTurnsError(
+        turnCost,
+        attacker.turnsRemaining
+      );
+    }
+    if (!stackHasAtLeast(source.units, args.units)) {
+      throw new GameInsufficientUnitsError();
+    }
+
+    const defenderActiveUpgrades = defender.activeUpgrades ?? {};
+    const attackerActiveUpgrades = attacker.activeUpgrades ?? {};
+    const tileCapacity = computeTileCapacity(
+      target.type,
+      defender.caste,
+      target.upgradeIds,
+      defenderActiveUpgrades
+    );
+
+    // Read neighbors for supply (mirrors attackTileServer).
+    const nIds = neighborTileIds(target.q, target.r);
+    const neighborSnaps = await Promise.all(
+      nIds.map((id) => tx.get(db.collection(COLLECTIONS.TILES).doc(id)))
+    );
+    const friendlyNeighbors: Array<{ landType: LandType }> = [];
+    for (const snap of neighborSnaps) {
+      if (!snap.exists) continue;
+      const t = snap.data() as GameTile;
+      if (t.ownerId !== defenderId) continue;
+      if (t.type === "unrevealed" || t.type === "unassigned") continue;
+      friendlyNeighbors.push({ landType: t.type });
+    }
+
+    const flyoverId = randomUUID();
+    const baseCombat = resolveAttack(
+      {
+        caste: attacker.caste,
+        units: args.units,
+        offenseSpellId: null,
+        magicLandCount: 0,
+        unitsAlive: attacker.stats.unitsAlive,
+        activeUpgrades: attackerActiveUpgrades,
+        intelOffenseBonus: intelContext.forgeSightOffenseBonus,
+        sourceLandType: source.type,
+      },
+      {
+        caste: defender.caste,
+        unitsOnTile: target.units,
+        armedDefenseSpellId: target.armedDefenseSpellId,
+        magicLandCount: 0,
+        unitsAlive: defender.stats.unitsAlive,
+        activeUpgrades: defenderActiveUpgrades,
+        intelDefenseBonus: intelContext.alertVsCasterDefenseBonus,
+      },
+      {
+        capacity: tileCapacity,
+        upgradeIds: target.upgradeIds,
+        friendlyNeighbors,
+        landType: target.type,
+        siegeDebuffMagnitude: intelContext.siegeDebuffMagnitude,
+      },
+      makeSeededRng(`flyover-${flyoverId}`)
+    );
+
+    // Flyover post-processing: capture is impossible (tile never changes
+    // hands in a raid) + attacker losses doubled. Logic lives in
+    // applyFlyoverModifiers so it's covered by combat tests.
+    const combat = applyFlyoverModifiers(baseCombat);
+
+    // Commit unit deltas. Source loses what was sent + the doubled losses
+    // never came back; survivors return.
+    const attackerLossesTotal = sumStack(combat.attackerLosses);
+    const defenderLossesTotal = sumStack(combat.defenderLosses);
+    const survivors = subtractStack(combat.unitsDeployed, combat.attackerLosses);
+    const sourceAfterDispatch = subtractStack(source.units, args.units);
+    const updatedSourceUnits = addStack(sourceAfterDispatch, survivors);
+    const updatedTargetUnits = subtractStack(target.units, combat.defenderLosses);
+
+    const turnsSpentTotal = attacker.turnsSpentTotal + turnCost;
+
+    tx.update(sourceRef, { units: updatedSourceUnits, updatedAt: now });
+    tx.update(targetRef, {
+      units: updatedTargetUnits,
+      lastAttackedAt: now,
+      updatedAt: now,
+    });
+
+    const attackerStats = {
+      ...attacker.stats,
+      unitsAlive: Math.max(0, attacker.stats.unitsAlive - attackerLossesTotal),
+    };
+    const defenderStats = {
+      ...defender.stats,
+      unitsAlive: Math.max(0, defender.stats.unitsAlive - defenderLossesTotal),
+    };
+
+    tx.update(attackerRef, {
+      turnsRemaining: attacker.turnsRemaining - turnCost,
+      turnsSpentTotal,
+      stats: attackerStats,
+      updatedAt: now,
+    });
+    tx.update(defenderRef, { stats: defenderStats, updatedAt: now });
+
+    const report = buildFlyoverReport({
+      turnIndex: turnsSpentTotal,
+      cost: turnCost,
+      targetTileId: args.targetTileId,
+      unitsSent: args.units,
+      combat,
+      artifactFound: null,
+      rng: makeNarrativeRng(args.attackerId, turnsSpentTotal, "flyover"),
+    });
+
+    return {
+      attackerPlayer: {
+        ...attacker,
+        turnsRemaining: attacker.turnsRemaining - turnCost,
+        turnsSpentTotal,
+        stats: attackerStats,
+        updatedAt: now,
+      },
+      sourceTile: { ...source, units: updatedSourceUnits, updatedAt: now },
+      targetTile: { ...target, units: updatedTargetUnits, lastAttackedAt: now, updatedAt: now },
+      report,
+      combat,
+    };
+  });
+}
+
+/**
+ * Standalone spell-cast against a target tile. Dispatches on
+ * `spell.type ∈ {"siege", "disarm", "attrition"}`. Rolls dice once
+ * (rollSpellEffectiveness, band 0.5–1.5), computes realized magnitude
+ * via `realizedSpellMagnitude`, and either persists an IntelEffect
+ * (siege, disarm) or commits unit kills (attrition).
+ *
+ * Costs `spell.turnCost` (5 for tier 1). Validates ownership + adjacency
+ * + non-shield + caste-match + tier tile-min + turn budget.
+ */
+export async function castSpellServer(args: {
+  attackerId: string;
+  spellId: string;
+  sourceTileId: string;
+  targetTileId: string;
+  now?: Date;
+}): Promise<{
+  player: GamePlayer;
+  report: TurnReport;
+  // Kind-specific outcome — only one populated based on spell.type.
+  siege?: { magnitudeApplied: number; totalMagnitudeAfter: number };
+  disarm?: { fractionApplied: number };
+  attrition?: { unitsKilled: UnitStack; targetTile: GameTile };
+}> {
+  const now = args.now ?? new Date();
+  const spell = SPELLS_BY_ID.get(args.spellId);
+  if (!spell) throw new GameInvalidSpellError(`unknown spellId ${args.spellId}`);
+  if (
+    spell.type !== "siege" &&
+    spell.type !== "disarm" &&
+    spell.type !== "attrition"
+  ) {
+    throw new GameInvalidSpellError(
+      `spellId ${args.spellId} (type=${spell.type}) is not a cast-able pre-attack spell`
+    );
+  }
+
+  const db = adminDbOrThrow();
+  const attackerRef = db.collection(COLLECTIONS.PLAYERS).doc(args.attackerId);
+  const sourceRef = db.collection(COLLECTIONS.TILES).doc(args.sourceTileId);
+  const targetRef = db.collection(COLLECTIONS.TILES).doc(args.targetTileId);
+
+  const targetPreSnap = await targetRef.get();
+  if (!targetPreSnap.exists) throw new GameTileNotFoundError();
+  const targetPre = targetPreSnap.data() as GameTile;
+  if (!targetPre.ownerId) throw new GameSelfAttackError();
+  if (targetPre.ownerId === args.attackerId) throw new GameSelfAttackError();
+  const defenderId = targetPre.ownerId;
+  const defenderRef = db.collection(COLLECTIONS.PLAYERS).doc(defenderId);
+
+  // Pre-read attacker for owned-land counts (drives the magicMultiplier in
+  // the realized-magnitude formula). Same staleness trade-off as the
+  // attack server uses for intel-effects.
+  const attackerLandCounts = await getOwnedLandCounts(args.attackerId);
+
+  // Pre-read for siege total projection (so we can return the post-cast
+  // total without a follow-up query).
+  const attackerPreSnap = await attackerRef.get();
+  if (!attackerPreSnap.exists) throw new GamePlayerNotFoundError();
+  const attackerPre = attackerPreSnap.data() as GamePlayer;
+  const intelContext = await readAttackContextEffects({
+    db,
+    attackerId: args.attackerId,
+    attackerTurnsSpentTotal: attackerPre.turnsSpentTotal,
+    defenderId,
+    defenderTileId: args.targetTileId,
+  });
+
+  return db.runTransaction(async (tx) => {
+    const [attackerSnap, defenderSnap, sourceSnap, targetSnap] =
+      await Promise.all([
+        tx.get(attackerRef),
+        tx.get(defenderRef),
+        tx.get(sourceRef),
+        tx.get(targetRef),
+      ]);
+    if (!attackerSnap.exists) throw new GamePlayerNotFoundError();
+    if (!defenderSnap.exists) throw new GamePlayerNotFoundError();
+    if (!sourceSnap.exists) throw new GameTileNotFoundError();
+    if (!targetSnap.exists) throw new GameTileNotFoundError();
+
+    const attacker = attackerSnap.data() as GamePlayer;
+    const defender = defenderSnap.data() as GamePlayer;
+    const source = sourceSnap.data() as GameTile;
+    const target = targetSnap.data() as GameTile;
+
+    if (target.ownerId !== defenderId) throw new GameSelfAttackError();
+    if (attacker.phase !== "play") {
+      throw new GameInvalidPhaseError("play", attacker.phase);
+    }
+    if (attacker.caste === null) {
+      throw new GameInvalidPhaseError("play (caste required)", attacker.phase);
+    }
+    if (spell.caste !== attacker.caste) {
+      throw new GameInvalidSpellError(
+        `spell ${spell.id} requires caste ${spell.caste}`
+      );
+    }
+    if (attacker.stats.tilesHeld < spell.minTilesRequired) {
+      throw new GameInvalidSpellError(
+        `spell ${spell.id} requires ${spell.minTilesRequired} tiles held; you have ${attacker.stats.tilesHeld}`
+      );
+    }
+    if (source.ownerId !== args.attackerId) throw new GameTileNotOwnedError();
+    if (!source.neighborTileIds.includes(args.targetTileId)) {
+      throw new GameNotAdjacentError();
+    }
+    if (isShieldActive(attacker, now)) throw new GameShieldedError("attacker");
+    if (isShieldActive(defender, now)) throw new GameShieldedError("defender");
+    if (attacker.turnsRemaining < spell.turnCost) {
+      throw new GameInsufficientTurnsError(
+        spell.turnCost,
+        attacker.turnsRemaining
+      );
+    }
+
+    // Roll dice + compute realized magnitude. Seed includes the cast time
+    // so re-cast on the same target rolls fresh; players cannot fish.
+    const castId = randomUUID();
+    const rng = makeSeededRng(`cast-${castId}`);
+    const dice = rollSpellEffectiveness(rng);
+    const rawMagnitude = realizedSpellMagnitude({
+      baseStrength: spell.baseStrength,
+      caste: attacker.caste,
+      spellType: spell.type,
+      magicLandCount: attackerLandCounts.magic,
+      activeUpgrades: attacker.activeUpgrades ?? {},
+      dice,
+    });
+
+    const turnsSpentTotal = attacker.turnsSpentTotal + spell.turnCost;
+    let kindPayload: {
+      siege?: { magnitudeApplied: number; totalMagnitudeAfter: number };
+      disarm?: { fractionApplied: number };
+      attrition?: { unitsKilled: UnitStack; targetTile: GameTile };
+    } = {};
+
+    if (spell.type === "siege") {
+      const magnitudeApplied = Math.max(
+        0,
+        Math.min(SIEGE_DEBUFF_MAX_MAGNITUDE, rawMagnitude)
+      );
+      recordSiegeDebuffInTx({
+        tx,
+        db,
+        attackerId: args.attackerId,
+        targetTileId: args.targetTileId,
+        magnitude: magnitudeApplied,
+        attackerTurnsSpentTotal: turnsSpentTotal,
+        now,
+      });
+      const totalMagnitudeAfter = Math.min(
+        SIEGE_DEBUFF_MAX_MAGNITUDE,
+        intelContext.siegeDebuffMagnitude + magnitudeApplied
+      );
+      kindPayload = {
+        siege: { magnitudeApplied, totalMagnitudeAfter },
+      };
+    } else if (spell.type === "disarm") {
+      const fractionApplied = Math.max(0, Math.min(1, rawMagnitude));
+      recordDefenseDisarmInTx({
+        tx,
+        db,
+        attackerId: args.attackerId,
+        targetTileId: args.targetTileId,
+        disarmFraction: fractionApplied,
+        attackerTurnsSpentTotal: turnsSpentTotal,
+        now,
+      });
+      kindPayload = { disarm: { fractionApplied } };
+    } else {
+      // attrition: kill units immediately, distributed across types.
+      const unitsKilled = distributeUnitKills(
+        target.units,
+        Math.max(0, Math.round(rawMagnitude))
+      );
+      const newUnits: UnitStack = {
+        ground: Math.max(0, target.units.ground - unitsKilled.ground),
+        siege: Math.max(0, target.units.siege - unitsKilled.siege),
+        air: Math.max(0, target.units.air - unitsKilled.air),
+      };
+      const totalKilled =
+        unitsKilled.ground + unitsKilled.siege + unitsKilled.air;
+      tx.update(targetRef, {
+        units: newUnits,
+        lastAttackedAt: now,
+        updatedAt: now,
+      });
+      // Decrement defender's denormalized unitsAlive too so kingdom-wide
+      // displays stay consistent.
+      const defenderStats = {
+        ...defender.stats,
+        unitsAlive: Math.max(0, defender.stats.unitsAlive - totalKilled),
+      };
+      tx.update(defenderRef, { stats: defenderStats, updatedAt: now });
+      kindPayload = {
+        attrition: {
+          unitsKilled,
+          targetTile: {
+            ...target,
+            units: newUnits,
+            lastAttackedAt: now,
+            updatedAt: now,
+          },
+        },
+      };
+    }
+
+    tx.update(attackerRef, {
+      turnsRemaining: attacker.turnsRemaining - spell.turnCost,
+      turnsSpentTotal,
+      updatedAt: now,
+    });
+
+    // Re-narrow spell.type for buildCastSpellReport — the TS flow analysis
+    // doesn't see through the early throw when traversing through the
+    // closure boundary.
+    const spellType: "siege" | "disarm" | "attrition" =
+      spell.type === "siege" || spell.type === "disarm" ? spell.type : "attrition";
+    const report = buildCastSpellReport({
+      turnIndex: turnsSpentTotal,
+      cost: spell.turnCost,
+      spellId: spell.id,
+      spellName: spell.name,
+      spellType,
+      targetTileId: args.targetTileId,
+      siege: kindPayload.siege,
+      disarm: kindPayload.disarm,
+      attrition: kindPayload.attrition
+        ? { unitsKilled: kindPayload.attrition.unitsKilled }
+        : undefined,
+      rng: makeNarrativeRng(args.attackerId, turnsSpentTotal, "spell-cast"),
+    });
+
+    const updatedPlayer: GamePlayer = {
+      ...attacker,
+      turnsRemaining: attacker.turnsRemaining - spell.turnCost,
+      turnsSpentTotal,
+      updatedAt: now,
+    };
+
+    return {
+      player: updatedPlayer,
+      report,
+      ...kindPayload,
+    };
+  });
 }
 
 export async function getRecentAttacksServer(opts: {
@@ -2538,17 +3409,44 @@ export async function setGeneralNameServer(
 export async function getLeaderboardServer(opts: {
   limit: number;
   cursor: string | null;
+  audience?: "all" | "npc" | "real";
 }): Promise<PaginatedQueryResult<GamePlayer>> {
   const db = adminDbOrThrow();
   const players = db.collection(COLLECTIONS.PLAYERS);
-  const query = players.orderBy("stats.tilesHeld", "desc");
-  return paginateFirestoreQuery({
-    query,
-    collection: players,
-    cursor: opts.cursor,
-    limit: opts.limit,
-    mapDoc: (d) => d.data() as GamePlayer,
+  const baseQuery = players.orderBy("stats.tilesHeld", "desc");
+  const audience = opts.audience ?? "all";
+
+  if (audience === "all") {
+    return paginateFirestoreQuery({
+      query: baseQuery,
+      collection: players,
+      cursor: opts.cursor,
+      limit: opts.limit,
+      mapDoc: (d) => d.data() as GamePlayer,
+    });
+  }
+
+  // Real players don't store `isNpc` at all, so a Firestore where(==false)
+  // would miss them. Overfetch + filter in memory — players collection is
+  // small (≲ a few hundred docs) and this avoids needing a composite index
+  // on (isNpc, stats.tilesHeld).
+  const overFetch = opts.limit * 4 + 1;
+  let q = baseQuery.limit(overFetch);
+  if (opts.cursor) {
+    const cursorDoc = await players.doc(opts.cursor).get();
+    if (cursorDoc.exists) q = q.startAfter(cursorDoc);
+  }
+  const snap = await q.get();
+  const matches = snap.docs.filter((d) => {
+    const isNpc = (d.data() as { isNpc?: boolean }).isNpc === true;
+    return audience === "npc" ? isNpc : !isNpc;
   });
+  const sliced = matches.slice(0, opts.limit);
+  const items = sliced.map((d) => d.data() as GamePlayer);
+  const hasMore = matches.length > opts.limit || snap.size === overFetch;
+  const nextCursor =
+    hasMore && sliced.length > 0 ? sliced[sliced.length - 1].id : null;
+  return { items, nextCursor, hasMore };
 }
 
 // Admin-only testing helper. Kept as a manual override even after the cron

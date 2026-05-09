@@ -40,6 +40,7 @@ const LandTypeEnum = z.enum([
 ]);
 const UnitTypeEnum = z.enum(["ground", "siege", "air"]);
 const AttackSideEnum = z.enum(["sent", "received", "all"]);
+const LeaderboardAudienceEnum = z.enum(["all", "npc", "real"]);
 
 const UnitStackSchema = z.object({
   ground: z.number().int().nonnegative(),
@@ -278,6 +279,49 @@ const AttackBody = z
   })
   .openapi("GameAttackBody");
 
+// Same shape as AttackBody — preview reuses the same input but never
+// deducts turns or writes state. Validation rules are softer: cap-overflow
+// and insufficient-units are reported in the response, not thrown.
+const AttackPreviewBody = AttackBody.openapi("GameAttackPreviewBody");
+
+const SiegeBody = z
+  .object({
+    sourceTileId: z.string().min(1),
+    targetTileId: z.string().min(1),
+  })
+  .openapi("GameSiegeBody");
+
+const FlyoverBody = z
+  .object({
+    sourceTileId: z.string().min(1),
+    targetTileId: z.string().min(1),
+    // Air units only. Server enforces ground/siege == 0; we keep the full
+    // UnitStack shape to share validation with the attack call site.
+    units: UnitStackSchema,
+  })
+  .openapi("GameFlyoverBody");
+
+const CastSpellBody = z
+  .object({
+    spellId: z.string().min(1),
+    sourceTileId: z.string().min(1),
+    targetTileId: z.string().min(1),
+  })
+  .openapi("GameCastSpellBody");
+
+// Aggregated active prep-effect summary surfaced to the sim panel. Mirrors
+// readAttackContextEffects' shape but with display-friendly fields. All
+// magnitudes are zero (and `count` zero) when no effects of that kind apply.
+const AttackPreviewEffectsSchema = z
+  .object({
+    forgeSightOffenseBonus: z.number(),
+    alertVsCasterDefenseBonus: z.number(),
+    siegeDebuffMagnitude: z.number(),
+    preCastOffenseBonus: z.number(),
+    defenseDisarmFraction: z.number(),
+  })
+  .openapi("GameAttackPreviewEffects");
+
 const BuildBody = z
   .object({
     tileId: z.string().min(1),
@@ -447,8 +491,10 @@ export const gameContract = c.router(
       path: "/api/game/leaderboard",
       summary: "Get the leaderboard ranked by tiles held",
       description:
-        "Returns players ranked by `stats.tilesHeld` descending. Cursor-paginated; default page size is 20 (max 100).",
-      query: PaginationQuerySchema,
+        "Returns players ranked by `stats.tilesHeld` descending. Cursor-paginated; default page size is 20 (max 100). `audience` filters to `npc`, `real`, or `all` (default).",
+      query: PaginationQuerySchema.extend({
+        audience: LeaderboardAudienceEnum.optional(),
+      }),
       responses: { 200: LeaderboardOk, ...baseErrorResponses },
       metadata: { errorCodes: ["UNAUTHORIZED", "SERVER_ERROR"] as const },
     },
@@ -739,6 +785,116 @@ export const gameContract = c.router(
           report: TurnReportSchema,
           combat: CombatResultSchema.optional(),
           intelReport: z.object({}).passthrough().optional(),
+        }),
+        ...actionErrorResponses,
+      },
+      metadata: {
+        errorCodes: ["UNAUTHORIZED", "VALIDATION_ERROR", "SERVER_ERROR"] as const,
+      },
+    },
+    attackPreview: {
+      method: "POST",
+      path: "/api/game/attack/preview",
+      summary: "Project the outcome of a hypothetical attack",
+      description:
+        "Runs the same combat math as `/api/game/attack` but with a fixed midpoint RNG seed and no writes / turn deduction. The resulting CombatResult is the 'expected' outcome a player would see if they swung now with the supplied stack. Active prep effects (siege, pre-cast, disarm, forge-sight, alert) are also reflected.",
+      body: AttackPreviewBody,
+      responses: {
+        200: z.object({
+          success: z.literal(true),
+          combat: CombatResultSchema,
+          source: GameTileSchema,
+          target: GameTileSchema,
+          defender: z.object({
+            userId: z.string(),
+            displayName: z.string(),
+            caste: CasteEnum.nullable(),
+            shielded: z.boolean(),
+          }),
+          effects: AttackPreviewEffectsSchema,
+        }),
+        ...actionErrorResponses,
+      },
+      metadata: {
+        errorCodes: ["UNAUTHORIZED", "VALIDATION_ERROR", "SERVER_ERROR"] as const,
+      },
+    },
+    siege: {
+      method: "POST",
+      path: "/api/game/siege",
+      summary: "Soften a target tile's standing-defense floor",
+      description:
+        "Costs 5 turns. Records a `siege-debuff` IntelEffect on the target with magnitude `SIEGE_ACTION_MAGNITUDE` (0.10) and a 5-attacker-turn TTL. Stacks across calls until SIEGE_DEBUFF_MAX_MAGNITUDE (0.30). Source must be owned and adjacent to target.",
+      body: SiegeBody,
+      responses: {
+        200: z.object({
+          success: z.literal(true),
+          player: GamePlayerSchema,
+          report: TurnReportSchema,
+          // Total siege debuff currently applied to the target after this
+          // siege (capped at SIEGE_DEBUFF_MAX_MAGNITUDE).
+          siegeTotalMagnitude: z.number(),
+        }),
+        ...actionErrorResponses,
+      },
+      metadata: {
+        errorCodes: ["UNAUTHORIZED", "VALIDATION_ERROR", "SERVER_ERROR"] as const,
+      },
+    },
+    flyover: {
+      method: "POST",
+      path: "/api/game/flyover",
+      summary: "Air raid that attrits defenders without taking the tile",
+      description:
+        "Air-only attack with the capture branch disabled. Always resolves to 'repelled' or 'stalemate'; tile ownership never changes. Attacker losses are doubled (`2× resolveAttack` losses, clamped to deployed) — a deliberate suicide-mission trade. Costs `ATTACK_TURN_COST` (1 turn).",
+      body: FlyoverBody,
+      responses: {
+        200: z.object({
+          success: z.literal(true),
+          attackerPlayer: GamePlayerSchema,
+          sourceTile: GameTileSchema,
+          targetTile: GameTileSchema,
+          report: TurnReportSchema,
+          combat: CombatResultSchema,
+        }),
+        ...actionErrorResponses,
+      },
+      metadata: {
+        errorCodes: ["UNAUTHORIZED", "VALIDATION_ERROR", "SERVER_ERROR"] as const,
+      },
+    },
+    castSpell: {
+      method: "POST",
+      path: "/api/game/spell/cast",
+      summary:
+        "Cast a standalone siege/disarm/attrition spell against a target tile",
+      description:
+        "Dispatches on the spell's `type`. Each kind rolls dice once (SPELL_RNG band 0.5–1.5) and either persists an IntelEffect (siege, disarm) or commits unit losses immediately (attrition). Validates ownership + adjacency + non-shield + caste-match + tier tile-min + turn budget.",
+      body: CastSpellBody,
+      responses: {
+        200: z.object({
+          success: z.literal(true),
+          player: GamePlayerSchema,
+          report: TurnReportSchema,
+          // Kind-specific outcome payload. All optional so each kind can
+          // populate the slice it cares about.
+          siege: z
+            .object({
+              magnitudeApplied: z.number(),
+              totalMagnitudeAfter: z.number(),
+            })
+            .optional(),
+          disarm: z
+            .object({
+              fractionApplied: z.number(),
+            })
+            .optional(),
+          attrition: z
+            .object({
+              unitsKilled: UnitStackSchema,
+              targetTile: GameTileSchema,
+            })
+            .optional(),
         }),
         ...actionErrorResponses,
       },
