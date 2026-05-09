@@ -38,6 +38,10 @@ export interface WorldSnapshotOwner {
   displayName: string;
   caste: Caste | null;
   shielded: boolean;
+  /** True for seeded NPCs. Real humans surface `false` (their player doc
+   *  has no `isNpc` field; we coerce the missing case to `false` for the
+   *  client). Used by the map's audience filter. */
+  isNpc: boolean;
 }
 
 export interface WorldSnapshot {
@@ -80,7 +84,8 @@ export async function computeWorldSnapshot(
         "caste",
         "shieldUntil",
         "shieldDropAtTurn",
-        "turnsSpentTotal"
+        "turnsSpentTotal",
+        "isNpc"
       )
       .get(),
   ]);
@@ -99,12 +104,13 @@ export async function computeWorldSnapshot(
   });
 
   const owners: WorldSnapshotOwner[] = playersSnap.docs.map((d) => {
-    const p = d.data() as GamePlayer;
+    const p = d.data() as GamePlayer & { isNpc?: boolean };
     return {
       userId: p.userId,
       displayName: p.displayName ?? "",
       caste: p.caste ?? null,
       shielded: isShieldActive(p, now),
+      isNpc: p.isNpc === true,
     };
   });
 
