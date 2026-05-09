@@ -32,6 +32,14 @@ interface LeaderboardResponse {
 
 const PAGE_LIMIT = 20;
 
+type Audience = "all" | "real" | "npc";
+
+const AUDIENCE_TABS: { value: Audience; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "real", label: "Real Players" },
+  { value: "npc", label: "NPCs" },
+];
+
 export default function LeaderboardPage() {
   const { user, loading: authLoading } = useAuth();
   const [rows, setRows] = useState<LeaderRow[]>([]);
@@ -39,14 +47,19 @@ export default function LeaderboardPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [audience, setAudience] = useState<Audience>("all");
 
   const fetchPage = useCallback(
-    async (cursor: string | null): Promise<LeaderboardResponse | null> => {
+    async (
+      cursor: string | null,
+      aud: Audience
+    ): Promise<LeaderboardResponse | null> => {
       if (!user) return null;
       const token = await user.getIdToken();
       const params = new URLSearchParams();
       params.set("limit", String(PAGE_LIMIT));
       if (cursor) params.set("cursor", cursor);
+      if (aud !== "all") params.set("audience", aud);
       const res = await fetch(`/api/game/leaderboard?${params}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -64,7 +77,7 @@ export default function LeaderboardPage() {
     }
     setError(null);
     try {
-      const data = await fetchPage(null);
+      const data = await fetchPage(null, audience);
       if (!data) return;
       setRows(data.players ?? []);
       setNextCursor(data.nextCursor ?? null);
@@ -73,14 +86,14 @@ export default function LeaderboardPage() {
     } finally {
       setLoading(false);
     }
-  }, [user, fetchPage]);
+  }, [user, fetchPage, audience]);
 
   const loadMore = useCallback(async () => {
     if (!nextCursor || loadingMore) return;
     setLoadingMore(true);
     setError(null);
     try {
-      const data = await fetchPage(nextCursor);
+      const data = await fetchPage(nextCursor, audience);
       if (!data) return;
       setRows((prev) => [...prev, ...(data.players ?? [])]);
       setNextCursor(data.nextCursor ?? null);
@@ -89,7 +102,7 @@ export default function LeaderboardPage() {
     } finally {
       setLoadingMore(false);
     }
-  }, [nextCursor, loadingMore, fetchPage]);
+  }, [nextCursor, loadingMore, fetchPage, audience]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -138,6 +151,36 @@ export default function LeaderboardPage() {
             and drops your opponent&apos;s by the same amount. Your row is
             highlighted.
           </p>
+        </div>
+
+        <div
+          role="tablist"
+          aria-label="Filter leaderboard by player type"
+          className="inline-flex mb-4 rounded-lg border border-neutral-200 dark:border-neutral-800 p-0.5 bg-neutral-50 dark:bg-neutral-900/40"
+        >
+          {AUDIENCE_TABS.map((tab) => {
+            const active = audience === tab.value;
+            return (
+              <button
+                key={tab.value}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => {
+                  if (audience === tab.value) return;
+                  setAudience(tab.value);
+                  setNextCursor(null);
+                }}
+                className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+                  active
+                    ? "bg-white dark:bg-neutral-800 shadow-sm font-medium"
+                    : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200"
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
 
         {rows.length === 0 ? (

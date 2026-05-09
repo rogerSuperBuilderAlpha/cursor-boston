@@ -5,16 +5,24 @@
  */
 
 import {
+  applyFlyoverModifiers,
   computeSupplyMultiplier,
   computeTileCapacity,
+  distributeUnitKills,
   magicMultiplier,
   makeSeededRng,
+  realizedSpellMagnitude,
   resolveAttack,
+  rollSpellEffectiveness,
+  SPELL_RNG_LOWER,
+  SPELL_RNG_MIDPOINT,
+  SPELL_RNG_RANGE,
   unitCapFromFoodLands,
 } from "@/lib/game/combat";
 import type {
   CombatAttackerInput,
   CombatDefenderInput,
+  CombatResult,
   CombatTileInput,
   UnitStack,
 } from "@/lib/game/types";
@@ -772,5 +780,652 @@ describe("resolveAttack — determinism", () => {
       expect(r.rng.defenderRoll).toBeGreaterThanOrEqual(0.9);
       expect(r.rng.defenderRoll).toBeLessThan(1.1);
     }
+  });
+});
+
+describe("resolveAttack — tile-type modifiers (May 2026 rework)", () => {
+  // Each test pairs a baseline (no landType / sourceLandType — neutral
+  // ×1.00) against a configured-tile run, using the same seed so the RNG
+  // rolls are identical. We assert ratios on attackPower / defensePower.
+
+  it("legacy callers (no landType / sourceLandType) get neutral multipliers and 0 standing defense", () => {
+    const r = resolveAttack(
+      defaultAttacker(),
+      defaultDefender(),
+      defaultTile(2000),
+      makeSeededRng("legacy-tile-types")
+    );
+    expect(r.sourceLandTypeMultiplier).toBe(1);
+    expect(r.targetLandTypeMultiplier).toBe(1);
+    expect(r.standingDefenseAdded).toBe(0);
+    expect(r.magicTileOffenseSpellBonusApplied).toBe(false);
+    expect(r.magicTileDefenseSpellBonusApplied).toBe(false);
+  });
+
+  it("military source tile multiplies attack power by 1.20", () => {
+    const baseline = resolveAttack(
+      defaultAttacker(),
+      defaultDefender(),
+      defaultTile(2000),
+      makeSeededRng("source-mil")
+    );
+    const fromMilitary = resolveAttack(
+      defaultAttacker({ sourceLandType: "military" }),
+      defaultDefender(),
+      defaultTile(2000),
+      makeSeededRng("source-mil")
+    );
+    expect(fromMilitary.sourceLandTypeMultiplier).toBe(1.2);
+    expect(fromMilitary.attackPower).toBeCloseTo(baseline.attackPower * 1.2, 1);
+  });
+
+  it("food source tile penalizes attack by 0.75", () => {
+    const baseline = resolveAttack(
+      defaultAttacker(),
+      defaultDefender(),
+      defaultTile(2000),
+      makeSeededRng("source-food")
+    );
+    const fromFood = resolveAttack(
+      defaultAttacker({ sourceLandType: "food" }),
+      defaultDefender(),
+      defaultTile(2000),
+      makeSeededRng("source-food")
+    );
+    expect(fromFood.sourceLandTypeMultiplier).toBe(0.75);
+    expect(fromFood.attackPower).toBeCloseTo(baseline.attackPower * 0.75, 1);
+  });
+
+  it("magic source tile is neutral on attack power", () => {
+    const baseline = resolveAttack(
+      defaultAttacker(),
+      defaultDefender(),
+      defaultTile(2000),
+      makeSeededRng("source-magic")
+    );
+    const fromMagic = resolveAttack(
+      defaultAttacker({ sourceLandType: "magic" }),
+      defaultDefender(),
+      defaultTile(2000),
+      makeSeededRng("source-magic")
+    );
+    expect(fromMagic.sourceLandTypeMultiplier).toBe(1);
+    expect(fromMagic.attackPower).toBeCloseTo(baseline.attackPower, 1);
+  });
+
+  it("military target tile multiplies defense by 1.25", () => {
+    const baseline = resolveAttack(
+      defaultAttacker(),
+      defaultDefender(),
+      defaultTile(2000),
+      makeSeededRng("target-mil")
+    );
+    const onMilitary = resolveAttack(
+      defaultAttacker(),
+      defaultDefender(),
+      { capacity: 2000, upgradeIds: [], landType: "military" },
+      makeSeededRng("target-mil")
+    );
+    expect(onMilitary.targetLandTypeMultiplier).toBe(1.25);
+    // Defense = unit_def × 1.25 + standing(military 30% of attack).
+    const expected =
+      baseline.defensePower * 1.25 + onMilitary.attackPower * 0.3;
+    expect(onMilitary.defensePower).toBeCloseTo(expected, 1);
+  });
+
+  it("magic target tile multiplies defense by 1.25 + adds 15% standing floor", () => {
+    const baseline = resolveAttack(
+      defaultAttacker(),
+      defaultDefender(),
+      defaultTile(2000),
+      makeSeededRng("target-magic")
+    );
+    const onMagic = resolveAttack(
+      defaultAttacker(),
+      defaultDefender(),
+      { capacity: 2000, upgradeIds: [], landType: "magic" },
+      makeSeededRng("target-magic")
+    );
+    expect(onMagic.targetLandTypeMultiplier).toBe(1.25);
+    const expected =
+      baseline.defensePower * 1.25 + onMagic.attackPower * 0.15;
+    expect(onMagic.defensePower).toBeCloseTo(expected, 1);
+    expect(onMagic.standingDefenseAdded).toBeCloseTo(
+      onMagic.attackPower * 0.15,
+      1
+    );
+  });
+
+  it("food target tile gets no defense multiplier and no standing floor", () => {
+    const baseline = resolveAttack(
+      defaultAttacker(),
+      defaultDefender(),
+      defaultTile(2000),
+      makeSeededRng("target-food")
+    );
+    const onFood = resolveAttack(
+      defaultAttacker(),
+      defaultDefender(),
+      { capacity: 2000, upgradeIds: [], landType: "food" },
+      makeSeededRng("target-food")
+    );
+    expect(onFood.targetLandTypeMultiplier).toBe(1);
+    expect(onFood.standingDefenseAdded).toBe(0);
+    expect(onFood.defensePower).toBeCloseTo(baseline.defensePower, 1);
+  });
+
+  it("empty military tile still resists at ~30% of attack power (standing defense)", () => {
+    const onEmptyMilitary = resolveAttack(
+      defaultAttacker(),
+      defaultDefender({ unitsOnTile: stack(0, 0, 0) }),
+      { capacity: 2000, upgradeIds: [], landType: "military" },
+      makeSeededRng("empty-mil")
+    );
+    // No units → unit_def = 0, ×1.25 = 0; only standing applies.
+    expect(onEmptyMilitary.standingDefenseAdded).toBeCloseTo(
+      onEmptyMilitary.attackPower * 0.3,
+      1
+    );
+    expect(onEmptyMilitary.defensePower).toBeCloseTo(
+      onEmptyMilitary.standingDefenseAdded,
+      1
+    );
+    expect(onEmptyMilitary.defensePower).toBeGreaterThan(0);
+  });
+
+  it("empty food tile has zero defense (no garrison)", () => {
+    const onEmptyFood = resolveAttack(
+      defaultAttacker(),
+      defaultDefender({ unitsOnTile: stack(0, 0, 0) }),
+      { capacity: 2000, upgradeIds: [], landType: "food" },
+      makeSeededRng("empty-food")
+    );
+    expect(onEmptyFood.defensePower).toBe(0);
+    expect(onEmptyFood.standingDefenseAdded).toBe(0);
+  });
+
+  it("offense spell from a magic source tile is amplified by 1.25", () => {
+    const tile = defaultTile(2000);
+    const noMagicSource = resolveAttack(
+      defaultAttacker({
+        caste: "red",
+        offenseSpellId: "red-offense-inferno",
+        magicLandCount: 50,
+      }),
+      defaultDefender(),
+      tile,
+      makeSeededRng("magic-spell-source")
+    );
+    const fromMagicSource = resolveAttack(
+      defaultAttacker({
+        caste: "red",
+        offenseSpellId: "red-offense-inferno",
+        magicLandCount: 50,
+        sourceLandType: "magic",
+      }),
+      defaultDefender(),
+      tile,
+      makeSeededRng("magic-spell-source")
+    );
+    expect(fromMagicSource.magicTileOffenseSpellBonusApplied).toBe(true);
+    expect(noMagicSource.magicTileOffenseSpellBonusApplied).toBe(false);
+    // The amplified contribution increases attackPower vs the non-amplified
+    // baseline (magnitude depends on spell+caste; we only check direction).
+    expect(fromMagicSource.attackPower).toBeGreaterThan(
+      noMagicSource.attackPower
+    );
+  });
+
+  it("defense spell armed on a magic target tile is amplified by 1.25", () => {
+    const baseline = resolveAttack(
+      defaultAttacker(),
+      defaultDefender({
+        caste: "white",
+        armedDefenseSpellId: "white-defense-sanctuary",
+        magicLandCount: 50,
+      }),
+      defaultTile(2000),
+      makeSeededRng("magic-spell-target")
+    );
+    const armedOnMagic = resolveAttack(
+      defaultAttacker(),
+      defaultDefender({
+        caste: "white",
+        armedDefenseSpellId: "white-defense-sanctuary",
+        magicLandCount: 50,
+      }),
+      { capacity: 2000, upgradeIds: [], landType: "magic" },
+      makeSeededRng("magic-spell-target")
+    );
+    expect(armedOnMagic.magicTileDefenseSpellBonusApplied).toBe(true);
+    expect(baseline.magicTileDefenseSpellBonusApplied).toBe(false);
+    expect(armedOnMagic.defensePower).toBeGreaterThan(baseline.defensePower);
+  });
+});
+
+describe("resolveAttack — pre-attack mods (siege / disarm / pre-cast)", () => {
+  // Same pattern as the tile-type modifier suite: pair a neutral baseline
+  // with a configured run, identical seed, then assert ratios.
+
+  it("legacy callers (no siege / disarm / pre-cast fields) get 0 on all three CombatResult fields", () => {
+    const r = resolveAttack(
+      defaultAttacker(),
+      defaultDefender(),
+      defaultTile(2000),
+      makeSeededRng("legacy-pre-attack")
+    );
+    expect(r.siegeDebuffApplied).toBe(0);
+    expect(r.defenseDisarmApplied).toBe(0);
+    expect(r.preCastOffenseApplied).toBe(0);
+  });
+
+  it("siege debuff drops the standing-defense floor proportionally", () => {
+    const tile = {
+      capacity: 2000,
+      upgradeIds: [],
+      landType: "military" as const,
+    };
+    const baseline = resolveAttack(
+      defaultAttacker(),
+      defaultDefender({ unitsOnTile: stack(0, 0, 0) }),
+      tile,
+      makeSeededRng("siege-floor")
+    );
+    const oneSiege = resolveAttack(
+      defaultAttacker(),
+      defaultDefender({ unitsOnTile: stack(0, 0, 0) }),
+      { ...tile, siegeDebuffMagnitude: 0.10 },
+      makeSeededRng("siege-floor")
+    );
+    expect(baseline.siegeDebuffApplied).toBe(0);
+    expect(oneSiege.siegeDebuffApplied).toBeCloseTo(0.10, 5);
+    // Empty military tile → defense is purely the floor; one siege = 30% −
+    // 10% = 20% of attackPower.
+    expect(baseline.defensePower).toBeCloseTo(baseline.attackPower * 0.30, 1);
+    expect(oneSiege.defensePower).toBeCloseTo(oneSiege.attackPower * 0.20, 1);
+  });
+
+  it("siege debuff at the cap (0.30) zeros out a military tile's standing floor", () => {
+    const onCappedSiege = resolveAttack(
+      defaultAttacker(),
+      defaultDefender({ unitsOnTile: stack(0, 0, 0) }),
+      {
+        capacity: 2000,
+        upgradeIds: [],
+        landType: "military",
+        siegeDebuffMagnitude: 0.30,
+      },
+      makeSeededRng("siege-cap")
+    );
+    // Empty tile + zero floor → no defense at all.
+    expect(onCappedSiege.standingDefenseAdded).toBe(0);
+    expect(onCappedSiege.defensePower).toBe(0);
+    expect(onCappedSiege.siegeDebuffApplied).toBeCloseTo(0.30, 5);
+  });
+
+  it("siege debuff exceeding the floor doesn't go negative", () => {
+    // Magic floor is 0.15. A 0.30 siege would push fraction to −0.15 if
+    // unclamped — must clamp at 0, not produce negative defense.
+    const r = resolveAttack(
+      defaultAttacker(),
+      defaultDefender({ unitsOnTile: stack(0, 0, 0) }),
+      {
+        capacity: 2000,
+        upgradeIds: [],
+        landType: "magic",
+        siegeDebuffMagnitude: 0.30,
+      },
+      makeSeededRng("siege-overshoot")
+    );
+    expect(r.standingDefenseAdded).toBe(0);
+    expect(r.defensePower).toBe(0);
+  });
+
+  it("disarm fraction proportionally reduces defender's armed spell contribution", () => {
+    const tile = defaultTile(2000);
+    const baselineNoDisarm = resolveAttack(
+      defaultAttacker({ caste: "red" }),
+      defaultDefender({
+        caste: "white",
+        armedDefenseSpellId: "white-defense-sanctuary",
+        magicLandCount: 50,
+      }),
+      tile,
+      makeSeededRng("disarm-baseline")
+    );
+    const halfDisarm = resolveAttack(
+      defaultAttacker({ caste: "red" }),
+      defaultDefender({
+        caste: "white",
+        armedDefenseSpellId: "white-defense-sanctuary",
+        magicLandCount: 50,
+        defenseDisarmFraction: 0.5,
+      }),
+      tile,
+      makeSeededRng("disarm-baseline")
+    );
+    const fullDisarm = resolveAttack(
+      defaultAttacker({ caste: "red" }),
+      defaultDefender({
+        caste: "white",
+        armedDefenseSpellId: "white-defense-sanctuary",
+        magicLandCount: 50,
+        defenseDisarmFraction: 1.0,
+      }),
+      tile,
+      makeSeededRng("disarm-baseline")
+    );
+    const noSpell = resolveAttack(
+      defaultAttacker({ caste: "red" }),
+      defaultDefender({ caste: "white" }),
+      tile,
+      makeSeededRng("disarm-baseline")
+    );
+    expect(baselineNoDisarm.defenseDisarmApplied).toBe(0);
+    expect(halfDisarm.defenseDisarmApplied).toBeCloseTo(0.5, 5);
+    expect(fullDisarm.defenseDisarmApplied).toBeCloseTo(1, 5);
+    // Half-disarm sits between the spell-armed baseline and a no-spell run.
+    expect(halfDisarm.defensePower).toBeLessThan(baselineNoDisarm.defensePower);
+    expect(halfDisarm.defensePower).toBeGreaterThan(noSpell.defensePower);
+    // Full disarm matches the no-spell baseline exactly (within FP slop).
+    expect(fullDisarm.defensePower).toBeCloseTo(noSpell.defensePower, 1);
+  });
+
+  it("disarm with no armed spell is a no-op (defenseDisarmApplied=0)", () => {
+    const r = resolveAttack(
+      defaultAttacker(),
+      defaultDefender({
+        armedDefenseSpellId: null,
+        defenseDisarmFraction: 0.5,
+      }),
+      defaultTile(2000),
+      makeSeededRng("disarm-no-spell")
+    );
+    expect(r.defenseDisarmApplied).toBe(0);
+  });
+
+  it("pre-cast offense bonus is added to attackPower as a flat increment", () => {
+    const tile = defaultTile(2000);
+    const baseline = resolveAttack(
+      defaultAttacker(),
+      defaultDefender(),
+      tile,
+      makeSeededRng("pre-cast-flat")
+    );
+    const buffed = resolveAttack(
+      defaultAttacker({ preCastOffenseBonus: 100 }),
+      defaultDefender(),
+      tile,
+      makeSeededRng("pre-cast-flat")
+    );
+    expect(baseline.preCastOffenseApplied).toBe(0);
+    expect(buffed.preCastOffenseApplied).toBe(100);
+    expect(buffed.attackPower).toBeCloseTo(baseline.attackPower + 100, 1);
+  });
+
+  it("pre-cast does NOT get re-amplified by source-tile magic mult", () => {
+    // The pre-cast spell was rolled and realized at its own moment from
+    // its own tile. If the next attack happens to launch from a magic
+    // tile, the in-flight bonus shouldn't be scaled again — only the
+    // attack-time spell rides the source-tile mult.
+    const tile = defaultTile(2000);
+    const fromMagicSource = resolveAttack(
+      defaultAttacker({
+        sourceLandType: "magic",
+        preCastOffenseBonus: 100,
+      }),
+      defaultDefender(),
+      tile,
+      makeSeededRng("pre-cast-magic-no-stack")
+    );
+    const fromNonMagicSource = resolveAttack(
+      defaultAttacker({ preCastOffenseBonus: 100 }),
+      defaultDefender(),
+      tile,
+      makeSeededRng("pre-cast-magic-no-stack")
+    );
+    // Both runs add the flat 100 after the source-tile mult, so the delta
+    // between them is exactly the magic-source amplification of the
+    // existing (non-pre-cast) attackPower components, not 100×anything.
+    expect(fromMagicSource.preCastOffenseApplied).toBe(100);
+    expect(fromNonMagicSource.preCastOffenseApplied).toBe(100);
+  });
+
+  it("siege + disarm + pre-cast can stack in a single resolution", () => {
+    const tile = {
+      capacity: 2000,
+      upgradeIds: [],
+      landType: "military" as const,
+      siegeDebuffMagnitude: 0.20,
+    };
+    const r = resolveAttack(
+      defaultAttacker({ preCastOffenseBonus: 50 }),
+      defaultDefender({
+        armedDefenseSpellId: "white-defense-sanctuary",
+        magicLandCount: 50,
+        defenseDisarmFraction: 0.5,
+      }),
+      tile,
+      makeSeededRng("stack-everything")
+    );
+    expect(r.siegeDebuffApplied).toBeCloseTo(0.20, 5);
+    expect(r.defenseDisarmApplied).toBeCloseTo(0.5, 5);
+    expect(r.preCastOffenseApplied).toBe(50);
+  });
+});
+
+describe("rollSpellEffectiveness + SPELL_RNG constants", () => {
+  it("constants form a band around 1.0 midpoint", () => {
+    expect(SPELL_RNG_LOWER).toBe(0.5);
+    expect(SPELL_RNG_RANGE).toBe(1.0);
+    expect(SPELL_RNG_MIDPOINT).toBe(1.0);
+  });
+
+  it("rolls fall in [SPELL_RNG_LOWER, SPELL_RNG_LOWER + SPELL_RNG_RANGE]", () => {
+    const rng = makeSeededRng("spell-roll");
+    for (let i = 0; i < 50; i++) {
+      const v = rollSpellEffectiveness(rng);
+      expect(v).toBeGreaterThanOrEqual(SPELL_RNG_LOWER);
+      expect(v).toBeLessThan(SPELL_RNG_LOWER + SPELL_RNG_RANGE);
+    }
+  });
+
+  it("midpoint RNG (() => 0.5) returns exactly SPELL_RNG_MIDPOINT", () => {
+    const v = rollSpellEffectiveness(() => 0.5);
+    expect(v).toBe(SPELL_RNG_MIDPOINT);
+  });
+});
+
+describe("applyFlyoverModifiers", () => {
+  // Build a minimal CombatResult for the helper to chew on. Only the
+  // fields the helper inspects matter; the rest are stubbed to neutral.
+  function combatStub(overrides: Partial<CombatResult> = {}): CombatResult {
+    return {
+      outcome: "captured",
+      unitsDeployed: stack(0, 0, 100),
+      unitsClampedFromCapacity: 0,
+      attackPower: 0,
+      defensePower: 0,
+      attackerLosses: stack(0, 0, 10),
+      defenderLosses: stack(0, 0, 5),
+      underdogApplied: false,
+      supplyMultiplier: 1,
+      sourceLandTypeMultiplier: 1,
+      targetLandTypeMultiplier: 1,
+      standingDefenseAdded: 0,
+      magicTileOffenseSpellBonusApplied: false,
+      magicTileDefenseSpellBonusApplied: false,
+      siegeDebuffApplied: 0,
+      defenseDisarmApplied: 0,
+      preCastOffenseApplied: 0,
+      rng: { attackerRoll: 1, defenderRoll: 1 },
+      appliedSpells: { offenseId: null, defenseId: null },
+      ...overrides,
+    };
+  }
+
+  it("converts a 'captured' outcome to 'repelled'", () => {
+    const r = applyFlyoverModifiers(combatStub({ outcome: "captured" }));
+    expect(r.outcome).toBe("repelled");
+  });
+
+  it("leaves 'repelled' outcomes untouched", () => {
+    const r = applyFlyoverModifiers(combatStub({ outcome: "repelled" }));
+    expect(r.outcome).toBe("repelled");
+  });
+
+  it("leaves 'stalemate' outcomes untouched", () => {
+    const r = applyFlyoverModifiers(combatStub({ outcome: "stalemate" }));
+    expect(r.outcome).toBe("stalemate");
+  });
+
+  it("doubles attacker losses across all unit types", () => {
+    const r = applyFlyoverModifiers(
+      combatStub({
+        unitsDeployed: stack(20, 30, 40),
+        attackerLosses: stack(5, 10, 8),
+      })
+    );
+    expect(r.attackerLosses).toEqual(stack(10, 20, 16));
+  });
+
+  it("clamps doubled losses to deployed (can't lose more than were sent)", () => {
+    const r = applyFlyoverModifiers(
+      combatStub({
+        unitsDeployed: stack(0, 0, 50),
+        // 30 × 2 = 60, but only 50 deployed → clamp to 50.
+        attackerLosses: stack(0, 0, 30),
+      })
+    );
+    expect(r.attackerLosses).toEqual(stack(0, 0, 50));
+  });
+
+  it("preserves defender losses unchanged", () => {
+    const before = combatStub({ defenderLosses: stack(2, 3, 4) });
+    const after = applyFlyoverModifiers(before);
+    expect(after.defenderLosses).toEqual(stack(2, 3, 4));
+  });
+
+  it("preserves all other CombatResult fields verbatim", () => {
+    const before = combatStub({
+      attackPower: 1234,
+      defensePower: 567,
+      siegeDebuffApplied: 0.10,
+      magicTileOffenseSpellBonusApplied: true,
+    });
+    const after = applyFlyoverModifiers(before);
+    expect(after.attackPower).toBe(1234);
+    expect(after.defensePower).toBe(567);
+    expect(after.siegeDebuffApplied).toBe(0.10);
+    expect(after.magicTileOffenseSpellBonusApplied).toBe(true);
+  });
+});
+
+describe("realizedSpellMagnitude", () => {
+  it("midpoint dice (1.0) and 0 magic lands returns baseStrength × casteBonus", () => {
+    // Red's siege bonus is 1.30. Tier-1 base 0.05.
+    const m = realizedSpellMagnitude({
+      baseStrength: 0.05,
+      caste: "red",
+      spellType: "siege",
+      magicLandCount: 0,
+      dice: 1.0,
+    });
+    expect(m).toBeCloseTo(0.05 * 1.30, 5);
+  });
+
+  it("scales with magicMultiplier(magicLandCount)", () => {
+    // 50 magic lands → magicMultiplier = 3.5. White attrition bonus 0.85,
+    // base 30 → 30 × 3.5 × 0.85 × 1.0 = 89.25.
+    const m = realizedSpellMagnitude({
+      baseStrength: 30,
+      caste: "white",
+      spellType: "attrition",
+      magicLandCount: 50,
+      dice: 1.0,
+    });
+    expect(m).toBeCloseTo(30 * 3.5 * 0.85, 1);
+  });
+
+  it("scales linearly with dice", () => {
+    const args = {
+      baseStrength: 0.4,
+      caste: "white" as const,
+      spellType: "disarm" as const,
+      magicLandCount: 0,
+      dice: 1.0,
+    };
+    const mid = realizedSpellMagnitude(args);
+    const low = realizedSpellMagnitude({ ...args, dice: 0.5 });
+    const high = realizedSpellMagnitude({ ...args, dice: 1.5 });
+    expect(low).toBeCloseTo(mid * 0.5, 5);
+    expect(high).toBeCloseTo(mid * 1.5, 5);
+  });
+
+  it("uses the caste's per-spelltype bonus row", () => {
+    // Red siege bonus 1.30; Green siege bonus 1.00. Same inputs otherwise
+    // should differ by 1.30 / 1.00 = 1.30.
+    const red = realizedSpellMagnitude({
+      baseStrength: 0.05,
+      caste: "red",
+      spellType: "siege",
+      magicLandCount: 0,
+      dice: 1.0,
+    });
+    const green = realizedSpellMagnitude({
+      baseStrength: 0.05,
+      caste: "green",
+      spellType: "siege",
+      magicLandCount: 0,
+      dice: 1.0,
+    });
+    expect(red / green).toBeCloseTo(1.3, 2);
+  });
+});
+
+describe("distributeUnitKills", () => {
+  it("returns zero stack when killCount is 0", () => {
+    const u = stack(50, 30, 20);
+    const k = distributeUnitKills(u, 0);
+    expect(k).toEqual(stack(0, 0, 0));
+  });
+
+  it("returns zero stack when target stack is empty", () => {
+    const k = distributeUnitKills(stack(0, 0, 0), 100);
+    expect(k).toEqual(stack(0, 0, 0));
+  });
+
+  it("never kills more than killCount or more than units present", () => {
+    // 20 units total, ask for 100 → cap at 20.
+    const u = stack(10, 5, 5);
+    const k = distributeUnitKills(u, 100);
+    const total = k.ground + k.siege + k.air;
+    expect(total).toBe(20);
+    expect(k.ground).toBeLessThanOrEqual(u.ground);
+    expect(k.siege).toBeLessThanOrEqual(u.siege);
+    expect(k.air).toBeLessThanOrEqual(u.air);
+  });
+
+  it("distributes proportionally — dominant type takes most kills", () => {
+    // 100 kills against (90, 5, 5): roughly 90% of kills land on ground.
+    const k = distributeUnitKills(stack(90, 5, 5), 100);
+    expect(k.ground).toBeGreaterThanOrEqual(85);
+    expect(k.siege).toBeLessThanOrEqual(8);
+    expect(k.air).toBeLessThanOrEqual(8);
+    expect(k.ground + k.siege + k.air).toBe(100);
+  });
+
+  it("distributes evenly across equal stacks", () => {
+    const k = distributeUnitKills(stack(30, 30, 30), 30);
+    // 10 each, with sum=30.
+    expect(k.ground + k.siege + k.air).toBe(30);
+    expect(Math.abs(k.ground - 10)).toBeLessThanOrEqual(1);
+    expect(Math.abs(k.siege - 10)).toBeLessThanOrEqual(1);
+    expect(Math.abs(k.air - 10)).toBeLessThanOrEqual(1);
+  });
+
+  it("handles killCount equal to total — kills everyone", () => {
+    const k = distributeUnitKills(stack(7, 11, 13), 31);
+    expect(k).toEqual(stack(7, 11, 13));
   });
 });

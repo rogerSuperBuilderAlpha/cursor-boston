@@ -40,7 +40,17 @@ export default function ThreatsPage() {
     handleRecruit,
     handleArmDefenseSpell,
     handleDistributeTile,
+    handleSiege,
+    handleFlyover,
+    handleCastSpell,
   } = data;
+
+  // Player's magic-land count drives spell-cast magnitudes via
+  // magicMultiplier. Computed once here and passed down to ThreatRow.
+  const myMagicLandCount = useMemo(
+    () => tiles.filter((t) => t.type === "magic").length,
+    [tiles]
+  );
 
   const [hideShielded, setHideShielded] = useState(true);
   const [hideOverwhelming, setHideOverwhelming] = useState(false);
@@ -178,6 +188,10 @@ export default function ThreatsPage() {
               onRecruit={withBusy(handleRecruit)}
               onArmDefenseSpell={withBusy(handleArmDefenseSpell)}
               onDistributeTile={withBusy(handleDistributeTile)}
+              onSiege={withBusy(handleSiege)}
+              onFlyover={withBusy(handleFlyover)}
+              onCastSpell={withBusy(handleCastSpell)}
+              myMagicLandCount={myMagicLandCount}
             />
           ))}
         </div>

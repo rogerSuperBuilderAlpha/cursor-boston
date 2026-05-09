@@ -10,7 +10,26 @@ export type Caste = "black" | "red" | "white" | "green" | "blue";
 
 export type UnitType = "ground" | "siege" | "air";
 
-export type SpellType = "defense" | "offense" | "production" | "intel";
+export type SpellType =
+  | "defense"
+  | "offense"
+  | "production"
+  | "intel"
+  // May 2026 sim feature additions. These spell kinds are cast standalone
+  // (not bundled with attack) and resolve with a dice roll. See
+  // lib/game/data-server.ts:castSpellServer for runtime semantics.
+  //  - "siege"     → records a siege-debuff IntelEffect; magnitude is the
+  //                  rolled fraction subtracted from the target tile's
+  //                  standing-defense floor.
+  //  - "disarm"    → records a defense-disarm IntelEffect; magnitude is
+  //                  the rolled fraction (0..1) by which the next attack
+  //                  nullifies the defender's armed defense spell.
+  //  - "attrition" → applied immediately at cast: defender units on the
+  //                  target tile are killed, distributed across types
+  //                  proportionally to current composition.
+  | "siege"
+  | "disarm"
+  | "attrition";
 
 // Reveal scope for intel-type artifacts and spells. Used by both
 // SpellDefinition.intelScope and ArtifactDefinition.intelDepth (the latter
@@ -247,6 +266,16 @@ export interface CombatAttackerInput {
   // Red Forge Sight = +0.10 against the targeted tile). Stacks
   // multiplicatively on attackPower after spell contribution.
   intelOffenseBonus?: number;
+  // Land type of the source tile the attack is launching from. Drives the
+  // tile-type attack multiplier (military ×1.20, food ×0.75) and the
+  // magic-tile offense-spell amplifier. Optional for legacy/test callers
+  // that haven't been updated; resolveAttack treats undefined as neutral.
+  sourceLandType?: LandType;
+  // Already-realized offense power from a pre-cast offense spell against
+  // this target (kind = "pre-cast-offense-spell"). Flat addition to
+  // attackPower; not re-amplified by source-tile magic mult (the spell was
+  // cast and rolled already). Optional; legacy callers default to 0.
+  preCastOffenseBonus?: number;
 }
 
 export interface CombatDefenderInput {
@@ -261,6 +290,10 @@ export interface CombatDefenderInput {
   // against the specific attacker). Stacks multiplicatively on defensePower
   // after supply.
   intelDefenseBonus?: number;
+  // Fraction in [0, 1] by which the armed defense spell's contribution is
+  // nullified ("defense-disarm" effect rolled by the attacker). 1 fully
+  // dispels; 0.5 halves; 0 is a no-op. Optional; legacy callers default 0.
+  defenseDisarmFraction?: number;
 }
 
 export interface CombatTileInput {
@@ -272,6 +305,17 @@ export interface CombatTileInput {
   // is unmodified. When present and empty, the tile is treated as isolated
   // and gets the -15% defense floor.
   friendlyNeighbors?: ReadonlyArray<{ landType: LandType }>;
+  // Land type of the contested tile itself. Drives the defender-tile
+  // defense multiplier (military/magic ×1.25), the standing-defense floor
+  // (military 30%, magic 15% of attack power), and the magic-tile
+  // defense-spell amplifier. Optional for legacy/test callers; resolveAttack
+  // treats undefined as neutral.
+  landType?: LandType;
+  // Cumulative siege-debuff magnitude (0..SIEGE_DEBUFF_MAX_MAGNITUDE)
+  // softening this tile's standing-defense floor. Caller is responsible
+  // for clamping to the cap; resolveAttack does not re-clamp. Optional;
+  // legacy callers default to 0.
+  siegeDebuffMagnitude?: number;
 }
 
 // ──── v2: Artifacts (single-use, caste-agnostic, found on turn-spend) ────
@@ -307,8 +351,8 @@ export interface ArtifactDefinition {
   intelDepth?: IntelDepth;
 }
 
-// Persisted, time-bounded combat effects produced by intel spells. Read by
-// resolveAttack via the data-server attack handler.
+// Persisted, time-bounded combat effects produced by intel spells and
+// pre-attack actions. Read by resolveAttack via the data-server attack handler.
 //
 // "alert-vs-caster" — the defender (ownerId) holds an alert against a
 //   specific caster: when that caster attacks the owner, the defender gets a
@@ -318,7 +362,38 @@ export interface ArtifactDefinition {
 // "forge-sight-offense" — the attacker (ownerId) gets a `magnitude` offense
 //   bonus when attacking a specific `targetTileId`. Created by Red Forge
 //   Sight (+0.10). Stacks with the Red Forge Scouts air-upgrade bonus.
-export type IntelEffectKind = "alert-vs-caster" | "forge-sight-offense";
+//
+// "siege-debuff" — the attacker (ownerId) has softened the target tile's
+//   standing-defense floor by `magnitude` (0..1 fraction). Stackable up to
+//   SIEGE_DEBUFF_MAX_MAGNITUDE; combat reads the SUM of active effects.
+//   TTL-only — not consumed by attack.
+//
+// "pre-cast-offense-spell" — the attacker (ownerId) pre-cast an offense
+//   spell pointed at `targetTileId`; `magnitude` is the realized
+//   spell-contribution power (already × magicMultiplier × caste bonus ×
+//   dice). Single-use: combat consumes (deletes) on next attack.
+//
+// "defense-disarm" — the attacker (ownerId) disarmed the target tile's
+//   armed defense spell by `magnitude` (0..1 fraction; 1 = fully nullified).
+//   Single-use: combat consumes on next attack.
+export type IntelEffectKind =
+  | "alert-vs-caster"
+  | "forge-sight-offense"
+  | "siege-debuff"
+  | "pre-cast-offense-spell"
+  | "defense-disarm";
+
+// Cap on stacked siege-debuff magnitude. Three siege actions × 0.10 each →
+// 0.30, which fully neutralizes the military standing floor (0.30) and
+// halves the magic floor (0.15) twice. Spell-cast siege adds on top up to
+// the same cap.
+export const SIEGE_DEBUFF_MAX_MAGNITUDE = 0.30;
+// Per-action siege magnitude (deterministic; spell-cast siege uses dice).
+export const SIEGE_ACTION_MAGNITUDE = 0.10;
+// Kinds that are consumed (deleted) on the next attack against the target
+// tile. Read once, deleted in-tx.
+export const SINGLE_USE_INTEL_EFFECT_KINDS: ReadonlySet<IntelEffectKind> =
+  new Set<IntelEffectKind>(["pre-cast-offense-spell", "defense-disarm"]);
 
 export interface IntelEffect {
   id: string;
@@ -397,7 +472,10 @@ export type TurnAction =
   | "distribute"
   | "spell-arm"
   | "spell-produce"
-  | "attack";
+  | "spell-cast"
+  | "attack"
+  | "siege"
+  | "flyover";
 
 export interface TurnReport {
   // The player.turnsSpentTotal at the time this report was generated.
@@ -433,6 +511,23 @@ export interface CombatResult {
   // 1.0 if the supply system was not consulted (legacy callers); else the
   // multiplier that scaled defense before underdog stacking. 0.85 = isolated.
   supplyMultiplier: number;
+  // Tile-type combat modifiers applied this resolution. 1.0 means neutral
+  // (the legacy default when callers don't pass landType / sourceLandType).
+  // Surfaced so the battle readout can show "Military source ×1.20" etc.
+  sourceLandTypeMultiplier: number;
+  targetLandTypeMultiplier: number;
+  // Absolute defense power added by the standing-defense floor (military
+  // 30% / magic 15% of attack power). 0 for food / unrevealed / unassigned.
+  standingDefenseAdded: number;
+  // True when the offense spell or defense spell was cast from / armed on a
+  // magic tile and received the MAGIC_TILE_SPELL_MULT amplifier.
+  magicTileOffenseSpellBonusApplied: boolean;
+  magicTileDefenseSpellBonusApplied: boolean;
+  // Pre-attack mods (May 2026 sim feature). 0 / false when no effect was
+  // active; surfaced so the BattleReport can render Modifiers lines.
+  siegeDebuffApplied: number;
+  defenseDisarmApplied: number;
+  preCastOffenseApplied: number;
   rng: { attackerRoll: number; defenderRoll: number };
   appliedSpells: { offenseId: string | null; defenseId: string | null };
   // Pre-commit intel produced by the attacker's air-unit intel passive (if

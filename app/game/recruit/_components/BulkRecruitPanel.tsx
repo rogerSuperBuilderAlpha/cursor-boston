@@ -7,14 +7,19 @@
 "use client";
 
 import type { MapTile, UnitType } from "@/lib/game/types";
-import { TURNS_PER_CYCLE, UNITS_PER_CYCLE } from "../_lib/constants";
+import {
+  MIN_UNITS_PER_CYCLE_RECRUITABLE,
+  TURNS_PER_CYCLE,
+  unitsPerCycleForLand,
+} from "../_lib/constants";
 import type { RecruitProgress } from "../_lib/types";
 import { PlanPreview } from "./PlanPreview";
 import { ProgressBar } from "./ProgressBar";
 
 interface Props {
-  militaryTiles: MapTile[];
-  threatRankedMilitaryIds: string[];
+  recruitableTiles: MapTile[];
+  threatRankedRecruitableIds: string[];
+  tilesById: Map<string, MapTile>;
   unitType: UnitType;
   setUnitType: (u: UnitType) => void;
   requestedUnits: number;
@@ -30,6 +35,12 @@ interface Props {
   onRecruit: () => void;
 }
 
+const TYPE_LABEL: Record<string, string> = {
+  military: "Mil",
+  food: "Food",
+  magic: "Magic",
+};
+
 /**
  * The recruit form: unit-type / count / target-tile selectors + the
  * recruit button + the live plan preview + the progress bar. Owns
@@ -37,8 +48,9 @@ interface Props {
  * picker state and the action result).
  */
 export function BulkRecruitPanel({
-  militaryTiles,
-  threatRankedMilitaryIds,
+  recruitableTiles,
+  threatRankedRecruitableIds,
+  tilesById,
   unitType,
   setUnitType,
   requestedUnits,
@@ -53,14 +65,21 @@ export function BulkRecruitPanel({
   progress,
   onRecruit,
 }: Props) {
+  const tilesCount = recruitableTiles.length;
+  const militaryCount = recruitableTiles.filter(
+    (t) => t.type === "military"
+  ).length;
+  const foodMagicCount = tilesCount - militaryCount;
+
   return (
     <div className="rounded-lg border-2 border-emerald-300 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-900/10 p-4 mb-6">
       <h2 className="font-semibold mb-3">Bulk recruit</h2>
-      {militaryTiles.length === 0 ? (
+      {tilesCount === 0 ? (
         <p className="text-sm text-neutral-500">
-          You have no military tiles. Distribute some unassigned tiles to{" "}
-          <em>military</em> first — head to the dashboard&apos;s bulk-assign
-          panel or any tile&apos;s detail page.
+          You have no recruitable tiles. Distribute some unassigned tiles to{" "}
+          <em>military</em>, <em>food</em>, or <em>magic</em> first — head to
+          the dashboard&apos;s bulk-assign panel or any tile&apos;s detail
+          page.
         </p>
       ) : (
         <div className="space-y-3">
@@ -79,12 +98,12 @@ export function BulkRecruitPanel({
               </select>
             </label>
             <label className="text-sm">
-              Units (multiple of {UNITS_PER_CYCLE}):{" "}
+              Units (multiple of {MIN_UNITS_PER_CYCLE_RECRUITABLE}):{" "}
               <input
                 type="number"
-                step={UNITS_PER_CYCLE}
-                min={UNITS_PER_CYCLE}
-                max={Math.max(UNITS_PER_CYCLE, maxUnits)}
+                step={MIN_UNITS_PER_CYCLE_RECRUITABLE}
+                min={MIN_UNITS_PER_CYCLE_RECRUITABLE}
+                max={Math.max(MIN_UNITS_PER_CYCLE_RECRUITABLE, maxUnits)}
                 value={requestedUnits}
                 onChange={(e) => {
                   const n = Number.parseInt(e.target.value, 10);
@@ -99,16 +118,24 @@ export function BulkRecruitPanel({
               <select
                 value={selectedTileId}
                 onChange={(e) => setSelectedTileId(e.target.value)}
-                disabled={busy || militaryTiles.length === 0}
+                disabled={busy || tilesCount === 0}
                 className="ml-2 px-2 py-1 border border-neutral-300 dark:border-neutral-700 rounded bg-transparent"
               >
                 <option value="">Auto — most-threatened tiles first</option>
-                {threatRankedMilitaryIds.map((tileId, idx) => (
-                  <option key={tileId} value={tileId}>
-                    {tileId}
-                    {idx === 0 ? " (top threat)" : ""}
-                  </option>
-                ))}
+                {threatRankedRecruitableIds.map((tileId, idx) => {
+                  const tile = tilesById.get(tileId);
+                  const yieldPerCycle = tile
+                    ? unitsPerCycleForLand(tile.type)
+                    : 0;
+                  const typeLabel = tile ? TYPE_LABEL[tile.type] ?? "" : "";
+                  return (
+                    <option key={tileId} value={tileId}>
+                      {tileId}
+                      {typeLabel ? ` · ${typeLabel} +${yieldPerCycle}` : ""}
+                      {idx === 0 ? " (top threat)" : ""}
+                    </option>
+                  );
+                })}
               </select>
             </label>
             <button
@@ -122,11 +149,14 @@ export function BulkRecruitPanel({
             </button>
           </div>
           <p className="text-xs text-neutral-500">
-            {TURNS_PER_CYCLE} turns / {UNITS_PER_CYCLE} units · across{" "}
-            {militaryTiles.length} military tile
-            {militaryTiles.length === 1 ? "" : "s"}.
+            {TURNS_PER_CYCLE} turns / cycle · {militaryCount} military
+            {militaryCount === 1 ? " tile" : " tiles"} (10/cycle)
+            {foodMagicCount > 0
+              ? ` + ${foodMagicCount} food/magic (5/cycle)`
+              : ""}
+            .
           </p>
-          <PlanPreview plan={planPreview} selectedTileId={selectedTileId} />
+          <PlanPreview plan={planPreview} selectedTileId={selectedTileId} tilesById={tilesById} />
         </div>
       )}
 

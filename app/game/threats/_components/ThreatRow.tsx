@@ -8,6 +8,7 @@
 
 import { useMemo, useState } from "react";
 import { ARTIFACTS_BY_ID, getSpellsForCasteAndType } from "@/lib/game/content";
+import { realizedSpellMagnitude } from "@/lib/game/combat";
 import type {
   CombatResult,
   GameArtifact,
@@ -20,7 +21,9 @@ import type {
   UnitType,
 } from "@/lib/game/types";
 import type { ThreatEntry } from "../_lib/threats-derive";
+import { useAttackPreview } from "../_lib/use-attack-preview";
 import { BattleReport } from "./BattleReport";
+import { BattleSimPanel } from "./BattleSimPanel";
 
 const UNIT_TYPES: UnitType[] = ["ground", "siege", "air"];
 const LAND_TYPES: { type: LandType; label: string }[] = [
@@ -35,6 +38,10 @@ export interface ThreatRowProps {
   player: GamePlayer;
   artifacts: ReadonlyArray<GameArtifact>;
   busy: boolean;
+  // Count of the player's magic-land tiles. Drives the magic multiplier
+  // in the spell-cast picker's expected-magnitude readout. Passed from
+  // the page so the row doesn't need the full tile list.
+  myMagicLandCount: number;
   onAttack: (args: {
     sourceTileId: string;
     targetTileId: string;
@@ -68,6 +75,33 @@ export interface ThreatRowProps {
     tileId: string,
     type: LandType
   ) => Promise<{ reportSummary: string } | null>;
+  onSiege: (
+    sourceTileId: string,
+    targetTileId: string
+  ) => Promise<{
+    reportSummary: string;
+    siegeTotalMagnitude: number;
+  } | null>;
+  onFlyover: (
+    sourceTileId: string,
+    targetTileId: string,
+    units: { ground: number; siege: number; air: number }
+  ) => Promise<{
+    reportSummary: string;
+    combat: CombatResult | null;
+    report: TurnReport | null;
+    targetTile: GameTile | null;
+  } | null>;
+  onCastSpell: (
+    spellId: string,
+    sourceTileId: string,
+    targetTileId: string
+  ) => Promise<{
+    reportSummary: string;
+    siege?: { magnitudeApplied: number; totalMagnitudeAfter: number };
+    disarm?: { fractionApplied: number };
+    attrition?: { unitsKilled: { ground: number; siege: number; air: number } };
+  } | null>;
 }
 
 /**
@@ -80,7 +114,7 @@ export interface ThreatRowProps {
  * that will 4xx out — the row tells them up-front why it's not allowed.
  */
 export function ThreatRow(props: ThreatRowProps) {
-  const { entry, player, artifacts, busy } = props;
+  const { entry, player, artifacts, busy, myMagicLandCount } = props;
   const [expanded, setExpanded] = useState(false);
   const [sourceTileId, setSourceTileId] = useState(entry.bestSource.tileId);
   const [ground, setGround] = useState(0);
@@ -111,6 +145,27 @@ export function ThreatRow(props: ThreatRowProps) {
     () => (myCaste ? getSpellsForCasteAndType(myCaste, "defense") : []),
     [myCaste]
   );
+  const siegeSpell = useMemo<SpellDefinition | null>(
+    () =>
+      myCaste
+        ? getSpellsForCasteAndType(myCaste, "siege")[0] ?? null
+        : null,
+    [myCaste]
+  );
+  const disarmSpell = useMemo<SpellDefinition | null>(
+    () =>
+      myCaste
+        ? getSpellsForCasteAndType(myCaste, "disarm")[0] ?? null
+        : null,
+    [myCaste]
+  );
+  const attritionSpell = useMemo<SpellDefinition | null>(
+    () =>
+      myCaste
+        ? getSpellsForCasteAndType(myCaste, "attrition")[0] ?? null
+        : null,
+    [myCaste]
+  );
   const intelSpell = useMemo<SpellDefinition | null>(
     () =>
       myCaste
@@ -137,6 +192,25 @@ export function ThreatRow(props: ThreatRowProps) {
     if (player.phase !== "play") return "Not in play phase";
     return null;
   })();
+
+  // Battle simulation preview — fires for every (source, units, spell) tweak
+  // unless the matchup is structurally impossible (shielded enemy, wrong
+  // phase). Insufficient turns / cap overflow don't gate the preview, since
+  // the player can recover by adjusting before they actually swing.
+  const previewDisabled =
+    enemyShielded || player.phase !== "play";
+  // Bumped on every successful pre-action (spy / siege / flyover) so the
+  // preview refetches even when the form fields haven't changed — those
+  // actions mutate server-side intel-effects that the projection reads.
+  const [previewRefreshKey, setPreviewRefreshKey] = useState(0);
+  const attackPreview = useAttackPreview({
+    sourceTileId: source.tileId,
+    targetTileId: entry.enemyTile.tileId,
+    units: { ground, siege, air },
+    offenseSpellId: offenseSpellId || null,
+    disabled: previewDisabled,
+    refreshKey: previewRefreshKey,
+  });
 
   async function handleAttack() {
     setToast(null);
@@ -177,6 +251,9 @@ export function ThreatRow(props: ThreatRowProps) {
     if (res?.intelReport) {
       setIntelReport(res.intelReport as IntelReport);
       setToast(`Intel captured · detected: ${res.detected ? "yes" : "no"}`);
+      // Forge Sight (Red caste) creates a forge-sight-offense effect that
+      // tightens the projection; bump so the panel re-fetches.
+      setPreviewRefreshKey((k) => k + 1);
     }
   }
 
@@ -209,6 +286,55 @@ export function ThreatRow(props: ThreatRowProps) {
     setToast(null);
     const res = await props.onDistributeTile(source.tileId, type);
     if (res) setToast(res.reportSummary || `Tile set to ${type}`);
+  }
+
+  async function handleSiegeFromPanel() {
+    setToast(null);
+    const res = await props.onSiege(source.tileId, entry.enemyTile.tileId);
+    if (res) {
+      setToast(
+        `${res.reportSummary} · total siege −${(
+          res.siegeTotalMagnitude * 100
+        ).toFixed(0)}%`
+      );
+      setPreviewRefreshKey((k) => k + 1);
+    }
+  }
+
+  async function handleCastSpellFromPanel(spellId: string) {
+    setToast(null);
+    const res = await props.onCastSpell(
+      spellId,
+      source.tileId,
+      entry.enemyTile.tileId
+    );
+    if (res) {
+      setToast(res.reportSummary || "Spell cast");
+      setPreviewRefreshKey((k) => k + 1);
+    }
+  }
+
+  async function handleFlyoverFromPanel() {
+    setToast(null);
+    setBattle(null);
+    const res = await props.onFlyover(source.tileId, entry.enemyTile.tileId, {
+      ground: 0,
+      siege: 0,
+      air,
+    });
+    if (res) {
+      if (res.combat && res.report && res.targetTile) {
+        setBattle({
+          combat: res.combat,
+          report: res.report,
+          targetTile: res.targetTile,
+        });
+      } else {
+        setToast(res.reportSummary || "Flyover");
+      }
+      setAir(0);
+      setPreviewRefreshKey((k) => k + 1);
+    }
   }
 
   const enemyName = entry.enemyOwner?.displayName ?? entry.enemyTile.ownerId?.slice(0, 6) ?? "??";
@@ -375,6 +501,104 @@ export function ThreatRow(props: ThreatRowProps) {
           Attack disabled: {attackDisabledReason}.
         </div>
       )}
+
+      {/* ─── Battle simulation panel (live projection) ───────────────────── */}
+      <div className="mx-4">
+        <BattleSimPanel
+          preview={attackPreview.preview}
+          loading={attackPreview.loading}
+          error={attackPreview.error}
+          disabled={previewDisabled}
+          disabledReason={
+            previewDisabled
+              ? enemyShielded
+                ? "Enemy is shielded — no preview while shielded."
+                : "Not in play phase — preview unavailable."
+              : undefined
+          }
+          busy={busy}
+          spy={
+            intelSpell
+              ? {
+                  onClick: () => void handleCastIntel(),
+                  turnCost: intelSpell.turnCost,
+                  disabledReason:
+                    player.turnsRemaining < intelSpell.turnCost
+                      ? `Need ${intelSpell.turnCost} turns (you have ${player.turnsRemaining})`
+                      : null,
+                }
+              : undefined
+          }
+          siege={{
+            onClick: () => void handleSiegeFromPanel(),
+            turnCost: 5,
+            disabledReason:
+              player.turnsRemaining < 5
+                ? `Need 5 turns (you have ${player.turnsRemaining})`
+                : null,
+          }}
+          flyover={{
+            onClick: () => void handleFlyoverFromPanel(),
+            turnCost: 1,
+            airUnits: air,
+            disabledReason: (() => {
+              if (air <= 0) return "Set air units in the form first";
+              if (air > source.units.air)
+                return `Source has only ${source.units.air} air`;
+              if (player.turnsRemaining < 1)
+                return `Need 1 turn (you have ${player.turnsRemaining})`;
+              return null;
+            })(),
+          }}
+          castSpell={(() => {
+            // Build the picker entries for the player's caste-specific
+            // tier-1 spells of the new kinds. Expected magnitude uses
+            // dice=1.0 (midpoint of [0.5, 1.5]) so the player sees the
+            // average outcome before the actual roll.
+            const ownedMagic = myMagicLandCount;
+            const turnCost = 5;
+            const baseDisabled =
+              player.turnsRemaining < turnCost
+                ? `Need ${turnCost} turns (you have ${player.turnsRemaining})`
+                : null;
+            const candidates: SpellDefinition[] = [
+              siegeSpell,
+              disarmSpell,
+              attritionSpell,
+            ].filter((s): s is SpellDefinition => s !== null);
+            return {
+              spells: candidates.map((s) => {
+                const expected = realizedSpellMagnitude({
+                  baseStrength: s.baseStrength,
+                  caste: s.caste,
+                  spellType: s.type,
+                  magicLandCount: ownedMagic,
+                  activeUpgrades: player.activeUpgrades ?? {},
+                  dice: 1.0,
+                });
+                let entryDisabled = baseDisabled;
+                if (
+                  !entryDisabled &&
+                  player.stats.tilesHeld < s.minTilesRequired
+                ) {
+                  entryDisabled = `Need ${s.minTilesRequired} tiles held (you have ${player.stats.tilesHeld})`;
+                }
+                return {
+                  spell: s,
+                  expectedMagnitude: expected,
+                  disabledReason: entryDisabled,
+                };
+              }),
+              onCast: (spellId) => void handleCastSpellFromPanel(spellId),
+              turnCost,
+              disabledReason:
+                candidates.length === 0
+                  ? "No castable spells for your caste"
+                  : baseDisabled,
+            };
+          })()}
+        />
+      </div>
 
       {/* ─── Battle report (full structured readout after an attack) ─────── */}
       {battle && (

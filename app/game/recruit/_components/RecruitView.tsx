@@ -19,12 +19,16 @@ import {
   type ThreatOwnerInfo,
 } from "@/lib/game/threat";
 import type { GamePlayer, MapTile, UnitType } from "@/lib/game/types";
-import { TURNS_PER_CYCLE, UNITS_PER_CYCLE } from "../_lib/constants";
+import {
+  MIN_UNITS_PER_CYCLE_RECRUITABLE,
+  TURNS_PER_CYCLE,
+  unitsPerCycleForLand,
+} from "../_lib/constants";
 import { buildThreatPriorityPlan } from "../_lib/threat-priority-plan";
 import type { OwnerSummary } from "../_lib/types";
 import type { RecruitAction } from "../_lib/use-recruit-action";
 import { BulkRecruitPanel } from "./BulkRecruitPanel";
-import { MilitaryTilesList } from "./MilitaryTilesList";
+import { RecruitableTilesList } from "./MilitaryTilesList";
 import { ReportLog } from "./ReportLog";
 import { StatGrid } from "./StatGrid";
 
@@ -63,26 +67,43 @@ export function RecruitView({
     () => tiles.filter((t) => t.type === "military"),
     [tiles]
   );
-  const foodTiles = tiles.filter((t) => t.type === "food");
-  const magicTiles = tiles.filter((t) => t.type === "magic");
+  const foodTiles = useMemo(
+    () => tiles.filter((t) => t.type === "food"),
+    [tiles]
+  );
+  const magicTiles = useMemo(
+    () => tiles.filter((t) => t.type === "magic"),
+    [tiles]
+  );
+  // All tiles where the player can train units. As of the May 2026 rework,
+  // food and magic tiles can recruit (at half the military rate).
+  const recruitableTiles = useMemo(
+    () => [...militaryTiles, ...foodTiles, ...magicTiles],
+    [militaryTiles, foodTiles, magicTiles]
+  );
+  const tilesById = useMemo(() => {
+    const m = new Map<string, MapTile>();
+    for (const t of recruitableTiles) m.set(t.tileId, t);
+    return m;
+  }, [recruitableTiles]);
 
-  // Threat-ranked military-tile ids. Drives the auto-route distribution and
-  // the order tiles appear in the manual-override picker (most exposed at
-  // top is what a player wants to see).
-  const threatRankedMilitaryIds = useMemo(() => {
+  // Threat-ranked recruitable-tile ids. Drives the auto-route distribution
+  // and the order tiles appear in the manual-override picker (most exposed
+  // at top is what a player wants to see).
+  const threatRankedRecruitableIds = useMemo(() => {
     const ownerInfo = new Map<string, ThreatOwnerInfo>();
     for (const [uid, o] of owners) ownerInfo.set(uid, { shielded: o.shielded });
     const threat = computeTileThreat({
-      myTiles: militaryTiles,
+      myTiles: recruitableTiles,
       worldTiles: borderTiles,
       owners: ownerInfo,
       myUserId: player.userId,
     });
     return rankTileIdsByThreat(
-      militaryTiles.map((t) => t.tileId),
+      recruitableTiles.map((t) => t.tileId),
       threat
     );
-  }, [militaryTiles, borderTiles, owners, player.userId]);
+  }, [recruitableTiles, borderTiles, owners, player.userId]);
 
   // Compute the player's current effective unit cap. This mirrors what the
   // server uses inside buildUnitsServer so the displayed numbers match what
@@ -91,28 +112,52 @@ export function RecruitView({
   const unitsAlive = player.stats.unitsAlive ?? 0;
   const availableCap = Math.max(0, cap - unitsAlive);
   const turnsRemaining = player.turnsRemaining;
-  // How many BUILD CYCLES the player can afford right now.
-  const maxCyclesByCap = Math.floor(availableCap / UNITS_PER_CYCLE);
+  // Cap-by-tiles math. Per-cycle yield now varies by tile type, so the
+  // safe upper bound on cycles uses the *minimum* yield (5) — we'd rather
+  // under-predict and let the server cap-stop than ever exceed cap.
+  const maxCyclesByCap = Math.floor(
+    availableCap / MIN_UNITS_PER_CYCLE_RECRUITABLE
+  );
   const maxCyclesByTurns = Math.floor(turnsRemaining / TURNS_PER_CYCLE);
   const maxCycles = Math.min(maxCyclesByCap, maxCyclesByTurns);
-  const maxUnits = maxCycles * UNITS_PER_CYCLE;
 
-  // Final units rounded to a multiple of UNITS_PER_CYCLE and bounded by cap.
-  const effectiveUnits = useMemo(
+  // Project how many actual units a given plan will yield, given each tile's
+  // land type. Used by the input control and the recruit button label.
+  const projectUnits = useMemo(
     () =>
-      Math.max(
-        UNITS_PER_CYCLE,
-        Math.min(
-          maxUnits,
-          Math.floor(requestedUnits / UNITS_PER_CYCLE) * UNITS_PER_CYCLE
-        )
-      ),
-    [maxUnits, requestedUnits]
+      (
+        plan: ReadonlyArray<{ tileId: string; cycles: number }>
+      ): number => {
+        let total = 0;
+        for (const { tileId, cycles } of plan) {
+          const t = tilesById.get(tileId);
+          if (!t) continue;
+          total += cycles * unitsPerCycleForLand(t.type);
+        }
+        return total;
+      },
+    [tilesById]
   );
-  const effectiveCycles = Math.max(
-    0,
-    Math.floor(effectiveUnits / UNITS_PER_CYCLE)
-  );
+
+  // The "max units this session" stat: optimistic projection assuming
+  // auto-route, since that's the likeliest user choice.
+  const maxUnits = useMemo(() => {
+    if (maxCycles === 0) return 0;
+    const plan = buildThreatPriorityPlan(threatRankedRecruitableIds, maxCycles);
+    return projectUnits(plan);
+  }, [maxCycles, threatRankedRecruitableIds, projectUnits]);
+
+  // Convert the user's requested units into a cycle count, then clamp.
+  const effectiveCycles = useMemo(() => {
+    // One cycle costs at least the minimum yield, so divide by that to be
+    // generous with the user's input ("I want at least N units → that many
+    // cycles, clamped to maxCycles"). The actual realized units come back
+    // from projectUnits below.
+    const requestedCycles = Math.floor(
+      requestedUnits / MIN_UNITS_PER_CYCLE_RECRUITABLE
+    );
+    return Math.max(0, Math.min(maxCycles, requestedCycles));
+  }, [requestedUnits, maxCycles]);
 
   // Distribution preview, used to render a transparent "this is where the
   // units are going" line above the recruit button.
@@ -121,19 +166,24 @@ export function RecruitView({
     if (selectedTileId) {
       return [{ tileId: selectedTileId, cycles: effectiveCycles }];
     }
-    return buildThreatPriorityPlan(threatRankedMilitaryIds, effectiveCycles);
-  }, [effectiveCycles, selectedTileId, threatRankedMilitaryIds]);
+    return buildThreatPriorityPlan(threatRankedRecruitableIds, effectiveCycles);
+  }, [effectiveCycles, selectedTileId, threatRankedRecruitableIds]);
+
+  const effectiveUnits = useMemo(
+    () => projectUnits(planPreview),
+    [planPreview, projectUnits]
+  );
 
   const onRecruit = () => {
-    if (militaryTiles.length === 0) {
-      setError("You have no military tiles to recruit from.");
+    if (recruitableTiles.length === 0) {
+      setError("You have no recruitable tiles. Distribute some land first.");
       return;
     }
     void action.handleRecruit({
       unitType,
       totalCycles: effectiveCycles,
       selectedTileId,
-      threatRankedMilitaryIds,
+      threatRankedRecruitableIds,
     });
   };
 
@@ -154,11 +204,13 @@ export function RecruitView({
 
         <div className="rounded-lg border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/10 p-4 mb-6 text-sm leading-relaxed">
           <p>
-            Each recruit cycle trains <strong>{UNITS_PER_CYCLE} units</strong>{" "}
-            of one type on a military tile, costing{" "}
-            <strong>{TURNS_PER_CYCLE} turns</strong>. Bulk recruit fires cycles
-            round-robin across all your military tiles so units distribute
-            evenly. Each cycle rolls a 3% chance for an artifact.
+            Each recruit cycle costs <strong>{TURNS_PER_CYCLE} turns</strong>{" "}
+            and trains units on one of your tiles.{" "}
+            <strong>Military tiles train 10 units/cycle</strong>; food and
+            magic tiles train <strong>5/cycle</strong>. Bulk recruit
+            distributes cycles by threat across your recruitable tiles so
+            exposed lands get reinforced first. Each cycle rolls a 3% chance
+            for an artifact.
           </p>
           <p className="mt-2">
             Your unit cap is set by your <strong>food lands</strong> (+5 cap
@@ -201,8 +253,9 @@ export function RecruitView({
         )}
 
         <BulkRecruitPanel
-          militaryTiles={militaryTiles}
-          threatRankedMilitaryIds={threatRankedMilitaryIds}
+          recruitableTiles={recruitableTiles}
+          threatRankedRecruitableIds={threatRankedRecruitableIds}
+          tilesById={tilesById}
           unitType={unitType}
           setUnitType={setUnitType}
           requestedUnits={requestedUnits}
@@ -218,7 +271,7 @@ export function RecruitView({
           onRecruit={onRecruit}
         />
 
-        <MilitaryTilesList tiles={militaryTiles} />
+        <RecruitableTilesList tiles={recruitableTiles} />
         <ReportLog reports={action.recentReports} />
       </div>
     </div>
