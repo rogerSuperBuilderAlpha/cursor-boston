@@ -10,13 +10,14 @@ import Link from "next/link";
 import { useCallback, useState } from "react";
 import { mayRefresh, mergeTiles as mergeTilesIntoCache } from "@/lib/game/local-map-cache";
 import type { LandType, MapTile } from "@/lib/game/types";
+import { AudienceFilterRow } from "./_components/AudienceFilterRow";
 import { LandTypeFilterRow } from "./_components/LandTypeFilterRow";
 import { MapCanvas } from "./_components/MapCanvas";
 import { MapLegend } from "./_components/MapLegend";
 import { PersonalMapToolbar } from "./_components/PersonalMapToolbar";
 import { ScopeFilterRow } from "./_components/ScopeFilterRow";
 import { TileActionsModal } from "./_components/TileActionsModal";
-import type { ScopeFilter } from "./_lib/types";
+import type { AudienceFilter, ScopeFilter } from "./_lib/types";
 import { usePanZoom } from "./_lib/use-pan-zoom";
 import { useTilesData } from "./_lib/use-tiles-data";
 
@@ -44,6 +45,7 @@ export default function TilesMapPage() {
   const panZoom = usePanZoom();
   const [filter, setFilter] = useState<LandType | "all">("all");
   const [scope, setScope] = useState<ScopeFilter>("everyone");
+  const [audience, setAudience] = useState<AudienceFilter>("all");
   // Tile-actions modal: open when the user clicks a tile. Holds a tileId
   // (not the MapTile itself) so it stays in sync with mutations.
   const [modalTileId, setModalTileId] = useState<string | null>(null);
@@ -77,9 +79,28 @@ export default function TilesMapPage() {
   }
 
   const ownTiles = tiles.filter((t) => t.ownerId === player.userId);
+  // Audience counts by owner (not by tile) — filter dropdown labels show
+  // how many distinct opponents fall in each bucket, since one player
+  // typically owns many tiles.
+  let humanCount = 0;
+  let npcCount = 0;
+  for (const owner of ownersById.values()) {
+    if (owner.userId === player.userId) continue;
+    if (owner.isNpc) npcCount++;
+    else humanCount++;
+  }
   const visibleTiles = tiles.filter((t) => {
     if (scope === "mine" && t.ownerId !== player.userId) return false;
     if (scope === "foreign" && t.ownerId === player.userId) return false;
+    // Audience filter only applies to enemy-owned tiles. Own tiles and
+    // unowned (frontier/wilderness) always pass — hiding either would be
+    // confusing for the player.
+    if (audience !== "all" && t.ownerId && t.ownerId !== player.userId) {
+      const owner = ownersById.get(t.ownerId);
+      const isNpc = owner?.isNpc === true;
+      if (audience === "humans" && isNpc) return false;
+      if (audience === "npcs" && !isNpc) return false;
+    }
     return true;
   });
 
@@ -146,6 +167,13 @@ export default function TilesMapPage() {
           onChange={setScope}
           totalCount={tiles.length}
           ownCount={ownTiles.length}
+        />
+
+        <AudienceFilterRow
+          audience={audience}
+          onChange={setAudience}
+          humanCount={humanCount}
+          npcCount={npcCount}
         />
 
         <LandTypeFilterRow

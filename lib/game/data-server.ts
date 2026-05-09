@@ -493,6 +493,10 @@ export interface OwnerSummary {
   displayName: string;
   caste: Caste | null;
   shielded: boolean;
+  /** True when this player is a seeded NPC. Real humans have the field
+   *  unset on their player doc; we surface explicit `false` for them so
+   *  client-side filters can rely on the boolean. */
+  isNpc: boolean;
 }
 
 // Personal map view: my tiles + the *enemy* tiles that share an edge with
@@ -574,6 +578,7 @@ export async function getMyMapServer(
         displayName: p.displayName ?? "",
         caste: p.caste ?? null,
         shielded: isShieldActive(p, now),
+        isNpc: (p as { isNpc?: boolean }).isNpc === true,
       });
     }
   }
@@ -595,16 +600,18 @@ export async function getAllOwnerSummariesServer(
       "caste",
       "shieldUntil",
       "shieldDropAtTurn",
-      "turnsSpentTotal"
+      "turnsSpentTotal",
+      "isNpc"
     )
     .get();
   return snap.docs.map((d) => {
-    const data = d.data() as GamePlayer;
+    const data = d.data() as GamePlayer & { isNpc?: boolean };
     return {
       userId: data.userId,
       displayName: data.displayName ?? "",
       caste: data.caste ?? null,
       shielded: isShieldActive(data, now),
+      isNpc: data.isNpc === true,
     };
   });
 }

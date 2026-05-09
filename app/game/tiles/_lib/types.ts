@@ -19,7 +19,12 @@ export interface OwnerSummary {
   displayName: string;
   caste: Caste | null;
   shielded: boolean;
+  /** True for seeded NPCs; false for real humans. Used by the audience
+   *  filter on the world map. */
+  isNpc?: boolean;
 }
+
+export type AudienceFilter = "all" | "humans" | "npcs";
 
 export interface MapMeResponse {
   success: boolean;
