@@ -304,6 +304,70 @@ describe("attack", () => {
     expect(out?.intelReport).toEqual(intel);
   });
 
+  it("returns combat + report + targetTile so the row can render BattleReport", async () => {
+    const combat = {
+      outcome: "captured",
+      unitsDeployed: { ground: 5, siege: 0, air: 0 },
+      unitsClampedFromCapacity: 0,
+      attackPower: 100,
+      defensePower: 50,
+      attackerLosses: { ground: 1, siege: 0, air: 0 },
+      defenderLosses: { ground: 4, siege: 2, air: 1 },
+      underdogApplied: false,
+      supplyMultiplier: 1,
+      rng: { attackerRoll: 1.0, defenderRoll: 1.0 },
+      appliedSpells: { offenseId: null, defenseId: null },
+    };
+    const report = { summary: "Captured 3_4", narrative: ["a", "b"] };
+    mockFetchOnce({
+      success: true,
+      attackerPlayer: FAKE_PLAYER,
+      sourceTile: FAKE_TILE,
+      targetTile: FAKE_ENEMY_TILE,
+      attack: { outcome: "victory" },
+      report,
+      combat,
+    });
+    const mut = makeMutators();
+    const out = await attack(
+      makeUser(),
+      {
+        sourceTileId: "1_2",
+        targetTileId: "3_4",
+        units: { ground: 5, siege: 0, air: 0 },
+        offenseSpellId: null,
+      },
+      mut
+    );
+    expect(out?.combat).toEqual(combat);
+    expect(out?.report).toEqual(report);
+    expect(out?.targetTile).toEqual(FAKE_ENEMY_TILE);
+  });
+
+  it("returns combat=null when older server response omits the field", async () => {
+    mockFetchOnce({
+      success: true,
+      attackerPlayer: FAKE_PLAYER,
+      sourceTile: FAKE_TILE,
+      targetTile: FAKE_ENEMY_TILE,
+      attack: { outcome: "victory" },
+      report: { summary: "x" },
+      // intentionally no `combat` field
+    });
+    const mut = makeMutators();
+    const out = await attack(
+      makeUser(),
+      {
+        sourceTileId: "1_2",
+        targetTileId: "3_4",
+        units: { ground: 5, siege: 0, air: 0 },
+        offenseSpellId: null,
+      },
+      mut
+    );
+    expect(out?.combat).toBeNull();
+  });
+
   it("returns null on failure", async () => {
     mockFetchOnce({ success: false, error: "no border" });
     const mut = makeMutators();

@@ -56,6 +56,7 @@ import {
 import type {
   ArtifactDefinition,
   Caste,
+  CombatResult,
   GameArtifact,
   GameAttack,
   GamePlayer,
@@ -1882,6 +1883,10 @@ export async function attackTileServer(args: {
   sourceTile: GameTile;
   targetTile: GameTile;
   report: TurnReport;
+  // Full combat resolution result. Already feeds buildAttackReport; we surface
+  // it on the response too so the client can render Forces / Losses /
+  // Modifiers / Narrative without re-deriving from outcome alone.
+  combat: CombatResult;
   artifact: GameArtifact | null;
   // Set when the attacker's air-unit intel passive triggered a post-attack
   // reveal. Currently produced for Blue Sky Reader (air > defender air → ring
@@ -2204,6 +2209,11 @@ export async function attackTileServer(args: {
         updatedAt: now,
       },
       report,
+      // Full CombatResult so the client can render a structured battle
+      // readout (RNG rolls, supply ×, applied spells, intel passive flags,
+      // per-unit-type loss breakdowns). Already feeds buildAttackReport;
+      // we just expose it on the response too.
+      combat: result,
       artifact: rolled?.doc ?? null,
       // Snapshot for post-txn air-intel reveals.
       _airIntelContext: {
