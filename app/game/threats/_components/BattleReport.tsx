@@ -20,8 +20,11 @@ export interface BattleReportProps {
   /** The TurnReport produced by the same attack — used for the prose
    *  narrative and the cost-in-turns banner. */
   report: TurnReport;
-  /** Post-combat enemy tile state. We derive defender pre-attack units as
-   *  `targetTile.units + combat.defenderLosses`. */
+  /** Post-combat enemy tile state. For repelled/stalemate we derive defender
+   *  pre-attack units as `targetTile.units + combat.defenderLosses`. For a
+   *  captured tile, `targetTile.units` is the attacker's survivors so we
+   *  fall back to `combat.defenderLosses` directly (which combat.ts sets to
+   *  the defender's full pre-attack stack on capture). */
   targetTile: GameTile;
   /** Click-to-dismiss handler. The card persists until cleared (or the
    *  next attack on the same row overwrites it). */
@@ -64,7 +67,10 @@ export function BattleReport({
   targetTile,
   onDismiss,
 }: BattleReportProps) {
-  const defenderPreAttack = addStacks(targetTile.units, combat.defenderLosses);
+  const defenderPreAttack =
+    combat.outcome === "captured"
+      ? combat.defenderLosses
+      : addStacks(targetTile.units, combat.defenderLosses);
   const sent = combat.unitsDeployed;
   const sentTotal = totalUnits(sent);
   const defenderHadTotal = totalUnits(defenderPreAttack);
