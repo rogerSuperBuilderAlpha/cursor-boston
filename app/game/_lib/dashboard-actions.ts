@@ -8,6 +8,7 @@
 
 import type { User } from "firebase/auth";
 import type {
+  CombatResult,
   GameArtifact,
   GamePlayer,
   GameTile,
@@ -321,6 +322,11 @@ export async function attack(
   outcome: string;
   reportSummary: string;
   intelReport: IntelReport | null;
+  combat: CombatResult | null;
+  report: TurnReport | null;
+  /** Post-combat enemy tile state — used by BattleReport to derive
+   *  defender pre-attack units = `targetTile.units + combat.defenderLosses`. */
+  targetTile: GameTile | null;
 } | null> {
   mut.setError(null);
   try {
@@ -360,6 +366,9 @@ export async function attack(
       reportSummary:
         (data.report as { summary?: string } | undefined)?.summary ?? "",
       intelReport: (data.intelReport as IntelReport | undefined) ?? null,
+      combat: (data.combat as CombatResult | undefined) ?? null,
+      report: (data.report as TurnReport | undefined) ?? null,
+      targetTile: (data.targetTile as GameTile | undefined) ?? null,
     };
   } catch (e) {
     mut.setError(e instanceof Error ? e.message : "Attack failed");
