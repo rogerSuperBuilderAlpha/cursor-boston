@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
       sourceTile: result.sourceTile,
       targetTile: result.targetTile,
       report: result.report,
+      combat: result.combat,
       ...(result.intelReport ? { intelReport: result.intelReport } : {}),
     });
   } catch (error) {

@@ -130,6 +130,43 @@ const TurnReportSchema = z
       "Per-action turn report. Shape varies by action type — see `lib/game/turn-report.ts` for the discriminated union.",
   });
 
+// Mirrors `CombatResult` from `lib/game/types.ts`. Returned alongside the
+// TurnReport on attack responses so the client can render a structured
+// battle readout (RNG rolls, supply ×, applied spells, intel-passive flags,
+// per-unit-type loss breakdowns). Optional on the response so older clients
+// that ignore it remain compatible.
+const CombatResultSchema = z
+  .object({
+    outcome: z.string(),
+    unitsDeployed: UnitStackSchema,
+    unitsClampedFromCapacity: z.number().int().nonnegative(),
+    attackPower: z.number(),
+    defensePower: z.number(),
+    attackerLosses: UnitStackSchema,
+    defenderLosses: UnitStackSchema,
+    underdogApplied: z.boolean(),
+    supplyMultiplier: z.number(),
+    rng: z.object({
+      attackerRoll: z.number(),
+      defenderRoll: z.number(),
+    }),
+    appliedSpells: z.object({
+      offenseId: z.string().nullable(),
+      defenseId: z.string().nullable(),
+    }),
+    airIntel: z
+      .object({
+        sourcePassive: z.string(),
+        defenseSpellTier: z.number().int().optional(),
+        weakFace: UnitTypeEnum.optional(),
+        forgeScoutsBonusApplied: z.boolean().optional(),
+      })
+      .passthrough()
+      .optional(),
+  })
+  .passthrough()
+  .openapi("GameCombatResult");
+
 // ──────────────────── Common response wrappers ────────────────────
 
 const PlayerOkResponse = z.object({
@@ -700,6 +737,7 @@ export const gameContract = c.router(
           sourceTile: GameTileSchema,
           targetTile: GameTileSchema,
           report: TurnReportSchema,
+          combat: CombatResultSchema.optional(),
           intelReport: z.object({}).passthrough().optional(),
         }),
         ...actionErrorResponses,

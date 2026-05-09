@@ -9,14 +9,18 @@
 import { useMemo, useState } from "react";
 import { ARTIFACTS_BY_ID, getSpellsForCasteAndType } from "@/lib/game/content";
 import type {
+  CombatResult,
   GameArtifact,
   GamePlayer,
+  GameTile,
   IntelReport,
   LandType,
   SpellDefinition,
+  TurnReport,
   UnitType,
 } from "@/lib/game/types";
 import type { ThreatEntry } from "../_lib/threats-derive";
+import { BattleReport } from "./BattleReport";
 
 const UNIT_TYPES: UnitType[] = ["ground", "siege", "air"];
 const LAND_TYPES: { type: LandType; label: string }[] = [
@@ -40,6 +44,9 @@ export interface ThreatRowProps {
     outcome: string;
     reportSummary: string;
     intelReport: IntelReport | null;
+    combat: CombatResult | null;
+    report: TurnReport | null;
+    targetTile: GameTile | null;
   } | null>;
   onCastIntelSpell: (
     spellId: string,
@@ -82,6 +89,14 @@ export function ThreatRow(props: ThreatRowProps) {
   const [offenseSpellId, setOffenseSpellId] = useState<string>("");
   const [toast, setToast] = useState<string | null>(null);
   const [intelReport, setIntelReport] = useState<IntelReport | null>(null);
+  // Structured battle readout shown after an attack lands. Replaces the
+  // plain toast for attack actions; non-attack actions (recruit, arm, etc.)
+  // still use the toast.
+  const [battle, setBattle] = useState<{
+    combat: CombatResult;
+    report: TurnReport;
+    targetTile: GameTile;
+  } | null>(null);
 
   const source =
     entry.candidateSources.find((t) => t.tileId === sourceTileId) ??
@@ -125,6 +140,7 @@ export function ThreatRow(props: ThreatRowProps) {
 
   async function handleAttack() {
     setToast(null);
+    setBattle(null);
     const res = await props.onAttack({
       sourceTileId: source.tileId,
       targetTileId: entry.enemyTile.tileId,
@@ -132,7 +148,18 @@ export function ThreatRow(props: ThreatRowProps) {
       offenseSpellId: offenseSpellId || null,
     });
     if (res) {
-      setToast(res.reportSummary || `Attack ${res.outcome}`);
+      // If we have full combat detail + report + post-combat tile, render
+      // the structured battle card. Otherwise (older server response) fall
+      // back to a one-line toast.
+      if (res.combat && res.report && res.targetTile) {
+        setBattle({
+          combat: res.combat,
+          report: res.report,
+          targetTile: res.targetTile,
+        });
+      } else {
+        setToast(res.reportSummary || `Attack ${res.outcome}`);
+      }
       setGround(0);
       setSiege(0);
       setAir(0);
@@ -228,6 +255,61 @@ export function ThreatRow(props: ThreatRowProps) {
         </span>
       </div>
 
+      {/* ─── Source prep strip — always visible (assign + recruit) ──────── */}
+      <div className="px-4 pb-2 space-y-1.5">
+        {/* Assign land type */}
+        <div className="flex flex-wrap items-center gap-1.5 text-xs">
+          <span className="text-neutral-500 mr-1">Assign source · 1t:</span>
+          {LAND_TYPES.map((a) => {
+            const isCurrent = source.type === a.type;
+            const cantSpend = player.turnsRemaining < 1;
+            const reason = isCurrent
+              ? `Already ${a.label.toLowerCase()}`
+              : cantSpend
+                ? "Need 1 turn"
+                : null;
+            return (
+              <button
+                key={a.type}
+                onClick={() => handleAssign(a.type)}
+                disabled={busy || reason !== null}
+                title={reason ?? `Set source to ${a.label.toLowerCase()}`}
+                className={`px-2 py-1 rounded border ${
+                  isCurrent
+                    ? "border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300"
+                    : "border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                } disabled:opacity-50`}
+              >
+                {a.label}
+              </button>
+            );
+          })}
+        </div>
+        {/* Recruit */}
+        <div className="flex flex-wrap items-center gap-1.5 text-xs">
+          <span className="text-neutral-500 mr-1">Recruit · 5t:</span>
+          {UNIT_TYPES.map((u) => {
+            const reason =
+              source.type !== "military"
+                ? "Tile is not military — assign first"
+                : player.turnsRemaining < 5
+                  ? "Need 5 turns"
+                  : null;
+            return (
+              <button
+                key={u}
+                onClick={() => handleRecruit(u)}
+                disabled={busy || reason !== null}
+                title={reason ?? `Recruit +10 ${u} on source`}
+                className="px-2 py-1 rounded border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 disabled:opacity-50 capitalize"
+              >
+                +10 {u}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* ─── Inline attack form (visible always) ─────────────────────────── */}
       <div className="px-4 pb-3 grid gap-2 md:grid-cols-[minmax(0,1fr)_auto]">
         <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto_auto_minmax(0,1fr)] items-end">
@@ -294,7 +376,19 @@ export function ThreatRow(props: ThreatRowProps) {
         </div>
       )}
 
-      {/* ─── Toast (last action result) ──────────────────────────────────── */}
+      {/* ─── Battle report (full structured readout after an attack) ─────── */}
+      {battle && (
+        <div className="mx-4 mb-3">
+          <BattleReport
+            combat={battle.combat}
+            report={battle.report}
+            targetTile={battle.targetTile}
+            onDismiss={() => setBattle(null)}
+          />
+        </div>
+      )}
+
+      {/* ─── Toast (one-line result for non-attack actions) ──────────────── */}
       {toast && (
         <div className="mx-4 mb-3 px-3 py-2 rounded bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 text-xs text-emerald-800 dark:text-emerald-200 flex items-center justify-between gap-2">
           <span>{toast}</span>
@@ -383,73 +477,14 @@ export function ThreatRow(props: ThreatRowProps) {
             </section>
           )}
 
-          {/* Manage source tile */}
+          {/* Manage source tile — defense-side only.
+              Assign + recruit live in the always-visible strip up top. */}
           <section>
             <h3 className="text-xs uppercase tracking-wide text-neutral-500 mb-2">
-              Manage source · {source.tileId} ({source.type})
+              Defend source · {source.tileId} ({source.type})
             </h3>
 
             <div className="space-y-3">
-              {/* Land type buttons */}
-              <div>
-                <p className="text-xs text-neutral-500 mb-1">Assign — 1 turn</p>
-                <div className="flex flex-wrap gap-2">
-                  {LAND_TYPES.map((a) => {
-                    const isCurrent = source.type === a.type;
-                    const cantSpend = player.turnsRemaining < 1;
-                    return (
-                      <button
-                        key={a.type}
-                        onClick={() => handleAssign(a.type)}
-                        disabled={busy || isCurrent || cantSpend}
-                        title={
-                          isCurrent
-                            ? "Current type"
-                            : cantSpend
-                              ? "Need 1 turn"
-                              : `Set tile to ${a.label.toLowerCase()}`
-                        }
-                        className={`px-3 py-1.5 text-xs rounded border ${
-                          isCurrent
-                            ? "border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 cursor-default"
-                            : "border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                        } disabled:opacity-50`}
-                      >
-                        {a.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Recruit */}
-              <div>
-                <p className="text-xs text-neutral-500 mb-1">
-                  Recruit — +10 / 5 turns (military tiles only)
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {UNIT_TYPES.map((u) => {
-                    const reason =
-                      source.type !== "military"
-                        ? "Tile is not military"
-                        : player.turnsRemaining < 5
-                          ? "Need 5 turns"
-                          : null;
-                    return (
-                      <button
-                        key={u}
-                        onClick={() => handleRecruit(u)}
-                        disabled={busy || reason !== null}
-                        title={reason ?? `Recruit +10 ${u}`}
-                        className="px-3 py-1.5 text-xs rounded border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 disabled:opacity-50 capitalize"
-                      >
-                        +10 {u}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
               {/* Arm defense spell */}
               {defenseSpells.length > 0 && (
                 <div>
