@@ -357,6 +357,10 @@ export function useDashboardData() {
     loading,
     creating,
     error,
+    // Refetch player + tiles. Used by surfaces (e.g. the onboarding
+    // wizard) that drive setup endpoints which don't patch local state
+    // through the existing per-action mutators.
+    refresh: fetchPlayer,
     exploring,
     exploreCount,
     setExploreCount,

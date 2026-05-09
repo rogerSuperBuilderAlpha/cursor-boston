@@ -644,6 +644,23 @@ export const gameContract = c.router(
         ] as const,
       },
     },
+    changeCaste: {
+      method: "POST",
+      path: "/api/game/caste/change",
+      summary: "Switch castes (one-time, after reaching 1000 tiles)",
+      description:
+        "Allows a single permanent caste change once `stats.tilesHeld >= 1000`. The first caste pick is treated as experimental; this endpoint flips the player to a new caste and increments `casteChangesUsed` to 1. Subsequent attempts return CONFLICT.",
+      body: SetupCasteBody,
+      responses: { 200: PlayerOkResponse, ...actionErrorResponses },
+      metadata: {
+        errorCodes: [
+          "UNAUTHORIZED",
+          "VALIDATION_ERROR",
+          "CONFLICT",
+          "SERVER_ERROR",
+        ] as const,
+      },
+    },
     setupDistribute: {
       method: "POST",
       path: "/api/game/setup/distribute",

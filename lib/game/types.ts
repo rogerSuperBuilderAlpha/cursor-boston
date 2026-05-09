@@ -176,6 +176,12 @@ export interface GamePlayer {
   displayName: string;
   caste: Caste | null;
   casteLockedAt?: Timestamp | Date;
+  // Number of times the player has changed castes after the initial pick.
+  // The first caste pick (chooseCasteServer) does not increment this.
+  // Players can change once after reaching `stats.tilesHeld >= 1000`; that
+  // change increments to 1 and locks caste permanently. Optional on the
+  // type so existing player docs parse without backfill (treated as 0).
+  casteChangesUsed?: number;
   turnsRemaining: number;
   turnsSpentTotal: number;
   phase: Phase;

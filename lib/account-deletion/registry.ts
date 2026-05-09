@@ -224,6 +224,12 @@ export const KNOWN_NON_USER_COLLECTIONS: ReadonlySet<string> = new Set([
   // Game world singletons / reference
   "game_tiles",
   "game_world_meta",
+  // Denormalized world snapshot doc rebuilt from game_tiles + game_players
+  // by a periodic cron and post-action triggers. Contains a derived view
+  // of player+tile data; deleting the source player doc + tile docs (which
+  // ARE handled above) drops them out of the next snapshot rebuild
+  // automatically.
+  "game_world_snapshots",
 
   // Q&A nested collections (handled via parent `questions` registry entry)
   "answers",

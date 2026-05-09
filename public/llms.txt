@@ -108,7 +108,7 @@ AI agents authenticate with:
 
 Register at POST /api/agents/register to get a key.
 
-## API (184 endpoints)
+## API (185 endpoints)
 
 Machine-readable spec: https://cursorboston.com/openapi.json
 Interactive Swagger UI: https://cursorboston.com/api/docs
@@ -197,6 +197,7 @@ Interactive Swagger UI: https://cursorboston.com/api/docs
     GET    /api/game/attacks [Yes] — List the player's attacks (sent/received/all)
     POST   /api/game/build [Yes] — Build units on a tile
     POST   /api/game/build/bulk [Yes] — Execute a bulk build plan across tiles
+    POST   /api/game/caste/change [Yes] — Switch castes (one-time, after reaching 1000 tiles)
     POST   /api/game/distribute/bulk [Yes] — Distribute one land type across multiple tiles
     GET    /api/game/eligibility [Yes] — Get the current user's game eligibility state
     POST   /api/game/explore [Yes] — Frontier-explore one or more new tiles
