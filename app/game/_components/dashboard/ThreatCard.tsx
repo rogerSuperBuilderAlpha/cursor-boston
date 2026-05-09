@@ -6,11 +6,28 @@
 
 "use client";
 
+import Link from "next/link";
 import type { ThreatSummary } from "../../_lib/dashboard-types";
 
 interface ThreatCardProps {
   threats: ThreatSummary;
   shielded: boolean;
+}
+
+/**
+ * Link the player from the threat callout into the consolidated Threats
+ * action hub at /game/threats. Rendered only when there's actually
+ * something on the border (skipped on the empty + shielded variants).
+ */
+function ViewAllThreatsLink() {
+  return (
+    <Link
+      href="/game/threats"
+      className="block text-xs text-emerald-600 dark:text-emerald-400 hover:underline mt-2"
+    >
+      View all threats →
+    </Link>
+  );
 }
 
 /**
@@ -87,6 +104,7 @@ export function ThreatCard({ threats, shielded }: ThreatCardProps) {
           shielded
         </div>
       )}
+      <ViewAllThreatsLink />
     </div>
   );
 }

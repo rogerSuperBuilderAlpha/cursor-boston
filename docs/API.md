@@ -8,7 +8,7 @@
 
 All endpoints are under `/api/`. Authentication uses Firebase Auth ID tokens (Bearer) or session cookies. Spec: [`/openapi.json`](https://cursorboston.com/openapi.json) · interactive: [`/api/docs`](https://cursorboston.com/api/docs).
 
-**142 paths, 175 operations across 31 areas.**
+**144 paths, 177 operations across 31 areas.**
 
 ---
 
@@ -143,6 +143,7 @@ _Strategy game endpoints (leaderboard, attacks, artifacts, turns)._
 | GET | `/api/game/eligibility` | Yes | Get the current user's game eligibility state |
 | POST | `/api/game/explore` | Yes | Frontier-explore one or more new tiles |
 | POST | `/api/game/explore/bulk` | Yes | Bulk frontier-explore (count required) |
+| POST | `/api/game/explore/far` | Yes | Spend 2 turns to plant a tile adjacent to a random enemy tile (Far Expedition). |
 | GET | `/api/game/leaderboard` | Yes | Get the leaderboard ranked by tiles held |
 | GET | `/api/game/map/me` | Yes | Get the current user's personal map view (own tiles + enemy ring) |
 | POST | `/api/game/npc-weekly` | No | Cron-only weekly NPC turn-spender |
@@ -155,6 +156,7 @@ _Strategy game endpoints (leaderboard, attacks, artifacts, turns)._
 | POST | `/api/game/setup/explore` | Yes | Frontier-explore tiles during onboarding |
 | POST | `/api/game/spell/arm` | Yes | Arm a defense spell on one tile (single) or many (bulk) |
 | POST | `/api/game/spell/produce` | Yes | Cast a production spell (with optional batch count) |
+| POST | `/api/game/spy` | Yes | Cast an intel ('spy') spell on an enemy tile. |
 | GET | `/api/game/tile/{tileId}` | Yes | Get a single tile by id |
 | POST | `/api/game/upgrades/apply` | Yes | Apply an upgrade to a target |
 | POST | `/api/game/upgrades/remove` | Yes | Remove an upgrade from a target |

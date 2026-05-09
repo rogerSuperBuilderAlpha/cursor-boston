@@ -7,8 +7,9 @@
 "use client";
 
 import { useState } from "react";
-import { ALL_SPELLS } from "@/lib/game/content";
+import { ALL_SPELLS, ARTIFACTS_BY_ID } from "@/lib/game/content";
 import type {
+  GameArtifact,
   GamePlayer,
   LandType,
   MapTile,
@@ -37,19 +38,27 @@ export function OwnTilePanel({
   tile,
   player,
   myDefenseSpells,
+  artifacts = [],
   busy,
   onBuild,
   onArmSpell,
   onAssign,
+  onUseArtifact,
 }: {
   tile: MapTile;
   player: GamePlayer;
   myDefenseSpells: SpellDefinition[];
+  /** Unused artifacts only — pass [] to hide the artifacts section. */
+  artifacts?: ReadonlyArray<GameArtifact>;
   busy: boolean;
   onBuild: (unitType: UnitType) => void;
   onArmSpell: (spellId: string) => void;
   onAssign: (newType: LandType) => void;
+  /** Wires up to /api/game/artifact/use for defense artifacts. Optional —
+   *  panel hides the artifact section when not provided. */
+  onUseArtifact?: (artifactId: string) => void;
 }) {
+  const defensiveArtifacts = artifacts.filter((a) => a.type === "defense");
   const canBuild =
     player.phase === "play" &&
     tile.type === "military" &&
@@ -176,6 +185,39 @@ export function OwnTilePanel({
           </div>
         )}
       </section>
+
+      {onUseArtifact && (
+        <section>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500 mb-2">
+            Defense artifacts{" "}
+            <span className="text-neutral-400 normal-case font-normal">
+              — apply to this tile
+            </span>
+          </h2>
+          {defensiveArtifacts.length === 0 ? (
+            <p className="text-sm text-neutral-500">
+              No unused defense artifacts in inventory.
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {defensiveArtifacts.map((a) => {
+                const def = ARTIFACTS_BY_ID.get(a.definitionId);
+                return (
+                  <button
+                    key={a.id}
+                    onClick={() => onUseArtifact(a.id)}
+                    disabled={busy || tile.type === "unrevealed"}
+                    title={def?.description ?? a.definitionId}
+                    className="px-3 py-1.5 text-sm border border-blue-300 dark:border-blue-700 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors disabled:opacity-50"
+                  >
+                    Use {def?.name ?? a.definitionId}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
     </div>
   );
 }
@@ -184,13 +226,17 @@ export function EnemyTilePanel({
   tile,
   player,
   ownedTiles,
+  artifacts = [],
   busy,
   onAttack,
   onSpy,
+  onUseArtifact,
 }: {
   tile: MapTile;
   player: GamePlayer;
   ownedTiles: MapTile[];
+  /** Unused artifacts only — pass [] to hide artifact-use sections. */
+  artifacts?: ReadonlyArray<GameArtifact>;
   busy: boolean;
   onAttack: (
     sourceTileId: string,
@@ -200,7 +246,12 @@ export function EnemyTilePanel({
   // Optional: when present, renders a Spy section that casts the player's
   // caste intel spell on this tile. Wires straight to /api/game/spy.
   onSpy?: (spellId: string) => void;
+  /** Wires up to /api/game/artifact/use for offense + intel artifacts.
+   *  When present, panel renders sections for each artifact category. */
+  onUseArtifact?: (artifactId: string) => void;
 }) {
+  const offensiveArtifacts = artifacts.filter((a) => a.type === "offense");
+  const intelArtifacts = artifacts.filter((a) => a.type === "intel");
   const targetBorders = new Set(neighborTileIds(tile.q, tile.r));
   const myBorders = ownedTiles.filter((t) => targetBorders.has(t.tileId));
   const myCaste = player.caste;
@@ -241,6 +292,56 @@ export function EnemyTilePanel({
     player.phase === "play" &&
     player.turnsRemaining >= 1 + (offenseSpellId ? 5 : 0);
 
+  const offenseArtifactSection =
+    onUseArtifact && offensiveArtifacts.length > 0 ? (
+      <div className="rounded-lg border border-red-200 dark:border-red-900 bg-red-50/50 dark:bg-red-950/20 p-4 space-y-2">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-red-700 dark:text-red-300">
+          Offensive artifacts
+        </h2>
+        <div className="flex flex-wrap gap-2">
+          {offensiveArtifacts.map((a) => {
+            const def = ARTIFACTS_BY_ID.get(a.definitionId);
+            return (
+              <button
+                key={a.id}
+                onClick={() => onUseArtifact(a.id)}
+                disabled={busy}
+                title={def?.description ?? a.definitionId}
+                className="px-3 py-1.5 text-sm border border-red-300 dark:border-red-700 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors disabled:opacity-50"
+              >
+                Use {def?.name ?? a.definitionId}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    ) : null;
+
+  const intelArtifactSection =
+    onUseArtifact && intelArtifacts.length > 0 ? (
+      <div className="rounded-lg border border-violet-200 dark:border-violet-900 bg-violet-50/50 dark:bg-violet-950/20 p-4 space-y-2">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
+          Intel artifacts
+        </h2>
+        <div className="flex flex-wrap gap-2">
+          {intelArtifacts.map((a) => {
+            const def = ARTIFACTS_BY_ID.get(a.definitionId);
+            return (
+              <button
+                key={a.id}
+                onClick={() => onUseArtifact(a.id)}
+                disabled={busy}
+                title={def?.description ?? a.definitionId}
+                className="px-3 py-1.5 text-sm border border-violet-300 dark:border-violet-700 rounded-lg hover:bg-violet-100 dark:hover:bg-violet-900/30 transition-colors disabled:opacity-50"
+              >
+                Use {def?.name ?? a.definitionId}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    ) : null;
+
   const spySection = onSpy && intelSpell ? (
     <div className="rounded-lg border border-violet-200 dark:border-violet-900 bg-violet-50/50 dark:bg-violet-950/20 p-4 space-y-2">
       <h2 className="text-sm font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
@@ -277,6 +378,7 @@ export function EnemyTilePanel({
           {onSpy && intelSpell ? " You can still spy on it from anywhere." : ""}
         </div>
         {spySection}
+        {intelArtifactSection}
       </div>
     );
   }
@@ -358,7 +460,9 @@ export function EnemyTilePanel({
         </button>
       </div>
 
+      {offenseArtifactSection}
       {spySection}
+      {intelArtifactSection}
     </div>
   );
 }
