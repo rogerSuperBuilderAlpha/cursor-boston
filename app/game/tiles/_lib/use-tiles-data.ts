@@ -8,10 +8,13 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useWorldSnapshotListener } from "@/app/game/_lib/use-world-snapshot-listener";
+import { neighborTileIds } from "@/lib/game/world-gen";
 import {
   loadCachedMap,
   saveCachedMap,
   type CachedMapView,
+  type CachedOwnerSummary,
 } from "@/lib/game/local-map-cache";
 import type { GamePlayer, MapTile } from "@/lib/game/types";
 import type {
@@ -126,6 +129,88 @@ export function useTilesData() {
     return () => clearInterval(id);
   }, [cachedView]);
 
+  // Real-time push from `game_world_snapshots/latest`. The listener
+  // auto-detaches when the tab is hidden or the user is idle for 5 min
+  // (see use-world-snapshot-listener.ts) so a long-open background tab
+  // doesn't keep billing reads for cron-rebuild deliveries.
+  const live = useWorldSnapshotListener({ enabled: !!user });
+
+  // When the listener delivers a fresh snapshot, refresh both the
+  // personal cache (derived from the snapshot via the same logic the
+  // server's deriveMyMapFromSnapshot uses) and the world view. Server
+  // gating ensures the doc only changes when game state actually
+  // changed, so each delivery is a meaningful update — no spurious
+  // cache thrash.
+  //
+  // The setCachedView/setWorldView calls inside this effect are the
+  // canonical "subscribe to external system, mirror into local state"
+  // pattern from the React docs — the lint rule flags it conservatively
+  // because it can't see past the upstream listener.
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    if (!user) return;
+    if (!live.snapshot) return;
+    const snap = live.snapshot;
+
+    // Personal-mode derivation: my tiles + the enemy ring touching my
+    // borders + owner summaries for those enemies.
+    const tilesById = new Map<string, MapTile>();
+    for (const t of snap.tiles) tilesById.set(t.tileId, t);
+    const myTiles = snap.tiles.filter((t) => t.ownerId === user.uid);
+    const myIds = new Set(myTiles.map((t) => t.tileId));
+    const borderTiles: MapTile[] = [];
+    const enemyOwnerIds = new Set<string>();
+    const seen = new Set<string>();
+    for (const t of myTiles) {
+      for (const nid of neighborTileIds(t.q, t.r)) {
+        if (myIds.has(nid)) continue;
+        if (seen.has(nid)) continue;
+        seen.add(nid);
+        const neighbor = tilesById.get(nid);
+        if (!neighbor) continue;
+        if (!neighbor.ownerId || neighbor.ownerId === user.uid) continue;
+        borderTiles.push(neighbor);
+        enemyOwnerIds.add(neighbor.ownerId);
+      }
+    }
+    const cachedOwners: CachedOwnerSummary[] = [];
+    for (const o of snap.owners) {
+      if (enemyOwnerIds.has(o.userId)) {
+        cachedOwners.push({
+          userId: o.userId,
+          displayName: o.displayName,
+          caste: o.caste,
+          shielded: o.shielded,
+          isNpc: o.isNpc,
+        });
+      }
+    }
+    const view: CachedMapView = {
+      myTiles,
+      borderTiles,
+      owners: cachedOwners,
+      lastFetchedAt: Date.now(),
+    };
+    saveCachedMap(user.uid, view);
+    setCachedView(view);
+
+    // World view stays in sync too — when the user toggles to 🌐 it's
+    // already ready, no extra HTTP fetch needed.
+    setWorldView({
+      tiles: snap.tiles,
+      owners: snap.owners.map((o) => ({
+        userId: o.userId,
+        displayName: o.displayName,
+        caste: o.caste,
+        shielded: o.shielded,
+        isNpc: o.isNpc,
+      })),
+    });
+    // Listener supplied data; no need to leave the loading skeleton up.
+    setLoading(false);
+  }, [live.snapshot, user]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
   // Whole-world snapshot for the 🌐 button. Lazy: only runs when the user
   // explicitly switches modes. Surfaces fetch errors inline so a failed
   // request doesn't silently look like an empty world.
@@ -205,6 +290,7 @@ export function useTilesData() {
     ownersById,
     refreshPersonalMap,
     fetchWorldOnce,
+    liveConnected: live.connected,
   };
 }
 

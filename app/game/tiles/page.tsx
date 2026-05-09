@@ -40,6 +40,7 @@ export default function TilesMapPage() {
     ownersById,
     refreshPersonalMap,
     fetchWorldOnce,
+    liveConnected,
   } = data;
 
   const panZoom = usePanZoom();
@@ -160,6 +161,7 @@ export default function TilesMapPage() {
             if (cachedView && !mayRefresh(cachedView)) return;
             void refreshPersonalMap();
           }}
+          liveConnected={liveConnected}
         />
 
         <ScopeFilterRow

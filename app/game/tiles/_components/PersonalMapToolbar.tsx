@@ -18,6 +18,10 @@ interface Props {
   cachedView: CachedMapView | null;
   refreshing: boolean;
   onRefresh: () => void;
+  /** True while the live snapshot listener is attached. False when
+   *  detached due to tab-hidden / idle / no Web SDK. Surfaced so the
+   *  player can see whether their map is updating in real time. */
+  liveConnected?: boolean;
 }
 
 export function PersonalMapToolbar({
@@ -26,6 +30,7 @@ export function PersonalMapToolbar({
   cachedView,
   refreshing,
   onRefresh,
+  liveConnected,
 }: Props) {
   const ms = msUntilRefresh(cachedView);
   const allowed = ms === 0;
@@ -88,6 +93,28 @@ export function PersonalMapToolbar({
             </span>
           )}
         </>
+      )}
+      {liveConnected !== undefined && (
+        <span
+          className={`ml-auto inline-flex items-center gap-1.5 text-xs ${
+            liveConnected
+              ? "text-emerald-600 dark:text-emerald-400"
+              : "text-neutral-400"
+          }`}
+          title={
+            liveConnected
+              ? "Live updates on — map refreshes automatically when the world changes"
+              : "Live updates paused (tab idle or hidden) — will resume on activity"
+          }
+        >
+          <span
+            className={`inline-block h-2 w-2 rounded-full ${
+              liveConnected ? "bg-emerald-500 animate-pulse" : "bg-neutral-400"
+            }`}
+            aria-hidden="true"
+          />
+          {liveConnected ? "Live" : "Paused"}
+        </span>
       )}
     </div>
   );

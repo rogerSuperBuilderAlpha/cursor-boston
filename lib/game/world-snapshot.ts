@@ -123,14 +123,81 @@ export async function computeWorldSnapshot(
   };
 }
 
-// Reads + writes the snapshot doc. Idempotent. Logs the size so we can
-// monitor when we approach the 1MB Firestore doc limit (will need
-// sharding around ~12K tiles — see comment at end of file).
+// Cheap pre-check: are there any tile or player writes since the current
+// snapshot's `generatedAt`? Both queries are `.where(...).limit(1)` so
+// each costs at most 1 Firestore read (Firestore charges 1 read for an
+// empty result set). Skipping the rebuild on a no-op cron tick saves
+// ~3K reads — at 12 ticks/hr that's the dominant cost in the system.
+async function worldHasChangedSince(
+  db: Firestore,
+  since: Date
+): Promise<boolean> {
+  const [tilesSnap, playersSnap] = await Promise.all([
+    db
+      .collection("game_tiles")
+      .where("updatedAt", ">", since)
+      .limit(1)
+      .get(),
+    db
+      .collection("game_players")
+      .where("updatedAt", ">", since)
+      .limit(1)
+      .get(),
+  ]);
+  return !tilesSnap.empty || !playersSnap.empty;
+}
+
+// Reads + writes the snapshot doc. Idempotent. Skips the (~3K-read)
+// recompute when no game_tiles or game_players have been updated since
+// the existing snapshot's generatedAt — the cron fires every 5 minutes
+// and most ticks have nothing to do. Logs the size so we can monitor
+// when we approach the 1MB Firestore doc limit (will need sharding
+// around ~12K tiles — see comment at end of file).
+//
+// Pass `force: true` to rebuild unconditionally (used by the post-action
+// freshness path so a player's own attack capture is reflected on the
+// map without waiting for the next cron tick).
 export async function rebuildWorldSnapshotServer(
-  now: Date = new Date()
-): Promise<{ tileCount: number; ownerCount: number; bytes: number }> {
+  now: Date = new Date(),
+  opts: { force?: boolean } = {}
+): Promise<{
+  tileCount: number;
+  ownerCount: number;
+  bytes: number;
+  skipped: boolean;
+}> {
   const db = getAdminDb();
   if (!db) throw new Error("Firebase Admin not initialized");
+
+  // Cheap gate — only check when we have a previous snapshot to compare
+  // against. Empty-snapshot case (first deploy) falls through to rebuild.
+  if (!opts.force) {
+    const ref = db
+      .collection(WORLD_SNAPSHOT_COLLECTION)
+      .doc(WORLD_SNAPSHOT_DOC);
+    const existing = await ref.get();
+    if (existing.exists) {
+      const data = existing.data() as StoredWorldSnapshot;
+      const generatedAt =
+        data.generatedAt instanceof Date
+          ? data.generatedAt
+          : (data.generatedAt as FirebaseFirestore.Timestamp).toDate();
+      const changed = await worldHasChangedSince(db, generatedAt);
+      if (!changed) {
+        logger.info("Game world snapshot rebuild skipped — no changes", {
+          lastGeneratedAt: generatedAt.toISOString(),
+          tileCount: data.tileCount,
+          ownerCount: data.ownerCount,
+        });
+        return {
+          tileCount: data.tileCount ?? 0,
+          ownerCount: data.ownerCount ?? 0,
+          bytes: 0,
+          skipped: true,
+        };
+      }
+    }
+  }
 
   const snapshot = await computeWorldSnapshot(db, now);
   const stored: StoredWorldSnapshot = {
@@ -161,6 +228,7 @@ export async function rebuildWorldSnapshotServer(
     tileCount: snapshot.tileCount,
     ownerCount: snapshot.ownerCount,
     bytes,
+    skipped: false,
   };
 }
 
