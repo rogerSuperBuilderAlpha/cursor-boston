@@ -25,7 +25,11 @@
 
 import type { Caste, MapTile } from "./types";
 
-const CACHE_VERSION = 1;
+// v2: added `isNpc` to CachedOwnerSummary so the world-map audience filter
+// (Humans / NPCs) has the data it needs without a re-fetch. Bumping the
+// version invalidates v1 caches; clients rehydrate from /api/game/map/me
+// on next load.
+const CACHE_VERSION = 2;
 const KEY_PREFIX = "cb-game-map-v" + CACHE_VERSION + ":";
 export const REFRESH_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -34,6 +38,9 @@ export interface CachedOwnerSummary {
   displayName: string;
   caste: Caste | null;
   shielded: boolean;
+  /** True for seeded NPCs; false for real human players. Optional only for
+   *  defensive parsing of older cache entries — fresh data always sets it. */
+  isNpc?: boolean;
 }
 
 export interface CachedMapView {
