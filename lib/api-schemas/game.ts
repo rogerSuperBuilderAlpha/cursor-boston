@@ -275,7 +275,7 @@ const AttackBody = z
     sourceTileId: z.string().min(1),
     targetTileId: z.string().min(1),
     units: UnitStackSchema,
-    offenseSpellId: z.string().optional(),
+    offenseSpellId: z.string().nullish(),
   })
   .openapi("GameAttackBody");
 
