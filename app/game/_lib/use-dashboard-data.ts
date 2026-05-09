@@ -10,19 +10,27 @@ import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { mergeTiles as mergeTilesIntoCache } from "@/lib/game/local-map-cache";
 import type {
+  GameArtifact,
   GamePlayer,
   LandType,
   MapTile,
   TurnReport,
+  UnitStack,
+  UnitType,
 } from "@/lib/game/types";
 import {
   adminGrant,
+  armDefenseSpell,
+  attack,
   bulkDistribute,
   castIntelSpell,
   createPlayer,
+  distributeTile,
   farExpedition,
   frontierExplore,
+  recruitUnits,
   setPlayerName,
+  spendArtifact,
   type DashboardMutators,
 } from "./dashboard-actions";
 import { fetchInitialData } from "./dashboard-fetch";
@@ -77,6 +85,12 @@ export function useDashboardData() {
   const [renaming, setRenaming] = useState(false);
   const [renameInput, setRenameInput] = useState("");
 
+  // Inventory of unused artifacts. Loaded once on mount and patched in place
+  // whenever an artifact is found (frontier explore reports) or used (artifact
+  // use endpoint). Threats page + tile-detail page consume this directly so
+  // every action button knows what's available without a refetch.
+  const [artifacts, setArtifacts] = useState<GameArtifact[]>([]);
+
   /**
    * Patch the local owned-tile list AND the localStorage map cache so
    * downstream pages read the same data without an extra fetch.
@@ -115,12 +129,27 @@ export function useDashboardData() {
     [user]
   );
 
+  /**
+   * Patch the artifacts inventory after a use (artifact.used flips true) or
+   * a find (new artifact doc). Filters out used artifacts so callers always
+   * see only the still-spendable inventory.
+   */
+  const mergeArtifacts = useCallback((updates: GameArtifact[]) => {
+    if (updates.length === 0) return;
+    setArtifacts((prev) => {
+      const byId = new Map(prev.map((a) => [a.id, a] as const));
+      for (const u of updates) byId.set(u.id, u);
+      return Array.from(byId.values()).filter((a) => !a.used);
+    });
+  }, []);
+
   const mut: DashboardMutators = {
     setError,
     setPlayer,
     setRecentReports,
     mergeOwnedTiles,
     mergeBorderTiles,
+    mergeArtifacts,
   };
 
   const fetchPlayer = useCallback(async () => {
@@ -135,6 +164,7 @@ export function useDashboardData() {
       setEligibility,
       setWorldTiles,
       setWorldOwners,
+      setArtifacts,
       setError,
       setLoading,
     });
@@ -227,6 +257,56 @@ export function useDashboardData() {
     [user]
   );
 
+  const handleAttack = useCallback(
+    async (args: {
+      sourceTileId: string;
+      targetTileId: string;
+      units: UnitStack;
+      offenseSpellId: string | null;
+    }) => {
+      if (!user) return null;
+      return attack(user, args, mut);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mut is rebuilt every render but its members are stable
+    [user]
+  );
+
+  const handleRecruit = useCallback(
+    async (tileId: string, unitType: UnitType) => {
+      if (!user) return null;
+      return recruitUnits(user, tileId, unitType, mut);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mut is rebuilt every render but its members are stable
+    [user]
+  );
+
+  const handleArmDefenseSpell = useCallback(
+    async (tileId: string, spellId: string) => {
+      if (!user) return null;
+      return armDefenseSpell(user, tileId, spellId, mut);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mut is rebuilt every render but its members are stable
+    [user]
+  );
+
+  const handleDistributeTile = useCallback(
+    async (tileId: string, type: LandType) => {
+      if (!user) return null;
+      return distributeTile(user, tileId, type, mut);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mut is rebuilt every render but its members are stable
+    [user]
+  );
+
+  const handleUseArtifact = useCallback(
+    async (artifactId: string, targetTileId: string | null) => {
+      if (!user) return null;
+      return spendArtifact(user, artifactId, targetTileId, mut);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mut is rebuilt every render but its members are stable
+    [user]
+  );
+
   return {
     user,
     authLoading,
@@ -261,6 +341,12 @@ export function useDashboardData() {
     handleAdminGrant,
     handleFarExpedition,
     handleCastIntelSpell,
+    artifacts,
+    handleAttack,
+    handleRecruit,
+    handleArmDefenseSpell,
+    handleDistributeTile,
+    handleUseArtifact,
   };
 }
 

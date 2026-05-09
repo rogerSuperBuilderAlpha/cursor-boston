@@ -8,10 +8,15 @@
 
 import type { User } from "firebase/auth";
 import type {
+  GameArtifact,
   GamePlayer,
+  GameTile,
+  IntelReport,
   LandType,
   MapTile,
   TurnReport,
+  UnitStack,
+  UnitType,
 } from "@/lib/game/types";
 import type { ActionProgress } from "./dashboard-types";
 
@@ -31,6 +36,26 @@ export interface DashboardMutators {
    *  localStorage map cache. Used by Far Expedition and Attack to surface
    *  newly-adjacent enemy tiles in the threat box without a page reload. */
   mergeBorderTiles: (updates: MapTile[]) => void;
+  /** Patch the artifacts inventory after a use / find. Pass artifact docs
+   *  with `used` flipped or freshly-found artifacts. */
+  mergeArtifacts: (updates: GameArtifact[]) => void;
+}
+
+/**
+ * Convert the GameTile shape returned by single-tile action endpoints
+ * (build / arm / distribute / attack) into the lighter MapTile shape that
+ * lives in the dashboard's tiles + worldTiles state.
+ */
+function asMapTile(t: GameTile): MapTile {
+  return {
+    tileId: t.tileId,
+    q: t.q,
+    r: t.r,
+    type: t.type,
+    ownerId: t.ownerId ?? null,
+    units: t.units,
+    armedDefenseSpellId: t.armedDefenseSpellId ?? null,
+  };
 }
 
 /** Common error-message extraction for `data.error` (string | object). */
@@ -273,6 +298,235 @@ export async function castIntelSpell(
     };
   } catch (e) {
     mut.setError(e instanceof Error ? e.message : "Spy spell failed");
+    return null;
+  }
+}
+
+/**
+ * POST /api/game/attack — single-tile attack with optional offense spell.
+ * Patches both source (mine) and target (border) tiles + the attacker's
+ * player record from the response. Returns the IntelReport if a Blue/Black
+ * air-intel passive fired.
+ */
+export async function attack(
+  user: User,
+  args: {
+    sourceTileId: string;
+    targetTileId: string;
+    units: UnitStack;
+    offenseSpellId: string | null;
+  },
+  mut: DashboardMutators
+): Promise<{
+  outcome: string;
+  reportSummary: string;
+  intelReport: IntelReport | null;
+} | null> {
+  mut.setError(null);
+  try {
+    const token = await user.getIdToken();
+    const res = await fetch("/api/game/attack", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(args),
+    });
+    const data = await res.json();
+    if (!data.success) {
+      throw new Error(asErrorMessage(data, "Attack failed"));
+    }
+    // Attack response uses `attackerPlayer` instead of the standard `player`.
+    if (data.attackerPlayer) mut.setPlayer(data.attackerPlayer as GamePlayer);
+    if (data.sourceTile) mut.mergeOwnedTiles([asMapTile(data.sourceTile as GameTile)]);
+    if (data.targetTile) {
+      const tt = data.targetTile as GameTile;
+      // If we captured the tile, it now belongs to us — funnel through
+      // mergeOwnedTiles. Otherwise it stays in the enemy ring.
+      if (tt.ownerId === user.uid) {
+        mut.mergeOwnedTiles([asMapTile(tt)]);
+      } else {
+        mut.mergeBorderTiles([asMapTile(tt)]);
+      }
+    }
+    if (data.report) {
+      mut.setRecentReports((prev) =>
+        [data.report as TurnReport, ...prev].slice(0, 50)
+      );
+    }
+    return {
+      outcome: (data.attack as { outcome?: string } | undefined)?.outcome ?? "",
+      reportSummary:
+        (data.report as { summary?: string } | undefined)?.summary ?? "",
+      intelReport: (data.intelReport as IntelReport | undefined) ?? null,
+    };
+  } catch (e) {
+    mut.setError(e instanceof Error ? e.message : "Attack failed");
+    return null;
+  }
+}
+
+/** POST /api/game/build — recruit one batch (`+10` units of one type). */
+export async function recruitUnits(
+  user: User,
+  tileId: string,
+  unitType: UnitType,
+  mut: DashboardMutators
+): Promise<{ produced: number; reportSummary: string } | null> {
+  mut.setError(null);
+  try {
+    const token = await user.getIdToken();
+    const res = await fetch("/api/game/build", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ tileId, unitType }),
+    });
+    const data = await res.json();
+    if (!data.success) {
+      throw new Error(asErrorMessage(data, "Recruit failed"));
+    }
+    if (data.player) mut.setPlayer(data.player as GamePlayer);
+    if (data.tile) mut.mergeOwnedTiles([asMapTile(data.tile as GameTile)]);
+    if (data.report) {
+      mut.setRecentReports((prev) =>
+        [data.report as TurnReport, ...prev].slice(0, 50)
+      );
+    }
+    return {
+      produced: typeof data.produced === "number" ? data.produced : 0,
+      reportSummary:
+        (data.report as { summary?: string } | undefined)?.summary ?? "",
+    };
+  } catch (e) {
+    mut.setError(e instanceof Error ? e.message : "Recruit failed");
+    return null;
+  }
+}
+
+/** POST /api/game/spell/arm — pre-arm one defense spell on one tile. */
+export async function armDefenseSpell(
+  user: User,
+  tileId: string,
+  spellId: string,
+  mut: DashboardMutators
+): Promise<{ reportSummary: string } | null> {
+  mut.setError(null);
+  try {
+    const token = await user.getIdToken();
+    const res = await fetch("/api/game/spell/arm", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ tileId, spellId }),
+    });
+    const data = await res.json();
+    if (!data.success) {
+      throw new Error(asErrorMessage(data, "Arm spell failed"));
+    }
+    if (data.player) mut.setPlayer(data.player as GamePlayer);
+    if (data.tile) mut.mergeOwnedTiles([asMapTile(data.tile as GameTile)]);
+    if (data.report) {
+      mut.setRecentReports((prev) =>
+        [data.report as TurnReport, ...prev].slice(0, 50)
+      );
+    }
+    return {
+      reportSummary:
+        (data.report as { summary?: string } | undefined)?.summary ?? "",
+    };
+  } catch (e) {
+    mut.setError(e instanceof Error ? e.message : "Arm spell failed");
+    return null;
+  }
+}
+
+/**
+ * POST /api/game/setup/distribute — change one owned tile's land type
+ * (military / food / magic / unassigned). The "setup" route name is a v1
+ * artifact; the underlying server function permits the play phase too.
+ */
+export async function distributeTile(
+  user: User,
+  tileId: string,
+  type: LandType,
+  mut: DashboardMutators
+): Promise<{ reportSummary: string } | null> {
+  mut.setError(null);
+  try {
+    const token = await user.getIdToken();
+    const res = await fetch("/api/game/setup/distribute", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ tileId, type, count: 1 }),
+    });
+    const data = await res.json();
+    if (!data.success) {
+      throw new Error(asErrorMessage(data, "Distribute failed"));
+    }
+    if (data.player) mut.setPlayer(data.player as GamePlayer);
+    if (data.tile) mut.mergeOwnedTiles([asMapTile(data.tile as GameTile)]);
+    if (data.report) {
+      mut.setRecentReports((prev) =>
+        [data.report as TurnReport, ...prev].slice(0, 50)
+      );
+    }
+    return {
+      reportSummary:
+        (data.report as { summary?: string } | undefined)?.summary ?? "",
+    };
+  } catch (e) {
+    mut.setError(e instanceof Error ? e.message : "Distribute failed");
+    return null;
+  }
+}
+
+/**
+ * POST /api/game/artifact/use — spend a single artifact, optionally on a
+ * target tile. Intel artifacts return an IntelReport that the caller is
+ * expected to render (e.g. ThreatRow inline panel).
+ *
+ * Named `spendArtifact` (not `useArtifact`) to avoid React's
+ * `react-hooks/rules-of-hooks` lint flagging it inside `useCallback`.
+ */
+export async function spendArtifact(
+  user: User,
+  artifactId: string,
+  targetTileId: string | null,
+  mut: DashboardMutators
+): Promise<{ intelReport: IntelReport | null } | null> {
+  mut.setError(null);
+  try {
+    const token = await user.getIdToken();
+    const res = await fetch("/api/game/artifact/use", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        artifactId,
+        ...(targetTileId ? { targetTileId } : {}),
+      }),
+    });
+    const data = await res.json();
+    if (!data.success) {
+      throw new Error(asErrorMessage(data, "Artifact use failed"));
+    }
+    if (data.artifact) mut.mergeArtifacts([data.artifact as GameArtifact]);
+    return {
+      intelReport: (data.intelReport as IntelReport | undefined) ?? null,
+    };
+  } catch (e) {
+    mut.setError(e instanceof Error ? e.message : "Artifact use failed");
     return null;
   }
 }

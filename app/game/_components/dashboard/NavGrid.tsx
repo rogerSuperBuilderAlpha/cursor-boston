@@ -67,7 +67,8 @@ export function NavGrid({ phase }: NavGridProps) {
                 { href: "/game/tiles", label: "World map" },
               ]
             : [
-                { href: "/game/tiles", label: "World map", primary: true },
+                { href: "/game/threats", label: "Threats", primary: true },
+                { href: "/game/tiles", label: "World map" },
                 { href: "/game/recruit", label: "Recruit" },
                 { href: "/game/spells", label: "Spells" },
                 { href: "/game/upgrades", label: "Upgrades" },
