@@ -422,6 +422,16 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
+    // Game — World snapshot (denormalized tiles + owner summaries). The
+    // map view subscribes to `latest` via a Firestore real-time listener,
+    // which auto-detaches when the tab is hidden or the user goes idle
+    // for ~5 min. Authenticated read only. All writes are Admin SDK
+    // (cron + post-action freshness rebuild).
+    match /game_world_snapshots/{docId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if false;
+    }
+
     // Game — Artifacts (v2): a player can only read their own inventory.
     // All writes go through the Admin SDK via turn-spending API routes.
     match /game_artifacts/{artifactId} {
