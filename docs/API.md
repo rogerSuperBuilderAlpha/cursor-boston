@@ -8,7 +8,7 @@
 
 All endpoints are under `/api/`. Authentication uses Firebase Auth ID tokens (Bearer) or session cookies. Spec: [`/openapi.json`](https://cursorboston.com/openapi.json) · interactive: [`/api/docs`](https://cursorboston.com/api/docs).
 
-**152 paths, 185 operations across 31 areas.**
+**155 paths, 189 operations across 31 areas.**
 
 ---
 
@@ -141,6 +141,10 @@ _Strategy game endpoints (leaderboard, attacks, artifacts, turns)._
 | POST | `/api/game/build` | Yes | Build units on a tile |
 | POST | `/api/game/build/bulk` | Yes | Execute a bulk build plan across tiles |
 | POST | `/api/game/caste/change` | Yes | Switch castes (one-time, after reaching 1000 tiles) |
+| GET | `/api/game/community/chat` | Yes | Recent community chat messages |
+| POST | `/api/game/community/chat` | Yes | Post a chat message (rate-limited: 10 / 60s per user) |
+| DELETE | `/api/game/community/chat/{messageId}` | Yes | Delete a chat message (own or admin) |
+| GET | `/api/game/community/feed` | Yes | Recent community events (player joins, caste picks, attacks) |
 | POST | `/api/game/distribute/bulk` | Yes | Distribute one land type across multiple tiles |
 | GET | `/api/game/eligibility` | Yes | Get the current user's game eligibility state |
 | POST | `/api/game/explore` | Yes | Frontier-explore one or more new tiles |

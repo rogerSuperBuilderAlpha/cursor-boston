@@ -32,6 +32,7 @@ import { MiniMap } from "./MiniMap";
 import { NavGrid } from "./NavGrid";
 import { DashboardReports } from "./DashboardReports";
 import { CasteChangeCard } from "./CasteChangeCard";
+import { CommunityPanel } from "./CommunityPanel";
 import { OnboardingWizard } from "../onboarding/OnboardingWizard";
 import type { GamePlayer } from "@/lib/game/types";
 
@@ -276,6 +277,8 @@ export function DashboardView({ player, data }: DashboardViewProps) {
         )}
 
         <DashboardReports reports={recentReports} />
+
+        <CommunityPanel user={data.user} isAdmin={isAdmin} />
       </div>
     </div>
   );

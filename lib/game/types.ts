@@ -547,3 +547,51 @@ export interface CombatResult {
     forgeScoutsBonusApplied?: boolean;
   };
 }
+
+
+// =====================================================================
+// Community feed + chat
+// =====================================================================
+
+/** Events surfaced in the dashboard's CommunityPanel activity feed. */
+export type CommunityEventKind =
+  | "player_join"
+  | "caste_pick"
+  | "caste_change"
+  | "attack"
+  | "milestone_1k_tiles";
+
+/** Single entry in the `game_community_events` log. Denormalized so the
+ *  feed renderer never needs to join against game_players. */
+export interface CommunityEvent {
+  id: string;
+  kind: CommunityEventKind;
+  createdAt: Timestamp | Date;
+  /** Player who performed the action. */
+  actorUserId: string;
+  actorDisplayName: string;
+  actorCaste: Caste | null;
+  // Attack-specific fields
+  targetUserId?: string;
+  targetDisplayName?: string;
+  tileId?: string;
+  outcome?: AttackOutcome;
+  // Caste-change-specific fields
+  fromCaste?: Caste;
+  toCaste?: Caste;
+}
+
+/** Single message in the `game_community_messages` collection. */
+export interface CommunityMessage {
+  id: string;
+  userId: string;
+  displayName: string;
+  caste: Caste | null;
+  body: string;
+  createdAt: Timestamp | Date;
+  /** Set when the message has been soft-deleted (by the author or an
+   *  admin). The chat renderer hides deleted messages by default. */
+  deletedAt?: Timestamp | Date;
+  /** True when the deletion was performed by an admin. */
+  deletedByAdmin?: boolean;
+}
