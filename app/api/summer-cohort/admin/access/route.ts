@@ -7,6 +7,10 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { isSummerCohortAdminEmail } from "@/lib/summer-cohort-admin-access";
+import { summerCohortContract } from "@/lib/api-schemas/summer-cohort";
+
+// Contract reference (no runtime inputs to validate on this probe).
+void summerCohortContract.adminAccess;
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

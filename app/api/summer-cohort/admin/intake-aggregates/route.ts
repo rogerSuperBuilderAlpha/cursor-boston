@@ -8,6 +8,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { isSummerCohortAdminEmail } from "@/lib/summer-cohort-admin-access";
+import { summerCohortContract } from "@/lib/api-schemas/summer-cohort";
 import {
   AI_TOOL_OPTIONS,
   CS_CREDENTIAL_OPTIONS,
@@ -130,7 +131,22 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Server not configured" }, { status: 500 });
   }
 
-  const cohort = request.nextUrl.searchParams.get("cohort");
+  const parsedQuery = summerCohortContract.adminIntakeAggregates.query.safeParse(
+    {
+      cohort:
+        request.nextUrl.searchParams.get("cohort") ?? undefined,
+    }
+  );
+  if (!parsedQuery.success) {
+    return NextResponse.json(
+      {
+        error:
+          parsedQuery.error.issues[0]?.message ?? "Invalid query parameters",
+      },
+      { status: 400 }
+    );
+  }
+  const cohort = parsedQuery.data.cohort ?? null;
 
   let query: FirebaseFirestore.Query = db.collection(
     SUMMER_COHORT_INTAKE_COLLECTION
