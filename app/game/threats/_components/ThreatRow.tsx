@@ -20,6 +20,7 @@ import type {
   TurnReport,
   UnitType,
 } from "@/lib/game/types";
+import { unitsPerCycleForLand } from "@/app/game/recruit/_lib/constants";
 import type { ThreatEntry } from "../_lib/threats-derive";
 import { useAttackPreview } from "../_lib/use-attack-preview";
 import { BattleReport } from "./BattleReport";
@@ -411,13 +412,15 @@ export function ThreatRow(props: ThreatRowProps) {
             );
           })}
         </div>
-        {/* Recruit */}
+        {/* Recruit — military/food/magic recruit at different rates;
+            unrevealed/unassigned can't recruit (must assign first). */}
         <div className="flex flex-wrap items-center gap-1.5 text-xs">
           <span className="text-neutral-500 mr-1">Recruit · 5t:</span>
           {UNIT_TYPES.map((u) => {
+            const yieldPerCycle = unitsPerCycleForLand(source.type);
             const reason =
-              source.type !== "military"
-                ? "Tile is not military — assign first"
+              yieldPerCycle <= 0
+                ? "Tile cannot recruit — assign land type first"
                 : player.turnsRemaining < 5
                   ? "Need 5 turns"
                   : null;
@@ -426,10 +429,12 @@ export function ThreatRow(props: ThreatRowProps) {
                 key={u}
                 onClick={() => handleRecruit(u)}
                 disabled={busy || reason !== null}
-                title={reason ?? `Recruit +10 ${u} on source`}
+                title={
+                  reason ?? `Recruit +${yieldPerCycle} ${u} on source`
+                }
                 className="px-2 py-1 rounded border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 disabled:opacity-50 capitalize"
               >
-                +10 {u}
+                +{yieldPerCycle || 10} {u}
               </button>
             );
           })}
