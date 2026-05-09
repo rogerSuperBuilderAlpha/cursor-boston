@@ -51,6 +51,15 @@ const VotesPostBody = z
   })
   .openapi("SummerCohortVoteBody");
 
+const AdminApplicationsQuery = z.object({
+  cohortId: z.enum(["cohort-1", "cohort-2"]).optional(),
+  status: z.enum(["pending", "admitted", "rejected", "waitlist"]).optional(),
+});
+
+const AdminIntakeAggregatesQuery = z.object({
+  cohort: z.string().min(1).max(64).optional(),
+});
+
 export const summerCohortContract = c.router(
   {
     applyGet: {
@@ -144,6 +153,45 @@ export const summerCohortContract = c.router(
       },
       metadata: {
         errorCodes: ["UNAUTHORIZED", "VALIDATION_ERROR", "SERVER_ERROR"] as const,
+      },
+    },
+    adminAccess: {
+      method: "GET",
+      path: "/api/summer-cohort/admin/access",
+      summary:
+        "Probe whether the current user is allowed in the Summer Cohort admin area",
+      responses: { 200: PassthroughOk, 401: ApiErrorSchema },
+      metadata: { errorCodes: ["UNAUTHORIZED"] as const },
+    },
+    adminApplications: {
+      method: "GET",
+      path: "/api/summer-cohort/admin/applications",
+      summary: "List applications (admin only) with optional cohort/status filter",
+      query: AdminApplicationsQuery,
+      responses: {
+        200: PassthroughOk,
+        401: ApiErrorSchema,
+        403: ApiErrorSchema,
+        500: ApiErrorSchema,
+      },
+      metadata: {
+        errorCodes: ["UNAUTHORIZED", "FORBIDDEN", "SERVER_ERROR"] as const,
+      },
+    },
+    adminIntakeAggregates: {
+      method: "GET",
+      path: "/api/summer-cohort/admin/intake-aggregates",
+      summary:
+        "Aggregate stats for intake-survey responses (admin only, no PII or free text)",
+      query: AdminIntakeAggregatesQuery,
+      responses: {
+        200: PassthroughOk,
+        401: ApiErrorSchema,
+        403: ApiErrorSchema,
+        500: ApiErrorSchema,
+      },
+      metadata: {
+        errorCodes: ["UNAUTHORIZED", "FORBIDDEN", "SERVER_ERROR"] as const,
       },
     },
   },

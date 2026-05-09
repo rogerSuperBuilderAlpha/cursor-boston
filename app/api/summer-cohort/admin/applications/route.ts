@@ -8,9 +8,9 @@ import { type NextRequest, NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { isSummerCohortAdminEmail } from "@/lib/summer-cohort-admin-access";
+import { summerCohortContract } from "@/lib/api-schemas/summer-cohort";
 import {
   SUMMER_COHORT_COLLECTION,
-  isValidCohortId,
   type SummerCohortId,
   type SummerCohortStatus,
 } from "@/lib/summer-cohort";
@@ -71,15 +71,21 @@ export async function GET(request: NextRequest) {
   }
 
   const params = request.nextUrl.searchParams;
-  const cohortIdParam = params.get("cohortId");
-  const statusParam = params.get("status");
-
-  const cohortFilter =
-    cohortIdParam && isValidCohortId(cohortIdParam) ? cohortIdParam : null;
-  const statusFilter =
-    statusParam && VALID_STATUSES.has(statusParam as SummerCohortStatus)
-      ? (statusParam as SummerCohortStatus)
-      : null;
+  const parsedQuery = summerCohortContract.adminApplications.query.safeParse({
+    cohortId: params.get("cohortId") ?? undefined,
+    status: params.get("status") ?? undefined,
+  });
+  if (!parsedQuery.success) {
+    return NextResponse.json(
+      {
+        error:
+          parsedQuery.error.issues[0]?.message ?? "Invalid query parameters",
+      },
+      { status: 400 }
+    );
+  }
+  const cohortFilter = parsedQuery.data.cohortId ?? null;
+  const statusFilter = parsedQuery.data.status ?? null;
 
   let query: FirebaseFirestore.Query = db.collection(SUMMER_COHORT_COLLECTION);
   if (cohortFilter) {
@@ -93,7 +99,9 @@ export async function GET(request: NextRequest) {
   const rows: AdminApplicationRow[] = snap.docs.map((doc) => {
     const data = doc.data();
     const cohorts = Array.isArray(data.cohorts)
-      ? (data.cohorts as unknown[]).filter(isValidCohortId)
+      ? (data.cohorts as unknown[]).filter(
+          (c): c is SummerCohortId => c === "cohort-1" || c === "cohort-2"
+        )
       : [];
     const status =
       typeof data.status === "string" &&
