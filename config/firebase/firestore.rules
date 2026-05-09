@@ -432,6 +432,26 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
+    // Game — Community feed (append-only event log of player joins,
+    // caste picks, attacks, milestones). Surfaced in the dashboard's
+    // CommunityPanel. Authenticated read; all writes flow through the
+    // Admin SDK in lib/game/community.ts (logCommunityEventInTx /
+    // logCommunityEvent), so direct client writes are denied.
+    match /game_community_events/{eventId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if false;
+    }
+
+    // Game — Community chat (free-form message board). Reads are
+    // authenticated. All writes (create + soft-delete) flow through
+    // /api/game/community/chat which validates ownership and admin
+    // status before delegating to the Admin SDK. Direct client writes
+    // would bypass the rate-limit + length checks, so deny.
+    match /game_community_messages/{messageId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if false;
+    }
+
     // Game — Artifacts (v2): a player can only read their own inventory.
     // All writes go through the Admin SDK via turn-spending API routes.
     match /game_artifacts/{artifactId} {
