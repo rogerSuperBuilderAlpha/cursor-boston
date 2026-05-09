@@ -8,7 +8,7 @@
 
 All endpoints are under `/api/`. Authentication uses Firebase Auth ID tokens (Bearer) or session cookies. Spec: [`/openapi.json`](https://cursorboston.com/openapi.json) · interactive: [`/api/docs`](https://cursorboston.com/api/docs).
 
-**144 paths, 177 operations across 31 areas.**
+**151 paths, 184 operations across 31 areas.**
 
 ---
 
@@ -136,6 +136,7 @@ _Strategy game endpoints (leaderboard, attacks, artifacts, turns)._
 | POST | `/api/game/artifact/use` | Yes | Spend an artifact (optionally on a target tile) |
 | GET | `/api/game/artifacts` | Yes | List the player's artifact inventory |
 | POST | `/api/game/attack` | Yes | Launch an attack from one of your tiles |
+| POST | `/api/game/attack/preview` | Yes | Project the outcome of a hypothetical attack |
 | GET | `/api/game/attacks` | Yes | List the player's attacks (sent/received/all) |
 | POST | `/api/game/build` | Yes | Build units on a tile |
 | POST | `/api/game/build/bulk` | Yes | Execute a bulk build plan across tiles |
@@ -144,6 +145,7 @@ _Strategy game endpoints (leaderboard, attacks, artifacts, turns)._
 | POST | `/api/game/explore` | Yes | Frontier-explore one or more new tiles |
 | POST | `/api/game/explore/bulk` | Yes | Bulk frontier-explore (count required) |
 | POST | `/api/game/explore/far` | Yes | Spend 2 turns to plant a tile adjacent to a random enemy tile (Far Expedition). |
+| POST | `/api/game/flyover` | Yes | Air raid that attrits defenders without taking the tile |
 | GET | `/api/game/leaderboard` | Yes | Get the leaderboard ranked by tiles held |
 | GET | `/api/game/map/me` | Yes | Get the current user's personal map view (own tiles + enemy ring) |
 | POST | `/api/game/npc-weekly` | No | Cron-only weekly NPC turn-spender |
@@ -154,7 +156,9 @@ _Strategy game endpoints (leaderboard, attacks, artifacts, turns)._
 | POST | `/api/game/setup/caste` | Yes | Choose initial caste during onboarding |
 | POST | `/api/game/setup/distribute` | Yes | Distribute land type to a tile during onboarding |
 | POST | `/api/game/setup/explore` | Yes | Frontier-explore tiles during onboarding |
+| POST | `/api/game/siege` | Yes | Soften a target tile's standing-defense floor |
 | POST | `/api/game/spell/arm` | Yes | Arm a defense spell on one tile (single) or many (bulk) |
+| POST | `/api/game/spell/cast` | Yes | Cast a standalone siege/disarm/attrition spell against a target tile |
 | POST | `/api/game/spell/produce` | Yes | Cast a production spell (with optional batch count) |
 | POST | `/api/game/spy` | Yes | Cast an intel ('spy') spell on an enemy tile. |
 | GET | `/api/game/tile/{tileId}` | Yes | Get a single tile by id |
@@ -391,6 +395,9 @@ _Talk-submission moderation queue._
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
+| GET | `/api/summer-cohort/admin/access` | Yes | Probe whether the current user is allowed in the Summer Cohort admin area |
+| GET | `/api/summer-cohort/admin/applications` | Yes | List applications (admin only) with optional cohort/status filter |
+| GET | `/api/summer-cohort/admin/intake-aggregates` | Yes | Aggregate stats for intake-survey responses (admin only, no PII or free text) |
 | DELETE | `/api/summer-cohort/apply` | Yes | Withdraw the current user's summer-cohort application |
 | GET | `/api/summer-cohort/apply` | Yes | Get the current user's summer-cohort application + counts |
 | POST | `/api/summer-cohort/apply` | Yes | Create or update the current user's summer-cohort application |
