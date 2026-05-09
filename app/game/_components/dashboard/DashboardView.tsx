@@ -31,6 +31,8 @@ import { BulkUnassign } from "./BulkUnassign";
 import { MiniMap } from "./MiniMap";
 import { NavGrid } from "./NavGrid";
 import { DashboardReports } from "./DashboardReports";
+import { CasteChangeCard } from "./CasteChangeCard";
+import { OnboardingWizard } from "../onboarding/OnboardingWizard";
 import type { GamePlayer } from "@/lib/game/types";
 
 interface DashboardViewProps {
@@ -121,6 +123,14 @@ export function DashboardView({ player, data }: DashboardViewProps) {
 
   return (
     <div className="min-h-screen py-12 px-6">
+      <OnboardingWizard
+        user={data.user}
+        player={player}
+        counts={counts}
+        army={army}
+        tiles={tiles}
+        onRefresh={data.refresh}
+      />
       <div className="max-w-5xl mx-auto">
         <DashboardHeader
           player={player}
@@ -146,6 +156,12 @@ export function DashboardView({ player, data }: DashboardViewProps) {
         )}
 
         {eligibility && <EligibilityBanner eligibility={eligibility} />}
+
+        <CasteChangeCard
+          player={player}
+          user={data.user}
+          onRefresh={data.refresh}
+        />
 
         <HeroCard
           turnsRemaining={player.turnsRemaining}

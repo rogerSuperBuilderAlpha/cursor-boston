@@ -41,7 +41,12 @@ export default function GameSetupPage() {
           <h1 className="text-3xl font-bold">Setup</h1>
           <p className="text-sm text-neutral-500 mt-1">
             Finish the setup ramp here, then return to the dashboard to manage
-            tiles, build units, and attack.
+            tiles, build units, and attack.{" "}
+            <span className="text-neutral-400">
+              Tip: the onboarding wizard on{" "}
+              <span className="font-mono">/game</span> walks you through
+              this faster.
+            </span>
           </p>
         </div>
 
