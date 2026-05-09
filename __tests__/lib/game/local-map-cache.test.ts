@@ -141,7 +141,7 @@ describe("local-map-cache", () => {
     });
 
     it("rejects an entry with a corrupt JSON payload", () => {
-      mem.setItem("cb-game-map-v1:" + USER, "not-json");
+      mem.setItem("cb-game-map-v2:" + USER, "not-json");
       expect(loadCachedMap(USER)).toBeNull();
     });
 
@@ -153,10 +153,10 @@ describe("local-map-cache", () => {
         lastFetchedAt: 1_000_000,
       });
       // Tamper: load, swap, write back under USER's key.
-      const raw = mem.getItem("cb-game-map-v1:" + USER)!;
+      const raw = mem.getItem("cb-game-map-v2:" + USER)!;
       const parsed = JSON.parse(raw);
       parsed.userId = OTHER;
-      mem.setItem("cb-game-map-v1:" + USER, JSON.stringify(parsed));
+      mem.setItem("cb-game-map-v2:" + USER, JSON.stringify(parsed));
       expect(loadCachedMap(USER)).toBeNull();
     });
   });

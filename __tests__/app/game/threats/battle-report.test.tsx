@@ -109,19 +109,44 @@ describe("BattleReport", () => {
     expect(screen.getByText(/6 turns spent/i)).toBeInTheDocument();
   });
 
-  it("derives Defender-had as targetTile.units + defenderLosses", () => {
-    // post-attack target tile has 10/5/5; defender lost 40/15/15.
-    // → defender had 50/20/20 (90 total).
+  it("derives Defender-had from targetTile.units + losses for non-captured outcomes", () => {
+    // Repelled / stalemate: targetTile.units is the defender's surviving
+    // garrison after the swing, so pre-attack = surviving + lost.
     render(
       <BattleReport
-        combat={makeCombat()}
-        report={makeReport()}
+        combat={makeCombat({ outcome: "repelled" })}
+        report={makeReport({ summary: "Repelled at -149_47" })}
         targetTile={makeTargetTile(stack(10, 5, 5))}
         onDismiss={jest.fn()}
       />
     );
+    // 10+40, 5+15, 5+15 = 50/20/20 (90 total).
     expect(screen.getByText(/G50 · S20 · A20/)).toBeInTheDocument();
     expect(screen.getByText(/\(90 total\)/)).toBeInTheDocument();
+  });
+
+  it("derives Defender-had from defenderLosses alone for captured outcomes", () => {
+    // After a capture, targetTile.units holds the attacker's survivors
+    // (the captured tile is now ours). The combat result records
+    // defenderLosses = the defender's full pre-attack stack on capture,
+    // so the wizard reads from there directly.
+    render(
+      <BattleReport
+        combat={makeCombat({ outcome: "captured" })}
+        report={makeReport()}
+        // Attacker survivors live on the captured tile post-swing.
+        targetTile={makeTargetTile(stack(7, 4, 0))}
+        onDismiss={jest.fn()}
+      />
+    );
+    // 40/15/15 → 70 total. NOT 47/19/15.
+    // The same value renders twice in this case — once as "Defender had"
+    // and once as "Defender lost" — since on a capture the defender
+    // loses everything they had.
+    expect(screen.getAllByText(/G40 · S15 · A15/).length).toBeGreaterThanOrEqual(
+      1
+    );
+    expect(screen.getByText(/\(70 total\)/)).toBeInTheDocument();
   });
 
   it("renders You-sent stack from combat.unitsDeployed", () => {
@@ -143,13 +168,17 @@ describe("BattleReport", () => {
   });
 
   it("renders losses for both sides per unit type", () => {
+    // Use a repelled outcome so the "Defender had" line is distinct from
+    // the "Defender lost" line; with `captured` they'd render the same
+    // stack (defender lost everything they had).
     render(
       <BattleReport
         combat={makeCombat({
+          outcome: "repelled",
           attackerLosses: stack(3, 1, 0),
           defenderLosses: stack(40, 15, 15),
         })}
-        report={makeReport()}
+        report={makeReport({ summary: "Repelled at -149_47" })}
         targetTile={makeTargetTile()}
         onDismiss={jest.fn()}
       />

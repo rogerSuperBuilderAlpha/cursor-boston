@@ -190,6 +190,12 @@ export class GameCasteAlreadySetError extends Error {
     this.name = "GameCasteAlreadySetError";
   }
 }
+export class GameCasteChangeUnavailableError extends Error {
+  constructor(reason: string) {
+    super(`Caste change unavailable: ${reason}`);
+    this.name = "GameCasteChangeUnavailableError";
+  }
+}
 export class GameInvalidLandTypeError extends Error {
   constructor(t: string) {
     super(`Invalid land type for distribute: ${t}`);
@@ -624,8 +630,12 @@ export async function getTileServer(tileId: string): Promise<GameTile | null> {
 
 // v2 — new players spawn with 25 already-revealed unassigned tiles, skipping
 // the v1 "explore" phase entirely. Existing v1 player records aren't touched.
-export const NEW_PLAYER_TILE_COUNT = 25;
-const NEW_PLAYER_CONTIGUOUS = 20;
+// Total claimed tiles per spawn. Increased from 25 → 100 (May 2026) when
+// the v1 "explore" phase was reinstated as the first step of the onboarding
+// wizard. All 100 are claimed-but-unrevealed at spawn; the wizard drives the
+// player through revealing them via setupExploreServer (1 turn each).
+export const NEW_PLAYER_TILE_COUNT = 100;
+const NEW_PLAYER_CONTIGUOUS = 80;
 const NEW_PLAYER_EXCLAVES_MIN = 3;
 const NEW_PLAYER_EXCLAVES_MAX = 5;
 
@@ -696,11 +706,13 @@ export async function createPlayerWithSpawnServer(
     });
 
     const player = newPlayer(userId, now, {
-      // Skip the v1 "explore" phase entirely — new players land in
-      // distribute with all their tiles already revealed.
-      initialPhase: "distribute",
+      // Spawn into v1 "explore" phase with all 100 tiles claimed but
+      // unrevealed. The onboarding wizard drives the player through
+      // revealing each tile via setupExploreServer (1 turn each); the
+      // server auto-advances phase → "distribute" at tilesExplored >= 100.
+      initialPhase: "explore",
       tilesHeld: spawn.tileIds.length,
-      tilesExplored: spawn.tileIds.length,
+      tilesExplored: 0,
       displayName: cleanedName,
     });
     tx.set(playerRef, {
@@ -716,13 +728,15 @@ export async function createPlayerWithSpawnServer(
         q,
         r,
         ownerId: userId,
-        type: "unassigned" as LandType,
+        // Claimed but hidden under fog. Wizard step 1 reveals each via
+        // setupExploreServer, which flips type → "unassigned" and stamps
+        // revealedAt at the moment of reveal.
+        type: "unrevealed" as LandType,
         level: 0,
         units: { ground: 0, siege: 0, air: 0 },
         armedDefenseSpellId: null,
         neighborTileIds: neighborTileIds(q, r),
         upgradeIds: [],
-        revealedAt: now,
         createdAt: now,
         updatedAt: now,
       });
@@ -1100,6 +1114,70 @@ export async function bulkDistributeTilesServer(
       artifacts,
       stoppedEarly,
     };
+  });
+}
+
+// Threshold at which a player unlocks a one-time caste change. The first
+// caste pick (chooseCasteServer) is treated as "experimental" — once the
+// player reaches this many tiles held they can switch castes once more,
+// and that second pick is permanent (casteChangesUsed flips to 1).
+export const CASTE_CHANGE_TILES_THRESHOLD = 1000;
+
+// One-time caste switch after the player has built up real territory. Same
+// shape as chooseCasteServer (free of turn cost; Admin SDK only) but with a
+// different precondition set: player must already be in `play` with a caste,
+// must have hit the tilesHeld threshold, must not have switched before, and
+// must be picking a different caste than they currently have.
+//
+// Increments `casteChangesUsed` to 1 — after this call, subsequent attempts
+// throw `GameCasteChangeUnavailableError`.
+export async function changeCasteServer(
+  userId: string,
+  newCaste: Caste,
+  now: Date = new Date()
+): Promise<GamePlayer> {
+  if (!VALID_CASTES.has(newCaste)) throw new GameInvalidCasteError(newCaste);
+
+  const db = adminDbOrThrow();
+  const playerRef = db.collection(COLLECTIONS.PLAYERS).doc(userId);
+
+  return db.runTransaction(async (tx) => {
+    const playerSnap = await tx.get(playerRef);
+    if (!playerSnap.exists) throw new GamePlayerNotFoundError();
+    const player = playerSnap.data() as GamePlayer;
+
+    if (player.phase !== "play") {
+      throw new GameInvalidPhaseError("play", player.phase);
+    }
+    if (player.caste === null) {
+      throw new GameCasteChangeUnavailableError(
+        "no caste set — pick one first via /api/game/setup/caste"
+      );
+    }
+    if (player.caste === newCaste) {
+      throw new GameCasteChangeUnavailableError(
+        `already playing as ${newCaste}`
+      );
+    }
+    if (player.stats.tilesHeld < CASTE_CHANGE_TILES_THRESHOLD) {
+      throw new GameCasteChangeUnavailableError(
+        `requires tilesHeld >= ${CASTE_CHANGE_TILES_THRESHOLD} (have ${player.stats.tilesHeld})`
+      );
+    }
+    if ((player.casteChangesUsed ?? 0) >= 1) {
+      throw new GameCasteChangeUnavailableError(
+        "caste change already used; further changes are not allowed"
+      );
+    }
+
+    const updates = {
+      caste: newCaste,
+      casteLockedAt: now,
+      casteChangesUsed: 1,
+      updatedAt: now,
+    };
+    tx.update(playerRef, updates);
+    return { ...player, ...updates };
   });
 }
 

@@ -33,9 +33,9 @@ export function recommendNext(
     return {
       title: "Reveal your starting lands",
       body:
-        "Each tile you reveal costs 1 turn. The setup page walks you through it.",
-      ctaLabel: "Continue setup →",
-      ctaHref: "/game/setup",
+        "Each tile you reveal costs 1 turn. The onboarding wizard walks you through it.",
+      ctaLabel: "Open the wizard →",
+      ctaHref: "/game",
       tone: "primary",
     };
   }
@@ -53,9 +53,9 @@ export function recommendNext(
     return {
       title: "Pick your caste",
       body:
-        "Five factions, each with its own units, spells, and identity. The choice is permanent — read each card on the setup page before you commit.",
+        "Five factions, each with its own units, spells, and identity. Pick the one that calls to you — once you reach 1,000 tiles you can switch one time, and that second pick is permanent.",
       ctaLabel: "Pick a caste →",
-      ctaHref: "/game/setup",
+      ctaHref: "/game",
       tone: "primary",
     };
   }

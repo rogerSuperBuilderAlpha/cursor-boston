@@ -12,6 +12,7 @@ import {
   GameArtifactAlreadyUsedError,
   GameArtifactNotFoundError,
   GameCasteAlreadySetError,
+  GameCasteChangeUnavailableError,
   GameFrontierExhaustedError,
   GameInsufficientTurnsError,
   GameInsufficientUnitsError,
@@ -63,6 +64,7 @@ export function mapGameError(error: unknown): NextResponse {
     error instanceof GamePlayerAlreadyExistsError ||
     error instanceof GameAlreadyRevealedError ||
     error instanceof GameCasteAlreadySetError ||
+    error instanceof GameCasteChangeUnavailableError ||
     error instanceof GameInvalidPhaseError ||
     error instanceof GameInsufficientTurnsError ||
     error instanceof GameInsufficientUnitsError ||
