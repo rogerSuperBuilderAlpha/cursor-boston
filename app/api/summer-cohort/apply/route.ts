@@ -207,6 +207,25 @@ async function handlePost(request: NextRequest) {
   try {
     const ref = db.collection(SUMMER_COHORT_COLLECTION).doc(user.uid);
     const existing = await ref.get();
+    // Cohort 1 signups are closed (kickoff is Mon May 11). New applicants
+    // cannot include cohort-1; existing applicants who already opted into
+    // cohort-1 can keep editing their record (phone, etc.) without losing it.
+    const wantsCohort1 = cohorts.includes("cohort-1");
+    const alreadyHadCohort1 = existing.exists
+      ? Array.isArray((existing.data() as { cohorts?: SummerCohortId[] }).cohorts) &&
+        ((existing.data() as { cohorts?: SummerCohortId[] }).cohorts ?? []).includes(
+          "cohort-1"
+        )
+      : false;
+    if (wantsCohort1 && !alreadyHadCohort1) {
+      return NextResponse.json(
+        {
+          error:
+            "Cohort 1 applications are closed — kickoff is Mon May 11. Cohort 2 is still open.",
+        },
+        { status: 403 }
+      );
+    }
     const baseFields = {
       userId: user.uid,
       email: user.email,

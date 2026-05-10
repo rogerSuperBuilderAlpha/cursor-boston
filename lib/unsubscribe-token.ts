@@ -35,3 +35,33 @@ export function buildUnsubscribeUrl(email: string): string {
   const token = generateUnsubscribeToken(email);
   return `${origin}/api/notifications/unsubscribe?email=${encodeURIComponent(email)}&token=${token}`;
 }
+
+// HMAC namespace prefix so a withdraw token can never be replayed against the
+// unsubscribe endpoint (or vice-versa) even though both share the same secret.
+const WITHDRAW_NS = "withdraw-cohort";
+
+export function generateWithdrawToken(email: string, cohortId: string): string {
+  return createHmac("sha256", SECRET)
+    .update(`${WITHDRAW_NS}:${cohortId}:${email.toLowerCase().trim()}`)
+    .digest("hex");
+}
+
+export function verifyWithdrawToken(
+  email: string,
+  cohortId: string,
+  token: string
+): boolean {
+  return generateWithdrawToken(email, cohortId) === token;
+}
+
+export function buildWithdrawUrl(email: string, cohortId: string): string {
+  const origin =
+    (process.env.NEXT_PUBLIC_APP_URL || "https://cursorboston.com").replace(
+      /\/$/,
+      ""
+    );
+  const token = generateWithdrawToken(email, cohortId);
+  return `${origin}/api/summer-cohort/withdraw?email=${encodeURIComponent(
+    email
+  )}&cohortId=${encodeURIComponent(cohortId)}&token=${token}`;
+}
