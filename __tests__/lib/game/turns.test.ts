@@ -205,11 +205,17 @@ describe("shouldGrantWeeklyTurns + applyWeeklyGrant", () => {
     expect(shouldGrantWeeklyTurns(granted, true, "2026-05-10")).toBe(true);
   });
 
-  it("applyWeeklyGrant resets turnsRemaining to 100 (no rollover)", () => {
+  it("applyWeeklyGrant adds WEEKLY_TURN_GRANT to turnsRemaining (banks rollover)", () => {
     const partial: GamePlayer = { ...p(), turnsRemaining: 30 };
     const granted = applyWeeklyGrant(partial, "2026-05-03");
-    expect(granted.turnsRemaining).toBe(WEEKLY_TURN_GRANT);
+    expect(granted.turnsRemaining).toBe(30 + WEEKLY_TURN_GRANT);
     expect(granted.lastWeeklyGrantWeekStart).toBe("2026-05-03");
+  });
+
+  it("applyWeeklyGrant adds even when bucket is full (no cap)", () => {
+    const flush: GamePlayer = { ...p(), turnsRemaining: 300 };
+    const granted = applyWeeklyGrant(flush, "2026-05-03");
+    expect(granted.turnsRemaining).toBe(300 + WEEKLY_TURN_GRANT);
   });
 });
 

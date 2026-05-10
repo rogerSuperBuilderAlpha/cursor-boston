@@ -12,7 +12,7 @@ export const WEEKLY_TURN_GRANT = 100;
 // Initial bucket granted at spawn. Larger than the weekly grant so a fresh
 // general can clear setup (assign 25 lands, pick a caste) and still have a
 // substantial pool for early recruiting / first attacks before the next
-// Sunday rollover refills the bucket.
+// Sunday rollover tops up the bucket.
 export const STARTING_TURN_GRANT = 300;
 export const SHIELD_DURATION_WEEKS = 3;
 export const SHIELD_TURN_THRESHOLD = 300;
@@ -200,6 +200,8 @@ export function shouldGrantWeeklyTurns(
   return true;
 }
 
+// Adds WEEKLY_TURN_GRANT on top of any unspent turns — banking is rewarded,
+// not penalized. A player who hoarded 300 going into the rollover ends at 400.
 export function applyWeeklyGrant(
   player: GamePlayer,
   weekStartIso: string,
@@ -207,7 +209,7 @@ export function applyWeeklyGrant(
 ): GamePlayer {
   return {
     ...player,
-    turnsRemaining: WEEKLY_TURN_GRANT,
+    turnsRemaining: player.turnsRemaining + WEEKLY_TURN_GRANT,
     lastWeeklyGrantAt: now,
     lastWeeklyGrantWeekStart: weekStartIso,
     updatedAt: now,
