@@ -56,6 +56,14 @@ const AdminApplicationsQuery = z.object({
   status: z.enum(["pending", "admitted", "rejected", "waitlist"]).optional(),
 });
 
+const WithdrawQuery = z.object({
+  email: z.string().optional(),
+  cohortId: z.string().optional(),
+  token: z.string().optional(),
+});
+
+const RedirectResponse = z.object({}).optional();
+
 const AdminIntakeAggregatesQuery = z.object({
   cohort: z.string().min(1).max(64).optional(),
 });
@@ -91,6 +99,14 @@ export const summerCohortContract = c.router(
       body: z.object({}).optional(),
       responses: { 200: PassthroughOk, 401: ApiErrorSchema, 500: ApiErrorSchema },
       metadata: { errorCodes: ["UNAUTHORIZED", "SERVER_ERROR"] as const },
+    },
+    withdraw: {
+      method: "GET",
+      path: "/api/summer-cohort/withdraw",
+      summary: "One-click cohort withdrawal (HMAC token in query)",
+      query: WithdrawQuery,
+      responses: { 302: RedirectResponse },
+      metadata: { errorCodes: [] as const },
     },
     intakeSurveyGet: {
       method: "GET",
