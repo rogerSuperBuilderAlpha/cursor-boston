@@ -10,6 +10,7 @@ import { getAdminDb } from "@/lib/firebase-admin";
 import { verifyWithdrawToken } from "@/lib/unsubscribe-token";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 import { isValidCohortId, SUMMER_COHORT_COLLECTION } from "@/lib/summer-cohort";
+import { summerCohortContract } from "@/lib/api-schemas/summer-cohort";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -32,9 +33,18 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const email = request.nextUrl.searchParams.get("email")?.toLowerCase().trim();
-  const cohortId = request.nextUrl.searchParams.get("cohortId")?.trim();
-  const token = request.nextUrl.searchParams.get("token")?.trim();
+  const parsedQuery = summerCohortContract.withdraw.query.safeParse({
+    email: request.nextUrl.searchParams.get("email") ?? undefined,
+    cohortId: request.nextUrl.searchParams.get("cohortId") ?? undefined,
+    token: request.nextUrl.searchParams.get("token") ?? undefined,
+  });
+  const email = parsedQuery.success
+    ? parsedQuery.data.email?.toLowerCase().trim()
+    : undefined;
+  const cohortId = parsedQuery.success
+    ? parsedQuery.data.cohortId?.trim()
+    : undefined;
+  const token = parsedQuery.success ? parsedQuery.data.token?.trim() : undefined;
 
   if (!email || !cohortId || !token) {
     return NextResponse.redirect(
