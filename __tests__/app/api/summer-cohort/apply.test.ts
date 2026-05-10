@@ -178,7 +178,7 @@ describe("POST /api/summer-cohort/apply", () => {
           email: "applicant@example.com",
           name: "Test Applicant",
           phone: "555-1234",
-          cohorts: ["cohort-1", "cohort-2"],
+          cohorts: ["cohort-2"],
           siteId: "cursor-boston",
           status: "pending",
           isLocal: true,
@@ -192,7 +192,7 @@ describe("POST /api/summer-cohort/apply", () => {
             name: "Test Applicant",
             email: "applicant@example.com",
             phone: "555-1234",
-            cohorts: ["cohort-1", "cohort-2"],
+            cohorts: ["cohort-2"],
             createdAt: { toMillis: () => Date.now() },
           }),
         },
@@ -204,7 +204,7 @@ describe("POST /api/summer-cohort/apply", () => {
         ...validBody,
         name: "Test Applicant",
         phone: "555-1234",
-        cohorts: ["cohort-1", "cohort-2", "cohort-1"], // dedupe
+        cohorts: ["cohort-2", "cohort-2"], // dedupe
         isLocal: true,
         wantsToPresent: true,
       })
@@ -216,6 +216,51 @@ describe("POST /api/summer-cohort/apply", () => {
     // Wait a microtask so the fire-and-forget email has a chance to dispatch.
     await new Promise((r) => setTimeout(r, 10));
     expect(mockSendEmail).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects new cohort-1 applications with 403 (signups closed)", async () => {
+    mockDocGet.mockResolvedValueOnce({ exists: false });
+    const res = await POST(
+      makePost({
+        ...validBody,
+        cohorts: ["cohort-1"],
+      })
+    );
+    expect(res.status).toBe(403);
+    const body = await res.json();
+    expect(body.error).toMatch(/Cohort 1 applications are closed/);
+    expect(mockDocSet).not.toHaveBeenCalled();
+  });
+
+  it("lets existing cohort-1 applicants edit their record", async () => {
+    mockDocGet
+      .mockResolvedValueOnce({
+        exists: true,
+        data: () => ({ cohorts: ["cohort-1"] }),
+      })
+      .mockResolvedValueOnce({
+        exists: true,
+        data: () => ({
+          userId: "user-123",
+          email: "applicant@example.com",
+          name: "Existing C1",
+          phone: "555-0000",
+          cohorts: ["cohort-1"],
+          siteId: "cursor-boston",
+          status: "admitted",
+          isLocal: true,
+          wantsToPresent: true,
+        }),
+      });
+    const res = await POST(
+      makePost({
+        ...validBody,
+        name: "Existing C1",
+        phone: "555-0000",
+        cohorts: ["cohort-1"],
+      })
+    );
+    expect(res.status).toBe(200);
   });
 
   it("updates existing application without sending notification email", async () => {

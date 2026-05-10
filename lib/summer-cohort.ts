@@ -54,7 +54,8 @@ export type SummerCohortStatus =
   | "pending"
   | "admitted"
   | "rejected"
-  | "waitlist";
+  | "waitlist"
+  | "withdrawn";
 
 export interface SummerCohortApplication {
   userId: string;
@@ -162,8 +163,10 @@ export const SUMMER_COHORT_C1_ZOOM_URL_PLACEHOLDER =
 export const SUMMER_COHORT_C1_DISCORD_INVITE_URL_PLACEHOLDER =
   "https://discord.gg/PLACEHOLDER";
 
-/** Hard cap on Cohort 1 admits. Auto-admit-on-PR-merge respects this. */
-export const SUMMER_COHORT_C1_CAP = 100;
+/** Hard cap on Cohort 1 admits. Auto-admit-on-PR-merge respects this.
+ *  Bumped 2026-05-10 when we admitted everyone who applied to lock the roster
+ *  before the May 11 kickoff. */
+export const SUMMER_COHORT_C1_CAP = 200;
 
 /** PR-merge auto-admit deadline.
  *  Pending Cohort 1 applicants who get a PR merged into the community repo
