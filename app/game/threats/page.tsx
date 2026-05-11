@@ -10,6 +10,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { SignedOutLanding } from "../_components/dashboard/SignedOutLanding";
 import { useDashboardData } from "../_lib/use-dashboard-data";
+import { ArmyPanel } from "./_components/ArmyPanel";
 import { ThreatRow } from "./_components/ThreatRow";
 import { deriveThreatEntries } from "./_lib/threats-derive";
 
@@ -167,6 +168,8 @@ export default function ThreatsPage() {
         </div>
       )}
 
+      <ArmyPanel player={player} />
+
       {visibleEntries.length === 0 ? (
         <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 p-6 text-center text-sm text-neutral-500">
           {entries.length === 0
@@ -175,13 +178,18 @@ export default function ThreatsPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {visibleEntries.map((entry) => (
+          {visibleEntries.map((entry, idx) => (
             <ThreatRow
               key={entry.enemyTile.tileId}
               entry={entry}
               player={player}
               artifacts={artifacts}
               busy={busy}
+              // Auto-expand the top-3 ranked threats so the user lands in
+              // the canonical attack flow without an extra click on the
+              // matchups they're most likely to act on. Lower-ranked rows
+              // stay collapsed to keep the page scannable.
+              defaultExpanded={idx < 3}
               onAttack={withBusy(handleAttack)}
               onCastIntelSpell={withBusy(handleCastIntelSpell)}
               onUseArtifact={withBusy(handleUseArtifact)}

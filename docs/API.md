@@ -8,7 +8,7 @@
 
 All endpoints are under `/api/`. Authentication uses Firebase Auth ID tokens (Bearer) or session cookies. Spec: [`/openapi.json`](https://cursorboston.com/openapi.json) · interactive: [`/api/docs`](https://cursorboston.com/api/docs).
 
-**155 paths, 189 operations across 31 areas.**
+**158 paths, 192 operations across 31 areas.**
 
 ---
 
@@ -124,6 +124,7 @@ _Coworking sessions and PyData 2026 ticketing._
 | GET | `/api/events/pydata-2026/luma-status` | No | Whether the current user appears on the PyData Luma guest list |
 | GET | `/api/events/pydata-2026/registration` | Yes | Get the current user's PyData 2026 registration (if any) |
 | POST | `/api/events/pydata-2026/registration` | Yes | Create or update the current user's PyData 2026 registration |
+| POST | `/api/events/pydata-2026/withdraw` | No | Two-step PyData withdrawal: confirmation page POSTs here with HMAC token |
 
 ## Game
 
@@ -406,8 +407,10 @@ _Talk-submission moderation queue._
 | DELETE | `/api/summer-cohort/apply` | Yes | Withdraw the current user's summer-cohort application |
 | GET | `/api/summer-cohort/apply` | Yes | Get the current user's summer-cohort application + counts |
 | POST | `/api/summer-cohort/apply` | Yes | Create or update the current user's summer-cohort application |
+| POST | `/api/summer-cohort/confirm-dev-env` | Yes | Cohort 1 admit confirms dev environment is set up (Node + Git + IDE) |
 | GET | `/api/summer-cohort/intake-survey` | Yes | Get the current user's intake-survey response |
 | POST | `/api/summer-cohort/intake-survey` | Yes | Submit (or re-submit) the intake survey |
 | GET | `/api/summer-cohort/submissions/{weekId}` | No | Public read of merged submissions on a vote-format week |
 | GET | `/api/summer-cohort/votes` | No | Aggregate vote counts for a vote-format week |
 | POST | `/api/summer-cohort/votes` | Yes | Toggle the current user's vote for a submission |
+| GET | `/api/summer-cohort/withdraw` | No | One-click cohort withdrawal (HMAC token in query) |

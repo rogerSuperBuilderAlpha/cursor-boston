@@ -14,6 +14,8 @@ import {
 } from "@/lib/game/content";
 import { realizedSpellMagnitude } from "@/lib/game/combat";
 import { CatalogImage } from "@/app/game/_components/CatalogImage";
+import { BattleSimPanel } from "@/app/game/threats/_components/BattleSimPanel";
+import { useAttackPreview } from "@/app/game/threats/_lib/use-attack-preview";
 import type {
   GameArtifact,
   GamePlayer,
@@ -329,6 +331,31 @@ export function EnemyTilePanel({
     player.phase === "play" &&
     player.turnsRemaining >= 1 + (offenseSpellId ? 5 : 0);
 
+  // Live battle simulation — same hook the threats-page uses. Renders below
+  // the attack form so the modal and the threats page give the same answer
+  // for the same matchup. Preview disabled when the matchup is structurally
+  // impossible (no source, wrong phase) since the server would reject it.
+  const selectedOffense = offenseSpells.find((s) => s.id === offenseSpellId) ?? null;
+  const selectedOffenseExpected = selectedOffense
+    ? realizedSpellMagnitude({
+        baseStrength: selectedOffense.baseStrength,
+        caste: selectedOffense.caste,
+        spellType: selectedOffense.type,
+        magicLandCount: playerMagicLandCount,
+        activeUpgrades: player.activeUpgrades ?? {},
+        dice: 1.0,
+      })
+    : null;
+  const previewDisabled =
+    !source || player.phase !== "play" || sentTotal === 0;
+  const attackPreview = useAttackPreview({
+    sourceTileId: source?.tileId ?? "",
+    targetTileId: tile.tileId,
+    units: { ground, siege, air },
+    offenseSpellId: selectedOffense ? selectedOffense.id : null,
+    disabled: previewDisabled,
+  });
+
   const offenseArtifactSection =
     onUseArtifact && offensiveArtifacts.length > 0 ? (
       <div className="rounded-lg border border-red-200 dark:border-red-900 bg-red-50/50 dark:bg-red-950/20 p-4 space-y-2">
@@ -528,6 +555,31 @@ export function EnemyTilePanel({
           {busy ? "Resolving…" : `Send ${sentTotal} units (cost ${1 + (offenseSpellId ? 5 : 0)} turns)`}
         </button>
       </div>
+
+      {/* Live battle simulation — parity with the threats-page experience. */}
+      <BattleSimPanel
+        preview={attackPreview.preview}
+        loading={attackPreview.loading}
+        error={attackPreview.error}
+        disabled={previewDisabled}
+        disabledReason={
+          !source
+            ? "Pick a source tile first."
+            : player.phase !== "play"
+              ? "Not in play phase — preview unavailable."
+              : sentTotal === 0
+                ? "Set unit counts to see a projection."
+                : undefined
+        }
+        selectedOffenseSpell={
+          selectedOffense
+            ? {
+                spell: selectedOffense,
+                expectedMagnitude: selectedOffenseExpected ?? 0,
+              }
+            : null
+        }
+      />
 
       {offenseArtifactSection}
       {spySection}
