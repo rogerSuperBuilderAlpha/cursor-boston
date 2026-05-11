@@ -14,6 +14,8 @@ import {
   ALL_UNITS,
   ALL_UPGRADES,
 } from "@/lib/game/content";
+import { CatalogImage } from "@/app/game/_components/CatalogImage";
+import { CatalogLore } from "@/app/game/_components/CatalogLore";
 import type {
   BuildingDefinition,
   Caste,
@@ -341,15 +343,21 @@ function UpgradeRow({
                   : "border-neutral-200 dark:border-neutral-800"
               }`}
             >
-              <div className="flex items-baseline justify-between mb-1">
-                <span className="font-medium">{opt.name}</span>
-                <span className="text-[10px] uppercase tracking-wide text-neutral-500">
-                  Option {opt.optionIndex}
-                </span>
+              <div className="flex items-start gap-2 mb-2">
+                <CatalogImage entry={opt} size="sm" />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-baseline justify-between mb-1">
+                    <span className="font-medium">{opt.name}</span>
+                    <span className="text-[10px] uppercase tracking-wide text-neutral-500">
+                      Option {opt.optionIndex}
+                    </span>
+                  </div>
+                  <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                    {opt.description}
+                  </p>
+                </div>
               </div>
-              <p className="text-xs text-neutral-600 dark:text-neutral-400 mb-2">
-                {opt.description}
-              </p>
+              <CatalogLore entry={opt} className="text-xs mb-2" />
               {effects && (
                 <p className="text-xs text-emerald-700 dark:text-emerald-400 mb-2 font-mono">
                   {effects}

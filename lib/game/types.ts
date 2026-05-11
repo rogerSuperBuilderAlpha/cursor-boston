@@ -57,6 +57,11 @@ export interface UnitDefinition {
   defense: number;
   hp: number;
   description: string;
+  /** Long-form flavor / lore. UI falls back to "No lore yet." when absent. */
+  lore?: string;
+  /** Path or URL to illustrative art. UI falls back to /logo.svg when absent.
+   *  Convention: /game/units/<id>.png (e.g. "/game/units/white-ground-pikeman.png"). */
+  imageUrl?: string;
 }
 
 export type SpellTier = 1 | 2 | 3 | 4 | 5;
@@ -80,6 +85,11 @@ export interface SpellDefinition {
   turnCost: number;
   // For type === "intel": which reveal scope the spy spell delivers.
   intelScope?: IntelSpellScope;
+  /** Long-form flavor / lore. UI falls back to "No lore yet." when absent. */
+  lore?: string;
+  /** Path or URL to illustrative art. UI falls back to /logo.svg when absent.
+   *  Convention: /game/spells/<id>.png (e.g. "/game/spells/white-offense-smite.png"). */
+  imageUrl?: string;
 }
 
 export interface BuildingDefinition {
@@ -92,6 +102,11 @@ export interface BuildingDefinition {
   description: string;
   capacityBonus?: number;
   unitTypeAffinity?: { type: UnitType; multiplier: number };
+  /** Long-form flavor / lore. UI falls back to "No lore yet." when absent. */
+  lore?: string;
+  /** Path or URL to illustrative art. UI falls back to /logo.svg when absent.
+   *  Convention: /game/buildings/<id>.png (e.g. "/game/buildings/white-military.png"). */
+  imageUrl?: string;
 }
 
 // ──── v2: Unit & building upgrades ────
@@ -136,6 +151,11 @@ export interface UpgradeDefinition {
   // Set on the optionIndex-4 air-unit upgrades only; identifies which
   // caste-flavored intel passive this upgrade provides.
   intelPassive?: AirIntelPassive;
+  /** Long-form flavor / lore. UI falls back to "No lore yet." when absent. */
+  lore?: string;
+  /** Path or URL to illustrative art. UI falls back to /logo.svg when absent.
+   *  Convention: /game/upgrades/<id>.png (e.g. "/game/upgrades/white-ground-pikeman-upgrade-1.png"). */
+  imageUrl?: string;
 }
 
 export interface CasteProfile {
@@ -148,6 +168,11 @@ export interface CasteProfile {
   // it stacks on top of base defense. Green/White lean concentrated; Blue/Black
   // are comfortable spread.
   supplyMultiplier: number;
+  /** Long-form flavor / lore. UI falls back to "No lore yet." when absent. */
+  lore?: string;
+  /** Path or URL to illustrative art. UI falls back to /logo.svg when absent.
+   *  Convention: /game/castes/<caste>.png (e.g. "/game/castes/white.png"). */
+  imageUrl?: string;
 }
 
 export interface UnitStack {
