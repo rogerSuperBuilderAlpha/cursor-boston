@@ -7,7 +7,12 @@
 "use client";
 
 import { useState } from "react";
-import { ALL_SPELLS, ARTIFACTS_BY_ID } from "@/lib/game/content";
+import {
+  ALL_SPELLS,
+  ARTIFACTS_BY_ID,
+  getUnitForCasteAndType,
+} from "@/lib/game/content";
+import { CatalogImage } from "@/app/game/_components/CatalogImage";
 import type {
   GameArtifact,
   GamePlayer,
@@ -140,16 +145,25 @@ export function OwnTilePanel({
           </p>
         ) : (
           <div className="flex flex-wrap gap-2">
-            {UNIT_TYPES.map((u) => (
-              <button
-                key={u}
-                onClick={() => onBuild(u)}
-                disabled={busy || !canBuild}
-                className="px-4 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors capitalize disabled:opacity-50"
-              >
-                +10 {u}
-              </button>
-            ))}
+            {UNIT_TYPES.map((u) => {
+              const unit = player.caste
+                ? getUnitForCasteAndType(player.caste, u)
+                : null;
+              return (
+                <button
+                  key={u}
+                  onClick={() => onBuild(u)}
+                  disabled={busy || !canBuild}
+                  className="flex items-center gap-2 px-4 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors disabled:opacity-50"
+                  title={unit?.description ?? u}
+                >
+                  {unit ? <CatalogImage entry={unit} size="xs" /> : null}
+                  <span className="capitalize">
+                    +10 {unit?.name ?? u}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         )}
       </section>
@@ -176,10 +190,11 @@ export function OwnTilePanel({
                   player.turnsRemaining < 5 ||
                   tile.armedDefenseSpellId === s.id
                 }
-                className="px-3 py-1.5 text-sm border border-blue-300 dark:border-blue-700 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 px-3 py-1.5 text-sm border border-blue-300 dark:border-blue-700 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors disabled:opacity-50"
                 title={s.description}
               >
-                {s.name}
+                <CatalogImage entry={s} size="xs" />
+                <span>{s.name}</span>
               </button>
             ))}
           </div>

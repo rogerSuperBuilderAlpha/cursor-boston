@@ -8,6 +8,7 @@
 
 import { useMemo, useState } from "react";
 import { ARTIFACTS_BY_ID, getSpellsForCasteAndType } from "@/lib/game/content";
+import { CatalogImage } from "@/app/game/_components/CatalogImage";
 import { realizedSpellMagnitude } from "@/lib/game/combat";
 import type {
   CombatResult,
@@ -736,9 +737,10 @@ export function ThreatRow(props: ThreatRowProps) {
                           onClick={() => handleArm(s.id)}
                           disabled={busy || reason !== null}
                           title={reason ?? s.description}
-                          className="px-3 py-1.5 text-xs rounded border border-blue-300 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950/30 disabled:opacity-50"
+                          className="flex items-center gap-2 px-3 py-1.5 text-xs rounded border border-blue-300 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950/30 disabled:opacity-50"
                         >
-                          T{s.tier} {s.name}
+                          <CatalogImage entry={s} size="xs" />
+                          <span>T{s.tier} {s.name}</span>
                         </button>
                       );
                     })}

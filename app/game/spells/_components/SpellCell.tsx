@@ -12,6 +12,8 @@ import type {
   SpellDefinition,
   SpellType,
 } from "@/lib/game/types";
+import { CatalogImage } from "@/app/game/_components/CatalogImage";
+import { CatalogLore } from "@/app/game/_components/CatalogLore";
 import { TYPE_LABEL } from "../_lib/constants";
 import { DefenseControls } from "./spell-cell/DefenseControls";
 import { OffenseHint } from "./spell-cell/OffenseHint";
@@ -95,15 +97,21 @@ export function SpellCell(props: Props) {
 
   return (
     <div className="p-4 flex flex-col gap-3 min-h-[8rem]">
-      <div className="flex items-baseline justify-between gap-2">
-        <h3 className="font-semibold text-sm">{spell.name}</h3>
-        <span className="text-[10px] uppercase tracking-wide text-neutral-500 shrink-0">
-          {TYPE_LABEL[column]}
-        </span>
+      <div className="flex items-start gap-3">
+        <CatalogImage entry={spell} size="sm" />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline justify-between gap-2">
+            <h3 className="font-semibold text-sm">{spell.name}</h3>
+            <span className="text-[10px] uppercase tracking-wide text-neutral-500 shrink-0">
+              {TYPE_LABEL[column]}
+            </span>
+          </div>
+          <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed mt-1">
+            {spell.description}
+          </p>
+        </div>
       </div>
-      <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed flex-1">
-        {spell.description}
-      </p>
+      <CatalogLore entry={spell} className="text-xs flex-1" />
       <div className="text-[11px] text-neutral-500">
         Strength <strong>{spell.baseStrength}</strong> · cost{" "}
         <strong>{spell.turnCost}t</strong>

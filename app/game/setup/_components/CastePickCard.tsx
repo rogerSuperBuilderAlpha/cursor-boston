@@ -14,6 +14,8 @@ import {
 } from "@/lib/game/content";
 import type { Caste } from "@/lib/game/types";
 import { CASTE_PRESENTATION } from "../_lib/constants";
+import { CatalogImage } from "@/app/game/_components/CatalogImage";
+import { CatalogLore } from "@/app/game/_components/CatalogLore";
 
 interface Props {
   caste: Caste;
@@ -42,19 +44,25 @@ export function CastePickCard({ caste, busy, onChoose }: Props) {
 
   return (
     <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-4 bg-white dark:bg-neutral-950 flex flex-col">
-      <div className="flex items-center gap-3 mb-2">
-        <span
-          aria-hidden="true"
-          className="inline-block w-4 h-4 rounded-full border border-neutral-300 dark:border-neutral-700"
-          style={{ background: presentation.swatch }}
-        />
-        <h3 className="text-lg font-semibold capitalize">{caste}</h3>
-        <span className="text-xs text-neutral-500">{presentation.tagline}</span>
+      <div className="flex items-start gap-3 mb-3">
+        <CatalogImage entry={{ ...profile, name: caste }} size="md" />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <span
+              aria-hidden="true"
+              className="inline-block w-4 h-4 rounded-full border border-neutral-300 dark:border-neutral-700"
+              style={{ background: presentation.swatch }}
+            />
+            <h3 className="text-lg font-semibold capitalize">{caste}</h3>
+          </div>
+          <span className="text-xs text-neutral-500">{presentation.tagline}</span>
+        </div>
       </div>
 
-      <p className="text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed mb-3">
+      <p className="text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed mb-2">
         {presentation.lore}
       </p>
+      <CatalogLore entry={profile} className="mb-3" />
 
       <div className="grid grid-cols-3 gap-2 text-xs mb-3">
         <Stat
@@ -113,11 +121,17 @@ export function CastePickCard({ caste, busy, onChoose }: Props) {
               currently come from the artifact pool and from production spells.
             </p>
           ) : (
-            <ul className="space-y-1">
+            <ul className="space-y-2">
               {buildings.map((b) => (
-                <li key={b.id} className="text-xs">
-                  <span className="font-medium">{b.name}</span>
-                  <span className="text-neutral-500"> — {b.description}</span>
+                <li key={b.id} className="text-xs flex gap-2">
+                  <CatalogImage entry={b} size="xs" />
+                  <div className="min-w-0 flex-1">
+                    <div>
+                      <span className="font-medium">{b.name}</span>
+                      <span className="text-neutral-500"> — {b.description}</span>
+                    </div>
+                    <CatalogLore entry={b} className="text-xs mt-0.5" />
+                  </div>
                 </li>
               ))}
             </ul>
@@ -155,18 +169,22 @@ function UnitLine({
   bonus: number;
 }) {
   return (
-    <div className="border border-neutral-200 dark:border-neutral-800 rounded p-2">
-      <div className="flex items-baseline justify-between">
-        <span className="font-medium">{unit.name}</span>
-        <span className="text-[10px] uppercase tracking-wide text-neutral-500">
-          {unit.type} · ×{bonus.toFixed(2)}
-        </span>
-      </div>
-      <div className="text-xs text-neutral-500 mt-0.5">
-        ATK {unit.attack} · DEF {unit.defense} · HP {unit.hp}
-      </div>
-      <div className="text-xs text-neutral-600 dark:text-neutral-400 italic mt-1">
-        {unit.description}
+    <div className="border border-neutral-200 dark:border-neutral-800 rounded p-2 flex gap-2">
+      <CatalogImage entry={unit} size="sm" />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-baseline justify-between">
+          <span className="font-medium">{unit.name}</span>
+          <span className="text-[10px] uppercase tracking-wide text-neutral-500">
+            {unit.type} · ×{bonus.toFixed(2)}
+          </span>
+        </div>
+        <div className="text-xs text-neutral-500 mt-0.5">
+          ATK {unit.attack} · DEF {unit.defense} · HP {unit.hp}
+        </div>
+        <div className="text-xs text-neutral-600 dark:text-neutral-400 italic mt-1">
+          {unit.description}
+        </div>
+        <CatalogLore entry={unit} className="text-xs mt-1" />
       </div>
     </div>
   );
@@ -182,18 +200,22 @@ function SpellLine({
   bonus: number;
 }) {
   return (
-    <div className="border border-neutral-200 dark:border-neutral-800 rounded p-2">
-      <div className="flex items-baseline justify-between">
-        <span className="font-medium">{spell.name}</span>
-        <span className="text-[10px] uppercase tracking-wide text-neutral-500">
-          {slot} · ×{bonus.toFixed(2)}
-        </span>
-      </div>
-      <div className="text-xs text-neutral-500 mt-0.5">
-        Base strength {spell.baseStrength}
-      </div>
-      <div className="text-xs text-neutral-600 dark:text-neutral-400 italic mt-1">
-        {spell.description}
+    <div className="border border-neutral-200 dark:border-neutral-800 rounded p-2 flex gap-2">
+      <CatalogImage entry={spell} size="sm" />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-baseline justify-between">
+          <span className="font-medium">{spell.name}</span>
+          <span className="text-[10px] uppercase tracking-wide text-neutral-500">
+            {slot} · ×{bonus.toFixed(2)}
+          </span>
+        </div>
+        <div className="text-xs text-neutral-500 mt-0.5">
+          Base strength {spell.baseStrength}
+        </div>
+        <div className="text-xs text-neutral-600 dark:text-neutral-400 italic mt-1">
+          {spell.description}
+        </div>
+        <CatalogLore entry={spell} className="text-xs mt-1" />
       </div>
     </div>
   );
