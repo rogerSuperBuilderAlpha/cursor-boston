@@ -7,8 +7,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { unitsPerCycleForLand } from "@/app/game/recruit/_lib/constants";
 import { ARTIFACTS_BY_ID, getSpellsForCasteAndType } from "@/lib/game/content";
-import { CatalogImage } from "@/app/game/_components/CatalogImage";
 import { realizedSpellMagnitude } from "@/lib/game/combat";
 import type {
   CombatResult,
@@ -21,25 +21,25 @@ import type {
   TurnReport,
   UnitType,
 } from "@/lib/game/types";
-import { unitsPerCycleForLand } from "@/app/game/recruit/_lib/constants";
 import type { ThreatEntry } from "../_lib/threats-derive";
 import { useAttackPreview } from "../_lib/use-attack-preview";
 import { BattleReport } from "./BattleReport";
 import { BattleSimPanel } from "./BattleSimPanel";
-
-const UNIT_TYPES: UnitType[] = ["ground", "siege", "air"];
-const LAND_TYPES: { type: LandType; label: string }[] = [
-  { type: "military", label: "Military" },
-  { type: "food", label: "Food" },
-  { type: "magic", label: "Magic" },
-  { type: "unassigned", label: "Unassigned" },
-];
+import { BoostPanel } from "./BoostPanel";
+import { ChangeSourceModal } from "./ChangeSourceModal";
+import { ManageSourcePanel } from "./ManageSourcePanel";
+import { SourceTileCard } from "./SourceTileCard";
+import { SpellPicker } from "./SpellPicker";
 
 export interface ThreatRowProps {
   entry: ThreatEntry;
   player: GamePlayer;
   artifacts: ReadonlyArray<GameArtifact>;
   busy: boolean;
+  /** Open the row's full attack flow on first render. Top-N rows by
+   *  advantage are auto-expanded by the page; the rest stay collapsed
+   *  to keep the list scannable. User can still toggle manually. */
+  defaultExpanded?: boolean;
   // Count of the player's magic-land tiles. Drives the magic multiplier
   // in the spell-cast picker's expected-magnitude readout. Passed from
   // the page so the row doesn't need the full tile list.
@@ -116,9 +116,16 @@ export interface ThreatRowProps {
  * that will 4xx out — the row tells them up-front why it's not allowed.
  */
 export function ThreatRow(props: ThreatRowProps) {
-  const { entry, player, artifacts, busy, myMagicLandCount } = props;
-  const [expanded, setExpanded] = useState(false);
+  const { entry, player, artifacts, busy, myMagicLandCount, defaultExpanded } =
+    props;
+  const [expanded, setExpanded] = useState(defaultExpanded ?? false);
+  const [activeTab, setActiveTab] = useState<"attack" | "defense">("attack");
   const [sourceTileId, setSourceTileId] = useState(entry.bestSource.tileId);
+  const [sourcePickerOpen, setSourcePickerOpen] = useState(false);
+  // Offensive artifact queued for this swing. The artifact is NOT
+  // consumed until handleAttack fires — clicking the card just stages
+  // it (visual ring), and clicking the same card again clears it.
+  const [queuedArtifactId, setQueuedArtifactId] = useState<string>("");
   const [ground, setGround] = useState(0);
   const [siege, setSiege] = useState(0);
   const [air, setAir] = useState(0);
@@ -180,32 +187,8 @@ export function ThreatRow(props: ThreatRowProps) {
         : null,
     [offenseSpellId, offenseSpells]
   );
-  const selectedOffenseExpected: number | null = selectedOffenseSpell
-    ? offenseSpellPreviews.get(selectedOffenseSpell.id) ?? null
-    : null;
   const defenseSpells = useMemo<SpellDefinition[]>(
     () => (myCaste ? getSpellsForCasteAndType(myCaste, "defense") : []),
-    [myCaste]
-  );
-  const siegeSpell = useMemo<SpellDefinition | null>(
-    () =>
-      myCaste
-        ? getSpellsForCasteAndType(myCaste, "siege")[0] ?? null
-        : null,
-    [myCaste]
-  );
-  const disarmSpell = useMemo<SpellDefinition | null>(
-    () =>
-      myCaste
-        ? getSpellsForCasteAndType(myCaste, "disarm")[0] ?? null
-        : null,
-    [myCaste]
-  );
-  const attritionSpell = useMemo<SpellDefinition | null>(
-    () =>
-      myCaste
-        ? getSpellsForCasteAndType(myCaste, "attrition")[0] ?? null
-        : null,
     [myCaste]
   );
   const intelSpell = useMemo<SpellDefinition | null>(
@@ -269,6 +252,21 @@ export function ThreatRow(props: ThreatRowProps) {
   async function handleAttack() {
     setToast(null);
     setBattle(null);
+    // Consume a queued artifact (if any) before the swing fires. We
+    // await so the server-side intel/offense effect is in place by the
+    // time the attack resolves. If the use-artifact call fails, abort —
+    // the user shouldn't lose units to a half-applied bonus.
+    if (queuedArtifactId) {
+      const a = artifacts.find((x) => x.id === queuedArtifactId);
+      if (a) {
+        const useRes = await props.onUseArtifact(
+          a.id,
+          entry.enemyTile.tileId
+        );
+        if (!useRes) return;
+        if (useRes.intelReport) setIntelReport(useRes.intelReport);
+      }
+    }
     const res = await props.onAttack({
       sourceTileId: source.tileId,
       targetTileId: entry.enemyTile.tileId,
@@ -291,6 +289,7 @@ export function ThreatRow(props: ThreatRowProps) {
       setGround(0);
       setSiege(0);
       setAir(0);
+      setQueuedArtifactId("");
       if (res.intelReport) setIntelReport(res.intelReport);
     }
   }
@@ -355,19 +354,6 @@ export function ThreatRow(props: ThreatRowProps) {
     }
   }
 
-  async function handleCastSpellFromPanel(spellId: string) {
-    setToast(null);
-    const res = await props.onCastSpell(
-      spellId,
-      source.tileId,
-      entry.enemyTile.tileId
-    );
-    if (res) {
-      setToast(res.reportSummary || "Spell cast");
-      setPreviewRefreshKey((k) => k + 1);
-    }
-  }
-
   async function handleFlyoverFromPanel() {
     setToast(null);
     setBattle(null);
@@ -406,24 +392,29 @@ export function ThreatRow(props: ThreatRowProps) {
         ? "text-amber-600 dark:text-amber-400"
         : "text-red-600 dark:text-red-400";
 
+  const recentOutcomes =
+    Boolean(battle) || Boolean(toast) || Boolean(intelReport);
+
   return (
     <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 overflow-hidden">
-      {/* ─── Compact summary line ─────────────────────────────────────────── */}
-      <div className="px-4 py-3 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
-        <button
-          onClick={() => setExpanded((v) => !v)}
-          className="text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
-          aria-expanded={expanded}
-          aria-label={expanded ? "Collapse" : "Expand"}
-        >
+      {/* ── Summary line: click the chevron to expand the full attack flow ─ */}
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="w-full px-4 py-3 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm text-left hover:bg-neutral-50 dark:hover:bg-neutral-900/40"
+        aria-expanded={expanded}
+        aria-label={expanded ? "Collapse row" : "Expand row"}
+      >
+        <span className="text-neutral-500 shrink-0">
           {expanded ? "▾" : "▸"}
-        </button>
+        </span>
         <span className="font-mono font-semibold">{entry.enemyTile.tileId}</span>
         <span className="text-neutral-600 dark:text-neutral-300">
           {enemyName} · {enemyCasteLabel}
         </span>
         <span className="font-mono text-xs text-neutral-500">
-          G{entry.enemyTile.units.ground} S{entry.enemyTile.units.siege} A{entry.enemyTile.units.air}
+          G{entry.enemyTile.units.ground} S{entry.enemyTile.units.siege} A
+          {entry.enemyTile.units.air}
         </span>
         {enemyShielded && (
           <span className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 text-xs">
@@ -433,441 +424,350 @@ export function ThreatRow(props: ThreatRowProps) {
         <span className={`font-semibold ${advantageTone}`}>
           adv {advantageLabel}
         </span>
-      </div>
+        {!expanded && (
+          <span className="ml-auto text-xs text-neutral-500">
+            Plan attack →
+          </span>
+        )}
+      </button>
 
-      {/* ─── Source prep strip — always visible (assign + recruit) ──────── */}
-      <div className="px-4 pb-2 space-y-1.5">
-        {/* Assign land type */}
-        <div className="flex flex-wrap items-center gap-1.5 text-xs">
-          <span className="text-neutral-500 mr-1">Assign source · 1t:</span>
-          {LAND_TYPES.map((a) => {
-            const isCurrent = source.type === a.type;
-            const cantSpend = player.turnsRemaining < 1;
-            const reason = isCurrent
-              ? `Already ${a.label.toLowerCase()}`
-              : cantSpend
-                ? "Need 1 turn"
-                : null;
-            return (
-              <button
-                key={a.type}
-                onClick={() => handleAssign(a.type)}
-                disabled={busy || reason !== null}
-                title={reason ?? `Set source to ${a.label.toLowerCase()}`}
-                className={`px-2 py-1 rounded border ${
-                  isCurrent
-                    ? "border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300"
-                    : "border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                } disabled:opacity-50`}
-              >
-                {a.label}
-              </button>
-            );
-          })}
-        </div>
-        {/* Recruit — military/food/magic recruit at different rates;
-            unrevealed/unassigned can't recruit (must assign first). */}
-        <div className="flex flex-wrap items-center gap-1.5 text-xs">
-          <span className="text-neutral-500 mr-1">Recruit · 5t:</span>
-          {UNIT_TYPES.map((u) => {
-            const yieldPerCycle = unitsPerCycleForLand(source.type);
-            const reason =
-              yieldPerCycle <= 0
-                ? "Tile cannot recruit — assign land type first"
+      {expanded && (
+        <div className="border-t border-neutral-200 dark:border-neutral-800">
+          {/* Row-level mode tabs — Attack (plan/launch the strike) vs.
+              Defense (beef up the source tile). Picking the right mode
+              up front keeps each tab clean and focused. */}
+          <div className="flex gap-1 px-3 pt-3" role="tablist">
+            <TabButton
+              active={activeTab === "attack"}
+              tone="red"
+              onClick={() => setActiveTab("attack")}
+            >
+              ⚔️ Attack
+            </TabButton>
+            <TabButton
+              active={activeTab === "defense"}
+              tone="blue"
+              onClick={() => setActiveTab("defense")}
+            >
+              🛡 Defense
+            </TabButton>
+          </div>
+
+          {activeTab === "attack" && (() => {
+            const recruitYield = unitsPerCycleForLand(source.type);
+            const recruitDisabledReason =
+              recruitYield <= 0
+                ? "Assign a land type to this tile first (Defense tab)"
                 : player.turnsRemaining < 5
-                  ? "Need 5 turns"
+                  ? `Need 5 turns (you have ${player.turnsRemaining})`
                   : null;
             return (
-              <button
-                key={u}
-                onClick={() => handleRecruit(u)}
-                disabled={busy || reason !== null}
-                title={
-                  reason ?? `Recruit +${yieldPerCycle} ${u} on source`
-                }
-                className="px-2 py-1 rounded border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 disabled:opacity-50 capitalize"
-              >
-                +{yieldPerCycle || 10} {u}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* ─── Inline attack form (visible always) ─────────────────────────── */}
-      <div className="px-4 pb-3 grid gap-2 md:grid-cols-[minmax(0,1fr)_auto]">
-        <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto_auto_minmax(0,1fr)] items-end">
-          <label className="text-xs">
-            <span className="text-neutral-500 block mb-0.5">Source</span>
-            <select
-              value={sourceTileId}
-              onChange={(e) => setSourceTileId(e.target.value)}
-              className="w-full px-2 py-1.5 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-sm"
-            >
-              {entry.candidateSources.map((t) => (
-                <option key={t.tileId} value={t.tileId}>
-                  {t.tileId} ({t.type}) — G{t.units.ground} S{t.units.siege} A{t.units.air}
-                </option>
-              ))}
-            </select>
-          </label>
-          <UnitInput
-            label={`G/${source.units.ground}`}
-            value={ground}
-            max={source.units.ground}
-            onChange={setGround}
-          />
-          <UnitInput
-            label={`S/${source.units.siege}`}
-            value={siege}
-            max={source.units.siege}
-            onChange={setSiege}
-          />
-          <UnitInput
-            label={`A/${source.units.air}`}
-            value={air}
-            max={source.units.air}
-            onChange={setAir}
-          />
-          <label className="text-xs">
-            <span className="text-neutral-500 block mb-0.5">Spell (+5t)</span>
-            <select
-              value={offenseSpellId}
-              onChange={(e) => setOffenseSpellId(e.target.value)}
-              className="w-full px-2 py-1.5 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-sm"
-            >
-              <option value="">— none —</option>
-              {offenseSpells.map((s) => {
-                const expected = offenseSpellPreviews.get(s.id);
-                const fx =
-                  expected !== undefined
-                    ? ` · ~+${Math.round(expected)} atk power`
-                    : "";
-                return (
-                  <option key={s.id} value={s.id}>
-                    T{s.tier} {s.name}{fx}
-                  </option>
-                );
-              })}
-            </select>
-          </label>
-        </div>
-        <button
-          onClick={handleAttack}
-          disabled={busy || attackDisabledReason !== null}
-          title={attackDisabledReason ?? `Costs ${attackTurnCost} turns`}
-          className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-500 transition-colors disabled:opacity-50"
-        >
-          Attack ({attackTurnCost}t)
-        </button>
-      </div>
-      {attackDisabledReason && (
-        <div className="px-4 pb-2 text-xs text-neutral-500">
-          Attack disabled: {attackDisabledReason}.
-        </div>
-      )}
-
-      {/* ─── Battle simulation panel (live projection) ───────────────────── */}
-      <div className="mx-4">
-        <BattleSimPanel
-          selectedOffenseSpell={
-            selectedOffenseSpell
-              ? {
-                  spell: selectedOffenseSpell,
-                  expectedMagnitude: selectedOffenseExpected ?? 0,
-                }
-              : null
-          }
-          preview={attackPreview.preview}
-          loading={attackPreview.loading}
-          error={attackPreview.error}
-          disabled={previewDisabled}
-          disabledReason={
-            previewDisabled
-              ? enemyShielded
-                ? "Enemy is shielded — no preview while shielded."
-                : "Not in play phase — preview unavailable."
-              : undefined
-          }
-          busy={busy}
-          spy={
-            intelSpell
-              ? {
-                  onClick: () => void handleCastIntel(),
-                  turnCost: intelSpell.turnCost,
-                  disabledReason:
-                    player.turnsRemaining < intelSpell.turnCost
-                      ? `Need ${intelSpell.turnCost} turns (you have ${player.turnsRemaining})`
-                      : null,
-                }
-              : undefined
-          }
-          siege={{
-            onClick: () => void handleSiegeFromPanel(),
-            turnCost: 5,
-            disabledReason:
-              player.turnsRemaining < 5
-                ? `Need 5 turns (you have ${player.turnsRemaining})`
-                : null,
-          }}
-          flyover={{
-            onClick: () => void handleFlyoverFromPanel(),
-            turnCost: 1,
-            airUnits: air,
-            disabledReason: (() => {
-              if (air <= 0) return "Set air units in the form first";
-              if (air > source.units.air)
-                return `Source has only ${source.units.air} air`;
-              if (player.turnsRemaining < 1)
-                return `Need 1 turn (you have ${player.turnsRemaining})`;
-              return null;
-            })(),
-          }}
-          castSpell={(() => {
-            // Build the picker entries for the player's caste-specific
-            // tier-1 spells of the new kinds. Expected magnitude uses
-            // dice=1.0 (midpoint of [0.5, 1.5]) so the player sees the
-            // average outcome before the actual roll.
-            const ownedMagic = myMagicLandCount;
-            const turnCost = 5;
-            const baseDisabled =
-              player.turnsRemaining < turnCost
-                ? `Need ${turnCost} turns (you have ${player.turnsRemaining})`
-                : null;
-            const candidates: SpellDefinition[] = [
-              siegeSpell,
-              disarmSpell,
-              attritionSpell,
-            ].filter((s): s is SpellDefinition => s !== null);
-            return {
-              spells: candidates.map((s) => {
-                const expected = realizedSpellMagnitude({
-                  baseStrength: s.baseStrength,
-                  caste: s.caste,
-                  spellType: s.type,
-                  magicLandCount: ownedMagic,
-                  activeUpgrades: player.activeUpgrades ?? {},
-                  dice: 1.0,
-                });
-                let entryDisabled = baseDisabled;
-                if (
-                  !entryDisabled &&
-                  player.stats.tilesHeld < s.minTilesRequired
-                ) {
-                  entryDisabled = `Need ${s.minTilesRequired} tiles held (you have ${player.stats.tilesHeld})`;
-                }
-                return {
-                  spell: s,
-                  expectedMagnitude: expected,
-                  disabledReason: entryDisabled,
-                };
-              }),
-              onCast: (spellId) => void handleCastSpellFromPanel(spellId),
-              turnCost,
-              disabledReason:
-                candidates.length === 0
-                  ? "No castable spells for your caste"
-                  : baseDisabled,
-            };
-          })()}
-        />
-      </div>
-
-      {/* ─── Battle report (full structured readout after an attack) ─────── */}
-      {battle && (
-        <div className="mx-4 mb-3">
-          <BattleReport
-            combat={battle.combat}
-            report={battle.report}
-            targetTile={battle.targetTile}
-            onDismiss={() => setBattle(null)}
-          />
-        </div>
-      )}
-
-      {/* ─── Toast (one-line result for non-attack actions) ──────────────── */}
-      {toast && (
-        <div className="mx-4 mb-3 px-3 py-2 rounded bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 text-xs text-emerald-800 dark:text-emerald-200 flex items-center justify-between gap-2">
-          <span>{toast}</span>
-          <button
-            onClick={() => setToast(null)}
-            className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-900 dark:hover:text-emerald-200"
-          >
-            ✕
-          </button>
-        </div>
-      )}
-
-      {/* ─── Intel report (rendered when populated by spy / intel artifact) ─ */}
-      {intelReport && (
-        <div className="mx-4 mb-3">
-          <ThreatIntelPanel
-            report={intelReport}
-            onDismiss={() => setIntelReport(null)}
-          />
-        </div>
-      )}
-
-      {/* ─── Expanded action panels ──────────────────────────────────────── */}
-      {expanded && (
-        <div className="border-t border-neutral-200 dark:border-neutral-800 px-4 py-3 space-y-4">
-          {/* Spy + intel artifacts */}
-          <section>
-            <h3 className="text-xs uppercase tracking-wide text-neutral-500 mb-2">
-              Spy / intel
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {intelSpell && (
-                <SpyButton
-                  spell={intelSpell}
-                  player={player}
-                  busy={busy}
-                  onCast={handleCastIntel}
-                />
-              )}
-              {intelArtifacts.length === 0 && !intelSpell && (
-                <p className="text-xs text-neutral-500">
-                  No caste intel spell or intel artifacts available.
-                </p>
-              )}
-              {intelArtifacts.map((a) => {
-                const def = ARTIFACTS_BY_ID.get(a.definitionId);
-                return (
-                  <button
-                    key={a.id}
-                    onClick={() => handleUseArtifact(a, entry.enemyTile.tileId)}
-                    disabled={busy}
-                    title={def?.description ?? a.definitionId}
-                    className="flex items-center gap-2 px-2 py-1.5 text-xs rounded border border-violet-300 dark:border-violet-800 hover:bg-violet-50 dark:hover:bg-violet-950/30 disabled:opacity-50"
+            <div className="px-4 py-3 space-y-4">
+              {/* Row 1 — source tile card on the left + three unit columns
+                  (input over +N recruit button) on the right. Labels
+                  ("G/20" etc.) sit ABOVE the box stack so the source-tile
+                  card and the input-over-button stack share the same
+                  height beneath the label row. */}
+              <div className="grid gap-3 grid-cols-[minmax(0,1fr)_auto_auto_auto] items-stretch">
+                {/* Source column — invisible label-height spacer above
+                    the card so the card aligns with the unit input
+                    boxes, not the labels. */}
+                <div className="flex flex-col">
+                  <span
+                    aria-hidden="true"
+                    className="text-xs mb-1 invisible select-none"
                   >
-                    <CatalogImage entry={def ?? { name: a.definitionId }} size="xs" />
-                    <span>Use {def?.name ?? a.definitionId}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </section>
-
-          {/* Offensive artifacts (used on enemy tile) */}
-          {offensiveArtifacts.length > 0 && (
-            <section>
-              <h3 className="text-xs uppercase tracking-wide text-neutral-500 mb-1">
-                Offensive artifacts (on enemy) · one-time use
-              </h3>
-              <p className="text-[11px] text-neutral-500 mb-2">
-                Spent before your attack — the bonus applies to your next swing.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {offensiveArtifacts.map((a) => {
-                  const def = ARTIFACTS_BY_ID.get(a.definitionId);
-                  return (
-                    <button
-                      key={a.id}
-                      onClick={() =>
-                        handleUseArtifact(a, entry.enemyTile.tileId)
-                      }
-                      disabled={busy}
-                      title={def?.description ?? a.definitionId}
-                      className="flex items-center gap-2 px-2 py-1.5 text-xs rounded border border-red-300 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-950/30 disabled:opacity-50"
-                    >
-                      <CatalogImage entry={def ?? { name: a.definitionId }} size="xs" />
-                      <span>Use {def?.name ?? a.definitionId}</span>
-                    </button>
-                  );
-                })}
+                    ·
+                  </span>
+                  {myCaste && (
+                    <div className="flex-1">
+                      <SourceTileCard
+                        source={source}
+                        myCaste={myCaste}
+                        candidateCount={entry.candidateSources.length}
+                        isBest={source.tileId === entry.bestSource.tileId}
+                        onOpenPicker={() => setSourcePickerOpen(true)}
+                      />
+                    </div>
+                  )}
+                </div>
+                <UnitWithRecruit
+                  label={`G/${source.units.ground}`}
+                  value={ground}
+                  max={source.units.ground}
+                  onChange={setGround}
+                  recruitYield={recruitYield}
+                  recruitDisabledReason={recruitDisabledReason}
+                  busy={busy}
+                  onRecruit={() => void handleRecruit("ground")}
+                />
+                <UnitWithRecruit
+                  label={`S/${source.units.siege}`}
+                  value={siege}
+                  max={source.units.siege}
+                  onChange={setSiege}
+                  recruitYield={recruitYield}
+                  recruitDisabledReason={recruitDisabledReason}
+                  busy={busy}
+                  onRecruit={() => void handleRecruit("siege")}
+                />
+                <UnitWithRecruit
+                  label={`A/${source.units.air}`}
+                  value={air}
+                  max={source.units.air}
+                  onChange={setAir}
+                  recruitYield={recruitYield}
+                  recruitDisabledReason={recruitDisabledReason}
+                  busy={busy}
+                  onRecruit={() => void handleRecruit("air")}
+                />
               </div>
-            </section>
+
+              {/* Row 2 — Boost (left) | Spell picker (right). Both are
+                  "optional modifiers" on the swing, so pairing them visually
+                  reinforces that they're the player's tuning levers. The
+                  grid stretches both boxes to the same height. */}
+              <div className="grid gap-4 lg:grid-cols-2 items-stretch">
+                <BoostPanel
+                  busy={busy}
+                  offensiveArtifacts={offensiveArtifacts.map((a) => ({
+                    artifact: a,
+                    definition: ARTIFACTS_BY_ID.get(a.definitionId) ?? null,
+                  }))}
+                  intelArtifacts={intelArtifacts.map((a) => ({
+                    artifact: a,
+                    definition: ARTIFACTS_BY_ID.get(a.definitionId) ?? null,
+                  }))}
+                  queuedArtifactId={queuedArtifactId}
+                  onQueueArtifact={(id) => setQueuedArtifactId(id)}
+                  onUseIntelArtifact={(artifactId) => {
+                    const a = artifacts.find((x) => x.id === artifactId);
+                    if (a) void handleUseArtifact(a, entry.enemyTile.tileId);
+                  }}
+                  spy={
+                    intelSpell
+                      ? {
+                          spell: intelSpell,
+                          onClick: () => void handleCastIntel(),
+                          disabledReason:
+                            player.turnsRemaining < intelSpell.turnCost
+                              ? `Need ${intelSpell.turnCost} turns (you have ${player.turnsRemaining})`
+                              : player.stats.tilesHeld < intelSpell.minTilesRequired
+                                ? `Need ${intelSpell.minTilesRequired} tiles held`
+                                : null,
+                        }
+                      : undefined
+                  }
+                  siege={{
+                    onClick: () => void handleSiegeFromPanel(),
+                    turnCost: 5,
+                    disabledReason:
+                      player.turnsRemaining < 5
+                        ? `Need 5 turns (you have ${player.turnsRemaining})`
+                        : null,
+                  }}
+                  flyover={{
+                    onClick: () => void handleFlyoverFromPanel(),
+                    turnCost: 1,
+                    airUnits: air,
+                    disabledReason: (() => {
+                      if (air <= 0) return "Set air units in the form first";
+                      if (air > source.units.air)
+                        return `Source has only ${source.units.air} air`;
+                      if (player.turnsRemaining < 1)
+                        return `Need 1 turn (you have ${player.turnsRemaining})`;
+                      return null;
+                    })(),
+                  }}
+                />
+                <SpellPicker
+                  spells={offenseSpells}
+                  expectedById={offenseSpellPreviews}
+                  selectedSpellId={offenseSpellId}
+                  onSelect={setOffenseSpellId}
+                />
+              </div>
+
+              {/* Row 3 — Projected outcome (left) + big Attack call-to-action
+                  (right). The CTA mirrors the projection's height so the
+                  player's eye lands on it the moment they're happy with the
+                  preview. */}
+              <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] items-stretch">
+                <BattleSimPanel
+                  selectedOffenseSpell={null}
+                  preview={attackPreview.preview}
+                  loading={attackPreview.loading}
+                  error={attackPreview.error}
+                  disabled={previewDisabled}
+                  disabledReason={
+                    previewDisabled
+                      ? enemyShielded
+                        ? "Enemy is shielded — no preview while shielded."
+                        : "Not in play phase — preview unavailable."
+                      : undefined
+                  }
+                />
+                <button
+                  onClick={handleAttack}
+                  disabled={busy || attackDisabledReason !== null}
+                  title={attackDisabledReason ?? `Costs ${attackTurnCost} turns`}
+                  className="rounded-lg bg-red-600 hover:bg-red-500 text-white font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex flex-col items-center justify-center gap-2 p-6 min-h-[180px]"
+                >
+                  <span className="text-3xl leading-none">⚔️</span>
+                  <span className="text-xl tracking-wide">ATTACK</span>
+                  <span className="text-sm font-medium opacity-80">
+                    {attackTurnCost} turn{attackTurnCost === 1 ? "" : "s"}
+                  </span>
+                  {attackDisabledReason && (
+                    <span className="text-[11px] font-normal opacity-90 text-center px-2 mt-1">
+                      {attackDisabledReason}
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
+            );
+          })()}
+
+          {sourcePickerOpen && myCaste && (
+            <ChangeSourceModal
+              candidates={entry.candidateSources}
+              myCaste={myCaste}
+              currentSourceId={source.tileId}
+              bestSourceId={entry.bestSource.tileId}
+              targetTileId={entry.enemyTile.tileId}
+              onSelect={(id) => setSourceTileId(id)}
+              onClose={() => setSourcePickerOpen(false)}
+            />
           )}
 
-          {/* Manage source tile — defense-side only.
-              Assign + recruit live in the always-visible strip up top. */}
-          <section>
-            <h3 className="text-xs uppercase tracking-wide text-neutral-500 mb-2">
-              Defend source · {source.tileId} ({source.type})
-            </h3>
-
-            <div className="space-y-3">
-              {/* Arm defense spell */}
-              {defenseSpells.length > 0 && (
-                <div>
-                  <p className="text-xs text-neutral-500 mb-1">
-                    Arm defense spell — 5 turns
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {defenseSpells.map((s) => {
-                      const reason =
-                        source.armedDefenseSpellId === s.id
-                          ? "Already armed"
-                          : player.turnsRemaining < 5
-                            ? "Need 5 turns"
-                            : player.stats.tilesHeld < s.minTilesRequired
-                              ? `Need ${s.minTilesRequired} tiles`
-                              : null;
-                      return (
-                        <button
-                          key={s.id}
-                          onClick={() => handleArm(s.id)}
-                          disabled={busy || reason !== null}
-                          title={reason ?? s.description}
-                          className="flex items-center gap-2 px-3 py-1.5 text-xs rounded border border-blue-300 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950/30 disabled:opacity-50"
-                        >
-                          <CatalogImage entry={s} size="xs" />
-                          <span>T{s.tier} {s.name}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Defense artifacts (on source tile) */}
-              {defensiveArtifacts.length > 0 && (
-                <div>
-                  <p className="text-xs text-neutral-500 mb-1">
-                    Defense artifacts (on source) · one-time use
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {defensiveArtifacts.map((a) => {
-                      const def = ARTIFACTS_BY_ID.get(a.definitionId);
-                      return (
-                        <button
-                          key={a.id}
-                          onClick={() => handleUseArtifact(a, source.tileId)}
-                          disabled={busy}
-                          title={def?.description ?? a.definitionId}
-                          className="flex items-center gap-2 px-2 py-1.5 text-xs rounded border border-blue-300 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950/30 disabled:opacity-50"
-                        >
-                          <CatalogImage entry={def ?? { name: a.definitionId }} size="xs" />
-                          <span>Use {def?.name ?? a.definitionId}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+          {activeTab === "defense" && (
+            <div className="px-4 py-3">
+              <ManageSourcePanel
+                source={source}
+                player={player}
+                busy={busy}
+                defenseSpells={defenseSpells}
+                defensiveArtifacts={defensiveArtifacts.map((a) => ({
+                  artifact: a,
+                  definition: ARTIFACTS_BY_ID.get(a.definitionId) ?? null,
+                }))}
+                onAssign={(t) => void handleAssign(t)}
+                onRecruit={(u) => void handleRecruit(u)}
+                onArmDefenseSpell={(spellId) => void handleArm(spellId)}
+                onUseDefensiveArtifact={(artifactId) => {
+                  const a = artifacts.find((x) => x.id === artifactId);
+                  if (a) void handleUseArtifact(a, source.tileId);
+                }}
+              />
             </div>
-          </section>
+          )}
+
+          {/* ── RECENT OUTCOMES (full-width, below the tab content) ─────── */}
+          {recentOutcomes && (
+            <section className="px-4 py-3 space-y-2 border-t border-neutral-100 dark:border-neutral-900/60">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                Recent outcomes
+              </h3>
+              {battle && (
+                <BattleReport
+                  combat={battle.combat}
+                  report={battle.report}
+                  targetTile={battle.targetTile}
+                  onDismiss={() => setBattle(null)}
+                />
+              )}
+              {intelReport && (
+                <ThreatIntelPanel
+                  report={intelReport}
+                  onDismiss={() => setIntelReport(null)}
+                />
+              )}
+              {toast && (
+                <div className="px-3 py-2 rounded bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 text-xs text-emerald-800 dark:text-emerald-200 flex items-center justify-between gap-2">
+                  <span>{toast}</span>
+                  <button
+                    onClick={() => setToast(null)}
+                    className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-900 dark:hover:text-emerald-200"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+            </section>
+          )}
         </div>
       )}
     </div>
   );
 }
 
-function UnitInput({
+function TabButton({
+  active,
+  tone,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  tone: "red" | "blue";
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  const activeCls =
+    tone === "red"
+      ? "border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-200"
+      : "border-blue-300 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-200";
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={active}
+      onClick={onClick}
+      className={`px-4 py-1.5 text-sm font-semibold rounded-t-md border-x border-t -mb-px transition-colors ${
+        active
+          ? activeCls
+          : "border-transparent text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function UnitWithRecruit({
   label,
   value,
   max,
   onChange,
+  recruitYield,
+  recruitDisabledReason,
+  busy,
+  onRecruit,
 }: {
   label: string;
   value: number;
   max: number;
   onChange: (n: number) => void;
+  recruitYield: number;
+  recruitDisabledReason: string | null;
+  busy: boolean;
+  onRecruit: () => void;
 }) {
+  // When recruitYield is 0 the source tile can't actually produce that unit
+  // (no land type assigned). Show "+10" so the column width stays
+  // consistent, but disable the button — the tooltip carries the why.
+  const buttonLabel = recruitYield > 0 ? `+${recruitYield}` : "+10";
+  const inputId = `units-${label.replace(/[^a-z0-9]/gi, "-")}`;
   return (
-    <label className="text-xs">
-      <span className="text-neutral-500 block mb-0.5">{label}</span>
+    <div className="flex flex-col w-24">
+      <label
+        htmlFor={inputId}
+        className="text-xs text-neutral-500 mb-1 truncate"
+      >
+        {label}
+      </label>
       <input
+        id={inputId}
         type="number"
         min={0}
         max={max}
@@ -876,38 +776,18 @@ function UnitInput({
           const n = Number.parseInt(e.target.value, 10);
           onChange(Number.isFinite(n) ? Math.max(0, Math.min(max, n)) : 0);
         }}
-        className="w-20 px-2 py-1.5 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-sm"
+        className="w-full px-3 py-2 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-base font-medium"
       />
-    </label>
-  );
-}
-
-function SpyButton({
-  spell,
-  player,
-  busy,
-  onCast,
-}: {
-  spell: SpellDefinition;
-  player: GamePlayer;
-  busy: boolean;
-  onCast: () => void;
-}) {
-  const reason =
-    player.turnsRemaining < spell.turnCost
-      ? `Need ${spell.turnCost} turns`
-      : player.stats.tilesHeld < spell.minTilesRequired
-        ? `Need ${spell.minTilesRequired} tiles`
-        : null;
-  return (
-    <button
-      onClick={onCast}
-      disabled={busy || reason !== null}
-      title={reason ?? spell.description}
-      className="px-3 py-1.5 text-xs rounded border border-violet-300 dark:border-violet-800 hover:bg-violet-50 dark:hover:bg-violet-950/30 disabled:opacity-50"
-    >
-      Spy: {spell.name} ({spell.turnCost}t)
-    </button>
+      <button
+        type="button"
+        onClick={onRecruit}
+        disabled={busy || recruitDisabledReason !== null}
+        title={recruitDisabledReason ?? `Recruit ${buttonLabel} on this tile (5 turns)`}
+        className="mt-1 w-full px-3 py-2 text-sm rounded border border-emerald-400 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 disabled:opacity-40 disabled:cursor-not-allowed font-medium"
+      >
+        {buttonLabel} · 5t
+      </button>
+    </div>
   );
 }
 
