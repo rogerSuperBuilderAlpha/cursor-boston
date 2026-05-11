@@ -10,11 +10,25 @@ import { useState } from "react";
 import { SPELLS_BY_ID } from "@/lib/game/content";
 import type { SpellDefinition, UnitStack } from "@/lib/game/types";
 import type { AttackPreview } from "../_lib/use-attack-preview";
+import { CatalogImage } from "@/app/game/_components/CatalogImage";
+import { CatalogLore } from "@/app/game/_components/CatalogLore";
 
 export interface BattleSimPanelProps {
   preview: AttackPreview | null;
   loading: boolean;
   error: string | null;
+  /**
+   * The offense spell the player currently has staged for the attack (the
+   * value of the offense-spell `<select>` in ThreatRow). When set, the
+   * panel renders a "Selected offense spell" block with the spell's full
+   * description, lore, and expected attack-power boost so the player can
+   * see what they're committing to before they swing.
+   */
+  selectedOffenseSpell?: {
+    spell: SpellDefinition;
+    /** Midpoint-dice attack-power boost (already caste/magic-multiplied). */
+    expectedMagnitude: number;
+  } | null;
   // True when the calling row has determined the attack is structurally
   // impossible (e.g. enemy shielded). The panel renders a muted "preview
   // unavailable" state instead of stale numbers.
@@ -79,6 +93,7 @@ export function BattleSimPanel({
   siege,
   flyover,
   castSpell,
+  selectedOffenseSpell,
 }: BattleSimPanelProps) {
   return (
     <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/30 my-3">
@@ -109,6 +124,13 @@ export function BattleSimPanel({
         ) : (
           <PreviewBody preview={preview} stale={loading} />
         )}
+
+        {selectedOffenseSpell ? (
+          <SelectedOffenseSpellBlock
+            spell={selectedOffenseSpell.spell}
+            expectedMagnitude={selectedOffenseSpell.expectedMagnitude}
+          />
+        ) : null}
 
         <ActionButtonStrip
           disabled={disabled}
@@ -213,6 +235,37 @@ function PreviewBody({
       {/* Tile-type modifiers — only show when non-neutral. Same vocab as
           BattleReport so post-attack and pre-attack copy match. */}
       <PreviewModifiers preview={preview} />
+    </div>
+  );
+}
+
+function SelectedOffenseSpellBlock({
+  spell,
+  expectedMagnitude,
+}: {
+  spell: SpellDefinition;
+  expectedMagnitude: number;
+}) {
+  return (
+    <div className="rounded-md border border-amber-200 dark:border-amber-900 bg-amber-50/50 dark:bg-amber-950/20 p-3 flex gap-3">
+      <CatalogImage entry={spell} size="sm" />
+      <div className="min-w-0 flex-1 space-y-1">
+        <div className="flex items-baseline justify-between gap-2">
+          <span className="font-semibold text-[11px] uppercase tracking-wide text-amber-700 dark:text-amber-300">
+            Offense spell · T{spell.tier} {spell.name}
+          </span>
+          <span className="font-mono text-[11px] text-amber-700 dark:text-amber-300 shrink-0">
+            ~+{Math.round(expectedMagnitude)} atk power
+          </span>
+        </div>
+        <p className="text-xs text-neutral-700 dark:text-neutral-300 leading-relaxed">
+          {spell.description}
+        </p>
+        <CatalogLore entry={spell} className="text-xs" />
+        <p className="text-[10px] text-neutral-500">
+          Cost +5 turns · midpoint dice 1.0× (actual roll 0.5–1.5×)
+        </p>
+      </div>
     </div>
   );
 }

@@ -139,10 +139,50 @@ export function ThreatRow(props: ThreatRowProps) {
     entry.bestSource;
 
   const myCaste = player.caste;
+  // Show only spells the player has actually unlocked (tilesHeld gate).
+  // Turn-budget is a per-attack check applied by `attackDisabledReason` once
+  // a spell is selected, so we keep visibility broad enough that the player
+  // still sees freshly-unlocked spells even with a low turn count.
   const offenseSpells = useMemo<SpellDefinition[]>(
-    () => (myCaste ? getSpellsForCasteAndType(myCaste, "offense") : []),
-    [myCaste]
+    () =>
+      myCaste
+        ? getSpellsForCasteAndType(myCaste, "offense").filter(
+            (s) => player.stats.tilesHeld >= s.minTilesRequired
+          )
+        : [],
+    [myCaste, player.stats.tilesHeld]
   );
+  // Compute expected midpoint magnitude (flat attack-power add) per spell so
+  // the option label can preview the effect and the BattleSimPanel can show
+  // the selected spell's full description+lore inline.
+  const offenseSpellPreviews = useMemo(() => {
+    if (!myCaste) return new Map<string, number>();
+    const out = new Map<string, number>();
+    for (const s of offenseSpells) {
+      out.set(
+        s.id,
+        realizedSpellMagnitude({
+          baseStrength: s.baseStrength,
+          caste: s.caste,
+          spellType: s.type,
+          magicLandCount: myMagicLandCount,
+          activeUpgrades: player.activeUpgrades ?? {},
+          dice: 1.0,
+        })
+      );
+    }
+    return out;
+  }, [myCaste, offenseSpells, myMagicLandCount, player.activeUpgrades]);
+  const selectedOffenseSpell: SpellDefinition | null = useMemo(
+    () =>
+      offenseSpellId
+        ? offenseSpells.find((s) => s.id === offenseSpellId) ?? null
+        : null,
+    [offenseSpellId, offenseSpells]
+  );
+  const selectedOffenseExpected: number | null = selectedOffenseSpell
+    ? offenseSpellPreviews.get(selectedOffenseSpell.id) ?? null
+    : null;
   const defenseSpells = useMemo<SpellDefinition[]>(
     () => (myCaste ? getSpellsForCasteAndType(myCaste, "defense") : []),
     [myCaste]
@@ -182,7 +222,11 @@ export function ThreatRow(props: ThreatRowProps) {
 
   const enemyShielded = entry.enemyOwner?.shielded ?? false;
   const sentTotal = ground + siege + air;
-  const attackTurnCost = 1 + (offenseSpellId ? 5 : 0);
+  // Drive the turn-cost off the effective id (computed below) so a stale
+  // selection whose spell no longer resolves doesn't quote the wrong cost.
+  // Forward-reference is fine: effectiveOffenseSpellId is derived directly
+  // from selectedOffenseSpell which is already memoized above.
+  const attackTurnCost = 1 + (selectedOffenseSpell ? 5 : 0);
   const attackDisabledReason = (() => {
     if (enemyShielded) return "Enemy shielded";
     if (sentTotal === 0) return "No units selected";
@@ -205,11 +249,19 @@ export function ThreatRow(props: ThreatRowProps) {
   // preview refetches even when the form fields haven't changed — those
   // actions mutate server-side intel-effects that the projection reads.
   const [previewRefreshKey, setPreviewRefreshKey] = useState(0);
+
+  // The "effective" id we send to the preview and attack APIs. If the
+  // staged offenseSpellId no longer resolves to a castable spell (e.g.
+  // tilesHeld dropped below its minTilesRequired since selection), fall
+  // back to none. Derived at use rather than via a cleanup effect so we
+  // don't trigger a cascading render.
+  const effectiveOffenseSpellId = selectedOffenseSpell ? selectedOffenseSpell.id : null;
+
   const attackPreview = useAttackPreview({
     sourceTileId: source.tileId,
     targetTileId: entry.enemyTile.tileId,
     units: { ground, siege, air },
-    offenseSpellId: offenseSpellId || null,
+    offenseSpellId: effectiveOffenseSpellId,
     disabled: previewDisabled,
     refreshKey: previewRefreshKey,
   });
@@ -221,7 +273,7 @@ export function ThreatRow(props: ThreatRowProps) {
       sourceTileId: source.tileId,
       targetTileId: entry.enemyTile.tileId,
       units: { ground, siege, air },
-      offenseSpellId: offenseSpellId || null,
+      offenseSpellId: effectiveOffenseSpellId,
     });
     if (res) {
       // If we have full combat detail + report + post-combat tile, render
@@ -485,11 +537,18 @@ export function ThreatRow(props: ThreatRowProps) {
               className="w-full px-2 py-1.5 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-sm"
             >
               <option value="">— none —</option>
-              {offenseSpells.map((s) => (
-                <option key={s.id} value={s.id}>
-                  T{s.tier} {s.name}
-                </option>
-              ))}
+              {offenseSpells.map((s) => {
+                const expected = offenseSpellPreviews.get(s.id);
+                const fx =
+                  expected !== undefined
+                    ? ` · ~+${Math.round(expected)} atk power`
+                    : "";
+                return (
+                  <option key={s.id} value={s.id}>
+                    T{s.tier} {s.name}{fx}
+                  </option>
+                );
+              })}
             </select>
           </label>
         </div>
@@ -511,6 +570,14 @@ export function ThreatRow(props: ThreatRowProps) {
       {/* ─── Battle simulation panel (live projection) ───────────────────── */}
       <div className="mx-4">
         <BattleSimPanel
+          selectedOffenseSpell={
+            selectedOffenseSpell
+              ? {
+                  spell: selectedOffenseSpell,
+                  expectedMagnitude: selectedOffenseExpected ?? 0,
+                }
+              : null
+          }
           preview={attackPreview.preview}
           loading={attackPreview.loading}
           error={attackPreview.error}

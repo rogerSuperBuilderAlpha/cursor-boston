@@ -12,6 +12,7 @@ import {
   ARTIFACTS_BY_ID,
   getUnitForCasteAndType,
 } from "@/lib/game/content";
+import { realizedSpellMagnitude } from "@/lib/game/combat";
 import { CatalogImage } from "@/app/game/_components/CatalogImage";
 import type {
   GameArtifact,
@@ -270,9 +271,22 @@ export function EnemyTilePanel({
   const targetBorders = new Set(neighborTileIds(tile.q, tile.r));
   const myBorders = ownedTiles.filter((t) => targetBorders.has(t.tileId));
   const myCaste = player.caste;
+  // Only show offense spells the player has actually unlocked (tilesHeld
+  // gate). Picking an unusable spell would 400 from the server and isn't a
+  // meaningful choice — better to hide them outright. Turn-budget is still
+  // handled by the disabled-attack reasoning below.
   const offenseSpells = myCaste
-    ? ALL_SPELLS.filter((s) => s.caste === myCaste && s.type === "offense")
+    ? ALL_SPELLS.filter(
+        (s) =>
+          s.caste === myCaste &&
+          s.type === "offense" &&
+          player.stats.tilesHeld >= s.minTilesRequired
+      )
     : [];
+  // Magic-land count drives spell scaling. PlayerStats doesn't store it
+  // directly, so we count it off the player's owned tiles. Cheap (the
+  // attack panel already has ownedTiles in scope).
+  const playerMagicLandCount = ownedTiles.filter((t) => t.type === "magic").length;
   const intelSpell = myCaste
     ? ALL_SPELLS.find((s) => s.caste === myCaste && s.type === "intel")
     : null;
@@ -452,11 +466,21 @@ export function EnemyTilePanel({
             className="mt-1 block w-full px-3 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800"
           >
             <option value="">— none —</option>
-            {offenseSpells.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
+            {offenseSpells.map((s) => {
+              const expected = realizedSpellMagnitude({
+                baseStrength: s.baseStrength,
+                caste: s.caste,
+                spellType: s.type,
+                magicLandCount: playerMagicLandCount,
+                activeUpgrades: player.activeUpgrades ?? {},
+                dice: 1.0,
+              });
+              return (
+                <option key={s.id} value={s.id}>
+                  T{s.tier} {s.name} · ~+{Math.round(expected)} atk power
+                </option>
+              );
+            })}
           </select>
         </label>
 
