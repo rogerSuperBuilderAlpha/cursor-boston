@@ -62,6 +62,16 @@ const WithdrawQuery = z.object({
   token: z.string().optional(),
 });
 
+// No body — auth identifies the user; the endpoint just stamps a timestamp.
+const ConfirmDevEnvBody = z.object({}).openapi("SummerCohortConfirmDevEnvBody");
+
+const ConfirmDevEnvResponse = z
+  .object({
+    ok: z.literal(true),
+    cohort1DevEnvConfirmedAt: z.number().int().nonnegative(),
+  })
+  .openapi("SummerCohortConfirmDevEnvResponse");
+
 const RedirectResponse = z.object({}).optional();
 
 const AdminIntakeAggregatesQuery = z.object({
@@ -107,6 +117,22 @@ export const summerCohortContract = c.router(
       query: WithdrawQuery,
       responses: { 302: RedirectResponse },
       metadata: { errorCodes: [] as const },
+    },
+    confirmDevEnv: {
+      method: "POST",
+      path: "/api/summer-cohort/confirm-dev-env",
+      summary:
+        "Cohort 1 admit confirms dev environment is set up (Node + Git + IDE)",
+      body: ConfirmDevEnvBody,
+      responses: {
+        200: ConfirmDevEnvResponse,
+        401: ApiErrorSchema,
+        403: ApiErrorSchema,
+        500: ApiErrorSchema,
+      },
+      metadata: {
+        errorCodes: ["UNAUTHORIZED", "FORBIDDEN", "SERVER_ERROR"] as const,
+      },
     },
     intakeSurveyGet: {
       method: "GET",

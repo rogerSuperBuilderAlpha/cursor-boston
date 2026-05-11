@@ -56,6 +56,8 @@ interface ApplicationDto {
   isLocal: boolean | null;
   wantsToPresent: boolean | null;
   mayImmersionRsvped: boolean;
+  /** Server timestamp (ms) of when the user self-attested dev env ready. */
+  cohort1DevEnvConfirmedAt: number | null;
   createdAt: number | null;
   updatedAt: number | null;
 }
@@ -797,9 +799,39 @@ function SummerCohortPageInner() {
           needsDiscord={!discord.discordInfo}
           needsGithub={!github.githubInfo?.login}
           needsSurvey={intakeStatus === "incomplete"}
+          needsDevEnvConfirm={
+            (application?.cohort1DevEnvConfirmedAt ?? null) === null
+          }
           onConnectDiscord={discord.connect}
           onConnectGithub={github.connect}
           onGoToSurvey={() => setActiveTab("intake-survey")}
+          onConfirmDevEnv={async () => {
+            if (!user) return;
+            const token = await user.getIdToken();
+            const res = await fetch("/api/summer-cohort/confirm-dev-env", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: "{}",
+            });
+            if (!res.ok) {
+              throw new Error("confirm_dev_env_failed");
+            }
+            const json = (await res.json()) as {
+              ok: true;
+              cohort1DevEnvConfirmedAt: number;
+            };
+            setApplication((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    cohort1DevEnvConfirmedAt: json.cohort1DevEnvConfirmedAt,
+                  }
+                : prev
+            );
+          }}
         />
       ) : null}
       <header className="mb-8">
