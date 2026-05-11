@@ -12,6 +12,7 @@ import {
   ARTIFACTS_BY_ID,
   getUnitForCasteAndType,
 } from "@/lib/game/content";
+import { realizedSpellMagnitude } from "@/lib/game/combat";
 import { CatalogImage } from "@/app/game/_components/CatalogImage";
 import type {
   GameArtifact,
@@ -214,7 +215,7 @@ export function OwnTilePanel({
               No unused defense artifacts in inventory.
             </p>
           ) : (
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {defensiveArtifacts.map((a) => {
                 const def = ARTIFACTS_BY_ID.get(a.definitionId);
                 return (
@@ -223,9 +224,17 @@ export function OwnTilePanel({
                     onClick={() => onUseArtifact(a.id)}
                     disabled={busy || tile.type === "unrevealed"}
                     title={def?.description ?? a.definitionId}
-                    className="px-3 py-1.5 text-sm border border-blue-300 dark:border-blue-700 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors disabled:opacity-50"
+                    className="flex items-start gap-2 p-2 text-left text-sm border border-blue-300 dark:border-blue-700 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors disabled:opacity-50"
                   >
-                    Use {def?.name ?? a.definitionId}
+                    <CatalogImage entry={def ?? { name: a.definitionId }} size="sm" />
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium truncate">
+                        Use {def?.name ?? a.definitionId}
+                      </div>
+                      <div className="text-[11px] text-neutral-600 dark:text-neutral-400 line-clamp-2 mt-0.5">
+                        {def?.description ?? ""}
+                      </div>
+                    </div>
                   </button>
                 );
               })}
@@ -270,9 +279,22 @@ export function EnemyTilePanel({
   const targetBorders = new Set(neighborTileIds(tile.q, tile.r));
   const myBorders = ownedTiles.filter((t) => targetBorders.has(t.tileId));
   const myCaste = player.caste;
+  // Only show offense spells the player has actually unlocked (tilesHeld
+  // gate). Picking an unusable spell would 400 from the server and isn't a
+  // meaningful choice — better to hide them outright. Turn-budget is still
+  // handled by the disabled-attack reasoning below.
   const offenseSpells = myCaste
-    ? ALL_SPELLS.filter((s) => s.caste === myCaste && s.type === "offense")
+    ? ALL_SPELLS.filter(
+        (s) =>
+          s.caste === myCaste &&
+          s.type === "offense" &&
+          player.stats.tilesHeld >= s.minTilesRequired
+      )
     : [];
+  // Magic-land count drives spell scaling. PlayerStats doesn't store it
+  // directly, so we count it off the player's owned tiles. Cheap (the
+  // attack panel already has ownedTiles in scope).
+  const playerMagicLandCount = ownedTiles.filter((t) => t.type === "magic").length;
   const intelSpell = myCaste
     ? ALL_SPELLS.find((s) => s.caste === myCaste && s.type === "intel")
     : null;
@@ -313,7 +335,10 @@ export function EnemyTilePanel({
         <h2 className="text-sm font-semibold uppercase tracking-wide text-red-700 dark:text-red-300">
           Offensive artifacts
         </h2>
-        <div className="flex flex-wrap gap-2">
+        <p className="text-xs text-red-700/70 dark:text-red-300/70">
+          One-time use. The bonus consumes on your next attack.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {offensiveArtifacts.map((a) => {
             const def = ARTIFACTS_BY_ID.get(a.definitionId);
             return (
@@ -322,9 +347,17 @@ export function EnemyTilePanel({
                 onClick={() => onUseArtifact(a.id)}
                 disabled={busy}
                 title={def?.description ?? a.definitionId}
-                className="px-3 py-1.5 text-sm border border-red-300 dark:border-red-700 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors disabled:opacity-50"
+                className="flex items-start gap-2 p-2 text-left text-sm border border-red-300 dark:border-red-700 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors disabled:opacity-50"
               >
-                Use {def?.name ?? a.definitionId}
+                <CatalogImage entry={def ?? { name: a.definitionId }} size="sm" />
+                <div className="min-w-0 flex-1">
+                  <div className="font-medium truncate">
+                    Use {def?.name ?? a.definitionId}
+                  </div>
+                  <div className="text-[11px] text-neutral-600 dark:text-neutral-400 line-clamp-2 mt-0.5">
+                    {def?.description ?? ""}
+                  </div>
+                </div>
               </button>
             );
           })}
@@ -338,7 +371,10 @@ export function EnemyTilePanel({
         <h2 className="text-sm font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
           Intel artifacts
         </h2>
-        <div className="flex flex-wrap gap-2">
+        <p className="text-xs text-violet-700/70 dark:text-violet-300/70">
+          One-time use. Reveals intel on this tile when spent.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {intelArtifacts.map((a) => {
             const def = ARTIFACTS_BY_ID.get(a.definitionId);
             return (
@@ -347,9 +383,17 @@ export function EnemyTilePanel({
                 onClick={() => onUseArtifact(a.id)}
                 disabled={busy}
                 title={def?.description ?? a.definitionId}
-                className="px-3 py-1.5 text-sm border border-violet-300 dark:border-violet-700 rounded-lg hover:bg-violet-100 dark:hover:bg-violet-900/30 transition-colors disabled:opacity-50"
+                className="flex items-start gap-2 p-2 text-left text-sm border border-violet-300 dark:border-violet-700 rounded-lg hover:bg-violet-100 dark:hover:bg-violet-900/30 transition-colors disabled:opacity-50"
               >
-                Use {def?.name ?? a.definitionId}
+                <CatalogImage entry={def ?? { name: a.definitionId }} size="sm" />
+                <div className="min-w-0 flex-1">
+                  <div className="font-medium truncate">
+                    Use {def?.name ?? a.definitionId}
+                  </div>
+                  <div className="text-[11px] text-neutral-600 dark:text-neutral-400 line-clamp-2 mt-0.5">
+                    {def?.description ?? ""}
+                  </div>
+                </div>
               </button>
             );
           })}
@@ -452,11 +496,21 @@ export function EnemyTilePanel({
             className="mt-1 block w-full px-3 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800"
           >
             <option value="">— none —</option>
-            {offenseSpells.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
+            {offenseSpells.map((s) => {
+              const expected = realizedSpellMagnitude({
+                baseStrength: s.baseStrength,
+                caste: s.caste,
+                spellType: s.type,
+                magicLandCount: playerMagicLandCount,
+                activeUpgrades: player.activeUpgrades ?? {},
+                dice: 1.0,
+              });
+              return (
+                <option key={s.id} value={s.id}>
+                  T{s.tier} {s.name} · ~+{Math.round(expected)} atk power
+                </option>
+              );
+            })}
           </select>
         </label>
 

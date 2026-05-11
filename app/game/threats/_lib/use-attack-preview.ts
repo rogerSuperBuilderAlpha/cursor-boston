@@ -112,14 +112,26 @@ export function useAttackPreview(args: PreviewArgs): PreviewState {
               : {}),
           }),
         });
+        // The error shape from apiError() is { message, code }, not a bare
+        // string — render flow used to drop the object straight into state
+        // and React would throw "Objects are not valid as a React child"
+        // when the message rendered. Extract .message defensively (still
+        // handle a string fallback in case some upstream returns one).
         const data = (await res.json()) as
           | (AttackPreview & { success: true })
-          | { success: false; error: string };
+          | {
+              success: false;
+              error: string | { message?: string; code?: string };
+            };
         // Stale-result guard: if a newer request fired while we waited,
         // discard this response.
         if (cancelled || myReqId !== reqIdRef.current) return;
         if (!data.success) {
-          setState({ preview: null, loading: false, error: data.error });
+          const errMsg =
+            typeof data.error === "string"
+              ? data.error
+              : (data.error?.message ?? "Preview failed");
+          setState({ preview: null, loading: false, error: errMsg });
           return;
         }
         setState({

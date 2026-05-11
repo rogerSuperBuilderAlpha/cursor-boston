@@ -49,6 +49,8 @@ export async function GET(request: NextRequest) {
               description: def.description,
               flavorOnFind: def.flavorOnFind,
               baseStrength: def.baseStrength,
+              lore: def.lore,
+              imageUrl: def.imageUrl,
             }
           : null,
       };
