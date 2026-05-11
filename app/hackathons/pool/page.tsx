@@ -8,7 +8,7 @@
 
 import { useEffect, useState, useCallback, Suspense } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import Avatar from "@/components/Avatar";
 import { useSearchParams } from "next/navigation";
 import {
   collection,
@@ -92,15 +92,6 @@ interface JoinRequest {
   teamId: string;
   status: string;
   createdAt: Timestamp | { toDate: () => Date };
-}
-
-function getInitials(name: string | null | undefined): string {
-  if (name) {
-    const parts = name.trim().split(/\s+/);
-    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    return name[0].toUpperCase();
-  }
-  return "?";
 }
 
 function HackathonsPoolPageContent() {
@@ -241,6 +232,7 @@ function HackathonsPoolPageContent() {
 
   useEffect(() => {
     if (authLoading || !user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- finalize loading state once auth resolves to signed-out
       if (!authLoading && !user) setLoading(false);
       return;
     }
@@ -475,19 +467,12 @@ function HackathonsPoolPageContent() {
                   className="flex items-center justify-between gap-3 py-2 border-b border-neutral-800 last:border-0"
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
-                    {u.photoURL ? (
-                      <Image
-                        src={u.photoURL}
-                        alt={u.displayName || "User"}
-                        width={36}
-                        height={36}
-                        className="rounded-full object-cover shrink-0"
-                      />
-                    ) : (
-                      <div className="w-9 h-9 rounded-full bg-neutral-800 flex items-center justify-center text-white text-sm font-semibold shrink-0">
-                        {getInitials(u.displayName)}
-                      </div>
-                    )}
+                    <Avatar
+                      src={u.photoURL}
+                      name={u.displayName}
+                      size={36}
+                      className="shrink-0"
+                    />
                     <div className="min-w-0">
                       <p className="text-white font-medium text-sm truncate">{u.displayName || "Anonymous"}</p>
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-neutral-500 text-xs">
@@ -584,19 +569,11 @@ function HackathonsPoolPageContent() {
                               key={idx}
                               className="flex items-center gap-1 text-neutral-400 text-xs"
                             >
-                              {slot.profile.photoURL ? (
-                                <Image
-                                  src={slot.profile.photoURL}
-                                  alt={slot.profile.displayName || "Member"}
-                                  width={20}
-                                  height={20}
-                                  className="rounded-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-5 h-5 rounded-full bg-neutral-700 flex items-center justify-center text-white text-[10px] font-medium">
-                                  {getInitials(slot.profile.displayName)}
-                                </div>
-                              )}
+                              <Avatar
+                                src={slot.profile.photoURL}
+                                name={slot.profile.displayName}
+                                size={20}
+                              />
                               <span className="truncate max-w-[70px]">
                                 {slot.profile.displayName || "Anonymous"}
                               </span>

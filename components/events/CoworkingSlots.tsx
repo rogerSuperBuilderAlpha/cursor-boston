@@ -8,7 +8,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import Image from "next/image";
+import Avatar from "@/components/Avatar";
 import ProfileRequirementsModal from "@/components/ProfileRequirementsModal";
 
 interface Attendee {
@@ -410,19 +410,11 @@ export default function CoworkingSlots({ eventId }: CoworkingSlotsProps) {
                         key={index}
                         className="flex items-center gap-2 px-3 py-1.5 bg-neutral-800 rounded-full"
                       >
-                        {attendee.photoUrl ? (
-                          <Image
-                            src={attendee.photoUrl}
-                            alt={attendee.displayName}
-                            width={20}
-                            height={20}
-                            className="rounded-full"
-                          />
-                        ) : (
-                          <div className="w-5 h-5 bg-neutral-700 rounded-full flex items-center justify-center text-xs text-neutral-400">
-                            {attendee.displayName.charAt(0).toUpperCase()}
-                          </div>
-                        )}
+                        <Avatar
+                          src={attendee.photoUrl}
+                          name={attendee.displayName}
+                          size={20}
+                        />
                         <span className="text-sm text-neutral-300">
                           {attendee.displayName}
                         </span>

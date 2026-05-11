@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
+import Avatar from "@/components/Avatar";
 import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { PairSession, SessionNotes } from "@/lib/pair-programming/types";
@@ -235,21 +235,11 @@ export default function SessionDetailPage() {
           {/* Partner Info */}
           {otherUser && (
             <div className="flex items-center gap-4 mb-6 p-4 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
-              {otherUser.photoURL ? (
-                <Image
-                  src={otherUser.photoURL}
-                  alt={otherUser.displayName || "Partner"}
-                  width={64}
-                  height={64}
-                  className="w-16 h-16 rounded-full"
-                />
-              ) : (
-                <div className="w-16 h-16 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center">
-                  <span className="text-2xl text-neutral-500">
-                    {otherUser.displayName?.[0]?.toUpperCase() || "?"}
-                  </span>
-                </div>
-              )}
+              <Avatar
+                src={otherUser.photoURL}
+                name={otherUser.displayName}
+                size={64}
+              />
               <div>
                 <h3 className="font-semibold text-lg">
                   {otherUser.displayName || "Anonymous User"}

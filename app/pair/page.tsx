@@ -16,7 +16,7 @@ import type {
   SessionType,
   AvailabilityWindow,
 } from "@/lib/pair-programming/types";
-import Image from "next/image";
+import Avatar from "@/components/Avatar";
 import { getPairProfile, getAllActiveProfiles } from "@/lib/pair-programming/data";
 import { getTopMatches } from "@/lib/pair-programming/matching";
 import { doc, getDoc } from "firebase/firestore";
@@ -297,21 +297,11 @@ function MatchCard({
     <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-6">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          {userProfile?.photoURL ? (
-            <Image
-              src={userProfile.photoURL}
-              alt={userProfile.displayName || "User"}
-              width={48}
-              height={48}
-              className="w-12 h-12 rounded-full"
-            />
-          ) : (
-            <div className="w-12 h-12 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center">
-              <span className="text-neutral-500">
-                {userProfile?.displayName?.[0]?.toUpperCase() || "?"}
-              </span>
-            </div>
-          )}
+          <Avatar
+            src={userProfile?.photoURL}
+            name={userProfile?.displayName}
+            size={48}
+          />
           <div>
             <h3 className="font-semibold">
               {userProfile?.displayName || "Anonymous User"}
