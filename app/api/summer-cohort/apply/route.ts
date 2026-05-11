@@ -34,6 +34,7 @@ function serializeApplication(
 ) {
   const createdAt = data.createdAt;
   const updatedAt = data.updatedAt;
+  const devEnvAt = data.cohort1DevEnvConfirmedAt;
   return {
     userId: data.userId ?? null,
     email: data.email ?? null,
@@ -46,6 +47,10 @@ function serializeApplication(
     wantsToPresent:
       typeof data.wantsToPresent === "boolean" ? data.wantsToPresent : null,
     mayImmersionRsvped: extras.mayImmersionRsvped,
+    cohort1DevEnvConfirmedAt:
+      devEnvAt && typeof (devEnvAt as { toMillis?: () => number }).toMillis === "function"
+        ? (devEnvAt as { toMillis: () => number }).toMillis()
+        : null,
     createdAt:
       createdAt && typeof (createdAt as { toMillis?: () => number }).toMillis === "function"
         ? (createdAt as { toMillis: () => number }).toMillis()

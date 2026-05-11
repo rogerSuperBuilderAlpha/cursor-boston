@@ -24,10 +24,22 @@ interface SetupReadinessModalProps {
   needsGithub: boolean;
   /** Intake survey not yet submitted — displayed only, never triggers pop. */
   needsSurvey: boolean;
+  /**
+   * Cohort 1 admit hasn't self-attested their dev environment is ready
+   * (Node + Git + Cursor / Claude Code). Triggers the modal to pop and
+   * surfaces a single "Yes, I'm ready" button.
+   */
+  needsDevEnvConfirm: boolean;
   onConnectDiscord: () => void;
   onConnectGithub: () => void;
   /** Closes the modal and switches the page to the intake-survey tab. */
   onGoToSurvey: () => void;
+  /**
+   * POST /api/summer-cohort/confirm-dev-env, then refresh the application.
+   * Should resolve once the timestamp is persisted so the row can flip to
+   * "done" without a full page reload.
+   */
+  onConfirmDevEnv: () => Promise<void>;
 }
 
 /**
@@ -40,13 +52,29 @@ export function SetupReadinessModal({
   needsDiscord,
   needsGithub,
   needsSurvey,
+  needsDevEnvConfirm,
   onConnectDiscord,
   onConnectGithub,
   onGoToSurvey,
+  onConfirmDevEnv,
 }: SetupReadinessModalProps) {
-  const shouldOpen = needsDiscord || needsGithub;
+  const shouldOpen = needsDiscord || needsGithub || needsDevEnvConfirm;
   const [isOpen, setIsOpen] = useState(false);
+  const [devEnvSubmitting, setDevEnvSubmitting] = useState(false);
+  const [devEnvError, setDevEnvError] = useState<string | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  const handleConfirmDevEnv = useCallback(async () => {
+    setDevEnvSubmitting(true);
+    setDevEnvError(null);
+    try {
+      await onConfirmDevEnv();
+    } catch {
+      setDevEnvError("Couldn't save. Try again in a moment.");
+    } finally {
+      setDevEnvSubmitting(false);
+    }
+  }, [onConfirmDevEnv]);
 
   // Open whenever the trigger condition becomes true. We only auto-open on
   // the rising edge so that closing the modal doesn't immediately re-open it
@@ -118,11 +146,11 @@ export function SetupReadinessModal({
           id="setup-readiness-title"
           className="pr-8 text-xl font-bold text-white md:text-2xl"
         >
-          Cohort 1 kicks off Mon, May 11 — let&apos;s get you ready
+          Cohort 1 kicks off TONIGHT at 6pm EST — final readiness check
         </h2>
         <p className="mt-2 text-sm text-neutral-400">
-          A few quick checks before kickoff. Knock these out now and you can
-          show up Monday focused on the work, not the setup.
+          Knock these out before 6pm so kickoff is about the work, not
+          logistics.
         </p>
 
         <ul className="mt-5 space-y-2">
@@ -150,17 +178,34 @@ export function SetupReadinessModal({
               handleClose();
             }}
           />
+          <StatusRow
+            label="Dev environment ready (Node + Git + Cursor or Claude Code)"
+            done={!needsDevEnvConfirm}
+            doneCopy="Confirmed — you're all set for kickoff."
+            actionLabel={devEnvSubmitting ? "Saving…" : "Yes, I'm ready"}
+            onAction={handleConfirmDevEnv}
+            actionDisabled={devEnvSubmitting}
+          />
         </ul>
+
+        {devEnvError ? (
+          <p className="mt-3 text-xs text-red-300" role="alert">
+            {devEnvError}
+          </p>
+        ) : null}
 
         <div className="mt-5 rounded-lg border border-emerald-700/60 bg-emerald-500/10 p-4">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-emerald-300">
             <Laptop className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden="true" />
-            On your laptop
+            Haven&apos;t installed Node, Git, or an IDE yet?
           </div>
           <p className="mt-1.5 text-sm text-neutral-200">
-            Install <strong>Node</strong>, <strong>Git</strong>, and{" "}
-            <strong>Cursor</strong> (or Claude Code) before Monday. The full
-            walkthrough is at <span className="font-mono">ludwitt.com/alc</span>.
+            Not required, but <strong>highly</strong> encouraged today —
+            tonight&apos;s kickoff is at 6pm EST. The 20-minute walkthrough at{" "}
+            <span className="font-mono">ludwitt.com/alc</span> covers Node,
+            Git, and <strong>Cursor</strong> (or <strong>Claude Code</strong>)
+            end-to-end so you don&apos;t spend kickoff debugging install
+            issues.
           </p>
           <a
             href={ALC_URL}
@@ -190,6 +235,7 @@ interface StatusRowProps {
   doneCopy: string;
   actionLabel: string;
   onAction: () => void;
+  actionDisabled?: boolean;
 }
 
 function StatusRow({
@@ -198,6 +244,7 @@ function StatusRow({
   doneCopy,
   actionLabel,
   onAction,
+  actionDisabled,
 }: StatusRowProps) {
   return (
     <li
@@ -230,7 +277,8 @@ function StatusRow({
         <button
           type="button"
           onClick={onAction}
-          className="shrink-0 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-amber-950 transition-colors hover:bg-amber-400"
+          disabled={actionDisabled}
+          className="shrink-0 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-amber-950 transition-colors hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {actionLabel}
         </button>
