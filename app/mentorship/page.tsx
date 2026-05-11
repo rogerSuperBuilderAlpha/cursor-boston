@@ -9,7 +9,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
-import Image from "next/image";
+import Avatar from "@/components/Avatar";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { getMentorshipProfile } from "@/lib/mentorship/data";
@@ -267,21 +267,12 @@ function MatchCard({
     <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-6 flex flex-col">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          {userProfile?.photoURL ? (
-            <Image
-              src={userProfile.photoURL}
-              alt={userProfile.displayName || "User"}
-              width={48}
-              height={48}
-              className="w-12 h-12 rounded-full object-cover"
-            />
-          ) : (
-            <div className="w-12 h-12 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center shrink-0">
-              <span className="text-neutral-500 font-medium">
-                {userProfile?.displayName?.[0]?.toUpperCase() || "?"}
-              </span>
-            </div>
-          )}
+          <Avatar
+            src={userProfile?.photoURL}
+            name={userProfile?.displayName}
+            size={48}
+            className="shrink-0"
+          />
           <div>
             <h3 className="font-semibold">{userProfile?.displayName || "Anonymous"}</h3>
             <div className="flex items-center gap-2 mt-1">

@@ -6,10 +6,9 @@
 
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { User } from "firebase/auth";
-import { getInitials } from "@/lib/utils";
+import Avatar from "@/components/Avatar";
 
 interface PostComposerProps {
   user: User | null;
@@ -55,19 +54,12 @@ export function PostComposer({
     <div className="bg-white dark:bg-neutral-900 rounded-xl p-4 border border-neutral-200 dark:border-neutral-800 mb-6">
       <div className="flex gap-3">
         <div className="shrink-0">
-          {user.photoURL ? (
-            <Image
-              src={user.photoURL}
-              alt={user.displayName || "You"}
-              width={40}
-              height={40}
-              className="w-10 h-10 rounded-full object-cover"
-            />
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center text-neutral-700 dark:text-white font-semibold">
-              {getInitials(user.displayName || user.email)}
-            </div>
-          )}
+          <Avatar
+            src={user.photoURL}
+            name={user.displayName}
+            email={user.email}
+            size={40}
+          />
         </div>
         <div className="flex-1">
           <textarea

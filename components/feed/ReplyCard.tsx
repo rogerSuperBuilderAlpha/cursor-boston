@@ -7,9 +7,9 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+import Avatar from "@/components/Avatar";
 import type { Message, ReactionType } from "@/types/feed";
-import { getInitials, formatRelativeDate } from "@/lib/utils";
+import { formatRelativeDate } from "@/lib/utils";
 
 interface ReplyCardProps {
   reply: Message;
@@ -35,19 +35,12 @@ export function ReplyCard({
   return (
     <div className="bg-neutral-100 dark:bg-neutral-800/50 rounded-lg p-3">
       <div className="flex items-start gap-2">
-        {reply.authorPhoto ? (
-          <Image
-            src={reply.authorPhoto}
-            alt={reply.authorName}
-            width={28}
-            height={28}
-            className="rounded-full object-cover shrink-0"
-          />
-        ) : (
-          <div className="w-7 h-7 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-neutral-700 dark:text-white text-xs font-semibold shrink-0">
-            {getInitials(reply.authorName)}
-          </div>
-        )}
+        <Avatar
+          src={reply.authorPhoto}
+          name={reply.authorName}
+          size={28}
+          className="shrink-0"
+        />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="font-medium text-neutral-900 dark:text-white text-sm">{reply.authorName}</span>

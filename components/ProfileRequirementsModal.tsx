@@ -9,7 +9,7 @@
 import { useState, useEffect, useCallback, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
-import Image from "next/image";
+import Avatar from "@/components/Avatar";
 import { DiscordIcon, GitHubIcon } from "@/components/icons";
 
 export type RequirementType =
@@ -116,6 +116,7 @@ export default function ProfileRequirementsModal({
 
   useEffect(() => {
     if (isOpen && user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- show spinner while fetch-on-open completes
       setLoading(true);
       fetchProfile();
     }
@@ -454,33 +455,11 @@ export default function ProfileRequirementsModal({
         <div className="p-6 border-b border-neutral-800">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
-              {profile?.photoURL ? (
-                <Image
-                  src={profile.photoURL}
-                  alt="Profile"
-                  width={48}
-                  height={48}
-                  className="rounded-full"
-                />
-              ) : (
-                <div className="w-12 h-12 bg-neutral-800 rounded-full flex items-center justify-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="text-neutral-500"
-                  >
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                    <circle cx="12" cy="7" r="4" />
-                  </svg>
-                </div>
-              )}
+              <Avatar
+                src={profile?.photoURL}
+                name={profile?.displayName}
+                size={48}
+              />
               <div>
                 <h2 id="profile-requirements-title" className="text-xl font-bold text-white">{title}</h2>
                 <p className="text-sm text-neutral-400">{description}</p>
