@@ -38,6 +38,8 @@ export const CASTE_PROFILES: Record<Caste, CasteProfile> = {
       attrition: 0.85,
     },
     supplyMultiplier: 1.25,
+    lore:
+      "White moves slowly and remembers everything. Their banners are old, their drills older, and their pikemen will hold a road for as many days as the road needs holding. Sanctuaries glow on the hilltops at dusk; the priests do not explain how.",
   },
   blue: {
     caste: "blue",
@@ -53,6 +55,8 @@ export const CASTE_PROFILES: Record<Caste, CasteProfile> = {
       attrition: 1.05,
     },
     supplyMultiplier: 0.75,
+    lore:
+      "Blue plays the long economy. Their captains are astronomers, their air corps moves on currents no scout can chart, and their production magic refills granaries through a winter no one can quite remember surviving. They win wars that began three seasons ago.",
   },
   black: {
     caste: "black",
@@ -68,6 +72,8 @@ export const CASTE_PROFILES: Record<Caste, CasteProfile> = {
       attrition: 1.30,
     },
     supplyMultiplier: 0.5,
+    lore:
+      "Black armies are quiet at the edges and loud in the middle. Their reavers are bone-armored and tireless; their blood-tide spells fall on a battlefield like a price already settled. They take towns by walking through them. They keep no prisoners they can spare.",
   },
   red: {
     caste: "red",
@@ -83,6 +89,8 @@ export const CASTE_PROFILES: Record<Caste, CasteProfile> = {
       attrition: 1.00,
     },
     supplyMultiplier: 1.0,
+    lore:
+      "Red wars are decided in three days or three minutes. Their siege foundries turn out trebuchets that smell of pitch and bone-glue; their pyre-mortars throw heat that cracks stone. Their defenses are thin because their generals do not intend to need them.",
   },
   green: {
     caste: "green",
@@ -98,6 +106,8 @@ export const CASTE_PROFILES: Record<Caste, CasteProfile> = {
       attrition: 0.85,
     },
     supplyMultiplier: 1.5,
+    lore:
+      "Green takes ground and keeps it. Their wardens build deeper than other castes, and their tiles hold more soldiers per acre because the soldiers eat from the land they stand on. Their air is weak; they don't intend to leave the ground.",
   },
 };
 

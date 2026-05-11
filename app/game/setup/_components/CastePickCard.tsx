@@ -59,10 +59,7 @@ export function CastePickCard({ caste, busy, onChoose }: Props) {
         </div>
       </div>
 
-      <p className="text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed mb-2">
-        {presentation.lore}
-      </p>
-      <CatalogLore entry={profile} className="mb-3" />
+      <CatalogLore entry={profile} className="mb-3 text-sm leading-relaxed" />
 
       <div className="grid grid-cols-3 gap-2 text-xs mb-3">
         <Stat
