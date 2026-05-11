@@ -578,19 +578,6 @@ export function ThreatRow(props: ThreatRowProps) {
                 }
               : null
           }
-          useArtifact={{
-            artifacts: [...offensiveArtifacts, ...intelArtifacts].map((a) => ({
-              artifact: a,
-              definition: ARTIFACTS_BY_ID.get(a.definitionId) ?? null,
-            })),
-            onUse: (artifactId) => {
-              const a = [...offensiveArtifacts, ...intelArtifacts].find(
-                (x) => x.id === artifactId
-              );
-              if (a) void handleUseArtifact(a, entry.enemyTile.tileId);
-            },
-            disabledReason: busy ? "Busy" : null,
-          }}
           preview={attackPreview.preview}
           loading={attackPreview.loading}
           error={attackPreview.error}
