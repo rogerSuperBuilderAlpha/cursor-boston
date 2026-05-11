@@ -274,12 +274,6 @@ export const SUMMER_COHORT_C1_VOTE_WEEKS: readonly SummerCohortVoteWeek[] = [
         takeaway:
           "Already where the code lives. The bar to beat is \"why open another tab?\"",
       },
-      {
-        name: "Height",
-        url: "https://height.app",
-        takeaway:
-          "AI-first PM tool — auto-triage, smart filters. Shows what an LLM-native PM tool looks like.",
-      },
     ],
   },
   {
