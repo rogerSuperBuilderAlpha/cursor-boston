@@ -14,6 +14,7 @@ import {
 } from "@/lib/pydata-2026";
 import { verifyPydataWithdrawToken } from "@/lib/unsubscribe-token";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { eventsContract } from "@/lib/api-schemas/events";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -48,10 +49,18 @@ export async function POST(request: NextRequest) {
   let token: string | undefined;
   try {
     const form = await request.formData();
-    const rawEmail = form.get("email");
-    const rawToken = form.get("token");
-    email = typeof rawEmail === "string" ? rawEmail.toLowerCase().trim() : undefined;
-    token = typeof rawToken === "string" ? rawToken.trim() : undefined;
+    const parsed = eventsContract.pydataWithdraw.body.safeParse({
+      email: form.get("email"),
+      token: form.get("token"),
+    });
+    if (!parsed.success) {
+      return NextResponse.redirect(
+        new URL("/pydata-withdraw?status=invalid", request.url),
+        303
+      );
+    }
+    email = parsed.data.email.toLowerCase().trim();
+    token = parsed.data.token.trim();
   } catch {
     return NextResponse.redirect(
       new URL("/pydata-withdraw?status=invalid", request.url),
