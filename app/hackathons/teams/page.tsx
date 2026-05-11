@@ -8,7 +8,7 @@
 
 import { useEffect, useState, useCallback, Suspense } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import Avatar from "@/components/Avatar";
 import { useSearchParams } from "next/navigation";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -31,15 +31,6 @@ interface PublicUser {
   uid: string;
   displayName: string | null;
   photoURL: string | null;
-}
-
-function getInitials(name: string | null | undefined): string {
-  if (name) {
-    const parts = name.trim().split(/\s+/);
-    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    return name[0].toUpperCase();
-  }
-  return "?";
 }
 
 function isPlaceholderId(id: string): boolean {
@@ -123,6 +114,7 @@ function TeamsPageContent() {
 
   useEffect(() => {
     if (authLoading) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch-on-mount, state set inside async callback
     fetchData();
   }, [authLoading, fetchData]);
 
@@ -256,19 +248,11 @@ function TeamsPageContent() {
                                 key={idx}
                                 className="flex items-center gap-1.5 text-neutral-300 text-sm"
                               >
-                                {slot.profile.photoURL ? (
-                                  <Image
-                                    src={slot.profile.photoURL}
-                                    alt={slot.profile.displayName || "Member"}
-                                    width={24}
-                                    height={24}
-                                    className="rounded-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-6 h-6 rounded-full bg-neutral-700 flex items-center justify-center text-white text-xs font-medium">
-                                    {getInitials(slot.profile.displayName)}
-                                  </div>
-                                )}
+                                <Avatar
+                                  src={slot.profile.photoURL}
+                                  name={slot.profile.displayName}
+                                  size={24}
+                                />
                                 <span className="truncate max-w-[100px]">
                                   {slot.profile.displayName || "Anonymous"}
                                 </span>
@@ -371,19 +355,11 @@ function TeamsPageContent() {
                                 key={idx}
                                 className="flex items-center gap-1.5 text-neutral-400 text-sm"
                               >
-                                {slot.profile.photoURL ? (
-                                  <Image
-                                    src={slot.profile.photoURL}
-                                    alt={slot.profile.displayName || "Member"}
-                                    width={22}
-                                    height={22}
-                                    className="rounded-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-[22px] h-[22px] rounded-full bg-neutral-700 flex items-center justify-center text-white text-xs font-medium">
-                                    {getInitials(slot.profile.displayName)}
-                                  </div>
-                                )}
+                                <Avatar
+                                  src={slot.profile.photoURL}
+                                  name={slot.profile.displayName}
+                                  size={22}
+                                />
                                 <span className="truncate max-w-[90px]">
                                   {slot.profile.displayName || "Anonymous"}
                                 </span>

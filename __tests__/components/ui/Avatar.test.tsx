@@ -89,4 +89,23 @@ describe("Avatar", () => {
     render(<Avatar email="test@x.com" />);
     expect(screen.getByRole("img", { name: "test@x.com" })).toBeInTheDocument();
   });
+
+  it("accepts a numeric size for the image render path", () => {
+    render(<Avatar src="/photo.jpg" name="Alice" size={40} />);
+    const img = screen.getByAltText("Alice");
+    expect(img).toHaveAttribute("width", "40");
+    expect(img).toHaveAttribute("height", "40");
+    expect(img).toHaveStyle({ width: "40px", height: "40px" });
+  });
+
+  it("accepts a numeric size for the fallback render path", () => {
+    const { container } = render(<Avatar name="Alice" size={24} />);
+    const el = container.firstElementChild as HTMLElement;
+    expect(el).toHaveStyle({ width: "24px", height: "24px" });
+  });
+
+  it("renders fallback when src is null", () => {
+    render(<Avatar src={null} name="Alice Baker" />);
+    expect(screen.getByText("AB")).toBeInTheDocument();
+  });
 });

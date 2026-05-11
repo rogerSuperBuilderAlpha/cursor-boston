@@ -8,7 +8,7 @@
 
 import { useEffect, useState, useCallback, Suspense } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import Avatar from "@/components/Avatar";
 import { useSearchParams } from "next/navigation";
 import { doc, updateDoc, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -63,15 +63,6 @@ interface Submission {
   cutoffAt?: Date | { toISOString: () => string };
   disqualified?: boolean;
   disqualifiedReason?: string;
-}
-
-function getInitials(name: string | null | undefined): string {
-  if (name) {
-    const parts = name.trim().split(/\s+/);
-    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    return name[0].toUpperCase();
-  }
-  return "?";
 }
 
 function HackathonsTeamPageContent() {
@@ -194,6 +185,7 @@ function HackathonsTeamPageContent() {
 
   useEffect(() => {
     if (authLoading || !user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- finalize loading state once auth resolves to signed-out
       if (!authLoading && !user) setLoading(false);
       return;
     }
@@ -451,19 +443,11 @@ function HackathonsTeamPageContent() {
                 const profile = memberProfiles[uid];
                 return (
                   <li key={uid} className="flex items-center gap-3 py-2">
-                    {profile?.photoURL ? (
-                      <Image
-                        src={profile.photoURL}
-                        alt={profile.displayName || "Member"}
-                        width={40}
-                        height={40}
-                        className="rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center text-white font-semibold">
-                        {getInitials(profile?.displayName)}
-                      </div>
-                    )}
+                    <Avatar
+                      src={profile?.photoURL}
+                      name={profile?.displayName}
+                      size={40}
+                    />
                     <div>
                       <p className="text-white font-medium">{profile?.displayName || "Anonymous"}</p>
                       {uid === user.uid && <span className="text-neutral-500 text-sm">(you)</span>}

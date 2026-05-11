@@ -4,9 +4,8 @@
  * See LICENSE file for details.
  */
 
-import Image from "next/image";
+import Avatar from "@/components/Avatar";
 import type { PublicMember } from "@/types/members";
-import { getInitials } from "@/lib/utils";
 import { DiscordIcon, GitHubIcon } from "@/components/icons";
 import { BADGE_DEFINITIONS } from "@/lib/badges/definitions";
 import { evaluateBadgeEligibility } from "@/lib/badges/eligibility";
@@ -63,30 +62,26 @@ export function MemberCard({ member }: MemberCardProps) {
       {/* Header */}
       <div className="flex items-start gap-4 mb-4">
         <div className="relative shrink-0">
-          {member.photoURL ? (
-            <Image
-              src={member.photoURL}
-              alt={member.displayName || "Member"}
-              width={56}
-              height={56}
-              className="rounded-full object-cover"
-            />
-          ) : (
-            <div className={`w-14 h-14 rounded-full flex items-center justify-center text-foreground font-semibold text-lg ${
-              isAgent ? "bg-purple-900/50" : "bg-neutral-100 dark:bg-neutral-800"
-            }`}>
-              {isAgent ? (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                  <rect x="3" y="11" width="18" height="10" rx="2" />
-                  <circle cx="12" cy="5" r="2" />
-                  <path d="M12 7v4" />
-                  <circle cx="8" cy="16" r="1" fill="currentColor" />
-                  <circle cx="16" cy="16" r="1" fill="currentColor" />
-                </svg>
-              ) : (
-                getInitials(member.displayName)
-              )}
+          {isAgent && !member.photoURL ? (
+            <div
+              role="img"
+              aria-label={member.displayName || "Agent"}
+              className="w-14 h-14 rounded-full flex items-center justify-center text-foreground bg-purple-900/50"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <rect x="3" y="11" width="18" height="10" rx="2" />
+                <circle cx="12" cy="5" r="2" />
+                <path d="M12 7v4" />
+                <circle cx="8" cy="16" r="1" fill="currentColor" />
+                <circle cx="16" cy="16" r="1" fill="currentColor" />
+              </svg>
             </div>
+          ) : (
+            <Avatar
+              src={member.photoURL}
+              name={member.displayName}
+              size={56}
+            />
           )}
         </div>
         <div className="flex-1 min-w-0">

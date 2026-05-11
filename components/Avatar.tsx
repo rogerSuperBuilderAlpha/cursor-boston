@@ -9,23 +9,22 @@
 import { useState } from "react";
 import Image from "next/image";
 
+type SizePreset = "sm" | "md" | "lg" | "xl";
+
 interface AvatarProps {
   src?: string | null;
   name?: string | null;
   email?: string | null;
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: SizePreset | number;
   className?: string;
 }
 
-// Generate a consistent color based on a string
 function stringToColor(str: string): string {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     hash = str.charCodeAt(i) + ((hash << 5) - hash);
   }
-
-  // Generate vibrant colors in the emerald/teal/cyan range
-  const hue = Math.abs(hash % 60) + 140; // 140-200 range (cyan to green)
+  const hue = Math.abs(hash % 60) + 140;
   return `hsl(${hue}, 70%, 45%)`;
 }
 
@@ -54,19 +53,39 @@ function getInitials(
   return "?";
 }
 
-const sizeClasses = {
-  sm: "w-8 h-8 text-sm",
-  md: "w-12 h-12 text-lg",
-  lg: "w-16 h-16 text-2xl",
-  xl: "w-24 h-24 text-3xl",
+const presetSizes: Record<SizePreset, { px: number; box: string; text: string }> = {
+  sm: { px: 32, box: "w-8 h-8", text: "text-sm" },
+  md: { px: 48, box: "w-12 h-12", text: "text-lg" },
+  lg: { px: 64, box: "w-16 h-16", text: "text-2xl" },
+  xl: { px: 96, box: "w-24 h-24", text: "text-3xl" },
 };
 
-const imageSizes = {
-  sm: 32,
-  md: 48,
-  lg: 64,
-  xl: 96,
-};
+function textClassForPx(px: number): string {
+  if (px <= 24) return "text-[10px]";
+  if (px <= 32) return "text-xs";
+  if (px <= 44) return "text-sm";
+  if (px <= 60) return "text-lg";
+  if (px <= 80) return "text-2xl";
+  return "text-3xl";
+}
+
+function resolveSize(size: SizePreset | number): {
+  px: number;
+  boxClass: string;
+  textClass: string;
+  boxStyle?: { width: number; height: number };
+} {
+  if (typeof size === "number") {
+    return {
+      px: size,
+      boxClass: "",
+      textClass: textClassForPx(size),
+      boxStyle: { width: size, height: size },
+    };
+  }
+  const preset = presetSizes[size];
+  return { px: preset.px, boxClass: preset.box, textClass: preset.text };
+}
 
 export default function Avatar({
   src,
@@ -76,6 +95,7 @@ export default function Avatar({
   className = "",
 }: AvatarProps) {
   const [imgError, setImgError] = useState(false);
+  const { px, boxClass, textClass, boxStyle } = resolveSize(size);
   const identifier = email || name || "user";
   const initials = getInitials(name, email);
   const gradient = getGradient(identifier);
@@ -85,9 +105,10 @@ export default function Avatar({
       <Image
         src={src}
         alt={name || "Profile"}
-        width={imageSizes[size]}
-        height={imageSizes[size]}
-        className={`rounded-full object-cover ${sizeClasses[size].split(" ").slice(0, 2).join(" ")} ${className}`}
+        width={px}
+        height={px}
+        className={`rounded-full object-cover ${boxClass} ${className}`.trim()}
+        style={boxStyle}
         onError={() => setImgError(true)}
       />
     );
@@ -97,8 +118,8 @@ export default function Avatar({
     <div
       role="img"
       aria-label={name || email || "User avatar"}
-      className={`${sizeClasses[size]} rounded-full flex items-center justify-center font-semibold text-white shadow-inner ${className}`}
-      style={{ background: gradient }}
+      className={`${boxClass} ${textClass} rounded-full flex items-center justify-center font-semibold text-white shadow-inner ${className}`.trim()}
+      style={{ ...boxStyle, background: gradient }}
     >
       {initials}
     </div>
