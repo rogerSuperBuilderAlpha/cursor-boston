@@ -380,6 +380,13 @@ export interface ArtifactDefinition {
   // For type === "intel": how deep the reveal goes when the artifact is spent
   // on a target tile. Ignored otherwise.
   intelDepth?: IntelDepth;
+  /** Long-form flavor / lore that stays visible on the artifact's catalog
+   *  card. Different from `flavorOnFind` (one-time discovery copy). UI falls
+   *  back to "No lore yet." when absent. */
+  lore?: string;
+  /** Path or URL to illustrative art. UI falls back to /logo.svg when absent.
+   *  Convention: /game/artifacts/<id>.png (e.g. "/game/artifacts/rare-stormglass-ward.png"). */
+  imageUrl?: string;
 }
 
 // Persisted, time-bounded combat effects produced by intel spells and

@@ -14,6 +14,8 @@ import type {
   ArtifactType,
   GameArtifact,
 } from "@/lib/game/types";
+import { CatalogImage } from "@/app/game/_components/CatalogImage";
+import { CatalogLore } from "@/app/game/_components/CatalogLore";
 
 interface InventoryArtifact extends GameArtifact {
   definition: {
@@ -22,6 +24,8 @@ interface InventoryArtifact extends GameArtifact {
     description: string;
     flavorOnFind: string;
     baseStrength: number;
+    lore?: string;
+    imageUrl?: string;
   } | null;
 }
 
@@ -298,20 +302,37 @@ export default function ArtifactsInventoryPage() {
                           RARITY_COLORS[a.rarity]
                         } ${a.used ? "opacity-50" : ""}`}
                       >
-                        <div className="flex items-baseline justify-between mb-1">
-                          <h3 className="font-semibold">
-                            {a.definition?.name ?? a.definitionId}
-                          </h3>
-                          <span className="text-xs text-neutral-500 capitalize ml-2">
-                            {a.type}
-                          </span>
+                        <div className="flex gap-3 mb-2">
+                          <CatalogImage
+                            entry={a.definition ?? { name: a.definitionId }}
+                            size="md"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-baseline justify-between gap-2">
+                              <h3 className="font-semibold truncate">
+                                {a.definition?.name ?? a.definitionId}
+                              </h3>
+                              <span className="text-xs text-neutral-500 capitalize shrink-0">
+                                {a.type}
+                              </span>
+                            </div>
+                            {a.definition && (
+                              <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">
+                                {a.definition.description}
+                              </p>
+                            )}
+                          </div>
                         </div>
                         {a.definition && (
                           <>
-                            <p className="text-xs text-neutral-600 dark:text-neutral-400 mb-2">
-                              {a.definition.description}
-                            </p>
+                            <CatalogLore
+                              entry={a.definition}
+                              className="text-xs mb-2"
+                            />
                             <p className="text-xs italic text-neutral-500 mb-2">
+                              <span className="not-italic text-[10px] uppercase tracking-wide text-neutral-400 dark:text-neutral-500 mr-1">
+                                Found:
+                              </span>
                               {a.definition.flavorOnFind}
                             </p>
                             <div className="text-xs text-neutral-500 mb-3">

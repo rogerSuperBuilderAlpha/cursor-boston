@@ -578,6 +578,19 @@ export function ThreatRow(props: ThreatRowProps) {
                 }
               : null
           }
+          useArtifact={{
+            artifacts: [...offensiveArtifacts, ...intelArtifacts].map((a) => ({
+              artifact: a,
+              definition: ARTIFACTS_BY_ID.get(a.definitionId) ?? null,
+            })),
+            onUse: (artifactId) => {
+              const a = [...offensiveArtifacts, ...intelArtifacts].find(
+                (x) => x.id === artifactId
+              );
+              if (a) void handleUseArtifact(a, entry.enemyTile.tileId);
+            },
+            disabledReason: busy ? "Busy" : null,
+          }}
           preview={attackPreview.preview}
           loading={attackPreview.loading}
           error={attackPreview.error}
@@ -738,9 +751,10 @@ export function ThreatRow(props: ThreatRowProps) {
                     onClick={() => handleUseArtifact(a, entry.enemyTile.tileId)}
                     disabled={busy}
                     title={def?.description ?? a.definitionId}
-                    className="px-3 py-1.5 text-xs rounded border border-violet-300 dark:border-violet-800 hover:bg-violet-50 dark:hover:bg-violet-950/30 disabled:opacity-50"
+                    className="flex items-center gap-2 px-2 py-1.5 text-xs rounded border border-violet-300 dark:border-violet-800 hover:bg-violet-50 dark:hover:bg-violet-950/30 disabled:opacity-50"
                   >
-                    Use {def?.name ?? a.definitionId}
+                    <CatalogImage entry={def ?? { name: a.definitionId }} size="xs" />
+                    <span>Use {def?.name ?? a.definitionId}</span>
                   </button>
                 );
               })}
@@ -750,9 +764,12 @@ export function ThreatRow(props: ThreatRowProps) {
           {/* Offensive artifacts (used on enemy tile) */}
           {offensiveArtifacts.length > 0 && (
             <section>
-              <h3 className="text-xs uppercase tracking-wide text-neutral-500 mb-2">
-                Offensive artifacts (on enemy)
+              <h3 className="text-xs uppercase tracking-wide text-neutral-500 mb-1">
+                Offensive artifacts (on enemy) · one-time use
               </h3>
+              <p className="text-[11px] text-neutral-500 mb-2">
+                Spent before your attack — the bonus applies to your next swing.
+              </p>
               <div className="flex flex-wrap gap-2">
                 {offensiveArtifacts.map((a) => {
                   const def = ARTIFACTS_BY_ID.get(a.definitionId);
@@ -764,9 +781,10 @@ export function ThreatRow(props: ThreatRowProps) {
                       }
                       disabled={busy}
                       title={def?.description ?? a.definitionId}
-                      className="px-3 py-1.5 text-xs rounded border border-red-300 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-950/30 disabled:opacity-50"
+                      className="flex items-center gap-2 px-2 py-1.5 text-xs rounded border border-red-300 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-950/30 disabled:opacity-50"
                     >
-                      Use {def?.name ?? a.definitionId}
+                      <CatalogImage entry={def ?? { name: a.definitionId }} size="xs" />
+                      <span>Use {def?.name ?? a.definitionId}</span>
                     </button>
                   );
                 })}
@@ -819,7 +837,7 @@ export function ThreatRow(props: ThreatRowProps) {
               {defensiveArtifacts.length > 0 && (
                 <div>
                   <p className="text-xs text-neutral-500 mb-1">
-                    Defense artifacts (on source)
+                    Defense artifacts (on source) · one-time use
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {defensiveArtifacts.map((a) => {
@@ -830,9 +848,10 @@ export function ThreatRow(props: ThreatRowProps) {
                           onClick={() => handleUseArtifact(a, source.tileId)}
                           disabled={busy}
                           title={def?.description ?? a.definitionId}
-                          className="px-3 py-1.5 text-xs rounded border border-blue-300 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950/30 disabled:opacity-50"
+                          className="flex items-center gap-2 px-2 py-1.5 text-xs rounded border border-blue-300 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950/30 disabled:opacity-50"
                         >
-                          Use {def?.name ?? a.definitionId}
+                          <CatalogImage entry={def ?? { name: a.definitionId }} size="xs" />
+                          <span>Use {def?.name ?? a.definitionId}</span>
                         </button>
                       );
                     })}
