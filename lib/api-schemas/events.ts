@@ -50,6 +50,15 @@ const PydataRegistrationBody = z
   })
   .openapi("PydataRegistrationBody");
 
+const PydataWithdrawBody = z
+  .object({
+    email: z.string().min(1),
+    token: z.string().min(1),
+  })
+  .openapi("PydataWithdrawBody");
+
+const PydataWithdrawRedirect = z.object({}).optional();
+
 // ──────────────────── Response schemas ────────────────────
 
 const EligibilityResponse = z
@@ -237,6 +246,16 @@ export const eventsContract = c.router(
           "SERVER_ERROR",
         ] as const,
       },
+    },
+    pydataWithdraw: {
+      method: "POST",
+      path: "/api/events/pydata-2026/withdraw",
+      summary:
+        "Two-step PyData withdrawal: confirmation page POSTs here with HMAC token",
+      contentType: "application/x-www-form-urlencoded",
+      body: PydataWithdrawBody,
+      responses: { 303: PydataWithdrawRedirect },
+      metadata: { errorCodes: [] as const },
     },
   },
   { pathPrefix: "", strictStatusCodes: true }
