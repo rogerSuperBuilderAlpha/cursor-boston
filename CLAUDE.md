@@ -2,15 +2,8 @@
 
 Conventions and behaviors that apply to every session in this repo.
 
-## Firestore rules + indexes — verify before every commit
+## Firestore rules + indexes deploy automatically on push to main
 
-The Firestore security rules (`config/firebase/firestore.rules`) and composite-index spec (`config/firebase/firestore.indexes.json`) ship without a build-time check. A broken file shows up only at deploy time or when a query starts failing in prod. So before every commit:
+`config/firebase/firestore.rules` and `config/firebase/firestore.indexes.json` are deployed by `.github/workflows/firestore-deploy.yml` whenever main moves and either file (or `firebase.json`) changed. **Don't `firebase deploy` these by hand.** If a manual re-deploy is needed (e.g. after editing in the Firebase console and pulling the change down), trigger the `Deploy Firestore rules + indexes` workflow via `workflow_dispatch` instead.
 
-1. **Validate the indexes JSON parses.** Cheap, no dependencies:
-   ```bash
-   node -e "JSON.parse(require('fs').readFileSync('config/firebase/firestore.indexes.json','utf8'))"
-   ```
-2. **If the commit touches `firestore.rules` or `firestore.indexes.json`, the CI "Firestore rules tests" check is the gate** — don't merge a PR where that check is failing. The check runs `npm run test:rules` against the Firestore emulator in cloud CI, where the dependencies it needs (a JRE for the emulator) are already provisioned.
-3. **If you're actively editing `firestore.rules` and want a local emulator run,** that's `npm run test:rules`. It needs Java on the path. Don't install Java just to satisfy this rule — only set up the local emulator if you're doing real rules work and want the fast feedback loop. For everything else, the CI check is the source of truth.
-
-No `--no-verify` bypasses on commits that touch these files.
+The workflow validates that `firestore.indexes.json` parses before deploying. The Firestore emulator isn't run on every commit — that's a heavyweight check (needs Java) and CI's "Firestore rules tests" job already covers it on every PR.
