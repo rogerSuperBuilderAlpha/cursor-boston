@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   PYDATA_2026_CAPACITY,
   PYDATA_2026_EVENT_SLUG,
+  PYDATA_2026_REGISTRATION_OPEN,
   PYDATA_2026_REGISTRATION_PATH,
   type PydataRegistration,
 } from "@/lib/pydata-2026";
@@ -196,7 +197,7 @@ export default function PyDataRegisterPage() {
           don&apos;t match.
         </p>
 
-        {!registration ? <ProcessExplainer /> : null}
+        {!registration && PYDATA_2026_REGISTRATION_OPEN ? <ProcessExplainer /> : null}
 
         <div className="mt-10">
           {authLoading || loading ? (
@@ -207,6 +208,8 @@ export default function PyDataRegisterPage() {
             <SignInGate />
           ) : registration ? (
             <AwaitingBadge registration={registration} onEdit={() => setRegistration(null)} />
+          ) : !PYDATA_2026_REGISTRATION_OPEN ? (
+            <RegistrationClosed />
           ) : (
             <RegistrationForm
               form={form}
@@ -498,6 +501,31 @@ function ProcessExplainer() {
         </ul>
       </div>
     </section>
+  );
+}
+
+function RegistrationClosed() {
+  return (
+    <div className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
+      <h2 className="text-xl font-semibold tracking-tight">
+        Registration is closed
+      </h2>
+      <p className="mt-3 text-sm text-neutral-700 dark:text-neutral-300">
+        We&apos;ve sent the door list to Moderna and the badge cap is locked.
+        New sign-ups can no longer be added for the May 13 event.
+      </p>
+      <p className="mt-3 text-sm text-neutral-700 dark:text-neutral-300">
+        If you registered earlier, your details are already on the list — sign
+        in to see your status. If you need to change anything or cancel, email{" "}
+        <a
+          href="mailto:hello@cursorboston.com"
+          className="underline font-medium"
+        >
+          hello@cursorboston.com
+        </a>
+        .
+      </p>
+    </div>
   );
 }
 
