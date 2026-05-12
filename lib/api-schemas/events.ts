@@ -99,6 +99,11 @@ const PydataLumaStatusResponse = z.object({
   onLumaList: z.boolean(),
 });
 
+const PydataAccessResponse = z.object({
+  allowed: z.boolean(),
+  reason: z.literal("unauthenticated").optional(),
+});
+
 const PydataRegistrationGetResponse = z
   .object({
     registered: z.boolean(),
@@ -218,6 +223,14 @@ export const eventsContract = c.router(
       path: "/api/events/pydata-2026/luma-status",
       summary: "Whether the current user appears on the PyData Luma guest list",
       responses: { 200: PydataLumaStatusResponse, 500: ApiErrorSchema },
+      metadata: { errorCodes: ["SERVER_ERROR"] as const },
+    },
+    pydataAccess: {
+      method: "GET",
+      path: "/api/events/pydata-2026/access",
+      summary:
+        "Whether the signed-in user is on the 150-person PyData 2026 door list",
+      responses: { 200: PydataAccessResponse, 500: ApiErrorSchema },
       metadata: { errorCodes: ["SERVER_ERROR"] as const },
     },
     pydataRegistrationGet: {

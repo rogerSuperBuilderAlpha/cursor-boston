@@ -15,11 +15,7 @@ import {
   getLumaCheckoutEventId,
   getLumaCheckoutHref,
 } from "@/lib/luma-event";
-import {
-  PYDATA_2026_EVENT_SLUG,
-  PYDATA_2026_REGISTRATION_PATH,
-} from "@/lib/pydata-2026";
-import { PyDataLumaButton } from "@/components/events/PyDataLumaButton";
+import { PYDATA_2026_EVENT_SLUG } from "@/lib/pydata-2026";
 
 // Type definitions for event data
 interface AgendaItem {
@@ -138,12 +134,18 @@ function getEventBySlug(slug: string): Event | undefined {
   return getAllEvents().find((event) => event.slug === slug);
 }
 
-// Generate static paths for all events
+// Generate static paths for all events.
+// The pydata-2026 slug is intentionally excluded: it has its own static
+// route at app/events/cursor-boston-pydata-2026/page.tsx that gates access
+// and renders a different layout. Leaving the dynamic [slug] route would
+// also build a page for that slug, but the static one wins at request time.
 export async function generateStaticParams() {
   const events = getAllEvents();
-  return events.map((event) => ({
-    slug: event.slug,
-  }));
+  return events
+    .filter((event) => event.slug !== PYDATA_2026_EVENT_SLUG)
+    .map((event) => ({
+      slug: event.slug,
+    }));
 }
 
 // Generate metadata for SEO
@@ -202,7 +204,6 @@ export default async function EventPage({
   }
 
   const websiteRegistration = WEBSITE_REGISTRATION_CONFIG[event.slug];
-  const isPyData = event.slug === PYDATA_2026_EVENT_SLUG;
 
   // Generate JSON-LD structured data
   const eventJsonLd = {
@@ -404,24 +405,6 @@ export default async function EventPage({
                 </div>
                 <p className="text-sm text-amber-600 dark:text-amber-400 mt-1 font-medium">
                   You must register on <strong>both</strong>: Luma (for door entry) <strong>and</strong> the website (for hackathon ranking &amp; prizes). One without the other won&apos;t get you in.
-                </p>
-              </div>
-            ) : isPyData ? (
-              <div className="flex flex-col gap-4">
-                <Link
-                  href={PYDATA_2026_REGISTRATION_PATH}
-                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-emerald-500 text-white rounded-lg text-base font-semibold hover:bg-emerald-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black w-full sm:w-auto"
-                >
-                  Register for door access
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
-                </Link>
-                <PyDataLumaButton
-                  variant="outline"
-                  label="Also RSVP on Luma"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/20 text-white/80 rounded-lg text-sm font-medium hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black w-full sm:w-auto"
-                />
-                <p className="text-sm text-amber-600 dark:text-amber-400 mt-1 font-medium">
-                  Moderna requires us to hand them a CSV of confirmed attendees. Registering here is what gets your name on the door list — no site registration, no entry.
                 </p>
               </div>
             ) : (
@@ -802,30 +785,7 @@ export default async function EventPage({
       {/* Final CTA */}
       <section className="py-20 px-6">
         <div className="max-w-3xl mx-auto text-center">
-          {isPyData ? (
-            <>
-              <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-white mb-4">
-                Ready to be on the door list?
-              </h2>
-              <p className="text-neutral-600 dark:text-neutral-400 text-lg mb-2">
-                Registering on cursorboston.com is what gets your name to Moderna. Without it you won&apos;t be admitted.
-              </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6">
-                <Link
-                  href={PYDATA_2026_REGISTRATION_PATH}
-                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-emerald-500 text-white rounded-lg text-lg font-semibold hover:bg-emerald-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-                >
-                  Register for door access
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
-                </Link>
-                <PyDataLumaButton
-                  variant="outline"
-                  label="Also RSVP on Luma"
-                  className="inline-flex items-center justify-center gap-2 px-8 py-4 border border-neutral-300 dark:border-white/20 text-neutral-700 dark:text-white/80 rounded-lg text-base font-medium hover:bg-neutral-100 dark:hover:bg-white/10 transition-colors"
-                />
-              </div>
-            </>
-          ) : websiteRegistration ? (
+          {websiteRegistration ? (
             <>
               <h2 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-white mb-4">
                 Ready to compete?
