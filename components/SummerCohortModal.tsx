@@ -8,39 +8,110 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   SUMMER_COHORTS,
+  SUMMER_COHORT_IMMERSION,
   SUMMER_COHORT_LOCALSTORAGE_KEY,
   SUMMER_COHORT_OPEN_EVENT,
   SUMMER_COHORT_RETURN_TO,
+  SUMMER_COHORT_VIEW_TO,
 } from "@/lib/summer-cohort";
 
 function todayKey(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+// Pages that already cover the modal's content — don't auto-pop on top of
+// them. Manual dispatch of SUMMER_COHORT_OPEN_EVENT still works.
+const SUPPRESS_AUTO_OPEN_PREFIXES = ["/summer-cohort", "/contribute/game-art"];
+
+// Cap the wait for the "have you applied?" fetch before opening anyway.
+// Keeps the modal snappy if the API is slow; the CTA defaults to "Apply".
+const APPLIED_FETCH_TIMEOUT_MS = 600;
+
 export default function SummerCohortModal() {
+  const { user, loading: authLoading } = useAuth();
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  // null = not yet known; true/false = resolved.
+  const [hasApplied, setHasApplied] = useState<boolean | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  // Prevent double-resolves from racing each other.
+  const appliedResolvedRef = useRef(false);
 
+  // Auto-open gate: localStorage + pathname + applied-state lookup.
   useEffect(() => {
+    if (authLoading) return;
+    let lastShown: string | null = null;
     try {
-      const lastShown = localStorage.getItem(SUMMER_COHORT_LOCALSTORAGE_KEY);
-      if (lastShown !== todayKey()) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing with localStorage on mount
-        setIsOpen(true);
-      }
+      lastShown = localStorage.getItem(SUMMER_COHORT_LOCALSTORAGE_KEY);
     } catch {
-      /* localStorage unavailable; skip auto-open */
+      // localStorage unavailable; skip auto-open entirely
+      return;
     }
-  }, []);
+    if (lastShown === todayKey()) return;
+    if (
+      pathname &&
+      SUPPRESS_AUTO_OPEN_PREFIXES.some((p) => pathname.startsWith(p))
+    ) {
+      return;
+    }
 
+    let cancelled = false;
+    const resolveApplied = (value: boolean | null) => {
+      if (cancelled || appliedResolvedRef.current) return;
+      appliedResolvedRef.current = true;
+      setHasApplied(value);
+      setIsOpen(true);
+    };
+
+    if (!user) {
+      resolveApplied(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    // Race the apply-status fetch against a short timeout so a slow API
+    // can't delay the modal indefinitely.
+    const timer = setTimeout(() => resolveApplied(false), APPLIED_FETCH_TIMEOUT_MS);
+    (async () => {
+      try {
+        const token = await user.getIdToken();
+        const res = await fetch("/api/summer-cohort/apply", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) {
+          resolveApplied(false);
+          return;
+        }
+        const json = (await res.json()) as { application?: unknown | null };
+        resolveApplied(json.application != null);
+      } catch {
+        resolveApplied(false);
+      } finally {
+        clearTimeout(timer);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [authLoading, user, pathname]);
+
+  // Manual open via custom event — bypasses every gate.
   useEffect(() => {
-    const handleOpen = () => setIsOpen(true);
+    const handleOpen = () => {
+      if (hasApplied === null) setHasApplied(false);
+      setIsOpen(true);
+    };
     window.addEventListener(SUMMER_COHORT_OPEN_EVENT, handleOpen);
     return () => window.removeEventListener(SUMMER_COHORT_OPEN_EVENT, handleOpen);
-  }, []);
+  }, [hasApplied]);
 
   useEffect(() => {
     if (isOpen) {
@@ -75,6 +146,9 @@ export default function SummerCohortModal() {
 
   if (!isOpen) return null;
 
+  const ctaHref = hasApplied ? SUMMER_COHORT_VIEW_TO : SUMMER_COHORT_RETURN_TO;
+  const ctaLabel = hasApplied ? "View your cohort" : "Apply";
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -90,7 +164,7 @@ export default function SummerCohortModal() {
 
       <div
         ref={modalRef}
-        className="relative bg-neutral-900 border border-neutral-800 rounded-2xl p-6 md:p-8 max-w-md w-full shadow-2xl"
+        className="relative bg-neutral-900 border border-neutral-800 rounded-2xl p-6 md:p-8 max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto"
       >
         <button
           ref={closeButtonRef}
@@ -146,27 +220,49 @@ export default function SummerCohortModal() {
           </p>
 
           <ul className="space-y-2 mb-6 text-left">
-            {SUMMER_COHORTS.map((cohort) => (
-              <li
-                key={cohort.id}
-                className="flex items-center justify-between gap-3 px-4 py-3 rounded-lg bg-neutral-800/60 border border-neutral-800"
-              >
-                <span className="text-sm font-semibold text-white">
-                  {cohort.label}
-                </span>
-                <span className="text-xs text-neutral-300">
-                  {cohort.startLabel} – {cohort.endLabel}
-                </span>
-              </li>
-            ))}
+            {SUMMER_COHORTS.map((cohort) => {
+              const closed = cohort.signupsClosed === true;
+              return (
+                <li
+                  key={cohort.id}
+                  className={`flex items-center justify-between gap-3 px-4 py-3 rounded-lg border ${
+                    closed
+                      ? "bg-neutral-900/40 border-neutral-800 opacity-70"
+                      : "bg-neutral-800/60 border-neutral-700"
+                  }`}
+                >
+                  <span
+                    className={`text-sm font-semibold ${
+                      closed ? "text-neutral-400" : "text-white"
+                    }`}
+                  >
+                    {cohort.label}
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <span
+                      className={`text-xs ${
+                        closed ? "text-neutral-500" : "text-neutral-300"
+                      }`}
+                    >
+                      {cohort.startLabel} – {cohort.endLabel}
+                    </span>
+                    {closed ? (
+                      <span className="text-[10px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full border border-neutral-700 text-neutral-400">
+                        Closed
+                      </span>
+                    ) : null}
+                  </span>
+                </li>
+              );
+            })}
           </ul>
 
           <Link
-            href={SUMMER_COHORT_RETURN_TO}
+            href={ctaHref}
             onClick={handleClose}
             className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-emerald-500 text-white rounded-lg font-semibold hover:bg-emerald-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900"
           >
-            Apply
+            {ctaLabel}
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"
@@ -182,6 +278,70 @@ export default function SummerCohortModal() {
               <path d="M5 12h14M13 5l7 7-7 7" />
             </svg>
           </Link>
+
+          <div className="mt-5 space-y-2 text-left">
+            <a
+              href={SUMMER_COHORT_IMMERSION.lumaUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={handleClose}
+              className="flex items-center justify-between gap-3 px-4 py-3 rounded-lg border border-neutral-800 bg-neutral-800/40 hover:bg-neutral-800/70 hover:border-neutral-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+            >
+              <span className="min-w-0">
+                <span className="block text-xs uppercase tracking-wide text-emerald-400 font-semibold">
+                  {SUMMER_COHORT_IMMERSION.label}
+                </span>
+                <span className="block text-sm text-white truncate">
+                  {SUMMER_COHORT_IMMERSION.title}
+                </span>
+              </span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-neutral-400 shrink-0"
+                aria-hidden="true"
+              >
+                <path d="M7 17L17 7M7 7h10v10" />
+              </svg>
+            </a>
+
+            <Link
+              href="/contribute/game-art"
+              onClick={handleClose}
+              className="flex items-center justify-between gap-3 px-4 py-3 rounded-lg border border-neutral-800 bg-neutral-800/40 hover:bg-neutral-800/70 hover:border-neutral-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+            >
+              <span className="min-w-0">
+                <span className="block text-xs uppercase tracking-wide text-violet-300 font-semibold">
+                  Designers
+                </span>
+                <span className="block text-sm text-white truncate">
+                  Contribute art to the game
+                </span>
+              </span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-neutral-400 shrink-0"
+                aria-hidden="true"
+              >
+                <path d="M5 12h14M13 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
 
           <button
             onClick={handleClose}
