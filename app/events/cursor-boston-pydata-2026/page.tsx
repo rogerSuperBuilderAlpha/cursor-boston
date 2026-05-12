@@ -9,6 +9,7 @@ import Link from "next/link";
 import eventsData from "@/content/events.json";
 import type { EventsData } from "@/types/events";
 import { PyDataAccessGate } from "@/components/events/PyDataAccessGate";
+import { CursorSubmitPromptButton } from "@/components/events/CursorSubmitPromptButton";
 import {
   PYDATA_2026_EVENT_SLUG,
 } from "@/lib/pydata-2026";
@@ -177,6 +178,12 @@ function SubmissionInstructions() {
           </code>
           , your card appears in the grid below.
         </p>
+
+        <CursorSubmitPromptButton />
+
+        <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+          Or follow the manual steps
+        </h3>
 
         <ol className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Step
