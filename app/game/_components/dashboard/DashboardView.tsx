@@ -33,6 +33,7 @@ import { NavGrid } from "./NavGrid";
 import { DashboardReports } from "./DashboardReports";
 import { CasteChangeCard } from "./CasteChangeCard";
 import { CommunityPanel } from "./CommunityPanel";
+import { DesignersWantedCard } from "./DesignersWantedCard";
 import { OnboardingWizard } from "../onboarding/OnboardingWizard";
 import type { GamePlayer } from "@/lib/game/types";
 
@@ -163,6 +164,8 @@ export function DashboardView({ player, data }: DashboardViewProps) {
           user={data.user}
           onRefresh={data.refresh}
         />
+
+        <DesignersWantedCard />
 
         <HeroCard
           turnsRemaining={player.turnsRemaining}
