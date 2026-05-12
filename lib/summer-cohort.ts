@@ -15,6 +15,9 @@ export const SUMMER_COHORT_NOTIFY_EMAIL = "roger@cursorboston.com";
 export const SUMMER_COHORT_LOCALSTORAGE_KEY =
   "cursor-boston-summer-cohort-modal-shown-date";
 export const SUMMER_COHORT_RETURN_TO = "/summer-cohort";
+/** CTA target for users who already submitted an application — same page,
+ *  which surfaces their existing application status and cohort details. */
+export const SUMMER_COHORT_VIEW_TO = "/summer-cohort";
 export const SUMMER_COHORT_OPEN_EVENT = "open-summer-cohort-modal";
 
 export type SummerCohortId = "cohort-1" | "cohort-2";
@@ -27,6 +30,10 @@ export interface SummerCohort {
   startLabel: string;
   endLabel: string;
   graduationLabel: string;
+  /** True once we've stopped accepting new applications for this cohort.
+   *  The intro modal greys the row out and shows a "Closed" pill; the
+   *  Apply CTA targets the next still-open cohort. */
+  signupsClosed?: boolean;
 }
 
 export const SUMMER_COHORTS: readonly SummerCohort[] = [
@@ -38,6 +45,7 @@ export const SUMMER_COHORTS: readonly SummerCohort[] = [
     startLabel: "Mon, May 11",
     endLabel: "Fri, Jun 19",
     graduationLabel: "Graduation: Fri, Jun 19",
+    signupsClosed: true,
   },
   {
     id: "cohort-2",
