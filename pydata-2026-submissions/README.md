@@ -1,0 +1,87 @@
+# PyData × Cursor Boston — Hackathon submissions
+
+This directory holds the Jupyter notebook submissions from the **May 13, 2026
+Cursor Boston × PyData evening hack at Moderna HQ**.
+
+Each subfolder is one attendee's submission. The gated event page at
+[cursorboston.com/events/cursor-boston-pydata-2026](https://cursorboston.com/events/cursor-boston-pydata-2026)
+reads this directory at build time and renders a card per merged submission.
+
+---
+
+## How to submit your work
+
+1. **Fork the repo** at
+   <https://github.com/rogerSuperBuilderAlpha/cursor-boston>.
+
+2. **Create a folder under `pydata-2026-submissions/`** named after your
+   GitHub handle (lowercase, exactly as it appears in `github.com/<handle>`).
+   Example: `pydata-2026-submissions/adam-sychla/`.
+
+3. **Add two files inside your folder:**
+   - `submission.ipynb` — your Jupyter notebook. GitHub renders it natively,
+     so commit the notebook with output cells already executed if you want
+     reviewers to see results without re-running.
+   - `meta.json` — title + description, see template below.
+
+4. **Open a PR** targeting the branch **`pydata-2026-submissions`** (not
+   `develop` or `main`). We'll batch all the PRs into that branch, merge it
+   into `develop`, then promote `develop` to `main` — your card appears on
+   the gated event page after the final push to `main` deploys.
+
+5. **One folder per attendee.** If you collaborated, pick one handle for the
+   folder name and list collaborators inside `meta.json` (see below).
+
+---
+
+## `meta.json` template
+
+```json
+{
+  "title": "Short, specific title for your notebook",
+  "description": "1–3 sentences. What does the notebook do? What dataset or problem? What did you find?",
+  "displayName": "Your name as you want it on the page",
+  "tags": ["healthcare", "embeddings", "exploratory"],
+  "collaborators": [
+    { "displayName": "Pat Collaborator", "githubHandle": "pat-collab" }
+  ]
+}
+```
+
+### Field reference
+
+| Field | Required | Notes |
+|---|---|---|
+| `title` | yes | ≤120 chars. Shown as the card heading. |
+| `description` | yes | ≤500 chars. One paragraph. Markdown not rendered — plain text only. |
+| `displayName` | yes | Falls back to your GitHub handle if omitted, but please set it. |
+| `tags` | no | ≤6 short tags. Lowercase. Shown as pills. |
+| `collaborators` | no | List of `{ displayName, githubHandle }` for people who worked with you. The page lists them under your card. |
+
+### Rules
+
+- Don't include any **Moderna logo, branding, or photos** in your notebook
+  output cells or in `meta.json`. Moderna asked us to keep those off public
+  surfaces.
+- Don't commit secrets, API keys, or paid data. Sample data only.
+- Keep `submission.ipynb` under **50 MB** — if you have a huge dataset,
+  reference it by URL inside the notebook instead of embedding.
+- Your folder name is your **GitHub handle**, not your real name. The page
+  shows your `displayName` from `meta.json`.
+
+---
+
+## What happens after you open the PR
+
+1. A maintainer reviews the PR for the rules above (no branding leak, no
+   secrets, file structure correct).
+2. PR gets merged into the `pydata-2026-submissions` branch.
+3. When the maintainer is ready (likely batched, end-of-night or next
+   morning), `pydata-2026-submissions` is merged into `develop`, then
+   `develop` into `main`. Vercel deploys main → your card goes live.
+4. Your submission shows up on the event page. Other attendees can browse
+   it; the notebook itself is rendered by GitHub's built-in `.ipynb`
+   viewer.
+
+If anything's off, the maintainer will leave PR comments and you can push
+fixes to the same branch.
