@@ -1,0 +1,77 @@
+name: Deploy Firestore rules + indexes
+
+# Auto-deploys `config/firebase/firestore.rules` and
+# `config/firebase/firestore.indexes.json` whenever main moves and either
+# file (or `firebase.json`) changed. Vercel handles the Next.js app on
+# the same push; this workflow handles the Firebase side.
+#
+# Manual trigger via workflow_dispatch is also wired so a maintainer can
+# re-run a deploy without pushing a new commit (useful after editing a
+# rule directly in the Firebase console and pulling the change down).
+#
+# Required repo secret:
+#   FIREBASE_SERVICE_ACCOUNT_JSON — full JSON for a service account on
+#     the cursor-boston project with the
+#     `roles/firebaserules.admin` and `roles/datastore.indexAdmin`
+#     roles (or broader `roles/firebase.admin`).
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'config/firebase/firestore.rules'
+      - 'config/firebase/firestore.indexes.json'
+      - 'firebase.json'
+      - '.github/workflows/firestore-deploy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  # Serialize deploys per-ref. A queued second push waits for the first
+  # to land instead of racing the Firebase API.
+  group: firestore-deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: firebase deploy --only firestore:rules,firestore:indexes
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '20'
+
+      - name: Validate firestore.indexes.json parses
+        run: node -e "JSON.parse(require('fs').readFileSync('config/firebase/firestore.indexes.json','utf8'))"
+
+      - name: Write service-account credentials to a temp file
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          set -euo pipefail
+          if [ -z "${FIREBASE_SERVICE_ACCOUNT_JSON:-}" ]; then
+            echo "::error::FIREBASE_SERVICE_ACCOUNT_JSON secret is not set on this repo"
+            exit 1
+          fi
+          umask 077
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$RUNNER_TEMP/sa.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/sa.json" >> "$GITHUB_ENV"
+
+      - name: Deploy Firestore rules + indexes
+        run: |
+          npx --yes firebase-tools@15 deploy \
+            --only firestore:rules,firestore:indexes \
+            --project cursor-boston \
+            --non-interactive
+
+      - name: Cleanup credentials
+        if: always()
+        run: rm -f "$RUNNER_TEMP/sa.json"
