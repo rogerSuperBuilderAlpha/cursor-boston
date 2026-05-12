@@ -24,7 +24,22 @@ import { getAdminDb } from "@/lib/firebase-admin";
 import { logger } from "@/lib/logger";
 import { isShieldActive } from "./turns";
 import type { Caste, GamePlayer, MapTile } from "./types";
+import {
+  compactTile,
+  expandTile,
+  WORLD_SNAPSHOT_SCHEMA_VERSION,
+  type CompactTile,
+} from "./world-snapshot-codec";
 import { neighborTileIds } from "./world-gen";
+
+// Re-export the codec so existing callers that pull these from
+// `world-snapshot` keep working.
+export {
+  compactTile,
+  expandTile,
+  WORLD_SNAPSHOT_SCHEMA_VERSION,
+} from "./world-snapshot-codec";
+export type { CompactTile } from "./world-snapshot-codec";
 
 export const WORLD_SNAPSHOT_COLLECTION = "game_world_snapshots";
 export const WORLD_SNAPSHOT_DOC = "latest";
@@ -54,8 +69,15 @@ export interface WorldSnapshot {
   ownerCount: number;
 }
 
+// On-disk form. v2 stores `compactTiles`; v1 stored `tiles`. The reader
+// detects format via `schemaVersion` (defaulting to v1 for legacy docs)
+// and decodes accordingly.
 interface StoredWorldSnapshot {
-  tiles: MapTile[];
+  schemaVersion?: number;
+  // v2 (current writer always emits this):
+  compactTiles?: CompactTile[];
+  // v1 (still readable; written until the first v2 rebuild lands):
+  tiles?: MapTile[];
   owners: WorldSnapshotOwner[];
   generatedAt: FirebaseFirestore.Timestamp | Date;
   expiresAt: FirebaseFirestore.Timestamp | Date;
@@ -201,7 +223,8 @@ export async function rebuildWorldSnapshotServer(
 
   const snapshot = await computeWorldSnapshot(db, now);
   const stored: StoredWorldSnapshot = {
-    tiles: snapshot.tiles,
+    schemaVersion: WORLD_SNAPSHOT_SCHEMA_VERSION,
+    compactTiles: snapshot.tiles.map(compactTile),
     owners: snapshot.owners,
     generatedAt: now,
     expiresAt: new Date(now.getTime() + WORLD_SNAPSHOT_TTL_MS),
@@ -218,6 +241,7 @@ export async function rebuildWorldSnapshotServer(
   const bytes = JSON.stringify(stored).length;
 
   logger.info("Game world snapshot rebuilt", {
+    schemaVersion: WORLD_SNAPSHOT_SCHEMA_VERSION,
     tileCount: snapshot.tileCount,
     ownerCount: snapshot.ownerCount,
     approxBytes: bytes,
@@ -246,7 +270,16 @@ export async function readWorldSnapshotServer(): Promise<{
   if (!doc.exists) return null;
 
   const data = doc.data() as StoredWorldSnapshot | undefined;
-  if (!data || !Array.isArray(data.tiles) || !Array.isArray(data.owners)) {
+  if (!data || !Array.isArray(data.owners)) return null;
+
+  // Decode tiles from whichever format is present. v2 docs store
+  // `compactTiles`; legacy v1 docs store `tiles` directly. Either is OK.
+  let tiles: MapTile[];
+  if (Array.isArray(data.compactTiles)) {
+    tiles = data.compactTiles.map(expandTile);
+  } else if (Array.isArray(data.tiles)) {
+    tiles = data.tiles;
+  } else {
     return null;
   }
 
@@ -261,10 +294,10 @@ export async function readWorldSnapshotServer(): Promise<{
 
   return {
     snapshot: {
-      tiles: data.tiles,
+      tiles,
       owners: data.owners,
       generatedAt: generatedAt.toISOString(),
-      tileCount: data.tileCount ?? data.tiles.length,
+      tileCount: data.tileCount ?? tiles.length,
       ownerCount: data.ownerCount ?? data.owners.length,
     },
     isStale: Date.now() >= expiresAt.getTime(),
@@ -337,9 +370,11 @@ export function deriveMyMapFromSnapshot(
   return { myTiles, borderTiles, owners };
 }
 
-// Future work: when the world grows past ~12K tiles the snapshot doc will
-// approach Firestore's 1MB hard limit. Shard by `tileId.charCodeAt(0) % N`
-// into `game_world_snapshots/shard-{n}` and fan-out reads. Owners stay
-// unsharded (player count grows much slower than tile count). The reader
-// API can stay the same — `readWorldSnapshotServer` just gets all shards
-// in parallel.
+// Future work: schemaVersion 2 (compact per-tile encoding) brought the doc
+// from ~660 KB → ~200 KB at 4,419 tiles. The next ceiling is still the
+// Firestore 1MB single-doc limit — at the v2 size that's ~25K tiles, but
+// past ~15K worth pre-emptively sharding. Plan: hash by
+// `tileId.charCodeAt(0) % N` into `game_world_snapshots/shard-{n}` and
+// fan-out reads. Owners stay unsharded (player count grows much slower
+// than tile count). The reader API can stay the same —
+// `readWorldSnapshotServer` just gets all shards in parallel and concats.
