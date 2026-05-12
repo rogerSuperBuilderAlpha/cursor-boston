@@ -74,6 +74,9 @@ next-env.d.ts
 !.vscode/launch.json
 !.vscode/extensions.json
 
+# Claude Code (per-developer local state — settings, scheduled-task locks)
+.claude/
+
 # IntelliJ IDEA / WebStorm
 .idea/
 *.iml

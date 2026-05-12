@@ -6,31 +6,18 @@
 
 "use client";
 
-import { doc, onSnapshot, Timestamp } from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 import { useEffect, useRef, useState } from "react";
 import { db as firestoreDb } from "@/lib/firebase";
-import type { Caste, MapTile } from "@/lib/game/types";
+import {
+  parseSnapshotDoc,
+  type ClientWorldSnapshot,
+  type ClientWorldSnapshotOwner,
+} from "./parse-world-snapshot";
 
-// Mirrors WorldSnapshot in lib/game/world-snapshot.ts (which we can't
-// import here because it pulls firebase-admin). When the snapshot doc is
-// read by the client SDK, Firestore Timestamps stay as Timestamp
-// instances; we coerce to ISO strings on parse so the rest of the UI
-// treats it as plain JSON.
-export interface ClientWorldSnapshotOwner {
-  userId: string;
-  displayName: string;
-  caste: Caste | null;
-  shielded: boolean;
-  isNpc: boolean;
-}
-
-export interface ClientWorldSnapshot {
-  tiles: MapTile[];
-  owners: ClientWorldSnapshotOwner[];
-  generatedAt: string;
-  tileCount: number;
-  ownerCount: number;
-}
+// Re-export the snapshot types so existing callers that pull these from
+// the listener module keep working.
+export type { ClientWorldSnapshot, ClientWorldSnapshotOwner };
 
 // Detach from the live listener when the tab is hidden OR the user has
 // been idle for this long. Firestore bills 1 read per delivered change,
@@ -60,32 +47,6 @@ export interface WorldSnapshotListenerState {
   /** Last error observed from the listener (e.g. permission denied
    *  before sign-in). Cleared on a successful delivery. */
   error: string | null;
-}
-
-function parseSnapshotDoc(data: Record<string, unknown>): ClientWorldSnapshot {
-  const generatedAtRaw = data.generatedAt;
-  let generatedAt: string;
-  if (generatedAtRaw instanceof Timestamp) {
-    generatedAt = generatedAtRaw.toDate().toISOString();
-  } else if (generatedAtRaw instanceof Date) {
-    generatedAt = generatedAtRaw.toISOString();
-  } else if (typeof generatedAtRaw === "string") {
-    generatedAt = generatedAtRaw;
-  } else {
-    generatedAt = new Date().toISOString();
-  }
-  const tiles = Array.isArray(data.tiles) ? (data.tiles as MapTile[]) : [];
-  const owners = Array.isArray(data.owners)
-    ? (data.owners as ClientWorldSnapshotOwner[])
-    : [];
-  return {
-    tiles,
-    owners,
-    generatedAt,
-    tileCount: typeof data.tileCount === "number" ? data.tileCount : tiles.length,
-    ownerCount:
-      typeof data.ownerCount === "number" ? data.ownerCount : owners.length,
-  };
 }
 
 /**
