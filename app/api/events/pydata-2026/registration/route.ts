@@ -11,6 +11,7 @@ import { getVerifiedUser } from "@/lib/server-auth";
 import { withMiddleware, rateLimitConfigs } from "@/lib/middleware";
 import { logger } from "@/lib/logger";
 import {
+  PYDATA_2026_REGISTRATION_OPEN,
   PYDATA_2026_REGISTRATIONS_COLLECTION,
   validatePydataRegistration,
   type PydataRegistration,
@@ -76,6 +77,20 @@ async function handleGet(request: NextRequest) {
 }
 
 async function handlePost(request: NextRequest) {
+  // Door list is locked once we've handed the CSV to Moderna. Block
+  // both new sign-ups and edits to existing rows so the snapshot we
+  // sent matches what stays in Firestore. The withdraw route stays
+  // open — people freeing up slots is fine.
+  if (!PYDATA_2026_REGISTRATION_OPEN) {
+    return NextResponse.json(
+      {
+        error: "Registration closed",
+        message:
+          "Registration for the May 13 PyData × Cursor Boston event is closed. The badge list has been sent to Moderna. If you need to update your details or cancel, email hello@cursorboston.com.",
+      },
+      { status: 410 }
+    );
+  }
   const user = await getVerifiedUser(request);
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
