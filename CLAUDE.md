@@ -2,24 +2,15 @@
 
 Conventions and behaviors that apply to every session in this repo.
 
-## Firestore rules + indexes — run on every commit
+## Firestore rules + indexes — verify before every commit
 
-**Before every commit, run the Firestore rules tests and validate the indexes file.** A broken rule or a malformed index spec ships silently otherwise — both files are referenced by `firebase.json` but neither has a build-time check. The Firestore emulator is the only way to catch a regression locally before CI.
+The Firestore security rules (`config/firebase/firestore.rules`) and composite-index spec (`config/firebase/firestore.indexes.json`) ship without a build-time check. A broken file shows up only at deploy time or when a query starts failing in prod. So before every commit:
 
-What to run:
+1. **Validate the indexes JSON parses.** Cheap, no dependencies:
+   ```bash
+   node -e "JSON.parse(require('fs').readFileSync('config/firebase/firestore.indexes.json','utf8'))"
+   ```
+2. **If the commit touches `firestore.rules` or `firestore.indexes.json`, the CI "Firestore rules tests" check is the gate** — don't merge a PR where that check is failing. The check runs `npm run test:rules` against the Firestore emulator in cloud CI, where the dependencies it needs (a JRE for the emulator) are already provisioned.
+3. **If you're actively editing `firestore.rules` and want a local emulator run,** that's `npm run test:rules`. It needs Java on the path. Don't install Java just to satisfy this rule — only set up the local emulator if you're doing real rules work and want the fast feedback loop. For everything else, the CI check is the source of truth.
 
-```bash
-# Rules: full emulator-backed test suite (covers config/firebase/firestore.rules)
-npm run test:rules
-
-# Indexes: parseable JSON + matches the deployed schema shape
-node -e "JSON.parse(require('fs').readFileSync('config/firebase/firestore.indexes.json','utf8'))"
-```
-
-If either fails, fix the underlying issue before committing — don't bypass with `--no-verify`.
-
-Notes:
-- `npm run test:rules` boots the Firestore emulator; it can take 20–30 s. That's acceptable cost on every commit; the failure mode it prevents (broken security rules in prod) is much worse.
-- The rules file lives at `config/firebase/firestore.rules`; indexes at `config/firebase/firestore.indexes.json`. Both are wired through `firebase.json` at the repo root.
-- CI also runs the "Firestore rules tests" check on every PR; the local pre-commit run is the early warning so we don't push a broken branch.
-- **Prerequisite: Java.** The Firestore emulator needs a JRE. If `java -version` fails, install one (`brew install --cask temurin` on macOS) before relying on the local rules tests. If Java is unavailable in the environment, validate the indexes JSON at minimum and rely on the CI "Firestore rules tests" check as the backstop — note this gap explicitly when committing.
+No `--no-verify` bypasses on commits that touch these files.
