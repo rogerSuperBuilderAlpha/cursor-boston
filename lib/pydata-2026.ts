@@ -21,6 +21,18 @@ export const PYDATA_2026_REGISTRATION_PATH = `/events/${PYDATA_2026_EVENT_SLUG}/
 export const PYDATA_2026_REGISTRATIONS_COLLECTION = "pydataHack2026Registrations";
 
 /**
+ * Hard switch on the registration form. Set to `false` once we've sent
+ * the badge CSV to Moderna — at that point the door list is locked, no
+ * more new sign-ups or edits should land in the snapshot we already
+ * handed off. Existing registrants can still see their AwaitingBadge
+ * card and the `withdraw` route remains open so people can free up
+ * slots if they can't make it.
+ *
+ * Flipped to false on 2026-05-12 ahead of the May 13 event.
+ */
+export const PYDATA_2026_REGISTRATION_OPEN = false;
+
+/**
  * Event name written into eventContacts.eventNames by the Luma sync scripts
  * (sync-event-contacts.ts derives this from the CSV filename). Lookups for
  * "is this email on the pydata Luma list?" must match this string exactly.
