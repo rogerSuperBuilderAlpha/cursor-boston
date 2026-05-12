@@ -1,0 +1,60 @@
+{
+  "auth": {
+    "totalUsers": 404,
+    "newUsers10d": 112,
+    "activeUsers10d": 136,
+    "newUsersByDay": {
+      "2026-05-04": 22,
+      "2026-05-06": 12,
+      "2026-05-10": 4,
+      "2026-05-07": 14,
+      "2026-05-02": 7,
+      "2026-05-03": 3,
+      "2026-05-11": 11,
+      "2026-05-09": 5,
+      "2026-05-08": 9,
+      "2026-05-05": 22,
+      "2026-05-12": 3
+    },
+    "activeUsersByDay": {
+      "2026-05-04": 19,
+      "2026-05-07": 16,
+      "2026-05-06": 11,
+      "2026-05-11": 28,
+      "2026-05-02": 6,
+      "2026-05-08": 12,
+      "2026-05-10": 4,
+      "2026-05-09": 13,
+      "2026-05-05": 21,
+      "2026-05-12": 3,
+      "2026-05-03": 3
+    }
+  },
+  "collectionCounts": {
+    "game_players": 70,
+    "game_tiles": 4419,
+    "game_world_snapshots": 1,
+    "game_attacks": 14,
+    "game_intel_effects": 3,
+    "game_recruits": 0,
+    "game_far_expeditions": 0,
+    "game_chat_messages": 0,
+    "game_community_feed": 0,
+    "summer_cohort_applications": 0,
+    "cohort_1_members": 0,
+    "mentorship_requests": 0,
+    "users": 413
+  },
+  "recentActivity": {
+    "game_attacks.createdAt": 14,
+    "game_recruits.createdAt": 0,
+    "game_far_expeditions.createdAt": 0,
+    "game_chat_messages.createdAt": 0,
+    "game_community_feed.createdAt": 0,
+    "game_players.lastTurnAt": 0,
+    "game_players.createdAt": 70,
+    "summer_cohort_applications.createdAt": 0
+  },
+  "recentSnapshots": [],
+  "activeGamePlayers10d": 0
+}

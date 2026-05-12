@@ -1,0 +1,56 @@
+{
+  "collectionCounts": {
+    "game_community_events": 24,
+    "game_community_messages": 2,
+    "game_world_meta": 1,
+    "game_artifacts": 136,
+    "communityMessages": 3,
+    "communityQuestions": 0,
+    "luma_registrants": 0,
+    "summer_cohort": 0,
+    "summerCohortApplications": 128,
+    "mentorshipProfiles": 0,
+    "mentorshipMatches": 0
+  },
+  "recentActivity": {
+    "game_community_events.createdAt": 24,
+    "game_community_messages.createdAt": 2,
+    "game_players.updatedAt": 70,
+    "game_attacks.createdAt": 14,
+    "game_tiles.lastAttackedAt": 14,
+    "communityMessages.createdAt": 0,
+    "communityQuestions.createdAt": 0
+  },
+  "snapshots": [
+    {
+      "id": "latest",
+      "generatedAt": "2026-05-12T04:20:07.895Z",
+      "tileCount": 4419,
+      "ownerCount": 70,
+      "sizeBytesEstimate": 684313,
+      "keys": [
+        "tiles",
+        "owners",
+        "generatedAt",
+        "expiresAt",
+        "tileCount",
+        "ownerCount"
+      ]
+    }
+  ],
+  "activePlayers10d": 70,
+  "playersWhoSpentATurn": 66,
+  "playerStats": {
+    "totalPlayers": 70,
+    "byCaste": {
+      "black": 10,
+      "(none)": 6,
+      "blue": 14,
+      "green": 13,
+      "red": 13,
+      "white": 14
+    },
+    "totalTurnsSpent": 24525,
+    "zeroTurns": 4
+  }
+}
