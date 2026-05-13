@@ -8,7 +8,7 @@
 
 All endpoints are under `/api/`. Authentication uses Firebase Auth ID tokens (Bearer) or session cookies. Spec: [`/openapi.json`](https://cursorboston.com/openapi.json) · interactive: [`/api/docs`](https://cursorboston.com/api/docs).
 
-**158 paths, 192 operations across 31 areas.**
+**159 paths, 193 operations across 31 areas.**
 
 ---
 
@@ -119,6 +119,7 @@ _Coworking sessions and PyData 2026 ticketing._
 | DELETE | `/api/events/{eventId}/coworking/register` | Yes | Cancel the current user's coworking registration |
 | POST | `/api/events/{eventId}/coworking/register` | Yes | Register for a coworking session in an event |
 | GET | `/api/events/{eventId}/coworking/slots` | No | List coworking sessions with availability for an event |
+| GET | `/api/events/pydata-2026/access` | No | Whether the signed-in user is on the 150-person PyData 2026 door list |
 | GET | `/api/events/pydata-2026/admin/list` | Yes | Admin: paginated PyData 2026 registrations with cap-vs-waitlist |
 | GET | `/api/events/pydata-2026/capacity` | No | Public PyData 2026 capacity / claimed / remaining counts |
 | GET | `/api/events/pydata-2026/luma-status` | No | Whether the current user appears on the PyData Luma guest list |
