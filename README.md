@@ -236,6 +236,10 @@ CRON_SECRET=your-secret RATE_LIMIT_CLEANUP_BATCH_SIZE=200 RATE_LIMIT_CLEANUP_MAX
 - [ ] **v0.3**: Community Discussion Boards
 - [ ] **v0.4**: PWA & Mobile Optimization
 
+See the full roadmap — including active development, planned work, and where to find issues to pick up — in **[`.github/ACTIVE_ISSUES.md`](.github/ACTIVE_ISSUES.md)**.
+
+We're also **recruiting a second maintainer** — see [MAINTAINERS.md](MAINTAINERS.md#were-recruiting-a-second-maintainer) if you're interested.
+
 ---
 
 <p align="center">
