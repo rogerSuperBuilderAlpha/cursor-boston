@@ -37,7 +37,7 @@ import {
 
 const MODEL = "claude-opus-4-7";
 const SCORE_FILENAME = "score.json";
-const NOTEBOOK_FILENAME = "submission.ipynb";
+const NOTEBOOK_FILENAME = "submission.py";
 const META_FILENAME = "meta.json";
 const MAX_NOTEBOOK_CHARS = 30_000;
 
@@ -61,7 +61,7 @@ const COMPETITION_DATASETS = [
 const RUBRIC = `You are the AI "black box" judge for the Cursor Boston × PyData hackathon (May 13, 2026 at Moderna HQ).
 
 ## Challenge
-Attendees had one evening to use Cursor and Marimo to build a notebook that uncovers **one compelling insight** from one of the competition datasets below. The brief: "One notebook. One insight. Make it interesting."
+Attendees had one evening to use Cursor and Marimo to build a notebook (saved as a Python \`submission.py\` file, Marimo's native format) that uncovers **one compelling insight** from one of the competition datasets below. The brief: "One notebook. One insight. Make it interesting."
 
 ## Competition datasets (at least one must be used)
 ${COMPETITION_DATASETS.map((d) => `- ${d}`).join("\n")}
@@ -121,42 +121,15 @@ function parseArgs(argv: string[]) {
   return { handle, all, force, skipExisting };
 }
 
-interface NotebookCell {
-  cell_type?: string;
-  source?: string | string[];
-}
-
-function cellSourceToString(source: NotebookCell["source"]): string {
-  if (typeof source === "string") return source;
-  if (Array.isArray(source)) return source.join("");
-  return "";
-}
-
 function extractNotebookText(notebookPath: string): string {
   const raw = fs.readFileSync(notebookPath, "utf8");
-  let parsed: { cells?: NotebookCell[] };
-  try {
-    parsed = JSON.parse(raw) as { cells?: NotebookCell[] };
-  } catch {
-    return raw.slice(0, MAX_NOTEBOOK_CHARS);
-  }
-
-  const cells = Array.isArray(parsed.cells) ? parsed.cells : [];
-  const parts: string[] = [];
-  for (const cell of cells) {
-    const text = cellSourceToString(cell.source).trim();
-    if (!text) continue;
-    const kind = cell.cell_type === "markdown" ? "MD" : "CODE";
-    parts.push(`--- ${kind} ---\n${text}`);
-  }
-  const joined = parts.join("\n\n");
-  if (joined.length <= MAX_NOTEBOOK_CHARS) return joined;
+  if (raw.length <= MAX_NOTEBOOK_CHARS) return raw;
   const head = Math.floor(MAX_NOTEBOOK_CHARS * 0.7);
   const tail = MAX_NOTEBOOK_CHARS - head - 50;
   return (
-    joined.slice(0, head) +
+    raw.slice(0, head) +
     "\n\n…[truncated middle]…\n\n" +
-    joined.slice(joined.length - tail)
+    raw.slice(raw.length - tail)
   );
 }
 
@@ -185,7 +158,7 @@ async function scoreSubmission(
   const context = [
     `## Submission: ${handle}`,
     `\n### meta.json\n${meta}`,
-    `\n### submission.ipynb (cells extracted)\n${notebook}`,
+    `\n### submission.py (Marimo notebook source)\n${notebook}`,
   ].join("\n");
 
   const response = await client.messages.create({
