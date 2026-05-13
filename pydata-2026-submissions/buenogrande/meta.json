@@ -1,5 +1,5 @@
 {
-  "title": "Sample submission (placeholder notebook)",
-  "description": "Minimal placeholder notebook to validate the PyData 2026 submission workflow. Real analysis will be added in a follow-up.",
+  "title": "Hello! \u2014 marimo-style starter (Jupyter export)",
+  "description": "First submission matching the local hackathon-notebook.py layout: import marimo as mo, then a Hello! markdown cell. Ready to extend with analysis.",
   "displayName": "Sample (BuenoGrande)"
 }
