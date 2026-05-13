@@ -30,14 +30,27 @@ export const PYDATA_SUBMISSIONS_REPO_URL =
 
 const NOTEBOOK_FILENAME = "submission.ipynb";
 const META_FILENAME = "meta.json";
+const SCORE_FILENAME = "score.json";
 const MAX_TITLE = 120;
 const MAX_DESCRIPTION = 500;
 const MAX_TAGS = 6;
 const MAX_COLLABORATORS = 10;
+const MAX_RATIONALE = 1000;
 
 export interface PyDataSubmissionCollaborator {
   displayName: string;
   githubHandle: string | null;
+}
+
+export interface PyDataSubmissionScore {
+  /** Integer 1-10 from the LLM judge. */
+  score: number;
+  /** Short justification from the judge. */
+  rationale: string;
+  /** Model name that produced the score (e.g. `claude-opus-4-7`). */
+  model: string;
+  /** ISO timestamp of when the score was written. */
+  scoredAt: string;
 }
 
 export interface PyDataSubmission {
@@ -51,6 +64,12 @@ export interface PyDataSubmission {
   notebookUrl: string;
   /** GitHub URL pointing at the submission folder. */
   folderUrl: string;
+  /**
+   * Hackathon judge score. Maintainer-authored via
+   * `scripts/score-pydata-submission.ts` and committed as `score.json`
+   * before the PR is merged. Absent if not yet scored.
+   */
+  score: PyDataSubmissionScore | null;
 }
 
 function clampString(s: unknown, max: number): string {
@@ -109,9 +128,31 @@ function readMeta(folderPath: string): unknown {
   }
 }
 
+function readScore(folderPath: string): PyDataSubmissionScore | null {
+  const scorePath = path.join(folderPath, SCORE_FILENAME);
+  if (!fs.existsSync(scorePath)) return null;
+  let parsed: Record<string, unknown>;
+  try {
+    parsed = JSON.parse(fs.readFileSync(scorePath, "utf8")) as Record<
+      string,
+      unknown
+    >;
+  } catch {
+    return null;
+  }
+  const score = Number(parsed.score);
+  if (!Number.isFinite(score) || score < 1 || score > 10) return null;
+  const rationale = clampString(parsed.rationale, MAX_RATIONALE);
+  if (!rationale) return null;
+  const model = clampString(parsed.model, 80) || "unknown";
+  const scoredAt = clampString(parsed.scoredAt, 40) || "";
+  return { score, rationale, model, scoredAt };
+}
+
 function buildSubmission(
   handleDir: string,
-  meta: Record<string, unknown>
+  meta: Record<string, unknown>,
+  score: PyDataSubmissionScore | null
 ): PyDataSubmission | null {
   const title = clampString(meta.title, MAX_TITLE);
   const description = clampString(meta.description, MAX_DESCRIPTION);
@@ -130,6 +171,7 @@ function buildSubmission(
     collaborators,
     notebookUrl: `${PYDATA_SUBMISSIONS_REPO_URL}/blob/main/${PYDATA_SUBMISSIONS_DIR}/${handleDir}/${NOTEBOOK_FILENAME}`,
     folderUrl: `${PYDATA_SUBMISSIONS_REPO_URL}/tree/main/${PYDATA_SUBMISSIONS_DIR}/${handleDir}`,
+    score,
   };
 }
 
@@ -175,7 +217,12 @@ export function getPyDataSubmissions(): PyDataSubmission[] {
       continue;
     }
 
-    const submission = buildSubmission(handleDir, meta as Record<string, unknown>);
+    const score = readScore(folderPath);
+    const submission = buildSubmission(
+      handleDir,
+      meta as Record<string, unknown>,
+      score
+    );
     if (!submission) {
       console.warn(
         `[pydata-submissions] ${handleDir}: ${META_FILENAME} missing required fields, skipping`
