@@ -1,9 +1,0 @@
-{
-  "title": "Ed's One Big Insight",
-  "description": "PyDataXCursor 2026 Hackathon Submission at Moderna HQ",
-  "displayName": "Ed Ruiz",
-  "tags": ["AI", "marimo"],
-  "collaborators": [
-    { "displayName": "Pat Collaborator", "githubHandle": "pat-collab" }
-  ]
-}
