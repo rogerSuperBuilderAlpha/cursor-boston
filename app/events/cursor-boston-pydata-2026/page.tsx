@@ -150,13 +150,405 @@ export default function PyDataHackathonHubPage() {
           </div>
         </section>
 
-        {/* Instructions */}
+        {/* Challenge brief */}
+        <Challenge />
+
+        {/* Prizes */}
+        <Prizes />
+
+        {/* Datasets */}
+        <Datasets />
+
+        {/* Timeline */}
+        <Timeline />
+
+        {/* Submission mechanics — how to PR */}
         <SubmissionInstructions />
+
+        {/* Best Submission + Best Presentation rules */}
+        <PrizeRules />
 
         {/* Submissions grid */}
         <SubmissionsGrid submissions={submissions} />
       </main>
     </PyDataAccessGate>
+  );
+}
+
+function Challenge() {
+  return (
+    <section className="px-6 py-12 border-b border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950">
+      <div className="max-w-6xl mx-auto">
+        <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
+          The challenge
+        </h2>
+        <p className="text-lg text-neutral-700 dark:text-neutral-300 max-w-3xl">
+          Use Cursor and Marimo to build a notebook that uncovers{" "}
+          <strong>one compelling insight</strong> from the dataset(s) below.
+        </p>
+        <p className="mt-3 text-base text-neutral-600 dark:text-neutral-400 max-w-3xl">
+          That&apos;s it. One notebook. One insight. Make it interesting.
+        </p>
+      </div>
+    </section>
+  );
+}
+
+function Prizes() {
+  return (
+    <section className="px-6 py-12 border-b border-neutral-200 dark:border-neutral-800">
+      <div className="max-w-6xl mx-auto">
+        <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6">
+          Prizes
+        </h2>
+        <ul className="grid gap-4 md:grid-cols-3">
+          <PrizeCard
+            amount="$200"
+            unit="Cursor Credits × 3"
+            title="Best presentations"
+            body="Awarded to the top 3 presentations as scored by a panel of human judges on data story telling."
+          />
+          <PrizeCard
+            amount="$200"
+            unit="Cursor Credits × 3"
+            title="Best submissions"
+            body="Awarded to the top 3 notebooks as picked by an AI agent acting as a blind judge."
+          />
+          <PrizeCard
+            amount="$20"
+            unit="Cursor Credits"
+            title="For submitting"
+            body="Every attendee who submits a notebook gets $20 in Cursor Credits — no judging required."
+          />
+        </ul>
+        <p className="mt-6 text-sm text-neutral-600 dark:text-neutral-400 max-w-3xl">
+          Prizes are awarded to <strong>individuals, not teams</strong>. You can
+          only win a single $200 voucher during the event — you can&apos;t win
+          both &ldquo;best presentation&rdquo; and &ldquo;best submission&rdquo;
+          at the same time.
+        </p>
+      </div>
+    </section>
+  );
+}
+
+function PrizeCard({
+  amount,
+  unit,
+  title,
+  body,
+}: {
+  amount: string;
+  unit: string;
+  title: string;
+  body: string;
+}) {
+  return (
+    <li className="rounded-xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="flex items-baseline gap-2">
+        <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+          {amount}
+        </span>
+        <span className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+          {unit}
+        </span>
+      </div>
+      <h3 className="mt-2 text-base font-semibold text-foreground">{title}</h3>
+      <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+        {body}
+      </p>
+    </li>
+  );
+}
+
+const DATASET_GROUPS: ReadonlyArray<{
+  heading: string;
+  datasets: ReadonlyArray<{ name: string; url: string }>;
+}> = [
+  {
+    heading: "Biological",
+    datasets: [
+      {
+        name: "FLIP2: Expanding Protein Fitness Landscape Benchmarks",
+        url: "https://flip.protein.properties/",
+      },
+      { name: "ProteinGym", url: "https://proteingym.org/" },
+      {
+        name: "1000 Genomes Project",
+        url: "https://www.internationalgenome.org/data",
+      },
+      {
+        name: "GTEx Datasets",
+        url: "https://gtexportal.org/home/datasets",
+      },
+    ],
+  },
+  {
+    heading: "Climate",
+    datasets: [
+      {
+        name: "ERA5 Reanalysis (Copernicus)",
+        url: "https://cds.climate.copernicus.eu/datasets/reanalysis-era5-single-levels",
+      },
+      {
+        name: "NOAA Climate Data Online Datasets",
+        url: "https://www.ncei.noaa.gov/cdo-web/datasets",
+      },
+    ],
+  },
+  {
+    heading: "Robotics",
+    datasets: [
+      {
+        name: "LeRobot Datasets (Hugging Face)",
+        url: "https://huggingface.co/lerobot",
+      },
+      {
+        name: "UCI Wall-Following Robot Navigation",
+        url: "https://archive.ics.uci.edu/dataset/86/wall+following+robot+navigation+data",
+      },
+    ],
+  },
+  {
+    heading: "Marketing",
+    datasets: [
+      {
+        name: "UCI Bank Marketing",
+        url: "https://archive.ics.uci.edu/dataset/222/bank+marketing",
+      },
+      {
+        name: "Kaggle Marketing Campaign Datasets",
+        url: "https://www.kaggle.com/search?q=marketing+campaign+dataset",
+      },
+    ],
+  },
+  {
+    heading: "Retail / E-commerce",
+    datasets: [
+      {
+        name: "UCI Online Retail",
+        url: "https://archive.ics.uci.edu/dataset/352/online+retail",
+      },
+      {
+        name: "Retailrocket E-commerce Dataset (Kaggle)",
+        url: "https://www.kaggle.com/datasets/retailrocket/ecommerce-dataset",
+      },
+    ],
+  },
+  {
+    heading: "Local (Boston)",
+    datasets: [
+      {
+        name: "Analyze Boston (City of Boston Open Data)",
+        url: "https://data.boston.gov/",
+      },
+      { name: "MBTA Open Data", url: "https://www.mbta.com/developers" },
+    ],
+  },
+];
+
+function Datasets() {
+  return (
+    <section className="px-6 py-12 border-b border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950">
+      <div className="max-w-6xl mx-auto">
+        <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
+          Competition datasets
+        </h2>
+        <p className="text-neutral-600 dark:text-neutral-400 max-w-3xl mb-8">
+          These are the &ldquo;competition datasets&rdquo; for this hackathon.
+          Use any one (or several) of them in your submission. You must use at
+          least one of these to be eligible for the prizes.
+        </p>
+
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {DATASET_GROUPS.map((group) => (
+            <div key={group.heading}>
+              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+                {group.heading}
+              </h3>
+              <ul className="space-y-2">
+                {group.datasets.map((d) => (
+                  <li key={d.url}>
+                    <a
+                      href={d.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-start gap-1.5 text-sm text-emerald-600 hover:text-emerald-500 dark:text-emerald-400"
+                    >
+                      <span className="underline underline-offset-2 decoration-emerald-500/30 hover:decoration-emerald-500">
+                        {d.name}
+                      </span>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                        className="mt-0.5 shrink-0"
+                      >
+                        <path d="M7 17l9.2-9.2M17 17V7H7" />
+                      </svg>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+const TIMELINE_ROWS: ReadonlyArray<{ time: string; title: string; sub?: string }> = [
+  {
+    time: "7:00",
+    title: "Welcome",
+    sub: "Sebastian Wallkoetter, Benjamin Batorsky",
+  },
+  {
+    time: "7:15",
+    title: "Marimo + Cursor for Data Science",
+    sub: "Eric Ma",
+  },
+  {
+    time: "8:15",
+    title: "Q&A with Cursor",
+    sub: "virtual, parallel",
+  },
+  { time: "9:00", title: "Presentations" },
+  { time: "9:25", title: "Winners announced" },
+  { time: "9:30", title: "End" },
+];
+
+function Timeline() {
+  return (
+    <section className="px-6 py-12 border-b border-neutral-200 dark:border-neutral-800">
+      <div className="max-w-6xl mx-auto">
+        <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6">
+          Timeline
+        </h2>
+        <ol className="overflow-hidden rounded-xl border border-neutral-200 bg-white divide-y divide-neutral-200 dark:divide-neutral-800 dark:border-neutral-800 dark:bg-neutral-900">
+          {TIMELINE_ROWS.map((row) => (
+            <li
+              key={`${row.time}-${row.title}`}
+              className="flex items-baseline gap-4 px-5 py-3"
+            >
+              <span className="w-16 shrink-0 font-mono text-sm tabular-nums text-neutral-500">
+                {row.time}
+              </span>
+              <span className="text-sm text-foreground">
+                <span className="font-semibold">{row.title}</span>
+                {row.sub ? (
+                  <span className="text-neutral-500 dark:text-neutral-400">
+                    {" "}
+                    · {row.sub}
+                  </span>
+                ) : null}
+              </span>
+            </li>
+          ))}
+        </ol>
+        <p className="mt-4 text-sm text-neutral-600 dark:text-neutral-400">
+          Submissions close at <strong>9:00</strong>. You must have your
+          notebook PR&apos;d before then to be eligible for either prize.
+        </p>
+      </div>
+    </section>
+  );
+}
+
+function PrizeRules() {
+  return (
+    <section className="px-6 py-12 border-b border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950">
+      <div className="max-w-6xl mx-auto">
+        <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+          How the prizes are decided
+        </h2>
+        <p className="text-neutral-600 dark:text-neutral-400 mb-8 max-w-3xl">
+          Two prize tracks, judged independently. Submit your notebook for the
+          AI-judged track; sign up at the event and pitch for the human-judged
+          track.
+        </p>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Best Submission */}
+          <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-6 dark:border-neutral-800 dark:bg-neutral-900">
+            <h3 className="text-xl font-bold text-foreground mb-1">
+              Best submission
+            </h3>
+            <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
+              An AI agent reviews every notebook as a blind judge and picks the
+              top 3.
+            </p>
+
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-2">
+              Process
+            </h4>
+            <ol className="list-decimal pl-5 space-y-1 text-sm text-neutral-700 dark:text-neutral-300 mb-4">
+              <li>Submit your final notebook before 9:00.</li>
+              <li>Wait for winners to be announced.</li>
+            </ol>
+
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-2">
+              Eligibility
+            </h4>
+            <ul className="list-disc pl-5 space-y-1 text-sm text-neutral-700 dark:text-neutral-300">
+              <li>Submit your final notebook (see Submission below).</li>
+              <li>Use at least one of the competition datasets.</li>
+            </ul>
+          </div>
+
+          {/* Best Presentation */}
+          <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-6 dark:border-neutral-800 dark:bg-neutral-900">
+            <h3 className="text-xl font-bold text-foreground mb-1">
+              Best presentation
+            </h3>
+            <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
+              <strong>25 slots, first-come first-serve</strong>. 1-minute hard
+              limit. Sign up at the event by entering your name and GitHub
+              handle into the presentation list — if it&apos;s full, it&apos;s
+              full.
+            </p>
+
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-2">
+              Process
+            </h4>
+            <ol className="list-decimal pl-5 space-y-1 text-sm text-neutral-700 dark:text-neutral-300 mb-4">
+              <li>Sign up on the pitch list at the event (25 slots).</li>
+              <li>Submit your final notebook before 9:00.</li>
+              <li>Line up to present.</li>
+              <li>Present — 1 minute, notebook as backdrop.</li>
+              <li>Wait for winners to be announced.</li>
+            </ol>
+
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-2">
+              Eligibility
+            </h4>
+            <ul className="list-disc pl-5 space-y-1 text-sm text-neutral-700 dark:text-neutral-300 mb-4">
+              <li>Submit your final notebook before you present.</li>
+              <li>Use at least one of the competition datasets.</li>
+              <li>Actually present.</li>
+            </ul>
+
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-neutral-500 mb-2">
+              Eval criteria
+            </h4>
+            <p className="text-sm text-neutral-700 dark:text-neutral-300">
+              <strong>Data story telling.</strong> How clearly do you
+              communicate your insight and its significance using the available
+              dataset(s)? A panel of human judges scores each presentation;
+              scores are combined and the top 3 win. Ties broken at random.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
