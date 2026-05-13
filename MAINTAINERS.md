@@ -7,6 +7,7 @@
 | Roger Hunt      | [@rogerSuperBuilderAlpha](https://github.com/rogerSuperBuilderAlpha) | Project Lead | 2026-01-27 |
 | Brad Egan       | [@bradAGI](https://github.com/bradAGI) | Maintainer | 2026-05-13 |
 | Neha Chaudhari  | [@nebullii](https://github.com/nebullii) | Maintainer | 2026-05-13 |
+| Aaron Grace     | [@AaronGrace978](https://github.com/AaronGrace978) | Community Maintainer | 2026-05-13 |
 
 The full role definitions, decision-making process, and code-review tiers live in [`.github/GOVERNANCE.md`](.github/GOVERNANCE.md).
 
@@ -21,11 +22,16 @@ Both paths use the same evaluation criteria (sustained contributions, code-revie
 
 ## CODEOWNERS and area ownership
 
-[`.github/CODEOWNERS`](.github/CODEOWNERS) lists all three maintainers as default owners. Per-area primaries:
+[`.github/CODEOWNERS`](.github/CODEOWNERS) lists all four maintainers as default owners. Per-area primaries:
 
 - **Brad** — test surface (`__tests__/`, `e2e/`), CI/release workflows (`.github/workflows/`), and security-adjacent middleware (`lib/middleware.ts`, `lib/sanitize.ts`, rate-limit modules) — the areas he established expertise in through the test-coverage and security-hardening work that preceded his application.
 - **Neha** — analytics dashboard (`app/analytics/`, `app/api/analytics/`), realtime lightning-talk sessions (`app/live/`, `app/api/live/`, `lib/live-sessions/`), and the feed/map UI components — the two feature projects she shipped (#155, #213) plus the UI surface she's iterated on.
-- **Roger** — governance docs (MAINTAINERS.md, GOVERNANCE.md, CODEOWNERS), README/marketing copy, and the game subsystem.
+- **Aaron** — community/marketing-facing surface: the footer (`components/Footer.tsx` — which he shipped in #506), partner-facing pages (`app/partners/`), and the welcoming-tier docs (`docs/GET_STARTED.md`, `docs/FIRST_CONTRIBUTION.md`) — aligned with his self-described CMO-style role. Default reviewer everywhere else; expects to develop additional primary areas in the role.
+- **Roger** — governance docs (MAINTAINERS.md, GOVERNANCE.md, CODEOWNERS), and the game subsystem.
+
+### Community Maintainer track
+
+Aaron holds the **Community Maintainer** title rather than the standard Maintainer title — a track for maintainers whose value to the project is principally in welcoming, contributor support, and external-facing surface rather than deep code review. The decision-making weight is the same (one maintainer = one approval), but the expected day-to-day differs: triage and contributor-support questions, marketing-adjacent docs, and the welcoming pages, rather than deep code review on `lib/` or `app/api/`. The track may evolve into a standard Maintainer role as the codebase familiarity grows.
 
 ## Day-to-day
 
