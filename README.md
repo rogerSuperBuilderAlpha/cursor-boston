@@ -122,6 +122,8 @@ Want to add a major feature to the platform? We have **6 open feature projects**
 
 Each feature is **fully isolated** — new routes, new Firestore collections, no entanglement with existing code. Pick one, comment to claim it, and ship it. See the [Contributing Guide](.github/CONTRIBUTING.md#claiming-an-issue) for how to get started.
 
+> **Where does my PR go?** Most contributions target **`develop`** (the default base). A few — PyData notebooks, summer cohort weekly submissions, game content, maintainer applications — target dedicated long-lived branches instead. See [docs/SUBMISSION_BRANCHES.md](docs/SUBMISSION_BRANCHES.md) for the routing table.
+
 ---
 
 ## 🔌 API Reference
@@ -139,6 +141,7 @@ Each feature is **fully isolated** — new routes, new Firestore collections, no
 - [Development Guide](docs/DEVELOPMENT.md) - Setup, scripts, troubleshooting, architecture
 - [First Contribution](docs/FIRST_CONTRIBUTION.md) - Step-by-step first PR walkthrough
 - [Contributing Guide](.github/CONTRIBUTING.md) - Contribution policy and code style
+- [Submission branches](docs/SUBMISSION_BRANCHES.md) - When to PR against `develop` vs. a long-lived submission branch
 - [Support](.github/SUPPORT.md) - Where to ask questions (Discord, issues, email)
 - [Governance](.github/GOVERNANCE.md) - Roles, decisions, and maintainer process
 - [Maintainers](MAINTAINERS.md) - Pointer to governance and releases

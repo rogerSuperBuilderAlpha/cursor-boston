@@ -12,6 +12,8 @@ The workflow validates that `firestore.indexes.json` parses before deploying. Th
 
 Several long-lived branches serve as **persistent contribution / submission targets** — contributors PR into them instead of forking against `develop` or `main`. They survive across releases, so they need to stay current with `develop` or contributor PR diffs fill up with stale upstream commits.
 
+> Contributor-facing explanation of these branches lives in [`docs/SUBMISSION_BRANCHES.md`](docs/SUBMISSION_BRANCHES.md). Keep that doc and this section in sync — when a new submission branch is added (next cohort, next event), update both.
+
 Current core branches:
 
 - `c1w1pm-submission`, `c1w2comms-submission`, `c1w3mkt-submission`, `c1w4edu-submission`, `c1w5startup-submission`, `c1w6oss-submission` — summer cohort 1 weekly submissions
