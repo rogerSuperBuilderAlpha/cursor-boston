@@ -47,9 +47,25 @@ A read-only clone of upstream is fine for browsing or local experimentation, but
 
 ## Branching model (`develop` and `main`)
 
-- **`develop`** is the **default branch** on GitHub. Open **all** contributor pull requests against `develop`. That branch is the integration line: **reviews and GitHub Actions CI** (lint, tests, etc.). **Vercel production deploys run only when changes merge to `main`** — we do not deploy every PR commit to Vercel (see [docs/VERCEL.md](../docs/VERCEL.md)).
+- **`develop`** is the **default branch** on GitHub. Open **most** contributor pull requests against `develop` — see [Where to PR](#where-to-pr--submission-branch-routing) below for the few exceptions. That branch is the integration line: **reviews and GitHub Actions CI** (lint, tests, etc.). **Vercel production deploys run only when changes merge to `main`** — we do not deploy every PR commit to Vercel (see [docs/VERCEL.md](../docs/VERCEL.md)).
 - **`main`** tracks **production**. Changes reach `main` only through a **release PR** from `develop` after maintainers batch and review what should ship. That keeps production history and deployments controlled.
 - After a release merge, maintainers sync **`develop`** with **`main`** so both stay aligned.
+
+## Where to PR — submission branch routing
+
+Most PRs go to `develop`. A handful go to **long-lived submission branches** — dedicated targets for event submissions, cohort work, and the maintainer application process. Pick the right base before opening your PR:
+
+| If you're doing this… | Base branch |
+|---|---|
+| Standard code, bug fix, feature, docs | **`develop`** |
+| PyData hackathon notebook | **`pydata-2026-submissions`** ([details](../pydata-2026-submissions/README.md)) |
+| Summer cohort week N submission | **`c1w1pm-submission`** / **`c1w2comms-submission`** / **`c1w3mkt-submission`** / **`c1w4edu-submission`** / **`c1w5startup-submission`** / **`c1w6oss-submission`** |
+| Game-mode content (units, artifacts, lore) | **`game-contributions`** |
+| Maintainer application | **`maintainer-application`** (see [GOVERNANCE](GOVERNANCE.md#becoming-a-maintainer)) |
+
+GitHub defaults the base branch to `develop` in the PR form — **change it manually** if you're targeting a submission branch. Submission branches are kept current with `develop` by maintainers after each release, so you don't need to do anything special to keep your fork fresh.
+
+See [`docs/SUBMISSION_BRANCHES.md`](../docs/SUBMISSION_BRANCHES.md) for the full explanation: what these branches are, why they exist, and what happens to your PR after it merges. If you're unsure where your PR should go, default to `develop` and a maintainer will redirect you in review.
 
 ## Architecture Decision Records
 
@@ -63,6 +79,7 @@ We document significant architectural choices in short, numbered records so futu
 
 - [Contribution policy (fork and pull request only)](#contribution-policy-fork-and-pull-request-only)
 - [Branching model (develop and main)](#branching-model-develop-and-main)
+- [Where to PR — submission branch routing](#where-to-pr--submission-branch-routing)
 - [Architecture Decision Records](#architecture-decision-records)
 - [Code of Conduct](#code-of-conduct)
 - [Developer Certificate of Origin](#developer-certificate-of-origin)

@@ -3,6 +3,9 @@
 **Date:** April 11, 2026
 **Reported by:** Roger Hunt (repo owner)
 **Severity:** Medium (financial — $50 referral codes, 50 total = $2,500 potential exposure)
+**Status:** Closed (code-side changes shipped on 2026-05-06; remaining items are operational follow-ups tracked in the Action Items list below)
+
+The prevention work from this incident is codified in [`.gitleaks.toml`](../.gitleaks.toml) (rules `cursor-referral-url` and `credit-referral-file-content`), [`.gitignore`](../.gitignore) (`docs/*credit*/`, `*credit*.csv`, `*referral*.csv`), and the operational runbook at [`docs/SECURITY_OPERATIONS.md`](SECURITY_OPERATIONS.md).
 
 ---
 

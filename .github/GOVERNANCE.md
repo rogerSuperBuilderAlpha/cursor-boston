@@ -50,7 +50,7 @@ Maintainers are contributors who have demonstrated a sustained commitment to the
 
 #### Becoming a Maintainer
 
-Contributors may be invited to become maintainers based on:
+Contributors may become maintainers based on:
 
 - Sustained, high-quality contributions over time
 - Deep understanding of the codebase and architecture
@@ -58,11 +58,25 @@ Contributors may be invited to become maintainers based on:
 - Commitment to the project's mission and values
 - Positive interactions with the community
 
-The process:
+There are **two paths** to becoming a maintainer. The evaluation criteria above are the same for both.
+
+##### Path A — Nomination
+
 1. An existing maintainer nominates a contributor
 2. Maintainers discuss the nomination privately
 3. Decision is made by consensus among maintainers
 4. If approved, the contributor is invited to become a maintainer
+
+##### Path B — Self-nomination (expressing interest publicly)
+
+We don't want the maintainer seat to depend on being noticed. Contributors who are interested in the role can put themselves forward:
+
+1. Open a pull request against the **[`maintainer-application`](https://github.com/rogerSuperBuilderAlpha/cursor-boston/tree/maintainer-application)** branch using the [Maintainer Application Template](MAINTAINER_APPLICATION_TEMPLATE.md). The PR body fills out the template (background, contribution history, areas of interest, time commitment).
+2. Maintainers review the application using the same criteria as Path A.
+3. If accepted, the application PR is merged and the contributor is invited to become a maintainer.
+4. If declined or deferred, the maintainer team responds in the PR with feedback and (where applicable) what additional contribution would change the outcome.
+
+The two paths converge on the same decision rule: consensus among maintainers, with the Project Lead approving.
 
 #### Maintainer Responsibilities
 

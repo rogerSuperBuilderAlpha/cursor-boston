@@ -313,6 +313,7 @@ jobs:
           context: .
           file: docker/Dockerfile
           push: false
+          load: true
           tags: cursor-boston:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -324,3 +325,22 @@ jobs:
             NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=000000000000
             NEXT_PUBLIC_FIREBASE_APP_ID=1:000000000000:web:placeholder
             NEXT_PUBLIC_FIREBASE_DATABASE_URL=https://build-placeholder.firebaseio.com
+
+      - name: Scan Docker image with Trivy
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # 0.35.0
+        with:
+          image-ref: cursor-boston:${{ github.sha }}
+          format: sarif
+          output: trivy-results.sarif
+          severity: HIGH,CRITICAL
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: os,library
+
+      - name: Upload Trivy scan results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: trivy-results
+          path: trivy-results.sarif
+          retention-days: 30
