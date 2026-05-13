@@ -4,8 +4,9 @@
 
 | Name | GitHub | Role | Since |
 |------|--------|------|-------|
-| Roger Hunt | [@rogerSuperBuilderAlpha](https://github.com/rogerSuperBuilderAlpha) | Project Lead | 2026-01-27 |
-| Brad Egan  | [@bradAGI](https://github.com/bradAGI) | Maintainer | 2026-05-13 |
+| Roger Hunt      | [@rogerSuperBuilderAlpha](https://github.com/rogerSuperBuilderAlpha) | Project Lead | 2026-01-27 |
+| Brad Egan       | [@bradAGI](https://github.com/bradAGI) | Maintainer | 2026-05-13 |
+| Neha Chaudhari  | [@nebullii](https://github.com/nebullii) | Maintainer | 2026-05-13 |
 
 The full role definitions, decision-making process, and code-review tiers live in [`.github/GOVERNANCE.md`](.github/GOVERNANCE.md).
 
@@ -20,7 +21,11 @@ Both paths use the same evaluation criteria (sustained contributions, code-revie
 
 ## CODEOWNERS and area ownership
 
-[`.github/CODEOWNERS`](.github/CODEOWNERS) now lists both maintainers as default owners, with Brad as the primary reviewer for the test surface (`__tests__/`), CI/release workflows (`.github/workflows/`), and the security-adjacent middleware (`lib/middleware.ts`, `lib/sanitize.ts`) — the areas he established expertise in through the test-coverage and security-hardening work that preceded his application. Roger remains primary on governance docs, README/marketing copy, and the game subsystem.
+[`.github/CODEOWNERS`](.github/CODEOWNERS) lists all three maintainers as default owners. Per-area primaries:
+
+- **Brad** — test surface (`__tests__/`, `e2e/`), CI/release workflows (`.github/workflows/`), and security-adjacent middleware (`lib/middleware.ts`, `lib/sanitize.ts`, rate-limit modules) — the areas he established expertise in through the test-coverage and security-hardening work that preceded his application.
+- **Neha** — analytics dashboard (`app/analytics/`, `app/api/analytics/`), realtime lightning-talk sessions (`app/live/`, `app/api/live/`, `lib/live-sessions/`), and the feed/map UI components — the two feature projects she shipped (#155, #213) plus the UI surface she's iterated on.
+- **Roger** — governance docs (MAINTAINERS.md, GOVERNANCE.md, CODEOWNERS), README/marketing copy, and the game subsystem.
 
 ## Day-to-day
 
