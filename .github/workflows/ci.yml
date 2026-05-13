@@ -45,6 +45,19 @@ jobs:
       - name: Run type check
         run: npm run type-check
 
+      - name: Check API.md is up-to-date with contracts
+        # Regenerate openapi.json and docs/API.md from the ts-rest contracts.
+        # docs/API.md is checked into git; openapi.json is a build artifact.
+        # If either contract changed without regenerating the docs, fail loud
+        # so the PR author runs `npm run generate:openapi && npm run generate:api-md`.
+        run: |
+          npm run generate:openapi
+          npm run generate:api-md
+          if ! git diff --exit-code -- docs/API.md; then
+            echo "::error::docs/API.md is out of date. Run 'npm run generate:openapi && npm run generate:api-md' and commit the result."
+            exit 1
+          fi
+
   security:
     name: Security Scanning
     runs-on: ubuntu-latest

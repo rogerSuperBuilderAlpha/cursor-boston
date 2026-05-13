@@ -8,8 +8,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb, getAdminAuth } from "@/lib/firebase-admin";
 import { parseRequestBody } from "@/lib/api-response";
 import { authContract } from "@/lib/api-schemas/auth";
+import { withRateLimitMiddleware } from "@/lib/middleware";
 
-export async function POST(request: NextRequest) {
+// Strict per-IP rate limit: this endpoint reveals whether an email maps to
+// an account, so it is an enumeration vector. Legitimate users hit it once
+// during sign-in; a brute-force enumeration of common addresses would burn
+// through this budget within seconds.
+const RATE_LIMIT = {
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  maxRequests: 10,
+};
+
+async function handler(request: NextRequest): Promise<NextResponse> {
   try {
     const bodyOrError = await parseRequestBody(request);
     if (bodyOrError instanceof NextResponse) return bodyOrError;
@@ -89,3 +99,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const POST = withRateLimitMiddleware(RATE_LIMIT, handler);

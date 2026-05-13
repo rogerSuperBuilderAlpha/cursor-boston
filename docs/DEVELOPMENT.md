@@ -115,6 +115,29 @@ These require `FIREBASE_SERVICE_ACCOUNT_JSON` in `.env.local`:
 | `npm run backfill-merge-credit` | Backfill contributor merge credits (see `docs/CONTRIBUTOR_MERGE_CREDIT_BACKFILL.md`) |
 | `npm run send-hack-a-sprint-emails` | Send hackathon event emails (see `docs/HACK_A_SPRINT_2026_OPS.md`) |
 
+### Categories of script in `scripts/`
+
+The `scripts/` directory holds ~90 files. Most are not part of the day-to-day developer loop. Use this guide to know which are which.
+
+**Supported (referenced from `package.json` scripts):** anything wired up in `package.json` under `scripts` is a supported entry point. Run them via `npm run <name>`, not by invoking the file directly — the `package.json` wrapper sets the right `tsx` flags. The current supported set: `dev`, `build`, `test`, `test:rules`, `test:e2e`, `lint`, `type-check`, `validate-env`, `generate:openapi`, `generate:api-md`, `generate:llms-txt`, `check:route-contracts`, `seed-hackathon-teams`, `check-members-db`, `rate-limit-cleanup`, `rebuild-snapshots`, `backfill-merge-credit`, `send-hack-a-sprint-emails`, `sync-event-contacts`, `send-contact-list-email`, `ai-evaluate`, `ai-evaluate:apply-json`, `score-pydata`, `distribute-credits`, `seed-luma-registrants`, `generate-contributors`, `add:gpl-headers`, `analyze`.
+
+**Maintainer ops scripts (invoked directly with `tsx`):** files prefixed `send-`, `sync-`, `seed-`, `set-cohort-`, `admit-`, `audit-`, `freeze-`, `rank-`, `count-`, `list-`, `export-`, `treasure-hunt-`, `admin-grant-`, `build-hack-a-sprint-`, `firestore-reads-metrics`, `suppress-mailgun-bounces`. These are operational one-shots used to run cohorts, send broadcast emails, audit game state, or freeze rankings. They are kept in the tree so the ops work is reviewable and replayable, but they are not part of the normal contributor loop. Most assume `FIREBASE_SERVICE_ACCOUNT_JSON` in `.env.local` and many will only do the right thing when run by a maintainer with the right context. **If you're a contributor, you almost certainly don't need to run any of these.**
+
+**Internal analysis (prefixed `_`):** files starting with `_` (e.g. `_analysis-pull-gcp-metrics.ts`, `_merge-pydata-website-luma.ts`) are throwaway analysis scripts kept for reproducibility. They may be deleted at any time. Don't depend on them from other code.
+
+**Helpers (`scripts/_lib/`, `scripts/data/`):** shared modules used by the scripts above. Not entry points.
+
+**CI/workflow helpers:**
+- `add-gpl-headers.js` — runs in pre-commit to keep GPL headers in place
+- `check-route-contracts.js` — runs in `prebuild` to fail the build if an API route lacks a ts-rest contract
+- `generate-openapi.ts`, `generate-api-md.ts`, `generate-llms-txt.js` — regenerate `openapi.json`, `docs/API.md`, and `public/llms.txt` during `prebuild`
+- `validate-env.ts` — fails the build if required env vars are missing or placeholder
+- `validate-hack-a-sprint-submission-pr.cjs` — runs in the hack-a-sprint submission validation workflow
+- `vercel-ignore-build.sh` — the `ignoreCommand` used by `vercel.json` to skip non-production builds
+- `generate-contributors.sh` — runs in the `update-contributors` workflow on push to main
+
+If a script is missing from this list, treat it as maintainer-internal and ask before running it.
+
 ---
 
 ## Pre-commit Hooks

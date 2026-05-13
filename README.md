@@ -74,7 +74,7 @@ graph TB
 
     subgraph Vercel["Vercel"]
         Pages["Pages & Layouts<br/>(SSR / Static)"]
-        API["API Routes<br/>(63 endpoints)"]
+        API["API Routes<br/>(160+ endpoints)"]
         MW["Middleware<br/>(CSRF, Rate Limit, Logging)"]
     end
 
@@ -144,7 +144,7 @@ Each feature is **fully isolated** — new routes, new Firestore collections, no
 - [Submission branches](docs/SUBMISSION_BRANCHES.md) - When to PR against `develop` vs. a long-lived submission branch
 - [Support](.github/SUPPORT.md) - Where to ask questions (Discord, issues, email)
 - [Governance](.github/GOVERNANCE.md) - Roles, decisions, and maintainer process
-- [Maintainers](MAINTAINERS.md) - Pointer to governance and releases
+- [Maintainers](MAINTAINERS.md) - Current roster and per-area ownership
 - [GitHub Issues](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues) - Browse and claim open tasks
 - [Code of Conduct](.github/CODE_OF_CONDUCT.md) - Our community standards
 - [Security Policy](.github/SECURITY.md) - How to report security vulnerabilities
@@ -154,6 +154,7 @@ Each feature is **fully isolated** — new routes, new Firestore collections, no
 - [Changelog](CHANGELOG.md) - Version history
 - [Vercel deployments](docs/VERCEL.md) - Production-only deploys (PRs do not trigger Vercel builds)
 - [API Reference](docs/API.md) - Full list of API endpoints
+- [LICENSE](LICENSE) and [NOTICE](NOTICE) - GPL-3.0 license terms and project attributions
 
 ---
 
