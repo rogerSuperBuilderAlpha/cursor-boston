@@ -238,7 +238,7 @@ CRON_SECRET=your-secret RATE_LIMIT_CLEANUP_BATCH_SIZE=200 RATE_LIMIT_CLEANUP_MAX
 
 See the full roadmap — including active development, planned work, and where to find issues to pick up — in **[`.github/ACTIVE_ISSUES.md`](.github/ACTIVE_ISSUES.md)**.
 
-Maintained by **[@rogerSuperBuilderAlpha](https://github.com/rogerSuperBuilderAlpha)** (Project Lead), **[@bradAGI](https://github.com/bradAGI)** (Maintainer), and **[@nebullii](https://github.com/nebullii)** (Maintainer) — see [MAINTAINERS.md](MAINTAINERS.md) for area ownership.
+Maintained by **[@rogerSuperBuilderAlpha](https://github.com/rogerSuperBuilderAlpha)** (Project Lead), **[@bradAGI](https://github.com/bradAGI)** (Maintainer), **[@nebullii](https://github.com/nebullii)** (Maintainer), and **[@AaronGrace978](https://github.com/AaronGrace978)** (Community Maintainer) — see [MAINTAINERS.md](MAINTAINERS.md) for area ownership.
 
 ---
 
