@@ -78,7 +78,9 @@ export function ManageSourcePanel(props: ManageSourcePanelProps) {
         </span>
         <span className="text-neutral-500 capitalize">{source.type}</span>
         <span className="font-mono text-neutral-500">
-          G{source.units.ground} S{source.units.siege} A{source.units.air}
+          G{source.units.ground + (source.baseUnits?.ground ?? 0)} S
+          {source.units.siege + (source.baseUnits?.siege ?? 0)} A
+          {source.units.air + (source.baseUnits?.air ?? 0)}
         </span>
       </div>
 

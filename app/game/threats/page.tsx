@@ -8,9 +8,15 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import type {
+  CombatResult,
+  GameTile,
+  TurnReport,
+} from "@/lib/game/types";
 import { SignedOutLanding } from "../_components/dashboard/SignedOutLanding";
 import { useDashboardData } from "../_lib/use-dashboard-data";
 import { ArmyPanel } from "./_components/ArmyPanel";
+import { BattleReport } from "./_components/BattleReport";
 import { ThreatRow } from "./_components/ThreatRow";
 import { deriveThreatEntries } from "./_lib/threats-derive";
 
@@ -56,6 +62,14 @@ export default function ThreatsPage() {
   const [hideShielded, setHideShielded] = useState(true);
   const [hideOverwhelming, setHideOverwhelming] = useState(false);
   const [busy, setBusy] = useState(false);
+  // Lifted out of ThreatRow so a successful capture (which unmounts the
+  // attacked row) doesn't yank the result away mid-read. The modal stays
+  // up until the user clicks Close, then they move on to the next threat.
+  const [battleResult, setBattleResult] = useState<{
+    combat: CombatResult;
+    report: TurnReport;
+    targetTile: GameTile;
+  } | null>(null);
 
   const entries = useMemo(() => {
     if (!user || !player) return [];
@@ -199,9 +213,40 @@ export default function ThreatsPage() {
               onSiege={withBusy(handleSiege)}
               onFlyover={withBusy(handleFlyover)}
               onCastSpell={withBusy(handleCastSpell)}
+              onBattleResolved={setBattleResult}
               myMagicLandCount={myMagicLandCount}
             />
           ))}
+        </div>
+      )}
+
+      {battleResult && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Battle result"
+          onClick={() => setBattleResult(null)}
+        >
+          <div
+            className="w-full max-w-2xl max-h-[90vh] overflow-y-auto space-y-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <BattleReport
+              combat={battleResult.combat}
+              report={battleResult.report}
+              targetTile={battleResult.targetTile}
+              onDismiss={() => setBattleResult(null)}
+            />
+            <button
+              type="button"
+              onClick={() => setBattleResult(null)}
+              autoFocus
+              className="w-full px-4 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-base shadow-lg"
+            >
+              Close
+            </button>
+          </div>
         </div>
       )}
     </main>

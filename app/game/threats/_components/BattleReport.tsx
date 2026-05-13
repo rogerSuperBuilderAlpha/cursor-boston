@@ -37,14 +37,6 @@ function totalUnits(stack: UnitStack): number {
   return stack.ground + stack.siege + stack.air;
 }
 
-function addStacks(a: UnitStack, b: UnitStack): UnitStack {
-  return {
-    ground: a.ground + b.ground,
-    siege: a.siege + b.siege,
-    air: a.air + b.air,
-  };
-}
-
 function fmtRoll(n: number): string {
   return `${n.toFixed(2)}×`;
 }
@@ -67,15 +59,51 @@ export function BattleReport({
   targetTile,
   onDismiss,
 }: BattleReportProps) {
-  const defenderPreAttack =
-    combat.outcome === "captured"
-      ? combat.defenderLosses
-      : addStacks(targetTile.units, combat.defenderLosses);
+  // BASE+SUPER: defenderUnitsPreAttack is the composite stack (garrison +
+  // reinforcements) the defender held entering combat. Surfaced by
+  // resolveAttack so we don't have to back-derive from post-attack state.
+  // Optional-with-fallback so older test fixtures + legacy CombatResult
+  // shapes still render: on captures the targetTile now belongs to the
+  // attacker so `defenderLosses` alone reconstructs the pre-attack stack;
+  // on repels/stalemates we add surviving units to lost ones.
+  const defenderPreAttack: UnitStack =
+    combat.defenderUnitsPreAttack ??
+    (combat.outcome === "captured"
+      ? { ...combat.defenderLosses }
+      : {
+          ground: targetTile.units.ground + combat.defenderLosses.ground,
+          siege: targetTile.units.siege + combat.defenderLosses.siege,
+          air: targetTile.units.air + combat.defenderLosses.air,
+        });
+  const defenderBasePreAttack: UnitStack = combat.defenderBasePreAttack ?? {
+    ground: 0,
+    siege: 0,
+    air: 0,
+  };
   const sent = combat.unitsDeployed;
   const sentTotal = totalUnits(sent);
   const defenderHadTotal = totalUnits(defenderPreAttack);
   const attackerLost = combat.attackerLosses;
   const defenderLost = combat.defenderLosses;
+
+  // Decisiveness label for the banner sub-title. Maps the lossCurveTag from
+  // combat to player-facing prose.
+  const decisivenessLabel = (() => {
+    switch (combat.lossCurveTag) {
+      case "decisive-capture":
+        return "Decisive";
+      case "close-capture":
+        return "Narrow";
+      case "stalemate":
+        return "Stalemate";
+      case "close-repel":
+        return "Pyrrhic loss";
+      case "decisive-repel":
+        return "Crushed";
+      default:
+        return null;
+    }
+  })();
 
   const banner = (() => {
     if (combat.outcome === "captured") {
@@ -184,6 +212,11 @@ export function BattleReport({
       <div className="flex items-baseline justify-between px-3 py-2">
         <h3 className="font-semibold uppercase tracking-wide text-xs">
           {banner.label}
+          {decisivenessLabel && (
+            <span className="normal-case font-semibold ml-2 opacity-90">
+              · {decisivenessLabel}
+            </span>
+          )}
           <span className="text-neutral-500 normal-case font-normal ml-2">
             · {report.cost} turn{report.cost === 1 ? "" : "s"} spent
           </span>
@@ -215,6 +248,37 @@ export function BattleReport({
               {defenderPreAttack.air}
             </span>
             <span className="text-neutral-500">({defenderHadTotal} total)</span>
+            {totalUnits(defenderBasePreAttack) > 0 && (
+              <>
+                <span className="text-neutral-500">↳ garrison</span>
+                <span className="text-neutral-500 italic">
+                  G{defenderBasePreAttack.ground} · S
+                  {defenderBasePreAttack.siege} · A
+                  {defenderBasePreAttack.air}
+                </span>
+                <span className="text-neutral-500 italic">
+                  ({totalUnits(defenderBasePreAttack)} base)
+                </span>
+              </>
+            )}
+            {totalUnits(defenderBasePreAttack) > 0 &&
+              defenderHadTotal - totalUnits(defenderBasePreAttack) > 0 && (
+                <>
+                  <span className="text-neutral-500">↳ reinforcements</span>
+                  <span className="text-neutral-500 italic">
+                    G
+                    {defenderPreAttack.ground - defenderBasePreAttack.ground}
+                    {" · "}S
+                    {defenderPreAttack.siege - defenderBasePreAttack.siege}
+                    {" · "}A
+                    {defenderPreAttack.air - defenderBasePreAttack.air}
+                  </span>
+                  <span className="text-neutral-500 italic">
+                    ({defenderHadTotal - totalUnits(defenderBasePreAttack)}{" "}
+                    recruited)
+                  </span>
+                </>
+              )}
           </div>
         </section>
 

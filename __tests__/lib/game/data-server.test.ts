@@ -252,10 +252,25 @@ describe("getOwnedTilesServer", () => {
     jest.clearAllMocks();
   });
 
-  it("returns an empty array when the player owns no tiles", async () => {
-    const get = jest.fn().mockResolvedValue({ docs: [] });
+  // After the BASE+SUPER redesign, getOwnedTilesServer also fetches the
+  // owner's player doc for lazy-regen and may fire-and-forget tile updates.
+  // The mock builder below stubs both paths so the unit tests stay tight.
+  function buildOwnedTilesMockDb(tileDocs: Array<{ data: () => unknown }>) {
+    const get = jest.fn().mockResolvedValue({ docs: tileDocs });
     const where = jest.fn().mockReturnValue({ get });
-    const db: any = { collection: jest.fn(() => ({ where })) };
+    const tileDoc = jest.fn(() => ({ update: jest.fn().mockResolvedValue(undefined) }));
+    const playerDoc = jest.fn(() => ({
+      get: jest.fn().mockResolvedValue({ exists: false, data: () => undefined }),
+    }));
+    const collection = jest.fn((name: string) => {
+      if (name === "game_players") return { doc: playerDoc };
+      return { where, doc: tileDoc };
+    });
+    return { db: { collection } as any, where };
+  }
+
+  it("returns an empty array when the player owns no tiles", async () => {
+    const { db, where } = buildOwnedTilesMockDb([]);
     mockAdminDb.mockReturnValue(db);
     const result = await getOwnedTilesServer("u1");
     expect(result).toEqual([]);
@@ -267,9 +282,7 @@ describe("getOwnedTilesServer", () => {
       { data: () => ({ tileId: "t1", ownerId: "u1", q: 0, r: 0, type: "military" }) },
       { data: () => ({ tileId: "t2", ownerId: "u1", q: 1, r: 0, type: "food" }) },
     ];
-    const get = jest.fn().mockResolvedValue({ docs });
-    const where = jest.fn().mockReturnValue({ get });
-    const db: any = { collection: jest.fn(() => ({ where })) };
+    const { db } = buildOwnedTilesMockDb(docs);
     mockAdminDb.mockReturnValue(db);
     const result = await getOwnedTilesServer("u1");
     expect(result).toHaveLength(2);

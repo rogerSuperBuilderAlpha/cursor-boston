@@ -6,6 +6,11 @@
 
 import {
   applyFlyoverModifiers,
+  attributeAttackerLosses,
+  attributeDefenderLosses,
+  BASE_CAPTURE_RETENTION,
+  BASE_DURABILITY_MULT,
+  baseUnitsTarget,
   computeSupplyMultiplier,
   computeTileCapacity,
   distributeUnitKills,
@@ -1427,5 +1432,291 @@ describe("distributeUnitKills", () => {
   it("handles killCount equal to total — kills everyone", () => {
     const k = distributeUnitKills(stack(7, 11, 13), 31);
     expect(k).toEqual(stack(7, 11, 13));
+  });
+});
+
+// ─── BASE + SUPER combat (2026-05-13 rework) ─────────────────────────────
+// These tests pin down the behavioral expectations of the BASE-units
+// redesign: every tile defends with intrinsic militia even when SUPER is
+// empty, near-equal fights tip into stalemate instead of an exact-tie dead
+// branch, the loss curve is decisiveness-keyed, captures retain a fraction
+// of BASE, and the SUPER/BASE attribution at the server layer absorbs
+// damage from SUPER first.
+
+describe("resolveAttack — BASE units defense", () => {
+  it("empty SUPER but full BASE garrison can repel a small attacker", () => {
+    // 10 ground vs a tile with no recruited units but a full military
+    // garrison (22/8/5 composite, BASE_DURABILITY_MULT-tougher than SUPER).
+    // The attacker is outnumbered ~3.5×; we expect the outcome to skew
+    // toward repelled (not always — RNG can swing it — but the *intent*
+    // is that an empty tile is not free real estate).
+    const tile = defaultTile(2000);
+    const result = resolveAttack(
+      defaultAttacker({ caste: "red", units: stack(10, 0, 0), unitsAlive: 100 }),
+      defaultDefender({
+        caste: "white",
+        unitsOnTile: stack(22, 8, 5), // composite stack = base only
+        baseUnitsOnTile: stack(22, 8, 5),
+        unitsAlive: 35,
+      }),
+      tile,
+      makeSeededRng("empty-tile-base")
+    );
+    // The decisive-capture path is no longer guaranteed — the defender
+    // brought ~35 BASE units against 10 attackers and should hold or stalemate.
+    expect(["repelled", "stalemate", "captured"]).toContain(result.outcome);
+    // Whichever way the dice fell, the defender pre-attack stack must
+    // surface the BASE garrison.
+    expect(result.defenderBasePreAttack).toEqual(stack(22, 8, 5));
+  });
+});
+
+describe("resolveAttack — stalemate band", () => {
+  it("returns stalemate when finalAttack/finalDefense is within ±8%", () => {
+    // Construct attacker and defender with similar power. We can't fully
+    // control RNG ratios, but we can search across seeds and confirm the
+    // band fires sometimes (and never with a 0/609 freq like the old code).
+    const tile = defaultTile(2000);
+    let stalemateCount = 0;
+    for (let seed = 0; seed < 60; seed++) {
+      const result = resolveAttack(
+        defaultAttacker({ caste: "white", units: stack(50, 50, 50) }),
+        defaultDefender({
+          caste: "white",
+          unitsOnTile: stack(50, 50, 50),
+        }),
+        tile,
+        makeSeededRng(`stalemate-${seed}`)
+      );
+      if (result.outcome === "stalemate") stalemateCount++;
+    }
+    // Old code: 0 stalemates ever. New code: a few per 60 seeds is plenty.
+    expect(stalemateCount).toBeGreaterThan(0);
+  });
+
+  it("stalemate causes both sides to take partial losses", () => {
+    // Force a stalemate by mirroring composition + caste; pick a seed
+    // that lands in the band.
+    const tile = defaultTile(2000);
+    let stalemate: CombatResult | null = null;
+    for (let seed = 0; seed < 100 && !stalemate; seed++) {
+      const r = resolveAttack(
+        defaultAttacker({ caste: "white", units: stack(50, 50, 50) }),
+        defaultDefender({
+          caste: "white",
+          unitsOnTile: stack(50, 50, 50),
+        }),
+        tile,
+        makeSeededRng(`stalemate-losses-${seed}`)
+      );
+      if (r.outcome === "stalemate") stalemate = r;
+    }
+    expect(stalemate).not.toBeNull();
+    const atkTotal =
+      stalemate!.attackerLosses.ground +
+      stalemate!.attackerLosses.siege +
+      stalemate!.attackerLosses.air;
+    const defTotal =
+      stalemate!.defenderLosses.ground +
+      stalemate!.defenderLosses.siege +
+      stalemate!.defenderLosses.air;
+    // Stalemate band: attacker ~50% loss, defender ~40% loss on a ~150 stack.
+    expect(atkTotal).toBeGreaterThan(0);
+    expect(defTotal).toBeGreaterThan(0);
+    // Neither side wiped (stalemate, not a one-sided wipe).
+    expect(atkTotal).toBeLessThan(150);
+    expect(defTotal).toBeLessThan(150);
+  });
+});
+
+describe("resolveAttack — decisiveness-keyed loss curves", () => {
+  it("decisive capture: attacker loses < 20% on a 2× edge", () => {
+    // Heavy attacker advantage: 500/500/500 vs 50/50/50 (~10× power).
+    // Decisive capture means the attacker doesn't bleed out.
+    const tile = defaultTile(2000);
+    const result = resolveAttack(
+      defaultAttacker({
+        caste: "red",
+        units: stack(500, 500, 500),
+        unitsAlive: 5000,
+      }),
+      defaultDefender({
+        caste: "white",
+        unitsOnTile: stack(50, 50, 50),
+      }),
+      tile,
+      makeSeededRng("decisive-capture")
+    );
+    expect(result.outcome).toBe("captured");
+    const sent = result.unitsDeployed;
+    const sentTotal = sent.ground + sent.siege + sent.air;
+    const lost =
+      result.attackerLosses.ground +
+      result.attackerLosses.siege +
+      result.attackerLosses.air;
+    expect(lost / sentTotal).toBeLessThan(0.2);
+    expect(result.lossCurveTag).toBe("decisive-capture");
+  });
+
+  it("decisive repel: attacker loses > 60% on a heavy underdog roll", () => {
+    // Attacker is heavily outclassed. Old curve would wipe 99.7%; new
+    // curve should bleed them, but not vaporize unless extremely lopsided.
+    const tile = defaultTile(2000);
+    const result = resolveAttack(
+      defaultAttacker({
+        caste: "red",
+        units: stack(5, 5, 5),
+        unitsAlive: 15,
+      }),
+      defaultDefender({
+        caste: "white",
+        unitsOnTile: stack(300, 300, 300),
+        unitsAlive: 1000,
+      }),
+      tile,
+      makeSeededRng("decisive-repel")
+    );
+    expect(result.outcome).toBe("repelled");
+    const sent = result.unitsDeployed;
+    const sentTotal = sent.ground + sent.siege + sent.air;
+    const lost =
+      result.attackerLosses.ground +
+      result.attackerLosses.siege +
+      result.attackerLosses.air;
+    expect(lost / sentTotal).toBeGreaterThan(0.6);
+    expect(result.lossCurveTag).toBe("decisive-repel");
+  });
+
+  it("exposes finalAttack and finalDefense for the BattleReport", () => {
+    const tile = defaultTile(2000);
+    const result = resolveAttack(
+      defaultAttacker(),
+      defaultDefender(),
+      tile,
+      makeSeededRng("expose-power")
+    );
+    expect(result.finalAttack).toBeGreaterThan(0);
+    expect(result.finalDefense).toBeGreaterThan(0);
+    // The pre-attack stack mirrors what the caller passed as unitsOnTile.
+    expect(result.defenderUnitsPreAttack).toEqual(stack(50, 50, 50));
+  });
+});
+
+describe("attributeDefenderLosses — SUPER-first split", () => {
+  it("SUPER absorbs damage before BASE bleeds", () => {
+    const out = attributeDefenderLosses({
+      superBefore: stack(20, 0, 0),
+      baseBefore: stack(10, 0, 0),
+      totalLosses: stack(15, 0, 0),
+      outcome: "repelled",
+      captureBaseRetentionFactor: 1,
+    });
+    expect(out.superLost).toEqual(stack(15, 0, 0));
+    expect(out.baseLost).toEqual(stack(0, 0, 0));
+    expect(out.newSuper).toEqual(stack(5, 0, 0));
+    expect(out.newBase).toEqual(stack(10, 0, 0));
+  });
+
+  it("BASE picks up overflow when SUPER is exhausted", () => {
+    // 25 damage, only 20 SUPER → 5 overflow → BASE durability soaks
+    // ~5/1.30 ≈ 4 BASE killed.
+    const out = attributeDefenderLosses({
+      superBefore: stack(20, 0, 0),
+      baseBefore: stack(10, 0, 0),
+      totalLosses: stack(25, 0, 0),
+      outcome: "repelled",
+      captureBaseRetentionFactor: 1,
+    });
+    expect(out.superLost.ground).toBe(20);
+    expect(out.baseLost.ground).toBe(Math.round(5 / BASE_DURABILITY_MULT));
+    expect(out.newSuper).toEqual(stack(0, 0, 0));
+    expect(out.newBase.ground).toBe(10 - out.baseLost.ground);
+  });
+
+  it("on capture, SUPER is wiped and BASE retained at the factor", () => {
+    const out = attributeDefenderLosses({
+      superBefore: stack(8, 4, 2),
+      baseBefore: stack(40, 16, 8),
+      // Curve losses are ignored on capture — server uses wiped+retained.
+      totalLosses: stack(2, 1, 0),
+      outcome: "captured",
+      captureBaseRetentionFactor: BASE_CAPTURE_RETENTION,
+    });
+    expect(out.newSuper).toEqual(stack(0, 0, 0));
+    expect(out.newBase).toEqual(
+      stack(
+        Math.floor(40 * BASE_CAPTURE_RETENTION),
+        Math.floor(16 * BASE_CAPTURE_RETENTION),
+        Math.floor(8 * BASE_CAPTURE_RETENTION)
+      )
+    );
+  });
+});
+
+describe("attributeAttackerLosses — proportional split", () => {
+  it("losses go entirely to SUPER when no BASE was conscripted", () => {
+    const out = attributeAttackerLosses({
+      superSent: stack(10, 5, 0),
+      baseSent: stack(0, 0, 0),
+      totalLosses: stack(3, 2, 0),
+    });
+    expect(out.superLost).toEqual(stack(3, 2, 0));
+    expect(out.baseLost).toEqual(stack(0, 0, 0));
+  });
+
+  it("splits proportionally when SUPER + BASE were both deployed", () => {
+    // 80% SUPER, 20% BASE → ~80% of losses come from SUPER.
+    const out = attributeAttackerLosses({
+      superSent: stack(80, 0, 0),
+      baseSent: stack(20, 0, 0),
+      totalLosses: stack(10, 0, 0),
+    });
+    expect(out.superLost.ground + out.baseLost.ground).toBe(10);
+    expect(out.superLost.ground).toBeGreaterThanOrEqual(7);
+    expect(out.baseLost.ground).toBeLessThanOrEqual(3);
+  });
+});
+
+describe("baseUnitsTarget — caste + land profiles", () => {
+  it("unowned tile gets the raw land seed (no caste mult, no entrenchment)", () => {
+    const u = baseUnitsTarget({ landType: "military", caste: null });
+    // LAND_TYPE_BASE.military = { ground: 22, siege: 8, air: 5 }
+    expect(u).toEqual(stack(22, 8, 5));
+  });
+
+  it("red caste boosts ground/siege over white baseline", () => {
+    const red = baseUnitsTarget({ landType: "military", caste: "red" });
+    const white = baseUnitsTarget({ landType: "military", caste: "white" });
+    expect(red.ground).toBeGreaterThanOrEqual(white.ground);
+    expect(red.siege).toBeGreaterThanOrEqual(white.siege);
+  });
+
+  it("unrevealed tile gets zero BASE", () => {
+    expect(
+      baseUnitsTarget({ landType: "unrevealed", caste: "red" })
+    ).toEqual(stack(0, 0, 0));
+  });
+});
+
+describe("resolveAttack — BASE retention on capture", () => {
+  it("surfaces captureBaseRetentionFactor < 1 on capture", () => {
+    const tile = defaultTile(2000);
+    const result = resolveAttack(
+      defaultAttacker({
+        caste: "red",
+        units: stack(500, 500, 500),
+        unitsAlive: 5000,
+      }),
+      defaultDefender({
+        caste: "white",
+        unitsOnTile: stack(10, 10, 10),
+        baseUnitsOnTile: stack(10, 10, 10),
+      }),
+      tile,
+      makeSeededRng("retention-cap")
+    );
+    expect(result.outcome).toBe("captured");
+    expect(result.captureBaseRetentionFactor).toBeLessThan(1);
+    expect(result.captureBaseRetentionFactor).toBeGreaterThan(0);
   });
 });

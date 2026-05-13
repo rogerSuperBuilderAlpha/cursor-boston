@@ -40,7 +40,18 @@ export interface ThreatEntry {
 }
 
 function totalUnits(tile: MapTile): number {
-  return tile.units.ground + tile.units.siege + tile.units.air;
+  // BASE+SUPER: displayed totals always sum the intrinsic garrison with
+  // recruited reinforcements. Threat-derivation, advantage scoring, and
+  // every consumer downstream uses this composite count.
+  const baseUnits = tile.baseUnits ?? { ground: 0, siege: 0, air: 0 };
+  return (
+    tile.units.ground +
+    tile.units.siege +
+    tile.units.air +
+    baseUnits.ground +
+    baseUnits.siege +
+    baseUnits.air
+  );
 }
 
 /**

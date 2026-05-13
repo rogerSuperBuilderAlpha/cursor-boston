@@ -13,10 +13,11 @@ import type { LandType, MapTile } from "./types";
 import { tileIdFromAxial } from "./world-gen";
 
 // Bumped when on-disk shape changes. Reader code should accept any version
-// it knows how to decode; v2 (current) reads compactTiles, v1 (legacy)
-// read tiles. Doc-shape rollbacks would require deploying a reader that
-// understands both — same pattern as today's reader.
-export const WORLD_SNAPSHOT_SCHEMA_VERSION = 2;
+// it knows how to decode; v3 (current) adds BASE-unit garrison fields
+// (bg/bs/ba) alongside the SUPER-unit fields (g/s/a). v2 omitted them; v1
+// stored the entire MapTile uncompressed. v3 readers default missing
+// baseUnits to {0,0,0}, so a v2 doc still decodes cleanly during rollout.
+export const WORLD_SNAPSHOT_SCHEMA_VERSION = 3;
 
 // Single-character codes for LandType. The on-wire form pays a per-tile
 // price for the type string in 4,000+ array entries; trimming "unrevealed"
@@ -53,12 +54,18 @@ export interface CompactTile {
   t: string;
   /** Owner userId. Omitted when null (unowned). */
   o?: string;
-  /** Ground units. Omitted when 0. */
+  /** Ground units (SUPER, recruited). Omitted when 0. */
   g?: number;
-  /** Siege units. Omitted when 0. */
+  /** Siege units (SUPER, recruited). Omitted when 0. */
   s?: number;
-  /** Air units. Omitted when 0. */
+  /** Air units (SUPER, recruited). Omitted when 0. */
   a?: number;
+  /** Ground BASE units (intrinsic garrison). Omitted when 0. v3+. */
+  bg?: number;
+  /** Siege BASE units (intrinsic garrison). Omitted when 0. v3+. */
+  bs?: number;
+  /** Air BASE units (intrinsic garrison). Omitted when 0. v3+. */
+  ba?: number;
   /** Armed defense spell id. Omitted when null. */
   d?: string;
 }
@@ -73,6 +80,10 @@ export function compactTile(tile: MapTile): CompactTile {
   if (tile.units?.ground) c.g = tile.units.ground;
   if (tile.units?.siege) c.s = tile.units.siege;
   if (tile.units?.air) c.a = tile.units.air;
+  // tile.baseUnits is optional pre-backfill; encode only non-zero entries.
+  if (tile.baseUnits?.ground) c.bg = tile.baseUnits.ground;
+  if (tile.baseUnits?.siege) c.bs = tile.baseUnits.siege;
+  if (tile.baseUnits?.air) c.ba = tile.baseUnits.air;
   if (tile.armedDefenseSpellId) c.d = tile.armedDefenseSpellId;
   return c;
 }
@@ -88,6 +99,9 @@ export function expandTile(c: CompactTile): MapTile {
     type,
     ownerId: c.o ?? null,
     units: { ground: c.g ?? 0, siege: c.s ?? 0, air: c.a ?? 0 },
+    // v2 docs predate BASE units → default to {0,0,0} so the client still
+    // renders cleanly until the next rebuild stamps real values.
+    baseUnits: { ground: c.bg ?? 0, siege: c.bs ?? 0, air: c.ba ?? 0 },
     armedDefenseSpellId: c.d ?? null,
   };
 }

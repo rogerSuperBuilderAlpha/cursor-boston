@@ -17,6 +17,7 @@ describe("parseSnapshotDoc", () => {
     type: "military",
     ownerId: "user_alpha",
     units: { ground: 12, siege: 0, air: 0 },
+    baseUnits: { ground: 22, siege: 8, air: 5 },
     armedDefenseSpellId: null,
   };
 

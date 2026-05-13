@@ -173,7 +173,20 @@ function PreviewBody({
         <div className="col-span-2">
           <span className="text-neutral-500">Defender on tile · </span>
           <span className="font-mono">
-            {fmtStack(target.units)} ({totalUnits(target.units)})
+            {fmtStack({
+              ground:
+                target.units.ground + (target.baseUnits?.ground ?? 0),
+              siege:
+                target.units.siege + (target.baseUnits?.siege ?? 0),
+              air: target.units.air + (target.baseUnits?.air ?? 0),
+            })}
+            {" "}
+            (
+            {totalUnits(target.units) +
+              (target.baseUnits?.ground ?? 0) +
+              (target.baseUnits?.siege ?? 0) +
+              (target.baseUnits?.air ?? 0)}
+            )
           </span>
         </div>
       </div>

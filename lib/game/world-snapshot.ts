@@ -96,7 +96,16 @@ export async function computeWorldSnapshot(
   const [tilesSnap, playersSnap] = await Promise.all([
     db
       .collection("game_tiles")
-      .select("tileId", "q", "r", "type", "ownerId", "units", "armedDefenseSpellId")
+      .select(
+        "tileId",
+        "q",
+        "r",
+        "type",
+        "ownerId",
+        "units",
+        "baseUnits",
+        "armedDefenseSpellId"
+      )
       .get(),
     db
       .collection("game_players")
@@ -121,6 +130,9 @@ export async function computeWorldSnapshot(
       type: data.type,
       ownerId: data.ownerId ?? null,
       units: data.units,
+      // baseUnits is post-backfill (2026-05-13); tiles still missing it
+      // render as zero-base until the next read triggers lazy regen.
+      baseUnits: data.baseUnits ?? { ground: 0, siege: 0, air: 0 },
       armedDefenseSpellId: data.armedDefenseSpellId ?? null,
     };
   });

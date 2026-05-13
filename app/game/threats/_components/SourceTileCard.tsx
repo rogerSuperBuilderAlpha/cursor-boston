@@ -31,8 +31,13 @@ export function SourceTileCard(props: SourceTileCardProps) {
     source.type !== "unassigned"
       ? buildingForCasteAndLand(myCaste, source.type)
       : undefined;
-  const totalUnits =
-    source.units.ground + source.units.siege + source.units.air;
+  // BASE+SUPER: source card reflects the full deployable pool — garrison +
+  // recruited — since the attack form drafts from both.
+  const sourceBase = source.baseUnits ?? { ground: 0, siege: 0, air: 0 };
+  const totalGround = source.units.ground + sourceBase.ground;
+  const totalSiege = source.units.siege + sourceBase.siege;
+  const totalAir = source.units.air + sourceBase.air;
+  const totalUnits = totalGround + totalSiege + totalAir;
   return (
     <div className="rounded-md border border-emerald-300/70 dark:border-emerald-900 bg-emerald-50/40 dark:bg-emerald-950/10 px-2.5 py-1.5 h-full flex items-center gap-2.5 min-h-0">
       <CatalogImage
@@ -55,7 +60,7 @@ export function SourceTileCard(props: SourceTileCardProps) {
           )}
         </div>
         <div className="text-[11px] text-neutral-500 font-mono mt-0.5">
-          G{source.units.ground} · S{source.units.siege} · A{source.units.air}
+          G{totalGround} · S{totalSiege} · A{totalAir}
           {totalUnits > 0 && (
             <span className="ml-1.5 text-neutral-400">({totalUnits})</span>
           )}

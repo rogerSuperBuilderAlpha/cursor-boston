@@ -23,9 +23,20 @@ export function TileHoverCard({ hovered, hoveredOwner, isOwnTile }: Props) {
         <span className="capitalize text-neutral-500">{hovered.type}</span>
       </div>
       <div className="text-neutral-600 dark:text-neutral-400">
-        G {hovered.units.ground} · S {hovered.units.siege} · A{" "}
-        {hovered.units.air}
+        G {hovered.units.ground + (hovered.baseUnits?.ground ?? 0)} · S{" "}
+        {hovered.units.siege + (hovered.baseUnits?.siege ?? 0)} · A{" "}
+        {hovered.units.air + (hovered.baseUnits?.air ?? 0)}
       </div>
+      {hovered.baseUnits &&
+        hovered.baseUnits.ground +
+          hovered.baseUnits.siege +
+          hovered.baseUnits.air >
+          0 && (
+          <div className="text-neutral-500 italic text-[11px] mt-0.5">
+            ↳ garrison: {hovered.baseUnits.ground}G/{hovered.baseUnits.siege}S/
+            {hovered.baseUnits.air}A
+          </div>
+        )}
       {hovered.armedDefenseSpellId && (
         <div className="text-blue-600 dark:text-blue-400 mt-1">
           Armed: {hovered.armedDefenseSpellId}

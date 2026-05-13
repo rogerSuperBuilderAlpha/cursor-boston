@@ -12,8 +12,8 @@ import {
 } from "@/lib/game/world-snapshot-codec";
 
 describe("world-snapshot codec", () => {
-  it("schema version is 2", () => {
-    expect(WORLD_SNAPSHOT_SCHEMA_VERSION).toBe(2);
+  it("schema version is 3", () => {
+    expect(WORLD_SNAPSHOT_SCHEMA_VERSION).toBe(3);
   });
 
   describe("round-trip", () => {
@@ -27,6 +27,7 @@ describe("world-snapshot codec", () => {
           type: "unrevealed",
           ownerId: null,
           units: { ground: 0, siege: 0, air: 0 },
+          baseUnits: { ground: 0, siege: 0, air: 0 },
           armedDefenseSpellId: null,
         },
       },
@@ -39,6 +40,7 @@ describe("world-snapshot codec", () => {
           type: "military",
           ownerId: "user_abc123",
           units: { ground: 50, siege: 10, air: 0 },
+          baseUnits: { ground: 22, siege: 8, air: 5 },
           armedDefenseSpellId: null,
         },
       },
@@ -51,6 +53,7 @@ describe("world-snapshot codec", () => {
           type: "magic",
           ownerId: "user_def456",
           units: { ground: 0, siege: 0, air: 5 },
+          baseUnits: { ground: 8, siege: 2, air: 15 },
           armedDefenseSpellId: "white_t3_shield",
         },
       },
@@ -63,6 +66,7 @@ describe("world-snapshot codec", () => {
           type: "food",
           ownerId: null,
           units: { ground: 0, siege: 0, air: 0 },
+          baseUnits: { ground: 0, siege: 0, air: 0 },
           armedDefenseSpellId: null,
         },
       },
@@ -85,6 +89,7 @@ describe("world-snapshot codec", () => {
         type: "unrevealed",
         ownerId: null,
         units: { ground: 0, siege: 0, air: 0 },
+        baseUnits: { ground: 0, siege: 0, air: 0 },
         armedDefenseSpellId: null,
       };
       const v1Bytes = JSON.stringify(empty).length;
@@ -107,6 +112,9 @@ describe("world-snapshot codec", () => {
           type: owned ? "military" : "unrevealed",
           ownerId: owned ? "user_abcdef123456" : null,
           units: owned ? { ground: 25, siege: 0, air: 0 } : { ground: 0, siege: 0, air: 0 },
+          baseUnits: owned
+            ? { ground: 22, siege: 8, air: 5 }
+            : { ground: 0, siege: 0, air: 0 },
           armedDefenseSpellId: null,
         });
       }
@@ -135,8 +143,17 @@ describe("world-snapshot codec", () => {
         type: "unrevealed",
         ownerId: null,
         units: { ground: 0, siege: 0, air: 0 },
+        baseUnits: { ground: 0, siege: 0, air: 0 },
         armedDefenseSpellId: null,
       });
+    });
+
+    it("decodes a v2 doc (no bg/bs/ba fields) with baseUnits=0", () => {
+      // Backwards-compat smoke: pre-v3 docs never wrote bg/bs/ba. v3 readers
+      // must tolerate their absence so rolling deploys don't choke.
+      const tile = expandTile({ q: 0, r: 0, t: "m", g: 50, s: 10 });
+      expect(tile.units).toEqual({ ground: 50, siege: 10, air: 0 });
+      expect(tile.baseUnits).toEqual({ ground: 0, siege: 0, air: 0 });
     });
   });
 });
