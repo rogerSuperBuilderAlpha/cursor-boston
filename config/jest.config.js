@@ -43,7 +43,7 @@ const customJestConfig = {
   // have no Jest unit tests, which dropped global numbers ~1-2pp.
   // Pure lib pieces (pydata-2026-access, pydata-submissions) have full
   // unit tests; the gate + banner components are tested via RTL.
-  // Current totals: statements 32.37%, branches 25.22%, lines 33.62%, functions 24.49%.
+  // Current totals: statements 33.35%, branches 25.63%, lines 34.62%, functions 25.38%.
   // Floors set ~1pp below current → any regression fails CI.
   // Ratchet these UP as tests are added; the OSS-readiness lift (Sprints 2-5)
   // targets statements ≥75% by adding ~150 tests across the 95 untested API
@@ -51,9 +51,9 @@ const customJestConfig = {
   coverageThreshold: {
     global: {
       branches: 25,
-      functions: 24,
-      lines: 33,
-      statements: 32,
+      functions: 25,
+      lines: 34,
+      statements: 33,
     },
   },
   // Generate JSON summary for CI coverage checks
