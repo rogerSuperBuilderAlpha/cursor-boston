@@ -31,6 +31,9 @@ jobs:
           days-before-close: 14
           stale-issue-label: stale
           stale-pr-label: stale
-          exempt-issue-labels: 'good first issue,help wanted,security,accessibility'
-          exempt-pr-labels: 'security'
-          exempt-all-milestones: true
+          exempt-issue-labels: 'good first issue,help wanted,security,accessibility,pinned'
+          exempt-pr-labels: 'security,pinned'
+          # Blanket milestone exemption was removed: an ancient milestoned
+          # issue should not be permanently insulated from triage. Use the
+          # `pinned` label on the rare items that genuinely shouldn't go
+          # stale (long-term tracking issues, ongoing initiatives).
