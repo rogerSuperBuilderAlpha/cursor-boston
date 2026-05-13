@@ -6,11 +6,14 @@
 # a maintainer is the primary reviewer for an area, their handle is listed first.
 
 # Default owners for everything in the repo
-*                            @rogerSuperBuilderAlpha @bradAGI @nebullii
+*                            @rogerSuperBuilderAlpha @bradAGI @nebullii @AaronGrace978
 
 # Frontend components (Neha co-primary — feed/map/ui work)
-/app/                        @rogerSuperBuilderAlpha @bradAGI @nebullii
+/app/                        @rogerSuperBuilderAlpha @bradAGI @nebullii @AaronGrace978
 /components/                 @nebullii @rogerSuperBuilderAlpha @bradAGI
+
+# Footer + branding-adjacent assets (Aaron primary — shipped #506 X/LinkedIn)
+/components/Footer.tsx       @AaronGrace978 @rogerSuperBuilderAlpha
 
 # Core library code
 /lib/                        @rogerSuperBuilderAlpha @bradAGI @nebullii
@@ -33,6 +36,9 @@
 /app/api/live/               @nebullii @rogerSuperBuilderAlpha
 /lib/live-sessions/          @nebullii @rogerSuperBuilderAlpha
 
+# Partners / external-facing pages (Aaron primary — CMO-track surface)
+/app/partners/               @AaronGrace978 @rogerSuperBuilderAlpha
+
 # Game subsystem — Roger primary
 /lib/game/                   @rogerSuperBuilderAlpha @bradAGI @nebullii
 /app/game/                   @rogerSuperBuilderAlpha @bradAGI @nebullii
@@ -41,7 +47,7 @@
 /config/                     @rogerSuperBuilderAlpha @bradAGI @nebullii
 
 # .github root configuration — Roger primary
-/.github/                    @rogerSuperBuilderAlpha @bradAGI @nebullii
+/.github/                    @rogerSuperBuilderAlpha @bradAGI @nebullii @AaronGrace978
 
 # CI / release workflows (Brad primary — the test-coverage and bundle-size
 # work he did pre-application touched these)
@@ -56,8 +62,12 @@
 /e2e/                        @bradAGI @rogerSuperBuilderAlpha @nebullii
 
 # Documentation
-*.md                         @rogerSuperBuilderAlpha @bradAGI @nebullii
-/docs/                       @rogerSuperBuilderAlpha @bradAGI @nebullii
+*.md                         @rogerSuperBuilderAlpha @bradAGI @nebullii @AaronGrace978
+/docs/                       @rogerSuperBuilderAlpha @bradAGI @nebullii @AaronGrace978
+
+# Welcoming / first-touch docs (Aaron primary — community/contributor onboarding)
+/docs/GET_STARTED.md         @AaronGrace978 @rogerSuperBuilderAlpha
+/docs/FIRST_CONTRIBUTION.md  @AaronGrace978 @rogerSuperBuilderAlpha
 
 # Governance docs (Roger primary — Project Lead authority)
 /MAINTAINERS.md              @rogerSuperBuilderAlpha
