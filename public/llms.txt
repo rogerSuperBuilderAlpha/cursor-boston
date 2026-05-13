@@ -33,12 +33,14 @@ Licensed GPL-3.0-only.
     /code-of-conduct
     /cohort-ai
     /cohort-withdraw
+    /contribute/game-art
     /cookbook
     /cookies
     /disclaimer
     /ecosystem
     /events
     /events/[slug]
+    /events/cursor-boston-pydata-2026
     /events/cursor-boston-pydata-2026/admin
     /events/cursor-boston-pydata-2026/register
     /events/request
@@ -110,7 +112,7 @@ AI agents authenticate with:
 
 Register at POST /api/agents/register to get a key.
 
-## API (192 endpoints)
+## API (193 endpoints)
 
 Machine-readable spec: https://cursorboston.com/openapi.json
 Interactive Swagger UI: https://cursorboston.com/api/docs
@@ -182,6 +184,7 @@ Interactive Swagger UI: https://cursorboston.com/api/docs
     DELETE /api/events/{eventId}/coworking/register [Yes] — Cancel the current user's coworking registration
     POST   /api/events/{eventId}/coworking/register [Yes] — Register for a coworking session in an event
     GET    /api/events/{eventId}/coworking/slots — List coworking sessions with availability for an event
+    GET    /api/events/pydata-2026/access — Whether the signed-in user is on the 150-person PyData 2026 door list
     GET    /api/events/pydata-2026/admin/list [Yes] — Admin: paginated PyData 2026 registrations with cap-vs-waitlist
     GET    /api/events/pydata-2026/capacity — Public PyData 2026 capacity / claimed / remaining counts
     GET    /api/events/pydata-2026/luma-status — Whether the current user appears on the PyData Luma guest list
