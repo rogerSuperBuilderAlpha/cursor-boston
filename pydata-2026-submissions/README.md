@@ -75,13 +75,20 @@ reads this directory at build time and renders a card per merged submission.
 
 1. A maintainer reviews the PR for the rules above (no branding leak, no
    secrets, file structure correct).
-2. PR gets merged into the `pydata-2026-submissions` branch.
-3. When the maintainer is ready (likely batched, end-of-night or next
+2. **The maintainer runs the LLM judge** against your notebook and commits
+   a `score.json` (score 1-10 + rationale + model) into your folder. This
+   is the "black box" judge that decides the **Best Submission** winners.
+   You don't add `score.json` yourself — any PR that ships one will be
+   rejected.
+3. PR gets merged into the `pydata-2026-submissions` branch.
+4. When the maintainer is ready (likely batched, end-of-night or next
    morning), `pydata-2026-submissions` is merged into `develop`, then
-   `develop` into `main`. Vercel deploys main → your card goes live.
-4. Your submission shows up on the event page. Other attendees can browse
+   `develop` into `main`. Vercel deploys main → your card (with score
+   badge) goes live.
+5. Your submission shows up on the event page. Other attendees can browse
    it; the notebook itself is rendered by GitHub's built-in `.ipynb`
    viewer.
 
 If anything's off, the maintainer will leave PR comments and you can push
-fixes to the same branch.
+fixes to the same branch. If you push new commits after a score lands, the
+maintainer will re-score before merging.

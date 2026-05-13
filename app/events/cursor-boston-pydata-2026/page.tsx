@@ -455,6 +455,22 @@ function SubmissionCard({ submission }: { submission: PyDataSubmission }) {
         </ul>
       ) : null}
 
+      {submission.score ? (
+        <div className="mt-4 rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3 dark:border-emerald-400/20 dark:bg-emerald-400/5">
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+              AI judge score
+            </span>
+            <span className="font-mono text-sm font-semibold tabular-nums text-emerald-700 dark:text-emerald-400">
+              {submission.score.score}/10
+            </span>
+          </div>
+          <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
+            {submission.score.rationale}
+          </p>
+        </div>
+      ) : null}
+
       {submission.collaborators.length > 0 ? (
         <p className="mt-3 text-xs text-neutral-500 dark:text-neutral-400">
           With:{" "}
