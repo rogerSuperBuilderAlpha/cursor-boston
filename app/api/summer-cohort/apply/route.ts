@@ -364,27 +364,43 @@ async function sendNewApplicationEmail(
     wantsToPresent: boolean;
   }
 ): Promise<void> {
-  const snap = await db
-    .collection(SUMMER_COHORT_COLLECTION)
-    .orderBy("createdAt", "asc")
-    .get();
+  // Only surface cohorts that are still accepting signups. Past cohorts
+  // (signupsClosed: true) are historical context that adds noise to the
+  // new-application notification — the maintainer wants to see who else
+  // is in the new applicant's pool, not every applicant who ever applied.
+  const openCohorts = SUMMER_COHORTS.filter((c) => !c.signupsClosed);
+  const openCohortIds = openCohorts.map((c) => c.id);
 
-  const all: ApplicantRow[] = snap.docs.map((doc) => {
-    const data = doc.data();
-    const createdAt = data.createdAt as { toMillis?: () => number } | undefined;
-    return {
-      name: typeof data.name === "string" ? data.name : "",
-      email: typeof data.email === "string" ? data.email : "",
-      phone: typeof data.phone === "string" ? data.phone : "",
-      cohorts: Array.isArray(data.cohorts)
-        ? data.cohorts.filter(isValidCohortId)
-        : [],
-      appliedAtMs:
-        createdAt && typeof createdAt.toMillis === "function"
-          ? createdAt.toMillis()
-          : null,
-    };
-  });
+  // `array-contains-any` accepts up to 30 values (well above the cohort
+  // count). If every cohort is somehow closed at once, skip the query
+  // entirely — there's nothing to list.
+  const snap =
+    openCohortIds.length === 0
+      ? null
+      : await db
+          .collection(SUMMER_COHORT_COLLECTION)
+          .where("cohorts", "array-contains-any", openCohortIds)
+          .orderBy("createdAt", "asc")
+          .get();
+
+  const all: ApplicantRow[] = snap
+    ? snap.docs.map((doc) => {
+        const data = doc.data();
+        const createdAt = data.createdAt as { toMillis?: () => number } | undefined;
+        return {
+          name: typeof data.name === "string" ? data.name : "",
+          email: typeof data.email === "string" ? data.email : "",
+          phone: typeof data.phone === "string" ? data.phone : "",
+          cohorts: Array.isArray(data.cohorts)
+            ? data.cohorts.filter(isValidCohortId)
+            : [],
+          appliedAtMs:
+            createdAt && typeof createdAt.toMillis === "function"
+              ? createdAt.toMillis()
+              : null,
+        };
+      })
+    : [];
 
   const cohortLabel = new Map(SUMMER_COHORTS.map((c) => [c.id, c.label] as const));
   const dateRange = new Map(
@@ -393,7 +409,7 @@ async function sendNewApplicationEmail(
     )
   );
 
-  const cohortBuckets = SUMMER_COHORTS.map((cohort) => ({
+  const cohortBuckets = openCohorts.map((cohort) => ({
     id: cohort.id,
     label: cohort.label,
     range: dateRange.get(cohort.id) || "",
