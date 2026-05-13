@@ -81,6 +81,7 @@ If you're deploying Cursor Boston:
    - Rotate OAuth client secrets periodically
    - Use different secrets for development and production
    - Never hardcode secrets in source code
+   - For the project's own rotation cadence and runbook, see [`docs/SECURITY_OPERATIONS.md`](../docs/SECURITY_OPERATIONS.md)
 7. **Rate Limiting** - API routes are protected with rate limiting
    - Review rate limit configurations for your use case
    - Monitor for abuse patterns
