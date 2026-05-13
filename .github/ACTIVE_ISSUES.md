@@ -20,7 +20,6 @@ Work that's in flight on `develop` or being delivered to a submission branch.
 Committed direction for the next minor release, but not yet started.
 
 - **v0.2 — Enhanced Member Profiles & Social Integration** — richer profile pages, social-graph features
-- **Maintainer recruitment** — fill the second maintainer seat ([MAINTAINERS.md](../MAINTAINERS.md#were-recruiting-a-second-maintainer))
 - **Test coverage lift** — raise Jest thresholds toward 75% statements / 65% branches (targeted API-route handlers + game data layer first)
 
 ## Future — vision

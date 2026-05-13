@@ -1,21 +1,56 @@
 # CODEOWNERS - Defines code owners for automatic review requests
 # https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+#
+# Listing two owners on a line makes either eligible to review; GitHub will
+# auto-request review from at least one when a PR opens. Where one maintainer
+# is the primary reviewer for an area, only that handle is listed.
 
 # Default owners for everything in the repo
-* @rogerSuperBuilderAlpha
+*                            @rogerSuperBuilderAlpha @bradAGI
 
 # Frontend components
-/app/ @rogerSuperBuilderAlpha
-/components/ @rogerSuperBuilderAlpha
+/app/                        @rogerSuperBuilderAlpha @bradAGI
+/components/                 @rogerSuperBuilderAlpha @bradAGI
 
 # Core library code
-/lib/ @rogerSuperBuilderAlpha
+/lib/                        @rogerSuperBuilderAlpha @bradAGI
+
+# Security-adjacent and sanitization (Brad primary — establishes his
+# pre-application work on safe JSON parsing across API routes,
+# Firestore doc-id sanitization, and CSP hardening)
+/lib/middleware.ts           @bradAGI @rogerSuperBuilderAlpha
+/lib/sanitize.ts             @bradAGI @rogerSuperBuilderAlpha
+/lib/rate-limit.ts           @bradAGI @rogerSuperBuilderAlpha
+/lib/rate-limit-server.ts    @bradAGI @rogerSuperBuilderAlpha
+/lib/upstash-rate-limit.ts   @bradAGI @rogerSuperBuilderAlpha
+
+# Game subsystem — Roger primary
+/lib/game/                   @rogerSuperBuilderAlpha @bradAGI
+/app/game/                   @rogerSuperBuilderAlpha @bradAGI
 
 # Configuration and infrastructure
-/config/ @rogerSuperBuilderAlpha
-/.github/ @rogerSuperBuilderAlpha
-/docker/ @rogerSuperBuilderAlpha
+/config/                     @rogerSuperBuilderAlpha @bradAGI
+
+# .github root configuration — Roger primary
+/.github/                    @rogerSuperBuilderAlpha @bradAGI
+
+# CI / release workflows (Brad primary — the test-coverage and bundle-size
+# work he did pre-application touched these)
+/.github/workflows/          @bradAGI @rogerSuperBuilderAlpha
+
+# Docker — Roger primary
+/docker/                     @rogerSuperBuilderAlpha @bradAGI
+
+# Test surface (Brad primary — established expertise: 952 tests added
+# pre-application, plus the OSS-readiness lift in May 2026)
+/__tests__/                  @bradAGI @rogerSuperBuilderAlpha
+/e2e/                        @bradAGI @rogerSuperBuilderAlpha
 
 # Documentation
-*.md @rogerSuperBuilderAlpha
-/docs/ @rogerSuperBuilderAlpha
+*.md                         @rogerSuperBuilderAlpha @bradAGI
+/docs/                       @rogerSuperBuilderAlpha @bradAGI
+
+# Governance docs (Roger primary — Project Lead authority)
+/MAINTAINERS.md              @rogerSuperBuilderAlpha
+/.github/GOVERNANCE.md       @rogerSuperBuilderAlpha
+/.github/CODEOWNERS          @rogerSuperBuilderAlpha
