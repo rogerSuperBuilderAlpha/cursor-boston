@@ -43,17 +43,17 @@ const customJestConfig = {
   // have no Jest unit tests, which dropped global numbers ~1-2pp.
   // Pure lib pieces (pydata-2026-access, pydata-submissions) have full
   // unit tests; the gate + banner components are tested via RTL.
-  // Current totals: statements 30.63%, branches 23.80%, lines 31.76%, functions 23.77%.
+  // Current totals: statements 31.00%, branches 24.04%, lines 32.14%, functions 23.95%.
   // Floors set ~1pp below current → any regression fails CI.
-  // Ratchet these UP as tests are added (especially around lib/account-deletion
-  // and the new community/report+moderate routes — both have route-level
-  // unit tests but no UI tests yet — plus the pydata access API route).
+  // Ratchet these UP as tests are added; the OSS-readiness lift (Sprints 2-5)
+  // targets statements ≥75% by adding ~150 tests across the 95 untested API
+  // route handlers and the game data layer at lib/game/data-server.ts etc.
   coverageThreshold: {
     global: {
-      branches: 22,
-      functions: 22,
-      lines: 30,
-      statements: 29,
+      branches: 23,
+      functions: 23,
+      lines: 31,
+      statements: 30,
     },
   },
   // Generate JSON summary for CI coverage checks
