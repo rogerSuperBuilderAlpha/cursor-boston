@@ -5,14 +5,9 @@
 | Name | GitHub | Role | Since |
 |------|--------|------|-------|
 | Roger Hunt | [@rogerSuperBuilderAlpha](https://github.com/rogerSuperBuilderAlpha) | Project Lead | 2026-01-27 |
+| Brad Egan  | [@bradAGI](https://github.com/bradAGI) | Maintainer | 2026-05-13 |
 
 The full role definitions, decision-making process, and code-review tiers live in [`.github/GOVERNANCE.md`](.github/GOVERNANCE.md).
-
-## We're recruiting a second maintainer
-
-Cursor Boston currently runs on a single maintainer, which is fragile for an active community project. **We are actively recruiting a second maintainer** to share review, release, and triage responsibilities.
-
-If you've been contributing regularly and want to step into a maintainer role, see **[Becoming a maintainer](#becoming-a-maintainer)** below. The path is public — you don't need to wait to be tapped on the shoulder.
 
 ## Becoming a maintainer
 
@@ -25,7 +20,7 @@ Both paths use the same evaluation criteria (sustained contributions, code-revie
 
 ## CODEOWNERS and area ownership
 
-[`.github/CODEOWNERS`](.github/CODEOWNERS) currently routes every path to `@rogerSuperBuilderAlpha` (the only maintainer). When a second maintainer is added, the file will be split by area — frontend, library code, infrastructure, docs — so review responsibility is shared cleanly. The split is intentionally deferred until there are two people to share it.
+[`.github/CODEOWNERS`](.github/CODEOWNERS) now lists both maintainers as default owners, with Brad as the primary reviewer for the test surface (`__tests__/`), CI/release workflows (`.github/workflows/`), and the security-adjacent middleware (`lib/middleware.ts`, `lib/sanitize.ts`) — the areas he established expertise in through the test-coverage and security-hardening work that preceded his application. Roger remains primary on governance docs, README/marketing copy, and the game subsystem.
 
 ## Day-to-day
 
