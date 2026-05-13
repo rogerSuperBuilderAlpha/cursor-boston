@@ -37,6 +37,11 @@ path = '''(?i)(credit|referral).*\.(csv|tsv|txt|json)$'''
 # the April 2026 incident slipped through because the prior `docs/`
 # allowlist suppressed scans on every file under docs/, including the
 # CSV that held the leaked codes.
+#
+# Audit cadence: any change to this list (especially new path entries)
+# should be justified in the PR description. Broad allowlists are how
+# the April 2026 incident happened — keep this list as narrow as
+# practical, and prefer per-rule exceptions over path exemptions.
 [allowlist]
 paths = [
   '''\.env\.local\.example''',

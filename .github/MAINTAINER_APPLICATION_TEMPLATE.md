@@ -79,9 +79,17 @@ Optional — anything we should know that the template didn't cover.
 
 1. **Acknowledgement** within ~3 days: a maintainer responds to confirm the application is in review.
 2. **Review** within ~2 weeks: maintainers evaluate against the criteria in [GOVERNANCE.md](GOVERNANCE.md#becoming-a-maintainer) (sustained contributions, codebase understanding, review judgment, community fit).
-3. **Decision** posted in the PR. Three possible outcomes:
-   - **Accepted** — PR merged, you're invited to the maintainer team, [MAINTAINERS.md](../MAINTAINERS.md) updated, [CODEOWNERS](CODEOWNERS) split by area.
+3. **Decision** posted in the application PR. Three possible outcomes:
+   - **Accepted** — your application PR is merged on the `maintainer-application` branch. A maintainer then opens a separate `onboard/<your-handle>-maintainer` PR against `develop` with the governance update (your row added to [MAINTAINERS.md](../MAINTAINERS.md), area assignment in [CODEOWNERS](CODEOWNERS), entry in [CHANGELOG.md](../CHANGELOG.md)). When that PR merges, you are invited to the maintainer team and granted repo access.
    - **Deferred** — feedback on what additional contribution would make the case stronger; you're welcome to update and re-request review later.
    - **Declined** — feedback on why; the PR is closed but you remain welcome as a contributor.
 
 There's no penalty for applying. The worst case is useful feedback on where to focus next.
+
+### Audit trail
+
+To trace any maintainer's onboarding after the fact:
+
+- Their **application** is on the `maintainer-application` branch as a merged PR titled `Maintainer application: <handle>`.
+- Their **governance update** is on `develop`/`main` as a merged PR from `onboard/<handle>-maintainer`.
+- The pair is the canonical record of consent and process.
