@@ -192,7 +192,16 @@ function findAttackCandidates(
 ): AttackCandidate[] {
   const candidates: AttackCandidate[] = [];
   for (const src of ctx.myMilitary) {
-    if (sumStack(src.units) < 5) continue;
+    // BASE+SUPER: NPCs can draft from both pools, so the candidate filter
+    // includes baseUnits in the deployable count. A tile with 0 SUPER and
+    // 22 BASE ground is now a viable source for raids.
+    const srcBase = src.baseUnits ?? { ground: 0, siege: 0, air: 0 };
+    const srcDeployable = {
+      ground: src.units.ground + srcBase.ground,
+      siege: src.units.siege + srcBase.siege,
+      air: src.units.air + srcBase.air,
+    };
+    if (sumStack(srcDeployable) < 5) continue;
     for (const neighborId of src.neighborTileIds) {
       const target = world.npcTilesById.get(neighborId);
       if (!target) continue;
@@ -212,7 +221,7 @@ function findAttackCandidates(
         sourceTileId: src.tileId,
         targetTileId: target.tileId,
         defenderId: target.ownerId!,
-        sourceUnits: { ...src.units },
+        sourceUnits: srcDeployable,
         targetCapacity: open,
       });
     }

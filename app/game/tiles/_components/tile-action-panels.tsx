@@ -486,34 +486,48 @@ export function EnemyTilePanel({
             onChange={(e) => setSourceTileId(e.target.value)}
             className="mt-1 block w-full px-3 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800"
           >
-            {myBorders.map((t) => (
-              <option key={t.tileId} value={t.tileId}>
-                {t.tileId} — G{t.units.ground} S{t.units.siege} A{t.units.air}
-              </option>
-            ))}
+            {myBorders.map((t) => {
+              const tb = t.baseUnits ?? { ground: 0, siege: 0, air: 0 };
+              return (
+                <option key={t.tileId} value={t.tileId}>
+                  {t.tileId} — G{t.units.ground + tb.ground} S
+                  {t.units.siege + tb.siege} A{t.units.air + tb.air}
+                </option>
+              );
+            })}
           </select>
         </label>
 
-        <div className="grid grid-cols-3 gap-3">
-          <UnitInput
-            label={`Ground / ${source?.units.ground ?? 0}`}
-            value={ground}
-            max={source?.units.ground ?? 0}
-            onChange={setGround}
-          />
-          <UnitInput
-            label={`Siege / ${source?.units.siege ?? 0}`}
-            value={siege}
-            max={source?.units.siege ?? 0}
-            onChange={setSiege}
-          />
-          <UnitInput
-            label={`Air / ${source?.units.air ?? 0}`}
-            value={air}
-            max={source?.units.air ?? 0}
-            onChange={setAir}
-          />
-        </div>
+        {(() => {
+          // BASE+SUPER: deployable per type = SUPER + BASE.
+          const sb =
+            source?.baseUnits ?? { ground: 0, siege: 0, air: 0 };
+          const maxGround = (source?.units.ground ?? 0) + sb.ground;
+          const maxSiege = (source?.units.siege ?? 0) + sb.siege;
+          const maxAir = (source?.units.air ?? 0) + sb.air;
+          return (
+            <div className="grid grid-cols-3 gap-3">
+              <UnitInput
+                label={`Ground / ${maxGround}`}
+                value={ground}
+                max={maxGround}
+                onChange={setGround}
+              />
+              <UnitInput
+                label={`Siege / ${maxSiege}`}
+                value={siege}
+                max={maxSiege}
+                onChange={setSiege}
+              />
+              <UnitInput
+                label={`Air / ${maxAir}`}
+                value={air}
+                max={maxAir}
+                onChange={setAir}
+              />
+            </div>
+          );
+        })()}
 
         <label className="block text-sm font-medium">
           Offense spell (optional, +5 turns)

@@ -55,7 +55,16 @@ export function TileHexagon({
   const strokeWidth = isOwn ? 1.5 : isForeign ? 3.5 : 2.25;
   const text = TYPE_TEXT[t.type];
   const armed = !!t.armedDefenseSpellId;
-  const totalUnits = t.units.ground + t.units.siege + t.units.air;
+  // BASE+SUPER: hex visual intensity reflects total defender force, not
+  // just recruited units. An undefended military tile with 45 BASE should
+  // look as armed as one with 45 SUPER.
+  const totalUnits =
+    t.units.ground +
+    t.units.siege +
+    t.units.air +
+    (t.baseUnits?.ground ?? 0) +
+    (t.baseUnits?.siege ?? 0) +
+    (t.baseUnits?.air ?? 0);
   // Filter dimming still applies, but the muddy 0.6 wash on foreign tiles
   // is gone — the bright fill carries the visual weight on its own.
   const opacity = matched ? 1 : 0.12;

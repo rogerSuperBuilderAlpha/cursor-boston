@@ -236,6 +236,21 @@ export interface GameTile {
   type: LandType;
   level: number;
   units: UnitStack;
+  // Intrinsic garrison ("BASE"): militia that lives on the tile regardless of
+  // recruitment. Composes with `units` (SUPER) in combat — defenders fight with
+  // base+super, attackers can draw from base+super at the source. Regenerates
+  // toward a per-tile target over wall-clock time (see baseRegenedAt).
+  // Optional for legacy docs predating the v3 schema; readers coalesce to
+  // {0,0,0} until the backfill stamps in real values.
+  baseUnits?: UnitStack;
+  // Wall-clock timestamp of the last applyBaseRegen tick. Lazy regen reads
+  // (now - baseRegenedAt) and steps baseUnits toward its target. Optional for
+  // legacy docs; coalesce to createdAt when missing.
+  baseRegenedAt?: Timestamp | Date;
+  // Tile-permanent buffs stamped by artifacts. Each entry can modify
+  // baseUnits count or per-unit stats on this tile only. Expires when
+  // expiresAt < now (null = permanent).
+  intrinsicBuffs?: IntrinsicTileBuff[];
   armedDefenseSpellId: string | null;
   neighborTileIds: string[];
   upgradeIds: string[];
@@ -251,6 +266,24 @@ export interface GameTile {
   updatedAt: Timestamp | Date;
 }
 
+// Stamped onto a tile by intrinsic-buff artifacts. baseUnitsTarget() folds
+// these in. The shape is forward-compat: future artifacts can introduce new
+// modifier types (e.g. defenseStatBonus) without breaking the schema.
+export interface IntrinsicTileBuff {
+  artifactId: string;
+  appliedAt: Timestamp | Date;
+  // Flat add to base unit counts. Stacks additively with other buffs.
+  baseCountBonus?: Partial<UnitStack>;
+  // Multiplicative bonus to per-unit defense stat on this tile. Stacks
+  // multiplicatively with other buffs and with caste profile defense.
+  defenseStatBonus?: number;
+  // Multiplicative bonus to per-unit attack stat on this tile. Stacks
+  // multiplicatively with other buffs and with caste profile attack.
+  attackStatBonus?: number;
+  // null / absent = permanent.
+  expiresAt?: Timestamp | Date;
+}
+
 // Lightweight projection of GameTile for map-fetch payloads. Strips
 // neighborTileIds (~6 strings × N tiles), upgradeIds, level, and timestamps
 // — fields the dashboard/hex-map/recruit/spells pages don't use. Tile detail
@@ -262,6 +295,10 @@ export interface MapTile {
   type: LandType;
   ownerId: string | null;
   units: UnitStack;
+  // Garrison (BASE) counts, included so map tooltips and the threat list can
+  // render correct totals. Optional for v2-snapshot back-compat — coalesce to
+  // {0,0,0} when absent.
+  baseUnits?: UnitStack;
   armedDefenseSpellId: string | null;
 }
 
@@ -311,7 +348,15 @@ export interface CombatAttackerInput {
 
 export interface CombatDefenderInput {
   caste: Caste;
+  // Composite stack (BASE garrison + SUPER reinforcements) entering combat.
+  // resolveAttack treats this as a single defender force; the server is
+  // responsible for splitting losses back into the underlying pools.
   unitsOnTile: UnitStack;
+  // BASE portion of `unitsOnTile`. Echoed onto CombatResult so the
+  // BattleReport can render "X garrison + Y reinforcements" without
+  // re-querying. Optional for legacy callers; absent ⇒ treat as 0
+  // (whole stack rendered as reinforcements).
+  baseUnitsOnTile?: UnitStack;
   armedDefenseSpellId: string | null;
   magicLandCount: number;
   unitsAlive: number;
@@ -578,7 +623,44 @@ export interface CombatResult {
     weakFace?: UnitType;
     forgeScoutsBonusApplied?: boolean;
   };
+  // BASE+SUPER combat additions ────────────────────────────────────────────
+  // finalAttack / finalDefense (the post-RNG values used to determine
+  // outcome). Surfaced so the loss-attribution helpers don't have to
+  // re-derive them and so the UI can show the closeness of the fight.
+  finalAttack: number;
+  finalDefense: number;
+  // Composite defender stack (BASE + SUPER) entering combat. Surfaced so the
+  // BattleReport can render "Defender had X" without back-deriving from
+  // post-attack tile state (which on capture is now the attacker's survivors,
+  // not the defender's losses).
+  defenderUnitsPreAttack: UnitStack;
+  // BASE portion of defenderUnitsPreAttack. The remainder is SUPER. Lets the
+  // BattleReport render "X garrison + Y reinforcements" without coupling to
+  // the server's post-attack tile state. Absent if the caller didn't supply
+  // baseUnitsOnTile in the defender input.
+  defenderBasePreAttack: UnitStack;
+  // |ratio - 1| where ratio = finalAttack / finalDefense. 0 = perfectly even,
+  // 1 = 2× one side. Drives the "Decisive / Close / Pyrrhic" labels in the
+  // BattleReport modal.
+  decisiveness: number;
+  // Human-readable tag for the loss curve that applied. One of:
+  //   "decisive-capture" | "close-capture" | "stalemate" | "close-repel" | "decisive-repel"
+  // The UI uses this for the outcome banner; combat math uses the same tag
+  // internally to scale losses.
+  lossCurveTag: LossCurveTag;
+  // Fraction of the defender's pre-attack BASE that survives capture
+  // (0..1). The server multiplies target.baseUnits by this on capture; the
+  // new owner inherits a small garrison rather than starting at zero. 1 for
+  // non-captured outcomes (BASE losses then come from the curve).
+  captureBaseRetentionFactor: number;
 }
+
+export type LossCurveTag =
+  | "decisive-capture"
+  | "close-capture"
+  | "stalemate"
+  | "close-repel"
+  | "decisive-repel";
 
 
 // =====================================================================

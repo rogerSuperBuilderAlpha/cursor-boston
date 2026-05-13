@@ -23,7 +23,6 @@ import type {
 } from "@/lib/game/types";
 import type { ThreatEntry } from "../_lib/threats-derive";
 import { useAttackPreview } from "../_lib/use-attack-preview";
-import { BattleReport } from "./BattleReport";
 import { BattleSimPanel } from "./BattleSimPanel";
 import { BoostPanel } from "./BoostPanel";
 import { ChangeSourceModal } from "./ChangeSourceModal";
@@ -57,6 +56,15 @@ export interface ThreatRowProps {
     report: TurnReport | null;
     targetTile: GameTile | null;
   } | null>;
+  /** Bubble a resolved attack/flyover up to the page so it can render the
+   *  battle modal. Kept at the page level so the result survives this row
+   *  unmounting (e.g. on a successful capture, the enemy tile drops out of
+   *  the threats list and the row disappears mid-read). */
+  onBattleResolved: (data: {
+    combat: CombatResult;
+    report: TurnReport;
+    targetTile: GameTile;
+  }) => void;
   onCastIntelSpell: (
     spellId: string,
     targetTileId: string
@@ -132,14 +140,6 @@ export function ThreatRow(props: ThreatRowProps) {
   const [offenseSpellId, setOffenseSpellId] = useState<string>("");
   const [toast, setToast] = useState<string | null>(null);
   const [intelReport, setIntelReport] = useState<IntelReport | null>(null);
-  // Structured battle readout shown after an attack lands. Replaces the
-  // plain toast for attack actions; non-attack actions (recruit, arm, etc.)
-  // still use the toast.
-  const [battle, setBattle] = useState<{
-    combat: CombatResult;
-    report: TurnReport;
-    targetTile: GameTile;
-  } | null>(null);
 
   const source =
     entry.candidateSources.find((t) => t.tileId === sourceTileId) ??
@@ -210,12 +210,22 @@ export function ThreatRow(props: ThreatRowProps) {
   // Forward-reference is fine: effectiveOffenseSpellId is derived directly
   // from selectedOffenseSpell which is already memoized above.
   const attackTurnCost = 1 + (selectedOffenseSpell ? 5 : 0);
+  // BASE+SUPER: deployable per type = SUPER (recruited) + BASE (garrison
+  // conscriptable). Slider max + validation key off the composite.
+  const sourceBaseStack = source.baseUnits ?? { ground: 0, siege: 0, air: 0 };
+  const sourceDeployableGround = source.units.ground + sourceBaseStack.ground;
+  const sourceDeployableSiege = source.units.siege + sourceBaseStack.siege;
+  const sourceDeployableAir = source.units.air + sourceBaseStack.air;
+
   const attackDisabledReason = (() => {
     if (enemyShielded) return "Enemy shielded";
     if (sentTotal === 0) return "No units selected";
-    if (ground > source.units.ground) return `Source has only ${source.units.ground} ground`;
-    if (siege > source.units.siege) return `Source has only ${source.units.siege} siege`;
-    if (air > source.units.air) return `Source has only ${source.units.air} air`;
+    if (ground > sourceDeployableGround)
+      return `Source has only ${sourceDeployableGround} ground`;
+    if (siege > sourceDeployableSiege)
+      return `Source has only ${sourceDeployableSiege} siege`;
+    if (air > sourceDeployableAir)
+      return `Source has only ${sourceDeployableAir} air`;
     if (player.turnsRemaining < attackTurnCost)
       return `Need ${attackTurnCost} turns (you have ${player.turnsRemaining})`;
     if (player.phase !== "play") return "Not in play phase";
@@ -251,7 +261,6 @@ export function ThreatRow(props: ThreatRowProps) {
 
   async function handleAttack() {
     setToast(null);
-    setBattle(null);
     // Consume a queued artifact (if any) before the swing fires. We
     // await so the server-side intel/offense effect is in place by the
     // time the attack resolves. If the use-artifact call fails, abort —
@@ -274,11 +283,12 @@ export function ThreatRow(props: ThreatRowProps) {
       offenseSpellId: effectiveOffenseSpellId,
     });
     if (res) {
-      // If we have full combat detail + report + post-combat tile, render
-      // the structured battle card. Otherwise (older server response) fall
-      // back to a one-line toast.
+      // Full combat detail → hand it to the page so the result modal
+      // renders even if this row unmounts (captured tiles drop out of
+      // the threat list). Otherwise (older server response) fall back
+      // to a one-line toast in this row.
       if (res.combat && res.report && res.targetTile) {
-        setBattle({
+        props.onBattleResolved({
           combat: res.combat,
           report: res.report,
           targetTile: res.targetTile,
@@ -356,7 +366,6 @@ export function ThreatRow(props: ThreatRowProps) {
 
   async function handleFlyoverFromPanel() {
     setToast(null);
-    setBattle(null);
     const res = await props.onFlyover(source.tileId, entry.enemyTile.tileId, {
       ground: 0,
       siege: 0,
@@ -364,7 +373,7 @@ export function ThreatRow(props: ThreatRowProps) {
     });
     if (res) {
       if (res.combat && res.report && res.targetTile) {
-        setBattle({
+        props.onBattleResolved({
           combat: res.combat,
           report: res.report,
           targetTile: res.targetTile,
@@ -392,8 +401,7 @@ export function ThreatRow(props: ThreatRowProps) {
         ? "text-amber-600 dark:text-amber-400"
         : "text-red-600 dark:text-red-400";
 
-  const recentOutcomes =
-    Boolean(battle) || Boolean(toast) || Boolean(intelReport);
+  const recentOutcomes = Boolean(toast) || Boolean(intelReport);
 
   return (
     <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 overflow-hidden">
@@ -413,8 +421,14 @@ export function ThreatRow(props: ThreatRowProps) {
           {enemyName} · {enemyCasteLabel}
         </span>
         <span className="font-mono text-xs text-neutral-500">
-          G{entry.enemyTile.units.ground} S{entry.enemyTile.units.siege} A
-          {entry.enemyTile.units.air}
+          G
+          {entry.enemyTile.units.ground +
+            (entry.enemyTile.baseUnits?.ground ?? 0)}
+          {" "}S
+          {entry.enemyTile.units.siege +
+            (entry.enemyTile.baseUnits?.siege ?? 0)}
+          {" "}A
+          {entry.enemyTile.units.air + (entry.enemyTile.baseUnits?.air ?? 0)}
         </span>
         {enemyShielded && (
           <span className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 text-xs">
@@ -492,9 +506,9 @@ export function ThreatRow(props: ThreatRowProps) {
                   )}
                 </div>
                 <UnitWithRecruit
-                  label={`G/${source.units.ground}`}
+                  label={`G/${sourceDeployableGround}`}
                   value={ground}
-                  max={source.units.ground}
+                  max={sourceDeployableGround}
                   onChange={setGround}
                   recruitYield={recruitYield}
                   recruitDisabledReason={recruitDisabledReason}
@@ -502,9 +516,9 @@ export function ThreatRow(props: ThreatRowProps) {
                   onRecruit={() => void handleRecruit("ground")}
                 />
                 <UnitWithRecruit
-                  label={`S/${source.units.siege}`}
+                  label={`S/${sourceDeployableSiege}`}
                   value={siege}
-                  max={source.units.siege}
+                  max={sourceDeployableSiege}
                   onChange={setSiege}
                   recruitYield={recruitYield}
                   recruitDisabledReason={recruitDisabledReason}
@@ -512,9 +526,9 @@ export function ThreatRow(props: ThreatRowProps) {
                   onRecruit={() => void handleRecruit("siege")}
                 />
                 <UnitWithRecruit
-                  label={`A/${source.units.air}`}
+                  label={`A/${sourceDeployableAir}`}
                   value={air}
-                  max={source.units.air}
+                  max={sourceDeployableAir}
                   onChange={setAir}
                   recruitYield={recruitYield}
                   recruitDisabledReason={recruitDisabledReason}
@@ -572,8 +586,8 @@ export function ThreatRow(props: ThreatRowProps) {
                     airUnits: air,
                     disabledReason: (() => {
                       if (air <= 0) return "Set air units in the form first";
-                      if (air > source.units.air)
-                        return `Source has only ${source.units.air} air`;
+                      if (air > sourceDeployableAir)
+                        return `Source has only ${sourceDeployableAir} air`;
                       if (player.turnsRemaining < 1)
                         return `Need 1 turn (you have ${player.turnsRemaining})`;
                       return null;
@@ -669,14 +683,6 @@ export function ThreatRow(props: ThreatRowProps) {
               <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
                 Recent outcomes
               </h3>
-              {battle && (
-                <BattleReport
-                  combat={battle.combat}
-                  report={battle.report}
-                  targetTile={battle.targetTile}
-                  onDismiss={() => setBattle(null)}
-                />
-              )}
               {intelReport && (
                 <ThreatIntelPanel
                   report={intelReport}

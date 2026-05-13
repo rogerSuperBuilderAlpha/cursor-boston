@@ -5,10 +5,14 @@
  */
 
 import { randomUUID } from "node:crypto";
-import type { Firestore, Transaction } from "firebase-admin/firestore";
+import type { Firestore, Timestamp, Transaction } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import {
+  applyBaseRegen,
   applyFlyoverModifiers,
+  attributeAttackerLosses,
+  attributeDefenderLosses,
+  baseUnitsTarget,
   computeTileCapacity,
   distributeUnitKills,
   makeSeededRng,
@@ -399,7 +403,92 @@ export async function getOwnedTilesServer(userId: string): Promise<GameTile[]> {
     .collection(COLLECTIONS.TILES)
     .where("ownerId", "==", userId)
     .get();
-  return snap.docs.map((d) => d.data() as GameTile);
+  const playerSnap = await db.collection(COLLECTIONS.PLAYERS).doc(userId).get();
+  const player = playerSnap.exists ? (playerSnap.data() as GamePlayer) : null;
+  const tiles = snap.docs.map((d) => d.data() as GameTile);
+  return applyLazyRegenBatch(tiles, player, new Date());
+}
+
+// In-memory + fire-and-forget Firestore writeback of BASE regen across a
+// batch of tiles. Returns the regenerated tiles. Writes only fire for tiles
+// where the BASE delta is non-zero (avoids write storms on read-heavy paths).
+// The writes are not awaited — the caller's response uses the in-memory
+// regen result; the next request reads the persisted values.
+function applyLazyRegenBatch(
+  tiles: GameTile[],
+  player: GamePlayer | null,
+  now: Date
+): GameTile[] {
+  const db = adminDbOrThrow();
+  const out: GameTile[] = [];
+  for (const t of tiles) {
+    out.push(applyLazyRegen(t, player, now, db));
+  }
+  return out;
+}
+
+function applyLazyRegen(
+  tile: GameTile,
+  player: GamePlayer | null,
+  now: Date,
+  db: Firestore
+): GameTile {
+  if (!tile.ownerId) return tile;
+  const currentBase = tile.baseUnits ?? { ground: 0, siege: 0, air: 0 };
+  const target = baseUnitsTarget({
+    landType: tile.type,
+    caste: player?.caste ?? null,
+    upgradeIds: tile.upgradeIds,
+    intrinsicBuffs: tile.intrinsicBuffs,
+    createdAt:
+      tile.createdAt instanceof Date
+        ? tile.createdAt
+        : typeof (tile.createdAt as Timestamp | undefined)?.toDate === "function"
+          ? (tile.createdAt as Timestamp).toDate()
+          : undefined,
+    activeUpgrades: player?.activeUpgrades ?? {},
+    productionSpellsActive: player?.productionSpellsActive,
+    now,
+  });
+  const baseRegenedAt =
+    tile.baseRegenedAt instanceof Date
+      ? tile.baseRegenedAt
+      : typeof (tile.baseRegenedAt as Timestamp | undefined)?.toDate ===
+          "function"
+        ? (tile.baseRegenedAt as Timestamp).toDate()
+        : tile.createdAt instanceof Date
+          ? tile.createdAt
+          : typeof (tile.createdAt as Timestamp | undefined)?.toDate ===
+              "function"
+            ? (tile.createdAt as Timestamp).toDate()
+            : now;
+  const result = applyBaseRegen({
+    currentBase,
+    target,
+    landType: tile.type,
+    baseRegenedAt,
+    now,
+  });
+  if (result.deltaUnits <= 0) return tile;
+  // Fire-and-forget Firestore writeback. Failures are logged inside the
+  // surrounding logger; we don't await so the read path stays snappy.
+  db.collection(COLLECTIONS.TILES)
+    .doc(tile.tileId)
+    .update({
+      baseUnits: result.baseUnits,
+      baseRegenedAt: result.baseRegenedAt,
+    })
+    .catch((e) => {
+      logger.warn("applyLazyRegen writeback failed", {
+        tileId: tile.tileId,
+        error: e instanceof Error ? e.message : String(e),
+      });
+    });
+  return {
+    ...tile,
+    baseUnits: result.baseUnits,
+    baseRegenedAt: result.baseRegenedAt,
+  };
 }
 
 // Lightweight tile fetch — uses Firestore's select() to only pull the fields
@@ -413,7 +502,16 @@ export async function getOwnedMapTilesServer(
   const snap = await db
     .collection(COLLECTIONS.TILES)
     .where("ownerId", "==", userId)
-    .select("tileId", "q", "r", "type", "ownerId", "units", "armedDefenseSpellId")
+    .select(
+      "tileId",
+      "q",
+      "r",
+      "type",
+      "ownerId",
+      "units",
+      "baseUnits",
+      "armedDefenseSpellId"
+    )
     .get();
   return snap.docs.map((d) => {
     const data = d.data();
@@ -424,6 +522,7 @@ export async function getOwnedMapTilesServer(
       type: data.type,
       ownerId: data.ownerId ?? null,
       units: data.units,
+      baseUnits: data.baseUnits ?? { ground: 0, siege: 0, air: 0 },
       armedDefenseSpellId: data.armedDefenseSpellId ?? null,
     } as MapTile;
   });
@@ -437,7 +536,16 @@ export async function getAllMapTilesServer(): Promise<MapTile[]> {
   const db = adminDbOrThrow();
   const snap = await db
     .collection(COLLECTIONS.TILES)
-    .select("tileId", "q", "r", "type", "ownerId", "units", "armedDefenseSpellId")
+    .select(
+      "tileId",
+      "q",
+      "r",
+      "type",
+      "ownerId",
+      "units",
+      "baseUnits",
+      "armedDefenseSpellId"
+    )
     .get();
   return snap.docs.map((d) => {
     const data = d.data();
@@ -448,6 +556,7 @@ export async function getAllMapTilesServer(): Promise<MapTile[]> {
       type: data.type,
       ownerId: data.ownerId ?? null,
       units: data.units,
+      baseUnits: data.baseUnits ?? { ground: 0, siege: 0, air: 0 },
       armedDefenseSpellId: data.armedDefenseSpellId ?? null,
     } as MapTile;
   });
@@ -476,7 +585,16 @@ export async function getMapTilesInBoundsServer(bounds: {
     .collection(COLLECTIONS.TILES)
     .where("q", ">=", bounds.qMin)
     .where("q", "<=", bounds.qMax)
-    .select("tileId", "q", "r", "type", "ownerId", "units", "armedDefenseSpellId")
+    .select(
+      "tileId",
+      "q",
+      "r",
+      "type",
+      "ownerId",
+      "units",
+      "baseUnits",
+      "armedDefenseSpellId"
+    )
     .limit(VIEWPORT_TILE_LIMIT + 1)
     .get();
   if (snap.size > VIEWPORT_TILE_LIMIT) {
@@ -496,6 +614,7 @@ export async function getMapTilesInBoundsServer(bounds: {
       type: data.type,
       ownerId: data.ownerId ?? null,
       units: data.units,
+      baseUnits: data.baseUnits ?? { ground: 0, siege: 0, air: 0 },
       armedDefenseSpellId: data.armedDefenseSpellId ?? null,
     } as MapTile);
   }
@@ -571,6 +690,7 @@ export async function getMyMapServer(
         type: data.type,
         ownerId: data.ownerId,
         units: data.units,
+        baseUnits: data.baseUnits ?? { ground: 0, siege: 0, air: 0 },
         armedDefenseSpellId: data.armedDefenseSpellId ?? null,
       });
       enemyOwnerIds.add(data.ownerId);
@@ -633,7 +753,15 @@ export async function getAllOwnerSummariesServer(
 export async function getTileServer(tileId: string): Promise<GameTile | null> {
   const db = adminDbOrThrow();
   const snap = await db.collection(COLLECTIONS.TILES).doc(tileId).get();
-  return snap.exists ? (snap.data() as GameTile) : null;
+  if (!snap.exists) return null;
+  const tile = snap.data() as GameTile;
+  if (!tile.ownerId) return tile;
+  const playerSnap = await db
+    .collection(COLLECTIONS.PLAYERS)
+    .doc(tile.ownerId)
+    .get();
+  const player = playerSnap.exists ? (playerSnap.data() as GamePlayer) : null;
+  return applyLazyRegen(tile, player, new Date(), db);
 }
 
 // v2 — new players spawn with 25 already-revealed unassigned tiles, skipping
@@ -742,6 +870,11 @@ export async function createPlayerWithSpawnServer(
         type: "unrevealed" as LandType,
         level: 0,
         units: { ground: 0, siege: 0, air: 0 },
+        // BASE garrison stays zero on unrevealed; exploreNextTileServer
+        // seeds it the moment the tile flips to unassigned.
+        baseUnits: { ground: 0, siege: 0, air: 0 },
+        baseRegenedAt: now,
+        intrinsicBuffs: [],
         armedDefenseSpellId: null,
         neighborTileIds: neighborTileIds(q, r),
         upgradeIds: [],
@@ -837,9 +970,31 @@ export async function exploreNextTileServer(
     );
     const artifact = rolled?.definition ?? null;
 
+    // Seed BASE garrison the moment the tile flips out of unrevealed —
+    // unassigned tiles get the LAND_TYPE_BASE seed scaled by caste, which
+    // ensures every revealed tile has a real defensive floor.
+    const exploreCreatedAt: Date | undefined =
+      tile.createdAt instanceof Date
+        ? tile.createdAt
+        : typeof (tile.createdAt as Timestamp | undefined)?.toDate === "function"
+          ? (tile.createdAt as Timestamp).toDate()
+          : undefined;
+    const initialBaseUnits = baseUnitsTarget({
+      landType: "unassigned",
+      caste: player.caste,
+      upgradeIds: tile.upgradeIds,
+      intrinsicBuffs: tile.intrinsicBuffs,
+      createdAt: exploreCreatedAt,
+      activeUpgrades: player.activeUpgrades ?? {},
+      productionSpellsActive: player.productionSpellsActive,
+      now,
+    });
+
     tx.update(tileRef, {
       type: "unassigned" as LandType,
       revealedAt: now,
+      baseUnits: initialBaseUnits,
+      baseRegenedAt: now,
       updatedAt: now,
     });
     tx.update(playerRef, {
@@ -853,6 +1008,8 @@ export async function exploreNextTileServer(
     const updatedTile: GameTile = {
       ...tile,
       type: "unassigned",
+      baseUnits: initialBaseUnits,
+      baseRegenedAt: now,
       revealedAt: now,
       updatedAt: now,
     };
@@ -953,7 +1110,53 @@ export async function distributeTileServer(
     );
     const artifact = rolled?.definition ?? null;
 
-    tx.update(tileRef, { type, updatedAt: now });
+    // Re-seed BASE garrison toward the new land type's target. We don't
+    // snap to the new target instantly; the existing baseUnits stay (the
+    // militia don't disappear when you re-zone), but we update
+    // baseRegenedAt so the next regen tick aims at the new type's target.
+    // Exception: if the tile is being re-typed away from a developed
+    // type back to unassigned, leave baseUnits alone and let lazy regen
+    // decay it (a future enhancement; for now no decay).
+    const createdAtDate: Date | undefined =
+      tile.createdAt instanceof Date
+        ? tile.createdAt
+        : typeof (tile.createdAt as Timestamp | undefined)?.toDate === "function"
+          ? (tile.createdAt as Timestamp).toDate()
+          : undefined;
+    const newBaseTarget = baseUnitsTarget({
+      landType: type,
+      caste: player.caste,
+      upgradeIds: tile.upgradeIds,
+      intrinsicBuffs: tile.intrinsicBuffs,
+      createdAt: createdAtDate,
+      activeUpgrades: player.activeUpgrades ?? {},
+      productionSpellsActive: player.productionSpellsActive,
+      now,
+    });
+    // If existing baseUnits is below the new target, jump to halfway —
+    // distribute-as-promotion shouldn't be an instant-full-garrison cheat.
+    const currentBase = tile.baseUnits ?? { ground: 0, siege: 0, air: 0 };
+    const seededBase = {
+      ground: Math.max(
+        currentBase.ground,
+        Math.floor((currentBase.ground + newBaseTarget.ground) / 2)
+      ),
+      siege: Math.max(
+        currentBase.siege,
+        Math.floor((currentBase.siege + newBaseTarget.siege) / 2)
+      ),
+      air: Math.max(
+        currentBase.air,
+        Math.floor((currentBase.air + newBaseTarget.air) / 2)
+      ),
+    };
+
+    tx.update(tileRef, {
+      type,
+      baseUnits: seededBase,
+      baseRegenedAt: now,
+      updatedAt: now,
+    });
     tx.update(playerRef, {
       turnsRemaining: player.turnsRemaining - 1,
       turnsSpentTotal,
@@ -975,7 +1178,13 @@ export async function distributeTileServer(
         turnsSpentTotal,
         updatedAt: now,
       },
-      tile: { ...tile, type, updatedAt: now },
+      tile: {
+        ...tile,
+        type,
+        baseUnits: seededBase,
+        baseRegenedAt: now,
+        updatedAt: now,
+      },
       report,
       artifact: rolled?.doc ?? null,
     };
@@ -2193,9 +2402,26 @@ export async function attackTileServer(args: {
         attacker.turnsRemaining
       );
     }
-    if (!stackHasAtLeast(source.units, args.units)) {
+    // BASE+SUPER: source's deployable pool is units (SUPER) + baseUnits (BASE).
+    // We draw from SUPER first per type; any overflow conscripts from BASE.
+    const sourceBase: UnitStack =
+      source.baseUnits ?? { ground: 0, siege: 0, air: 0 };
+    const targetBase: UnitStack =
+      target.baseUnits ?? { ground: 0, siege: 0, air: 0 };
+    const sourceDeployable = addStack(source.units, sourceBase);
+    if (!stackHasAtLeast(sourceDeployable, args.units)) {
       throw new GameInsufficientUnitsError();
     }
+    const superSent: UnitStack = {
+      ground: Math.min(args.units.ground, source.units.ground),
+      siege: Math.min(args.units.siege, source.units.siege),
+      air: Math.min(args.units.air, source.units.air),
+    };
+    const baseSent: UnitStack = {
+      ground: args.units.ground - superSent.ground,
+      siege: args.units.siege - superSent.siege,
+      air: args.units.air - superSent.air,
+    };
 
     const defenderActiveUpgrades = defender.activeUpgrades ?? {};
     const attackerActiveUpgrades = attacker.activeUpgrades ?? {};
@@ -2205,12 +2431,16 @@ export async function attackTileServer(args: {
       target.upgradeIds,
       defenderActiveUpgrades
     );
+    // Capacity check is against SUPER on tile only — BASE is intrinsic and
+    // doesn't compete for cap (food-cap math doesn't include militia).
     const defenderTotalOnTile = sumStack(target.units);
     const availableSpace = Math.max(0, tileCapacity - defenderTotalOnTile);
     const sentTotal = sumStack(args.units);
     if (sentTotal > availableSpace) {
       throw new GameTileFullError(availableSpace, sentTotal);
     }
+    // Composite defender stack for combat — base+super fight together.
+    const defenderComposite = addStack(target.units, targetBase);
 
     // Read the 6 neighbor tiles to compute supply. Hex coords are immutable,
     // so deriving IDs from (q, r) is canonical even if neighborTileIds drifts.
@@ -2250,7 +2480,8 @@ export async function attackTileServer(args: {
       },
       {
         caste: defender.caste,
-        unitsOnTile: target.units,
+        unitsOnTile: defenderComposite,
+        baseUnitsOnTile: targetBase,
         armedDefenseSpellId: target.armedDefenseSpellId,
         magicLandCount: 0,
         unitsAlive: defender.stats.unitsAlive,
@@ -2279,11 +2510,39 @@ export async function attackTileServer(args: {
       });
     }
 
-    const survivors = subtractStack(result.unitsDeployed, result.attackerLosses);
-    const sourceAfterDispatch = subtractStack(source.units, args.units);
+    // BASE+SUPER loss attribution. Split combat losses back into the
+    // pools they came from so each tile's units / baseUnits stay coherent.
+    const attackerLossSplit = attributeAttackerLosses({
+      superSent,
+      baseSent,
+      totalLosses: result.attackerLosses,
+    });
+    const defenderLossSplit = attributeDefenderLosses({
+      superBefore: target.units,
+      baseBefore: targetBase,
+      totalLosses: result.defenderLosses,
+      outcome: result.outcome,
+      captureBaseRetentionFactor: result.captureBaseRetentionFactor,
+    });
+
+    const superSurvivors: UnitStack = {
+      ground: superSent.ground - attackerLossSplit.superLost.ground,
+      siege: superSent.siege - attackerLossSplit.superLost.siege,
+      air: superSent.air - attackerLossSplit.superLost.air,
+    };
+    const baseSurvivors: UnitStack = {
+      ground: baseSent.ground - attackerLossSplit.baseLost.ground,
+      siege: baseSent.siege - attackerLossSplit.baseLost.siege,
+      air: baseSent.air - attackerLossSplit.baseLost.air,
+    };
+
+    const sourceUnitsAfterDispatch = subtractStack(source.units, superSent);
+    const sourceBaseAfterDispatch = subtractStack(sourceBase, baseSent);
 
     let updatedSourceUnits: UnitStack;
+    let updatedSourceBase: UnitStack;
     let updatedTargetUnits: UnitStack;
+    let updatedTargetBase: UnitStack;
     let updatedTargetOwner: string | null = target.ownerId;
     let updatedTargetType: LandType = target.type;
     let updatedTargetLevel: number = target.level;
@@ -2292,18 +2551,28 @@ export async function attackTileServer(args: {
 
     if (result.outcome === "captured") {
       captured = true;
-      updatedSourceUnits = sourceAfterDispatch;
-      updatedTargetUnits = survivors;
+      // Source: sent units are gone (no return on capture).
+      updatedSourceUnits = sourceUnitsAfterDispatch;
+      updatedSourceBase = sourceBaseAfterDispatch;
+      // Target: SUPER survivors occupy as new SUPER; BASE survivors fold
+      // into the residual defender BASE that survived the capture.
+      updatedTargetUnits = superSurvivors;
+      updatedTargetBase = addStack(defenderLossSplit.newBase, baseSurvivors);
       updatedTargetOwner = args.attackerId;
       updatedTargetLevel = 0;
       updatedTargetUpgrades = [];
     } else {
-      updatedSourceUnits = addStack(sourceAfterDispatch, survivors);
-      updatedTargetUnits = subtractStack(target.units, result.defenderLosses);
+      // Survivors return home; defender keeps post-curve base+super.
+      updatedSourceUnits = addStack(sourceUnitsAfterDispatch, superSurvivors);
+      updatedSourceBase = addStack(sourceBaseAfterDispatch, baseSurvivors);
+      updatedTargetUnits = defenderLossSplit.newSuper;
+      updatedTargetBase = defenderLossSplit.newBase;
     }
 
-    const attackerLossesTotal = sumStack(result.attackerLosses);
-    const defenderLossesTotal = sumStack(result.defenderLosses);
+    // unitsAlive tracks SUPER only (food-cap-bound). BASE losses don't hit
+    // the player-level stat.
+    const attackerSuperLostTotal = sumStack(attackerLossSplit.superLost);
+    const defenderSuperLostTotal = sumStack(defenderLossSplit.superLost);
 
     const attackerTurnsSpentTotal = attacker.turnsSpentTotal + turnCost;
     const rolled = rollAndStageArtifact(
@@ -2316,9 +2585,17 @@ export async function attackTileServer(args: {
     );
     const artifact = rolled?.definition ?? null;
 
-    tx.update(sourceRef, { units: updatedSourceUnits, updatedAt: now });
+    tx.update(sourceRef, {
+      units: updatedSourceUnits,
+      baseUnits: updatedSourceBase,
+      updatedAt: now,
+    });
     tx.update(targetRef, {
       units: updatedTargetUnits,
+      baseUnits: updatedTargetBase,
+      // On capture, baseRegenedAt resets so the new owner's caste regens
+      // the residual militia from now.
+      baseRegenedAt: captured ? now : (target.baseRegenedAt ?? now),
       ownerId: updatedTargetOwner,
       type: updatedTargetType,
       level: updatedTargetLevel,
@@ -2330,13 +2607,13 @@ export async function attackTileServer(args: {
 
     const attackerStats = {
       ...attacker.stats,
-      unitsAlive: Math.max(0, attacker.stats.unitsAlive - attackerLossesTotal),
+      unitsAlive: Math.max(0, attacker.stats.unitsAlive - attackerSuperLostTotal),
       attacksWon: attacker.stats.attacksWon + (captured ? 1 : 0),
       tilesHeld: attacker.stats.tilesHeld + (captured ? 1 : 0),
     };
     const defenderStats = {
       ...defender.stats,
-      unitsAlive: Math.max(0, defender.stats.unitsAlive - defenderLossesTotal),
+      unitsAlive: Math.max(0, defender.stats.unitsAlive - defenderSuperLostTotal),
       attacksLost: defender.stats.attacksLost + (captured ? 1 : 0),
       tilesHeld: Math.max(0, defender.stats.tilesHeld - (captured ? 1 : 0)),
     };
@@ -2423,10 +2700,17 @@ export async function attackTileServer(args: {
         updatedAt: now,
       },
       defenderPlayer: { ...defender, stats: defenderStats, updatedAt: now },
-      sourceTile: { ...source, units: updatedSourceUnits, updatedAt: now },
+      sourceTile: {
+        ...source,
+        units: updatedSourceUnits,
+        baseUnits: updatedSourceBase,
+        updatedAt: now,
+      },
       targetTile: {
         ...target,
         units: updatedTargetUnits,
+        baseUnits: updatedTargetBase,
+        baseRegenedAt: captured ? now : (target.baseRegenedAt ?? now),
         ownerId: updatedTargetOwner,
         type: updatedTargetType,
         level: updatedTargetLevel,
@@ -2640,15 +2924,20 @@ export async function attackPreviewServer(args: {
   // result is identical across previews and players can't fish for outcomes.
   const midpointRng = (): number => 0.5;
 
-  // Clamp requested units to what's actually on the source tile so the
-  // projection reflects what the player could actually deploy. The real
-  // attack call rejects over-spec; here we soft-clamp instead so the panel
-  // stays useful while a player tweaks numbers.
+  // Clamp requested units to source SUPER + BASE so the projection
+  // reflects everything the player could deploy (the real attack call
+  // drafts BASE into the send pool).
+  const sourceBase: UnitStack =
+    source.baseUnits ?? { ground: 0, siege: 0, air: 0 };
+  const targetBase: UnitStack =
+    target.baseUnits ?? { ground: 0, siege: 0, air: 0 };
+  const sourceDeployable = addStack(source.units, sourceBase);
   const clampedUnits: UnitStack = {
-    ground: Math.min(args.units.ground, source.units.ground),
-    siege: Math.min(args.units.siege, source.units.siege),
-    air: Math.min(args.units.air, source.units.air),
+    ground: Math.min(args.units.ground, sourceDeployable.ground),
+    siege: Math.min(args.units.siege, sourceDeployable.siege),
+    air: Math.min(args.units.air, sourceDeployable.air),
   };
+  const defenderComposite = addStack(target.units, targetBase);
 
   const combat = resolveAttack(
     {
@@ -2664,7 +2953,8 @@ export async function attackPreviewServer(args: {
     },
     {
       caste: defender.caste,
-      unitsOnTile: target.units,
+      unitsOnTile: defenderComposite,
+      baseUnitsOnTile: targetBase,
       armedDefenseSpellId: target.armedDefenseSpellId,
       magicLandCount: 0,
       unitsAlive: defender.stats.unitsAlive,
@@ -2930,9 +3220,25 @@ export async function flyoverTileServer(args: {
         attacker.turnsRemaining
       );
     }
-    if (!stackHasAtLeast(source.units, args.units)) {
+    // BASE+SUPER: same draft semantics as attackTileServer.
+    const sourceBase: UnitStack =
+      source.baseUnits ?? { ground: 0, siege: 0, air: 0 };
+    const targetBase: UnitStack =
+      target.baseUnits ?? { ground: 0, siege: 0, air: 0 };
+    const sourceDeployable = addStack(source.units, sourceBase);
+    if (!stackHasAtLeast(sourceDeployable, args.units)) {
       throw new GameInsufficientUnitsError();
     }
+    const superSent: UnitStack = {
+      ground: Math.min(args.units.ground, source.units.ground),
+      siege: Math.min(args.units.siege, source.units.siege),
+      air: Math.min(args.units.air, source.units.air),
+    };
+    const baseSent: UnitStack = {
+      ground: args.units.ground - superSent.ground,
+      siege: args.units.siege - superSent.siege,
+      air: args.units.air - superSent.air,
+    };
 
     const defenderActiveUpgrades = defender.activeUpgrades ?? {};
     const attackerActiveUpgrades = attacker.activeUpgrades ?? {};
@@ -2957,6 +3263,7 @@ export async function flyoverTileServer(args: {
       friendlyNeighbors.push({ landType: t.type });
     }
 
+    const defenderComposite = addStack(target.units, targetBase);
     const flyoverId = randomUUID();
     const baseCombat = resolveAttack(
       {
@@ -2971,7 +3278,8 @@ export async function flyoverTileServer(args: {
       },
       {
         caste: defender.caste,
-        unitsOnTile: target.units,
+        unitsOnTile: defenderComposite,
+        baseUnitsOnTile: targetBase,
         armedDefenseSpellId: target.armedDefenseSpellId,
         magicLandCount: 0,
         unitsAlive: defender.stats.unitsAlive,
@@ -2993,31 +3301,65 @@ export async function flyoverTileServer(args: {
     // applyFlyoverModifiers so it's covered by combat tests.
     const combat = applyFlyoverModifiers(baseCombat);
 
-    // Commit unit deltas. Source loses what was sent + the doubled losses
-    // never came back; survivors return.
-    const attackerLossesTotal = sumStack(combat.attackerLosses);
-    const defenderLossesTotal = sumStack(combat.defenderLosses);
-    const survivors = subtractStack(combat.unitsDeployed, combat.attackerLosses);
-    const sourceAfterDispatch = subtractStack(source.units, args.units);
-    const updatedSourceUnits = addStack(sourceAfterDispatch, survivors);
-    const updatedTargetUnits = subtractStack(target.units, combat.defenderLosses);
+    // BASE+SUPER loss attribution (no capture branch — flyover always repels).
+    const attackerLossSplit = attributeAttackerLosses({
+      superSent,
+      baseSent,
+      totalLosses: combat.attackerLosses,
+    });
+    const defenderLossSplit = attributeDefenderLosses({
+      superBefore: target.units,
+      baseBefore: targetBase,
+      totalLosses: combat.defenderLosses,
+      outcome: combat.outcome,
+      captureBaseRetentionFactor: combat.captureBaseRetentionFactor,
+    });
+
+    const superSurvivors: UnitStack = {
+      ground: superSent.ground - attackerLossSplit.superLost.ground,
+      siege: superSent.siege - attackerLossSplit.superLost.siege,
+      air: superSent.air - attackerLossSplit.superLost.air,
+    };
+    const baseSurvivors: UnitStack = {
+      ground: baseSent.ground - attackerLossSplit.baseLost.ground,
+      siege: baseSent.siege - attackerLossSplit.baseLost.siege,
+      air: baseSent.air - attackerLossSplit.baseLost.air,
+    };
+    const updatedSourceUnits = addStack(
+      subtractStack(source.units, superSent),
+      superSurvivors
+    );
+    const updatedSourceBase = addStack(
+      subtractStack(sourceBase, baseSent),
+      baseSurvivors
+    );
+    const updatedTargetUnits = defenderLossSplit.newSuper;
+    const updatedTargetBase = defenderLossSplit.newBase;
+
+    const attackerSuperLostTotal = sumStack(attackerLossSplit.superLost);
+    const defenderSuperLostTotal = sumStack(defenderLossSplit.superLost);
 
     const turnsSpentTotal = attacker.turnsSpentTotal + turnCost;
 
-    tx.update(sourceRef, { units: updatedSourceUnits, updatedAt: now });
+    tx.update(sourceRef, {
+      units: updatedSourceUnits,
+      baseUnits: updatedSourceBase,
+      updatedAt: now,
+    });
     tx.update(targetRef, {
       units: updatedTargetUnits,
+      baseUnits: updatedTargetBase,
       lastAttackedAt: now,
       updatedAt: now,
     });
 
     const attackerStats = {
       ...attacker.stats,
-      unitsAlive: Math.max(0, attacker.stats.unitsAlive - attackerLossesTotal),
+      unitsAlive: Math.max(0, attacker.stats.unitsAlive - attackerSuperLostTotal),
     };
     const defenderStats = {
       ...defender.stats,
-      unitsAlive: Math.max(0, defender.stats.unitsAlive - defenderLossesTotal),
+      unitsAlive: Math.max(0, defender.stats.unitsAlive - defenderSuperLostTotal),
     };
 
     tx.update(attackerRef, {
@@ -3046,8 +3388,19 @@ export async function flyoverTileServer(args: {
         stats: attackerStats,
         updatedAt: now,
       },
-      sourceTile: { ...source, units: updatedSourceUnits, updatedAt: now },
-      targetTile: { ...target, units: updatedTargetUnits, lastAttackedAt: now, updatedAt: now },
+      sourceTile: {
+        ...source,
+        units: updatedSourceUnits,
+        baseUnits: updatedSourceBase,
+        updatedAt: now,
+      },
+      targetTile: {
+        ...target,
+        units: updatedTargetUnits,
+        baseUnits: updatedTargetBase,
+        lastAttackedAt: now,
+        updatedAt: now,
+      },
       report,
       combat,
     };
@@ -3940,6 +4293,15 @@ export async function frontierExploreServer(
     );
     const artifact = rolled?.definition ?? null;
 
+    const initialBaseUnits = baseUnitsTarget({
+      landType: "unassigned",
+      caste: player.caste,
+      upgradeIds: [],
+      createdAt: now,
+      activeUpgrades: player.activeUpgrades ?? {},
+      productionSpellsActive: player.productionSpellsActive,
+      now,
+    });
     const tile: GameTile = {
       tileId: sample.tileId,
       q: sample.tile.q,
@@ -3948,6 +4310,9 @@ export async function frontierExploreServer(
       type: "unassigned",
       level: 0,
       units: { ground: 0, siege: 0, air: 0 },
+      baseUnits: initialBaseUnits,
+      baseRegenedAt: now,
+      intrinsicBuffs: [],
       armedDefenseSpellId: null,
       neighborTileIds: neighborTileIds(sample.tile.q, sample.tile.r),
       upgradeIds: [],
@@ -4220,6 +4585,15 @@ export async function farExpeditionExploreServer(
     );
     const artifact = rolled?.definition ?? null;
 
+    const initialBaseUnits = baseUnitsTarget({
+      landType: "unassigned",
+      caste: player.caste,
+      upgradeIds: [],
+      createdAt: now,
+      activeUpgrades: player.activeUpgrades ?? {},
+      productionSpellsActive: player.productionSpellsActive,
+      now,
+    });
     const tile: GameTile = {
       tileId,
       q: dropCoord.q,
@@ -4228,6 +4602,9 @@ export async function farExpeditionExploreServer(
       type: "unassigned",
       level: 0,
       units: { ground: 0, siege: 0, air: 0 },
+      baseUnits: initialBaseUnits,
+      baseRegenedAt: now,
+      intrinsicBuffs: [],
       armedDefenseSpellId: null,
       neighborTileIds: neighborTileIds(dropCoord.q, dropCoord.r),
       upgradeIds: [],
@@ -4613,6 +4990,15 @@ export async function bulkFrontierExploreServer(
       const artifact = rolled?.definition ?? null;
       if (rolled) artifacts.push(rolled.doc);
 
+      const initialBaseUnits = baseUnitsTarget({
+        landType: "unassigned",
+        caste: player.caste,
+        upgradeIds: [],
+        createdAt: now,
+        activeUpgrades: player.activeUpgrades ?? {},
+        productionSpellsActive: player.productionSpellsActive,
+        now,
+      });
       const tile: GameTile = {
         tileId: sample.tileId,
         q: sample.tile.q,
@@ -4621,6 +5007,9 @@ export async function bulkFrontierExploreServer(
         type: "unassigned",
         level: 0,
         units: { ground: 0, siege: 0, air: 0 },
+        baseUnits: initialBaseUnits,
+        baseRegenedAt: now,
+        intrinsicBuffs: [],
         armedDefenseSpellId: null,
         neighborTileIds: neighborTileIds(sample.tile.q, sample.tile.r),
         upgradeIds: [],
