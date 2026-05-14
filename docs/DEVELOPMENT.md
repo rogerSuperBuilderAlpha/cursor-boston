@@ -56,12 +56,27 @@ Choose the approach that fits your workflow:
 
 ### Option A: Personal Firebase project (most common)
 
-1. Go to [Firebase Console](https://console.firebase.google.com/) and create a new project
-2. Enable **Authentication** (Email/Password + Google providers)
-3. Create a **Firestore Database** in test mode
-4. Create a **Storage** bucket
-5. Go to Project Settings > General > Your apps > Add a Web app
-6. Copy the config values into `.env.local` (use `.env.local.example` as the template — it has detailed instructions for each field)
+1. Go to [Firebase Console](https://console.firebase.google.com/) and create a new project.
+
+2. **Authentication** (matches `contexts/AuthContext.tsx` — Email/Password, Google, and GitHub popups):
+   1. Open **Build → Authentication → Get started**.
+   2. On **Sign-in method**, enable **Email/Password**, **Google** (set a support email on the consent screen), and **GitHub**.
+   3. For **GitHub**, Firebase shows an **Authorization callback URL** (typically `https://<your-project-id>.firebaseapp.com/__/auth/handler`). In [GitHub → Settings → Developer settings → OAuth Apps](https://github.com/settings/developers), create an OAuth App and paste that URL as **Authorization callback URL**. Copy the GitHub app’s **Client ID** and **Client secret** back into Firebase’s GitHub provider dialog and save.
+   4. Under **Authentication → Settings → Authorized domains**, add **`localhost`** (and your production domain when you deploy). Without `localhost`, Google/GitHub popup sign-in fails on `http://localhost:3000`.
+
+   > **Note:** Credentials for **Firebase** GitHub sign-in live only in the Firebase Console. The `NEXT_PUBLIC_GITHUB_*` and `GITHUB_CLIENT_SECRET` entries in [`.env.local.example`](../.env.local.example) are for this repo’s **profile link** flow (`/api/github/*`), not for the Firebase Auth GitHub button.
+
+3. **Firestore**: Create a database (test mode is fine for a personal sandbox; tighten rules before real data).
+
+4. **Realtime Database**: Create a default database instance. Put its URL in **`NEXT_PUBLIC_FIREBASE_DATABASE_URL`** — the web client calls `getDatabase()` in `lib/firebase.ts` when config is present.
+
+5. **Storage**: Create a default bucket; match **`NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`** to what the console shows.
+
+6. **Web app config**: **Project settings → General → Your apps →** register a **Web** app. Copy **apiKey**, **authDomain**, **projectId**, **storageBucket**, **messagingSenderId**, **appId**, and the Realtime Database URL into **`.env.local`**, using [`.env.local.example`](../.env.local.example) as the template.
+
+7. **Optional but common for API routes and scripts:** add **`FIREBASE_SERVICE_ACCOUNT_JSON`** as described in [Formatting `FIREBASE_SERVICE_ACCOUNT_JSON`](#formatting-firebase_service_account_json).
+
+Restart **`npm run dev`** after editing `.env.local` so Next.js reloads env vars.
 
 ### Option B: Firebase Emulator (no cloud account needed)
 

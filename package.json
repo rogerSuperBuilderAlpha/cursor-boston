@@ -36,6 +36,7 @@
     "dev": "cross-env NODE_OPTIONS=--no-deprecation next dev --webpack -H localhost",
     "build": "next build --webpack",
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
+    "serve": "cross-env NODE_OPTIONS=--no-deprecation next start",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
     "test": "jest --config config/jest.config.js",

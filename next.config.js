@@ -1,9 +1,15 @@
+const path = require('path')
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true',
 })
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // If a package-lock.json exists above this repo (e.g. in $HOME), Next.js would pick that
+  // directory as the monorepo root and resolve node_modules there — breaking imports such as
+  // `firebase/auth`. Pin the tracing / Turbopack root to this application directory.
+  outputFileTracingRoot: path.join(__dirname),
+
   // Standalone output is only for Docker builds (see docker/Dockerfile). Omit on Vercel.
   ...(process.env.DOCKER_BUILD === '1' ? { output: 'standalone' } : {}),
 
