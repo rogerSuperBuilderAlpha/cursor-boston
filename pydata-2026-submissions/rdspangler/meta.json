@@ -1,6 +1,6 @@
 {
   "title": "Exoplanet Explorer",
-  "description": "An interactive Marimo notebook exploring how telescope technology shaped exoplanet discovery. Visualises the NASA Exoplanet Archive — animated discovery timelines, a planet-class radius histogram, and a scored filter for Earth-like candidates — all driven by live UI controls.",
+  "description": "Every spike on the exoplanet discovery chart is a telescope, not a planet. This Marimo notebook walks through 5,700+ confirmed worlds from NASA's archive — annotated discovery timeline, planet-class radius histogram, and a transparent Earth-likeness shortlist of the closest cousins JWST could observe next.",
   "displayName": "Ryan Spangler",
   "tags": ["astronomy", "nasa", "exoplanets", "interactive", "marimo"],
   "collaborators": []

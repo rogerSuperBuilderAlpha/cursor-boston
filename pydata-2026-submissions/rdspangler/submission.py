@@ -42,8 +42,31 @@ def title_markdown(mo):
 
 
 @app.cell(hide_code=True)
+def hero_stats(df, mo, n_total, pl):
+    n_hosts = df.get_column("hostname").n_unique()
+    n_methods = (
+        df.filter(pl.col("discoverymethod").is_not_null())
+        .get_column("discoverymethod")
+        .n_unique()
+    )
+    yrs = df.filter(pl.col("disc_year").is_not_null()).get_column("disc_year")
+    span = int(yrs.max()) - int(yrs.min())
+    mo.vstack([
+        mo.hstack([
+            mo.stat(label="Confirmed planets", value=f"{n_total:,}"),
+            mo.stat(label="Host stars", value=f"{n_hosts:,}"),
+            mo.stat(label="Discovery methods", value=str(n_methods)),
+            mo.stat(label="Years of data", value=f"{span} yrs"),
+        ]),
+        mo.md("> **Every spike on this chart is a telescope, not a planet.**"),
+    ])
+    return
+
+
+@app.cell(hide_code=True)
 def load_data_markdown(mo):
-    mo.md(r"""
+    mo.vstack([
+        mo.md(r"""
     ## The catalog
 
     We query the **Planetary Systems Composite Parameters** (`pscomppars`) table from the
@@ -77,11 +100,9 @@ def load_data_markdown(mo):
     | `discoverymethod` | Discovery method | How we know the planet exists — see the timeline below for a breakdown of each technique |
     | `disc_year` | Discovery year | When the planet was confirmed, not when it was first detected as a candidate |
     | `disc_facility` | Discovery facility | The telescope or instrument that made the discovery (e.g. *Kepler*, *TESS*, *Keck*) |
-
-    ---
-
-    ### Quick reference: all discovery methods
-
+        """),
+        mo.accordion({
+            "All 11 discovery methods — click to expand": mo.md(r"""
     | Method | Principle | Strengths | Limitations |
     |---|---|---|---|
     | **Transit** | Planet passes in front of its star, causing a tiny, periodic dip in brightness | Finds small planets; Kepler and TESS use this; scales to thousands of detections | Requires the orbital plane to be edge-on as seen from Earth; only ~1% of orbits are aligned favourably |
@@ -95,7 +116,9 @@ def load_data_markdown(mo):
     | **Pulsation Timing Variations** | Like pulsar timing but applied to pulsating giant stars (oscillating subdwarfs, white dwarfs) | Sensitive to long-period, wide-orbit companions | Stellar pulsations are far less stable than pulsar clocks, making interpretation difficult |
     | **Orbital Brightness Modulation (OBM)** | Measures periodic brightness changes caused by the planet's reflected light, ellipsoidal distortion of the star, and Doppler boosting | No special orbital alignment required; works with high-precision photometry (Kepler) | Only detects very massive, close-in planets where the brightness signal is large enough |
     | **Disk Kinematics** | In protoplanetary disks, a forming planet carves a gap and perturbs the gas velocity field — detected via millimetre-wave radio (ALMA) | Detects planets while they are still actively forming, before they are otherwise detectable | Still emerging; very few confirmed detections; requires nearby, bright protoplanetary disks |
-    """)
+            """),
+        }),
+    ])
     return
 
 
@@ -1133,27 +1156,19 @@ def candidate_card_display(candidate_profile_card):
 
 @app.cell(hide_code=True)
 def final_insight_markdown(mo):
-    mo.md(r"""
-    ## What this tells us
+    mo.vstack([
+        mo.callout(
+            mo.md("### Of these 5,700+ worlds — which one would you point JWST at next?"),
+            kind="success",
+        ),
+        mo.md(r"""
+## What this tells us
 
-    A few key takeaways from the catalog:
-
-    - **We are biased toward what we can detect.** Transit and radial velocity methods favor
-      large planets on short orbits close to bright stars. The true population of small,
-      temperate, far-out planets is almost certainly much larger than our current census.
-
-    - **The Fulton gap is real.** There is a genuine deficit of planets with radii 1.5–2 R⊕,
-      suggesting that planets either stay rocky or puff up with hydrogen envelopes — atmospheric
-      escape from stellar irradiation likely sets the boundary.
-
-    - **The nearest candidates are achievable targets.** Future missions like
-      LIFE, HWO (Habitable Worlds Observatory), or ELT direct imaging could
-      characterize the atmospheres of the closest Earth-size planets in temperate zones.
-
-    - **Earth is rare in the catalog — but not necessarily rare in the universe.**
-      Our planet is harder to find than most of what we have confirmed so far.
-      The small temperate planets that exist are simply harder to detect.
-    """)
+- **We are biased toward what we can detect** — Transit and RV methods favor large planets on short orbits. The true population of small, temperate, far-out planets is almost certainly far larger than our current census.
+- **The Fulton gap is real** — Atmospheric escape from stellar irradiation sorts planets into rocky or gas-wrapped; planets in the 1.5–2 R⊕ range are genuinely rare.
+- **The nearest candidates are achievable targets** — LIFE, HWO (Habitable Worlds Observatory), and ELT direct imaging could characterise the atmospheres of the closest Earth-size planets in temperate zones within a decade.
+        """),
+    ])
     return
 
 
