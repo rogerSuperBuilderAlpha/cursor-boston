@@ -232,10 +232,15 @@ export function getPyDataSubmissions(): PyDataSubmission[] {
     submissions.push(submission);
   }
 
-  // Alphabetical by displayName so the grid has a stable ordering across
-  // builds — nothing "wins" by submitting early.
-  submissions.sort((a, b) =>
-    a.displayName.localeCompare(b.displayName, undefined, { sensitivity: "base" })
-  );
+  // Show the strongest judged submissions first. Keep unscored entries last and
+  // use display name as a stable tie-breaker so equal scores don't jump around.
+  submissions.sort((a, b) => {
+    const aScore = a.score?.score ?? -Infinity;
+    const bScore = b.score?.score ?? -Infinity;
+    if (bScore !== aScore) return bScore - aScore;
+    return a.displayName.localeCompare(b.displayName, undefined, {
+      sensitivity: "base",
+    });
+  });
   return submissions;
 }
