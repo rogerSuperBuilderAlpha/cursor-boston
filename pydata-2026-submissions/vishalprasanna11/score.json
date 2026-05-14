@@ -1,0 +1,7 @@
+{
+  "score": 6,
+  "rationale": "The notebook builds a useful RFM customer segmentation dashboard on UCI Online Retail, with cleaned transaction data, segment labels, and practical marketing playbooks. It is business-friendly and interactive, but the core RFM approach is standard and the AI recommendations are prewritten playbook copy rather than model-derived evidence. It is a solid applied dashboard rather than a surprising analytical insight.",
+  "model": "gpt-5.5",
+  "scoredAt": "2026-05-14T02:02:00.000Z",
+  "scorerVersion": 1
+}
