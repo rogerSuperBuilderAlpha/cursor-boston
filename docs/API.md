@@ -415,7 +415,7 @@ _Talk-submission moderation queue._
 | DELETE | `/api/summer-cohort/apply` | Yes | Withdraw the current user's summer-cohort application |
 | GET | `/api/summer-cohort/apply` | Yes | Get the current user's summer-cohort application + counts |
 | POST | `/api/summer-cohort/apply` | Yes | Create or update the current user's summer-cohort application |
-| POST | `/api/summer-cohort/confirm-dev-env` | Yes | Cohort 1 admit confirms dev environment is set up (Node + Git + IDE) |
+| POST | `/api/summer-cohort/confirm-dev-env` | Yes | Admitted cohort participant confirms dev environment is set up (Node + Git + IDE) |
 | GET | `/api/summer-cohort/intake-survey` | Yes | Get the current user's intake-survey response |
 | POST | `/api/summer-cohort/intake-survey` | Yes | Submit (or re-submit) the intake survey |
 | GET | `/api/summer-cohort/submissions/{weekId}` | No | Public read of merged submissions on a vote-format week |
