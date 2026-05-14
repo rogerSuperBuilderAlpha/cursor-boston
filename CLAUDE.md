@@ -27,6 +27,7 @@ Several long-lived branches serve as **persistent contribution / submission targ
 Current core branches:
 
 - `c1w1pm-submission`, `c1w2comms-submission`, `c1w3mkt-submission`, `c1w4edu-submission`, `c1w5startup-submission`, `c1w6oss-submission` — summer cohort 1 weekly submissions
+- `c2w1pm-submission`, `c2w2comms-submission`, `c2w3mkt-submission` — summer cohort 2 vote-format weekly submissions (create from `origin/develop` before c2 Week 1 kickoff on Mon Jun 29; the dashboard already references these branches via `SUMMER_COHORT_C2_VOTE_WEEKS` in `lib/summer-cohort.ts`)
 - `pydata-2026-submissions` — PyData attendee notebooks
 - `hack-a-sprint-2026-submissions` — Hack-a-Sprint showcase JSON submissions
 - `game-contributions`
@@ -36,8 +37,8 @@ After every `develop → main` release PR merges, fast-forward each one to `orig
 ```bash
 git fetch origin --prune --quiet
 DEV=$(git rev-parse origin/develop)
-for b in c1w1pm-submission c1w2comms-submission c1w3mkt-submission c1w4edu-submission c1w5startup-submission c1w6oss-submission game-contributions pydata-2026-submissions hack-a-sprint-2026-submissions; do
-  git push origin "${DEV}:refs/heads/${b}"
+for b in c1w1pm-submission c1w2comms-submission c1w3mkt-submission c1w4edu-submission c1w5startup-submission c1w6oss-submission c2w1pm-submission c2w2comms-submission c2w3mkt-submission game-contributions pydata-2026-submissions hack-a-sprint-2026-submissions; do
+ git push origin "${DEV}:refs/heads/${b}"
 done
 ```
 

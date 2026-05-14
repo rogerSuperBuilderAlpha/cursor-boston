@@ -17,7 +17,7 @@ import {
   Trophy,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import type { SummerCohortVoteWeek } from "@/lib/summer-cohort";
+import type { SummerCohortId, SummerCohortVoteWeek } from "@/lib/summer-cohort";
 
 interface SubmissionRow {
   githubHandle: string;
@@ -50,6 +50,10 @@ interface VotesResponse {
 interface WeekSubmissionsCollapsibleProps {
   week: SummerCohortVoteWeek;
   tabId: string;
+  /** Cohort the dashboard is rendering for. Threads through to the submissions
+   *  + votes APIs so cohort-1 and cohort-2 see separate submission feeds and
+   *  separate vote tallies. */
+  cohortId: SummerCohortId;
   /** Logged-in user's GitHub login (lowercased), if connected. Used to surface
    *  "you're submitted" / "not yet" status and to gate expansion. */
   currentUserGithubHandle: string | null;
@@ -114,6 +118,7 @@ function statusForUser(
 export function WeekSubmissionsCollapsible({
   week,
   tabId,
+  cohortId,
   currentUserGithubHandle,
   currentUserDisplayName,
   currentUserPhotoUrl,
@@ -131,7 +136,12 @@ export function WeekSubmissionsCollapsible({
 
   useEffect(() => {
     let cancelled = false;
-    fetch(`/api/summer-cohort/submissions/${tabId}`, { cache: "no-store" })
+    fetch(
+      `/api/summer-cohort/submissions/${tabId}?cohortId=${encodeURIComponent(
+        cohortId
+      )}`,
+      { cache: "no-store" }
+    )
       .then(async (res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return (await res.json()) as SubmissionsResponse;
@@ -149,7 +159,7 @@ export function WeekSubmissionsCollapsible({
     return () => {
       cancelled = true;
     };
-  }, [tabId]);
+  }, [tabId, cohortId]);
 
   // Fetch vote tallies. Refetch when auth state changes so signed-in users
   // see their `myVotes` populated, and signed-out users get a clean view.
@@ -166,7 +176,9 @@ export function WeekSubmissionsCollapsible({
         }
       }
       const res = await fetch(
-        `/api/summer-cohort/votes?weekId=${encodeURIComponent(tabId)}`,
+        `/api/summer-cohort/votes?weekId=${encodeURIComponent(
+          tabId
+        )}&cohortId=${encodeURIComponent(cohortId)}`,
         { cache: "no-store", headers }
       );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -185,7 +197,7 @@ export function WeekSubmissionsCollapsible({
     return () => {
       cancelled = true;
     };
-  }, [tabId, user]);
+  }, [tabId, user, cohortId]);
 
   const toggleVote = useCallback(
     async (submitterHandle: string) => {
@@ -216,7 +228,11 @@ export function WeekSubmissionsCollapsible({
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ weekId: tabId, submitterHandle: handleKey }),
+          body: JSON.stringify({
+            weekId: tabId,
+            submitterHandle: handleKey,
+            cohortId,
+          }),
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = (await res.json()) as {
@@ -255,7 +271,7 @@ export function WeekSubmissionsCollapsible({
         });
       }
     },
-    [user, myVotes, pendingVotes, tabId]
+    [user, myVotes, pendingVotes, tabId, cohortId]
   );
 
   const yourStatus = useMemo(

@@ -8,15 +8,21 @@
 
 import { ExternalLink, GitMerge, Trophy, Video } from "lucide-react";
 import {
-  SUMMER_COHORT_C1_WEEK_6,
-  SUMMER_COHORT_C1_ZOOM_URL_PLACEHOLDER,
   SUMMER_COHORT_DEMO_DAY,
+  type SummerCohortWeek6,
 } from "@/lib/summer-cohort";
 
-export function Week6OssPanel() {
-  const week = SUMMER_COHORT_C1_WEEK_6;
-  const zoomUrl = SUMMER_COHORT_C1_ZOOM_URL_PLACEHOLDER;
+interface Week6OssPanelProps {
+  week: SummerCohortWeek6;
+  cohortLabel: string;
+  zoomUrl: string;
+}
 
+export function Week6OssPanel({
+  week,
+  cohortLabel,
+  zoomUrl,
+}: Week6OssPanelProps) {
   return (
     <section
       role="tabpanel"
@@ -26,7 +32,7 @@ export function Week6OssPanel() {
     >
       <div className="flex flex-wrap items-center gap-2">
         <span className="inline-flex items-center rounded-full bg-emerald-500 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white">
-          Cohort 1 · Week 6 — Final
+          {cohortLabel} · Week 6 — Final
         </span>
         <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:text-amber-400">
           <GitMerge

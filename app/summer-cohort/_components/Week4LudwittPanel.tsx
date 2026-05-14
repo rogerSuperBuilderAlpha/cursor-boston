@@ -7,15 +7,19 @@
 "use client";
 
 import { Calendar, ExternalLink, Sparkles, Video } from "lucide-react";
-import {
-  SUMMER_COHORT_C1_WEEK_4,
-  SUMMER_COHORT_C1_ZOOM_URL_PLACEHOLDER,
-} from "@/lib/summer-cohort";
+import { type SummerCohortWeek4 } from "@/lib/summer-cohort";
 
-export function Week4LudwittPanel() {
-  const week = SUMMER_COHORT_C1_WEEK_4;
-  const zoomUrl = SUMMER_COHORT_C1_ZOOM_URL_PLACEHOLDER;
+interface Week4LudwittPanelProps {
+  week: SummerCohortWeek4;
+  cohortLabel: string;
+  zoomUrl: string;
+}
 
+export function Week4LudwittPanel({
+  week,
+  cohortLabel,
+  zoomUrl,
+}: Week4LudwittPanelProps) {
   return (
     <section
       role="tabpanel"
@@ -25,7 +29,7 @@ export function Week4LudwittPanel() {
     >
       <div className="flex flex-wrap items-center gap-2">
         <span className="inline-flex items-center rounded-full bg-emerald-500 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white">
-          Cohort 1 · Week 4
+          {cohortLabel} · Week 4
         </span>
         <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
           <Sparkles className="h-3 w-3" strokeWidth={2.25} aria-hidden="true" />
@@ -107,9 +111,9 @@ export function Week4LudwittPanel() {
         </div>
         <p className="mt-2 text-sm text-neutral-700 dark:text-neutral-300">
           The Ludwitt PR template, accepted-tool spec, and revenue-share terms
-          will be finalized at the Mon Jun 1 kickoff. By then you&apos;ll know
-          how the cohort PM tool, comms platform, and marketing site (built in
-          weeks 1–3) play into the workflow.
+          will be finalized at the {week.kickoffLabel.split("·")[0]?.trim() ?? week.kickoffLabel} kickoff.
+          By then you&apos;ll know how the cohort PM tool, comms platform, and
+          marketing site (built in weeks 1–3) play into the workflow.
         </p>
         <p className="mt-3 text-xs text-neutral-500">
           This section will be filled in before the week opens.
