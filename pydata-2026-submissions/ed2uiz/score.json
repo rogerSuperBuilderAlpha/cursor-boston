@@ -1,0 +1,7 @@
+{
+  "score": 1,
+  "rationale": "The PR has a metadata file but the submitted `submission.py` is empty, so there is no notebook, analysis, evidence, or insight to evaluate. This is therefore a broken/empty submission under the rubric.",
+  "model": "gpt-5.5",
+  "scoredAt": "2026-05-14T00:58:00.000Z",
+  "scorerVersion": 1
+}
