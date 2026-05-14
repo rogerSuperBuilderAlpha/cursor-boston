@@ -25,10 +25,11 @@ import { useDiscordConnection } from "@/app/(auth)/profile/_hooks/useDiscordConn
 import {
   SUMMER_COHORTS,
   SUMMER_COHORT_C1_DEFAULT_TAB,
-  SUMMER_COHORT_C1_VOTE_WEEKS,
   SUMMER_COHORT_GOAL_PER_COHORT,
   SUMMER_COHORT_IMMERSION,
   SUMMER_COHORT_RETURN_TO,
+  getPrimarySummerCohort,
+  getSummerCohortRuntime,
   type SummerCohortId,
 } from "@/lib/summer-cohort";
 import { ClaimSpotByPRCard } from "./_components/ClaimSpotByPRCard";
@@ -56,7 +57,9 @@ interface ApplicationDto {
   isLocal: boolean | null;
   wantsToPresent: boolean | null;
   mayImmersionRsvped: boolean;
-  /** Server timestamp (ms) of when the user self-attested dev env ready. */
+  /** Server timestamp (ms) of when the user self-attested dev env ready.
+   *  Field name still says "cohort1" for back-compat with existing data;
+   *  it's the cohort-agnostic dev-env confirmation now. */
   cohort1DevEnvConfirmedAt: number | null;
   createdAt: number | null;
   updatedAt: number | null;
@@ -561,15 +564,15 @@ function SummerCohortPageInner() {
     };
   }, [loading, user]);
 
-  // Fetch intake-survey status whenever the user is an admitted Cohort 1
-  // applicant. Non-admitted users never see the gate, so the effect short-
-  // circuits without touching state — `showSurveyGate` already requires
-  // `showTabs`, so a stale `intakeStatus` can't leak through to the UI.
+  // Fetch intake-survey status whenever the user is an admitted cohort
+  // applicant (any cohort). Non-admitted users never see the gate, so the
+  // effect short-circuits without touching state — `showSurveyGate` already
+  // requires `showTabs`, so a stale `intakeStatus` can't leak through to the UI.
   useEffect(() => {
     if (loading || !user) return;
     if (
       application?.status !== "admitted" ||
-      !application.cohorts.includes("cohort-1")
+      application.cohorts.length === 0
     ) {
       return;
     }
@@ -601,7 +604,7 @@ function SummerCohortPageInner() {
     if (intakeStatus !== "incomplete") return;
     if (
       application?.status !== "admitted" ||
-      !application.cohorts.includes("cohort-1")
+      application.cohorts.length === 0
     ) {
       return;
     }
@@ -777,25 +780,39 @@ function SummerCohortPageInner() {
     return (id: SummerCohortId) => map.get(id) || id;
   }, []);
 
+  // Primary cohort drives the dashboard runtime (dates, branches, zoom/discord
+  // placeholders). Cohort 1 takes priority when the user is admitted to both.
+  const primaryCohort: SummerCohortId | null = application
+    ? getPrimarySummerCohort(application.cohorts)
+    : null;
+  const runtime = primaryCohort ? getSummerCohortRuntime(primaryCohort) : null;
   const showTabs =
-    application?.status === "admitted" &&
-    application.cohorts.includes("cohort-1");
+    application?.status === "admitted" && primaryCohort !== null;
   // Soft gate: the intake survey is now a tab, not a blocker. The tab
   // appears (with a callout banner above the tabs) until the user has
   // submitted. Once submitted, the tab disappears.
   const showIntakeSurveyTab = showTabs && intakeStatus === "incomplete";
   const myInfoVisible = !showTabs || activeTab === "my-info";
-  const cohort1Count = applicationCounts["cohort-1"] ?? 0;
+  const cohortCount = primaryCohort ? applicationCounts[primaryCohort] ?? 0 : 0;
 
   const localityDone =
     application?.isLocal !== null && application?.wantsToPresent !== null;
   const rsvpDone = application?.mayImmersionRsvped === true;
-  const moveCompletedSetupToInfo = showTabs && localityDone && rsvpDone;
+  // Only cohort 1 has an in-person immersion event; for other cohorts the
+  // "RSVP done" check is moot, so the completed-setup summary becomes a pure
+  // locality check.
+  const isCohort1Primary = primaryCohort === "cohort-1";
+  const moveCompletedSetupToInfo =
+    showTabs &&
+    localityDone &&
+    (isCohort1Primary ? rsvpDone : true);
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10 md:px-6 md:py-14">
-      {showTabs ? (
+      {showTabs && runtime ? (
         <SetupReadinessModal
+          cohortLabel={runtime.label}
+          kickoffLabel={runtime.kickoffLabel}
           needsDiscord={!discord.discordInfo}
           needsGithub={!github.githubInfo?.login}
           needsSurvey={intakeStatus === "incomplete"}
@@ -895,7 +912,7 @@ function SummerCohortPageInner() {
       ) : (
         <>
           {application ? (
-            showTabs ? (
+            showTabs && runtime && primaryCohort ? (
               <>
                 <ApplicationStatusPanel
                   application={application}
@@ -946,21 +963,27 @@ function SummerCohortPageInner() {
                     ) : (
                       <IntakeSurveyForm
                         defaultEmail={user?.email ?? application.email ?? ""}
-                        cohortId={application.cohorts[0] ?? "cohort-1"}
+                        cohortId={primaryCohort}
                         onComplete={() => setIntakeStatus("completed")}
                       />
                     )
                   ) : activeTab === "info" ? (
                     <InfoTabPanel
-                      cohort1Count={cohort1Count}
+                      cohortId={primaryCohort}
+                      cohortLabel={runtime.label}
+                      cohortCount={cohortCount}
+                      discordInviteUrl={runtime.discordInviteUrl}
                       application={
                         moveCompletedSetupToInfo ? application : undefined
                       }
                     />
                   ) : activeTab === "week-1" ? (
                     <WeekVotePanel
-                      week={SUMMER_COHORT_C1_VOTE_WEEKS[0]}
+                      week={runtime.voteWeeks[0]}
                       tabId="week-1"
+                      cohortId={primaryCohort}
+                      cohortLabel={runtime.label}
+                      zoomUrl={runtime.zoomUrl}
                       currentUserGithubHandle={
                         github.githubInfo?.login ?? null
                       }
@@ -972,8 +995,11 @@ function SummerCohortPageInner() {
                     />
                   ) : activeTab === "week-2" ? (
                     <WeekVotePanel
-                      week={SUMMER_COHORT_C1_VOTE_WEEKS[1]}
+                      week={runtime.voteWeeks[1]}
                       tabId="week-2"
+                      cohortId={primaryCohort}
+                      cohortLabel={runtime.label}
+                      zoomUrl={runtime.zoomUrl}
                       currentUserGithubHandle={
                         github.githubInfo?.login ?? null
                       }
@@ -985,8 +1011,11 @@ function SummerCohortPageInner() {
                     />
                   ) : activeTab === "week-3" ? (
                     <WeekVotePanel
-                      week={SUMMER_COHORT_C1_VOTE_WEEKS[2]}
+                      week={runtime.voteWeeks[2]}
                       tabId="week-3"
+                      cohortId={primaryCohort}
+                      cohortLabel={runtime.label}
+                      zoomUrl={runtime.zoomUrl}
                       currentUserGithubHandle={
                         github.githubInfo?.login ?? null
                       }
@@ -997,13 +1026,27 @@ function SummerCohortPageInner() {
                       onSwitchToMyInfo={() => setActiveTab("my-info")}
                     />
                   ) : activeTab === "week-4" ? (
-                    <Week4LudwittPanel />
+                    <Week4LudwittPanel
+                      week={runtime.week4}
+                      cohortLabel={runtime.label}
+                      zoomUrl={runtime.zoomUrl}
+                    />
                   ) : activeTab === "week-5" ? (
-                    <Week5StartupPanel />
+                    <Week5StartupPanel
+                      week={runtime.week5}
+                      cohortLabel={runtime.label}
+                      zoomUrl={runtime.zoomUrl}
+                    />
                   ) : activeTab === "week-6" ? (
-                    <Week6OssPanel />
+                    <Week6OssPanel
+                      week={runtime.week6}
+                      cohortLabel={runtime.label}
+                      zoomUrl={runtime.zoomUrl}
+                    />
                   ) : activeTab === "setup" ? (
-                    <SetupInstructionsPanel />
+                    <SetupInstructionsPanel
+                      kickoffLabel={runtime.kickoffLabel}
+                    />
                   ) : activeTab === "game" ? (
                     <GamePromoPanel />
                   ) : null}

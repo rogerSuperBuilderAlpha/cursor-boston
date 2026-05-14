@@ -171,6 +171,14 @@ export const SUMMER_COHORT_C1_ZOOM_URL_PLACEHOLDER =
 export const SUMMER_COHORT_C1_DISCORD_INVITE_URL_PLACEHOLDER =
   "https://discord.gg/PLACEHOLDER";
 
+// TODO: swap in the real Zoom link before 2026-06-29.
+export const SUMMER_COHORT_C2_ZOOM_URL_PLACEHOLDER =
+  "https://zoom.us/j/PLACEHOLDER-C2";
+
+// TODO: swap in the real Discord invite link / channel URL before kickoff.
+export const SUMMER_COHORT_C2_DISCORD_INVITE_URL_PLACEHOLDER =
+  "https://discord.gg/PLACEHOLDER-C2";
+
 /** Hard cap on Cohort 1 admits. Auto-admit-on-PR-merge respects this.
  *  Bumped 2026-05-10 when we admitted everyone who applied to lock the roster
  *  before the May 11 kickoff. */
@@ -458,3 +466,175 @@ export const SUMMER_COHORT_PHILOSOPHY =
 
 /** Stretch target for applicants per cohort — drives the counter UI. */
 export const SUMMER_COHORT_GOAL_PER_COHORT = 100;
+
+// ---------------------------------------------------------------------------
+// Cohort 2 — same shape as Cohort 1, dates shifted to the Jun 29 → Aug 7 run.
+//
+// Submission branches mirror the c1 pattern (`c1w1pm-submission` → `c2w1pm-submission`).
+// The c2 branches don't exist yet at the time of writing — they'll be created
+// before Week 1 kickoff. The submissions API returns empty cleanly when the
+// branch is missing, so the UI still works pre-kickoff.
+// ---------------------------------------------------------------------------
+
+export const SUMMER_COHORT_C2_VOTE_WEEKS: readonly SummerCohortVoteWeek[] = [
+  {
+    week: 1,
+    title: "Project Management Build",
+    oneLiner:
+      "Everyone builds a PM tool. The cohort picks a winner on Friday; the winner runs the cohort PM tool for the rest of the program.",
+    kickoffLabel: "Mon, Jun 29 · 6–7pm EST",
+    deadlineLabel: "Fri, Jul 3 · 5pm EST",
+    votingCallLabel: "Fri, Jul 3 · 6pm EST",
+    submissionBranch: "c2w1pm-submission",
+    submissionPath:
+      "content/summer-cohort/c2/w1-pm/submissions/<github-handle>.json",
+    liveUrlRequired: true,
+    winnerCommitment: SUMMER_COHORT_C1_VOTE_WEEKS[0].winnerCommitment,
+    inspirationScopeNote: SUMMER_COHORT_C1_VOTE_WEEKS[0].inspirationScopeNote,
+    inspirationPlatforms: SUMMER_COHORT_C1_VOTE_WEEKS[0].inspirationPlatforms,
+  },
+  {
+    week: 2,
+    title: "Communications Build",
+    oneLiner:
+      "Everyone builds a comms platform for the cohort. Same vote-and-pick-a-winner format. Winner runs comms for the rest of the cohort.",
+    kickoffLabel: "Mon, Jul 6 · 6–7pm EST",
+    deadlineLabel: "Fri, Jul 10 · 5pm EST",
+    votingCallLabel: "Fri, Jul 10 · 6pm EST",
+    submissionBranch: "c2w2comms-submission",
+    submissionPath:
+      "content/summer-cohort/c2/w2-comms/submissions/<github-handle>.json",
+    liveUrlRequired: true,
+    winnerCommitment: SUMMER_COHORT_C1_VOTE_WEEKS[1].winnerCommitment,
+    inspirationScopeNote: SUMMER_COHORT_C1_VOTE_WEEKS[1].inspirationScopeNote,
+    inspirationPlatforms: SUMMER_COHORT_C1_VOTE_WEEKS[1].inspirationPlatforms,
+  },
+  {
+    week: 3,
+    title: "Vibe Marketing Build",
+    oneLiner:
+      "Everyone builds a marketing platform that does outbound, not just inbound — gets the cohort's work into the public eye AND handles the replies that come back. Same vote format; winner maintains it.",
+    kickoffLabel: "Mon, Jul 13 · 6–7pm EST",
+    deadlineLabel: "Fri, Jul 17 · 5pm EST",
+    votingCallLabel: "Fri, Jul 17 · 6pm EST",
+    submissionBranch: "c2w3mkt-submission",
+    submissionPath:
+      "content/summer-cohort/c2/w3-mkt/submissions/<github-handle>.json",
+    liveUrlRequired: true,
+    winnerCommitment: SUMMER_COHORT_C1_VOTE_WEEKS[2].winnerCommitment,
+    inspirationScopeNote: SUMMER_COHORT_C1_VOTE_WEEKS[2].inspirationScopeNote,
+    inspirationPlatforms: SUMMER_COHORT_C1_VOTE_WEEKS[2].inspirationPlatforms,
+  },
+] as const;
+
+export const SUMMER_COHORT_C2_WEEK_4 = {
+  week: 4,
+  title: "Ludwitt Education Tool",
+  oneLiner: SUMMER_COHORT_C1_WEEK_4.oneLiner,
+  kickoffLabel: "Mon, Jul 20 · 6–7pm EST",
+  deadlineLabel: "Fri, Jul 24 · 5pm EST",
+} as const;
+
+export const SUMMER_COHORT_C2_WEEK_5 = {
+  week: 5,
+  title: "Your Own Startup",
+  oneLiner: SUMMER_COHORT_C1_WEEK_5.oneLiner,
+  kickoffLabel: "Mon, Jul 27 · 6–7pm EST",
+  showAndTellLabel: "Fri, Jul 31 · 6pm EST",
+} as const;
+
+export const SUMMER_COHORT_C2_WEEK_6 = {
+  week: 6,
+  title: "Open-Source PR",
+  oneLiner: SUMMER_COHORT_C1_WEEK_6.oneLiner,
+  kickoffLabel: "Mon, Aug 3 · 6–7pm EST",
+  demoDayLabel: "Fri, Aug 7 · time TBD",
+} as const;
+
+/** Default tab when an admitted cohort-2 user lands on /summer-cohort. */
+export const SUMMER_COHORT_C2_DEFAULT_TAB = "week-1" as const;
+
+// ---------------------------------------------------------------------------
+// Cohort runtime — single accessor that the page + week panels read from so
+// the UI is the same shape for either cohort and only the dates / branches /
+// connection placeholders differ.
+// ---------------------------------------------------------------------------
+
+export interface SummerCohortWeek4 {
+  readonly week: number;
+  readonly title: string;
+  readonly oneLiner: string;
+  readonly kickoffLabel: string;
+  readonly deadlineLabel: string;
+}
+
+export interface SummerCohortWeek5 {
+  readonly week: number;
+  readonly title: string;
+  readonly oneLiner: string;
+  readonly kickoffLabel: string;
+  readonly showAndTellLabel: string;
+}
+
+export interface SummerCohortWeek6 {
+  readonly week: number;
+  readonly title: string;
+  readonly oneLiner: string;
+  readonly kickoffLabel: string;
+  readonly demoDayLabel: string;
+}
+
+export interface SummerCohortRuntime {
+  readonly cohortId: SummerCohortId;
+  readonly label: string;
+  /** "Mon, May 11" / "Mon, Jun 29" — the Week 1 kickoff date headline. */
+  readonly kickoffLabel: string;
+  readonly zoomUrl: string;
+  readonly discordInviteUrl: string;
+  readonly voteWeeks: readonly SummerCohortVoteWeek[];
+  readonly week4: SummerCohortWeek4;
+  readonly week5: SummerCohortWeek5;
+  readonly week6: SummerCohortWeek6;
+}
+
+const COHORT_1_RUNTIME: SummerCohortRuntime = {
+  cohortId: "cohort-1",
+  label: "Cohort 1",
+  kickoffLabel: SUMMER_COHORT_C1_WEEK_1.kickoffLabel,
+  zoomUrl: SUMMER_COHORT_C1_ZOOM_URL_PLACEHOLDER,
+  discordInviteUrl: SUMMER_COHORT_C1_DISCORD_INVITE_URL_PLACEHOLDER,
+  voteWeeks: SUMMER_COHORT_C1_VOTE_WEEKS,
+  week4: SUMMER_COHORT_C1_WEEK_4,
+  week5: SUMMER_COHORT_C1_WEEK_5,
+  week6: SUMMER_COHORT_C1_WEEK_6,
+};
+
+const COHORT_2_RUNTIME: SummerCohortRuntime = {
+  cohortId: "cohort-2",
+  label: "Cohort 2",
+  kickoffLabel: SUMMER_COHORT_C2_VOTE_WEEKS[0].kickoffLabel,
+  zoomUrl: SUMMER_COHORT_C2_ZOOM_URL_PLACEHOLDER,
+  discordInviteUrl: SUMMER_COHORT_C2_DISCORD_INVITE_URL_PLACEHOLDER,
+  voteWeeks: SUMMER_COHORT_C2_VOTE_WEEKS,
+  week4: SUMMER_COHORT_C2_WEEK_4,
+  week5: SUMMER_COHORT_C2_WEEK_5,
+  week6: SUMMER_COHORT_C2_WEEK_6,
+};
+
+export function getSummerCohortRuntime(
+  cohortId: SummerCohortId
+): SummerCohortRuntime {
+  return cohortId === "cohort-2" ? COHORT_2_RUNTIME : COHORT_1_RUNTIME;
+}
+
+/**
+ * Pick the cohort whose dashboard the user should see. Cohort 1 takes priority
+ * if the user is admitted to both — c1 is the active run; c2 is upcoming.
+ */
+export function getPrimarySummerCohort(
+  cohorts: readonly string[]
+): SummerCohortId | null {
+  if (cohorts.includes("cohort-1")) return "cohort-1";
+  if (cohorts.includes("cohort-2")) return "cohort-2";
+  return null;
+}

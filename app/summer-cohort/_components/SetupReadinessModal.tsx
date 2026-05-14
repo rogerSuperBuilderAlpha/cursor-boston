@@ -18,6 +18,10 @@ import {
 const ALC_URL = "https://ludwitt.com/alc";
 
 interface SetupReadinessModalProps {
+  /** Cohort label used in the modal headline, e.g. "Cohort 1" / "Cohort 2". */
+  cohortLabel: string;
+  /** Kickoff date headline, e.g. "Mon, May 11 · 6–7pm EST". */
+  kickoffLabel: string;
   /** Discord is not connected — triggers the modal to pop. */
   needsDiscord: boolean;
   /** GitHub is not connected — triggers the modal to pop. */
@@ -25,7 +29,7 @@ interface SetupReadinessModalProps {
   /** Intake survey not yet submitted — displayed only, never triggers pop. */
   needsSurvey: boolean;
   /**
-   * Cohort 1 admit hasn't self-attested their dev environment is ready
+   * Admit hasn't self-attested their dev environment is ready
    * (Node + Git + Cursor / Claude Code). Triggers the modal to pop and
    * surfaces a single "Yes, I'm ready" button.
    */
@@ -43,12 +47,14 @@ interface SetupReadinessModalProps {
 }
 
 /**
- * Sticky readiness modal for admitted Cohort 1 admits.
- * Pops on every page load while Discord OR GitHub is missing.
- * Closing only suppresses for the current page-load — no localStorage flag
- * — so users keep being nudged until they connect both.
+ * Sticky readiness modal for admitted cohort participants.
+ * Pops on every page load while Discord, GitHub, or dev-env confirmation is
+ * missing. Closing only suppresses for the current page-load — no localStorage
+ * flag — so users keep being nudged until everything is done.
  */
 export function SetupReadinessModal({
+  cohortLabel,
+  kickoffLabel,
   needsDiscord,
   needsGithub,
   needsSurvey,
@@ -146,11 +152,11 @@ export function SetupReadinessModal({
           id="setup-readiness-title"
           className="pr-8 text-xl font-bold text-white md:text-2xl"
         >
-          Cohort 1 kicks off TONIGHT at 6pm EST — final readiness check
+          Final readiness check — before {cohortLabel} kickoff
         </h2>
         <p className="mt-2 text-sm text-neutral-400">
-          Knock these out before 6pm so kickoff is about the work, not
-          logistics.
+          {cohortLabel} kickoff: <span className="font-semibold text-neutral-200">{kickoffLabel}</span>.
+          Knock these out so kickoff is about the work, not logistics.
         </p>
 
         <ul className="mt-5 space-y-2">
@@ -200,8 +206,8 @@ export function SetupReadinessModal({
             Haven&apos;t installed Node, Git, or an IDE yet?
           </div>
           <p className="mt-1.5 text-sm text-neutral-200">
-            Not required, but <strong>highly</strong> encouraged today —
-            tonight&apos;s kickoff is at 6pm EST. The 20-minute walkthrough at{" "}
+            Not required, but <strong>highly</strong> encouraged before
+            kickoff. The 20-minute walkthrough at{" "}
             <span className="font-mono">ludwitt.com/alc</span> covers Node,
             Git, and <strong>Cursor</strong> (or <strong>Claude Code</strong>)
             end-to-end so you don&apos;t spend kickoff debugging install
