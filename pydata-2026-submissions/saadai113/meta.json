@@ -1,0 +1,17 @@
+{
+  "title": "From UCI Wall-Following to LeRobot-Shaped Episodes",
+  "description": "Compares classic UCI wall-following robot navigation features with modern LeRobot-style episodic data, including static and lagged classifiers plus a schema peek at LeRobot data.",
+  "displayName": "Saad Ali",
+  "tags": [
+    "robotics",
+    "machine-learning",
+    "classification",
+    "lerobot"
+  ],
+  "collaborators": [
+    {
+      "displayName": "Saad Ali",
+      "githubHandle": "saadai113"
+    }
+  ]
+}
