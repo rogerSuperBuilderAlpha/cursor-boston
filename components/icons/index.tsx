@@ -44,6 +44,32 @@ export function GitHubIcon({ size = 14, ...props }: IconProps) {
   );
 }
 
+export function CursorIcon({ size = 14, ...props }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+      {...props}
+    >
+      <path
+        d="M4 4h10.5L20 9.5V20H9.5L4 14.5V4Z"
+        fill="currentColor"
+        opacity="0.18"
+      />
+      <path
+        d="M4 4h10.5L20 9.5M4 4v10.5L9.5 20M4 4l16 16M20 9.5V20H9.5"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function LinkedInIcon({ size = 14, ...props }: IconProps) {
   return (
     <svg
