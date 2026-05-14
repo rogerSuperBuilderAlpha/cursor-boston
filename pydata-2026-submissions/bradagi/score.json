@@ -1,7 +1,7 @@
 {
-  "score": 8,
-  "rationale": "This notebook delivers a crisp and actionable insight from the UCI Bank Marketing data: the bank underused the 31-90 day recontact window where conversion was strongest, while over-dialing weaker windows and late attempts. The analysis is easy to follow, includes useful visual contrasts, and addresses an obvious seasonality confound with a within-month check. It is less technically ambitious than the very top submissions, but the storytelling and practical campaign recommendation are strong.",
+  "score": 8.8,
+  "rationale": "Refined tie-break score: this notebook delivers the strongest winner-eligible 8-range result because it turns the UCI Bank Marketing data into a crisp, operational recommendation: the bank underused the 31-90 day recontact window where conversion was strongest while over-dialing weaker late windows. It adds strong visual contrasts, checks the obvious seasonality confound within May, estimates missed opportunity, and separately analyzes dial-count exhaustion. It is less technically ambitious than the 9/10 entries, but it has the clearest actionable insight among the tied 8s.",
   "model": "gpt-5.5",
-  "scoredAt": "2026-05-14T00:56:00.000Z",
-  "scorerVersion": 1
+  "scoredAt": "2026-05-14T12:08:00.000Z",
+  "scorerVersion": 2
 }
