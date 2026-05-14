@@ -197,7 +197,7 @@ export default function CursorConnectionPage() {
                   {
                     step: "1",
                     title: "Create a key",
-                    body: "Open Cursor's cloud agents dashboard and generate an API key.",
+                    body: "Open Cursor's integrations dashboard and create a user API key for the Cloud Agents API.",
                   },
                   {
                     step: "2",
@@ -226,12 +226,12 @@ export default function CursorConnectionPage() {
               </section>
 
               <a
-                href="https://cursor.com/dashboard/cloud-agents"
+                href="https://cursor.com/dashboard/integrations"
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 text-sm text-emerald-300 hover:text-emerald-200 transition-colors"
               >
-                Open Cursor cloud agents dashboard
+                Open Cursor integrations dashboard
                 <ExternalLink size={14} />
               </a>
 
