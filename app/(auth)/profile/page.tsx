@@ -33,6 +33,7 @@ function ProfilePageContent() {
     discord,
     github,
     ludwitt,
+    cursor,
     google,
     profileSettings,
     password,
@@ -74,6 +75,7 @@ function ProfilePageContent() {
     discord,
     github,
     ludwitt,
+    cursor,
     email: ctx.email,
     refreshUserProfile: ctx.refreshUserProfile,
     setActiveTab: (tab) => {
