@@ -33,6 +33,9 @@ export type DeletionBehavior =
  *    (e.g. `mentorship_pairings.{mentorId|menteeId}`).
  *  - `arrayContains` — an array field contains the UID
  *    (e.g. `pair_sessions.participantIds`).
+ *  - `userSubcollectionDoc` — a fixed document inside `users/{uid}`.
+ *    Firestore does not cascade subcollections when the parent user doc is
+ *    deleted, so these entries must be cleaned up explicitly.
  */
 export type UserOwnedCollection =
   | {
@@ -57,6 +60,13 @@ export type UserOwnedCollection =
       mode: "arrayContains";
       field: string;
       behavior: DeletionBehavior;
+    }
+  | {
+      collection: string;
+      mode: "userSubcollectionDoc";
+      parentCollection: "users";
+      docId: string;
+      behavior: { type: "delete" };
     };
 
 /**
@@ -179,6 +189,17 @@ export const userOwnedCollections: ReadonlyArray<UserOwnedCollection> = [
     collection: "pair_sessions",
     mode: "arrayContains",
     field: "participantIds",
+    behavior: { type: "delete" },
+  },
+
+  // ---------------------------------------------------------------------
+  // userSubcollectionDoc — fixed docs below users/{uid}
+  // ---------------------------------------------------------------------
+  {
+    collection: "secrets",
+    mode: "userSubcollectionDoc",
+    parentCollection: "users",
+    docId: "cursor",
     behavior: { type: "delete" },
   },
 ];

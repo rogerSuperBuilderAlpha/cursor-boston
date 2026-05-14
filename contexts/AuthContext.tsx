@@ -97,6 +97,16 @@ interface UserProfile {
     connectedAt: Date;
     lastSignInAt?: Date;
   };
+  cursor?: {
+    apiKeyFingerprint: string;
+    modelsAvailable?: string[];
+    defaultModel?: string;
+    monthlyCapUsd: number;
+    scopesConsented: string[];
+    connectedAt: Date;
+    lastUsedAt?: Date | null;
+    revokedAt?: Date | null;
+  };
   eduBadge?: boolean;
   /** Server-set when a merged PR adds the user's Hack-a-Sprint 2026 showcase submission. */
   hackASprint2026ShowcaseBadge?: boolean;
