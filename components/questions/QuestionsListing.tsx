@@ -62,56 +62,46 @@ export function QuestionsListing() {
 
   useEffect(() => {
     let cancelled = false;
-
-    async function loadQuestions() {
-      await Promise.resolve();
-      if (cancelled) return;
-      setLoading(true);
-      try {
-        const data = await fetchQuestions();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- loading mirrors the active async query.
+    setLoading(true);
+    fetchQuestions()
+      .then((data) => {
         if (cancelled) return;
         setQuestions(data.questions);
         setNextCursor(data.nextCursor);
-      } catch {
+      })
+      .catch(() => {
         if (cancelled) return;
         setQuestions([]);
         setNextCursor(null);
-      } finally {
+      })
+      .finally(() => {
         if (!cancelled) setLoading(false);
-      }
-    }
-
-    void loadQuestions();
+      });
     return () => { cancelled = true; };
   }, [fetchQuestions]);
 
   // Fetch user votes
   useEffect(() => {
-    let cancelled = false;
-
-    async function loadUserVotes() {
-      await Promise.resolve();
-      if (cancelled) return;
-      if (!user) {
-        setUserVotes({});
-        return;
-      }
+    if (!user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset cached vote state when auth signs out.
+      setUserVotes({});
+      return;
+    }
+    (async () => {
       try {
         const token = await fetchIdToken(user);
         const res = await fetch("/api/questions/vote", {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
-        if (res.ok && !cancelled) {
+        if (res.ok) {
           const data = await res.json();
           setUserVotes(data.userVotes || {});
         }
       } catch {
         // Non-critical
       }
-    }
-
-    void loadUserVotes();
-    return () => { cancelled = true; };
+    })();
   }, [user]);
 
   const handleLoadMore = async () => {
