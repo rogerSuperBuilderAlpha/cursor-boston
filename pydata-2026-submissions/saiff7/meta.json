@@ -1,0 +1,6 @@
+{
+  "title": "Boston Crime & Safety Analysis — District Risk Scoring",
+  "description": "Analyzes Boston crime incidents and Vision Zero crash data to compute a district-level safety score. Finds that districts B2, B3, and C11 are highest risk while A1 and A7 are safest, with an interactive gesture-controlled map.",
+  "displayName": "Abdul Saif Mohammed",
+  "tags": ["boston", "crime", "safety", "geospatial", "folium"]
+}

@@ -1,0 +1,7 @@
+{
+  "score": 6,
+  "rationale": "The submission builds a clear Boston crime and safety analysis with district-level risk scoring, heatmaps, crash concern overlays, and a concrete finding that B2, B3, and C11 are highest risk while A1 and A7 are safer. The interactive map is useful and the civic-data framing is strong. It loses points because the notebook is an exported Jupyter script rather than a polished Marimo notebook, installs packages at runtime, relies on browser/camera gesture controls that are not central to the analysis, and uses a simple severity heuristic without much validation or uncertainty analysis.",
+  "model": "gpt-5.5",
+  "scoredAt": "2026-05-14T11:40:00.000Z",
+  "scorerVersion": 1
+}

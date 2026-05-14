@@ -1,0 +1,7 @@
+{
+  "score": 7,
+  "rationale": "This is a coherent Marimo notebook with a strong technical through-line: it connects a classic UCI robot wall-following dataset to modern LeRobot episode structure, compares logistic regression and MLP baselines, and shows how lagged observations approximate short-term memory. The framing is clear and the code is compact. It loses points because the PR packaging was messy, the original metadata was empty, and the analysis is mostly a compact model comparison/schema sketch rather than a deeper diagnostic study with visualizations or extensive interpretation.",
+  "model": "gpt-5.5",
+  "scoredAt": "2026-05-14T11:46:00.000Z",
+  "scorerVersion": 1
+}
