@@ -187,14 +187,9 @@ def df_time_prep(df, pd):
 
 @app.cell(hide_code=True)
 def time_slider(mo):
-    tod_slider = mo.ui.slider(start=6, stop=28, step=1, value=20, show_value=False, label="Hour of day")
+    tod_slider = mo.ui.slider(start=0, stop=23, step=1, value=20, show_value=False, label="Hour of day")
     tod_slider
     return (tod_slider,)
-
-
-@app.cell
-def _():
-    return
 
 
 @app.cell(hide_code=True)
@@ -211,22 +206,71 @@ def time_heatmap(
     tod_slider,
     west,
 ):
+    def _fmt_hour(h):
+        a = h % 24
+        suffix = "AM" if a < 12 else "PM"
+        return f"{a % 12 or 12}:00 {suffix}"
+
     _hour = tod_slider.value
-    _open = df_time[df_time["closing_adj"] >= _hour * 60]
+    _slider_mins = _hour * 60 + (1440 if _hour < 6 else 0)
+    open_df = df_time[df_time["closing_adj"] >= _slider_mins]
     _m = folium.Map(
         location=[center_lat, center_lon], zoom_start=13,
         tiles="CartoDB dark_matter", control_scale=True,
     )
     HeatMap(
-        _open[["lat", "lon"]].values.tolist(),
+        open_df[["lat", "lon"]].values.tolist(),
         radius=18, blur=14, min_opacity=0.35,
         gradient={0.3: "#0ea5e9", 0.6: "#a855f7", 0.8: "#ef4444", 1.0: "#fbbf24"},
     ).add_to(_m)
     _m.fit_bounds([[south, west], [north, east]], padding=(28, 28))
     mo.vstack([
-        mo.md(f"*{len(_open):,} of {len(df_time):,} establishments still open*"),
+        mo.md(f"### {_fmt_hour(_hour)} -- {len(open_df):,} of {len(df_time):,} establishments still open"),
         mo.Html(_m._repr_html_()),
     ])
+    return (open_df,)
+
+
+@app.cell(hide_code=True)
+def time_cluster_map(
+    MarkerCluster,
+    center_lat,
+    center_lon,
+    east,
+    folium,
+    html,
+    mo,
+    north,
+    open_df,
+    south,
+    west,
+):
+    _m2 = folium.Map(
+        location=[center_lat, center_lon], zoom_start=13,
+        tiles="OpenStreetMap", control_scale=True,
+    )
+    _cluster2 = MarkerCluster(name="Open establishments").add_to(_m2)
+    for _, _row in open_df.iterrows():
+        _dba = _row.get("dba_name")
+        _biz = _row.get("business_name", "")
+        if isinstance(_dba, str) and _dba.strip():
+            _label = _dba.strip()
+        elif isinstance(_biz, str):
+            _label = _biz.strip()[:120]
+        else:
+            _label = ""
+        _addr = str(_row.get("address", "") or "")[:140]
+        _ltype = str(_row.get("license_type", "") or "")[:160]
+        _closing = str(_row.get("closing", "") or "")
+        _text = chr(10).join([html.escape(_label), html.escape(_addr), html.escape(_ltype), html.escape(_closing)])
+        folium.CircleMarker(
+            location=[float(_row["lat"]), float(_row["lon"])],
+            radius=4, color="#1d4ed8", weight=1,
+            fill=True, fill_color="#38bdf8", fill_opacity=0.78,
+            popup=folium.Popup(_text, max_width=280),
+        ).add_to(_cluster2)
+    _m2.fit_bounds([[south, west], [north, east]], padding=(28, 28))
+    mo.Html(_m2._repr_html_())
     return
 
 
