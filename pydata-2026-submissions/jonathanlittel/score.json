@@ -1,0 +1,7 @@
+{
+  "score": 3,
+  "rationale": "The notebook loads the UCI Bank Marketing data, gives summary statistics, and explores whether more campaign contacts are associated with customer balance. It is honest about missing customer/loan timing limitations, but the analysis is narrow, mostly descriptive, and does not establish a strong or actionable insight. The result is a small exploratory check rather than a compelling hackathon finding.",
+  "model": "gpt-5.5",
+  "scoredAt": "2026-05-14T01:41:00.000Z",
+  "scorerVersion": 1
+}

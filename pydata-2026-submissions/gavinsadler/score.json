@@ -1,0 +1,7 @@
+{
+  "score": 6,
+  "rationale": "The notebook provides a useful interactive geospatial explorer for Boston liquor licenses, with clustered markers, density heatmap, and time-of-day filtering. It is polished as a map interface and uses city open data effectively, but the insight is mostly descriptive concentration/exploration rather than a surprising or rigorously defended finding. The work is solid, especially visually, but less analytical than the top submissions.",
+  "model": "gpt-5.5",
+  "scoredAt": "2026-05-14T01:54:00.000Z",
+  "scorerVersion": 1
+}

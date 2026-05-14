@@ -1,0 +1,9 @@
+{
+  "title": "Probably Don't Drive your Bike at Night",
+  "description": "I used a bike share dataset to find out if people bike more at night than during the day.",
+  "displayName": "Amen",
+  "tags": ["bikes", "morebikes", "streetlights"],
+  "collaborators": [
+    { "displayName": "Pat Collaborator", "githubHandle": "pat-collab" }
+  ]
+}
