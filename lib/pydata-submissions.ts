@@ -36,6 +36,44 @@ const MAX_DESCRIPTION = 500;
 const MAX_TAGS = 6;
 const MAX_COLLABORATORS = 10;
 const MAX_RATIONALE = 1000;
+const WINNER_ELIGIBLE_CUTOFF_ISO = "2026-05-14T01:00:00.000Z";
+
+const SUBMISSION_PR_CREATED_AT: Record<string, string> = {
+  aaravraina3: "2026-05-14T00:40:39Z",
+  aarongrace978: "2026-05-14T01:09:53Z",
+  amirmolavi: "2026-05-14T00:48:53Z",
+  ankittejyadav: "2026-05-14T01:18:21Z",
+  bradagi: "2026-05-14T00:01:10Z",
+  buenogrande: "2026-05-14T00:56:23Z",
+  danysigha: "2026-05-14T00:54:50Z",
+  dengziwu123: "2026-05-14T00:49:54Z",
+  dimavrem22: "2026-05-14T00:56:07Z",
+  ed2uiz: "2026-05-13T23:28:49Z",
+  gavinsadler: "2026-05-13T23:05:38Z",
+  harryj12: "2026-05-14T00:58:38Z",
+  johnnywang1998: "2026-05-14T00:17:31Z",
+  jonathanlittel: "2026-05-14T00:58:40Z",
+  mahtaraatwit: "2026-05-14T01:10:41Z",
+  mallikagaikwad: "2026-05-14T01:24:26Z",
+  manisha002307735: "2026-05-14T01:11:27Z",
+  ori98: "2026-05-14T00:44:57Z",
+  "paramjeet-singh-neu": "2026-05-14T00:58:49Z",
+  pjsk02: "2026-05-14T01:05:56Z",
+  pocketp1ck: "2026-05-14T01:01:37Z",
+  rdspangler: "2026-05-14T00:46:39Z",
+  saadai113: "2026-05-14T01:49:05Z",
+  saiff7: "2026-05-14T01:37:07Z",
+  sanaz01: "2026-05-14T01:10:42Z",
+  shuaeb6: "2026-05-14T01:05:51Z",
+  simrankumari30: "2026-05-14T01:31:56Z",
+  squamis: "2026-05-14T00:56:20Z",
+  "t-siddharth": "2026-05-14T00:28:58Z",
+  trevordcampbell: "2026-05-14T01:04:01Z",
+  varun7778: "2026-05-14T01:08:07Z",
+  vimaleshraja: "2026-05-14T01:01:31Z",
+  vishalprasanna11: "2026-05-14T00:56:43Z",
+  "xiaolong-y": "2026-05-13T23:06:48Z",
+};
 
 export interface PyDataSubmissionCollaborator {
   displayName: string;
@@ -70,6 +108,10 @@ export interface PyDataSubmission {
    * before the PR is merged. Absent if not yet scored.
    */
   score: PyDataSubmissionScore | null;
+  /** PR creation time used for winner eligibility cutoff decisions. */
+  submittedAt: string | null;
+  /** True when the original PR was opened before 9 PM Eastern on May 13. */
+  winnerEligible: boolean;
 }
 
 function clampString(s: unknown, max: number): string {
@@ -161,6 +203,10 @@ function buildSubmission(
     clampString(meta.displayName, 80) || handleDir;
   const tags = parseTags(meta.tags);
   const collaborators = parseCollaborators(meta.collaborators);
+  const submittedAt = SUBMISSION_PR_CREATED_AT[handleDir] ?? null;
+  const winnerEligible = submittedAt
+    ? Date.parse(submittedAt) < Date.parse(WINNER_ELIGIBLE_CUTOFF_ISO)
+    : false;
 
   return {
     githubHandle: handleDir,
@@ -172,6 +218,8 @@ function buildSubmission(
     notebookUrl: `${PYDATA_SUBMISSIONS_REPO_URL}/blob/main/${PYDATA_SUBMISSIONS_DIR}/${handleDir}/${NOTEBOOK_FILENAME}`,
     folderUrl: `${PYDATA_SUBMISSIONS_REPO_URL}/tree/main/${PYDATA_SUBMISSIONS_DIR}/${handleDir}`,
     score,
+    submittedAt,
+    winnerEligible,
   };
 }
 

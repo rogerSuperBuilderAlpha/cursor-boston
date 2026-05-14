@@ -757,31 +757,120 @@ function Step({
 }
 
 function SubmissionsGrid({ submissions }: { submissions: PyDataSubmission[] }) {
+  const eligible = submissions.filter((s) => s.winnerEligible);
+  const afterDeadline = submissions.filter((s) => !s.winnerEligible);
+
   return (
     <section className="px-6 py-12">
       <div className="max-w-6xl mx-auto">
-        <div className="mb-6 flex items-baseline justify-between gap-4 flex-wrap">
-          <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-            Merged submissions{" "}
-            <span className="text-neutral-500 font-normal tabular-nums">
-              ({submissions.length})
-            </span>
-          </h2>
-          <p className="text-sm text-neutral-500 dark:text-neutral-400">
-            Each card links to the rendered notebook on GitHub.
+        <div className="mb-8 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-5 dark:border-emerald-400/20 dark:bg-emerald-400/5">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">
+            Final judging board
           </p>
+          <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground">
+                Merged submissions{" "}
+                <span className="text-neutral-500 font-normal tabular-nums">
+                  ({submissions.length})
+                </span>
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm text-neutral-600 dark:text-neutral-300">
+                Cards are sorted by AI judge score. Only PRs opened before 9:00
+                PM Eastern on May 13 are winner eligible; later PRs are shown
+                separately for showcase visibility.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-right">
+              <div className="rounded-xl bg-white px-4 py-3 shadow-sm dark:bg-neutral-950">
+                <p className="text-2xl font-bold tabular-nums text-emerald-700 dark:text-emerald-300">
+                  {eligible.length}
+                </p>
+                <p className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
+                  Eligible
+                </p>
+              </div>
+              <div className="rounded-xl bg-white px-4 py-3 shadow-sm dark:bg-neutral-950">
+                <p className="text-2xl font-bold tabular-nums text-amber-700 dark:text-amber-300">
+                  {afterDeadline.length}
+                </p>
+                <p className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
+                  After 9 PM
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {submissions.length === 0 ? (
           <EmptyState />
         ) : (
-          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {submissions.map((s) => (
-              <SubmissionCard key={s.githubHandle} submission={s} />
-            ))}
-          </ul>
+          <div className="space-y-10">
+            <SubmissionSection
+              title="Winner eligible"
+              description="PR opened before 9:00 PM Eastern on May 13."
+              submissions={eligible}
+              tone="eligible"
+            />
+            <SubmissionSection
+              title="After deadline showcase"
+              description="PR opened after 9:00 PM Eastern. Included on the page, but not eligible for winner selection."
+              submissions={afterDeadline}
+              tone="late"
+            />
+          </div>
         )}
       </div>
+    </section>
+  );
+}
+
+function SubmissionSection({
+  title,
+  description,
+  submissions,
+  tone,
+}: {
+  title: string;
+  description: string;
+  submissions: PyDataSubmission[];
+  tone: "eligible" | "late";
+}) {
+  const countColor =
+    tone === "eligible"
+      ? "text-emerald-700 dark:text-emerald-300"
+      : "text-amber-700 dark:text-amber-300";
+
+  return (
+    <section>
+      <div className="mb-4 flex items-baseline justify-between gap-4 flex-wrap">
+        <div>
+          <h3 className="text-xl font-bold text-foreground">
+            {title}{" "}
+            <span className={`font-mono text-base font-semibold ${countColor}`}>
+              ({submissions.length})
+            </span>
+          </h3>
+          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+            {description}
+          </p>
+        </div>
+      </div>
+      {submissions.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-neutral-300 bg-white p-5 text-sm text-neutral-500 dark:border-neutral-700 dark:bg-neutral-900">
+          No submissions in this group.
+        </div>
+      ) : (
+        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {submissions.map((s) => (
+            <SubmissionCard
+              key={s.githubHandle}
+              submission={s}
+              eligibilityTone={tone}
+            />
+          ))}
+        </ul>
+      )}
     </section>
   );
 }
@@ -803,10 +892,38 @@ function EmptyState() {
   );
 }
 
-function SubmissionCard({ submission }: { submission: PyDataSubmission }) {
+function SubmissionCard({
+  submission,
+  eligibilityTone,
+}: {
+  submission: PyDataSubmission;
+  eligibilityTone: "eligible" | "late";
+}) {
   const handleHref = `https://github.com/${submission.githubHandle}`;
+  const badgeClass =
+    eligibilityTone === "eligible"
+      ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+      : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300";
+  const badgeText =
+    eligibilityTone === "eligible" ? "Winner eligible" : "After deadline";
+
   return (
     <li className="flex flex-col rounded-xl border border-neutral-200 bg-white p-5 transition-colors hover:border-emerald-500/40 dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <span
+          className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${badgeClass}`}
+        >
+          {badgeText}
+        </span>
+        {submission.submittedAt ? (
+          <time
+            dateTime={submission.submittedAt}
+            className="text-[11px] text-neutral-500 dark:text-neutral-400"
+          >
+            {formatSubmissionTime(submission.submittedAt)}
+          </time>
+        ) : null}
+      </div>
       <h3 className="text-lg font-semibold text-foreground line-clamp-2">
         <a
           href={submission.notebookUrl}
@@ -920,4 +1037,15 @@ function SubmissionCard({ submission }: { submission: PyDataSubmission }) {
       </div>
     </li>
   );
+}
+
+function formatSubmissionTime(iso: string): string {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+  }).format(new Date(iso));
 }
