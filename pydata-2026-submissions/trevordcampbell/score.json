@@ -1,0 +1,7 @@
+{
+  "score": 9,
+  "rationale": "This is an unusually ambitious and well-framed public-data atlas: it combines GTEx tissue expression, ProteinGym coverage, ClinVar, PubMed, Open Targets, and other evidence layers to ask which PCD mechanisms are visible or underrepresented in public molecular data. The notebook is careful about provenance, limitations, and clinical boundaries while still producing a useful evidence-gap map. It is broad rather than a single narrow statistical punchline, but the scope, rigor, and storytelling make it one of the strongest submissions.",
+  "model": "gpt-5.5",
+  "scoredAt": "2026-05-14T01:45:00.000Z",
+  "scorerVersion": 1
+}
