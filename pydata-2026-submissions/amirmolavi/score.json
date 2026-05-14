@@ -1,7 +1,7 @@
 {
-  "score": 8,
-  "rationale": "This notebook tells a polished and accessible story around the Fulton Gap, with clear sample cuts, an effective radius-distribution visualization, and strong explanatory prose. The insight is compelling and easy to understand, and the notebook uses Marimo well as a guided narrative. It scores below the very top entries mainly because it recreates a known result rather than surfacing a more novel or actionable finding.",
+  "score": 8.1,
+  "rationale": "Refined tie-break score: this notebook is a polished Marimo narrative around the Fulton Gap, with careful sample cuts, effective visualizations, and an interactive irradiation filter that demonstrates the expected radius-valley shift. It is elegant and accessible, but among the tied 8s it is least novel because it primarily recreates a known published result rather than surfacing a new actionable or original finding.",
   "model": "gpt-5.5",
-  "scoredAt": "2026-05-14T01:05:00.000Z",
-  "scorerVersion": 1
+  "scoredAt": "2026-05-14T12:08:00.000Z",
+  "scorerVersion": 2
 }

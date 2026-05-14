@@ -81,7 +81,7 @@ export interface PyDataSubmissionCollaborator {
 }
 
 export interface PyDataSubmissionScore {
-  /** Integer 1-10 from the LLM judge. */
+  /** Numeric 1-10 score from the LLM judge; decimals are used for tie-breaks. */
   score: number;
   /** Short justification from the judge. */
   rationale: string;
