@@ -8,7 +8,7 @@
 
 import Link from "next/link";
 import { ThumbsUp, ThumbsDown, MessageSquare } from "lucide-react";
-import type { Question, VoteType } from "@/types/questions";
+import { getQuestionTagLabel, type Question, type VoteType } from "@/types/questions";
 
 function timeAgo(dateStr: string): string {
   const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
@@ -104,16 +104,20 @@ export function QuestionCard({
           </p>
 
           <div className="flex flex-wrap items-center gap-2 mt-3">
-            {question.tags.map((tag) => (
-              <button
-                key={tag}
-                type="button"
-                onClick={() => onTagClick?.(tag)}
-                className="px-2 py-0.5 bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 rounded text-xs hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
-              >
-                {tag}
-              </button>
-            ))}
+            {question.tags.map((tag) => {
+              const label = getQuestionTagLabel(tag);
+              return (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => onTagClick?.(tag)}
+                  aria-label={`Filter questions by ${label}`}
+                  className="px-2 py-0.5 bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 rounded text-xs hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+                >
+                  {label}
+                </button>
+              );
+            })}
 
             <span className="flex items-center gap-1 text-xs text-neutral-500 ml-auto">
               <MessageSquare size={14} />

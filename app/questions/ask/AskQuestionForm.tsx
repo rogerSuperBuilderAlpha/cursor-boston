@@ -11,21 +11,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { QUESTION_TAGS, type QuestionTag } from "@/types/questions";
-
-const TAG_LABELS: Record<QuestionTag, string> = {
-  "cursor-rules": "Cursor Rules",
-  prompting: "Prompting",
-  debugging: "Debugging",
-  refactoring: "Refactoring",
-  testing: "Testing",
-  architecture: "Architecture",
-  performance: "Performance",
-  workflows: "Workflows",
-  mcp: "MCP",
-  agents: "Agents",
-  other: "Other",
-};
+import { QUESTION_TAGS, getQuestionTagLabel, type QuestionTag } from "@/types/questions";
 
 export function AskQuestionForm() {
   const { user } = useAuth();
@@ -147,7 +133,7 @@ export function AskQuestionForm() {
                     : "bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700",
                 ].join(" ")}
               >
-                {TAG_LABELS[tag]}
+                {getQuestionTagLabel(tag)}
               </button>
             ))}
           </div>

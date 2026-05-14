@@ -10,7 +10,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { ArrowLeft, ThumbsUp, ThumbsDown } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import type { Question, Answer, VoteType } from "@/types/questions";
+import { getQuestionTagLabel, type Question, type Answer, type VoteType } from "@/types/questions";
 import type { CookbookEntry } from "@/types/cookbook";
 import { AnswerCard } from "./AnswerCard";
 import { AnswerComposer } from "./AnswerComposer";
@@ -52,25 +52,30 @@ export function QuestionDetail({
   const isLoggedIn = !!user;
   const isQuestionAuthor = user?.uid === question.authorId;
 
-  const fetchVotes = useCallback(async () => {
-    if (!user) return;
-    try {
-      const token = await fetchIdToken(user);
-      const res = await fetch("/api/questions/vote", {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setUserVotes(data.userVotes || {});
-      }
-    } catch {
-      // Non-critical — UI still works without user vote state
-    }
-  }, [user]);
-
   useEffect(() => {
-    fetchVotes();
-  }, [fetchVotes]);
+    if (!user) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const token = await fetchIdToken(user);
+        const res = await fetch("/api/questions/vote", {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (cancelled) return;
+          setUserVotes(data.userVotes || {});
+        }
+      } catch {
+        // Non-critical — UI still works without user vote state
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   const handleVote = useCallback(
     async (targetType: "question" | "answer", targetId: string, voteType: VoteType) => {
@@ -257,7 +262,7 @@ export function QuestionDetail({
                 href={`/questions?tag=${tag}`}
                 className="px-2 py-0.5 bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 rounded text-xs hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
               >
-                {tag}
+                {getQuestionTagLabel(tag)}
               </Link>
             ))}
           </div>

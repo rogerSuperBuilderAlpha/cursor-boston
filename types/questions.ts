@@ -20,6 +20,27 @@ export const QUESTION_TAGS = [
 
 export type QuestionTag = (typeof QUESTION_TAGS)[number];
 
+export const QUESTION_TAG_LABELS: Record<QuestionTag, string> = {
+  "cursor-rules": "Cursor Rules",
+  prompting: "Prompting",
+  debugging: "Debugging",
+  refactoring: "Refactoring",
+  testing: "Testing",
+  architecture: "Architecture",
+  performance: "Performance",
+  workflows: "Workflows",
+  mcp: "MCP",
+  agents: "Agents",
+  other: "Other",
+};
+
+export function getQuestionTagLabel(tag: QuestionTag | string): string {
+  if ((QUESTION_TAGS as readonly string[]).includes(tag)) {
+    return QUESTION_TAG_LABELS[tag as QuestionTag];
+  }
+  return tag;
+}
+
 export type VoteType = "up" | "down";
 
 export type QuestionSort = "newest" | "top" | "unanswered";

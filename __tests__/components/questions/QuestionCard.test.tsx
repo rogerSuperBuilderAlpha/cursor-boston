@@ -61,7 +61,8 @@ describe("QuestionCard", () => {
         onTagClick={onTagClick}
       />
     );
-    const tagBtn = screen.getByText("cursor-rules");
+    const tagBtn = screen.getByRole("button", { name: "Filter questions by Cursor Rules" });
+    expect(tagBtn).toHaveTextContent("Cursor Rules");
     fireEvent.click(tagBtn);
     expect(onTagClick).toHaveBeenCalledWith("cursor-rules");
   });
