@@ -1,5 +1,5 @@
 {
-  "title": "Hello! — Marimo starter (native submission.py)",
-  "description": "Native Marimo submission.py: mo import, Hello!, and a short hackathon note. Ready to extend with analysis.",
-  "displayName": "Sample (BuenoGrande)"
+  "title": "Mutation Radar — Spike RBD triage from ProteinGym ACE2-binding DMS",
+  "description": "Marimo notebook for the May 13, 2026 Cursor Boston × PyData hack: loads the ProteinGym SARS-CoV-2 Spike RBD ACE2-binding deep mutational scanning assay, summarizes per-site tolerance, and surfaces flexible vs brittle positions with heatmaps and rankings. Public data only (Hugging Face URLs). Final submission.",
+  "displayName": "Pierre"
 }

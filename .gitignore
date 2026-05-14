@@ -1,6 +1,10 @@
 # =============================================================================
 # Dependencies
 # =============================================================================
+/.venv-pydata/
+# PyData submission local venv + marimo cache (do not commit)
+pydata-2026-submissions/*/.venv/
+pydata-2026-submissions/*/__marimo__/
 node_modules/
 /.pnp
 .pnp.js
