@@ -28,6 +28,7 @@ Current core branches:
 
 - `c1w1pm-submission`, `c1w2comms-submission`, `c1w3mkt-submission`, `c1w4edu-submission`, `c1w5startup-submission`, `c1w6oss-submission` — summer cohort 1 weekly submissions
 - `pydata-2026-submissions` — PyData attendee notebooks
+- `hack-a-sprint-2026-submissions` — Hack-a-Sprint showcase JSON submissions
 - `game-contributions`
 
 After every `develop → main` release PR merges, fast-forward each one to `origin/develop`'s tip:
@@ -35,7 +36,7 @@ After every `develop → main` release PR merges, fast-forward each one to `orig
 ```bash
 git fetch origin --prune --quiet
 DEV=$(git rev-parse origin/develop)
-for b in c1w1pm-submission c1w2comms-submission c1w3mkt-submission c1w4edu-submission c1w5startup-submission c1w6oss-submission game-contributions pydata-2026-submissions; do
+for b in c1w1pm-submission c1w2comms-submission c1w3mkt-submission c1w4edu-submission c1w5startup-submission c1w6oss-submission game-contributions pydata-2026-submissions hack-a-sprint-2026-submissions; do
   git push origin "${DEV}:refs/heads/${b}"
 done
 ```

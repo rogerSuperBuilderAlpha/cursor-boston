@@ -206,6 +206,26 @@ export default function Home() {
               View Events
             </Link>
           </div>
+          <div className="mt-5 flex flex-col items-center justify-center gap-2 text-sm sm:flex-row">
+            <span className="text-neutral-500 dark:text-neutral-400">
+              Recent hackathon results:
+            </span>
+            <Link
+              href="/events/cursor-boston-pydata-2026"
+              className="font-semibold text-emerald-600 hover:text-emerald-500 dark:text-emerald-400"
+            >
+              PyData showcase
+            </Link>
+            <span className="hidden text-neutral-300 dark:text-neutral-700 sm:inline">
+              /
+            </span>
+            <Link
+              href="/hackathons/hack-a-sprint-2026"
+              className="font-semibold text-emerald-600 hover:text-emerald-500 dark:text-emerald-400"
+            >
+              Hack-a-Sprint results
+            </Link>
+          </div>
         </div>
       </section>
 

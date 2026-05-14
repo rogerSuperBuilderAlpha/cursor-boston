@@ -8,7 +8,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import eventsData from "@/content/events.json";
 import type { EventsData } from "@/types/events";
-import { PyDataAccessGate } from "@/components/events/PyDataAccessGate";
 import { CursorSubmitPromptButton } from "@/components/events/CursorSubmitPromptButton";
 import {
   PYDATA_2026_EVENT_SLUG,
@@ -51,8 +50,6 @@ export const metadata: Metadata = {
   title: "Cursor Boston × PyData — Hackathon submissions",
   description:
     "Submit your hackathon notebook and browse merged submissions from the May 13 Cursor Boston × PyData evening hack at Moderna HQ.",
-  // Gated page — no need to be in search results or social previews.
-  robots: { index: false, follow: false },
 };
 
 // Linking to the branch (not /compare) so GitHub renders its "Contribute"
@@ -67,8 +64,7 @@ export default function PyDataHackathonHubPage() {
   const submissions = getPyDataSubmissions();
 
   return (
-    <PyDataAccessGate>
-      <main className="flex flex-col bg-neutral-50 dark:bg-neutral-950">
+    <main className="flex flex-col bg-neutral-50 dark:bg-neutral-950">
         {/* Breadcrumb */}
         <nav
           className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-800"
@@ -96,7 +92,7 @@ export default function PyDataHackathonHubPage() {
         <section className="px-6 py-10 border-b border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950">
           <div className="max-w-6xl mx-auto">
             <span className="inline-block px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-semibold rounded-full mb-3 uppercase tracking-wide">
-              You&apos;re in
+              Public showcase
             </span>
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
               {event?.title ?? "Cursor Boston × PyData — Hackathon hub"}
@@ -170,8 +166,7 @@ export default function PyDataHackathonHubPage() {
 
         {/* Submissions grid */}
         <SubmissionsGrid submissions={submissions} />
-      </main>
-    </PyDataAccessGate>
+    </main>
   );
 }
 
@@ -564,7 +559,9 @@ function SubmissionInstructions() {
           <code className="rounded bg-neutral-200 px-1.5 py-0.5 text-xs font-mono dark:bg-neutral-800">
             {PYDATA_SUBMISSIONS_BRANCH}
           </code>{" "}
-          branch. Once a maintainer merges it through to{" "}
+          branch. The event is over, but the exercise stays open: anyone can
+          do the notebook later and open a PR to be listed with the others.
+          Once a maintainer merges it through to{" "}
           <code className="rounded bg-neutral-200 px-1.5 py-0.5 text-xs font-mono dark:bg-neutral-800">
             main
           </code>
