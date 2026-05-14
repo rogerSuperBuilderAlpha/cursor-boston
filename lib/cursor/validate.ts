@@ -4,8 +4,6 @@
  * See LICENSE file for details.
  */
 
-import { Cursor, CursorAgentError } from "@cursor/sdk";
-
 export interface CursorAccountInfo {
   modelsAvailable: string[];
   defaultModel?: string;
@@ -22,6 +20,7 @@ export async function validateCursorApiKey(
   apiKey: string
 ): Promise<CursorAccountInfo> {
   try {
+    const { Cursor } = await import("@cursor/sdk");
     const models = await Cursor.models.list({ apiKey });
     const modelsAvailable = models.map((model) => model.id);
 
@@ -32,7 +31,7 @@ export async function validateCursorApiKey(
         modelsAvailable[0],
     };
   } catch (error) {
-    if (error instanceof CursorAgentError) {
+    if (error instanceof Error) {
       throw new InvalidCursorKeyError(error.message);
     }
     throw new InvalidCursorKeyError();

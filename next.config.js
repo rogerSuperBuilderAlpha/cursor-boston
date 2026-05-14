@@ -6,6 +6,7 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 const nextConfig = {
   // Standalone output is only for Docker builds (see docker/Dockerfile). Omit on Vercel.
   ...(process.env.DOCKER_BUILD === '1' ? { output: 'standalone' } : {}),
+  serverExternalPackages: ['@cursor/sdk'],
 
   images: {
     remotePatterns: [
