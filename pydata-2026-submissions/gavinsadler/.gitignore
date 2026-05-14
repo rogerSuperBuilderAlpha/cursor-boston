@@ -1,0 +1,51 @@
+# Downloaded datasets and archives (see scripts/download_events_data.py)
+data/
+
+# uv / virtualenv
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+.eggs/
+dist/
+build/
+wheels/
+pip-wheel-metadata/
+
+# Test / lint / type caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.hypothesis/
+coverage.xml
+.coverage
+htmlcov/
+
+# Jupyter (if you mix notebooks)
+.ipynb_checkpoints/
+
+# marimo local session / cache
+__marimo__/
+
+# Claude Code / agent working directories
+.claude/
+.agents/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors (local swap files only)
+*.swp
+*.swo

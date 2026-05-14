@@ -1,0 +1,7 @@
+{
+  "score": 9,
+  "rationale": "This is a sharp and technically ambitious notebook: it adapts speculative decoding from LLM serving to robot diffusion policies and backs the claim with latency, acceptance-rate, MSE, and cross-episode validation. The narrative is clear, the 10 Hz deadline makes the result actionable, and the interactive tau/Pareto exploration uses Marimo well. The main caveat is that the methodology is complex enough that a reader has to trust several implementation details, but the evidence presented is unusually strong for a single-evening submission.",
+  "model": "gpt-5.5",
+  "scoredAt": "2026-05-14T00:54:00.000Z",
+  "scorerVersion": 1
+}

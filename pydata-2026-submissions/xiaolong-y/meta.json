@@ -1,0 +1,7 @@
+{
+  "title": "Marimo starter: markdown + a tiny math check",
+  "description": "A minimal marimo notebook exported to Jupyter for the PyData × Cursor Boston hack. It introduces the workflow and verifies a small sum-of-squares calculation (1²+…+10² = 385). No external data or APIs.",
+  "displayName": "Xiaolong Yang",
+  "tags": ["marimo", "pydata", "cursor", "starter", "stdlib"],
+  "collaborators": []
+}

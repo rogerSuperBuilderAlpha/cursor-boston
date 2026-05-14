@@ -1,0 +1,6 @@
+{
+  "title": "UCI Bank Marketing: more calls, more loans?",
+  "description": "Looks at marketing data by a Portuguese bank, and compares the number of marketing touches with the average loan size taken by customers.",
+  "displayName": "Jonathan Littel",
+  "tags": ["exploratory", "histogram", "pandas"]
+}

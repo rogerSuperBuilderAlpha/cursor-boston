@@ -40,6 +40,7 @@ jest.mock("@/lib/firebase-admin", () => ({
           count: () => ({
             get: () => mockCountGet(value),
           }),
+          orderBy: () => ({ get: mockOrderByGet }),
         }),
       };
     },

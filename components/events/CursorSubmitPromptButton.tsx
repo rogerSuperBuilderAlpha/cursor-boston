@@ -13,17 +13,17 @@ import { useState } from "react";
  * have the agent open their submission PR end-to-end. Designed to be
  * unambiguous: tells the agent the destination repo, branch, exact file
  * layout, required + optional `meta.json` fields, and the rules — and
- * forces it to ask the attendee for inputs it can't guess (notebook path,
- * GitHub handle, title, description).
+ * forces it to ask the attendee for inputs it can't guess (Marimo notebook
+ * path, GitHub handle, title, description).
  *
  * Keep in sync with `pydata-2026-submissions/README.md` (which is the
  * source of truth that the maintainer will check the PR against) and with
  * `lib/pydata-submissions.ts` (which validates `meta.json` at build time).
  */
-const CURSOR_PROMPT = `I just attended the Cursor Boston × PyData hackathon at Moderna HQ (May 13, 2026). Open a pull request submitting my Jupyter notebook to https://github.com/rogerSuperBuilderAlpha/cursor-boston targeting the \`pydata-2026-submissions\` branch (NOT main or develop).
+const CURSOR_PROMPT = `I just attended the Cursor Boston × PyData hackathon at Moderna HQ (May 13, 2026). Open a pull request submitting my Marimo notebook to https://github.com/rogerSuperBuilderAlpha/cursor-boston targeting the \`pydata-2026-submissions\` branch (NOT main or develop).
 
 ## Ask me for these — do not guess
-- Path to my \`.ipynb\` notebook on this machine
+- Path to my Marimo notebook \`.py\` file on this machine (Marimo saves notebooks as Python files)
 - My GitHub handle (lowercased, exactly as it appears in \`github.com/<handle>\`). You can detect: \`gh api user --jq .login\`
 - The name I want displayed on the event page
 - A short title (≤120 chars)
@@ -34,7 +34,7 @@ If \`gh\` isn't authenticated (\`gh auth status\` fails), tell me to run \`gh au
 ## Files to add to the PR
 Exactly two, where \`<handle>\` is my lowercased GitHub handle:
 
-1. \`pydata-2026-submissions/<handle>/submission.ipynb\` — copy from the path I gave you
+1. \`pydata-2026-submissions/<handle>/submission.py\` — copy from the Marimo \`.py\` path I gave you
 2. \`pydata-2026-submissions/<handle>/meta.json\`:
 \`\`\`json
 {
@@ -55,7 +55,7 @@ You may add \`tags\` (array of lowercase strings, ≤6) or \`collaborators\` (ar
 
 ## Rules (the maintainer will reject the PR if any of these are wrong)
 - Folder name **must** be my GitHub handle, lowercased.
-- File **must** be named \`submission.ipynb\` exactly.
+- File **must** be named \`submission.py\` exactly (Marimo's native \`.py\` format — do NOT submit a \`.ipynb\`).
 - \`meta.json\` **must** have \`title\`, \`description\`, \`displayName\`. Other fields are optional.
 - Notebook < 50 MB. No Moderna logo or branding anywhere in cells, outputs, or screenshots. No secrets, API keys, or paid datasets.
 
