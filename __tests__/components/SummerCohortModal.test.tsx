@@ -61,9 +61,8 @@ describe("SummerCohortModal", () => {
   it("auto-opens on first visit (no localStorage flag for today)", async () => {
     render(<SummerCohortModal />);
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
-    expect(
-      screen.getByText("Cursor Boston Summer Cohort")
-    ).toBeInTheDocument();
+    // Logged-out new visitor sees the cohort-targeted headline.
+    expect(screen.getByRole("heading", { name: /Join Cohort 2/i })).toBeInTheDocument();
   });
 
   it("does not auto-open if today's date is already stored", () => {
@@ -85,6 +84,17 @@ describe("SummerCohortModal", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
+  it("does not auto-open on /signup or /login (don't disrupt the auth flow)", () => {
+    mockUsePathname.mockReturnValue("/signup");
+    const { unmount } = render(<SummerCohortModal />);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    unmount();
+
+    mockUsePathname.mockReturnValue("/login");
+    render(<SummerCohortModal />);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
   it("renders both cohort rows; cohort 1 marked Closed", async () => {
     render(<SummerCohortModal />);
     await screen.findByRole("dialog");
@@ -93,11 +103,24 @@ describe("SummerCohortModal", () => {
     expect(screen.getByText("Closed")).toBeInTheDocument();
   });
 
-  it("default CTA is Apply → /summer-cohort for signed-out users", async () => {
+  it("logged-out users get a Create-account-and-apply primary CTA pointing to /signup with redirect", async () => {
     render(<SummerCohortModal />);
     await screen.findByRole("dialog");
-    const cta = screen.getByRole("link", { name: /^apply/i });
-    expect(cta).toHaveAttribute("href", "/summer-cohort");
+    const cta = screen.getByRole("link", { name: /create account.*apply/i });
+    expect(cta).toHaveAttribute(
+      "href",
+      "/signup?redirect=%2Fsummer-cohort"
+    );
+  });
+
+  it("logged-out users also see a secondary Sign in link with redirect preserved", async () => {
+    render(<SummerCohortModal />);
+    await screen.findByRole("dialog");
+    const cta = screen.getByRole("link", { name: /^sign in$/i });
+    expect(cta).toHaveAttribute(
+      "href",
+      "/login?redirect=%2Fsummer-cohort"
+    );
   });
 
   it("includes the May 26 immersion link as an external link", async () => {
@@ -118,6 +141,46 @@ describe("SummerCohortModal", () => {
       name: /Contribute art to the game/i,
     });
     expect(link).toHaveAttribute("href", "/contribute/game-art");
+  });
+
+  it("renders the explore-the-community footer chips (Discord, Events, PR Ideas)", async () => {
+    render(<SummerCohortModal />);
+    await screen.findByRole("dialog");
+    expect(screen.getByText(/explore the community/i)).toBeInTheDocument();
+    const discord = screen.getByRole("link", { name: /discord/i });
+    expect(discord).toHaveAttribute("href", expect.stringContaining("discord.gg"));
+    expect(discord).toHaveAttribute("target", "_blank");
+    expect(screen.getByRole("link", { name: /events/i })).toHaveAttribute("href", "/events");
+    expect(screen.getByRole("link", { name: /pr ideas/i })).toHaveAttribute("href", "/pr-ideas");
+  });
+
+  it("logged-in user without an application gets a single Apply CTA (no Create-account button)", async () => {
+    const fakeUser = {
+      getIdToken: jest.fn().mockResolvedValue("fake-token"),
+    } as unknown as {
+      getIdToken: () => Promise<string>;
+    };
+    mockUseAuth.mockReturnValue({ user: fakeUser, loading: false });
+
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ application: null }),
+    });
+    // @ts-expect-error - assigning a mock to the global fetch in the test env
+    global.fetch = fetchMock;
+
+    render(<SummerCohortModal />);
+    await waitFor(() => {
+      expect(screen.getByRole("link", { name: /^apply/i })).toBeInTheDocument();
+    });
+    expect(screen.getByRole("link", { name: /^apply/i })).toHaveAttribute(
+      "href",
+      "/summer-cohort"
+    );
+    // Logged-in path no longer surfaces the create-account fork.
+    expect(
+      screen.queryByRole("link", { name: /create account/i })
+    ).not.toBeInTheDocument();
   });
 
   it("swaps CTA to View-your-cohort when the user has already applied", async () => {
@@ -144,29 +207,6 @@ describe("SummerCohortModal", () => {
     expect(
       screen.getByRole("link", { name: /View your cohort/i })
     ).toHaveAttribute("href", "/summer-cohort");
-  });
-
-  it("keeps Apply CTA when fetch returns no application", async () => {
-    const fakeUser = {
-      getIdToken: jest.fn().mockResolvedValue("fake-token"),
-    } as unknown as {
-      getIdToken: () => Promise<string>;
-    };
-    mockUseAuth.mockReturnValue({ user: fakeUser, loading: false });
-
-    const fetchMock = jest.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ application: null }),
-    });
-    // @ts-expect-error - assigning a mock to the global fetch in the test env
-    global.fetch = fetchMock;
-
-    render(<SummerCohortModal />);
-    await waitFor(() => {
-      expect(
-        screen.getByRole("link", { name: /^apply/i })
-      ).toBeInTheDocument();
-    });
   });
 
   it("closes and writes today's date on close", async () => {

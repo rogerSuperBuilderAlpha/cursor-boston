@@ -8,7 +8,7 @@
 
 All endpoints are under `/api/`. Authentication uses Firebase Auth ID tokens (Bearer) or session cookies. Spec: [`/openapi.json`](https://cursorboston.com/openapi.json) · interactive: [`/api/docs`](https://cursorboston.com/api/docs).
 
-**161 paths, 195 operations across 32 areas.**
+**171 paths, 207 operations across 32 areas.**
 
 ---
 
@@ -389,6 +389,18 @@ _Talk-submission moderation queue._
 |--------|----------|------|-------------|
 | POST | `/api/cursor/connect` | Yes | Validate and store the current user's Cursor API key |
 | POST | `/api/cursor/disconnect` | Yes | Disconnect the current user's Cursor API key |
+| GET | `/api/cursor/github-issues` | Yes | List open GitHub issues for PR Studio |
+| GET | `/api/cursor/idea-runs` | Yes | List recent Cursor PR idea runs for the current user |
+| POST | `/api/cursor/idea-runs` | Yes | Launch a Cursor Cloud Agent to propose contribution PR ideas |
+| DELETE | `/api/cursor/idea-runs/{runId}` | Yes | Delete the Cursor agent and local record for an idea run |
+| GET | `/api/cursor/idea-runs/{runId}` | Yes | Get and refresh a Cursor PR idea run |
+| POST | `/api/cursor/idea-runs/{runId}/answers` | Yes | Submit clarification answers and request a build plan |
+| POST | `/api/cursor/idea-runs/{runId}/approve-plan` | Yes | Approve the generated build plan and start implementation |
+| POST | `/api/cursor/idea-runs/{runId}/archive` | Yes | Archive the Cursor agent behind an idea run |
+| POST | `/api/cursor/idea-runs/{runId}/cancel` | Yes | Cancel an active Cursor PR idea run |
+| POST | `/api/cursor/idea-runs/{runId}/open-pr` | Yes | Open a pull request for a built Cursor idea run |
+| POST | `/api/cursor/idea-runs/{runId}/questions` | Yes | Ask clarification questions for a selected Cursor PR idea |
+| POST | `/api/cursor/idea-runs/{runId}/recover-agent` | Yes | Start a fresh Cursor Cloud Agent from the current workflow context |
 
 ## HiringPartners
 

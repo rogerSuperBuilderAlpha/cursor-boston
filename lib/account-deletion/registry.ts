@@ -104,6 +104,7 @@ export const userOwnedCollections: ReadonlyArray<UserOwnedCollection> = [
   { collection: "question_votes", mode: "fieldEqualsUid", field: "userId", behavior: { type: "delete" } },
   { collection: "answer_votes", mode: "fieldEqualsUid", field: "userId", behavior: { type: "delete" } },
   { collection: "game_artifacts", mode: "fieldEqualsUid", field: "ownerId", behavior: { type: "delete" } },
+  { collection: "cursorAgentRuns", mode: "fieldEqualsUid", field: "userId", behavior: { type: "delete" } },
   // Deleted players: drop their intel effects on both sides — owner-as-attacker
   // (forge-sight) and owner-as-defender-of-an-alert. fieldEqualsUid only
   // covers ownerId; the casterId column is a foreign key so it'll naturally

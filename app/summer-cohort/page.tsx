@@ -481,8 +481,11 @@ function SummerCohortPageInner() {
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  // Default to only the cohorts still open for signup. New applicants
+  // can't join Cohort 1 (kickoff already happened) — pre-checking it
+  // would just produce a confusing 403 on submit.
   const [pickedCohorts, setPickedCohorts] = useState<Set<SummerCohortId>>(
-    new Set(SUMMER_COHORTS.map((c) => c.id))
+    new Set(SUMMER_COHORTS.filter((c) => !c.signupsClosed).map((c) => c.id))
   );
   const [isLocal, setIsLocal] = useState<boolean | null>(null);
   const [wantsToPresent, setWantsToPresent] = useState<boolean | null>(null);
@@ -763,7 +766,9 @@ function SummerCohortPageInner() {
       setApplication(null);
       setName(user.displayName || "");
       setPhone("");
-      setPickedCohorts(new Set(SUMMER_COHORTS.map((c) => c.id)));
+      setPickedCohorts(
+        new Set(SUMMER_COHORTS.filter((c) => !c.signupsClosed).map((c) => c.id))
+      );
       setIsLocal(null);
       setWantsToPresent(null);
       setSubmitSuccess(null);
@@ -890,16 +895,39 @@ function SummerCohortPageInner() {
         </div>
       ) : !user ? (
         <section className="rounded-xl border border-neutral-200 bg-neutral-50 p-6 dark:border-neutral-800 dark:bg-neutral-900/40">
-          <h2 className="text-lg font-semibold">Sign in to apply</h2>
+          <h2 className="text-lg font-semibold">Create an account to apply</h2>
           <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-            We need an account on file to follow up on your application.
+            Takes 30 seconds with Google or GitHub. We need an account on file
+            to follow up on your application.
           </p>
-          <Link
-            href={`/login?redirect=${encodeURIComponent(SUMMER_COHORT_RETURN_TO)}`}
-            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-400"
-          >
-            Sign in
-          </Link>
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <Link
+              href={`/signup?redirect=${encodeURIComponent(SUMMER_COHORT_RETURN_TO)}`}
+              className="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-400"
+            >
+              Create account
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.25"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M5 12h14M13 5l7 7-7 7" />
+              </svg>
+            </Link>
+            <Link
+              href={`/login?redirect=${encodeURIComponent(SUMMER_COHORT_RETURN_TO)}`}
+              className="inline-flex items-center gap-2 rounded-lg border border-neutral-300 bg-white px-4 py-2.5 text-sm font-semibold text-neutral-700 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:bg-transparent dark:text-neutral-300 dark:hover:bg-neutral-800"
+            >
+              Already have an account? Sign in
+            </Link>
+          </div>
         </section>
       ) : appLoading ? (
         <div className="rounded-xl border border-neutral-200 p-6 text-sm text-neutral-500 dark:border-neutral-800">
@@ -1219,23 +1247,45 @@ function SummerCohortPageInner() {
                   Which cohort(s)? Pick at least one.
                 </legend>
                 <div className="mt-2 space-y-2">
-                  {SUMMER_COHORTS.map((cohort) => (
-                    <label
-                      key={cohort.id}
-                      className="flex items-center gap-3 rounded-lg border border-neutral-200 px-3 py-2.5 text-sm dark:border-neutral-800"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={pickedCohorts.has(cohort.id)}
-                        onChange={() => toggleCohort(cohort.id)}
-                        className="h-4 w-4 rounded border-neutral-300 text-emerald-500 focus:ring-emerald-500"
-                      />
-                      <span className="font-semibold">{cohort.label}</span>
-                      <span className="text-xs text-neutral-600 dark:text-neutral-400">
-                        {cohort.startLabel} – {cohort.endLabel}
-                      </span>
-                    </label>
-                  ))}
+                  {SUMMER_COHORTS.map((cohort) => {
+                    const closed = cohort.signupsClosed === true;
+                    // Existing applicants who already opted into a now-closed
+                    // cohort can still see/edit it; brand-new applicants
+                    // can't pick it (the API rejects with a 403 anyway —
+                    // disabling here surfaces that constraint up front).
+                    const alreadyHas =
+                      application?.cohorts.includes(cohort.id) === true;
+                    const disabled = closed && !alreadyHas;
+                    return (
+                      <label
+                        key={cohort.id}
+                        className={`flex items-center gap-3 rounded-lg border px-3 py-2.5 text-sm ${
+                          disabled
+                            ? "border-neutral-200 bg-neutral-100/60 dark:border-neutral-800 dark:bg-neutral-900/40 opacity-70"
+                            : "border-neutral-200 dark:border-neutral-800"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={pickedCohorts.has(cohort.id)}
+                          onChange={() => toggleCohort(cohort.id)}
+                          disabled={disabled}
+                          className="h-4 w-4 rounded border-neutral-300 text-emerald-500 focus:ring-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
+                        />
+                        <span className={`font-semibold ${disabled ? "text-neutral-500" : ""}`}>
+                          {cohort.label}
+                        </span>
+                        <span className="text-xs text-neutral-600 dark:text-neutral-400">
+                          {cohort.startLabel} – {cohort.endLabel}
+                        </span>
+                        {closed ? (
+                          <span className="ml-auto text-[10px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full border border-neutral-300 text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
+                            Closed
+                          </span>
+                        ) : null}
+                      </label>
+                    );
+                  })}
                 </div>
               </fieldset>
               <fieldset>

@@ -21,6 +21,7 @@ import {
   Award,
   BarChart2,
   BookOpen,
+  Bot,
   Briefcase,
   Building2,
   Calendar,
@@ -53,7 +54,8 @@ const STORAGE_KEY = "cursor-boston-sidebar-collapsed";
 
 interface NavItem {
   href: string;
-  label: string;
+  label: ReactNode;
+  title?: string;
   icon: LucideIcon;
   highlight?: boolean;
 }
@@ -81,6 +83,42 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/events", label: "Events", icon: Calendar },
       { href: "/cookbook", label: "Cookbook", icon: ChefHat },
       { href: "/questions", label: "Q&A", icon: HelpCircle },
+      { 
+        href: "/pr-ideas", 
+        title: "PR Studio",
+        label: (
+          <span className="inline-flex items-center gap-1">
+            PR Studio
+            <span className="relative ml-1 flex h-4 w-4 items-center justify-center">
+              <span
+                className="absolute inline-block h-4 w-4 animate-spin rounded-full bg-gradient-to-tr from-yellow-400 via-orange-300 to-pink-500 opacity-70"
+                style={{
+                  animationDuration: "2.4s",
+                  filter: "blur(1.5px)"
+                }}
+              ></span>
+              <svg
+                className="relative z-10"
+                width="16"
+                height="16"
+                fill="none"
+                viewBox="0 0 16 16"
+              >
+                <g filter="drop-shadow(0px 0px 3px rgba(255,199,44,0.3))">
+                  <path
+                    d="M8 2.5l1.24 2.89 3.11.27-2.45 2.17.73 3.03L8 9.39l-2.63 1.47.73-3.03-2.45-2.17 3.11-.27L8 2.5z"
+                    fill="#FECF2F"
+                    stroke="#FFB300"
+                    strokeWidth="0.5"
+                  />
+                </g>
+              </svg>
+            </span>
+          </span>
+        ), 
+        icon: Bot 
+      },
+
       { href: "/opportunities", label: "Opportunities", icon: Briefcase },
       { href: "/ecosystem", label: "Ecosystem", icon: Building2 },
       { href: "/blog", label: "Blog", icon: BookOpen },
@@ -341,7 +379,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                       <li key={item.href}>
                         <Link
                           href={item.href}
-                          title={item.label}
+                          title={item.title ?? (typeof item.label === "string" ? item.label : undefined)}
                           onClick={() => {
                             setMobileOpen(false);
                             if (item.highlight) {

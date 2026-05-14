@@ -232,6 +232,13 @@ service cloud.firestore {
       allow write: if false; // Only server-side writes via Admin SDK
     }
 
+    // Cursor Cloud Agent idea runs - users can read their own run history,
+    // while creation, refresh, cancellation, archive, and deletion stay server-side.
+    match /cursorAgentRuns/{runId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow write: if false;
+    }
+
     // Coworking sessions - read-only for clients, server manages slots
     match /coworkingSessions/{sessionId} {
       allow read: if true; // Anyone can view sessions
