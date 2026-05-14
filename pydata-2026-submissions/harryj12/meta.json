@@ -1,0 +1,7 @@
+{
+  "title": "MBTA Reliability Oracle",
+  "description": "AI-powered transit reliability and infrastructure anomaly intelligence for the MBTA. This Marimo notebook builds a scalable reliability foundation from MBTA 2026 rapid transit travel-time data, including route-pair reliability metrics, anomaly timelines, and an infrastructure failure detector based on joint travel-time spikes and service-volume drops.",
+  "displayName": "Harry Joshi",
+  "tags": ["mbta", "transit", "reliability", "anomaly-detection", "data-science"],
+  "collaborators": []
+}
