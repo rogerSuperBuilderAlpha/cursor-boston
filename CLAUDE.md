@@ -8,6 +8,16 @@ Conventions and behaviors that apply to every session in this repo.
 
 The workflow validates that `firestore.indexes.json` parses before deploying. The Firestore emulator isn't run on every commit — that's a heavyweight check (needs Java) and CI's "Firestore rules tests" job already covers it on every PR.
 
+## Verify locally before any develop→main release
+
+Before merging or pushing any change all the way to `main`, run a local production verification:
+
+1. Run `npm run build`.
+2. Run `npm start` against that build.
+3. Share the local URL with the user and wait for explicit confirmation before creating or merging the `develop` → `main` release PR.
+
+Do this even when CI or type checks are green, especially for UI changes, so production Vercel deploys are not used as the visual QA loop.
+
 ## Fast-forward the core contribution branches after every develop→main release
 
 Several long-lived branches serve as **persistent contribution / submission targets** — contributors PR into them instead of forking against `develop` or `main`. They survive across releases, so they need to stay current with `develop` or contributor PR diffs fill up with stale upstream commits.
@@ -18,6 +28,7 @@ Current core branches:
 
 - `c1w1pm-submission`, `c1w2comms-submission`, `c1w3mkt-submission`, `c1w4edu-submission`, `c1w5startup-submission`, `c1w6oss-submission` — summer cohort 1 weekly submissions
 - `pydata-2026-submissions` — PyData attendee notebooks
+- `hack-a-sprint-2026-submissions` — Hack-a-Sprint showcase JSON submissions
 - `game-contributions`
 
 After every `develop → main` release PR merges, fast-forward each one to `origin/develop`'s tip:
@@ -25,7 +36,7 @@ After every `develop → main` release PR merges, fast-forward each one to `orig
 ```bash
 git fetch origin --prune --quiet
 DEV=$(git rev-parse origin/develop)
-for b in c1w1pm-submission c1w2comms-submission c1w3mkt-submission c1w4edu-submission c1w5startup-submission c1w6oss-submission game-contributions pydata-2026-submissions; do
+for b in c1w1pm-submission c1w2comms-submission c1w3mkt-submission c1w4edu-submission c1w5startup-submission c1w6oss-submission game-contributions pydata-2026-submissions hack-a-sprint-2026-submissions; do
   git push origin "${DEV}:refs/heads/${b}"
 done
 ```

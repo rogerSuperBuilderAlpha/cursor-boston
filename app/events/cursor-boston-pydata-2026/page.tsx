@@ -8,7 +8,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import eventsData from "@/content/events.json";
 import type { EventsData } from "@/types/events";
-import { PyDataAccessGate } from "@/components/events/PyDataAccessGate";
 import { CursorSubmitPromptButton } from "@/components/events/CursorSubmitPromptButton";
 import {
   PYDATA_2026_EVENT_SLUG,
@@ -51,8 +50,6 @@ export const metadata: Metadata = {
   title: "Cursor Boston × PyData — Hackathon submissions",
   description:
     "Submit your hackathon notebook and browse merged submissions from the May 13 Cursor Boston × PyData evening hack at Moderna HQ.",
-  // Gated page — no need to be in search results or social previews.
-  robots: { index: false, follow: false },
 };
 
 // Linking to the branch (not /compare) so GitHub renders its "Contribute"
@@ -67,8 +64,7 @@ export default function PyDataHackathonHubPage() {
   const submissions = getPyDataSubmissions();
 
   return (
-    <PyDataAccessGate>
-      <main className="flex flex-col bg-neutral-50 dark:bg-neutral-950">
+    <main className="flex flex-col bg-neutral-50 dark:bg-neutral-950">
         {/* Breadcrumb */}
         <nav
           className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-800"
@@ -96,7 +92,7 @@ export default function PyDataHackathonHubPage() {
         <section className="px-6 py-10 border-b border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950">
           <div className="max-w-6xl mx-auto">
             <span className="inline-block px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-semibold rounded-full mb-3 uppercase tracking-wide">
-              You&apos;re in
+              Public showcase
             </span>
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
               {event?.title ?? "Cursor Boston × PyData — Hackathon hub"}
@@ -170,8 +166,7 @@ export default function PyDataHackathonHubPage() {
 
         {/* Submissions grid */}
         <SubmissionsGrid submissions={submissions} />
-      </main>
-    </PyDataAccessGate>
+    </main>
   );
 }
 
@@ -564,7 +559,9 @@ function SubmissionInstructions() {
           <code className="rounded bg-neutral-200 px-1.5 py-0.5 text-xs font-mono dark:bg-neutral-800">
             {PYDATA_SUBMISSIONS_BRANCH}
           </code>{" "}
-          branch. Once a maintainer merges it through to{" "}
+          branch. The event is over, but the exercise stays open: anyone can
+          do the notebook later and open a PR to be listed with the others.
+          Once a maintainer merges it through to{" "}
           <code className="rounded bg-neutral-200 px-1.5 py-0.5 text-xs font-mono dark:bg-neutral-800">
             main
           </code>
@@ -908,132 +905,140 @@ function SubmissionCard({
     eligibilityTone === "eligible" ? "Winner eligible" : "After deadline";
 
   return (
-    <li className="flex flex-col rounded-xl border border-neutral-200 bg-white p-5 transition-colors hover:border-emerald-500/40 dark:border-neutral-800 dark:bg-neutral-900">
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <span
-          className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${badgeClass}`}
-        >
-          {badgeText}
-        </span>
-        {submission.submittedAt ? (
-          <time
-            dateTime={submission.submittedAt}
-            className="text-[11px] text-neutral-500 dark:text-neutral-400"
+    <li className="grid gap-5 rounded-xl border border-neutral-200 bg-white p-5 transition-colors hover:border-emerald-500/40 dark:border-neutral-800 dark:bg-neutral-900 lg:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="min-w-0">
+        <h3 className="text-lg font-semibold text-foreground">
+          <a
+            href={submission.notebookUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
           >
-            {formatSubmissionTime(submission.submittedAt)}
-          </time>
+            {submission.title}
+          </a>
+        </h3>
+        <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+          by{" "}
+          <a
+            href={handleHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-neutral-700 hover:text-emerald-600 dark:text-neutral-300 dark:hover:text-emerald-400"
+          >
+            {submission.displayName}
+          </a>
+          <span className="text-neutral-400">
+            {" "}
+            · @{submission.githubHandle}
+          </span>
+        </p>
+
+        <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
+          {submission.description}
+        </p>
+
+        {submission.tags.length > 0 ? (
+          <ul className="mt-4 flex flex-wrap gap-1.5">
+            {submission.tags.map((tag) => (
+              <li
+                key={tag}
+                className="rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-medium text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300"
+              >
+                {tag}
+              </li>
+            ))}
+          </ul>
+        ) : null}
+
+        {submission.collaborators.length > 0 ? (
+          <p className="mt-3 text-xs text-neutral-500 dark:text-neutral-400">
+            With:{" "}
+            {submission.collaborators.map((c, i) => (
+              <span key={`${c.displayName}-${i}`}>
+                {i > 0 ? ", " : ""}
+                {c.githubHandle ? (
+                  <a
+                    href={`https://github.com/${c.githubHandle}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-neutral-700 hover:text-emerald-600 dark:text-neutral-300 dark:hover:text-emerald-400"
+                  >
+                    {c.displayName}
+                  </a>
+                ) : (
+                  c.displayName
+                )}
+              </span>
+            ))}
+          </p>
         ) : null}
       </div>
-      <h3 className="text-lg font-semibold text-foreground line-clamp-2">
-        <a
-          href={submission.notebookUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
-        >
-          {submission.title}
-        </a>
-      </h3>
-      <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-        by{" "}
-        <a
-          href={handleHref}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-medium text-neutral-700 hover:text-emerald-600 dark:text-neutral-300 dark:hover:text-emerald-400"
-        >
-          {submission.displayName}
-        </a>
-        <span className="text-neutral-400"> · @{submission.githubHandle}</span>
-      </p>
 
-      <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400 line-clamp-4">
-        {submission.description}
-      </p>
-
-      {submission.tags.length > 0 ? (
-        <ul className="mt-4 flex flex-wrap gap-1.5">
-          {submission.tags.map((tag) => (
-            <li
-              key={tag}
-              className="rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-medium text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300"
-            >
-              {tag}
-            </li>
-          ))}
-        </ul>
-      ) : null}
-
-      {submission.score ? (
-        <div className="mt-4 rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3 dark:border-emerald-400/20 dark:bg-emerald-400/5">
-          <div className="flex items-baseline justify-between gap-2">
-            <span className="text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
-              AI judge score
-            </span>
-            <span className="font-mono text-sm font-semibold tabular-nums text-emerald-700 dark:text-emerald-400">
-              {submission.score.score}/10
-            </span>
-          </div>
-          <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
-            {submission.score.rationale}
-          </p>
-        </div>
-      ) : null}
-
-      {submission.collaborators.length > 0 ? (
-        <p className="mt-3 text-xs text-neutral-500 dark:text-neutral-400">
-          With:{" "}
-          {submission.collaborators.map((c, i) => (
-            <span key={`${c.displayName}-${i}`}>
-              {i > 0 ? ", " : ""}
-              {c.githubHandle ? (
-                <a
-                  href={`https://github.com/${c.githubHandle}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-neutral-700 hover:text-emerald-600 dark:text-neutral-300 dark:hover:text-emerald-400"
-                >
-                  {c.displayName}
-                </a>
-              ) : (
-                c.displayName
-              )}
-            </span>
-          ))}
-        </p>
-      ) : null}
-
-      <div className="mt-auto pt-5 flex items-center justify-between text-xs">
-        <a
-          href={submission.notebookUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 font-medium text-emerald-600 hover:text-emerald-500 dark:text-emerald-400"
-        >
-          View notebook
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
+      <div className="flex min-w-0 flex-col gap-3 lg:border-l lg:border-neutral-200 lg:pl-5 lg:dark:border-neutral-800">
+        <div className="flex items-center justify-between gap-3">
+          <span
+            className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${badgeClass}`}
           >
-            <path d="M7 17l9.2-9.2M17 17V7H7" />
-          </svg>
-        </a>
-        <a
-          href={submission.folderUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
-        >
-          Folder
-        </a>
+            {badgeText}
+          </span>
+          {submission.submittedAt ? (
+            <time
+              dateTime={submission.submittedAt}
+              className="text-[11px] text-neutral-500 dark:text-neutral-400"
+            >
+              {formatSubmissionTime(submission.submittedAt)}
+            </time>
+          ) : null}
+        </div>
+
+        {submission.score ? (
+          <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3 dark:border-emerald-400/20 dark:bg-emerald-400/5">
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+                AI judge score
+              </span>
+              <span className="font-mono text-sm font-semibold tabular-nums text-emerald-700 dark:text-emerald-400">
+                {submission.score.score}/10
+              </span>
+            </div>
+            <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
+              {submission.score.rationale}
+            </p>
+          </div>
+        ) : null}
+
+        <div className="mt-auto flex items-center justify-between text-xs">
+          <a
+            href={submission.notebookUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 font-medium text-emerald-600 hover:text-emerald-500 dark:text-emerald-400"
+          >
+            View notebook
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M7 17l9.2-9.2M17 17V7H7" />
+            </svg>
+          </a>
+          <a
+            href={submission.folderUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+          >
+            Folder
+          </a>
+        </div>
       </div>
     </li>
   );
