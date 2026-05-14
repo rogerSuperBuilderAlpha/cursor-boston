@@ -1,6 +1,6 @@
 {
   "title": "Second Earth Scout: NASA Exoplanet Habitability Analysis",
-  "description": "An exploration of NASA's Exoplanet Archive using machine learning to identify potentially habitable worlds through habitability indexing, XGBoost scoring, and anomaly detection.",
+  "description": "An advanced exoplanet intelligence system using Random Forest classifiers and anomaly detection to identify 'Dark Horse Earths'—habitable worlds that defy standard planetary archetypes.",
   "displayName": "Ankit Tej Yadav",
   "tags": ["astronomy", "machine-learning", "exoplanets", "habitability"],
   "collaborators": []

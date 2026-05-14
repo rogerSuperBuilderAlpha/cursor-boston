@@ -1,0 +1,7 @@
+{
+  "score": 4,
+  "rationale": "The notebook explores MBTA GTFS and reliability data with route-type counts, bus shape visualizations, and bus reliability mapping. It has a relevant civic-data theme, but the analysis is mostly exploratory infrastructure plotting, includes a weak opening/metadata package, and does not clearly answer the stated on-time reliability question with a crisp finding. It is a useful start, but less polished and less insight-focused than stronger submissions.",
+  "model": "gpt-5.5",
+  "scoredAt": "2026-05-14T01:35:00.000Z",
+  "scorerVersion": 1
+}
