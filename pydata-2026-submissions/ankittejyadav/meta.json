@@ -1,0 +1,7 @@
+{
+  "title": "Second Earth Scout: NASA Exoplanet Habitability Analysis",
+  "description": "An exploration of NASA's Exoplanet Archive using machine learning to identify potentially habitable worlds through habitability indexing, XGBoost scoring, and anomaly detection.",
+  "displayName": "Ankit Tej Yadav",
+  "tags": ["astronomy", "machine-learning", "exoplanets", "habitability"],
+  "collaborators": []
+}

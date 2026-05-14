@@ -1,0 +1,7 @@
+{
+  "score": 8,
+  "rationale": "This notebook tells a polished and accessible story around the Fulton Gap, with clear sample cuts, an effective radius-distribution visualization, and strong explanatory prose. The insight is compelling and easy to understand, and the notebook uses Marimo well as a guided narrative. It scores below the very top entries mainly because it recreates a known result rather than surfacing a more novel or actionable finding.",
+  "model": "gpt-5.5",
+  "scoredAt": "2026-05-14T01:05:00.000Z",
+  "scorerVersion": 1
+}

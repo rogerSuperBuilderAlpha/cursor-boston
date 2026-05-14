@@ -1,0 +1,6 @@
+{
+  "title": "Cartography of 24 Minds — TF-IDF, PCA, and clustering of historical-thinker personas",
+  "description": "Marimo notebook for the May 13, 2026 Cursor Boston × PyData hack. Treats 24 historical-thinker persona prompts as a text corpus, then maps them with TF-IDF, cosine similarity, PCA, KMeans clusters, and distinctive-term tables. Self-contained: embedded corpus, no API keys, no internet at run-time.",
+  "displayName": "AaronGrace978",
+  "tags": ["nlp", "tf-idf", "pca", "clustering", "exploratory", "humanities"]
+}

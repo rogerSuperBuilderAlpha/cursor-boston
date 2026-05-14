@@ -1,0 +1,6 @@
+{
+  "title": "The Valley Between Worlds — Finding the Fulton Gap",
+  "description": "An interactive marimo notebook that reveals the Fulton Gap: a striking valley in the size distribution of small exoplanets discovered by Kepler. The gap, near 1.8 Earth radii, hints at atmospheric stripping of close-in planets — visualized with public NASA Exoplanet Archive data.",
+  "displayName": "Amir Molavi",
+  "tags": ["exoplanets", "kepler", "astronomy", "visualization", "marimo"]
+}
