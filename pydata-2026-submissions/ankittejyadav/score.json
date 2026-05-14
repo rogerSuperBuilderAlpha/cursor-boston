@@ -1,7 +1,7 @@
 {
-  "score": 6,
-  "rationale": "The notebook has an engaging premise around finding overlooked high-habitability exoplanets and combines feature engineering, clustering, anomaly detection, and an interactive candidate table. The story is interesting, but the core model is partly circular because it trains on synthetic habitability labels derived from the same handcrafted scores it later ranks, so the evidence is weaker than the presentation suggests. It is a solid exploratory notebook with useful visuals, but the rigor is moderate.",
+  "score": 7,
+  "rationale": "This replacement notebook improves the original Second Earth Scout concept with a clearer habitability-intelligence narrative, NASA Exoplanet Archive data, Earth-similarity and habitable-zone scoring, clustering, anomaly detection, and Random Forest ranking. The dark-horse framing is engaging and the analysis is more polished than the first version, but the model still relies on synthetic labels derived from handcrafted habitability scores, so the evidence is more exploratory than independently validated. Overall it is a strong interactive exploration with moderate methodological rigor.",
   "model": "gpt-5.5",
-  "scoredAt": "2026-05-14T01:11:00.000Z",
+  "scoredAt": "2026-05-14T01:29:00.000Z",
   "scorerVersion": 1
 }

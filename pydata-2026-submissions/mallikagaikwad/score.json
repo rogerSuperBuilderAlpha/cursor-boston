@@ -1,0 +1,7 @@
+{
+  "score": 7,
+  "rationale": "The notebook presents a clear campaign timing insight from the UCI Bank Marketing data: conversion varies sharply by job segment and month, with retired and student customers performing especially well in March, September, and October. It also includes useful call-fatigue analysis and correctly warns about duration leakage for predictive pipelines. The analysis is focused and actionable, though it is mostly descriptive segmentation rather than a deeper causal or validated modeling study.",
+  "model": "gpt-5.5",
+  "scoredAt": "2026-05-14T01:32:00.000Z",
+  "scorerVersion": 1
+}
