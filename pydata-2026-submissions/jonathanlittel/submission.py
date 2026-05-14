@@ -4,6 +4,7 @@
 #     "matplotlib==3.10.9",
 #     "numpy==2.4.4",
 #     "pandas==3.0.3",
+#     "scipy==1.17.1",
 # ]
 # requires-python = ">=3.13"
 # ///
@@ -19,12 +20,11 @@ def _():
     return
 
 
-@app.cell(hide_code=True)
+@app.cell
 def _():
     import marimo as mo
 
-    mo.md("Hello!")
-
+    mo.md("## Bank Marketing Data Analysis")
     return (mo,)
 
 
@@ -41,9 +41,9 @@ def _():
         _buf = io.BytesIO(resp.read())
     with zipfile.ZipFile(_buf) as zf:
         df = pd.read_csv(zf.open("bank-full.csv"), sep=";")
-    df
+    (df, pd)
 
-    return (df,)
+    return df, pd
 
 
 @app.cell(hide_code=True)
@@ -77,12 +77,11 @@ def _(df, mo):
             mo.ui.table(y_df),
         ]
     )
-
     return
 
 
 @app.cell(hide_code=True)
-def _(df, mo):
+def _(df, mo, pd):
     import matplotlib.pyplot as plt
     import numpy as np
 
@@ -106,50 +105,57 @@ def _(df, mo):
     ax1.spines["right"].set_visible(False)
     fig1.tight_layout()
 
-    # Second histogram: split by how many campaign contacts so far (1–3 vs 4+). "3 or more"
-    # in the prompt is treated as strictly more than 3 so groups do not overlap.
-    _bal_few = df.loc[df["campaign"].between(1, 3, inclusive="both"), "balance"]
-    _bal_many = df.loc[df["campaign"] > 3, "balance"]
-    _edges = np.linspace(df["balance"].min(), df["balance"].max(), 61)
+    # `campaign` = number of contacts in the current campaign on this row (integer >= 1).
+    _n_bins = 5
+    _call_bins = pd.cut(
+        df["campaign"],
+        bins=_n_bins,
+        include_lowest=True,
+        duplicates="drop",
+    )
+    _by_bin = (
+        df.assign(_call_bins=_call_bins)
+        .groupby("_call_bins", observed=True)
+        .agg(mean_balance=("balance", "mean"), n=("balance", "count"))
+        .reset_index()
+    )
+    _labels = [str(iv) for iv in _by_bin["_call_bins"]]
+    _x = np.arange(len(_by_bin))
 
     fig2, ax2 = plt.subplots(figsize=(9, 4.5))
-    ax2.hist(
-        _bal_few,
-        bins=_edges,
+    ax2.bar(
+        _x,
+        _by_bin["mean_balance"],
         color="#2c5282",
         edgecolor="white",
-        linewidth=0.35,
-        log=True,
-        alpha=0.65,
-        label="1–3",
+        linewidth=0.6,
     )
-    ax2.hist(
-        _bal_many,
-        bins=_edges,
-        color="#c05621",
-        edgecolor="white",
-        linewidth=0.35,
-        log=True,
-        alpha=0.65,
-        label="4+",
-    )
-    ax2.set_xlabel("Average yearly balance (euros)")
-    ax2.set_ylabel("Count (log scale)")
-    ax2.set_title("Histogram of balance by prior marketing calls in this campaign")
-    ax2.legend(title="Number of marketing calls before loan")
+    ax2.set_xticks(_x, labels=_labels, rotation=25, ha="right")
+    ax2.set_xlabel("Number of marketing calls (this campaign), equal-width bins")
+    ax2.set_ylabel("Mean balance (euros)")
+    ax2.set_title("Mean balance by binned call count")
+    ax2.bar_label(ax2.containers[0], labels=[f"n={int(n)}" for n in _by_bin["n"]], padding=3, fontsize=8)
     ax2.spines["top"].set_visible(False)
     ax2.spines["right"].set_visible(False)
     fig2.tight_layout()
+
+    _r_pearson = df["campaign"].corr(df["balance"], method="pearson")
+    _r_spearman = df["campaign"].corr(df["balance"], method="spearman")
 
     mo.vstack(
         [
             mo.md(
                 "The public UCI file does not record **when a loan began** or a stable **customer id** across calls. "
                 "For the first plot, **starting period** means **`campaign == 1`**. "
-                "For the second plot, **`campaign`** counts contacts in the **current** campaign on that row; "
-                "we treat that as a stand-in for how many marketing calls occurred **before** the modeled outcome, "
-                "and group **1–3** vs **4+** so bins do not double-count the same call count. "
-                "Both histograms use a **log-scaled count axis**."
+                "The second chart bins **`campaign`** (contacts so far in this campaign) into **five equal-width** "
+                "intervals and plots the **mean balance** per bin (bar labels show row counts). "
+                "The first chart still uses a **log-scaled count** axis."
+            ),
+            mo.md(
+                f"**Correlation (full sample, n = {len(df):,}):**  \n"
+                f"- **Pearson r** (`campaign` vs `balance`): `{_r_pearson:.4f}`  \n"
+                f"- **Spearman rho** (rank): `{_r_spearman:.4f}`  \n"
+                "These are marginal associations only (no controls); outreach rules may target wealthier clients."
             ),
             mo.mpl.interactive(fig1),
             mo.mpl.interactive(fig2),
