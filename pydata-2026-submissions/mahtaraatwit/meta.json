@@ -1,8 +1,8 @@
 {
-  "title": "Short, specific title for your notebook",
-  "description": "1–3 sentences. What does the notebook do? What dataset or problem? What did you find?",
-  "displayName": "Your name as you want it on the page",
-  "tags": ["healthcare", "embeddings", "exploratory"],
+  "title": "Probably Don't Drive your Bike at Night",
+  "description": "I used a bike share dataset to find out if people bike more at night than during the day.",
+  "displayName": "Amen",
+  "tags": ["bikes", "morebikes", "streetlights"],
   "collaborators": [
     { "displayName": "Pat Collaborator", "githubHandle": "pat-collab" }
   ]
