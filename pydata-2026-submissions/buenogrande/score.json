@@ -1,0 +1,7 @@
+{
+  "score": 1,
+  "rationale": "The submitted notebook is only a minimal Marimo starter that says hello and contains no dataset, analysis, evidence, or insight. It is useful as a format smoke test but not as a hackathon submission to evaluate.",
+  "model": "gpt-5.5",
+  "scoredAt": "2026-05-14T01:00:00.000Z",
+  "scorerVersion": 1
+}
