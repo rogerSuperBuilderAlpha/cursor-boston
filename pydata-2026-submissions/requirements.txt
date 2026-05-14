@@ -1,0 +1,5 @@
+pandas
+ucimlrepo
+plotly
+marimo
+nbformat
