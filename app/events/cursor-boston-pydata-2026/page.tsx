@@ -616,7 +616,7 @@ function SubmissionInstructions() {
                 </code>{" "}
                 with{" "}
                 <code className="rounded bg-neutral-200 px-1 py-0.5 text-xs font-mono dark:bg-neutral-800">
-                  submission.ipynb
+                  submission.py
                 </code>{" "}
                 and{" "}
                 <code className="rounded bg-neutral-200 px-1 py-0.5 text-xs font-mono dark:bg-neutral-800">

@@ -15,7 +15,7 @@ import path from "node:path";
  *   pydata-2026-submissions/
  *     README.md
  *     <gh-handle>/
- *       submission.ipynb
+ *       submission.py
  *       meta.json
  *
  * The event page reads this list at build time. New submissions appear
@@ -28,7 +28,7 @@ export const PYDATA_SUBMISSIONS_DIR = "pydata-2026-submissions";
 export const PYDATA_SUBMISSIONS_REPO_URL =
   "https://github.com/rogerSuperBuilderAlpha/cursor-boston";
 
-const NOTEBOOK_FILENAME = "submission.ipynb";
+const NOTEBOOK_FILENAME = "submission.py";
 const META_FILENAME = "meta.json";
 const SCORE_FILENAME = "score.json";
 const MAX_TITLE = 120;
@@ -60,7 +60,7 @@ export interface PyDataSubmission {
   description: string;
   tags: string[];
   collaborators: PyDataSubmissionCollaborator[];
-  /** GitHub URL pointing at the rendered notebook on `main`. */
+  /** GitHub URL pointing at the Marimo notebook source on `main`. */
   notebookUrl: string;
   /** GitHub URL pointing at the submission folder. */
   folderUrl: string;

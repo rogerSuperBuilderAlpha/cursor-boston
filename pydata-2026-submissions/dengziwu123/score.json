@@ -1,0 +1,7 @@
+{
+  "score": 2,
+  "rationale": "The notebook describes a plausible AI-assisted bank marketing workflow, but it uses only synthetic placeholder customer rows and does not analyze a real dataset or produce a supported insight. The recommendation framing is understandable, but the submission remains a concept sketch rather than evidence-backed analysis.",
+  "model": "gpt-5.5",
+  "scoredAt": "2026-05-14T01:24:00.000Z",
+  "scorerVersion": 1
+}
