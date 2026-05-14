@@ -152,6 +152,27 @@ const audienceCards = [
 
 const DISCORD_LINK = "https://discord.gg/Wsncg8YYqc";
 
+const pastHackathonCards = [
+  {
+    title: "PyData May 2026",
+    label: "Past notebook hack",
+    href: "/events/cursor-boston-pydata-2026",
+    description:
+      "View the scored notebook showcase, sorted results, and winner-eligible submissions from the PyData evening hack.",
+    submitCopy:
+      "Try the Marimo notebook exercise anytime and open a PR to pydata-2026-submissions to have your work reviewed, scored, and listed.",
+  },
+  {
+    title: "Hack-a-Sprint 2026",
+    label: "Past agent hack",
+    href: "/hackathons/hack-a-sprint-2026",
+    description:
+      "Browse the final project gallery, AI scores, peer judging, and winning agent builds from Hack-a-Sprint.",
+    submitCopy:
+      "Build the agent challenge on your own schedule and open a PR to hack-a-sprint-2026-submissions to get your project scored.",
+  },
+];
+
 export default function Home() {
   return (
     <div className="flex flex-col">
@@ -197,25 +218,46 @@ export default function Home() {
               View Events
             </Link>
           </div>
-          <div className="mt-5 flex flex-col items-center justify-center gap-2 text-sm text-neutral-500 dark:text-neutral-400 sm:flex-row">
-            <span className="text-neutral-500 dark:text-neutral-400">
-              Past event results:
-            </span>
-            <Link
-              href="/events/cursor-boston-pydata-2026"
-              className="font-medium underline-offset-4 hover:text-foreground hover:underline"
-            >
-              PyData May 2026
-            </Link>
-            <span className="hidden text-neutral-300 dark:text-neutral-700 sm:inline">
-              /
-            </span>
-            <Link
-              href="/hackathons/hack-a-sprint-2026"
-              className="font-medium underline-offset-4 hover:text-foreground hover:underline"
-            >
-              Hack-a-Sprint 2026
-            </Link>
+          <div className="mt-10 text-left">
+            <div className="mb-4 flex flex-col gap-1 text-center">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-neutral-500 dark:text-neutral-400">
+                Past Hackathons
+              </p>
+              <p className="text-sm text-neutral-600 dark:text-neutral-300">
+                Results are live, and the challenges remain open for anyone who
+                wants to try them later.
+              </p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              {pastHackathonCards.map((card) => (
+                <Link
+                  key={card.href}
+                  href={card.href}
+                  className="group flex h-full flex-col rounded-2xl border border-neutral-200 bg-white/80 p-5 text-left shadow-sm transition-colors hover:border-emerald-400/70 hover:bg-emerald-50/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:border-neutral-800 dark:bg-neutral-900/70 dark:hover:border-emerald-500/60 dark:hover:bg-emerald-950/20"
+                >
+                  <div className="mb-4 flex items-center justify-between gap-3">
+                    <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
+                      {card.label}
+                    </span>
+                    <span
+                      className="text-sm font-semibold text-emerald-600 transition-transform group-hover:translate-x-0.5 dark:text-emerald-400"
+                      aria-hidden="true"
+                    >
+                      Results &rarr;
+                    </span>
+                  </div>
+                  <h2 className="text-xl font-bold text-foreground">
+                    {card.title}
+                  </h2>
+                  <p className="mt-2 text-sm leading-relaxed text-neutral-600 dark:text-neutral-300">
+                    {card.description}
+                  </p>
+                  <p className="mt-4 rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-3 text-sm leading-relaxed text-neutral-700 dark:border-neutral-700 dark:bg-neutral-950/60 dark:text-neutral-300">
+                    {card.submitCopy}
+                  </p>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </section>
