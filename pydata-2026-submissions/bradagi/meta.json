@@ -1,0 +1,5 @@
+{
+  "title": "The Bank's Recontact Calendar Was Upside-Down",
+  "description": "Marimo analysis of the UCI Bank Marketing dataset surfacing two campaign-management levers the bank ignored: a 31-90 day recontact sweet spot that converts at 42% (the bank placed only 6% of recontacts there), and a dial-count exhaustion curve where calls past attempt #6 burn 56 minutes per subscription vs 35 on the first three. Includes a within-month sanity check that controls for the obvious seasonality confound.",
+  "displayName": "Brad Egan"
+}

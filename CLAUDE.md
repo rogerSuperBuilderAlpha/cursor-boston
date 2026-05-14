@@ -48,7 +48,7 @@ For each PR targeting `pydata-2026-submissions`:
    ```bash
    gh pr checkout <pr-number>
    ```
-2. **Review for the standard rules** (no Moderna branding, no secrets, folder is the contributor's GitHub handle, `submission.ipynb` + `meta.json` present). See `pydata-2026-submissions/README.md`.
+2. **Review for the standard rules** (no Moderna branding, no secrets, folder is the contributor's GitHub handle, `submission.py` + `meta.json` present — reject `.ipynb` submissions, the format is Marimo's native `.py`). See `pydata-2026-submissions/README.md`.
 3. **Run the LLM scorer.** This calls Claude with the hackathon rubric and writes `score.json` (score 1-10 + rationale + model + scoredAt) into the submission folder:
    ```bash
    ANTHROPIC_API_KEY=... npx tsx scripts/score-pydata-submission.ts --handle <gh-handle>

@@ -18,7 +18,7 @@ import {
 /**
  * The loader reads from `process.cwd()`, so each test spins up an isolated
  * temp directory, chdir's into it, populates the expected
- * `pydata-2026-submissions/<handle>/{submission.ipynb,meta.json}` layout,
+ * `pydata-2026-submissions/<handle>/{submission.py,meta.json}` layout,
  * runs the loader, and restores the original cwd.
  */
 function withTempCwd(setup: (dir: string) => void): ReturnType<typeof getPyDataSubmissions> {
@@ -43,7 +43,7 @@ function writeSubmission(
   const folder = path.join(root, PYDATA_SUBMISSIONS_DIR, handle);
   fs.mkdirSync(folder, { recursive: true });
   if (options.notebook !== false) {
-    fs.writeFileSync(path.join(folder, "submission.ipynb"), "{}");
+    fs.writeFileSync(path.join(folder, "submission.py"), "# marimo notebook\n");
   }
   if (meta !== null) {
     const body = typeof meta === "string" ? meta : JSON.stringify(meta);
@@ -85,14 +85,14 @@ describe("getPyDataSubmissions", () => {
     expect(s.title).toBe("mRNA embedding tricks");
     expect(s.tags).toEqual(["healthcare", "embeddings"]);
     expect(s.notebookUrl).toBe(
-      `${PYDATA_SUBMISSIONS_REPO_URL}/blob/main/${PYDATA_SUBMISSIONS_DIR}/adam-sychla/submission.ipynb`
+      `${PYDATA_SUBMISSIONS_REPO_URL}/blob/main/${PYDATA_SUBMISSIONS_DIR}/adam-sychla/submission.py`
     );
     expect(s.folderUrl).toBe(
       `${PYDATA_SUBMISSIONS_REPO_URL}/tree/main/${PYDATA_SUBMISSIONS_DIR}/adam-sychla`
     );
   });
 
-  it("skips a folder missing submission.ipynb", () => {
+  it("skips a folder missing submission.py", () => {
     const result = withTempCwd((root) => {
       writeSubmission(
         root,
@@ -103,7 +103,7 @@ describe("getPyDataSubmissions", () => {
     });
     expect(result).toEqual([]);
     expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining("missing submission.ipynb")
+      expect.stringContaining("missing submission.py")
     );
   });
 

@@ -1,7 +1,8 @@
 # PyData × Cursor Boston — Hackathon submissions
 
-This directory holds the Jupyter notebook submissions from the **May 13, 2026
-Cursor Boston × PyData evening hack at Moderna HQ**.
+This directory holds the Marimo notebook submissions from the **May 13, 2026
+Cursor Boston × PyData evening hack at Moderna HQ**. Marimo saves notebooks
+as plain Python files (`.py`), so every submission is a `submission.py`.
 
 Each subfolder is one attendee's submission. The gated event page at
 [cursorboston.com/events/cursor-boston-pydata-2026](https://cursorboston.com/events/cursor-boston-pydata-2026)
@@ -19,9 +20,10 @@ reads this directory at build time and renders a card per merged submission.
    Example: `pydata-2026-submissions/adam-sychla/`.
 
 3. **Add two files inside your folder:**
-   - `submission.ipynb` — your Jupyter notebook. GitHub renders it natively,
-     so commit the notebook with output cells already executed if you want
-     reviewers to see results without re-running.
+   - `submission.py` — your Marimo notebook, in Marimo's native `.py` format
+     (the file Marimo writes when you save). GitHub renders it as Python
+     source; reviewers can run it locally with `marimo run submission.py`.
+     Do **not** submit a `.ipynb` — submissions must be `.py`.
    - `meta.json` — title + description, see template below.
 
 4. **Open a PR** targeting the branch **`pydata-2026-submissions`** (not
@@ -64,7 +66,7 @@ reads this directory at build time and renders a card per merged submission.
   output cells or in `meta.json`. Moderna asked us to keep those off public
   surfaces.
 - Don't commit secrets, API keys, or paid data. Sample data only.
-- Keep `submission.ipynb` under **50 MB** — if you have a huge dataset,
+- Keep `submission.py` under **50 MB** — if you have a huge dataset,
   reference it by URL inside the notebook instead of embedding.
 - Your folder name is your **GitHub handle**, not your real name. The page
   shows your `displayName` from `meta.json`.
@@ -86,8 +88,8 @@ reads this directory at build time and renders a card per merged submission.
    `develop` into `main`. Vercel deploys main → your card (with score
    badge) goes live.
 5. Your submission shows up on the event page. Other attendees can browse
-   it; the notebook itself is rendered by GitHub's built-in `.ipynb`
-   viewer.
+   it; the card links to `submission.py` on GitHub, which renders the
+   Marimo notebook source as Python.
 
 If anything's off, the maintainer will leave PR comments and you can push
 fixes to the same branch. If you push new commits after a score lands, the
