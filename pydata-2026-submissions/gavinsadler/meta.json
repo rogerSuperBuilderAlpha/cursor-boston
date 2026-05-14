@@ -1,0 +1,7 @@
+{
+    "title": "Boston Liquor License Explorer",
+    "description": "Interactive analysis of ~1,500 active Boston liquor licenses from the city's open data portal. Includes a clustered marker map, a kernel density heatmap showing license concentration across neighborhoods, and a time-of-day heatmap with a slider to explore which establishments are still open at any given hour.",
+    "displayName": "Gavin Sadler",
+    "tags": ["geospatial", "folium", "open-data", "boston", "heatmap"],
+    "collaborators": []
+  }
