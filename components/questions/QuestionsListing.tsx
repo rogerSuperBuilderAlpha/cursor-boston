@@ -62,41 +62,56 @@ export function QuestionsListing() {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    fetchQuestions()
-      .then((data) => {
+
+    async function loadQuestions() {
+      await Promise.resolve();
+      if (cancelled) return;
+      setLoading(true);
+      try {
+        const data = await fetchQuestions();
         if (cancelled) return;
         setQuestions(data.questions);
         setNextCursor(data.nextCursor);
-      })
-      .catch(() => {
+      } catch {
         if (cancelled) return;
         setQuestions([]);
         setNextCursor(null);
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setLoading(false);
-      });
+      }
+    }
+
+    void loadQuestions();
     return () => { cancelled = true; };
   }, [fetchQuestions]);
 
   // Fetch user votes
   useEffect(() => {
-    if (!user) { setUserVotes({}); return; }
-    (async () => {
+    let cancelled = false;
+
+    async function loadUserVotes() {
+      await Promise.resolve();
+      if (cancelled) return;
+      if (!user) {
+        setUserVotes({});
+        return;
+      }
       try {
         const token = await fetchIdToken(user);
         const res = await fetch("/api/questions/vote", {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
-        if (res.ok) {
+        if (res.ok && !cancelled) {
           const data = await res.json();
           setUserVotes(data.userVotes || {});
         }
       } catch {
         // Non-critical
       }
-    })();
+    }
+
+    void loadUserVotes();
+    return () => { cancelled = true; };
   }, [user]);
 
   const handleLoadMore = async () => {
@@ -234,22 +249,13 @@ export function QuestionsListing() {
               </div>
               <h3 className="text-lg font-medium text-foreground mb-1">No questions yet.</h3>
               <p className="text-neutral-500 mb-6">Be the first to ask!</p>
-              {user ? (
-                <Link
-                  href="/questions/ask"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
-                >
-                  <Plus size={16} />
-                  Ask a Question
-                </Link>
-              ) : (
-                <Link
-                  href="/login"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-neutral-900 dark:bg-white text-white dark:text-black hover:bg-neutral-800 dark:hover:bg-neutral-100 text-sm font-medium rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
-                >
-                  Sign in to ask
-                </Link>
-              )}
+              <Link
+                href="/questions/ask"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+              >
+                <Plus size={16} />
+                Ask a Question
+              </Link>
             </>
           )}
         </div>
