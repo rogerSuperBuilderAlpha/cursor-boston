@@ -1,1 +1,9 @@
-
+{
+  "title": "Will make it on time? MBTA Transport Analysis",
+  "description": "I wanted to find the historical trends of MBTA Transports on time. Which modes are most reliable v/s which are the least reliable.",
+  "displayName": "Kumari Simran",
+  "tags": ["government", "data", "exploratory"],
+  "collaborators": [
+    { "displayName": "Kumari Simran", "githubHandle": "simrankumari30" }
+  ]
+}
