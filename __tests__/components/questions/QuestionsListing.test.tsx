@@ -5,7 +5,7 @@
  */
 
 import React from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QuestionsListing } from "@/components/questions/QuestionsListing";
 
@@ -62,14 +62,18 @@ describe("QuestionsListing", () => {
 
     expect(await screen.findByText("No questions yet.")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Agents" }));
+    await act(async () => {
+      await user.click(screen.getByRole("button", { name: "Agents" }));
+    });
 
     await waitFor(() => {
       expect(mockFetch).toHaveBeenLastCalledWith(expect.stringContaining("tag=agents"));
     });
     expect(await screen.findByRole("heading", { name: "No matches found" })).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Clear filter?" }));
+    await act(async () => {
+      await user.click(screen.getByRole("button", { name: "Clear filter?" }));
+    });
 
     await waitFor(() => {
       const lastUrl = mockFetch.mock.calls.at(-1)?.[0] as string;
