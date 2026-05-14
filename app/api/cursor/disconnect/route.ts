@@ -6,13 +6,18 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
+import { cursorContract } from "@/lib/api-schemas/cursor";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { logger } from "@/lib/logger";
 import { withMiddleware, rateLimitConfigs } from "@/lib/middleware";
 import { getVerifiedUser } from "@/lib/server-auth";
 
+// @contracts: cursorContract.disconnect (lib/api-schemas/cursor.ts)
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+void cursorContract;
 
 async function handleDisconnect(request: NextRequest): Promise<NextResponse> {
   const user = await getVerifiedUser(request);

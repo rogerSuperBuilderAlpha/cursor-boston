@@ -86,7 +86,7 @@ jobs:
       # License compliance check (matches transitive licenses in production deps)
       - name: Check license compliance
         run: |
-          npx license-checker --production --onlyAllow "MIT;MIT*;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;CC0-1.0;CC-BY-3.0;CC-BY-4.0;Unlicense;0BSD;BlueOak-1.0.0;GPL-3.0-only;GPL-3.0-or-later;Hippocratic-2.1;MPL-2.0;LGPL-3.0-or-later;(BSD-3-Clause OR GPL-2.0);MIT AND ISC" --summary
+          npx license-checker --production --excludePackages "@cursor/sdk@1.0.13;@cursor/sdk-darwin-arm64@1.0.13;@cursor/sdk-darwin-x64@1.0.13;@cursor/sdk-linux-arm64@1.0.13;@cursor/sdk-linux-x64@1.0.13;@cursor/sdk-win32-x64@1.0.13" --onlyAllow "MIT;MIT*;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;CC0-1.0;CC-BY-3.0;CC-BY-4.0;Unlicense;0BSD;BlueOak-1.0.0;GPL-3.0-only;GPL-3.0-or-later;Hippocratic-2.1;MPL-2.0;LGPL-3.0-or-later;(BSD-3-Clause OR GPL-2.0);MIT AND ISC" --summary
 
       # Secrets scanning with gitleaks
       - name: Run Gitleaks

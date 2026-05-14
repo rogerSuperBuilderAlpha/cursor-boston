@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
+import { cursorContract } from "@/lib/api-schemas/cursor";
 import { encryptApiKey, fingerprintApiKey } from "@/lib/cursor/encryption";
 import {
   InvalidCursorKeyError,
@@ -43,13 +44,12 @@ async function handleConnect(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "invalid_body" }, { status: 400 });
   }
 
-  const apiKey =
-    typeof (body as { apiKey?: unknown })?.apiKey === "string"
-      ? (body as { apiKey: string }).apiKey.trim()
-      : "";
-  const monthlyCapUsd = parseMonthlyCapUsd(
-    (body as { monthlyCapUsd?: unknown })?.monthlyCapUsd
-  );
+  const parsedBody = cursorContract.connect.body.safeParse(body);
+  if (!parsedBody.success) {
+    return NextResponse.json({ error: "invalid_body" }, { status: 400 });
+  }
+  const apiKey = parsedBody.data.apiKey.trim();
+  const monthlyCapUsd = parseMonthlyCapUsd(parsedBody.data.monthlyCapUsd);
 
   if (!apiKey || monthlyCapUsd === null) {
     return NextResponse.json({ error: "invalid_body" }, { status: 400 });
