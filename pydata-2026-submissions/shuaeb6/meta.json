@@ -1,0 +1,7 @@
+{
+  "title": "Wall of Shame — where protein fitness predictors collectively fail",
+  "description": "Joins the ProteinGym benchmark summary (217 deep mutational scanning assays scored by ~80 models) with per-assay metadata to find proteins every state-of-the-art model fails on. Stability assays are easiest (median best-model Spearman 0.72), activity is the frontier. Interactive py3Dmol viewer fetches AlphaFold structures by UniProt ID, colored by pLDDT — the hardest proteins overlap with regions AlphaFold itself isn't confident in.",
+  "displayName": "Mohd Mujtaba Shoeb",
+  "tags": ["proteingym", "alphafold", "protein-engineering", "marimo", "3d-viewer"],
+  "collaborators": []
+}
