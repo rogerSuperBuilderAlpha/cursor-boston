@@ -8,6 +8,16 @@ Conventions and behaviors that apply to every session in this repo.
 
 The workflow validates that `firestore.indexes.json` parses before deploying. The Firestore emulator isn't run on every commit — that's a heavyweight check (needs Java) and CI's "Firestore rules tests" job already covers it on every PR.
 
+## Verify locally before any develop→main release
+
+Before merging or pushing any change all the way to `main`, run a local production verification:
+
+1. Run `npm run build`.
+2. Run `npm start` against that build.
+3. Share the local URL with the user and wait for explicit confirmation before creating or merging the `develop` → `main` release PR.
+
+Do this even when CI or type checks are green, especially for UI changes, so production Vercel deploys are not used as the visual QA loop.
+
 ## Fast-forward the core contribution branches after every develop→main release
 
 Several long-lived branches serve as **persistent contribution / submission targets** — contributors PR into them instead of forking against `develop` or `main`. They survive across releases, so they need to stay current with `develop` or contributor PR diffs fill up with stale upstream commits.
