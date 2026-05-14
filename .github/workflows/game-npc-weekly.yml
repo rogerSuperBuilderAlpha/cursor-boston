@@ -1,0 +1,67 @@
+name: Game NPC weekly
+
+# Sunday 05:30 UTC = 30 min after the rollover cron, so any state changes
+# from `game-weekly-rollover` have settled before the NPCs run.
+# GitHub Actions cron is UTC-only.
+#
+# Required repo secrets (reuses the rollover ones — single shared cron secret):
+#   GAME_NPC_WEEKLY_URL  — full HTTPS URL of /api/game/npc-weekly
+#                          (e.g. https://cursor-boston.vercel.app/api/game/npc-weekly)
+#   GAME_ROLLOVER_SECRET — must match the GAME_ROLLOVER_SECRET env var on the deployment
+
+on:
+  schedule:
+    - cron: '30 5 * * 0'
+  workflow_dispatch:
+    inputs:
+      weekStartIso:
+        description: 'Optional yyyy-mm-dd to override the week-start key (idempotency). Leave blank for current.'
+        required: false
+        type: string
+      dryRun:
+        description: 'If true, compute the action plan but skip writes.'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  npc-weekly:
+    name: POST /api/game/npc-weekly
+    runs-on: ubuntu-latest
+    steps:
+      - name: Invoke NPC weekly endpoint
+        env:
+          NPC_WEEKLY_URL: ${{ secrets.GAME_NPC_WEEKLY_URL }}
+          ROLLOVER_SECRET: ${{ secrets.GAME_ROLLOVER_SECRET }}
+          WEEK_START_OVERRIDE: ${{ inputs.weekStartIso }}
+          DRY_RUN: ${{ inputs.dryRun }}
+        run: |
+          set -euo pipefail
+          if [ -z "${NPC_WEEKLY_URL:-}" ]; then
+            echo "::error::GAME_NPC_WEEKLY_URL secret is not set"; exit 1
+          fi
+          if [ -z "${ROLLOVER_SECRET:-}" ]; then
+            echo "::error::GAME_ROLLOVER_SECRET secret is not set"; exit 1
+          fi
+          URL="$NPC_WEEKLY_URL"
+          QS=""
+          if [ -n "$WEEK_START_OVERRIDE" ]; then
+            QS="weekStartIso=${WEEK_START_OVERRIDE}"
+          fi
+          if [ "${DRY_RUN:-false}" = "true" ]; then
+            if [ -n "$QS" ]; then QS="${QS}&dryRun=1"; else QS="dryRun=1"; fi
+          fi
+          if [ -n "$QS" ]; then
+            if [[ "$URL" == *\?* ]]; then URL="${URL}&${QS}"
+            else URL="${URL}?${QS}"
+            fi
+          fi
+          echo "Posting to $URL"
+          curl --fail-with-body -sS \
+            -X POST \
+            -H "x-rollover-secret: $ROLLOVER_SECRET" \
+            -H "Content-Type: application/json" \
+            "$URL"

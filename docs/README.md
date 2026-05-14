@@ -13,6 +13,8 @@ Read docs in this order depending on your goal:
 | 7 | [VERCEL.md](VERCEL.md) | Why PRs do not deploy to Vercel; production-only settings |
 | 8 | [Architecture Decision Records](adr/README.md) | Why the project is built the way it is |
 
+**Generals (the strategy game at `/game`):** open contribution surface for lore, units, spells, artifacts, castes, buildings, and UI. Start at [generals/README.md](generals/README.md).
+
 **Operations / events** (not required for typical code contributions):
 
 - [HACK_A_SPRINT_2026_OPS.md](HACK_A_SPRINT_2026_OPS.md)

@@ -1,0 +1,7 @@
+{
+  "score": 8,
+  "rationale": "The notebook extracts a sharp story from the UCI Bank Marketing data: conversion rises dramatically across the inferred 2008-2010 campaign timeline, and the analysis connects that lift to warmer targeting and prior-success signals while excluding post-call duration from predictive modeling. It is well structured, uses sanity-check assertions, and balances descriptive trend analysis with realistic modeling. The main caveat is that the inferred year reconstruction depends on row ordering, but the author is explicit about that assumption.",
+  "model": "gpt-5.5",
+  "scoredAt": "2026-05-14T01:34:00.000Z",
+  "scorerVersion": 1
+}

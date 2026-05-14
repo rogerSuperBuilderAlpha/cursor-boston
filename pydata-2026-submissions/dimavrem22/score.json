@@ -1,0 +1,7 @@
+{
+  "score": 8,
+  "rationale": "This notebook has a clever and memorable insight: instead of treating Push-T as a heavy image-only diffusion problem, it extracts the T pose directly from pixels and turns perception into a small optimization problem. The framing is sharp, the method is concrete, and the interactive video/frame exploration makes the argument easy to follow. It is slightly less complete than the top submissions because the downstream policy/benchmark comparison appears more exploratory than fully validated, but the idea is strong and well communicated.",
+  "model": "gpt-5.5",
+  "scoredAt": "2026-05-14T01:22:00.000Z",
+  "scorerVersion": 1
+}

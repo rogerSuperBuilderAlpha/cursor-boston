@@ -29,12 +29,9 @@ import {
   isHackathonEventSignupId,
 } from "../lib/hackathon-event-signup";
 import { getAdminDb } from "../lib/firebase-admin";
+import { parseGithubLogin } from "./_lib/parse-github-login";
 
 const GITHUB_COL_KEY = "What is your GitHub username?";
-
-const INVALID_LOGIN_TOKENS = new Set([
-  "", "n", "no", "none", "na", "n/a", "-", ".", "unknown",
-]);
 
 type CsvRow = Record<string, string>;
 
@@ -67,31 +64,6 @@ function parseCsv(content: string): CsvRow[] {
     out.push(obj);
   }
   return out;
-}
-
-function parseGithubLogin(raw: string | undefined): string | null {
-  if (!raw || typeof raw !== "string") return null;
-  let s = raw.trim();
-  if (!s) return null;
-  const lower = s.toLowerCase();
-  if (lower.startsWith("http://") || lower.startsWith("https://")) {
-    try {
-      const u = new URL(s.startsWith("http") ? s : `https://${s}`);
-      if (!u.hostname.includes("github.com")) return null;
-      const parts = u.pathname.split("/").filter(Boolean);
-      if (parts.length === 0) return null;
-      s = parts[0]!;
-    } catch { return null; }
-  } else if (lower.includes("github.com")) {
-    const idx = lower.indexOf("github.com");
-    const rest = s.slice(idx + "github.com".length).replace(/^[/:]+/, "");
-    const parts = rest.split("/").filter(Boolean);
-    if (parts.length === 0) return null;
-    s = parts[0]!;
-  }
-  s = s.replace(/^@+/, "");
-  if (INVALID_LOGIN_TOKENS.has(s.toLowerCase()) || s.length < 2) return null;
-  return s;
 }
 
 function parseArgs(argv: string[]) {

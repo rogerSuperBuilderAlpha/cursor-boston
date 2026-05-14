@@ -2,3 +2,5 @@ Contact: mailto:security@cursorboston.com
 Expires: 2027-12-31T23:59:59.000Z
 Preferred-Languages: en
 Canonical: https://cursorboston.com/.well-known/security.txt
+Policy: https://github.com/rogerSuperBuilderAlpha/cursor-boston/blob/main/.github/SECURITY.md
+Acknowledgments: https://github.com/rogerSuperBuilderAlpha/cursor-boston/blob/main/CONTRIBUTORS.md

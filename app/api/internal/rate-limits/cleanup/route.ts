@@ -9,6 +9,8 @@ import { Timestamp } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { logger } from "@/lib/logger";
 
+// @contracts: internalContract.rateLimitsCleanup (lib/api-schemas/internal.ts) — query parsing kept as-is for backwards-compat with existing cron invocations.
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 

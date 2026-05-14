@@ -87,6 +87,11 @@ export default function ShowcasePage() {
   const [talkModerationSubmissions, setTalkModerationSubmissions] = useState<
     TalkModerationSubmission[]
   >([]);
+  // Cursor-based pagination for the pending talk queue. Approved/completed
+  // buckets keep the original (capped) one-shot fetch — only pending grows
+  // unbounded under load, so that's where Load more matters.
+  const [talkPendingNextCursor, setTalkPendingNextCursor] = useState<string | null>(null);
+  const [loadingMoreTalkPending, setLoadingMoreTalkPending] = useState(false);
   const [moderatingSubmissionId, setModeratingSubmissionId] = useState<string | null>(null);
 
   // Fetch vote data
@@ -225,6 +230,7 @@ export default function ShowcasePage() {
 
   useEffect(() => {
     if (!user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset on sign-out is the intended sync into React state
       setSubmittedProjects({});
       return;
     }
@@ -271,9 +277,11 @@ export default function ShowcasePage() {
 
   useEffect(() => {
     if (!user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset on sign-out is the intended sync into React state
       setIsAdminOperator(false);
       setPendingSubmissions([]);
       setTalkModerationSubmissions([]);
+      setTalkPendingNextCursor(null);
       setAdminFeedback(null);
       return;
     }
@@ -317,11 +325,23 @@ export default function ShowcasePage() {
           const talkPayload = (await talkRes.json()) as {
             talkSubmissions?: TalkModerationSubmission[];
           };
-          setTalkModerationSubmissions(
-            Array.isArray(talkPayload.talkSubmissions) ? talkPayload.talkSubmissions : []
+          const submissions = Array.isArray(talkPayload.talkSubmissions)
+            ? talkPayload.talkSubmissions
+            : [];
+          setTalkModerationSubmissions(submissions);
+          // The default endpoint caps each status at 100 in one shot. If the
+          // pending bucket is at the cap, expose a Load more button cursored
+          // off the last pending item so admins can page beyond it.
+          const pendingItems = submissions.filter((s) => s.status === "pending");
+          const lastPending = pendingItems[pendingItems.length - 1];
+          setTalkPendingNextCursor(
+            pendingItems.length >= 100 && lastPending
+              ? lastPending.submissionId
+              : null
           );
         } else {
           setTalkModerationSubmissions([]);
+          setTalkPendingNextCursor(null);
         }
       } catch {
         if (!active) return;
@@ -457,6 +477,48 @@ export default function ShowcasePage() {
     },
     [isAdminOperator, moderatingSubmissionId, user]
   );
+
+  const handleLoadMoreTalkPending = useCallback(async () => {
+    if (!user || !talkPendingNextCursor || loadingMoreTalkPending) return;
+    setLoadingMoreTalkPending(true);
+    setAdminFeedback(null);
+    try {
+      const { getIdToken } = await import("firebase/auth");
+      const token = await getIdToken(user);
+      const params = new URLSearchParams();
+      params.set("status", "pending");
+      params.set("limit", "20");
+      params.set("cursor", talkPendingNextCursor);
+      const res = await fetch(`/api/talks/submission/moderate?${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const payload = (await res.json().catch(() => ({}))) as { error?: string };
+        setAdminFeedback({
+          type: "error",
+          message: payload.error || "Could not load more pending talks.",
+        });
+        return;
+      }
+      const payload = (await res.json()) as {
+        talkSubmissions?: TalkModerationSubmission[];
+        nextCursor?: string | null;
+        hasMore?: boolean;
+      };
+      const newItems = Array.isArray(payload.talkSubmissions)
+        ? payload.talkSubmissions
+        : [];
+      setTalkModerationSubmissions((prev) => [...prev, ...newItems]);
+      setTalkPendingNextCursor(payload.nextCursor ?? null);
+    } catch {
+      setAdminFeedback({
+        type: "error",
+        message: "Could not load more pending talks.",
+      });
+    } finally {
+      setLoadingMoreTalkPending(false);
+    }
+  }, [user, talkPendingNextCursor, loadingMoreTalkPending]);
 
   // Sort projects by net votes (descending)
   const sortedProjects = [...(showcaseData.projects as Project[])].sort(
@@ -781,6 +843,19 @@ export default function ShowcasePage() {
                         </div>
                       </div>
                     ))}
+                  </div>
+                )}
+
+                {talkPendingNextCursor && (
+                  <div className="mt-3 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() => void handleLoadMoreTalkPending()}
+                      disabled={loadingMoreTalkPending}
+                      className="px-3 py-1.5 rounded-md text-xs font-medium bg-neutral-800 text-neutral-200 hover:bg-neutral-700 disabled:opacity-60"
+                    >
+                      {loadingMoreTalkPending ? "Loading…" : "Load more pending"}
+                    </button>
                   </div>
                 )}
               </div>

@@ -12,6 +12,39 @@ import { getClientIdentifier } from "@/lib/rate-limit";
 import { buildRateLimitHeaders, checkServerRateLimit } from "@/lib/rate-limit-server";
 import { sanitizeDocId } from "@/lib/sanitize";
 import { logger } from "@/lib/logger";
+import {
+  clampLimit,
+  parseCursor,
+  paginateFirestoreQuery,
+  DEFAULT_PAGE_LIMIT,
+} from "@/lib/firestore-pagination";
+import { talksContract } from "@/lib/api-schemas/talks";
+
+const PAGINATABLE_STATUSES = new Set(["pending", "approved", "completed"]);
+
+function mapTalkSubmissionDoc(doc: { id: string; data: () => unknown }) {
+  const data = doc.data() as {
+    userId?: unknown;
+    title?: unknown;
+    status?: unknown;
+    createdAt?: unknown;
+  };
+  const status =
+    data.status === "approved"
+      ? "approved"
+      : data.status === "completed"
+      ? "completed"
+      : data.status === "pending"
+      ? "pending"
+      : "unknown";
+  return {
+    submissionId: doc.id,
+    userId: typeof data.userId === "string" ? data.userId : "",
+    title: typeof data.title === "string" ? data.title : "",
+    status,
+    createdAt: toIsoDate(data.createdAt),
+  };
+}
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -134,41 +167,61 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
+    // Single-status paginated mode: ?status=pending|approved|completed
+    // returns one bucket with cursor pagination. Default mode (no status)
+    // preserves the original "all three buckets" response so existing
+    // dashboards keep working unchanged.
+    talksContract.submissionModerateList.query.safeParse({
+      status: request.nextUrl.searchParams.get("status") ?? undefined,
+      limit: request.nextUrl.searchParams.get("limit") ?? undefined,
+      cursor: request.nextUrl.searchParams.get("cursor") ?? undefined,
+    });
+    const statusParam = request.nextUrl.searchParams.get("status");
+    if (statusParam && PAGINATABLE_STATUSES.has(statusParam)) {
+      const limit = clampLimit(
+        request.nextUrl.searchParams.get("limit"),
+        DEFAULT_PAGE_LIMIT
+      );
+      const cursor = parseCursor(request.nextUrl.searchParams.get("cursor"));
+      const collection = db.collection("talkSubmissions");
+      const query = collection
+        .where("status", "==", statusParam)
+        .orderBy("createdAt", "asc");
+
+      const { items, nextCursor, hasMore } = await paginateFirestoreQuery({
+        query,
+        collection,
+        cursor,
+        limit,
+        mapDoc: mapTalkSubmissionDoc,
+      });
+
+      return NextResponse.json({
+        talkSubmissions: items,
+        nextCursor,
+        hasMore,
+      });
+    }
+
     const [pendingSnapshot, approvedSnapshot, completedSnapshot] = await Promise.all([
       db.collection("talkSubmissions").where("status", "==", "pending").limit(100).get(),
       db.collection("talkSubmissions").where("status", "==", "approved").limit(100).get(),
       db.collection("talkSubmissions").where("status", "==", "completed").limit(100).get(),
     ]);
 
-    const talkSubmissions = [...pendingSnapshot.docs, ...approvedSnapshot.docs, ...completedSnapshot.docs]
-      .map((doc) => {
-        const data = doc.data() as {
-          userId?: unknown;
-          title?: unknown;
-          status?: unknown;
-          createdAt?: unknown;
-        };
-        const status =
-          data.status === "approved"
-            ? "approved"
-            : data.status === "completed"
-            ? "completed"
-            : data.status === "pending"
-            ? "pending"
-            : "unknown";
-
-        return {
-          submissionId: doc.id,
-          userId: typeof data.userId === "string" ? data.userId : "",
-          title: typeof data.title === "string" ? data.title : "",
-          status,
-          createdAt: toIsoDate(data.createdAt),
-        };
-      });
+    const talkSubmissions = [
+      ...pendingSnapshot.docs,
+      ...approvedSnapshot.docs,
+      ...completedSnapshot.docs,
+    ].map(mapTalkSubmissionDoc);
 
     await logTalkPendingAgeSummary(pendingSnapshot, "queue_read");
 
-    return NextResponse.json({ talkSubmissions });
+    return NextResponse.json({
+      talkSubmissions,
+      nextCursor: null,
+      hasMore: false,
+    });
   } catch (error) {
     logger.logError(error, {
       endpoint: "/api/talks/submission/moderate",
@@ -220,16 +273,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    let body: Record<string, unknown>;
-    try {
-      body = (await request.json()) as Record<string, unknown>;
-    } catch {
+    const rawBody = await request.json().catch(() => null);
+    if (rawBody === null) {
       return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
     }
-    const submissionId = sanitizeDocId(
-      typeof body.submissionId === "string" ? body.submissionId : ""
-    );
-    const action: TalkModerationAction = body.action === "complete" ? "complete" : "approve";
+    const parsed = talksContract.submissionModerateAction.body.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid submissionId" }, { status: 400 });
+    }
+    const submissionId = sanitizeDocId(parsed.data.submissionId);
+    const action: TalkModerationAction = parsed.data.action === "complete" ? "complete" : "approve";
     if (!submissionId) {
       return NextResponse.json({ error: "Invalid submissionId" }, { status: 400 });
     }

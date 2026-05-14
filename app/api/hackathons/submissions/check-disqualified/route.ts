@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getCurrentVirtualHackathonId, isVirtualHackathonId } from "@/lib/hackathons";
+import { hackathonsContract } from "@/lib/api-schemas/hackathons";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -59,8 +60,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    const hackathonId =
-      request.nextUrl.searchParams.get("hackathonId") || getCurrentVirtualHackathonId();
+    const parsedQuery = hackathonsContract.submissionsCheckDisqualified.query.safeParse({
+      hackathonId: request.nextUrl.searchParams.get("hackathonId") ?? undefined,
+    });
+    if (!parsedQuery.success) {
+      return NextResponse.json(
+        { error: parsedQuery.error.issues[0]?.message ?? "Invalid query" },
+        { status: 400 }
+      );
+    }
+    const hackathonId = parsedQuery.data.hackathonId || getCurrentVirtualHackathonId();
 
     if (!isVirtualHackathonId(hackathonId)) {
       return NextResponse.json(

@@ -239,6 +239,43 @@ service cloud.firestore {
       allow write: if false; // Only server-side writes for data integrity
     }
 
+    // Mentorship - Profiles: users can create/update their own profile, authenticated users can read active profiles
+    match /mentorship_profiles/{userId} {
+      allow read: if request.auth != null && (resource.data.isActive == true || request.auth.uid == userId);
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && request.auth.uid == userId;
+      allow delete: if false;
+    }
+
+    // Mentorship - Requests: create by fromUserId, read by participants, update by toUserId only
+    match /mentorship_requests/{requestId} {
+      allow create: if request.auth != null && request.resource.data.fromUserId == request.auth.uid;
+      allow read: if request.auth != null && (
+        resource.data.fromUserId == request.auth.uid || resource.data.toUserId == request.auth.uid
+      );
+      allow update: if request.auth != null && resource.data.toUserId == request.auth.uid;
+      allow delete: if request.auth != null && (
+        resource.data.fromUserId == request.auth.uid || resource.data.toUserId == request.auth.uid
+      );
+    }
+
+    // Mentorship - Pairings: read by mentor or mentee, created server-side when request is accepted
+    match /mentorship_pairings/{pairingId} {
+      allow read: if request.auth != null && (
+        resource.data.mentorId == request.auth.uid || resource.data.menteeId == request.auth.uid
+      );
+      allow create: if false; // Created server-side via Admin SDK when request is accepted
+      allow update: if false; // Goal/status updates are server-side only
+      allow delete: if false;
+    }
+
+    // Mentorship - Check-ins: participants can read, create by author, no updates
+    match /mentorship_check_ins/{checkInId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.authorId;
+      allow create: if false; // Created server-side via Admin SDK
+      allow update, delete: if false;
+    }
+
     // Pair Programming - Profiles: users can create/update their own profile, read active profiles
     match /pair_profiles/{userId} {
       allow read: if request.auth != null && (resource.data.isActive == true || request.auth.uid == userId);
@@ -356,6 +393,112 @@ service cloud.firestore {
     match /answer_votes/{voteId} {
       allow read: if request.auth != null;
       allow create, update, delete: if false;
+    }
+
+    // Game — Players: authenticated users can read all player docs (leaderboard,
+    // scouting). All writes go through the Admin SDK via /api/game/* routes.
+    match /game_players/{userId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if false;
+    }
+
+    // Game — Tiles: authenticated users can read all tiles (the world is
+    // shared and visible). All writes go through the Admin SDK.
+    match /game_tiles/{tileId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if false;
+    }
+
+    // Game — Attacks: authenticated users can read attack records. All writes
+    // go through the Admin SDK via the attack endpoint (PR 3+).
+    match /game_attacks/{attackId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if false;
+    }
+
+    // Game — World metadata (singleton player-count cursor, etc.): Admin SDK only.
+    match /game_world_meta/{docId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if false;
+    }
+
+    // Game — World snapshot (denormalized tiles + owner summaries). The
+    // map view subscribes to `latest` via a Firestore real-time listener,
+    // which auto-detaches when the tab is hidden or the user goes idle
+    // for ~5 min. Authenticated read only. All writes are Admin SDK
+    // (cron + post-action freshness rebuild).
+    match /game_world_snapshots/{docId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if false;
+    }
+
+    // Game — Community feed (append-only event log of player joins,
+    // caste picks, attacks, milestones). Surfaced in the dashboard's
+    // CommunityPanel. Authenticated read; all writes flow through the
+    // Admin SDK in lib/game/community.ts (logCommunityEventInTx /
+    // logCommunityEvent), so direct client writes are denied.
+    match /game_community_events/{eventId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if false;
+    }
+
+    // Game — Community chat (free-form message board). Reads are
+    // authenticated. All writes (create + soft-delete) flow through
+    // /api/game/community/chat which validates ownership and admin
+    // status before delegating to the Admin SDK. Direct client writes
+    // would bypass the rate-limit + length checks, so deny.
+    match /game_community_messages/{messageId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if false;
+    }
+
+    // Game — Artifacts (v2): a player can only read their own inventory.
+    // All writes go through the Admin SDK via turn-spending API routes.
+    match /game_artifacts/{artifactId} {
+      allow read: if request.auth != null
+        && resource.data.ownerId == request.auth.uid;
+      allow create, update, delete: if false;
+    }
+
+    // Game — Intel effects (v2): time-bounded combat modifiers produced by
+    // intel spells (alert-vs-caster from Black/Green spies; forge-sight-
+    // offense from Red Forge Sight). A player can only read effects they
+    // own (i.e. effects targeting them as defender, or their own attacker-
+    // side buffs). All writes go through the Admin SDK via /api/game/spy
+    // and /api/game/attack.
+    match /game_intel_effects/{effectId} {
+      allow read: if request.auth != null
+        && resource.data.ownerId == request.auth.uid;
+      allow create, update, delete: if false;
+    }
+
+    // Trust & safety: in-product abuse-report records on community
+    // user-generated content. Reporters can only create their own
+    // reports; only admins can list/triage. Server-side mutations via
+    // /api/community/moderate use Admin SDK and bypass these rules.
+    match /communityReports/{reportId} {
+      allow create: if request.auth != null
+                    && request.resource.data.reporterUid == request.auth.uid
+                    && request.resource.data.targetMessageId is string
+                    && request.resource.data.reason is string;
+      allow read, update, delete: if false; // Admin SDK only
+    }
+
+    // Trust & safety: per-user block list. Each blocker owns a
+    // subdocument tree of users they've blocked; clients can only
+    // read/write their own list. Feed filtering is enforced server-side.
+    match /userBlocks/{ownerUid}/blocked/{targetUid} {
+      allow read, write: if request.auth != null && request.auth.uid == ownerUid;
+    }
+    match /userBlocks/{ownerUid} {
+      allow read, write: if request.auth != null && request.auth.uid == ownerUid;
+    }
+
+    // Account-deletion progress docs. Server-only — clients should
+    // never see them. Listed so the registry-guard test classifies them
+    // explicitly.
+    match /accountDeletions/{uid} {
+      allow read, write: if false;
     }
   }
 }

@@ -9,6 +9,7 @@ import { getAdminDb } from "@/lib/firebase-admin";
 import { verifyUnsubscribeToken } from "@/lib/unsubscribe-token";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 import { FieldValue } from "firebase-admin/firestore";
+import { notificationsContract } from "@/lib/api-schemas/notifications";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,8 +31,14 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const email = request.nextUrl.searchParams.get("email")?.toLowerCase().trim();
-  const token = request.nextUrl.searchParams.get("token");
+  const parsedQuery = notificationsContract.unsubscribe.query.safeParse({
+    email: request.nextUrl.searchParams.get("email") ?? undefined,
+    token: request.nextUrl.searchParams.get("token") ?? undefined,
+  });
+  const email = parsedQuery.success
+    ? parsedQuery.data.email?.toLowerCase().trim()
+    : undefined;
+  const token = parsedQuery.success ? parsedQuery.data.token : undefined;
 
   if (!email || !token) {
     return NextResponse.redirect(

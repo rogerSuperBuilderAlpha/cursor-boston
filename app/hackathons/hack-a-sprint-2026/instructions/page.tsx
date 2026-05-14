@@ -27,6 +27,9 @@ const ideas: { text: string; link?: { href: string; label: string } }[] = [
   { text: "An agent that looks for job postings and applies via email follow-ups" },
 ];
 
+const HACK_A_SPRINT_SUBMISSION_BRANCH_URL =
+  "https://github.com/rogerSuperBuilderAlpha/cursor-boston/tree/hack-a-sprint-2026-submissions";
+
 export default function HackASprint2026InstructionsPage() {
   return (
     <div className="min-h-screen bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
@@ -54,6 +57,19 @@ export default function HackASprint2026InstructionsPage() {
         <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400">
           Everything you need to do <strong className="text-foreground">before April 13</strong> so
           you can hit the ground running on event day.
+        </p>
+        <p className="mt-3 text-sm text-neutral-500 dark:text-neutral-400">
+          Missed the event? The exercise is still open. Build an agent anytime
+          and open a PR against{" "}
+          <a
+            href={HACK_A_SPRINT_SUBMISSION_BRANCH_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-emerald-600 underline dark:text-emerald-400"
+          >
+            hack-a-sprint-2026-submissions
+          </a>{" "}
+          to add your project to the public showcase.
         </p>
 
         {/* The Challenge */}
@@ -298,13 +314,20 @@ with Inkbox(api_key="ApiKey_...") as inkbox:
         <section className="mt-10">
           <h2 className="text-xl font-bold text-foreground">Submission overview</h2>
           <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
-            On event day you will submit via PR: one JSON file with your public{" "}
+            Submit via PR: one JSON file with your public{" "}
             <strong className="text-foreground">GitHub repo</strong>,{" "}
             <strong className="text-foreground">title</strong>,{" "}
             <strong className="text-foreground">description</strong>, and a{" "}
             <strong className="text-foreground">Loom</strong> (or similar) walkthrough. A
-            deployed demo URL is optional. Full step-by-step instructions unlock on the live
-            hub.
+            deployed demo URL is optional. Use{" "}
+            <code className="rounded bg-neutral-200 px-1.5 py-0.5 text-xs font-mono dark:bg-neutral-800">
+              content/hackathons/hack-a-sprint-2026/submissions/&lt;your-github-login&gt;.json
+            </code>{" "}
+            and set your PR base branch to{" "}
+            <code className="rounded bg-neutral-200 px-1.5 py-0.5 text-xs font-mono dark:bg-neutral-800">
+              hack-a-sprint-2026-submissions
+            </code>
+            .
           </p>
         </section>
 

@@ -11,6 +11,7 @@ import { getVerifiedUser } from "@/lib/server-auth";
 import { getCurrentVirtualHackathonId, getVirtualMonthStartEndUtc, isVirtualHackathonId } from "@/lib/hackathons";
 import { getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
+import { hackathonsContract } from "@/lib/api-schemas/hackathons";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -60,14 +61,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    let body: Record<string, unknown>;
+    let body: unknown;
     try {
-      body = (await request.json()) as Record<string, unknown>;
+      body = await request.json();
     } catch {
       return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
     }
-    const repoUrl = (body.repoUrl as string)?.trim();
-    const hackathonId = (body.hackathonId as string) || getCurrentVirtualHackathonId();
+    const parsedBody = hackathonsContract.submissionRegister.body.safeParse(body);
+    if (!parsedBody.success) {
+      return NextResponse.json(
+        { error: parsedBody.error.issues[0]?.message ?? "Invalid body" },
+        { status: 400 }
+      );
+    }
+    const repoUrl = parsedBody.data.repoUrl.trim();
+    const hackathonId = parsedBody.data.hackathonId || getCurrentVirtualHackathonId();
 
     if (!repoUrl) {
       return NextResponse.json({ error: "repoUrl required" }, { status: 400 });

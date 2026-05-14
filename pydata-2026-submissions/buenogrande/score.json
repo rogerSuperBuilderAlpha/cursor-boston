@@ -1,0 +1,7 @@
+{
+  "score": 7,
+  "rationale": "This final notebook has a clear early-triage story for Spike RBD mutations and turns ProteinGym DMS measurements into flexible-site, brittle-site, and high-binding mutation rankings. The narrative framing is strong and the heatmap/watchlist format is useful for quickly prioritizing variants. It is less rigorous than the top entries because it mostly summarizes single-assay fitness rather than validating whether the watchlist predicts real surveillance or immune-escape risk, but it is a solid and relevant analysis.",
+  "model": "gpt-5.5",
+  "scoredAt": "2026-05-14T01:17:00.000Z",
+  "scorerVersion": 1
+}

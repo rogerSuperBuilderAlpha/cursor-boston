@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withMiddleware, rateLimitConfigs } from "@/lib/middleware";
 import { logger } from "@/lib/logger";
+import { discordContract } from "@/lib/api-schemas/discord";
 
 const DISCORD_CLIENT_ID = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
 const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
@@ -52,8 +53,12 @@ function buildCallbackRedirect(
 
 async function handleDiscordCallback(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
-  const code = searchParams.get("code");
-  const state = searchParams.get("state");
+  const parsedQuery = discordContract.callback.query.safeParse({
+    code: searchParams.get("code") ?? undefined,
+    state: searchParams.get("state") ?? undefined,
+  });
+  const code = parsedQuery.success ? parsedQuery.data.code ?? null : null;
+  const state = parsedQuery.success ? parsedQuery.data.state ?? null : null;
   const expectedState = request.cookies.get("discord_oauth_state")?.value;
   const returnTo = sanitizeReturnTo(
     request.cookies.get("discord_oauth_return_to")?.value

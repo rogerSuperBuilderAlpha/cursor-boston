@@ -149,6 +149,12 @@ const optionalEnvVars: EnvVar[] = [
     required: false,
     description: "Admin Email for notifications",
   },
+  {
+    name: "SUMMER_COHORT_ADMIN_EMAILS",
+    required: false,
+    description:
+      "CSV of lowercase emails allowed to view /admin/summer-cohort and call /api/summer-cohort/admin/*",
+  },
   // Mailgun (OPTIONAL - for sending emails)
   {
     name: "MAILGUN_API_KEY",

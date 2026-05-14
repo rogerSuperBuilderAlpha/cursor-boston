@@ -7,6 +7,8 @@
 import { randomBytes } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 
+// @contracts: discordContract.authorize (lib/api-schemas/discord.ts)
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 

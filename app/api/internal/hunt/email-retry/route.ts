@@ -16,6 +16,8 @@ import { getAdminDb } from "@/lib/firebase-admin";
 import { sendEmail } from "@/lib/mailgun";
 import { logger } from "@/lib/logger";
 
+// @contracts: internalContract.huntEmailRetryGet, internalContract.huntEmailRetryPost (lib/api-schemas/internal.ts)
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;

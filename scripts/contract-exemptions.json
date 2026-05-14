@@ -1,0 +1,5 @@
+{
+  "generatedAt": "2026-05-07",
+  "comment": "Routes awaiting ts-rest contract migration (issue #234). Each migration PR must remove its routes from this list. When the list is empty, full OpenAPI coverage is achieved.",
+  "routes": []
+}

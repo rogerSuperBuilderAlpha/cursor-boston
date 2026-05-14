@@ -11,6 +11,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { getClientIdentifier } from "@/lib/rate-limit";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 import { sanitizeName, sanitizeText, sanitizeUrl } from "@/lib/sanitize";
+import { profileContract } from "@/lib/api-schemas/profile";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -43,12 +44,20 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    let body: Record<string, unknown>;
+    let rawBody: unknown;
     try {
-      body = (await request.json()) as Record<string, unknown>;
+      rawBody = await request.json();
     } catch {
       return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
     }
+    const parsed = profileContract.update.body.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message ?? "Invalid body" },
+        { status: 400 }
+      );
+    }
+    const body = parsed.data;
     const updates: Record<string, unknown> = {};
 
     // Display name
@@ -120,7 +129,7 @@ export async function PATCH(request: NextRequest) {
     // Social links
     if (body.socialLinks && typeof body.socialLinks === "object") {
       const socialUpdates: Record<string, string | null> = {};
-      
+
       for (const [key, value] of Object.entries(body.socialLinks)) {
         if (typeof value === "string" && value.trim()) {
           const sanitized = sanitizeUrl(value);
@@ -131,7 +140,7 @@ export async function PATCH(request: NextRequest) {
           socialUpdates[key] = null;
         }
       }
-      
+
       if (Object.keys(socialUpdates).length > 0) {
         // Merge with existing social links
         const userRef = db.collection("users").doc(user.uid);

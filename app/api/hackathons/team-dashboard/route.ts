@@ -10,6 +10,7 @@ import { getAdminDb } from "@/lib/firebase-admin";
 import { getCurrentVirtualHackathonId } from "@/lib/hackathons";
 import { getClientIdentifier, checkRateLimit, rateLimitConfigs } from "@/lib/rate-limit";
 import { loadHackathonTeamDashboard } from "@/lib/hackathon-team-dashboard-server";
+import { hackathonsContract } from "@/lib/api-schemas/hackathons";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -37,8 +38,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    const hackathonId =
-      request.nextUrl.searchParams.get("hackathonId") ?? getCurrentVirtualHackathonId();
+    const queryParse = hackathonsContract.teamDashboard.query.safeParse({
+      hackathonId: request.nextUrl.searchParams.get("hackathonId") ?? undefined,
+    });
+    if (!queryParse.success) {
+      return NextResponse.json({ error: "Invalid query" }, { status: 400 });
+    }
+    const hackathonId = queryParse.data.hackathonId ?? getCurrentVirtualHackathonId();
 
     const payload = await loadHackathonTeamDashboard(db, user.uid, hackathonId);
     return NextResponse.json(payload, {

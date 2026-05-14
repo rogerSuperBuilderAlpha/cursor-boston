@@ -23,6 +23,8 @@ import {
 } from "@/lib/hackathon-asprint-2026-state";
 import { checkRateLimit, getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
 
+// @contracts: hackathonsContract.hackASprintAdminDashboard (lib/api-schemas/hackathons.ts)
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 

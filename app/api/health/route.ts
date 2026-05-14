@@ -6,6 +6,8 @@
 
 import { NextResponse } from 'next/server';
 
+// @contracts: healthContract.check (lib/api-schemas/health.ts)
+
 /**
  * Health check endpoint for container orchestration and monitoring
  * Returns 200 OK if the application is running

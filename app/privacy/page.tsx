@@ -90,9 +90,40 @@ export default function PrivacyPolicyPage() {
             <li>Access your personal information</li>
             <li>Correct inaccurate information</li>
             <li>Delete your account and associated data</li>
+            <li>Export a portable copy of your data (GDPR Article 20)</li>
             <li>Control your profile visibility settings</li>
             <li>Disconnect third-party accounts at any time</li>
           </ul>
+
+          <h3 className="text-xl font-semibold text-foreground mb-3 mt-6">How to delete your account</h3>
+          <p className="text-neutral-700 dark:text-neutral-300 mb-4">
+            Sign in, open your{" "}
+            <Link href="/profile?section=security" className="text-emerald-400 hover:text-emerald-300">
+              Profile → Security tab
+            </Link>
+            , and use the &quot;Delete my account&quot; control. You will be asked to type
+            <strong> DELETE </strong> to confirm and to have signed in within the last 5 minutes.
+          </p>
+          <p className="text-neutral-700 dark:text-neutral-300 mb-4">
+            We delete profile records, event registrations, mentor and pair-programming
+            requests, hackathon submissions you made on your own behalf, and game state.
+            We <strong>anonymize</strong> rather than delete community messages, cookbook
+            entries, and Q&amp;A posts so other users&apos; threads aren&apos;t broken — your name,
+            avatar, and any links to your profile are scrubbed; the post content is retained
+            with author <code>deleted-user</code>.
+          </p>
+          <p className="text-neutral-700 dark:text-neutral-300 mb-6">
+            Some records are retained for legitimate audit reasons: hackathon team objects
+            (which are shared with your former teammates), badges already issued to others,
+            and event attendance ledgers used for capacity planning. None of these contain
+            your name or email after the cascade runs.
+          </p>
+
+          <h3 className="text-xl font-semibold text-foreground mb-3 mt-6">How to export your data</h3>
+          <p className="text-neutral-700 dark:text-neutral-300 mb-6">
+            From the same Security tab, use &quot;Download my data&quot; to receive a JSON file in our
+            documented portable schema (<code>cursor-boston-data-export-v1</code>).
+          </p>
 
           <h2 className="text-2xl font-bold text-foreground mb-4 mt-8">Cookies</h2>
           <p className="text-neutral-700 dark:text-neutral-300 mb-6">

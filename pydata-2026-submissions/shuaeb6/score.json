@@ -1,0 +1,7 @@
+{
+  "score": 7,
+  "rationale": "The notebook asks a strong benchmark question: where do all ProteinGym models fail collectively, rather than which model wins on average. Joining model-level Spearman summaries to assay metadata and linking hard proteins to AlphaFold structure confidence is an interesting and useful failure-mode analysis. It is held back by a few unfinished interpretation notes and a relatively light final synthesis, but the core idea and implementation are solid.",
+  "model": "gpt-5.5",
+  "scoredAt": "2026-05-14T01:49:00.000Z",
+  "scorerVersion": 1
+}

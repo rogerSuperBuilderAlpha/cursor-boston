@@ -1,0 +1,7 @@
+{
+  "score": 7,
+  "rationale": "The notebook is ambitious and user-facing: it combines MBTA live data, equity scorecards, ghost-bus heuristics, multilingual copy, RAG-style policy snippets, and advocacy outputs into a civic dashboard. The scope and practical framing are strong, but some demographics/policy inputs are illustrative or hardcoded and the LLM features depend on optional API keys, so the evidence is less rigorous than the interface suggests. It is a compelling prototype with meaningful civic value, but not a fully validated transit equity analysis.",
+  "model": "gpt-5.5",
+  "scoredAt": "2026-05-14T02:19:00.000Z",
+  "scorerVersion": 1
+}

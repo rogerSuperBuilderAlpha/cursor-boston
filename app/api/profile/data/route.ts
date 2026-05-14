@@ -10,6 +10,7 @@ import { getAdminDb } from "@/lib/firebase-admin";
 import { getClientIdentifier, checkRateLimit } from "@/lib/rate-limit";
 import { fetchProfileDataBundleJson } from "@/lib/profile-bundle-server";
 import { reconcileMergedPrCreditForUser } from "@/lib/github-merged-pr-reconcile";
+import { profileContract } from "@/lib/api-schemas/profile";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -37,7 +38,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    const triggerReconcile = request.nextUrl.searchParams.get("reconcileGithub") === "1";
+    const queryParsed = profileContract.data.query.safeParse({
+      reconcileGithub: request.nextUrl.searchParams.get("reconcileGithub") ?? undefined,
+      format: request.nextUrl.searchParams.get("format") ?? undefined,
+    });
+    if (!queryParsed.success) {
+      return NextResponse.json(
+        { error: queryParsed.error.issues[0]?.message ?? "Invalid query parameters" },
+        { status: 400 }
+      );
+    }
+
+    const triggerReconcile = queryParsed.data.reconcileGithub === "1";
     if (triggerReconcile) {
       const userSnap = await db.collection("users").doc(user.uid).get();
       if (userSnap.exists) {
@@ -54,6 +66,36 @@ export async function GET(request: NextRequest) {
     }
 
     const payload = await fetchProfileDataBundleJson(db, user.uid);
+
+    // GDPR Article 20 portable-format mode. Triggered when the client
+    // adds `?format=portable` (used by the "Download my data" button on
+    // the profile Security tab). Wraps the bundle in a documented schema
+    // with version + exported-at metadata so downstream consumers
+    // (the user, a future archival tool) can parse it deterministically.
+    //
+    // The unwrapped legacy shape is preserved when the param is absent
+    // because existing callers expect the bundle directly.
+    const format = queryParsed.data.format;
+    if (format === "portable") {
+      const portable = {
+        schema: "cursor-boston-data-export-v1",
+        schemaUrl:
+          "https://github.com/rogerSuperBuilderAlpha/cursor-boston/blob/develop/docs/OPENSOURCE_REVIEW.md#dim-4--privacy-data-handling--trust--safety",
+        version: "1.0",
+        exportedAt: new Date().toISOString(),
+        userId: user.uid,
+        notes:
+          "Per GDPR Article 20 (right to data portability). Includes profile, contributions, and event participation. Anonymized records are not included; deleted-user content is omitted.",
+        data: payload,
+      };
+      return NextResponse.json(portable, {
+        headers: {
+          "Cache-Control": "private, no-store",
+          "Content-Disposition": `attachment; filename="cursor-boston-data-${user.uid}.json"`,
+        },
+      });
+    }
+
     return NextResponse.json(payload, {
       headers: {
         "Cache-Control": "private, no-store",

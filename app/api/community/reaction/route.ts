@@ -9,32 +9,35 @@ import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { logger } from "@/lib/logger";
-import { parseRequestBody } from "@/lib/api-response";
-import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 import { sanitizeDocId } from "@/lib/sanitize";
+import { communityContract } from "@/lib/api-schemas/community";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 type ReactionType = "like" | "dislike";
 
-const COMMUNITY_RATE_LIMIT = { windowMs: 60 * 1000, maxRequests: 60 };
+// Per-user limit. Reactions are cheap so the cap is generous; the goal is to
+// stop tight-loop abuse from a single account, not normal use.
+const REACTION_RATE_LIMIT = { windowMs: 60 * 1000, maxRequests: 60 };
 
 export async function POST(request: NextRequest) {
   try {
-    // Rate limiting
-    const clientId = getClientIdentifier(request as unknown as Request);
-    const rateResult = checkRateLimit(`community-reaction:${clientId}`, COMMUNITY_RATE_LIMIT);
+    const user = await getVerifiedUser(request);
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const rateResult = await checkUpstashRateLimit(
+      `community-reaction:${user.uid}`,
+      REACTION_RATE_LIMIT
+    );
     if (!rateResult.success) {
       return NextResponse.json(
         { error: "Too many requests", retryAfterSeconds: rateResult.retryAfter },
         { status: 429, headers: { "Retry-After": String(rateResult.retryAfter || 60) } }
       );
-    }
-
-    const user = await getVerifiedUser(request);
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const db = getAdminDb();
@@ -43,17 +46,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    const bodyOrError = await parseRequestBody(request);
-    if (bodyOrError instanceof NextResponse) return bodyOrError;
-    const { messageId, type } = bodyOrError;
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
+    }
+    const parsed = communityContract.reaction.body.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message ?? "Invalid body" },
+        { status: 400 }
+      );
+    }
+    const { messageId, type } = parsed.data;
 
     // Validate and sanitize messageId
     const sanitizedMessageId = sanitizeDocId(messageId);
-    if (!sanitizedMessageId || (type !== "like" && type !== "dislike")) {
+    if (!sanitizedMessageId) {
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
     }
 
-    const reactionType = type as ReactionType;
+    const reactionType: ReactionType = type;
     const messageRef = db.collection("communityMessages").doc(sanitizedMessageId);
     const reactionRef = db.collection("messageReactions").doc(`${sanitizedMessageId}_${user.uid}`);
 

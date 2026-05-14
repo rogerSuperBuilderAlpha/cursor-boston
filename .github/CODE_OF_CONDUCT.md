@@ -59,10 +59,19 @@ representative at an online or offline event.
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported to the community leaders responsible for enforcement at
-hello@cursorboston.com. All complaints will be reviewed and investigated
-promptly and fairly.
+reported through any of these channels:
 
+1. **In-product report flow** — for community posts and replies on the platform.
+   Open the message's "⋯" menu and select **Report**. Pick a reason (spam,
+   harassment, hate, self-harm, other) and optionally add notes. Reports go
+   to the maintainer queue at `/admin/moderation` for review. This is the
+   fastest path for content-level issues.
+2. **Block-user** — also available from a user's profile if you want to stop
+   seeing their posts in your feed without filing a report.
+3. **Email** — for off-platform issues, sustained patterns of behavior, or
+   anything you'd rather discuss privately, write to **hello@cursorboston.com**.
+
+All complaints will be reviewed and investigated promptly and fairly.
 All community leaders are obligated to respect the privacy and security of the
 reporter of any incident.
 

@@ -10,19 +10,10 @@ import {
   getPairProfileServer,
   createOrUpdatePairProfileServer,
 } from "@/lib/pair-programming/data-server";
-import type { PairProfile, SessionType } from "@/lib/pair-programming/types";
+import type { AvailabilityWindow, PairProfile } from "@/lib/pair-programming/types";
 
 import { parseRequestBody } from "@/lib/api-response";
-
-const VALID_SESSION_TYPES: SessionType[] = [
-  "teach-me",
-  "build-together",
-  "code-review",
-  "explore-topic",
-];
-
-const MAX_ARRAY_LENGTH = 20;
-const MAX_STRING_LENGTH = 500;
+import { pairContract } from "@/lib/api-schemas/pair";
 
 /**
  * GET /api/pair/profile
@@ -68,6 +59,13 @@ export async function POST(request: NextRequest) {
 
     const bodyOrError = await parseRequestBody(request);
     if (bodyOrError instanceof NextResponse) return bodyOrError;
+    const parsed = pairContract.profilePost.body.safeParse(bodyOrError);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0]?.message ?? "Invalid body" },
+        { status: 400 }
+      );
+    }
     const {
       skillsCanTeach,
       skillsWantToLearn,
@@ -78,63 +76,7 @@ export async function POST(request: NextRequest) {
       sessionTypes,
       bio,
       isActive,
-    } = bodyOrError;
-
-    // Validate arrays
-    if (!Array.isArray(skillsCanTeach) || !Array.isArray(skillsWantToLearn)) {
-      return NextResponse.json(
-        { success: false, error: "Skills arrays are required" },
-        { status: 400 }
-      );
-    }
-
-    if (!timezone || typeof timezone !== "string") {
-      return NextResponse.json(
-        { success: false, error: "Timezone is required" },
-        { status: 400 }
-      );
-    }
-
-    if (!Array.isArray(sessionTypes) || sessionTypes.length === 0) {
-      return NextResponse.json(
-        { success: false, error: "At least one session type required" },
-        { status: 400 }
-      );
-    }
-
-    // Validate session types
-    if (!sessionTypes.every((t: string) => VALID_SESSION_TYPES.includes(t as SessionType))) {
-      return NextResponse.json(
-        { success: false, error: "Invalid session type" },
-        { status: 400 }
-      );
-    }
-
-    // Validate array lengths
-    const arrays = [skillsCanTeach, skillsWantToLearn, preferredLanguages || [], preferredFrameworks || []];
-    if (arrays.some((arr) => arr.length > MAX_ARRAY_LENGTH)) {
-      return NextResponse.json(
-        { success: false, error: `Arrays cannot exceed ${MAX_ARRAY_LENGTH} items` },
-        { status: 400 }
-      );
-    }
-
-    // Validate string items in arrays
-    const allStrings = [...skillsCanTeach, ...skillsWantToLearn, ...(preferredLanguages || []), ...(preferredFrameworks || [])];
-    if (!allStrings.every((s: unknown) => typeof s === "string" && s.length <= MAX_STRING_LENGTH)) {
-      return NextResponse.json(
-        { success: false, error: "Invalid array items" },
-        { status: 400 }
-      );
-    }
-
-    // Validate bio length
-    if (bio && typeof bio === "string" && bio.length > 1000) {
-      return NextResponse.json(
-        { success: false, error: "Bio cannot exceed 1000 characters" },
-        { status: 400 }
-      );
-    }
+    } = parsed.data;
 
     const profile: Omit<PairProfile, "userId" | "createdAt" | "updatedAt"> = {
       skillsCanTeach: skillsCanTeach.map((s: string) => s.trim()).filter(Boolean),
@@ -142,7 +84,9 @@ export async function POST(request: NextRequest) {
       preferredLanguages: (preferredLanguages || []).map((s: string) => s.trim()).filter(Boolean),
       preferredFrameworks: (preferredFrameworks || []).map((s: string) => s.trim()).filter(Boolean),
       timezone: timezone.trim(),
-      availability: Array.isArray(availability) ? availability : [],
+      availability: Array.isArray(availability)
+        ? (availability as AvailabilityWindow[])
+        : [],
       sessionTypes,
       bio: bio ? String(bio).trim().slice(0, 1000) : undefined,
       isActive: isActive !== undefined ? Boolean(isActive) : true,

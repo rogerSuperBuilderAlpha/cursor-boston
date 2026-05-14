@@ -3,6 +3,9 @@
 **Date:** April 11, 2026
 **Reported by:** Roger Hunt (repo owner)
 **Severity:** Medium (financial — $50 referral codes, 50 total = $2,500 potential exposure)
+**Status:** Closed (code-side changes shipped on 2026-05-06; remaining items are operational follow-ups tracked in the Action Items list below)
+
+The prevention work from this incident is codified in [`.gitleaks.toml`](../.gitleaks.toml) (rules `cursor-referral-url` and `credit-referral-file-content`), [`.gitignore`](../.gitignore) (`docs/*credit*/`, `*credit*.csv`, `*referral*.csv`), and the operational runbook at [`docs/SECURITY_OPERATIONS.md`](SECURITY_OPERATIONS.md).
 
 ---
 
@@ -81,7 +84,7 @@ These forks cannot be modified or deleted by the upstream repo owner. Removal re
 - [ ] Request new referral codes from Cursor (treat all 50 originals as burned)
 - [ ] File GitHub support request to remove file from Pradyumna369 fork: [github.com/contact](https://github.com/contact) → "Report a security vulnerability"
 - [ ] Seed new codes into Firestore via `npx tsx scripts/seed-credit-codes.ts --write --csv path/to/new-codes.csv`
-- [ ] Consider adding a pre-commit hook or CI check to prevent committing files matching `*credit*` or `*referral*` patterns
+- [x] ~~Consider adding a pre-commit hook or CI check to prevent committing files matching `*credit*` or `*referral*` patterns~~ — added 2026-05-06: see `.gitleaks.toml` rules `cursor-referral-url` and `credit-referral-file-content`, plus `.gitignore` patterns for `docs/*credit*/`, `*credit*.csv`, `*referral*.csv`. The prior `docs/` allowlist in `.gitleaks.toml` was narrowed to `docs/.*\.md$` so non-markdown files in `docs/` are now scanned (the April incident slipped past the broad allowlist).
 
 ## Lessons Learned
 

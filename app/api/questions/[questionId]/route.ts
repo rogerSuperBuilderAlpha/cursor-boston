@@ -9,6 +9,7 @@ import { getQuestionsService } from "@/lib/questions/service";
 import { logger } from "@/lib/logger";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 import { sanitizeDocId } from "@/lib/sanitize";
+import { questionsContract } from "@/lib/api-schemas/questions";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,7 +31,16 @@ export async function GET(
     }
 
     const { questionId: rawId } = await params;
-    const questionId = sanitizeDocId(rawId);
+    const paramParsed = questionsContract.detail.pathParams.safeParse({
+      questionId: rawId,
+    });
+    if (!paramParsed.success) {
+      return NextResponse.json(
+        { error: paramParsed.error.issues[0]?.message ?? "Invalid question ID" },
+        { status: 400 }
+      );
+    }
+    const questionId = sanitizeDocId(paramParsed.data.questionId);
     if (!questionId) {
       return NextResponse.json({ error: "Invalid question ID" }, { status: 400 });
     }

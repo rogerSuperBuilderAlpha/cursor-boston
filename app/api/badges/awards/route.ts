@@ -19,6 +19,8 @@ import {
 import { logger } from "@/lib/logger";
 import type { BadgeId, UserBadge } from "@/lib/badges/types";
 
+// @contracts: badgesContract.awards (lib/api-schemas/badges.ts)
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 const BADGE_AWARDS_POST_RATE_LIMIT = { windowMs: 60 * 1000, maxRequests: 30 };

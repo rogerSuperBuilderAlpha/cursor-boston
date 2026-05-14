@@ -74,6 +74,7 @@ type LeaderboardEntry = {
   willBeLate?: boolean;
   queuingForSpot?: boolean;
   lumaRegistered?: boolean;
+  isCohort1?: boolean;
 };
 
 type LeaderboardResponse = {
@@ -1024,6 +1025,14 @@ export default function SportsHack2026SignupPage() {
                                     Waitlist
                                   </span>
                                 )}
+                                {row.isCohort1 ? (
+                                  <span
+                                    className="inline-flex items-center rounded-full border border-violet-500/30 bg-violet-500/10 px-2 py-0.5 text-xs font-semibold text-violet-700 dark:text-violet-400"
+                                    title="Summer Cohort 1 applicant — prioritized in the May 26 immersion ranking"
+                                  >
+                                    Cohort 1
+                                  </span>
+                                ) : null}
                                 <LumaPill registered={row.lumaRegistered} />
                               </div>
                             </td>

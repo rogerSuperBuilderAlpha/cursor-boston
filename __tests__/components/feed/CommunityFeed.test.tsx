@@ -24,6 +24,12 @@ jest.mock("@/lib/firebase", () => ({ db: null }));
 jest.mock("@/components/skeletons/FeedMessageSkeleton", () => ({
   FeedMessageSkeleton: () => <div data-testid="feed-skeleton" />,
 }));
+// ReportMessageMenu (added in 2026-Q2 review work) pulls in AuthContext →
+// firebase auth at module load. Mock it inert here; behavior is covered by
+// the API-route test.
+jest.mock("@/components/feed/ReportMessageMenu", () => ({
+  ReportMessageMenu: () => null,
+}));
 
 const mockUseFeed = {
   loading: false,

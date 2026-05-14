@@ -19,11 +19,14 @@ import {
 import { MERGED_PR_COUNTS_CACHE_TAG } from "@/lib/github-merged-pr-count";
 import { ensureHackASprint2026ScoreDoc } from "@/lib/hackathon-asprint-2026-scores";
 import { awardHackASprint2026ShowcaseBadge } from "@/lib/hackathon-showcase-admin";
+import { maybeAutoAdmitOnPRMerge } from "@/lib/summer-cohort-auto-admit";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { notifyPROpened, notifyPRMerged, notifyHackASprintSubmissionMerged } from "@/lib/discord";
 import { withLoggingMiddleware, withRateLimitMiddleware, rateLimitConfigs } from "@/lib/middleware";
 import { logger } from "@/lib/logger";
 import { getClientIdentifier } from "@/lib/rate-limit";
+
+// @contracts: githubContract.webhook (lib/api-schemas/github.ts) — body is HMAC-verified before any contract validation.
 
 // Disable body parsing to get raw body for signature verification
 export const runtime = "nodejs";
@@ -219,6 +222,18 @@ async function handleWebhook(request: NextRequest) {
           });
         } catch {
           // non-fatal
+        }
+
+        // Auto-admit-on-PR-merge: pending Cohort 1 applicants who get a PR
+        // merged before the May 9 deadline get promoted immediately. Helper
+        // is non-throwing — flow continues regardless.
+        try {
+          await maybeAutoAdmitOnPRMerge({
+            authorLogin: pr.user.login,
+            prNumber: pr.number,
+          });
+        } catch {
+          // non-fatal — helper already swallows + logs internally
         }
       }
     }

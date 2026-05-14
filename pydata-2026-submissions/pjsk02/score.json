@@ -1,0 +1,7 @@
+{
+  "score": 8,
+  "rationale": "The notebook is a polished and imaginative exoplanet mission-planner interface with NASA Exoplanet Archive integration, Earth-similarity scoring, interactive controls, Plotly candidate ranking, and a clear mission-mode framing for nearer-star prioritization. The metadata update now gives the submission a complete package. It is still more of an exploratory decision-support tool than a rigorously validated scientific analysis, but the presentation, interactivity, and coherent scoring workflow make it one of the stronger submissions.",
+  "model": "gpt-5.5",
+  "scoredAt": "2026-05-14T11:51:00.000Z",
+  "scorerVersion": 1
+}

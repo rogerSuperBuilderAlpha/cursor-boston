@@ -42,15 +42,11 @@ Maintainers are contributors who have demonstrated a sustained commitment to the
 - Ensuring code quality and consistency
 - Enforcing the Code of Conduct
 
-**Current Maintainers:**
-
-| Name | GitHub | Role |
-|------|--------|------|
-| Roger | [@rogerSuperBuilderAlpha](https://github.com/rogerSuperBuilderAlpha) | Project Lead |
+**Current Maintainers:** the canonical roster — including names, GitHub handles, role tier, and per-area ownership — lives in [`MAINTAINERS.md`](../MAINTAINERS.md). This document describes the *rules* maintainers operate under; the roster file describes *who* the maintainers are at any given moment.
 
 #### Becoming a Maintainer
 
-Contributors may be invited to become maintainers based on:
+Contributors may become maintainers based on:
 
 - Sustained, high-quality contributions over time
 - Deep understanding of the codebase and architecture
@@ -58,11 +54,25 @@ Contributors may be invited to become maintainers based on:
 - Commitment to the project's mission and values
 - Positive interactions with the community
 
-The process:
+There are **two paths** to becoming a maintainer. The evaluation criteria above are the same for both.
+
+##### Path A — Nomination
+
 1. An existing maintainer nominates a contributor
 2. Maintainers discuss the nomination privately
 3. Decision is made by consensus among maintainers
 4. If approved, the contributor is invited to become a maintainer
+
+##### Path B — Self-nomination (expressing interest publicly)
+
+We don't want the maintainer seat to depend on being noticed. Contributors who are interested in the role can put themselves forward:
+
+1. Open a pull request against the **[`maintainer-application`](https://github.com/rogerSuperBuilderAlpha/cursor-boston/tree/maintainer-application)** branch using the [Maintainer Application Template](MAINTAINER_APPLICATION_TEMPLATE.md). The PR body fills out the template (background, contribution history, areas of interest, time commitment).
+2. Maintainers review the application using the same criteria as Path A.
+3. If accepted, the application PR is merged and the contributor is invited to become a maintainer.
+4. If declined or deferred, the maintainer team responds in the PR with feedback and (where applicable) what additional contribution would change the outcome.
+
+The two paths converge on the same decision rule: consensus among maintainers, with the Project Lead approving.
 
 #### Maintainer Responsibilities
 
@@ -114,16 +124,6 @@ For decisions where consensus cannot be reached:
 4. Decisions require a simple majority
 5. The Project Lead may break ties
 
-### When there is only one maintainer
-
-While the maintainer team has a **single** person with merge rights (see the table above):
-
-- **Majority votes** described elsewhere in this document are decided by that maintainer (or by the Project Lead if they are the same person).
-- **Major changes** that call for two maintainer approvals should still get **community review time** (e.g. open PR, request feedback on Discord) before merge; the Project Lead approves when satisfied.
-- **Governance changes** that require “a majority of maintainers” require **Project Lead approval** plus the usual PR and comment period.
-
-When additional maintainers are added, this section no longer applies and normal multi-maintainer rules apply.
-
 ### Emergency Decisions
 
 In urgent situations (security vulnerabilities, Code of Conduct violations, critical bugs), maintainers may act without full consensus:
@@ -135,13 +135,28 @@ In urgent situations (security vulnerabilities, Code of Conduct violations, crit
 
 ## Code Review
 
-All code changes require review before merging:
+All code changes require review before merging.
 
-- **Minor changes** (typos, docs, small fixes): One maintainer approval
-- **Standard changes** (features, bug fixes): One maintainer approval, 24-hour waiting period for objections
-- **Major changes** (architecture, breaking changes): Two maintainer approvals, 72-hour waiting period
+### Tiers
 
-The author of a PR cannot approve their own changes. However, maintainers may merge their own PRs after receiving the required approvals.
+- **Minor changes** (typos, docs, small fixes): One maintainer approval.
+- **Standard changes** (features, bug fixes): One maintainer approval, 24-hour waiting period for objections.
+- **Major changes** (architecture, breaking changes): Two maintainer approvals, 72-hour waiting period.
+
+### No self-approval
+
+The author of a PR cannot approve their own changes. A maintainer may merge their own PR **only after** another maintainer has submitted a GitHub "Approve" review on that PR. This rule applies to every PR, including governance/docs PRs and including the Project Lead.
+
+This is enforced procedurally (maintainers are expected to follow it) and observably (GitHub's review history on each PR is the audit trail). If the maintainer team observes that the rule is being skipped in practice, the next governance update should move enforcement to a required-status-check on the branch protection rules.
+
+### Exception: solo-emergency merges
+
+If only one maintainer is reachable and the change is urgent (security patch, production outage), that maintainer may merge without a second reviewer. The merged PR must then be:
+
+1. Linked in `#maintainers` on Discord with the reason for the exception.
+2. Reviewed retroactively by a second maintainer within 7 days; any issues found are fixed via a follow-up PR.
+
+This exception exists so the rule never blocks a security fix, not as a routine path.
 
 ## Releases
 

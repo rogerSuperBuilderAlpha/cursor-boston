@@ -1,0 +1,7 @@
+{
+  "score": 9,
+  "rationale": "This is a sharp and well-supported protein fitness landscape analysis with a concrete thesis: high-fitness IRED variants emerge from composed mutation programs rather than isolated single mutants. The notebook grounds the claim in strong summary statistics, especially the S220T enrichment among high-activity/high-selectivity winners, and tells a clear story from sparse landscape to actionable motif. It is one of the strongest submissions because the insight is specific, surprising, and well evidenced.",
+  "model": "gpt-5.5",
+  "scoredAt": "2026-05-14T01:20:00.000Z",
+  "scorerVersion": 1
+}

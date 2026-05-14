@@ -12,6 +12,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import Link from "next/link";
@@ -30,13 +31,19 @@ import {
   SUMMER_COHORT_RETURN_TO,
   type SummerCohortId,
 } from "@/lib/summer-cohort";
+import { ClaimSpotByPRCard } from "./_components/ClaimSpotByPRCard";
 import { CohortProgramBreakdown } from "./_components/CohortProgramBreakdown";
 import { CohortTabs, type CohortTabId } from "./_components/CohortTabs";
+import { GamePromoPanel } from "./_components/GamePromoPanel";
 import { InfoTabPanel } from "./_components/InfoTabPanel";
+import { IntakeSurveyForm } from "./_components/IntakeSurveyForm";
+import { SetupInstructionsPanel } from "./_components/SetupInstructionsPanel";
+import { SetupReadinessModal } from "./_components/SetupReadinessModal";
 import { Week4LudwittPanel } from "./_components/Week4LudwittPanel";
 import { Week5StartupPanel } from "./_components/Week5StartupPanel";
 import { Week6OssPanel } from "./_components/Week6OssPanel";
 import { WeekVotePanel } from "./_components/WeekVotePanel";
+import { WinnerCommitmentsCard } from "./_components/WinnerCommitmentsCard";
 
 interface ApplicationDto {
   userId: string | null;
@@ -49,6 +56,8 @@ interface ApplicationDto {
   isLocal: boolean | null;
   wantsToPresent: boolean | null;
   mayImmersionRsvped: boolean;
+  /** Server timestamp (ms) of when the user self-attested dev env ready. */
+  cohort1DevEnvConfirmedAt: number | null;
   createdAt: number | null;
   updatedAt: number | null;
 }
@@ -110,247 +119,6 @@ function WhatToExpectTeaser() {
 interface CounterCardProps {
   counts: ApplicationCounts;
   pickedCohorts: SummerCohortId[];
-}
-
-interface PlatformRow {
-  name: string;
-  url: string;
-  notes: React.ReactNode;
-}
-
-/** Free-tier numbers verified against each provider's pricing page in May 2026.
- *  These rot fast — when limits change, update the {name, notes} pair and the
- *  date in the section copy below. */
-const HOST_PLATFORMS: readonly PlatformRow[] = [
-  {
-    name: "Vercel Hobby",
-    url: "https://vercel.com/pricing",
-    notes: (
-      <>
-        100 GB bandwidth/mo, 150K function invocations/mo, 60s function
-        duration. Hard cap — once you hit it, deploys and functions stop
-        until the next billing cycle. <strong>Non-commercial use only.</strong>
-      </>
-    ),
-  },
-  {
-    name: "Netlify Free",
-    url: "https://www.netlify.com/pricing/",
-    notes: (
-      <>
-        100 GB bandwidth/mo, 300 build minutes/mo, 125K serverless function
-        invocations/mo, 1M edge function invocations.
-      </>
-    ),
-  },
-  {
-    name: "Cloudflare Pages",
-    url: "https://pages.cloudflare.com/",
-    notes: (
-      <>
-        <strong>Unlimited bandwidth</strong>, 500 builds/mo, 1 concurrent
-        build, 100 custom domains. Pair with Cloudflare Workers (100K
-        requests/day free) for serverless logic. Most generous free tier of
-        the four.
-      </>
-    ),
-  },
-  {
-    name: "Render",
-    url: "https://render.com/pricing",
-    notes: (
-      <>
-        Static sites free with 100 GB bandwidth/mo. Free web services get
-        750 instance hours/mo but sleep after 15 min idle (~30s cold start).
-      </>
-    ),
-  },
-];
-
-const BACKEND_PLATFORMS: readonly PlatformRow[] = [
-  {
-    name: "Firebase Spark",
-    url: "https://firebase.google.com/pricing",
-    notes: (
-      <>
-        50K MAU (auth), 1 GB Firestore + 50K reads/day + 20K writes/day, 5
-        GB Cloud Storage, 10 GB Hosting. The per-day Firestore caps are the
-        thing to watch.
-      </>
-    ),
-  },
-  {
-    name: "Supabase Free",
-    url: "https://supabase.com/pricing",
-    notes: (
-      <>
-        500 MB Postgres, 1 GB file storage, 5 GB egress/mo, 50K MAU, 2
-        active projects. <strong>Auto-pauses after 7 days of inactivity</strong> —
-        you have to manually resume in the dashboard.
-      </>
-    ),
-  },
-  {
-    name: "Convex Free",
-    url: "https://www.convex.dev/pricing",
-    notes: (
-      <>
-        1M function calls/mo, 0.5 GB database, 1 GB file storage. Strong if
-        you want real-time queries baked in. Hard caps, no overage option.
-      </>
-    ),
-  },
-  {
-    name: "Neon Free",
-    url: "https://neon.com/pricing",
-    notes: (
-      <>
-        100 CU-hours/mo per project, 0.5 GB storage per project (5 GB
-        aggregate across up to 10 projects). Plain Postgres, no BaaS layer.
-      </>
-    ),
-  },
-];
-
-function PlatformTable({ rows, caption }: { rows: readonly PlatformRow[]; caption: string }) {
-  return (
-    <div className="mt-2 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
-      <table className="w-full text-left text-sm">
-        <caption className="sr-only">{caption}</caption>
-        <thead className="bg-neutral-50 text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:bg-neutral-800/50">
-          <tr>
-            <th scope="col" className="px-3 py-2 align-top">Platform</th>
-            <th scope="col" className="px-3 py-2 align-top">Free tier (May 2026)</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800">
-          {rows.map((row) => (
-            <tr key={row.name} className="align-top">
-              <td className="w-1/3 px-3 py-3">
-                <a
-                  href={row.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-semibold underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-500 dark:decoration-neutral-600 dark:hover:decoration-neutral-400"
-                >
-                  {row.name}
-                </a>
-              </td>
-              <td className="px-3 py-3 text-neutral-700 dark:text-neutral-300">
-                {row.notes}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-function WinnerCommitmentsCard() {
-  return (
-    <section className="mt-6 rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
-      <h2 className="text-base font-semibold">
-        If you win a week-1/2/3 vote
-      </h2>
-      <p className="mt-2 text-sm text-neutral-700 dark:text-neutral-300">
-        Winners ship their platform somewhere public for the rest of the
-        cohort to use, deal with real users (your fellow participants), and
-        submit a short demo video at showcase time.
-      </p>
-
-      <div className="mt-5 space-y-6 text-sm text-neutral-700 dark:text-neutral-300">
-        <div>
-          <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
-            Hosting costs — likely $0 at cohort scale, but verify your stack
-          </h3>
-          <p className="mt-2">
-            You pick the stack and run the deploy. At cohort scale (~100
-            users), the major free tiers are very likely to keep you at $0 —
-            but limits exist, exceeding them is your responsibility, and we
-            don&apos;t reimburse hosting bills. Always check the current
-            pricing page before you commit; the figures below are accurate as
-            of May 2026.
-          </p>
-        </div>
-
-        <div>
-          <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
-            Pick a deploy/host
-          </h3>
-          <PlatformTable rows={HOST_PLATFORMS} caption="Frontend / deploy hosts and their May 2026 free tier limits" />
-        </div>
-
-        <div>
-          <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
-            Pick a backend / database (if you need one)
-          </h3>
-          <PlatformTable rows={BACKEND_PLATFORMS} caption="Backend and database providers and their May 2026 free tier limits" />
-        </div>
-
-        <div>
-          <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
-            Domain
-          </h3>
-          <p className="mt-1">
-            We&apos;ll hand you a{" "}
-            <code className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs dark:bg-neutral-800">
-              yourthing.cursorboston.com
-            </code>{" "}
-            subdomain — no DNS service to buy.
-          </p>
-        </div>
-
-        <div>
-          <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
-            Managing real users is half the value
-          </h3>
-          <p className="mt-1">
-            Whatever you build will have actual users — your cohort.
-            Operating a platform with real people on it (handling questions,
-            fixing what breaks, deciding what to ship next) is part of the
-            educational experience. If you&apos;re already a senior operator,
-            treat it as a portfolio piece.
-          </p>
-        </div>
-
-        <div>
-          <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
-            Your demo can run locally
-          </h3>
-          <p className="mt-1">
-            For the showcase you submit a short Loom/Vidyard video. You
-            don&apos;t need a live URL — running the platform on your laptop
-            during the demo is fine.
-          </p>
-        </div>
-
-        <div>
-          <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
-            You own everything you build
-          </h3>
-          <p className="mt-1">
-            Whether or not you submit to win, the code is yours. Keep it
-            private, open it, or evolve it into something else — your call.
-          </p>
-        </div>
-
-        <div>
-          <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
-            Totally fine to not submit to win
-          </h3>
-          <p className="mt-1">
-            You can participate fully without putting yourself up for the
-            vote. There are 60+ people in Cohort 1 — we&apos;re not going to
-            run short of volunteers. Everything else (building, voting, the
-            in-person events, the demo day with hiring partners) is still
-            yours. The only thing to skip is the &quot;submit to win&quot;
-            step.
-          </p>
-        </div>
-      </div>
-    </section>
-  );
 }
 
 function ApplicationCounterCard({ counts, pickedCohorts }: CounterCardProps) {
@@ -425,10 +193,12 @@ function NextStepsCard({
   application,
   needsDiscord,
   onEditDetails,
+  hideDoneItems = false,
 }: {
   application: ApplicationDto;
   needsDiscord: boolean;
   onEditDetails: () => void;
+  hideDoneItems?: boolean;
 }) {
   const status = application.status;
   const isInCohort1 = application.cohorts.includes("cohort-1");
@@ -527,7 +297,11 @@ function NextStepsCard({
     });
   }
 
-  const allDone = items.every((i) => i.state === "done");
+  const visibleItems = hideDoneItems
+    ? items.filter((i) => i.state === "todo")
+    : items;
+  if (hideDoneItems && visibleItems.length === 0) return null;
+  const allDone = visibleItems.every((i) => i.state === "done");
 
   return (
     <section className="mt-6 rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
@@ -541,7 +315,7 @@ function NextStepsCard({
         </p>
       ) : null}
       <ul className="mt-4 space-y-3">
-        {items.map((item, idx) => (
+        {visibleItems.map((item, idx) => (
           <li
             key={idx}
             className={`flex gap-3 rounded-lg border p-3 ${
@@ -583,6 +357,29 @@ function NextStepsCard({
           </li>
         ))}
       </ul>
+    </section>
+  );
+}
+
+function CohortCodeOfConductFooter() {
+  return (
+    <section
+      aria-label="Code of conduct"
+      className="mt-6 rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-sm dark:border-neutral-800 dark:bg-neutral-900/40"
+    >
+      <p className="text-neutral-700 dark:text-neutral-300">
+        <strong>Code of conduct.</strong> Building together only works if
+        everyone feels welcome. By participating in the cohort you agree to
+        the{" "}
+        <Link
+          href="/code-of-conduct"
+          className="font-semibold underline decoration-emerald-600/60 underline-offset-2 hover:decoration-emerald-600"
+        >
+          Cursor Boston Code of Conduct
+        </Link>
+        . If something feels off — to you or anyone else — flag it to the
+        organizers.
+      </p>
     </section>
   );
 }
@@ -673,6 +470,11 @@ function SummerCohortPageInner() {
   const [applicationCounts, setApplicationCounts] = useState<ApplicationCounts>({});
   const [appLoading, setAppLoading] = useState(false);
   const [appLoadError, setAppLoadError] = useState<string | null>(null);
+  // Intake survey gate state. Admitted Cohort 1 applicants must complete
+  // the intake survey before the tabbed dashboard is rendered.
+  const [intakeStatus, setIntakeStatus] = useState<
+    "unknown" | "loading" | "completed" | "incomplete" | "error"
+  >("unknown");
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -693,6 +495,10 @@ function SummerCohortPageInner() {
   const [activeTab, setActiveTab] = useState<CohortTabId>(
     SUMMER_COHORT_C1_DEFAULT_TAB
   );
+  // Tracks whether we've auto-switched the user to the intake-survey tab on
+  // first land — one-shot so a user who explicitly navigates to another tab
+  // doesn't get yanked back.
+  const autoSwitchedToSurveyRef = useRef(false);
 
   const openEditDetails = useCallback(() => {
     setEditingDetails(true);
@@ -754,6 +560,65 @@ function SummerCohortPageInner() {
       cancelled = true;
     };
   }, [loading, user]);
+
+  // Fetch intake-survey status whenever the user is an admitted Cohort 1
+  // applicant. Non-admitted users never see the gate, so the effect short-
+  // circuits without touching state — `showSurveyGate` already requires
+  // `showTabs`, so a stale `intakeStatus` can't leak through to the UI.
+  useEffect(() => {
+    if (loading || !user) return;
+    if (
+      application?.status !== "admitted" ||
+      !application.cohorts.includes("cohort-1")
+    ) {
+      return;
+    }
+    let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch-on-mount, state set inside async callback
+    setIntakeStatus("loading");
+    (async () => {
+      try {
+        const token = await user.getIdToken();
+        const res = await fetch("/api/summer-cohort/intake-survey", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error(`status_${res.status}`);
+        const json = (await res.json()) as { completed: boolean };
+        if (!cancelled) setIntakeStatus(json.completed ? "completed" : "incomplete");
+      } catch {
+        if (!cancelled) setIntakeStatus("error");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [loading, user, application]);
+
+  // Auto-switch incomplete admits to the intake-survey tab on first land.
+  // One-shot via the ref so users who navigate away aren't yanked back.
+  useEffect(() => {
+    if (autoSwitchedToSurveyRef.current) return;
+    if (intakeStatus !== "incomplete") return;
+    if (
+      application?.status !== "admitted" ||
+      !application.cohorts.includes("cohort-1")
+    ) {
+      return;
+    }
+    autoSwitchedToSurveyRef.current = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot redirect on first paint
+    setActiveTab("intake-survey");
+  }, [intakeStatus, application]);
+
+  // If the survey was the active tab and the user just submitted it (status
+  // flipped to "completed" → tab disappears), snap to the default tab so we
+  // don't leave them staring at an empty panel.
+  useEffect(() => {
+    if (intakeStatus === "completed" && activeTab === "intake-survey") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- post-submit cleanup
+      setActiveTab(SUMMER_COHORT_C1_DEFAULT_TAB);
+    }
+  }, [intakeStatus, activeTab]);
 
   // Handle OAuth callbacks landed on this page.
   useEffect(() => {
@@ -915,11 +780,60 @@ function SummerCohortPageInner() {
   const showTabs =
     application?.status === "admitted" &&
     application.cohorts.includes("cohort-1");
+  // Soft gate: the intake survey is now a tab, not a blocker. The tab
+  // appears (with a callout banner above the tabs) until the user has
+  // submitted. Once submitted, the tab disappears.
+  const showIntakeSurveyTab = showTabs && intakeStatus === "incomplete";
   const myInfoVisible = !showTabs || activeTab === "my-info";
   const cohort1Count = applicationCounts["cohort-1"] ?? 0;
 
+  const localityDone =
+    application?.isLocal !== null && application?.wantsToPresent !== null;
+  const rsvpDone = application?.mayImmersionRsvped === true;
+  const moveCompletedSetupToInfo = showTabs && localityDone && rsvpDone;
+
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10 md:px-6 md:py-14">
+      {showTabs ? (
+        <SetupReadinessModal
+          needsDiscord={!discord.discordInfo}
+          needsGithub={!github.githubInfo?.login}
+          needsSurvey={intakeStatus === "incomplete"}
+          needsDevEnvConfirm={
+            (application?.cohort1DevEnvConfirmedAt ?? null) === null
+          }
+          onConnectDiscord={discord.connect}
+          onConnectGithub={github.connect}
+          onGoToSurvey={() => setActiveTab("intake-survey")}
+          onConfirmDevEnv={async () => {
+            if (!user) return;
+            const token = await user.getIdToken();
+            const res = await fetch("/api/summer-cohort/confirm-dev-env", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: "{}",
+            });
+            if (!res.ok) {
+              throw new Error("confirm_dev_env_failed");
+            }
+            const json = (await res.json()) as {
+              ok: true;
+              cohort1DevEnvConfirmedAt: number;
+            };
+            setApplication((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    cohort1DevEnvConfirmedAt: json.cohort1DevEnvConfirmedAt,
+                  }
+                : prev
+            );
+          }}
+        />
+      ) : null}
       <header className="mb-8">
         <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
           <Sun className="h-3.5 w-3.5" strokeWidth={2.25} />
@@ -991,28 +905,96 @@ function SummerCohortPageInner() {
                   application={application}
                   needsDiscord={!discord.discordInfo}
                   onEditDetails={openEditDetails}
+                  hideDoneItems={moveCompletedSetupToInfo}
                 />
+                {showIntakeSurveyTab && activeTab !== "intake-survey" ? (
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("intake-survey")}
+                    className="mt-6 flex w-full items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-left transition-colors hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/30 dark:hover:bg-amber-900/40"
+                  >
+                    <span aria-hidden className="mt-0.5 inline-block h-2.5 w-2.5 shrink-0 rounded-full bg-amber-500" />
+                    <span className="flex-1">
+                      <span className="block text-sm font-semibold text-amber-900 dark:text-amber-100">
+                        Quick intake survey — ~5 min
+                      </span>
+                      <span className="mt-0.5 block text-xs text-amber-800 dark:text-amber-200">
+                        Helps the team build tools to make the next six weeks
+                        smoother. Not research — IRB pending.
+                      </span>
+                    </span>
+                    <span className="text-xs font-semibold text-amber-900 dark:text-amber-100">
+                      Take it →
+                    </span>
+                  </button>
+                ) : null}
                 <CohortTabs
                   activeTab={activeTab}
                   onChange={setActiveTab}
+                  showIntakeSurvey={showIntakeSurveyTab}
                 />
                 <div className="mt-4">
-                  {activeTab === "info" ? (
-                    <InfoTabPanel cohort1Count={cohort1Count} />
+                  {activeTab === "intake-survey" ? (
+                    intakeStatus === "loading" || intakeStatus === "unknown" ? (
+                      <div className="rounded-xl border border-neutral-200 p-6 text-sm text-neutral-500 dark:border-neutral-800">
+                        Loading intake survey…
+                      </div>
+                    ) : intakeStatus === "error" ? (
+                      <div className="rounded-xl border border-red-300 bg-red-50 p-6 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+                        Couldn&apos;t load the intake survey. Refresh the page.
+                      </div>
+                    ) : (
+                      <IntakeSurveyForm
+                        defaultEmail={user?.email ?? application.email ?? ""}
+                        cohortId={application.cohorts[0] ?? "cohort-1"}
+                        onComplete={() => setIntakeStatus("completed")}
+                      />
+                    )
+                  ) : activeTab === "info" ? (
+                    <InfoTabPanel
+                      cohort1Count={cohort1Count}
+                      application={
+                        moveCompletedSetupToInfo ? application : undefined
+                      }
+                    />
                   ) : activeTab === "week-1" ? (
                     <WeekVotePanel
                       week={SUMMER_COHORT_C1_VOTE_WEEKS[0]}
                       tabId="week-1"
+                      currentUserGithubHandle={
+                        github.githubInfo?.login ?? null
+                      }
+                      currentUserDisplayName={
+                        userProfile?.displayName ?? null
+                      }
+                      currentUserPhotoUrl={userProfile?.photoURL ?? null}
+                      onSwitchToMyInfo={() => setActiveTab("my-info")}
                     />
                   ) : activeTab === "week-2" ? (
                     <WeekVotePanel
                       week={SUMMER_COHORT_C1_VOTE_WEEKS[1]}
                       tabId="week-2"
+                      currentUserGithubHandle={
+                        github.githubInfo?.login ?? null
+                      }
+                      currentUserDisplayName={
+                        userProfile?.displayName ?? null
+                      }
+                      currentUserPhotoUrl={userProfile?.photoURL ?? null}
+                      onSwitchToMyInfo={() => setActiveTab("my-info")}
                     />
                   ) : activeTab === "week-3" ? (
                     <WeekVotePanel
                       week={SUMMER_COHORT_C1_VOTE_WEEKS[2]}
                       tabId="week-3"
+                      currentUserGithubHandle={
+                        github.githubInfo?.login ?? null
+                      }
+                      currentUserDisplayName={
+                        userProfile?.displayName ?? null
+                      }
+                      currentUserPhotoUrl={userProfile?.photoURL ?? null}
+                      onSwitchToMyInfo={() => setActiveTab("my-info")}
                     />
                   ) : activeTab === "week-4" ? (
                     <Week4LudwittPanel />
@@ -1020,8 +1002,13 @@ function SummerCohortPageInner() {
                     <Week5StartupPanel />
                   ) : activeTab === "week-6" ? (
                     <Week6OssPanel />
+                  ) : activeTab === "setup" ? (
+                    <SetupInstructionsPanel />
+                  ) : activeTab === "game" ? (
+                    <GamePromoPanel />
                   ) : null}
                 </div>
+                <CohortCodeOfConductFooter />
               </>
             ) : (
               <>
@@ -1029,6 +1016,10 @@ function SummerCohortPageInner() {
                   application={application}
                   cohortLabel={cohortLabel}
                 />
+                {application.status === "pending" &&
+                application.cohorts.includes("cohort-1") ? (
+                  <ClaimSpotByPRCard />
+                ) : null}
                 <NextStepsCard
                   application={application}
                   needsDiscord={!discord.discordInfo}

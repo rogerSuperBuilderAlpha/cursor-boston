@@ -7,10 +7,11 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+import Avatar from "@/components/Avatar";
 import type { Message, ReactionType } from "@/types/feed";
-import { getInitials, formatRelativeDate } from "@/lib/utils";
+import { formatRelativeDate } from "@/lib/utils";
 import { ReplyCard } from "./ReplyCard";
+import { ReportMessageMenu } from "./ReportMessageMenu";
 
 interface MessageCardProps {
   message: Message;
@@ -94,19 +95,12 @@ export function MessageCard({
           aria-label={`View ${message.authorName}'s profile`}
           className="shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 rounded-full"
         >
-          {message.authorPhoto ? (
-            <Image
-              src={message.authorPhoto}
-              alt={message.authorName}
-              width={40}
-              height={40}
-              className="rounded-full object-cover hover:opacity-80 transition-opacity"
-            />
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center text-neutral-700 dark:text-white font-semibold hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors">
-              {getInitials(message.authorName)}
-            </div>
-          )}
+          <Avatar
+            src={message.authorPhoto}
+            name={message.authorName}
+            size={40}
+            className="hover:opacity-80 transition-opacity"
+          />
         </button>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
@@ -122,7 +116,7 @@ export function MessageCard({
                 {formatRelativeDate(message.createdAt)}
               </span>
             </div>
-            {isOwner && (
+            {isOwner ? (
               <div className="relative">
                 {showDeleteConfirm ? (
                   <div className="flex items-center gap-2">
@@ -167,7 +161,9 @@ export function MessageCard({
                   </button>
                 )}
               </div>
-            )}
+            ) : isLoggedIn ? (
+              <ReportMessageMenu messageId={message.id} />
+            ) : null}
           </div>
           {/* Reposter's comment */}
           <p className="text-neutral-700 dark:text-neutral-300 mt-1 whitespace-pre-wrap wrap-break-word">

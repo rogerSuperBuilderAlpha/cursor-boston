@@ -1,0 +1,14 @@
+{
+  "title": "The Hidden Axes of Primary Ciliary Dyskinesia in Public Molecular Data",
+  "description": "A Marimo public-data atlas showing how GTEx tissue expression and ProteinGym benchmark coverage reveal hidden PCD axes, then using ClinVar, PubMed, Open Targets, gnomAD, Human Protein Atlas, and cited clinical context to qualify where evidence is strong, sparse, robust, or only visible outside benchmarks.",
+  "displayName": "Trevor Campbell",
+  "tags": [
+    "marimo",
+    "biology",
+    "gtex",
+    "proteingym",
+    "clinvar",
+    "healthcare"
+  ],
+  "collaborators": []
+}

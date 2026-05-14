@@ -13,8 +13,16 @@
       "schedule": "0 */6 * * *"
     },
     {
+      "path": "/api/internal/snapshots/rebuild?only=game-world",
+      "schedule": "*/5 * * * *"
+    },
+    {
       "path": "/api/internal/hunt/email-retry",
       "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/internal/digest/weekly-hiring-partners",
+      "schedule": "0 13 * * 1"
     }
   ]
 }

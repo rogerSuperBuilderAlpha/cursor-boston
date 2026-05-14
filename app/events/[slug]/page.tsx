@@ -15,6 +15,7 @@ import {
   getLumaCheckoutEventId,
   getLumaCheckoutHref,
 } from "@/lib/luma-event";
+import { PYDATA_2026_EVENT_SLUG } from "@/lib/pydata-2026";
 
 // Type definitions for event data
 interface AgendaItem {
@@ -133,12 +134,18 @@ function getEventBySlug(slug: string): Event | undefined {
   return getAllEvents().find((event) => event.slug === slug);
 }
 
-// Generate static paths for all events
+// Generate static paths for all events.
+// The pydata-2026 slug is intentionally excluded: it has its own static
+// route at app/events/cursor-boston-pydata-2026/page.tsx that gates access
+// and renders a different layout. Leaving the dynamic [slug] route would
+// also build a page for that slug, but the static one wins at request time.
 export async function generateStaticParams() {
   const events = getAllEvents();
-  return events.map((event) => ({
-    slug: event.slug,
-  }));
+  return events
+    .filter((event) => event.slug !== PYDATA_2026_EVENT_SLUG)
+    .map((event) => ({
+      slug: event.slug,
+    }));
 }
 
 // Generate metadata for SEO

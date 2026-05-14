@@ -13,6 +13,7 @@ import { parseRequestBody } from "@/lib/api-response";
 import { getClientIdentifier } from "@/lib/rate-limit";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 import { sanitizeDocId } from "@/lib/sanitize";
+import { showcaseContract } from "@/lib/api-schemas/showcase";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -45,14 +46,16 @@ export async function POST(request: NextRequest) {
 
     const bodyOrError = await parseRequestBody(request);
     if (bodyOrError instanceof NextResponse) return bodyOrError;
-    const { projectId, type } = bodyOrError;
-
-    const sanitizedProjectId = sanitizeDocId(projectId);
-    if (!sanitizedProjectId || (type !== "up" && type !== "down")) {
+    const parsed = showcaseContract.vote.body.safeParse(bodyOrError);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+    }
+    const sanitizedProjectId = sanitizeDocId(parsed.data.projectId);
+    if (!sanitizedProjectId) {
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
     }
 
-    const voteType = type as VoteType;
+    const voteType: VoteType = parsed.data.type;
     const projectRef = db.collection("showcaseProjects").doc(sanitizedProjectId);
     const voteRef = db.collection("showcaseVotes").doc(`${sanitizedProjectId}_${user.uid}`);
 

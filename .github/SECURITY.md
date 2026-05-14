@@ -19,8 +19,9 @@ We take security vulnerabilities seriously. If you discover a security issue, pl
 
 Preferred options (pick one):
 
-1. **GitHub private vulnerability reporting** (if available on the repository) — use the **Report a vulnerability** link on the **Security** tab. This opens a private thread with maintainers.
-2. **Email:** **security@cursorboston.com**
+1. **GitHub private vulnerability reporting** (recommended) — use the **Report a vulnerability** link on the [**Security** tab](https://github.com/rogerSuperBuilderAlpha/cursor-boston/security/advisories/new). This opens a private thread visible to every maintainer and is the fastest path to a fix. It does not depend on email forwarding being configured.
+2. **Email:** **security@cursorboston.com** (forwards to the maintainer team).
+3. **Fallback:** if you don't get an acknowledgement within 48 hours via either channel, please email **hello@cursorboston.com** with the subject line beginning `[security]` so it lands in the same triage queue used by the rest of the maintainer team. This fallback exists so a misrouted security@ message never delays a disclosure.
 
 For machine-readable disclosure routing, see [`public/.well-known/security.txt`](../public/.well-known/security.txt) (served at `https://cursorboston.com/.well-known/security.txt` in production).
 
@@ -81,6 +82,7 @@ If you're deploying Cursor Boston:
    - Rotate OAuth client secrets periodically
    - Use different secrets for development and production
    - Never hardcode secrets in source code
+   - For the project's own rotation cadence and runbook, see [`docs/SECURITY_OPERATIONS.md`](../docs/SECURITY_OPERATIONS.md)
 7. **Rate Limiting** - API routes are protected with rate limiting
    - Review rate limit configurations for your use case
    - Monitor for abuse patterns

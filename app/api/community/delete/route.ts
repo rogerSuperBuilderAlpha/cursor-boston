@@ -8,29 +8,31 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { logger } from "@/lib/logger";
-import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
-import { parseRequestBody } from "@/lib/api-response";
+import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 import { sanitizeDocId } from "@/lib/sanitize";
+import { communityContract } from "@/lib/api-schemas/community";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const COMMUNITY_RATE_LIMIT = { windowMs: 60 * 1000, maxRequests: 20 };
+const DELETE_RATE_LIMIT = { windowMs: 60 * 1000, maxRequests: 20 };
 
 export async function POST(request: NextRequest) {
   try {
-    const clientId = getClientIdentifier(request as unknown as Request);
-    const rateResult = checkRateLimit(`community-delete:${clientId}`, COMMUNITY_RATE_LIMIT);
+    const user = await getVerifiedUser(request);
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const rateResult = await checkUpstashRateLimit(
+      `community-delete:${user.uid}`,
+      DELETE_RATE_LIMIT
+    );
     if (!rateResult.success) {
       return NextResponse.json(
         { error: "Too many requests", retryAfterSeconds: rateResult.retryAfter },
         { status: 429, headers: { "Retry-After": String(rateResult.retryAfter || 60) } }
       );
-    }
-
-    const user = await getVerifiedUser(request);
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const db = getAdminDb();
@@ -39,9 +41,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    const bodyOrError = await parseRequestBody(request);
-    if (bodyOrError instanceof NextResponse) return bodyOrError;
-    const { messageId } = bodyOrError;
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 });
+    }
+    const parsed = communityContract.deletePost.body.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message ?? "Invalid body" },
+        { status: 400 }
+      );
+    }
+    const { messageId } = parsed.data;
 
     const sanitizedId = sanitizeDocId(messageId);
     if (!sanitizedId) {

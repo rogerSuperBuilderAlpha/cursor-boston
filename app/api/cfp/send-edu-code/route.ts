@@ -12,6 +12,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { logApiError, logger } from "@/lib/logger";
 import { sendEmail } from "@/lib/mailgun";
 import { parseRequestBody } from "@/lib/api-response";
+import { cfpContract } from "@/lib/api-schemas/cfp";
 
 const CODE_LENGTH = 6;
 const CODE_EXPIRY_MINUTES = 15;
@@ -49,13 +50,14 @@ export async function POST(request: NextRequest) {
 
     const bodyOrError = await parseRequestBody(request);
     if (bodyOrError instanceof NextResponse) return bodyOrError;
-    const { email } = bodyOrError;
-    if (!email || typeof email !== "string") {
+    const parsed = cfpContract.sendEduCode.body.safeParse(bodyOrError);
+    if (!parsed.success) {
       logger.warn("CFP send-edu-code rejected: missing email payload", {
         uid: user.uid,
       });
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
+    const { email } = parsed.data;
 
     const normalizedEmail = email.toLowerCase().trim();
     const emailDomain = normalizedEmail.split("@")[1] || "";

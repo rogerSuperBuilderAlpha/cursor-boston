@@ -9,6 +9,7 @@ import { createAgent, getVerifiedAgent } from "@/lib/agents";
 import { getClientIdentifier } from "@/lib/rate-limit";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 import { parseRequestBody } from "@/lib/api-response";
+import { agentsContract } from "@/lib/api-schemas/agents";
 
 export async function POST(request: NextRequest) {
   try {
@@ -52,53 +53,18 @@ export async function POST(request: NextRequest) {
     // Parse request body
     const bodyOrError = await parseRequestBody(request);
     if (bodyOrError instanceof NextResponse) return bodyOrError;
-    const { name, description } = bodyOrError;
-
-    // Validate name
-    if (!name || typeof name !== "string") {
+    const parsed = agentsContract.register.body.safeParse(bodyOrError);
+    if (!parsed.success) {
       return NextResponse.json(
         {
           success: false,
-          error: "Name is required",
-          hint: "Provide a name for your agent in the request body",
+          error: parsed.error.issues[0]?.message ?? "Invalid body",
         },
         { status: 400 }
       );
     }
-
-    const trimmedName = name.trim();
-    if (trimmedName.length < 2 || trimmedName.length > 50) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Name must be between 2 and 50 characters",
-        },
-        { status: 400 }
-      );
-    }
-
-    // Validate name format (alphanumeric, spaces, hyphens, underscores)
-    if (!/^[a-zA-Z0-9\s\-_]+$/.test(trimmedName)) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Name can only contain letters, numbers, spaces, hyphens, and underscores",
-        },
-        { status: 400 }
-      );
-    }
-
-    // Validate description if provided
-    const trimmedDescription = description?.trim();
-    if (trimmedDescription && trimmedDescription.length > 500) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Description must be 500 characters or less",
-        },
-        { status: 400 }
-      );
-    }
+    const trimmedName = parsed.data.name.trim();
+    const trimmedDescription = parsed.data.description?.trim();
 
     // Create the agent
     const { agent, apiKey, claimUrl } = await createAgent(

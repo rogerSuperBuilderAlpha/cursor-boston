@@ -5,13 +5,9 @@
  */
 
 import { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import { DiscordIcon } from "@/components/icons";
-import eventsData from "@/content/events.json";
-import { getLumaCheckoutEventId, getLumaCheckoutHref } from "@/lib/luma-event";
-import type { Event, EventsData } from "@/types/events";
 
 export const metadata: Metadata = {
   title: "Cursor Boston - AI Coding Community",
@@ -156,10 +152,26 @@ const audienceCards = [
 
 const DISCORD_LINK = "https://discord.gg/Wsncg8YYqc";
 
-const eventsJson = eventsData as unknown as EventsData;
-const featuredHackathon = eventsJson.upcoming.find(
-  (e: Event) => e.type === "hackathon" && e.featured
-);
+const pastHackathonCards = [
+  {
+    title: "PyData May 2026",
+    label: "Past notebook hack",
+    href: "/events/cursor-boston-pydata-2026",
+    description:
+      "View the scored notebook showcase, sorted results, and winner-eligible submissions from the PyData evening hack.",
+    submitCopy:
+      "Try the Marimo notebook exercise anytime and open a PR to pydata-2026-submissions to have your work reviewed, scored, and listed.",
+  },
+  {
+    title: "Hack-a-Sprint 2026",
+    label: "Past agent hack",
+    href: "/hackathons/hack-a-sprint-2026",
+    description:
+      "Browse the final project gallery, AI scores, peer judging, and winning agent builds from Hack-a-Sprint.",
+    submitCopy:
+      "Build the agent challenge on your own schedule and open a PR to hack-a-sprint-2026-submissions to get your project scored.",
+  },
+];
 
 export default function Home() {
   return (
@@ -206,128 +218,49 @@ export default function Home() {
               View Events
             </Link>
           </div>
-        </div>
-      </section>
-
-      {/* Featured hackathon — Hack-a-Sprint */}
-      {featuredHackathon ? (
-        <section className="py-16 md:py-20 px-6 bg-neutral-100 dark:bg-neutral-950 transition-colors duration-300">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-10">
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-                Featured: Hack-a-Sprint
-              </h2>
-              <div className="flex flex-wrap gap-4 text-sm font-medium">
-                <Link
-                  href="/hackathons"
-                  className="text-emerald-600 dark:text-emerald-400 hover:underline focus-visible:outline-none focus-visible:underline"
-                >
-                  Hackathons &amp; details &rarr;
-                </Link>
-                <Link
-                  href="/events"
-                  className="text-neutral-600 dark:text-neutral-300 hover:text-foreground focus-visible:outline-none focus-visible:underline"
-                >
-                  All events &rarr;
-                </Link>
-              </div>
+          <div className="mt-10 text-left">
+            <div className="mb-4 flex flex-col gap-1 text-center">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-neutral-500 dark:text-neutral-400">
+                Past Hackathons
+              </p>
+              <p className="text-sm text-neutral-600 dark:text-neutral-300">
+                Results are live, and the challenges remain open for anyone who
+                wants to try them later.
+              </p>
             </div>
-
-            <div className="grid md:grid-cols-2 gap-10 items-center">
-              <div className="relative aspect-square max-h-[320px] md:max-h-[380px] rounded-2xl overflow-hidden bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 mx-auto w-full max-w-md">
-                <Image
-                  src={featuredHackathon.image}
-                  alt={`${featuredHackathon.title} graphic`}
-                  fill
-                  className="object-contain p-6"
-                  sizes="(max-width: 768px) 100vw, 380px"
-                />
-              </div>
-
-              <div className="flex flex-col gap-6">
-                <div>
-                  <span className="inline-block px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-sm font-medium rounded-full mb-4">
-                    In-person hackathon · 50 spots
-                  </span>
-                  <h3 className="text-xl md:text-2xl font-bold text-foreground mb-3">
-                    {featuredHackathon.title}
-                  </h3>
-                  <p className="text-neutral-600 dark:text-neutral-300 text-base leading-relaxed">
-                    {featuredHackathon.description}
-                  </p>
-                </div>
-
-                <div className="space-y-3 text-neutral-600 dark:text-neutral-300 text-sm">
-                  <p>
-                    <span className="font-semibold text-foreground">When:</span>{" "}
-                    {new Date(`${featuredHackathon.date}T12:00:00`).toLocaleDateString(
-                      "en-US",
-                      {
-                        weekday: "long",
-                        month: "long",
-                        day: "numeric",
-                        year: "numeric",
-                      }
-                    )}
-                    {featuredHackathon.time && featuredHackathon.time !== "TBD"
-                      ? ` · ${featuredHackathon.time}`
-                      : ""}
-                  </p>
-                  <p>
-                    <span className="font-semibold text-foreground">Where:</span>{" "}
-                    {featuredHackathon.location}. Exact address on Luma after approval.
-                  </p>
-                  <div className="flex flex-wrap gap-2 pt-1">
-                    <span className="px-2 py-1 bg-neutral-200/80 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 text-xs rounded-full border border-neutral-300 dark:border-neutral-700">
-                      $50 Cursor Credits each
+            <div className="grid gap-4 md:grid-cols-2">
+              {pastHackathonCards.map((card) => (
+                <Link
+                  key={card.href}
+                  href={card.href}
+                  className="group flex h-full flex-col rounded-2xl border border-neutral-200 bg-white/80 p-5 text-left shadow-sm transition-colors hover:border-emerald-400/70 hover:bg-emerald-50/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 dark:border-neutral-800 dark:bg-neutral-900/70 dark:hover:border-emerald-500/60 dark:hover:bg-emerald-950/20"
+                >
+                  <div className="mb-4 flex items-center justify-between gap-3">
+                    <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
+                      {card.label}
                     </span>
-                    <span className="px-2 py-1 bg-neutral-200/80 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 text-xs rounded-full border border-neutral-300 dark:border-neutral-700">
-                      $1,200 prize pool
-                    </span>
-                    <span className="px-2 py-1 bg-neutral-200/80 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 text-xs rounded-full border border-neutral-300 dark:border-neutral-700">
-                      Food &amp; drinks
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <a
-                    href={getLumaCheckoutHref(featuredHackathon)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="Register for Hack-a-Sprint on Luma (opens in new tab)"
-                    className="inline-flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 bg-emerald-500 text-white rounded-lg text-base font-semibold hover:bg-emerald-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background w-full sm:w-auto luma-checkout--button"
-                    data-luma-action="checkout"
-                    data-luma-event-id={getLumaCheckoutEventId(featuredHackathon)}
-                  >
-                    Register for event
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
+                    <span
+                      className="text-sm font-semibold text-emerald-600 transition-transform group-hover:translate-x-0.5 dark:text-emerald-400"
                       aria-hidden="true"
                     >
-                      <path d="M7 17l9.2-9.2M17 17V7H7" />
-                    </svg>
-                  </a>
-                  <Link
-                    href="/hackathons"
-                    className="inline-flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-4 border border-neutral-300 dark:border-neutral-700 text-foreground rounded-lg text-base font-semibold hover:bg-neutral-200/50 dark:hover:bg-neutral-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background w-full sm:w-auto"
-                  >
-                    More details
-                  </Link>
-                </div>
-              </div>
+                      Results &rarr;
+                    </span>
+                  </div>
+                  <h2 className="text-xl font-bold text-foreground">
+                    {card.title}
+                  </h2>
+                  <p className="mt-2 text-sm leading-relaxed text-neutral-600 dark:text-neutral-300">
+                    {card.description}
+                  </p>
+                  <p className="mt-4 rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-3 text-sm leading-relaxed text-neutral-700 dark:border-neutral-700 dark:bg-neutral-950/60 dark:text-neutral-300">
+                    {card.submitCopy}
+                  </p>
+                </Link>
+              ))}
             </div>
           </div>
-        </section>
-      ) : null}
+        </div>
+      </section>
 
       {/* Who's This For Section */}
       <section className="py-16 md:py-20 px-6">

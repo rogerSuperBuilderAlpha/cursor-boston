@@ -9,6 +9,7 @@ import { getVerifiedUser } from "@/lib/server-auth";
 import { getAdminDb, getAdminAuth } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 import { parseRequestBody } from "@/lib/api-response";
+import { authContract } from "@/lib/api-schemas/auth";
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,12 +20,15 @@ export async function POST(request: NextRequest) {
 
     const bodyOrError = await parseRequestBody(request);
     if (bodyOrError instanceof NextResponse) return bodyOrError;
-    const { newPrimaryEmail } = bodyOrError;
-    if (!newPrimaryEmail || typeof newPrimaryEmail !== "string") {
-      return NextResponse.json({ error: "New primary email is required" }, { status: 400 });
+    const parsed = authContract.changePrimaryEmail.body.safeParse(bodyOrError);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message ?? "New primary email is required" },
+        { status: 400 }
+      );
     }
 
-    const normalizedEmail = newPrimaryEmail.toLowerCase().trim();
+    const normalizedEmail = parsed.data.newPrimaryEmail.toLowerCase().trim();
 
     const adminDb = getAdminDb();
     const adminAuth = getAdminAuth();

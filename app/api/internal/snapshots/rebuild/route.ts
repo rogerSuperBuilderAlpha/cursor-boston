@@ -18,6 +18,9 @@ import {
   computePublicMembersSnapshot,
   MEMBERS_SNAPSHOT_CACHE_TTL_MS,
 } from "@/lib/members-public-snapshot";
+import { rebuildWorldSnapshotServer } from "@/lib/game/world-snapshot";
+
+// @contracts: internalContract.snapshotsRebuildGet, internalContract.snapshotsRebuildPost (lib/api-schemas/internal.ts)
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -71,11 +74,22 @@ async function handleRebuild(request: NextRequest): Promise<NextResponse> {
   const only = request.nextUrl.searchParams.get("only");
   let runAnalytics = !only || only === "analytics" || only === "all";
   let runMembers = !only || only === "members" || only === "all";
+  // Game world snapshot — opt-in via `only=game-world` (or the umbrella
+  // `all`). Kept off the default unscoped run because it has a tighter
+  // freshness budget than the other snapshots; its dedicated cron entry
+  // in vercel.json fires every 5 minutes vs analytics/members at 6h.
+  let runGameWorld = only === "game-world" || only === "all";
 
   try {
     const result: {
       analytics?: { ok: boolean; error?: string };
       members?: { ok: boolean; count?: number; error?: string };
+      gameWorld?: {
+        ok: boolean;
+        tileCount?: number;
+        ownerCount?: number;
+        error?: string;
+      };
     } = {};
 
     // Skip rebuild if the existing snapshot is still fresh (avoids redundant
@@ -137,8 +151,50 @@ async function handleRebuild(request: NextRequest): Promise<NextResponse> {
       }
     }
 
+    if (runGameWorld) {
+      try {
+        // Tighter freshness budget than analytics/members: this powers the
+        // live map view, so we want it ≤5 min stale. Skip if the existing
+        // snapshot was just rebuilt to deflect rapid cron retries.
+        const GAME_WORLD_FRESHNESS_MS = 60 * 1000; // 1 minute
+        if (!force) {
+          const existing = await db
+            .collection("game_world_snapshots")
+            .doc("latest")
+            .get();
+          const updatedAt = existing.data()?.generatedAt;
+          if (
+            updatedAt &&
+            Date.now() -
+              new Date(updatedAt.toDate?.() ?? updatedAt).getTime() <
+              GAME_WORLD_FRESHNESS_MS
+          ) {
+            result.gameWorld = { ok: true, error: "skipped: snapshot still fresh" };
+            runGameWorld = false;
+          }
+        }
+        if (runGameWorld) {
+          const out = await rebuildWorldSnapshotServer();
+          result.gameWorld = {
+            ok: true,
+            tileCount: out.tileCount,
+            ownerCount: out.ownerCount,
+          };
+        }
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        logger.logError(e, {
+          endpoint: "/api/internal/snapshots/rebuild",
+          phase: "game-world",
+        });
+        result.gameWorld = { ok: false, error: msg };
+      }
+    }
+
     const ok =
-      (!runAnalytics || result.analytics?.ok) && (!runMembers || result.members?.ok);
+      (!runAnalytics || result.analytics?.ok) &&
+      (!runMembers || result.members?.ok) &&
+      (!runGameWorld || result.gameWorld?.ok);
     return NextResponse.json({ ok, invocationId, ...result }, { status: ok ? 200 : 500 });
   } catch (error) {
     logger.logError(error, { endpoint: "/api/internal/snapshots/rebuild", invocationId });
