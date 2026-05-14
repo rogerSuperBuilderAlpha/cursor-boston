@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import {
   SUMMER_COHORT_C1_WEEK_1,
-  SUMMER_COHORT_C1_ZOOM_URL_PLACEHOLDER,
+  type SummerCohortId,
   type SummerCohortVoteWeek,
 } from "@/lib/summer-cohort";
 import { WeekSubmissionsCollapsible } from "./WeekSubmissionsCollapsible";
@@ -27,6 +27,13 @@ const WILDCARDS = SUMMER_COHORT_C1_WEEK_1.wildcardSlots;
 interface WeekVotePanelProps {
   week: SummerCohortVoteWeek;
   tabId: string;
+  /** Cohort id this dashboard is for. Threads through to the submissions /
+   *  votes APIs so cohort-1 and cohort-2 see separate submission feeds. */
+  cohortId: SummerCohortId;
+  /** Cohort label used in the Week-N badge. */
+  cohortLabel: string;
+  /** Zoom URL for this cohort's kickoff + voting call. */
+  zoomUrl: string;
   /** Lower-cased GitHub handle of the signed-in user, if connected — used by
    *  the submissions collapsible to render "you're submitted" status. */
   currentUserGithubHandle: string | null;
@@ -41,12 +48,14 @@ interface WeekVotePanelProps {
 export function WeekVotePanel({
   week,
   tabId,
+  cohortId,
+  cohortLabel,
+  zoomUrl,
   currentUserGithubHandle,
   currentUserDisplayName,
   currentUserPhotoUrl,
   onSwitchToMyInfo,
 }: WeekVotePanelProps) {
-  const zoomUrl = SUMMER_COHORT_C1_ZOOM_URL_PLACEHOLDER;
 
   return (
     <section
@@ -82,7 +91,7 @@ export function WeekVotePanel({
 
       <div className="mt-6 flex flex-wrap items-center gap-2">
         <span className="inline-flex items-center rounded-full bg-emerald-500 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white">
-          Cohort 1 · Week {week.week}
+          {cohortLabel} · Week {week.week}
         </span>
         <span className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
           {week.deadlineLabel.split("·")[0]?.trim()} deadline
@@ -106,6 +115,7 @@ export function WeekVotePanel({
         <WeekSubmissionsCollapsible
           week={week}
           tabId={tabId}
+          cohortId={cohortId}
           currentUserGithubHandle={currentUserGithubHandle}
           currentUserDisplayName={currentUserDisplayName}
           currentUserPhotoUrl={currentUserPhotoUrl}

@@ -17,12 +17,13 @@ import {
 } from "lucide-react";
 import {
   SUMMER_COHORTS,
-  SUMMER_COHORT_C1_DISCORD_INVITE_URL_PLACEHOLDER,
   SUMMER_COHORT_DEMO_DAY,
   SUMMER_COHORT_IMMERSION,
   SUMMER_COHORT_MEETING_CADENCE,
   SUMMER_COHORT_PHILOSOPHY,
   SUMMER_COHORT_WEEKS,
+  type SummerCohort,
+  type SummerCohortId,
 } from "@/lib/summer-cohort";
 import { WinnerCommitmentsCard } from "./WinnerCommitmentsCard";
 
@@ -33,14 +34,38 @@ interface CompletedSetupApplication {
 }
 
 interface InfoTabPanelProps {
-  cohort1Count: number;
+  /** Cohort id this dashboard is for — drives the headline copy + the
+   *  participant count shown in the "in your cohort" tile. */
+  cohortId: SummerCohortId;
+  /** Cohort label, e.g. "Cohort 1" / "Cohort 2". */
+  cohortLabel: string;
+  /** Participant count in the user's cohort. */
+  cohortCount: number;
+  /** Discord invite URL for the user's cohort. */
+  discordInviteUrl: string;
   /** When provided, renders a small "setup recorded" summary at the top of
    *  the tab — mirrors the "done" rows previously shown in the What's-next
    *  card above the tabs, once those rows are all green. */
   application?: CompletedSetupApplication;
 }
 
-export function InfoTabPanel({ cohort1Count, application }: InfoTabPanelProps) {
+function findCohort(cohortId: SummerCohortId): SummerCohort {
+  return (
+    SUMMER_COHORTS.find((c) => c.id === cohortId) ??
+    (SUMMER_COHORTS[0] as SummerCohort)
+  );
+}
+
+export function InfoTabPanel({
+  cohortId,
+  cohortLabel,
+  cohortCount,
+  discordInviteUrl,
+  application,
+}: InfoTabPanelProps) {
+  const cohort = findCohort(cohortId);
+  const discordChannel = cohortId === "cohort-2" ? "#cohort-2" : "#cohort-1";
+  const showImmersion = cohortId === "cohort-1";
   return (
     <div
       role="tabpanel"
@@ -64,9 +89,11 @@ export function InfoTabPanel({ cohort1Count, application }: InfoTabPanelProps) {
               Comfortable presenting + maintaining if you win:{" "}
               <strong>{application.wantsToPresent ? "yes" : "no"}</strong>
             </li>
-            <li>
-              May 26 immersion event: <strong>RSVP confirmed</strong>
-            </li>
+            {showImmersion ? (
+              <li>
+                May 26 immersion event: <strong>RSVP confirmed</strong>
+              </li>
+            ) : null}
           </ul>
         </section>
       ) : null}
@@ -84,7 +111,7 @@ export function InfoTabPanel({ cohort1Count, application }: InfoTabPanelProps) {
               Cohort Discord
             </div>
             <p className="mt-1 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-              The cohort lives in #cohort-1 on Discord.
+              The cohort lives in {discordChannel} on Discord.
             </p>
             <p className="mt-1 text-sm text-neutral-700 dark:text-neutral-300">
               Day-to-day questions, build help, voting-call prep, and demos
@@ -93,7 +120,7 @@ export function InfoTabPanel({ cohort1Count, application }: InfoTabPanelProps) {
             </p>
           </div>
           <a
-            href={SUMMER_COHORT_C1_DISCORD_INVITE_URL_PLACEHOLDER}
+            href={discordInviteUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="shrink-0 inline-flex items-center gap-2 rounded-lg bg-[#5865F2] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#4752C4]"
@@ -136,8 +163,9 @@ export function InfoTabPanel({ cohort1Count, application }: InfoTabPanelProps) {
           ))}
         </ul>
         <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
-          First Zoom kickoffs: Cohort 1 on Mon May 11, Cohort 2 on Mon Jun 29.
-          Watch your email and the Week tabs above for meeting links.
+          Your kickoff: <strong>{cohort.label}</strong> on{" "}
+          <strong>{cohort.startLabel}</strong>. Watch your email and the Week
+          tabs above for the meeting link.
         </p>
       </section>
 
@@ -172,8 +200,8 @@ export function InfoTabPanel({ cohort1Count, application }: InfoTabPanelProps) {
               <Users className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden="true" />
               In your cohort
             </div>
-            <p className="mt-1 text-2xl font-bold tabular-nums">{cohort1Count}</p>
-            <p className="mt-0.5 text-xs text-neutral-500">people in Cohort 1</p>
+            <p className="mt-1 text-2xl font-bold tabular-nums">{cohortCount}</p>
+            <p className="mt-0.5 text-xs text-neutral-500">people in {cohortLabel}</p>
           </div>
           <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-950/40">
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-neutral-500">
@@ -182,7 +210,8 @@ export function InfoTabPanel({ cohort1Count, application }: InfoTabPanelProps) {
             </div>
             <p className="mt-1 text-2xl font-bold tabular-nums">6</p>
             <p className="mt-0.5 text-xs text-neutral-500">
-              weeks · May 11 → Jun 19
+              weeks · {cohort.startLabel.replace(/^[A-Za-z]+,\s*/, "")} →{" "}
+              {cohort.endLabel.replace(/^[A-Za-z]+,\s*/, "")}
             </p>
           </div>
           <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-950/40">
@@ -239,37 +268,41 @@ export function InfoTabPanel({ cohort1Count, application }: InfoTabPanelProps) {
         </ol>
       </section>
 
-      {/* Calendar anchors: immersion + demo day */}
+      {/* Calendar anchors: immersion (c1 only) + demo day */}
       <section className="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
         <h3 className="text-base font-semibold">Anchor events</h3>
         <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-          Two dates that bracket the program. Block them on your calendar.
+          {showImmersion
+            ? "Two dates that bracket the program. Block them on your calendar."
+            : "One date that closes the program. Block it on your calendar."}
         </p>
-        <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-950/40">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-neutral-500">
-              <Calendar
-                className="h-3.5 w-3.5"
-                strokeWidth={2.25}
-                aria-hidden="true"
-              />
-              {SUMMER_COHORT_IMMERSION.label}
+        <div className={`mt-5 grid gap-3 ${showImmersion ? "sm:grid-cols-2" : "sm:grid-cols-1"}`}>
+          {showImmersion ? (
+            <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-950/40">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                <Calendar
+                  className="h-3.5 w-3.5"
+                  strokeWidth={2.25}
+                  aria-hidden="true"
+                />
+                {SUMMER_COHORT_IMMERSION.label}
+              </div>
+              <p className="mt-1 text-sm font-semibold">
+                {SUMMER_COHORT_IMMERSION.title}
+              </p>
+              <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
+                {SUMMER_COHORT_IMMERSION.description}
+              </p>
+              <a
+                href={SUMMER_COHORT_IMMERSION.lumaUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-emerald-700 underline decoration-emerald-600/60 underline-offset-2 hover:decoration-emerald-600 dark:text-emerald-400"
+              >
+                RSVP on Luma →
+              </a>
             </div>
-            <p className="mt-1 text-sm font-semibold">
-              {SUMMER_COHORT_IMMERSION.title}
-            </p>
-            <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
-              {SUMMER_COHORT_IMMERSION.description}
-            </p>
-            <a
-              href={SUMMER_COHORT_IMMERSION.lumaUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-emerald-700 underline decoration-emerald-600/60 underline-offset-2 hover:decoration-emerald-600 dark:text-emerald-400"
-            >
-              RSVP on Luma →
-            </a>
-          </div>
+          ) : null}
           <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-950/40">
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-neutral-500">
               <Users
@@ -277,7 +310,7 @@ export function InfoTabPanel({ cohort1Count, application }: InfoTabPanelProps) {
                 strokeWidth={2.25}
                 aria-hidden="true"
               />
-              Fri, Jun 19 — closing
+              {cohort.endLabel} — closing
             </div>
             <p className="mt-1 text-sm font-semibold">
               {SUMMER_COHORT_DEMO_DAY.title}

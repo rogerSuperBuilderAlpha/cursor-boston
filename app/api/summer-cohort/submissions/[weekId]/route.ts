@@ -4,11 +4,12 @@
  * See LICENSE file for details.
  */
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import {
   fetchSummerCohortSubmissions,
   getVoteWeekById,
 } from "@/lib/summer-cohort-submissions";
+import { isValidCohortId, type SummerCohortId } from "@/lib/summer-cohort";
 import { summerCohortContract } from "@/lib/api-schemas/summer-cohort";
 
 interface RouteParams {
@@ -16,11 +17,15 @@ interface RouteParams {
 }
 
 /**
- * Public read-only feed of merged submissions on a Cohort 1 vote-format week.
+ * Public read-only feed of merged submissions on a vote-format week.
  * Source of truth is the week's submission branch in GitHub; this route just
  * caches the GitHub Contents API call so the client tab can render counts.
+ *
+ * Accepts an optional `?cohortId=cohort-1|cohort-2` query so the same
+ * "week-1" / "week-2" / "week-3" path maps to the right cohort's submission
+ * branch. Defaults to cohort-1 for back-compat with older clients.
  */
-export async function GET(_req: Request, { params }: RouteParams) {
+export async function GET(req: NextRequest, { params }: RouteParams) {
   const { weekId } = await params;
   const parsedParams = summerCohortContract.submissionsByWeek.pathParams.safeParse({ weekId });
   if (!parsedParams.success) {
@@ -29,7 +34,13 @@ export async function GET(_req: Request, { params }: RouteParams) {
       { status: 404 }
     );
   }
-  const week = getVoteWeekById(parsedParams.data.weekId);
+
+  const cohortIdParam = req.nextUrl.searchParams.get("cohortId");
+  const cohortId: SummerCohortId = isValidCohortId(cohortIdParam)
+    ? cohortIdParam
+    : "cohort-1";
+
+  const week = getVoteWeekById(parsedParams.data.weekId, cohortId);
   if (!week) {
     return NextResponse.json(
       { error: "Unknown weekId — vote-format weeks are week-1, week-2, week-3." },

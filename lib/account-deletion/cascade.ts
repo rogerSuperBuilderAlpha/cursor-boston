@@ -140,6 +140,8 @@ async function runStep(
       return runTwoSided(uid, entry, db);
     case "arrayContains":
       return runArrayContains(uid, entry, db);
+    case "userSubcollectionDoc":
+      return runUserSubcollectionDoc(uid, entry, db);
   }
 }
 
@@ -200,6 +202,36 @@ async function runArrayContains(
 ): Promise<Omit<DeletionStepReport, "skipped">> {
   const query = db.collection(entry.collection).where(entry.field, "array-contains", uid);
   return drainQuery(query, entry, db);
+}
+
+async function runUserSubcollectionDoc(
+  uid: string,
+  entry: Extract<UserOwnedCollection, { mode: "userSubcollectionDoc" }>,
+  db: Firestore
+): Promise<Omit<DeletionStepReport, "skipped">> {
+  const ref = db
+    .collection(entry.parentCollection)
+    .doc(uid)
+    .collection(entry.collection)
+    .doc(entry.docId);
+  const snap = await ref.get();
+  if (!snap.exists) {
+    return {
+      collection: entry.collection,
+      mode: "userSubcollectionDoc",
+      scanned: 0,
+      deleted: 0,
+      anonymized: 0,
+    };
+  }
+  await ref.delete();
+  return {
+    collection: entry.collection,
+    mode: "userSubcollectionDoc",
+    scanned: 1,
+    deleted: 1,
+    anonymized: 0,
+  };
 }
 
 /**

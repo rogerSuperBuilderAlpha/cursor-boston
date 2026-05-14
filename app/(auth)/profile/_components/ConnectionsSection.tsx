@@ -8,6 +8,7 @@
 
 import { Sparkles } from "lucide-react";
 import {
+  CursorIcon,
   DiscordIcon,
   GitHubIcon,
   UserCardIcon,
@@ -22,11 +23,13 @@ export function ConnectionsSection() {
     discord,
     github,
     ludwitt,
+    cursor,
   } = useProfileContext();
 
   const discordInfo = discord.discordInfo;
   const githubInfo = github.githubInfo;
   const ludwittInfo = ludwitt.ludwittInfo;
+  const cursorInfo = cursor.cursorInfo;
 
   return (
     <div className="mb-8">
@@ -137,6 +140,42 @@ export function ConnectionsSection() {
             </button>
           )}
         </div>
+
+        {/* Cursor */}
+        <div className="bg-neutral-900 rounded-xl p-4 border border-neutral-800 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+              <CursorIcon size={18} className="text-emerald-300" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-white">Cursor</p>
+              {cursorInfo ? (
+                <p className="text-xs text-neutral-400">
+                  {cursorInfo.apiKeyFingerprint}
+                </p>
+              ) : (
+                <p className="text-xs text-neutral-500">Not connected</p>
+              )}
+            </div>
+          </div>
+          {cursorInfo ? (
+            <button
+              onClick={cursor.disconnect}
+              disabled={cursor.disconnecting}
+              className="text-xs text-neutral-400 hover:text-red-400 transition-colors disabled:opacity-50"
+            >
+              {cursor.disconnecting ? "..." : "Disconnect"}
+            </button>
+          ) : (
+            <button
+              onClick={cursor.connect}
+              disabled={cursor.connecting}
+              className="text-xs text-emerald-400 hover:text-emerald-300 font-medium transition-colors disabled:opacity-50"
+            >
+              {cursor.connecting ? "..." : "Connect"}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Status badges */}
@@ -170,9 +209,9 @@ export function ConnectionsSection() {
         </div>
       )}
 
-      {(discord.error || github.error || ludwitt.error) && (
+      {(discord.error || github.error || ludwitt.error || cursor.error) && (
         <p className="text-red-400 text-xs mt-2">
-          {discord.error || github.error || ludwitt.error}
+          {discord.error || github.error || ludwitt.error || cursor.error}
         </p>
       )}
     </div>
