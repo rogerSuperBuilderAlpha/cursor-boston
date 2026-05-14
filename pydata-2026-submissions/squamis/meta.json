@@ -1,0 +1,6 @@
+{
+  "title": "Protein fitness jumps when mutations are composed, not discovered alone",
+  "description": "ProteinGym / FLIP2 protein fitness landscape analysis of a Novartis IRED enzyme campaign. Across 11,305 screened variants, the broad landscape is mostly weak (median activity ratio 0.006), but later combinatorial rounds concentrate high-fitness designs: 3-mutation variants reach median activity 0.626 and EPPCR3 variants pair 98.2% median R-selectivity with 0.70 median activity.",
+  "displayName": "Thomas Haffenreffer",
+  "tags": ["protein-fitness", "fitness-landscape", "ired", "enzyme-engineering", "epistasis", "marimo"]
+}

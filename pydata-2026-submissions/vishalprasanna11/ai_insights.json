@@ -1,0 +1,97 @@
+{
+  "meta": {
+    "title": "Pre-generated segment playbooks",
+    "note": "Plain text only. No API keys and no live model calls in the notebook. Edit this JSON to refresh copy, then re-run the Goal 5 cell.",
+    "generatedFor": "UCI Online Retail RFM segments (hackathon notebook)"
+  },
+  "display_order": [
+    "Champions",
+    "Loyal Customers",
+    "Promising",
+    "New",
+    "Needs Attention",
+    "At Risk",
+    "Cannot Lose Them",
+    "Hibernating",
+    "Lost"
+  ],
+  "segments": {
+    "Champions": {
+      "icon": "🏆",
+      "accent": "#15803d",
+      "background": "#ecfdf5",
+      "description": "Your best customers: very recent purchases, strong repeat activity, and high spend. They behave like fans of the assortment and keep the cash register moving.",
+      "action": "Champions → double down on loyalty rewards, early access drops, and referral perks. Ask for reviews and UGC; protect margin with bundles instead of blanket discounts."
+    },
+    "Loyal Customers": {
+      "icon": "💙",
+      "accent": "#1d4ed8",
+      "background": "#eff6ff",
+      "description": "High frequency and solid monetary value with decent recency. They are dependable repeat buyers even if they are not quite in the top RFM corner.",
+      "action": "Loyal Customers → nurture with subscription-style reminders, replenishment prompts for consumables, and tiered perks that reward consistency over one-off coupons."
+    },
+    "Promising": {
+      "icon": "🌱",
+      "accent": "#0e7490",
+      "background": "#ecfeff",
+      "description": "Recent engagement with meaningful spend but frequency still has room to grow. They look like customers on an upswing if you give them reasons to return.",
+      "action": "Promising → cross-sell complementary SKUs, limited-time bundles, and educational content (how-to, styling, care guides) that justify a second purchase soon."
+    },
+    "New": {
+      "icon": "✨",
+      "accent": "#7c3aed",
+      "background": "#f5f3ff",
+      "description": "Very recent first or early purchases with low frequency so far. They are still forming habits and have not proven long-term loyalty yet.",
+      "action": "New → onboarding series, satisfaction check-ins, and a clear second-purchase incentive tied to categories they already bought. Keep service fast to cement trust."
+    },
+    "Needs Attention": {
+      "icon": "🧭",
+      "accent": "#ca8a04",
+      "background": "#fefce8",
+      "description": "Middle-of-the-road RFM scores: not cold, not hot. They are easy to ignore but often respond to a nudge with the right offer.",
+      "action": "Needs Attention → light personalization (category affinity), small experiments on subject lines and send time, and surveys to learn blockers like shipping or assortment gaps."
+    },
+    "At Risk": {
+      "icon": "⚠️",
+      "accent": "#ea580c",
+      "background": "#fff7ed",
+      "description": "Historically engaged (frequency and spend were healthy) but recency has slipped. They look like drift, not beginners.",
+      "action": "At Risk → win-back campaign with a sincere \"we miss you\" tone, replenishment reminders, winback codes with a deadline, and optional human outreach for high monetary tiers."
+    },
+    "Cannot Lose Them": {
+      "icon": "💎",
+      "accent": "#be123c",
+      "background": "#fff1f2",
+      "description": "Big spenders whose recency has gone stale. Losing them would hurt revenue disproportionately even if counts are small.",
+      "action": "Cannot Lose Them → white-glove save offers, proactive service recovery, VIP concierge, and inventory alerts on favorites. Avoid spam; prioritize relevance and respect."
+    },
+    "Hibernating": {
+      "icon": "😴",
+      "accent": "#475569",
+      "background": "#f8fafc",
+      "description": "Quiet lately with modest past engagement signals. They are not the worst churn profile but they are fading from active memory of the brand.",
+      "action": "Hibernating → low-frequency reactivation cadence, seasonal lookbooks, and \"what is new since you left\" highlights. Sunset to cheaper channels if no response after a few tries."
+    },
+    "Lost": {
+      "icon": "🪦",
+      "accent": "#0f172a",
+      "background": "#e2e8f0",
+      "description": "Weak recency, frequency, and monetary pattern. They behave like one-time or long-lapsed shoppers with little recent signal to build on.",
+      "action": "Lost → suppress expensive paid reactivation, run rare high-value tests only, and focus acquisition learnings on why they never graduated to repeat buyers."
+    }
+  },
+  "faq": [
+    {
+      "q": "Why is there no live AI call in this notebook?",
+      "a": "The hackathon layer is intentionally offline: insights are authored once as JSON so the dashboard stays fast, reproducible, and free of API keys in the UI."
+    },
+    {
+      "q": "How should I refresh the copy?",
+      "a": "Edit ai_insights.json (or regenerate it elsewhere), save the file beside hackathon-notebook.py, then re-run the Goal 5 insight cell in marimo."
+    },
+    {
+      "q": "How does \"revenue per segment\" relate to RFM monetary?",
+      "a": "Monetary here is the per-customer sum of line revenue in the cleaned data; segment revenue is that customer-level monetary summed for everyone in the segment."
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "score": 4,
+  "rationale": "The notebook outlines a useful interactive dashboard for public salary/employee earnings data, including department, title, ZIP, and map-based breakdowns over 2011-2025. However, it depends on local data files that are not included in the PR, starts with placeholder cells, and the analysis is mostly descriptive distribution plotting rather than a sharp finding. The dashboard idea is valuable but the submitted package is only partially reproducible.",
+  "model": "gpt-5.5",
+  "scoredAt": "2026-05-14T02:15:00.000Z",
+  "scorerVersion": 1
+}

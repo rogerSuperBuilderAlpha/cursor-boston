@@ -1,0 +1,9 @@
+{
+  "title": "Short, specific title for your notebook",
+  "description": "1–3 sentences. What does the notebook do? What did you find?",
+  "displayName": "Your name as you want it on the page",
+  "tags": ["healthcare", "embeddings"],
+  "collaborators": [
+    { "displayName": "Pat Collaborator", "githubHandle": "pat-collab" }
+  ]
+}

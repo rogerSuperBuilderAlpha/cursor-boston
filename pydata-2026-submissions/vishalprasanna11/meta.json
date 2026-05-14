@@ -1,0 +1,7 @@
+{
+    "title": "Customer Segmentation Dashboard — UCI Online Retail",
+    "description": "An interactive marimo notebook that segments e-commerce customers using RFM (Recency, Frequency, Monetary) analysis on the UCI Online Retail dataset. Visualizes customer groups like Champions, Loyal, At Risk, and Lost — and surfaces AI-generated marketing recommendations for each segment.",
+    "displayName": "Vishal Prasanna",
+    "tags": ["retail", "customer-segmentation", "rfm", "ecommerce", "dashboard"],
+    "collaborators": []
+}

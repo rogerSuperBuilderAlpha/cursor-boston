@@ -1,0 +1,7 @@
+{
+  "title": "Exoplanet Explorer",
+  "description": "Every spike on the exoplanet discovery chart is a telescope, not a planet. This Marimo notebook walks through 5,700+ confirmed worlds from NASA's archive — annotated discovery timeline, planet-class radius histogram, and a transparent Earth-likeness shortlist of the closest cousins JWST could observe next.",
+  "displayName": "Ryan Spangler",
+  "tags": ["astronomy", "nasa", "exoplanets", "interactive", "marimo"],
+  "collaborators": []
+}
