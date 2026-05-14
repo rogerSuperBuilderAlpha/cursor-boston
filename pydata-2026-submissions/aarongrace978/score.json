@@ -1,0 +1,7 @@
+{
+  "score": 6,
+  "rationale": "The notebook is a polished self-contained NLP exploration that maps 24 historical-thinker persona prompts with TF-IDF, cosine similarity, PCA, KMeans, and distinctive-term tables. It is creative and readable, but the corpus is hand-authored and small, so the analysis is more of a thoughtful visualization exercise than a strongly evidenced external-data insight. The presentation is strong, while the empirical stakes are modest.",
+  "model": "gpt-5.5",
+  "scoredAt": "2026-05-14T02:08:00.000Z",
+  "scorerVersion": 1
+}
