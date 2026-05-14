@@ -1,0 +1,7 @@
+{
+  "score": 7,
+  "rationale": "The notebook builds a practical MBTA reliability baseline from heavy-rail travel-time data, with route-pair variability metrics, unstable segment rankings, and anomaly-day detection. The operational framing is clear and the Polars-based workflow is credible for larger transit files. It falls short of the top tier because it depends on local CSV availability and the key insight is more of a reliability tooling foundation than one surprising, tightly defended finding.",
+  "model": "gpt-5.5",
+  "scoredAt": "2026-05-14T01:39:00.000Z",
+  "scorerVersion": 1
+}
