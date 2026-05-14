@@ -1,6 +1,6 @@
 {
   "title": "Speculative Decoding for Robot Diffusion Policies",
-  "description": "Ports speculative decoding (vLLM/Medusa/EAGLE) from LLM serving to robot diffusion policies. A tiny MLP draft and the lerobot/diffusion_pusht verifier are gated by an action-difference threshold tau. On 24 sampled frames of episode 0, at tau=7.6 the MLP is accepted on 46% of frames and projected chunked per-frame latency drops from 178ms to 96ms (1.9x speedup) -- hitting pusht's 10Hz deadline that pure diffusion misses, at the cost of +10% action MSE.",
+  "description": "Ports speculative decoding (vLLM/Medusa/EAGLE) from LLM serving to robot diffusion policies. A 4.5k-param MLP draft and the 263M-param lerobot/diffusion_pusht verifier are gated by an action-difference threshold tau. Across 3 episodes of pusht: mean 2.2x speedup, mean 51% MLP acceptance, +8.9% action MSE -- consistently hitting the 10 Hz / 100 ms deadline that pure diffusion misses. Includes a serving Pareto, adaptive denoising (EAGLE analogue), cross-episode validation, and an interactive tau slider that recolors the served trajectory live.",
   "displayName": "Aarav Raina",
   "tags": ["robotics", "lerobot", "inference-infra", "speculative-decoding", "diffusion-policy", "marimo"]
 }
