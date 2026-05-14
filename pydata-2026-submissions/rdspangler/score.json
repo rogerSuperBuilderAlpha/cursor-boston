@@ -1,0 +1,7 @@
+{
+  "score": 8,
+  "rationale": "The notebook has a clear, engaging story about how telescope technology shaped exoplanet discovery and then turns that context into an interactive Earth-like candidate explorer. It is polished, well-explained, and uses Marimo controls purposefully; the main weakness is that the insight is more broad exploratory storytelling than a single sharply defended quantitative claim.",
+  "model": "gpt-5.5",
+  "scoredAt": "2026-05-14T00:52:00.000Z",
+  "scorerVersion": 1
+}
