@@ -1,0 +1,7 @@
+{
+  "score": 2,
+  "rationale": "The submission JSON points to kvarnik/cursor-boston-w1pm-placeholder as the repo URL, but that repository returns 404 — it does not exist on GitHub. The only related repo under the submitter's account is kvarnik/cursor-boston, which is a fork of this cohort repo itself (rogerSuperBuilderAlpha/cursor-boston), not a standalone PM tool. The live URL kvarnik.github.io/cursor-boston/ renders a 'Cursor Boston — cohort PM board' headline with no further content visible on first paint, and the GitHub Pages source is unclear without an accessible repo.\n\nThe pitch ('flat file system within a repo to manage tasks, GitHub Pages as status board') is conceptually interesting — files-as-tasks is a real workflow some teams use, and it would be a uniquely git-native take on PM if implemented. But no implementation matching the pitch is findable at any URL on the submitter's GitHub account. Score 2 reflects 'submission registered, no deliverable verifiable'. If the work exists at a repo under a different name, please surface the correct URL and the score should be revisited.",
+  "model": "claude-opus-4-7",
+  "scoredAt": "2026-05-15T20:30:00.000Z",
+  "scorerVersion": 1
+}

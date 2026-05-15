@@ -1,0 +1,7 @@
+{
+  "score": 1,
+  "rationale": "This is the only submission scored at 1, and it reflects the actual content of the submission JSON rather than any judgment of effort. The JSON contains unmodified agent template text from the coding-agent prompt used in the deadline-day reminder email: liveUrl is 'https://yourthing.example.com' (placeholder), loomUrl is 'https://www.loom.com/share/...' (placeholder), and the pitch reads 'One sentence on why you should win this week.' — which is the template instruction asking the contributor to write their pitch, not a pitch itself. The repo t-siddharth/your-week-1-build does not exist on GitHub.\n\nThere is no app, no demo, no pitch, no repo — just the template defaults from the agent prompt, written through without the placeholders being filled in. The email's 'even an empty PR counts' rule was designed so contributors could at minimum get a placeholder card on the page with their handle filled in; this PR cleared that mechanical bar but the content is functionally empty. Score 1 is reserved per the rubric for non-submissions — this is the textbook case. If the submitter intended a real submission and the template-text artifact is a bug in their agent run, please re-submit and we'll re-score against actual content.",
+  "model": "claude-opus-4-7",
+  "scoredAt": "2026-05-15T20:30:00.000Z",
+  "scorerVersion": 1
+}
