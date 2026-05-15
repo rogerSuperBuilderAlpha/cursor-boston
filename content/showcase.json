@@ -38,6 +38,20 @@
       },
       "submittedBy": "Alex Builder",
       "submittedDate": "2026-02-08"
+    },
+    {
+      "id": "coachme-ai-sports-coaching",
+      "name": "CoachMe — AI Sports Coaching Plugin",
+      "description": "An AI-powered FiftyOne plugin that compares athlete videos against pro reference footage using TwelveLabs Marengo 3.0 for similarity scoring and Pegasus 1.2 for timestamped coaching feedback.",
+      "image": "/showcase/coachme.png",
+      "categories": ["AI/ML", "Computer Vision", "Sports Tech"],
+      "contact": {
+        "github": "https://github.com/Paramjeet-singh-neu/CoachMe",
+        "website": "https://paramjeetsingh.me",
+        "email": "singh.para@northeastern.edu"
+      },
+      "submittedBy": "Paramjeet Singh",
+      "submittedDate": "2026-05-14"
     }
   ]
 }
