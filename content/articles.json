@@ -1,6 +1,14 @@
 {
   "articles": [
     {
+      "id": "umass-lowell-aicore-applied-ai",
+      "title": "UMass Lowell Launches AICORE for Applied AI Research",
+      "source": "UMass Lowell News",
+      "url": "https://www.uml.edu/news/press-releases/2026/ai-computing-research.aspx",
+      "date": "2026-04-23",
+      "description": "New interdisciplinary AI center connects research, industry, and hands-on student experience to advance safe, practical AI applications in healthcare, defense, robotics, and beyond."
+    },
+    {
       "id": "mit-llm-agents",
       "title": "Helping AI agents search to get the best results out of large language models",
       "source": "MIT News",
