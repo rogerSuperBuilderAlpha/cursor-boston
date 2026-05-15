@@ -1,0 +1,8 @@
+{
+  "githubHandle": "kvarnik",
+  "name": "Kristjan Varnik",
+  "repoUrl": "https://github.com/kvarnik/cursor-boston-w1pm-placeholder",
+  "liveUrl": "https://kvarnik.github.io/cursor-boston/",
+  "pitch": "WIP: Using a flat file system wthin a repo to manage tasks. This makes it easy for humans and agents to make tracked changes. Stakeholders can quickly check status on github pages",
+  "competeForWin": true
+}
