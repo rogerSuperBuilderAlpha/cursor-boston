@@ -176,10 +176,19 @@ export function useIdeaRuns({ user, cursorConnected }: UseIdeaRunsArgs) {
       return undefined;
     }
 
+    // Kick an immediate snapshot on entry (via a 0ms timeout so the setState
+    // it eventually triggers happens outside this effect's render pass) so
+    // the UI doesn't sit for 3s after the user clicks an action button.
+    const kickoffId = window.setTimeout(() => {
+      void syncRunSnapshot(selectedRunId);
+    }, 0);
     const intervalId = window.setInterval(() => {
       void syncRunSnapshot(selectedRunId);
-    }, 5_000);
-    return () => window.clearInterval(intervalId);
+    }, 3_000);
+    return () => {
+      window.clearTimeout(kickoffId);
+      window.clearInterval(intervalId);
+    };
   }, [
     cursorConnected,
     pollPausedUntil,

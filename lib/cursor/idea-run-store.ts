@@ -272,5 +272,10 @@ function serializeTimestamp(value: unknown): string | null | undefined {
   if (value instanceof Timestamp) return value.toDate().toISOString();
   if (value instanceof Date) return value.toISOString();
   if (typeof value === "string") return value;
+  // A FieldValue sentinel (e.g. FieldValue.serverTimestamp()) is written to
+  // Firestore but not yet resolved when we echo the just-written record back
+  // to the client. Approximating it with `now` keeps UI gating
+  // (e.g. `!run.planApprovedAt`) consistent with the Firestore document.
+  if (typeof value === "object") return new Date().toISOString();
   return null;
 }
