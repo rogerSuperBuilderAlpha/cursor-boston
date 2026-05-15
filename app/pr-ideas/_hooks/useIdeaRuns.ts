@@ -10,7 +10,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { User } from "firebase/auth";
 import type { LaunchFormState, CursorIdeaRun, GithubIssueOption, LoadingState } from "../_lib/types";
-import { isActiveRun } from "../_lib/types";
+import {
+  formatIdeaRunsApiError,
+  isActiveRun,
+} from "../_lib/types";
 
 type RunAction = "cancel" | "archive" | "delete";
 type WorkflowAction = "questions" | "answers" | "approve-plan" | "open-pr" | "recover-agent";
@@ -36,6 +39,7 @@ export function useIdeaRuns({ user, cursorConnected }: UseIdeaRunsArgs) {
   const [runErrors, setRunErrors] = useState<Record<string, string>>({});
   const [visibilityState, setVisibilityState] = useState<"visible" | "hidden">("visible");
   const [pollPausedUntil, setPollPausedUntil] = useState(0);
+  const [, setPollFailCount] = useState(0);
   const [githubIssues, setGithubIssues] = useState<GithubIssueOption[]>([]);
   const [githubIssuesLoading, setGithubIssuesLoading] = useState(false);
   const [githubIssuesError, setGithubIssuesError] = useState<string | null>(null);
@@ -78,6 +82,20 @@ export function useIdeaRuns({ user, cursorConnected }: UseIdeaRunsArgs) {
     [user]
   );
 
+  const bumpPollFailures = useCallback(() => {
+    setPollFailCount((current) => {
+      const next = current + 1;
+      if (next >= 3) {
+        setPollPausedUntil(Date.now() + 30_000);
+        setError(
+          "Polling paused after repeated server errors. Wait a few seconds, use Retry below, or refresh the page."
+        );
+        return 0;
+      }
+      return next;
+    });
+  }, []);
+
   const loadRuns = useCallback(
     async (refresh = true, mode: LoadingState = "refreshing") => {
       if (!user || !cursorConnected) return;
@@ -85,18 +103,24 @@ export function useIdeaRuns({ user, cursorConnected }: UseIdeaRunsArgs) {
       setError(null);
       try {
         const res = await authFetch(`/api/cursor/idea-runs?refresh=${refresh ? "true" : "false"}`);
+        const payload = (await res.json().catch(() => ({}))) as {
+          runs?: CursorIdeaRun[];
+          error?: string;
+          errorId?: string;
+        };
         if (!res.ok) {
           if (res.status === 429) {
             const retryAfter = Number(res.headers.get("Retry-After") ?? "60");
             setPollPausedUntil(Date.now() + Math.max(retryAfter, 10) * 1000);
             setError("Cursor idea runs are syncing too often. Pausing refresh briefly.");
           } else {
-            setError("Could not load recent idea runs.");
+            if (res.status >= 500) bumpPollFailures();
+            setError(formatIdeaRunsApiError(payload.error, payload.errorId));
           }
           return;
         }
-        const body = (await res.json()) as { runs?: CursorIdeaRun[] };
-        const nextRuns = body.runs ?? [];
+        setPollFailCount(0);
+        const nextRuns = payload.runs ?? [];
         setRuns(nextRuns);
         setSelectedRunId((current) => {
           if (current && nextRuns.some((run) => run.id === current)) return current;
@@ -108,7 +132,7 @@ export function useIdeaRuns({ user, cursorConnected }: UseIdeaRunsArgs) {
         setLoadingState("idle");
       }
     },
-    [authFetch, cursorConnected, user]
+    [authFetch, bumpPollFailures, cursorConnected, user]
   );
 
   const syncRunSnapshot = useCallback(
@@ -117,16 +141,33 @@ export function useIdeaRuns({ user, cursorConnected }: UseIdeaRunsArgs) {
       setSyncingRunId(runId);
       try {
         const res = await authFetch(`/api/cursor/idea-runs/${runId}`);
+        const payload = (await res.json().catch(() => ({}))) as {
+          run?: CursorIdeaRun;
+          error?: string;
+          errorId?: string;
+          refreshSkipped?: string;
+        };
         if (!res.ok) {
           if (res.status === 429) {
             const retryAfter = Number(res.headers.get("Retry-After") ?? "60");
             setPollPausedUntil(Date.now() + Math.max(retryAfter, 10) * 1000);
+          } else if (res.status >= 500) {
+            bumpPollFailures();
           }
           return;
         }
-        const body = (await res.json().catch(() => ({}))) as { run?: CursorIdeaRun };
-        if (body.run) {
-          setRuns((current) => current.map((run) => (run.id === runId ? body.run! : run)));
+        if (payload.refreshSkipped === "cursor_not_connected") {
+          router.replace("/profile/cursor?return=/pr-ideas");
+          return;
+        }
+        setPollFailCount(0);
+        if (payload.run) {
+          setRuns((current) => current.map((run) => (run.id === runId ? payload.run! : run)));
+          setRunErrors((current) => {
+            const next = { ...current };
+            delete next[runId];
+            return next;
+          });
         }
       } catch {
         // Keep the existing UI visible; transient status checks should not blank the page.
@@ -134,7 +175,7 @@ export function useIdeaRuns({ user, cursorConnected }: UseIdeaRunsArgs) {
         setSyncingRunId((current) => (current === runId ? null : current));
       }
     },
-    [authFetch, cursorConnected, user]
+    [authFetch, bumpPollFailures, cursorConnected, router, user]
   );
 
   useEffect(() => {
@@ -224,16 +265,18 @@ export function useIdeaRuns({ user, cursorConnected }: UseIdeaRunsArgs) {
         const body = (await res.json().catch(() => ({}))) as {
           run?: CursorIdeaRun;
           error?: string;
+          errorId?: string;
         };
         if (!res.ok || !body.run) {
           if (body.error === "cursor_not_connected") {
             router.replace("/profile/cursor?return=/pr-ideas");
           } else {
-            setError("Could not launch the idea explorer.");
+            setError(formatIdeaRunsApiError(body.error, body.errorId));
           }
           return null;
         }
 
+        setPollFailCount(0);
         setRuns((current) => [body.run!, ...current.filter((run) => run.id !== body.run!.id)]);
         setSelectedRunId(body.run.id);
         return body.run;
@@ -274,12 +317,28 @@ export function useIdeaRuns({ user, cursorConnected }: UseIdeaRunsArgs) {
       setError(null);
       try {
         const res = await authFetch(`/api/cursor/idea-runs/${runId}`);
-        const body = (await res.json().catch(() => ({}))) as { run?: CursorIdeaRun };
-        if (!res.ok || !body.run) {
-          setError("Could not refresh that run.");
+        const body = (await res.json().catch(() => ({}))) as {
+          run?: CursorIdeaRun;
+          error?: string;
+          errorId?: string;
+          refreshSkipped?: string;
+        };
+        if (body.refreshSkipped === "cursor_not_connected") {
+          router.replace("/profile/cursor?return=/pr-ideas");
           return;
         }
+        if (!res.ok || !body.run) {
+          setError(formatIdeaRunsApiError(body.error, body.errorId));
+          if (res.status >= 500) bumpPollFailures();
+          return;
+        }
+        setPollFailCount(0);
         setRuns((current) => current.map((run) => (run.id === runId ? body.run! : run)));
+        setRunErrors((current) => {
+          const next = { ...current };
+          delete next[runId];
+          return next;
+        });
       } catch {
         setError("Network error while refreshing the run.");
       } finally {
@@ -287,12 +346,17 @@ export function useIdeaRuns({ user, cursorConnected }: UseIdeaRunsArgs) {
         setLoadingState("idle");
       }
     },
-    [authFetch]
+    [authFetch, bumpPollFailures, router]
   );
+
+  const clearError = useCallback(() => setError(null), []);
 
   const mutateRun = useCallback(
     async (runId: string, action: RunAction) => {
-      if (action === "delete" && !window.confirm("Delete this Cursor agent and local run record?")) {
+      if (
+        action === "delete" &&
+        !window.confirm("Delete this run permanently? This removes the run and its Cloud Agent record.")
+      ) {
         return;
       }
       setRunAction(`${action}:${runId}`);
@@ -302,10 +366,13 @@ export function useIdeaRuns({ user, cursorConnected }: UseIdeaRunsArgs) {
           `/api/cursor/idea-runs/${runId}${action === "delete" ? "" : `/${action}`}`,
           { method: action === "delete" ? "DELETE" : "POST" }
         );
-        const body = (await res.json().catch(() => ({}))) as { run?: CursorIdeaRun };
+        const body = (await res.json().catch(() => ({}))) as {
+          run?: CursorIdeaRun;
+          error?: string;
+          errorId?: string;
+        };
         if (!res.ok) {
-          const payload = (await res.json().catch(() => ({}))) as { error?: string };
-          setError(payload.error ? `Could not ${action}: ${payload.error}` : `Could not ${action} that run.`);
+          setError(formatIdeaRunsApiError(body.error, body.errorId) || `Could not ${action} that run.`);
           return;
         }
         if (action === "delete") {
@@ -339,12 +406,16 @@ export function useIdeaRuns({ user, cursorConnected }: UseIdeaRunsArgs) {
           method: "POST",
           ...(body ? { body: JSON.stringify(body) } : {}),
         });
-        const payload = (await res.json().catch(() => ({}))) as { run?: CursorIdeaRun; error?: string };
+        const payload = (await res.json().catch(() => ({}))) as {
+          run?: CursorIdeaRun;
+          error?: string;
+          errorId?: string;
+        };
         if (!res.ok || !payload.run) {
           const message =
             payload.error === "agent_recovery_required"
               ? "The previous Cursor Cloud Agent is no longer available. Start a fresh Cloud Agent from this context."
-              : "Could not advance that idea run.";
+              : formatIdeaRunsApiError(payload.error, payload.errorId) || "Could not advance that idea run.";
           setRunErrors((current) => ({
             ...current,
             [runId]: message,
@@ -388,6 +459,7 @@ export function useIdeaRuns({ user, cursorConnected }: UseIdeaRunsArgs) {
     githubIssuesLoading,
     githubIssuesError,
     loadRuns,
+    clearError,
     loadGithubIssues,
     launchIdeaRun,
     refreshRun,
