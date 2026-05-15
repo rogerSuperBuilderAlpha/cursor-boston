@@ -230,6 +230,21 @@ export interface SummerCohortInspirationPlatform {
   takeaway: string;
 }
 
+export interface SummerCohortVotingCallZoom {
+  /** Zoom join URL — used by the "Join the call" CTA. */
+  url: string;
+  /** In-meeting chat deep link (`/launch/jc/<id>`). Optional. */
+  chatUrl?: string;
+  /** Human meeting ID, e.g. "973 8933 2225". */
+  meetingId: string;
+  /** "tonight, 6:00 pm EST" — short, free-form label rendered next to the CTA. */
+  whenLabel: string;
+  /** Headline copy for the block: "Voting call tonight" / "Show & tell". */
+  headlineLabel: string;
+  /** One-tap mobile dial-in strings like "+13052241968,,97389332225# US". */
+  oneTapNumbers?: readonly string[];
+}
+
 export interface SummerCohortVoteWeek {
   week: number;
   title: string;
@@ -243,6 +258,10 @@ export interface SummerCohortVoteWeek {
   winnerCommitment: string;
   /** Free-form note rendered above the kickoff block (e.g. holiday / immersion overlap). */
   weekNotes?: string;
+  /** When set, the page renders a "voting call live now / soon" banner with
+   *  full Zoom dial-in details at the top of the week — replaces the
+   *  generic kickoff stand-in. Cleared once the call is over. */
+  votingCallZoom?: SummerCohortVotingCallZoom;
   /** Reference platforms participants can study. Frame is "what's worth
    *  borrowing", not "rebuild this." */
   inspirationScopeNote: string;
@@ -263,6 +282,17 @@ export const SUMMER_COHORT_C1_VOTE_WEEKS: readonly SummerCohortVoteWeek[] = [
     liveUrlRequired: true,
     winnerCommitment:
       "Winner maintains the cohort PM tool through the rest of the program — fixes bugs, ships changes the cohort asks for, keeps it running.",
+    votingCallZoom: {
+      headlineLabel: "Voting call · tonight",
+      whenLabel: "Fri May 15 · 6:00 pm EST",
+      url: "https://bentley.zoom.us/j/97389332225",
+      chatUrl: "https://bentley.zoom.us/launch/jc/97389332225",
+      meetingId: "973 8933 2225",
+      oneTapNumbers: [
+        "+13052241968,,97389332225# US",
+        "+13092053325,,97389332225# US",
+      ],
+    },
     inspirationScopeNote:
       "Don't try to rebuild Linear or Asana. The cohort is ~100 people shipping for 6 weeks — think \"how do we track who's shipping what each week and prep for Friday voting calls?\" Skip Gantt charts, time tracking, sprint estimation, and billing.",
     inspirationPlatforms: [
