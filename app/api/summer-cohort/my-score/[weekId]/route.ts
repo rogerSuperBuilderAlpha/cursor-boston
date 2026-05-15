@@ -13,6 +13,7 @@ import { getGithubRepoPair } from "@/lib/github-recent-merged-prs";
 import { isValidCohortId, type SummerCohortId } from "@/lib/summer-cohort";
 import { getOptionalVerifiedUser } from "@/lib/server-auth";
 import { logger } from "@/lib/logger";
+import { summerCohortContract } from "@/lib/api-schemas/summer-cohort";
 
 interface ScoreFile {
   score: number;
@@ -59,12 +60,21 @@ export async function GET(
   { params }: { params: Promise<{ weekId: string }> }
 ) {
   const { weekId } = await params;
+  const parsedParams = summerCohortContract.myScoreByWeek.pathParams.safeParse({
+    weekId,
+  });
+  if (!parsedParams.success) {
+    return NextResponse.json(
+      { error: "Unknown weekId — vote-format weeks are week-1, week-2, week-3." },
+      { status: 404 }
+    );
+  }
   const cohortIdParam = req.nextUrl.searchParams.get("cohortId");
   const cohortId: SummerCohortId = isValidCohortId(cohortIdParam)
     ? cohortIdParam
     : "cohort-1";
 
-  const week = getVoteWeekById(weekId, cohortId);
+  const week = getVoteWeekById(parsedParams.data.weekId, cohortId);
   if (!week) {
     return NextResponse.json(
       { error: "Unknown weekId — vote-format weeks are week-1, week-2, week-3." },
