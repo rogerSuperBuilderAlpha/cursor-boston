@@ -28,6 +28,7 @@ import {
 } from "@/lib/cursor/idea-runs";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { logger } from "@/lib/logger";
+import { jsonWithLoggedError } from "@/lib/server/api-request-error";
 import { withMiddleware, rateLimitConfigs } from "@/lib/middleware";
 import { getVerifiedUser } from "@/lib/server-auth";
 
@@ -48,7 +49,12 @@ async function handlePost(request: NextRequest): Promise<NextResponse> {
 
   const db = getAdminDb();
   if (!db) {
-    return NextResponse.json({ error: "not_configured" }, { status: 500 });
+    return jsonWithLoggedError(
+      500,
+      new Error("Firebase Admin not configured"),
+      { error: "not_configured" },
+      { stage: "cursor_idea_run_post", uid: user.uid }
+    );
   }
 
   let body: unknown;
@@ -129,8 +135,10 @@ async function handlePost(request: NextRequest): Promise<NextResponse> {
         { merge: true }
       )
       .catch(() => undefined);
-    logger.logError(err, { stage: "cursor_idea_run_launch", uid: user.uid });
-    return NextResponse.json({ error: "launch_failed" }, { status: 500 });
+    return jsonWithLoggedError(500, err, { error: "launch_failed" }, {
+      stage: "cursor_idea_run_launch",
+      uid: user.uid,
+    });
   }
 }
 
@@ -142,7 +150,12 @@ async function handleGet(request: NextRequest): Promise<NextResponse> {
 
   const db = getAdminDb();
   if (!db) {
-    return NextResponse.json({ error: "not_configured" }, { status: 500 });
+    return jsonWithLoggedError(
+      500,
+      new Error("Firebase Admin not configured"),
+      { error: "not_configured" },
+      { stage: "cursor_idea_runs_list", uid: user.uid }
+    );
   }
 
   try {
@@ -166,8 +179,10 @@ async function handleGet(request: NextRequest): Promise<NextResponse> {
       runs: runs.map(serializeCursorIdeaRun),
     });
   } catch (err) {
-    logger.logError(err, { stage: "cursor_idea_runs_list", uid: user.uid });
-    return NextResponse.json({ error: "list_failed" }, { status: 500 });
+    return jsonWithLoggedError(500, err, { error: "list_failed" }, {
+      stage: "cursor_idea_runs_list",
+      uid: user.uid,
+    });
   }
 }
 

@@ -7,29 +7,15 @@
 "use client";
 
 import {
+  displayState,
+  displayStateLabel,
   formatRunDate,
   getRunTitle,
-  isActiveRun,
+  DISPLAY_STATE_DOT,
+  DISPLAY_STATE_RAIL_TEXT,
   type CursorIdeaRun,
-  type CursorIdeaRunStatus,
   type LoadingState,
 } from "../_lib/types";
-
-const STATUS_TEXT_COLOR: Record<CursorIdeaRunStatus, string> = {
-  starting: "text-sky-300",
-  running: "text-amber-300",
-  finished: "text-emerald-300",
-  error: "text-red-300",
-  cancelled: "text-neutral-400",
-};
-
-const STATUS_DOT_COLOR: Record<CursorIdeaRunStatus, string> = {
-  starting: "bg-sky-400",
-  running: "bg-amber-400",
-  finished: "bg-emerald-400",
-  error: "bg-red-400",
-  cancelled: "bg-neutral-500",
-};
 
 interface RunsRailProps {
   runs: CursorIdeaRun[];
@@ -42,7 +28,7 @@ export function RunsRail({ runs, selectedRunId, loadingState, onSelect }: RunsRa
   const showSkeletons = loadingState === "initial" && runs.length === 0;
 
   return (
-    <aside className="rounded-2xl border border-neutral-800 bg-neutral-950/85 p-3 md:p-4">
+    <aside className="rounded-2xl border border-neutral-200 bg-background/90 p-3 dark:border-neutral-800 dark:bg-neutral-950/85 md:p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
         <h2 className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
           Runs
@@ -71,7 +57,8 @@ export function RunsRail({ runs, selectedRunId, loadingState, onSelect }: RunsRa
       ) : (
         <div className="flex gap-2 overflow-x-auto pb-1 lg:block lg:space-y-2 lg:overflow-visible">
           {runs.map((run) => {
-            const active = isActiveRun(run.status);
+            const derived = displayState(run);
+            const pulse = derived === "running";
             const selected = selectedRunId === run.id;
             return (
               <button
@@ -81,20 +68,20 @@ export function RunsRail({ runs, selectedRunId, loadingState, onSelect }: RunsRa
                 className={`block w-full min-w-[14rem] rounded-xl border p-2.5 text-left transition-colors lg:min-w-0 ${
                   selected
                     ? "border-emerald-500/50 bg-emerald-500/10"
-                    : "border-neutral-800 bg-neutral-900/70 hover:border-neutral-700"
+                    : "border-neutral-200 bg-neutral-100/80 hover:border-neutral-400 dark:border-neutral-800 dark:bg-neutral-900/70 dark:hover:border-neutral-700"
                 }`}
               >
                 <div className="flex items-start gap-2">
                   <span
-                    className={`mt-1 inline-block h-1.5 w-1.5 shrink-0 rounded-full ${STATUS_DOT_COLOR[run.status]} ${active ? "animate-pulse" : ""}`}
-                    title={run.status}
+                    className={`mt-1 inline-block h-1.5 w-1.5 shrink-0 rounded-full ${DISPLAY_STATE_DOT[derived]} ${pulse ? "animate-pulse" : ""}`}
+                    title={displayStateLabel(derived)}
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="line-clamp-2 text-xs font-medium leading-snug text-white" title={getRunTitle(run)}>
+                    <p className="line-clamp-2 text-xs font-medium leading-snug text-foreground" title={getRunTitle(run)}>
                       {getRunTitle(run)}
                     </p>
                     <p className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[10px] text-neutral-500">
-                      <span className={STATUS_TEXT_COLOR[run.status]}>{run.status}</span>
+                      <span className={DISPLAY_STATE_RAIL_TEXT[derived]}>{displayStateLabel(derived)}</span>
                       <span>·</span>
                       <span>{formatRunDate(run.createdAt)}</span>
                     </p>
