@@ -251,19 +251,26 @@ export function buildOpenPrPrompt(): string {
 
 export function normalizeRunInputs(value: unknown): CursorIdeaRunInputs {
   const input = (value && typeof value === "object" ? value : {}) as Record<string, unknown>;
-  return {
+  const result: CursorIdeaRunInputs = {
     mode: input.mode === "issue" ? "issue" : "idea",
-    interests: normalizeOptionalText(input.interests, 500),
-    skills: normalizeOptionalText(input.skills, 500),
-    preferredArea: normalizeOptionalText(input.preferredArea, 160),
-    constraints: normalizeOptionalText(input.constraints, 500),
-    freeform: normalizeOptionalText(input.freeform, 2000),
-    issueNumber: normalizeOptionalText(input.issueNumber, 20),
-    issueTitle: normalizeOptionalText(input.issueTitle, 500),
-    issueBody: normalizeOptionalText(input.issueBody, 4000),
-    issueUrl: normalizeOptionalText(input.issueUrl, 500),
-    issueLabels: normalizeOptionalText(input.issueLabels, 500),
   };
+  const assignIfSet = (key: keyof CursorIdeaRunInputs, raw: unknown, max: number) => {
+    const trimmed = normalizeOptionalText(raw, max);
+    if (trimmed !== undefined) {
+      (result as Record<string, unknown>)[key] = trimmed;
+    }
+  };
+  assignIfSet("interests", input.interests, 500);
+  assignIfSet("skills", input.skills, 500);
+  assignIfSet("preferredArea", input.preferredArea, 160);
+  assignIfSet("constraints", input.constraints, 500);
+  assignIfSet("freeform", input.freeform, 2000);
+  assignIfSet("issueNumber", input.issueNumber, 20);
+  assignIfSet("issueTitle", input.issueTitle, 500);
+  assignIfSet("issueBody", input.issueBody, 4000);
+  assignIfSet("issueUrl", input.issueUrl, 500);
+  assignIfSet("issueLabels", input.issueLabels, 500);
+  return result;
 }
 
 export type CursorIdeaWorkflowAction = "questions" | "answers" | "approve-plan" | "open-pr";

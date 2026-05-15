@@ -4,7 +4,38 @@
  * See LICENSE file for details.
  */
 
-import { buildPrIdeaPrompt } from "@/lib/cursor/idea-runs";
+import { buildPrIdeaPrompt, normalizeRunInputs } from "@/lib/cursor/idea-runs";
+
+describe("normalizeRunInputs", () => {
+  it("never returns explicit undefined values when fields are missing", () => {
+    const inputs = normalizeRunInputs({ mode: "issue", issueNumber: "12" });
+    for (const [key, value] of Object.entries(inputs)) {
+      expect(value).toBeDefined();
+      expect(key).not.toBe("interests");
+    }
+    expect(inputs.mode).toBe("issue");
+    expect(inputs.issueNumber).toBe("12");
+    expect("interests" in inputs).toBe(false);
+    expect("skills" in inputs).toBe(false);
+  });
+
+  it("keeps the values that were set", () => {
+    const inputs = normalizeRunInputs({
+      mode: "idea",
+      interests: "react",
+      preferredArea: "ui",
+    });
+    expect(inputs.mode).toBe("idea");
+    expect(inputs.interests).toBe("react");
+    expect(inputs.preferredArea).toBe("ui");
+    expect("skills" in inputs).toBe(false);
+  });
+
+  it("treats whitespace-only strings as unset", () => {
+    const inputs = normalizeRunInputs({ mode: "idea", interests: "   " });
+    expect("interests" in inputs).toBe(false);
+  });
+});
 
 describe("Cursor idea run prompts", () => {
   it("builds an issue-mode prompt with the selected issue and user context", () => {

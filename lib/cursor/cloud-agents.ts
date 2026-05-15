@@ -164,20 +164,43 @@ export async function getCursorRunSnapshot(
   if (run.supports("conversation")) {
     try {
       conversation = await run.conversation();
-    } catch {
+    } catch (err) {
       conversationStatusDetail =
         "Cloud Agent is running, but log sync failed. Open Cursor if you need the live console.";
+      // Surface the underlying SDK error to server logs so we can diagnose
+      // "no updates from the cloud agent" reports without flying blind.
+       
+      console.warn("[cursor.snapshot] conversation() threw", {
+        cursorAgentId,
+        cursorRunId,
+        error: err instanceof Error ? err.message : String(err),
+      });
     }
   } else {
-    conversationStatusDetail = "Cloud Agent log snapshots are not available for this run.";
+    conversationStatusDetail =
+      run.unsupportedReason("conversation") ??
+      "Cloud Agent log snapshots are not available for this run.";
   }
   const status = mapRunStatus(run.status);
+  const activity = normalizeConversation(conversation);
+  if (process.env.CURSOR_SNAPSHOT_DEBUG === "1") {
+     
+    console.info("[cursor.snapshot]", {
+      cursorAgentId,
+      cursorRunId,
+      runStatus: run.status,
+      conversationTurns: conversation.length,
+      activityCount: activity.length,
+      durationMs: run.durationMs,
+      agentSummary: agentInfo?.summary,
+    });
+  }
   const snapshot: CursorRunSnapshot = {
     status,
     result: run.result,
     git: run.git,
     durationMs: run.durationMs,
-    activity: normalizeConversation(conversation),
+    activity,
     cursorStatusDetail:
       [describeAgentInfo(agentInfo), conversationStatusDetail].filter(Boolean).join(" · ") ||
       null,
