@@ -64,30 +64,89 @@ export function WeekVotePanel({
       aria-labelledby={`tab-${tabId}`}
       className="rounded-xl border-2 border-emerald-400 bg-white p-6 dark:border-emerald-700 dark:bg-neutral-900"
     >
-      {/* Kickoff Zoom — top of the module */}
-      <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-950/40">
-        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-neutral-500">
-          <Video className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden="true" />
-          Kickoff Zoom · {week.kickoffLabel}
+      {/* Voting-call banner (live) — replaces the kickoff stand-in once the
+          call is scheduled and the dial-in details are real. Only Cohort 1
+          Week 1 has this set today; future weeks fall back to the stand-in. */}
+      {week.votingCallZoom ? (
+        <div className="rounded-lg border-2 border-emerald-400 bg-emerald-50/70 p-4 dark:border-emerald-700 dark:bg-emerald-950/30">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+            <Video className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden="true" />
+            {week.votingCallZoom.headlineLabel} · {week.votingCallZoom.whenLabel}
+          </div>
+          <p className="mt-2 text-sm text-emerald-900 dark:text-emerald-100">
+            Submissions are scored — come hang out, see what everyone shipped,
+            and vote the Week {week.week} winner.
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <a
+              href={week.votingCallZoom.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-400"
+            >
+              <Video className="h-4 w-4" strokeWidth={2.25} aria-hidden="true" />
+              Join the Zoom
+              <ExternalLink
+                className="h-3.5 w-3.5"
+                strokeWidth={2.25}
+                aria-hidden="true"
+              />
+            </a>
+            {week.votingCallZoom.chatUrl ? (
+              <a
+                href={week.votingCallZoom.chatUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-lg border border-emerald-300 bg-white px-3 py-2 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-50 dark:border-emerald-800 dark:bg-transparent dark:text-emerald-300 dark:hover:bg-emerald-950/50"
+              >
+                Meeting chat
+                <ExternalLink className="h-3 w-3" strokeWidth={2.25} aria-hidden="true" />
+              </a>
+            ) : null}
+          </div>
+          <dl className="mt-3 grid grid-cols-1 gap-y-1 text-xs text-emerald-900/90 dark:text-emerald-200/90 sm:grid-cols-[max-content_1fr] sm:gap-x-3">
+            <dt className="font-semibold uppercase tracking-wider">Meeting ID</dt>
+            <dd className="tabular-nums">{week.votingCallZoom.meetingId}</dd>
+            {week.votingCallZoom.oneTapNumbers && week.votingCallZoom.oneTapNumbers.length > 0 ? (
+              <>
+                <dt className="font-semibold uppercase tracking-wider">One-tap mobile</dt>
+                <dd className="break-words">
+                  {week.votingCallZoom.oneTapNumbers.map((n, i) => (
+                    <span key={n}>
+                      {i > 0 ? <span className="text-emerald-400"> · </span> : null}
+                      <span className="tabular-nums">{n}</span>
+                    </span>
+                  ))}
+                </dd>
+              </>
+            ) : null}
+          </dl>
         </div>
-        <a
-          href={zoomUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-3 inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-400"
-        >
-          <Video className="h-4 w-4" strokeWidth={2.25} aria-hidden="true" />
-          Join the Zoom
-          <ExternalLink
-            className="h-3.5 w-3.5"
-            strokeWidth={2.25}
-            aria-hidden="true"
-          />
-        </a>
-        <p className="mt-2 text-xs text-neutral-500">
-          Stand-in link — we&apos;ll swap in the real Zoom URL before kickoff.
-        </p>
-      </div>
+      ) : (
+        <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-950/40">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-neutral-500">
+            <Video className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden="true" />
+            Kickoff Zoom · {week.kickoffLabel}
+          </div>
+          <a
+            href={zoomUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-400"
+          >
+            <Video className="h-4 w-4" strokeWidth={2.25} aria-hidden="true" />
+            Join the Zoom
+            <ExternalLink
+              className="h-3.5 w-3.5"
+              strokeWidth={2.25}
+              aria-hidden="true"
+            />
+          </a>
+          <p className="mt-2 text-xs text-neutral-500">
+            Stand-in link — we&apos;ll swap in the real Zoom URL before kickoff.
+          </p>
+        </div>
+      )}
 
       <div className="mt-6 flex flex-wrap items-center gap-2">
         <span className="inline-flex items-center rounded-full bg-emerald-500 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white">

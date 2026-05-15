@@ -13,6 +13,8 @@ import {
   CheckCircle2,
   ExternalLink,
   GitPullRequest,
+  Lock,
+  Sparkles,
   ThumbsUp,
   Trophy,
 } from "lucide-react";
@@ -45,6 +47,15 @@ interface VotesResponse {
   counts: Record<string, number>;
   myVotes: string[];
   authenticated: boolean;
+}
+
+interface MyScoreResponse {
+  weekId: string;
+  githubHandle: string;
+  score: number;
+  rationale: string;
+  model: string | null;
+  scoredAt: string | null;
 }
 
 interface WeekSubmissionsCollapsibleProps {
@@ -133,6 +144,12 @@ export function WeekSubmissionsCollapsible({
   const [myVotes, setMyVotes] = useState<Set<string>>(new Set());
   const [pendingVotes, setPendingVotes] = useState<Set<string>>(new Set());
   const [voteError, setVoteError] = useState<string | null>(null);
+  // Score is tagged with the uid + tab it was fetched for, so a stale score
+  // from a previous signed-in user (or previous week) is filtered out at
+  // render time without needing a synchronous reset inside the fetch effect.
+  const [myScore, setMyScore] = useState<
+    (MyScoreResponse & { fetchedForUid: string; fetchedForTab: string }) | null
+  >(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -194,6 +211,41 @@ export function WeekSubmissionsCollapsible({
         // Silent: votes are a soft enhancement; failure shouldn't block the
         // main submissions UI.
       });
+    return () => {
+      cancelled = true;
+    };
+  }, [tabId, user, cohortId]);
+
+  // Fetch the signed-in user's own AI-judge score for this week. The endpoint
+  // resolves the user's handle server-side from `users/{uid}.github.login` and
+  // returns only that user's score — there is no way to ask for another
+  // person's feedback through this client. Stale results (after sign-out or a
+  // tab switch) are filtered at render time via the uid/tab tag on the score.
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    const uidAtFetch = user.uid;
+    (async () => {
+      try {
+        const token = await user.getIdToken();
+        const res = await fetch(
+          `/api/summer-cohort/my-score/${encodeURIComponent(
+            tabId
+          )}?cohortId=${encodeURIComponent(cohortId)}`,
+          {
+            cache: "no-store",
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        if (!res.ok) return; // 401 / 404 / 500 → silently no feedback panel
+        const json = (await res.json()) as MyScoreResponse;
+        if (!cancelled) {
+          setMyScore({ ...json, fetchedForUid: uidAtFetch, fetchedForTab: tabId });
+        }
+      } catch {
+        // Silent — feedback panel just won't render.
+      }
+    })();
     return () => {
       cancelled = true;
     };
@@ -553,10 +605,26 @@ export function WeekSubmissionsCollapsible({
                     .trim()
                     .charAt(0)
                     .toUpperCase();
+                  const isMine =
+                    currentUserGithubHandle !== null &&
+                    handleKey === currentUserGithubHandle.toLowerCase();
+                  const myFeedback =
+                    isMine &&
+                    myScore &&
+                    user !== null &&
+                    myScore.fetchedForUid === user.uid &&
+                    myScore.fetchedForTab === tabId &&
+                    myScore.githubHandle.toLowerCase() === handleKey
+                      ? myScore
+                      : null;
                   return (
                     <li
                       key={s.githubHandle}
-                      className="flex flex-wrap items-center gap-3 rounded-lg border border-neutral-200 px-3 py-2 text-sm dark:border-neutral-800"
+                      className={
+                        isMine
+                          ? "flex flex-wrap items-center gap-3 rounded-lg border-2 border-emerald-300 bg-emerald-50/40 px-3 py-2 text-sm dark:border-emerald-800 dark:bg-emerald-950/20"
+                          : "flex flex-wrap items-center gap-3 rounded-lg border border-neutral-200 px-3 py-2 text-sm dark:border-neutral-800"
+                      }
                     >
                       {s.photoUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element -- avatar URLs come from arbitrary OAuth providers (GitHub, Google), not the configured Next image domain list
@@ -673,6 +741,36 @@ export function WeekSubmissionsCollapsible({
                           )
                         ) : null}
                       </div>
+                      {myFeedback ? (
+                        <div className="basis-full">
+                          <div className="mt-2 rounded-md border border-emerald-300 bg-white p-3 dark:border-emerald-800 dark:bg-neutral-950">
+                            <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                              <Sparkles className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden="true" />
+                              <span>Your AI judge feedback</span>
+                              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:text-emerald-400">
+                                <Lock className="h-2.5 w-2.5" strokeWidth={2.5} aria-hidden="true" />
+                                visible only to you
+                              </span>
+                              <span className="ml-auto tabular-nums text-emerald-900 dark:text-emerald-300">
+                                <strong className="text-base">{myFeedback.score}</strong>
+                                <span className="text-emerald-700/80 dark:text-emerald-400/80"> / 10</span>
+                              </span>
+                            </div>
+                            <p className="mt-2 whitespace-pre-line text-sm text-neutral-800 dark:text-neutral-200">
+                              {myFeedback.rationale}
+                            </p>
+                            {myFeedback.model || myFeedback.scoredAt ? (
+                              <p className="mt-2 text-[11px] text-neutral-500">
+                                {myFeedback.model ? `Scored by ${myFeedback.model}` : null}
+                                {myFeedback.model && myFeedback.scoredAt ? " · " : null}
+                                {myFeedback.scoredAt
+                                  ? new Date(myFeedback.scoredAt).toLocaleString()
+                                  : null}
+                              </p>
+                            ) : null}
+                          </div>
+                        </div>
+                      ) : null}
                     </li>
                   );
                 })}
