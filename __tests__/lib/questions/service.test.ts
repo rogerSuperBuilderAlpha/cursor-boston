@@ -272,6 +272,50 @@ describe("QuestionsService", () => {
     });
   });
 
+  describe("getRelatedCookbookEntries", () => {
+    it("returns empty array without querying when tags are empty", async () => {
+      const result = await service.getRelatedCookbookEntries([]);
+      expect(result).toEqual([]);
+      expect(mockDb.collection).not.toHaveBeenCalledWith("cookbook_entries");
+    });
+
+    it("returns mapped cookbook entries for matching tags", async () => {
+      const createdAt = { toDate: () => new Date("2026-05-01T12:00:00.000Z") };
+      mockQueryGet.mockResolvedValueOnce({
+        docs: [
+          {
+            id: "entry-1",
+            data: () => ({
+              title: "Prompting for analysis",
+              description: "Cookbook example",
+              promptContent: "Use this prompt",
+              category: "analysis",
+              tags: ["python", "data"],
+              worksWith: ["Cursor", "Jupyter"],
+              authorId: "u1",
+              authorDisplayName: "Maintainer",
+              createdAt,
+              upCount: 4,
+              downCount: 1,
+            }),
+          },
+        ],
+      });
+
+      const result = await service.getRelatedCookbookEntries(["python", "data"], 3);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({
+        id: "entry-1",
+        title: "Prompting for analysis",
+        category: "analysis",
+        upCount: 4,
+        downCount: 1,
+      });
+      expect(mockDb.collection).toHaveBeenCalledWith("cookbook_entries");
+    });
+  });
+
   describe("error classes", () => {
     it("QuestionNotFoundError has correct name", () => {
       const err = new QuestionNotFoundError();
