@@ -6,15 +6,19 @@
 
 "use client";
 
-import { CheckCircle2, Copy, ExternalLink, Loader2, RefreshCw, Trash2, X } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Copy, ExternalLink, Loader2, RefreshCw, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { PromptMarkdown } from "@/components/cookbook/PromptMarkdown";
 import {
+  DISPLAY_STATE_PILL,
+  displayState,
+  displayStateLabel,
+  expectedWaitMaxMs,
   formatDuration,
   formatRunDate,
   getRunTitle,
   isActiveRun,
-  STATUS_STYLES,
+  typicalWaitLabel,
   type CursorIdeaRun,
   type LoadingState,
 } from "../_lib/types";
@@ -38,57 +42,6 @@ function SkeletonBlock({ className = "" }: { className?: string }) {
   return <div className={`animate-pulse rounded-xl bg-neutral-800/80 ${className}`} />;
 }
 
-function WorkflowBadge({ run }: { run: CursorIdeaRun }) {
-  const label = run.pr?.status && run.pr.status !== "not_started"
-    ? formatPrStatus(run.pr.status)
-    : formatWorkflowStage(run.workflowStage);
-  return (
-    <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs text-emerald-200">
-      {label}
-    </span>
-  );
-}
-
-function formatWorkflowStage(stage?: CursorIdeaRun["workflowStage"]): string {
-  switch (stage) {
-    case "questions":
-      return "questions";
-    case "planning":
-      return "planning";
-    case "plan_approval":
-      return "plan approval";
-    case "building":
-      return "building";
-    case "ready_for_pr":
-      return "ready for PR";
-    case "pr_open":
-      return "PR open";
-    case "pr_commented_on":
-      return "PR commented on";
-    case "pr_merged":
-      return "PR merged";
-    case "ideas":
-    default:
-      return "ideas";
-  }
-}
-
-function formatPrStatus(status: NonNullable<CursorIdeaRun["pr"]>["status"]): string {
-  switch (status) {
-    case "opening":
-      return "opening PR";
-    case "pr_open":
-      return "PR open";
-    case "pr_commented_on":
-      return "PR commented on";
-    case "pr_merged":
-      return "PR merged";
-    case "not_started":
-    default:
-      return "not started";
-  }
-}
-
 function extractSuggestionOptions(result?: string | null): string[] {
   if (!result) return [];
   const options: string[] = [];
@@ -102,22 +55,6 @@ function extractSuggestionOptions(result?: string | null): string[] {
     if (options.length >= 5) break;
   }
   return options;
-}
-
-function expectedAgentWindow(run: CursorIdeaRun): string {
-  switch (run.workflowStage) {
-    case "questions":
-      return "usually 30-90 seconds";
-    case "planning":
-      return "usually 1-3 minutes";
-    case "building":
-      return "usually 5-15 minutes";
-    case "pr_open":
-      return "usually 1-3 minutes";
-    case "ideas":
-    default:
-      return "usually 2-5 minutes";
-  }
 }
 
 function agentRunningLabel(run: CursorIdeaRun): string {
@@ -182,6 +119,16 @@ const WORKFLOW_STEPS = [
   { id: "pr", label: "PR" },
 ] as const;
 
+function scrollToWorkflowSection(stepId: (typeof WORKFLOW_STEPS)[number]["id"]) {
+  if (typeof document === "undefined") return;
+  document.getElementById(`pr-studio-${stepId}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function artifactCursorHref(cursorAgentUrl: string | undefined, path: string): string | undefined {
+  if (!cursorAgentUrl) return undefined;
+  return `${cursorAgentUrl}#path=${encodeURIComponent(path)}`;
+}
+
 function currentStepIndex(run: CursorIdeaRun): number {
   if (run.pr?.status && run.pr.status !== "not_started") return 5;
   if (run.workflowStage === "ready_for_pr" || run.workflowStage === "building" || run.buildResult) return 4;
@@ -209,6 +156,7 @@ interface AgentRunningModalProps {
   elapsed: number;
   canCancel: boolean;
   cancelling: boolean;
+  appearsStuck: boolean;
   onClose: () => void;
   onCancel: () => void;
 }
@@ -218,6 +166,7 @@ function AgentRunningModal({
   elapsed,
   canCancel,
   cancelling,
+  appearsStuck,
   onClose,
   onCancel,
 }: AgentRunningModalProps) {
@@ -247,8 +196,18 @@ function AgentRunningModal({
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-start gap-3">
-          <div className="rounded-full border border-emerald-500/30 bg-emerald-500/15 p-2">
-            <Loader2 size={18} className="animate-spin text-emerald-300" />
+          <div
+            className={`rounded-full border p-2 ${
+              appearsStuck
+                ? "border-amber-500/40 bg-amber-500/15"
+                : "border-emerald-500/30 bg-emerald-500/15"
+            }`}
+          >
+            {appearsStuck ? (
+              <AlertTriangle size={18} className="text-amber-300" />
+            ) : (
+              <Loader2 size={18} className="animate-spin text-emerald-300" />
+            )}
           </div>
           <div className="min-w-0 flex-1">
             <h3 id="agent-running-title" className="text-base font-semibold text-white">
@@ -271,8 +230,8 @@ function AgentRunningModal({
             <dd className="mt-1 text-sm text-white">{formatDuration(elapsed) ?? "0s"}</dd>
           </div>
           <div className="rounded-lg border border-neutral-800 bg-neutral-900/70 px-3 py-2">
-            <dt className="uppercase tracking-[0.14em] text-neutral-500">Expected</dt>
-            <dd className="mt-1 text-sm text-white">{expectedAgentWindow(run)}</dd>
+            <dt className="uppercase tracking-[0.14em] text-neutral-500">Typical</dt>
+            <dd className="mt-1 text-sm text-white">{typicalWaitLabel(run, appearsStuck)}</dd>
           </div>
         </dl>
         <p className="mt-4 text-xs text-neutral-400">
@@ -351,13 +310,15 @@ export function RunDetail({
     [run?.activity]
   );
   const elapsed = run ? elapsedForRun(run, now) : 0;
+  const appearsStuck = Boolean(run && agentWorking && elapsed > 2 * expectedWaitMaxMs(run));
+  const canCancelRun = Boolean(run && (active || agentWorking));
   const cancelling = run ? runAction === `cancel:${run.id}` : false;
 
   useEffect(() => {
-    if (!agentWorking) return undefined;
+    if (!agentWorking || appearsStuck) return undefined;
     const intervalId = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(intervalId);
-  }, [agentWorking]);
+  }, [agentWorking, appearsStuck]);
 
   // Modal auto-hides via conditional render (`modalOpen && agentWorking`); no
   // synchronization effect needed. Per-run state is reset by remounting the
@@ -369,7 +330,9 @@ export function RunDetail({
       body?: Record<string, unknown>
     ) => {
       if (!run) return Promise.resolve(null);
-      setModalOpen(true);
+      if (action !== "recover-agent") {
+        setModalOpen(true);
+      }
       return onAdvanceWorkflow(run.id, action, body);
     },
     [run, onAdvanceWorkflow]
@@ -412,15 +375,25 @@ export function RunDetail({
     await navigator.clipboard.writeText(content);
   };
 
+  const copyId = async (text: string | undefined | null) => {
+    if (!text) return;
+    await navigator.clipboard.writeText(text);
+  };
+
   const busyPrefix = runAction?.endsWith(`:${run.id}`) ? runAction.split(":")[0] : null;
   const suggestionOptions = extractSuggestionOptions(run.result);
   const stepIndex = currentStepIndex(run);
+  const derived = displayState(run);
+  const showPillPulse = derived === "running";
   const outputContent = run.pr?.url
     ? `PR opened: ${run.pr.url}`
     : run.buildResult ?? run.buildPlan ?? run.result ?? null;
 
   return (
-    <section className="relative overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-950/85">
+    <section
+      id="pr-studio-run-detail"
+      className="relative overflow-hidden rounded-2xl border border-neutral-200 bg-background/90 dark:border-neutral-800 dark:bg-neutral-950/85"
+    >
       {agentWorking && syncing && <div className="h-0.5 w-full animate-pulse bg-emerald-400" />}
 
       <div className="p-4 md:p-5">
@@ -428,17 +401,16 @@ export function RunDetail({
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <span
-                className={`inline-flex items-center gap-2 rounded-full border px-2.5 py-0.5 text-[11px] ${STATUS_STYLES[run.status]}`}
+                className={`inline-flex items-center gap-2 rounded-full border px-2.5 py-0.5 text-[11px] ${DISPLAY_STATE_PILL[derived]}`}
               >
-                {active && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current" />}
-                {run.status}
+                {showPillPulse && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current" />}
+                {displayStateLabel(derived)}
               </span>
-              <WorkflowBadge run={run} />
             </div>
-            <h2 className="mt-2 text-xl font-semibold tracking-tight text-white md:text-2xl">
+            <h2 className="mt-2 min-w-0 truncate text-xl font-semibold tracking-tight text-foreground md:text-2xl">
               {getRunTitle(run)}
             </h2>
-            <p className={`mt-0.5 text-xs text-neutral-500 ${agentWorking && syncing ? "animate-pulse" : ""}`}>
+            <p className={`mt-0.5 text-xs text-neutral-500 dark:text-neutral-500 ${agentWorking && syncing && !appearsStuck ? "animate-pulse" : ""}`}>
               Updated {formatRunDate(run.updatedAt)}
             </p>
           </div>
@@ -466,24 +438,73 @@ export function RunDetail({
           </div>
         </div>
 
-        <dl className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-400">
-          <div className="flex items-center gap-1.5">
-            <dt className="uppercase tracking-[0.14em] text-neutral-500">Agent</dt>
-            <dd className="max-w-[12rem] truncate text-neutral-200">{run.cursorAgentId ?? "Pending"}</dd>
+        <dl className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-600 dark:text-neutral-400">
+          <div className="flex min-w-0 max-w-full items-center gap-1.5">
+            <dt className="shrink-0 uppercase tracking-[0.14em] text-neutral-500">Agent</dt>
+            <dd className="min-w-0 truncate text-neutral-800 dark:text-neutral-200">{run.cursorAgentId ?? "Pending"}</dd>
+            <button
+              type="button"
+              onClick={() => void copyId(run.cursorAgentId)}
+              disabled={!run.cursorAgentId}
+              className="shrink-0 rounded border border-neutral-300 p-1 text-neutral-600 hover:bg-neutral-100 disabled:opacity-40 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
+              aria-label="Copy agent id"
+            >
+              <Copy size={12} />
+            </button>
           </div>
-          <div className="flex items-center gap-1.5">
-            <dt className="uppercase tracking-[0.14em] text-neutral-500">Run</dt>
-            <dd className="max-w-[12rem] truncate text-neutral-200">{run.cursorRunId ?? run.id}</dd>
+          <div className="flex min-w-0 max-w-full items-center gap-1.5">
+            <dt className="shrink-0 uppercase tracking-[0.14em] text-neutral-500">Run</dt>
+            <dd className="min-w-0 truncate text-neutral-800 dark:text-neutral-200">{run.cursorRunId ?? run.id}</dd>
+            <button
+              type="button"
+              onClick={() => void copyId(run.cursorRunId ?? run.id)}
+              className="shrink-0 rounded border border-neutral-300 p-1 text-neutral-600 hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
+              aria-label="Copy run id"
+            >
+              <Copy size={12} />
+            </button>
           </div>
           <div className="flex items-center gap-1.5">
             <dt className="uppercase tracking-[0.14em] text-neutral-500">Duration</dt>
-            <dd className="text-neutral-200">{formatDuration(run.durationMs) ?? "In progress"}</dd>
+            <dd className="text-neutral-800 dark:text-neutral-200">{formatDuration(run.durationMs) ?? "In progress"}</dd>
           </div>
           <div className="flex items-center gap-1.5">
             <dt className="uppercase tracking-[0.14em] text-neutral-500">Finished</dt>
-            <dd className="text-neutral-200">{run.finishedAt ? formatRunDate(run.finishedAt) : "Not yet"}</dd>
+            <dd className="text-neutral-800 dark:text-neutral-200">{run.finishedAt ? formatRunDate(run.finishedAt) : "Not yet"}</dd>
           </div>
         </dl>
+
+        <div
+          id="pr-studio-source"
+          className="mt-3 scroll-mt-20 rounded-xl border border-neutral-200 bg-neutral-50/80 p-3 text-xs dark:border-neutral-800 dark:bg-neutral-900/60"
+        >
+          <h4 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500">Source</h4>
+          <p className="mt-2 whitespace-pre-wrap text-neutral-800 dark:text-neutral-200">{run.prompt}</p>
+          <dl className="mt-2 grid gap-1 text-neutral-600 dark:text-neutral-400">
+            {run.inputs.mode ? (
+              <div>
+                <dt className="inline text-neutral-500">Mode · </dt>
+                <dd className="inline">{run.inputs.mode}</dd>
+              </div>
+            ) : null}
+            {run.inputs.issueNumber ? (
+              <div>
+                <dt className="inline text-neutral-500">Issue · </dt>
+                <dd className="inline">
+                  #{run.inputs.issueNumber} {run.inputs.issueTitle}
+                </dd>
+              </div>
+            ) : null}
+            {[run.inputs.interests, run.inputs.skills, run.inputs.preferredArea, run.inputs.freeform].some(Boolean) ? (
+              <div className="text-neutral-700 dark:text-neutral-300">
+                {run.inputs.interests ? <p>Interests: {run.inputs.interests}</p> : null}
+                {run.inputs.skills ? <p>Skills: {run.inputs.skills}</p> : null}
+                {run.inputs.preferredArea ? <p>Area: {run.inputs.preferredArea}</p> : null}
+                {run.inputs.freeform ? <p>{run.inputs.freeform}</p> : null}
+              </div>
+            ) : null}
+          </dl>
+        </div>
 
         {run.error && (
           <div className="mt-3 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
@@ -491,47 +512,100 @@ export function RunDetail({
           </div>
         )}
 
-        <div className="mt-4 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.04] px-4 py-3">
+        <div className="mt-4 rounded-xl border border-emerald-500/25 bg-emerald-500/[0.06] px-4 py-3 dark:border-emerald-500/20 dark:bg-emerald-500/[0.04]">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h3 className="text-sm font-semibold text-white">{workflowHeading(run)}</h3>
-            <p className="text-xs text-neutral-400">{workflowDescription(run)}</p>
+            <h3 className="text-sm font-semibold text-emerald-950 dark:text-white">{workflowHeading(run)}</h3>
+            <p className="text-xs text-neutral-600 dark:text-neutral-400">{workflowDescription(run)}</p>
           </div>
 
           <ol className="mt-3 flex flex-wrap items-center gap-1.5 text-[11px]">
             {WORKFLOW_STEPS.map((step, index) => (
-              <li
-                key={step.id}
-                className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 ${
-                  index <= stepIndex
-                    ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-100"
-                    : "border-neutral-800 bg-neutral-950 text-neutral-500"
-                }`}
-              >
-                {index < stepIndex ? (
-                  <CheckCircle2 size={11} />
-                ) : (
-                  <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                )}
-                {step.label}
+              <li key={step.id}>
+                <button
+                  type="button"
+                  onClick={() => scrollToWorkflowSection(step.id)}
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 transition-colors ${
+                    index <= stepIndex
+                      ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-900 hover:bg-emerald-500/15 dark:text-emerald-100"
+                      : "border-neutral-200 bg-neutral-100 text-neutral-600 hover:border-neutral-400 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-500"
+                  }`}
+                >
+                  {index < stepIndex ? (
+                    <CheckCircle2 size={11} />
+                  ) : (
+                    <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                  )}
+                  {step.label}
+                </button>
               </li>
             ))}
           </ol>
         </div>
 
         <div className="mt-4 space-y-4">
-          <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-4">
+          <div className="rounded-xl border border-neutral-200 bg-neutral-50/50 p-4 dark:border-neutral-800 dark:bg-neutral-950">
             <div className="flex items-start justify-between gap-3">
-              <h4 className="text-sm font-semibold text-white">Current action</h4>
-              {agentWorking && (
+              <h4 className="text-sm font-semibold text-foreground">Current action</h4>
+              {agentWorking && !appearsStuck && (
                 <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] text-emerald-200">
                   <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-300" />
                   Cloud Agent
                 </span>
               )}
+              {agentWorking && appearsStuck && (
+                <span className="inline-flex items-center gap-2 rounded-full border border-amber-500/40 bg-amber-500/15 px-2.5 py-0.5 text-[11px] text-amber-200">
+                  <AlertTriangle size={11} />
+                  Needs attention
+                </span>
+              )}
             </div>
 
             <div className="mt-3 space-y-3">
-                {agentWorking && (
+                {agentWorking && appearsStuck && (
+                  <div className="rounded-lg border border-amber-500/35 bg-amber-500/10 p-3 dark:bg-amber-500/[0.08]">
+                    <p className="text-sm font-semibold text-amber-950 dark:text-amber-100">This run looks stuck</p>
+                    <p className="mt-1 text-xs text-amber-900/90 dark:text-amber-100/90">
+                      {typicalWaitLabel(run, true)}. Try refreshing the snapshot, canceling, or starting a fresh agent.
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => onRefresh(run.id)}
+                        disabled={refreshing}
+                        className="inline-flex items-center gap-2 rounded-lg border border-amber-500/40 px-3 py-2 text-xs font-semibold text-amber-950 hover:bg-amber-500/15 disabled:opacity-50 dark:text-amber-100"
+                      >
+                        {refreshing ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
+                        Refresh
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onMutate(run.id, "cancel")}
+                        disabled={cancelling}
+                        className="inline-flex items-center gap-2 rounded-lg border border-amber-500/40 px-3 py-2 text-xs font-semibold text-amber-950 hover:bg-amber-500/15 disabled:opacity-50 dark:text-amber-100"
+                      >
+                        {cancelling && <Loader2 size={12} className="animate-spin" />}
+                        Cancel run
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void handleAdvance("recover-agent")}
+                        disabled={busyPrefix === "recover-agent"}
+                        className="inline-flex items-center gap-2 rounded-lg bg-amber-400 px-3 py-2 text-xs font-semibold text-amber-950 hover:bg-amber-300 disabled:opacity-50"
+                      >
+                        {busyPrefix === "recover-agent" && <Loader2 size={12} className="animate-spin" />}
+                        Start a fresh Cloud Agent
+                      </button>
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                      <div className="rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 dark:border-neutral-800 dark:bg-neutral-950">
+                        <span className="text-[10px] uppercase tracking-[0.14em] text-neutral-500">Elapsed </span>
+                        <span className="text-neutral-900 dark:text-white">{formatDuration(elapsed) ?? "0s"}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {agentWorking && !appearsStuck && (
                   <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/[0.05] p-3">
                     <p className="text-sm font-medium text-white">{agentRunningLabel(run)}</p>
                     <div className="mt-2 flex flex-wrap gap-2 text-xs">
@@ -540,15 +614,15 @@ export function RunDetail({
                         <span className="text-white">{formatDuration(elapsed) ?? "0s"}</span>
                       </div>
                       <div className="rounded-lg border border-neutral-800 bg-neutral-950 px-2.5 py-1.5">
-                        <span className="text-[10px] uppercase tracking-[0.14em] text-neutral-500">Expected </span>
-                        <span className="text-white">{expectedAgentWindow(run)}</span>
+                        <span className="text-[10px] uppercase tracking-[0.14em] text-neutral-500">Typical </span>
+                        <span className="text-white">{typicalWaitLabel(run, false)}</span>
                       </div>
                     </div>
                   </div>
                 )}
 
                 {run.workflowStage === "ideas" && run.result && !run.selectedIdea && (
-                  <div className="space-y-3">
+                  <div id="pr-studio-direction" className="scroll-mt-24 space-y-3">
                     <p className="text-sm font-medium text-white">Choose what Cursor should turn into a PR.</p>
                     {suggestionOptions.length > 0 && (
                       <div className="flex flex-wrap gap-2">
@@ -596,7 +670,7 @@ export function RunDetail({
                 )}
 
                 {run.workflowStage === "questions" && run.questions && run.questions.length > 0 && !run.answersSubmittedAt && (
-                  <div className="space-y-3">
+                  <div id="pr-studio-questions" className="scroll-mt-24 space-y-3">
                     {run.questions.map((question) => (
                       <div key={question.id} className="rounded-lg border border-neutral-800 bg-neutral-900 p-3">
                         <p className="text-sm text-neutral-200">{question.question}</p>
@@ -671,9 +745,11 @@ export function RunDetail({
                 )}
 
                 {run.pr?.url && (
+                  <div id="pr-studio-pr" className="scroll-mt-24">
                   <a href={run.pr.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-300 hover:text-emerald-200">
                     View PR <ExternalLink size={14} />
                   </a>
+                  </div>
                 )}
 
                 {error && (
@@ -681,8 +757,8 @@ export function RunDetail({
                     <p>{error}</p>
                     <button
                       type="button"
-                      onClick={() => handleAdvance("recover-agent")}
-                      disabled={busyPrefix === "recover-agent" || actionsLocked}
+                      onClick={() => void handleAdvance("recover-agent")}
+                      disabled={busyPrefix === "recover-agent"}
                       className="inline-flex items-center gap-2 rounded-lg border border-red-300/40 px-3 py-2 text-xs font-semibold text-red-100 hover:bg-red-500/10 disabled:opacity-50"
                     >
                       {busyPrefix === "recover-agent" && <Loader2 size={14} className="animate-spin" />}
@@ -693,10 +769,12 @@ export function RunDetail({
               </div>
             </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="flex flex-col rounded-xl border border-neutral-800 bg-neutral-950 p-4">
+          <div
+            className={`grid gap-4 ${resultExpanded ? "md:grid-cols-1" : "md:grid-cols-2"}`}
+          >
+            <div className="flex flex-col rounded-xl border border-neutral-200 bg-neutral-50/80 p-4 dark:border-neutral-800 dark:bg-neutral-950">
               <div className="flex items-center justify-between gap-3">
-                <h4 className="text-sm font-semibold text-white">Cloud Agent log</h4>
+                <h4 className="text-sm font-semibold text-foreground">Cloud Agent log</h4>
                 <span className="inline-flex items-center gap-1.5 text-xs text-neutral-500">
                   {syncing && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />}
                   {syncing
@@ -707,27 +785,27 @@ export function RunDetail({
                 </span>
               </div>
               {run.cursorStatusDetail && (
-                <div className="mt-2 rounded-lg border border-emerald-500/20 bg-emerald-500/[0.04] px-2.5 py-1.5 text-xs text-emerald-100">
+                <div className="mt-2 rounded-lg border border-emerald-500/20 bg-emerald-500/[0.04] px-2.5 py-1.5 text-xs text-emerald-800 dark:text-emerald-100">
                   {run.cursorStatusDetail}
                 </div>
               )}
               <div className="mt-2 max-h-[18rem] space-y-2 overflow-y-auto">
                 {recentActivity.length > 0 ? (
                   recentActivity.map((item) => (
-                    <div key={item.id} className="rounded-lg border border-neutral-800 bg-neutral-900/70 p-2">
-                      <p className="text-[10px] uppercase tracking-[0.14em] text-emerald-300">
+                    <div key={item.id} className="rounded-lg border border-neutral-200 bg-white/80 p-2 dark:border-neutral-800 dark:bg-neutral-900/70">
+                      <p className="text-[10px] uppercase tracking-[0.14em] text-emerald-700 dark:text-emerald-300">
                         {item.kind ?? (item.role === "assistant" ? "agent" : "prompt")}
                       </p>
                       <PromptMarkdown content={item.summary} className="mt-1 line-clamp-4 text-sm" />
                     </div>
                   ))
                 ) : agentWorking ? (
-                  <div className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-900/70 p-3">
-                    <div className="flex items-center gap-2 text-sm text-neutral-200">
+                  <div className="space-y-3 rounded-lg border border-neutral-200 bg-white/80 p-3 dark:border-neutral-800 dark:bg-neutral-900/70">
+                    <div className="flex items-center gap-2 text-sm text-neutral-800 dark:text-neutral-200">
                       <Loader2 size={14} className="animate-spin text-emerald-300" />
                       <span>{agentRunningLabel(run)}</span>
                     </div>
-                    <p className="text-xs leading-relaxed text-neutral-400">
+                    <p className="text-xs leading-relaxed text-neutral-600 dark:text-neutral-400">
                       The agent is working in the cloud but hasn&apos;t streamed any conversation steps to this
                       run yet. Conversation steps appear here after the agent emits its first message — Cursor
                       sometimes batches the first few seconds.
@@ -737,7 +815,7 @@ export function RunDetail({
                         href={run.cursorAgentUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-300 hover:text-emerald-200"
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 hover:text-emerald-500 dark:text-emerald-300 dark:hover:text-emerald-200"
                       >
                         Watch live in Cursor <ExternalLink size={12} />
                       </a>
@@ -749,16 +827,27 @@ export function RunDetail({
               </div>
             </div>
 
-            <div className="flex flex-col rounded-xl border border-neutral-800 bg-neutral-950 p-4">
+            <div
+              id="pr-studio-output"
+              className="flex flex-col rounded-xl border border-neutral-200 bg-neutral-50/80 p-4 dark:border-neutral-800 dark:bg-neutral-950"
+            >
               <div className="flex items-center justify-between gap-3">
-                <h4 className="text-sm font-semibold text-white">Output</h4>
+                <h4 className="text-sm font-semibold text-foreground">Output</h4>
                 <div className="flex gap-1.5">
                   {outputContent && (
                     <>
-                      <button type="button" onClick={() => setResultExpanded((current) => !current)} className="rounded-lg border border-neutral-700 px-2 py-1 text-xs text-neutral-300 hover:bg-neutral-900">
-                        {resultExpanded ? "Collapse" : "Expand"}
+                      <button
+                        type="button"
+                        onClick={() => setResultExpanded((current) => !current)}
+                        className="rounded-lg border border-neutral-300 px-2 py-1 text-xs text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-900"
+                      >
+                        {resultExpanded ? "Full width" : "Expand"}
                       </button>
-                      <button type="button" onClick={copyResult} className="inline-flex items-center gap-1 rounded-lg border border-neutral-700 px-2 py-1 text-xs text-neutral-300 hover:bg-neutral-900">
+                      <button
+                        type="button"
+                        onClick={() => void copyResult()}
+                        className="inline-flex items-center gap-1 rounded-lg border border-neutral-300 px-2 py-1 text-xs text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-900"
+                      >
                         <Copy size={12} /> Copy
                       </button>
                     </>
@@ -766,11 +855,15 @@ export function RunDetail({
                 </div>
               </div>
               {outputContent ? (
-                <div className={`mt-2 rounded-lg border border-neutral-800 bg-neutral-900/60 p-3 ${resultExpanded ? "" : "max-h-[18rem] overflow-y-auto"}`}>
+                <div
+                  className={`mt-2 rounded-lg border border-neutral-200 bg-white/80 p-3 dark:border-neutral-800 dark:bg-neutral-900/60`}
+                >
+                  {run.buildPlan ? <div id="pr-studio-plan" className="relative -mt-2 h-0 scroll-mt-28" aria-hidden /> : null}
+                  {run.buildResult ? <div id="pr-studio-build" className="relative -mt-2 h-0 scroll-mt-28" aria-hidden /> : null}
                   <PromptMarkdown content={outputContent} className="space-y-3" />
                 </div>
               ) : (
-                <p className="mt-2 rounded-lg border border-neutral-800 bg-neutral-900/60 p-3 text-sm text-neutral-500">
+                <p className="mt-2 rounded-lg border border-neutral-200 bg-white/60 p-3 text-sm text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900/60">
                   Output will appear here when the current step completes.
                 </p>
               )}
@@ -779,24 +872,49 @@ export function RunDetail({
         </div>
 
         {run.artifacts && run.artifacts.length > 0 && (
-          <div className="mt-4 rounded-xl border border-neutral-800 bg-neutral-900/60 p-3">
-            <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-400">Artifacts</h3>
-            <ul className="mt-2 space-y-0.5 text-xs text-neutral-400">
-              {run.artifacts.map((artifact) => (
-                <li key={artifact.path}>{artifact.path}</li>
-              ))}
+          <div className="mt-4 rounded-xl border border-neutral-200 bg-neutral-50/80 p-3 dark:border-neutral-800 dark:bg-neutral-900/60">
+            <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">
+              Artifacts (open in Cursor)
+            </h3>
+            <ul className="mt-2 space-y-1.5 text-xs text-neutral-600 dark:text-neutral-400">
+              {run.artifacts.map((artifact) => {
+                const href = artifactCursorHref(run.cursorAgentUrl, artifact.path);
+                return (
+                  <li key={artifact.path} className="flex flex-wrap items-center gap-2">
+                    {href ? (
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="break-all text-emerald-700 hover:underline dark:text-emerald-300"
+                      >
+                        {artifact.path}
+                      </a>
+                    ) : (
+                      <span className="break-all">{artifact.path}</span>
+                    )}
+                    <button
+                      type="button"
+                      className="shrink-0 rounded border border-neutral-300 px-1.5 py-0.5 text-[10px] hover:bg-neutral-100 dark:border-neutral-600 dark:hover:bg-neutral-800"
+                      onClick={() => void copyId(artifact.path)}
+                    >
+                      Copy path
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         )}
 
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-neutral-800 pt-3">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-neutral-200 pt-3 dark:border-neutral-800">
           <div className="flex flex-wrap gap-2">
-            {active && (
+            {canCancelRun && (
               <button
                 type="button"
                 onClick={() => onMutate(run.id, "cancel")}
                 disabled={runAction === `cancel:${run.id}`}
-                className="rounded-lg border border-amber-500/30 px-2.5 py-1.5 text-xs text-amber-200 hover:bg-amber-500/10 disabled:opacity-50"
+                className="rounded-lg border border-amber-500/30 px-2.5 py-1.5 text-xs text-amber-800 hover:bg-amber-500/10 dark:text-amber-200 disabled:opacity-50"
               >
                 Cancel run
               </button>
@@ -806,10 +924,10 @@ export function RunDetail({
                 type="button"
                 onClick={() => onMutate(run.id, "archive")}
                 disabled={runAction === `archive:${run.id}` || actionsLocked}
-                title={actionsLocked ? "Cancel the running agent before archiving" : undefined}
-                className="rounded-lg border border-neutral-700 px-2.5 py-1.5 text-xs text-neutral-300 hover:bg-neutral-900 disabled:opacity-50"
+                title={actionsLocked ? "Cancel the running agent before hiding" : undefined}
+                className="rounded-lg border border-neutral-300 px-2.5 py-1.5 text-xs text-neutral-700 hover:bg-neutral-100 disabled:opacity-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-900"
               >
-                Archive agent
+                Hide
               </button>
             )}
           </div>
@@ -818,10 +936,10 @@ export function RunDetail({
             onClick={() => onMutate(run.id, "delete")}
             disabled={runAction === `delete:${run.id}` || actionsLocked}
             title={actionsLocked ? "Cancel the running agent before deleting" : undefined}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/30 px-2.5 py-1.5 text-xs text-red-300 hover:bg-red-500/10 disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/30 px-2.5 py-1.5 text-xs text-red-700 hover:bg-red-500/10 disabled:opacity-50 dark:text-red-300"
           >
             <Trash2 size={12} />
-            Delete
+            Delete run permanently
           </button>
         </div>
       </div>
@@ -830,8 +948,9 @@ export function RunDetail({
         <AgentRunningModal
           run={run}
           elapsed={elapsed}
-          canCancel={active}
+          canCancel={canCancelRun}
           cancelling={cancelling}
+          appearsStuck={appearsStuck}
           onClose={() => setModalOpen(false)}
           onCancel={handleCancelFromModal}
         />

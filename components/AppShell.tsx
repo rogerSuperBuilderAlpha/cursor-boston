@@ -411,7 +411,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
               expandedWidth ? "justify-between" : "flex-col justify-center gap-2",
             ].join(" ")}
           >
-            <ThemeToggle />
+            {pathname !== "/pr-ideas" ? <ThemeToggle /> : null}
             <button
               type="button"
               onClick={toggleCollapsed}
