@@ -1,0 +1,7 @@
+{
+  "score": 4,
+  "rationale": "ShipVote implements voting / rating phase logic in a single ~500-line App.jsx — Board, Feedback, Leaderboard, Reports, and Admin views with state-machine-style phase tracking across the voting lifecycle. The voting logic itself is real code (phase transitions, score aggregation, leaderboard sorting), which sets it apart from a pure scaffold — there's actual algorithmic thinking about how a cohort would rank submissions. But every input is hardcoded mock data: MEMBERS is an 8-person array of fake cohort members, WEEK_THEMES is a static constant, and persistence is localStorage only with no server roundtrip.\n\n3 commits + 80 kB JS suggests the work was done in a single sitting rather than iterated across the week — and 'Few update are needed' as the submission pitch is itself a tell that the author knows it's not done. Smaller scope than the other client-only mocks: ShipTrack and Jackie at least gesture at multiple product surfaces (Kanban + Tracker; Cohort + Personal). ShipVote is voting and only voting. The narrower scope plus the lighter commit cadence places this below the 5-tier — but voting is a real feature that some cohort PM tools omit entirely, so 4 reflects 'real code, narrow scope, no backend' rather than 'broken'.",
+  "model": "claude-opus-4-7",
+  "scoredAt": "2026-05-15T20:30:00.000Z",
+  "scorerVersion": 1
+}
