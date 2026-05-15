@@ -1,0 +1,7 @@
+{
+  "score": 4,
+  "rationale": "This was the most awkward submission to score because the visible UI and the underlying code tell different stories. On the live URL, AgentOps Board renders the most polished Kanban in the batch — 7 well-named columns (Backlog → Ready for Agent → Planning → Running → Needs Review → Verified Done → Blocked) with stat dashboards (7 tasks, 92 avg readiness, 3 review risks, 0 accepted evidence). The AgentOps framing (PM as orchestration of agent workers, not human tasks) is the single most distinctive product concept in the batch — nobody else is treating the PM tool as a control plane for agentic workflows.\n\nBut the code tells a different story: only 2 commits, 72 kB total, no API routes, no DB schema, no real backend. The UI is a static mockup with hardcoded numbers. The author was explicit about this — pitch reads 'won't be able to make it work by the deadline, consider it an idea in progress' and competeForWin: false signals self-disqualification. That's an honest WIP signal and worth respecting. Score 4 reflects the gap between 'great design artifact' and 'shipped product', and respects the author's self-assessment — but it's worth flagging that if the same framing were paired with the schema depth of jfleck25 or the route breadth of bme3412 in subsequent weeks, this could be a top submission. The concept is strong; the execution is intentionally pre-release.",
+  "model": "claude-opus-4-7",
+  "scoredAt": "2026-05-15T20:30:00.000Z",
+  "scorerVersion": 1
+}

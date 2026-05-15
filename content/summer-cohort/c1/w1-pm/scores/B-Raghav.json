@@ -1,0 +1,7 @@
+{
+  "score": 2,
+  "rationale": "B-Raghav/pm returns 404 from GitHub's API — the repository does not exist on the submitter's account. The submitter has a fork of the cohort repo (B-Raghav/cursor-boston) but no project named 'pm'. The live URL pm-hazel-kappa.vercel.app returns HTTP 500 — the Vercel deployment exists in some form but the application is crashing on every request and serving no content.\n\nThe pitch ('a cohort feed where an LLM hypes what you just shipped') is genuinely sharp — a Discord-ish feed where an LLM riffs on each PR or ship event is exactly the kind of motivation-layer mechanic Roger's mid-week reframe was asking for. The framing would slot cleanly into the same product space as bme3412's Launchpad (cohort feed + reactions) or jfleck25's Momentum (streaks + ship events) but with the LLM-hype angle as the differentiator. But with the repo inaccessible and the deployment broken, there is no code or product to evaluate. Score 2 reflects 'submission registered, no deliverable accessible'. If the repo is private or under a different name, please surface it and we'll revisit.",
+  "model": "claude-opus-4-7",
+  "scoredAt": "2026-05-15T20:30:00.000Z",
+  "scorerVersion": 1
+}

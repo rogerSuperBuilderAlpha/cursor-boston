@@ -1,0 +1,7 @@
+{
+  "score": 7,
+  "rationale": "PM OS uses a different architecture from the rest of the batch: separate api/, backend/, frontend/ directories with a Python backend (auth.py, main.py, models.py, routes.py, tasks.py, requirements.txt) and a Vite + React frontend. The backend includes a proper auth module, SQLite-persisted users + tasks tables, and deployment configs for Railway (Procfile, railway.json) + Vercel — the author thought about hosting end-to-end, not just 'npm run dev'. The YouTube demo (https://youtu.be/1a94xTF3QeM) — submitted as a non-standard 'Youtube' field in the JSON rather than the standard loomUrl — suggests a self-recorded walkthrough exists.\n\nThe 'GitHub as source of truth' pitch is conceptually strong: most cohort PM tools rely on self-report ('I shipped this'), while PM OS's premise is to read what actually shipped from git/PR history and use that as the authoritative state. That's a real product insight — survey-based PM tools have a lying problem; PR-based ones don't. Scored at 7 alongside alaskalam because the code is real, the backend is real, the angle is sharp, but the public surface (first-paint of the live URL is a headline-only SPA shell that hasn't hydrated, and the backend code is a smaller Python set than the Next.js+Prisma shops). Would benefit from server-side rendering so a fresh visitor sees content immediately rather than a blank screen.",
+  "model": "claude-opus-4-7",
+  "scoredAt": "2026-05-15T20:30:00.000Z",
+  "scorerVersion": 1
+}
