@@ -1,5 +1,15 @@
 {
-  "talks": [],
+  "talks": [
+    {
+      "id": "pydata-x-cursor-marimo-demo-2026-05-13",
+      "title": "Cursor + Marimo Demo: Agentic Data Science at PyData x Cursor Boston",
+      "speaker": "Eric Ma",
+      "date": "2026-05-13",
+      "description": "A live demo of agentic data science where Cursor Agent Mode interacts directly with a Marimo notebook kernel runtime for faster iterative analysis. Eric walked through a protein data example, notebook visualizations, and practical prompting patterns that teams can reuse for exploratory data work.",
+      "category": "development",
+      "videoUrl": "https://www.youtube.com/watch?v=DvSxrCcfWFs"
+    }
+  ],
   "categories": [
     {
       "id": "academic",
