@@ -1,7 +1,7 @@
 {
-  "score": 8,
-  "rationale": "This notebook builds a thoughtful composite view of transit privilege across Boston neighborhoods by combining rapid-transit access, live alert exposure, and chronic wait-time reliability. The framing is clear, the geospatial joins and limitations are well explained, and the result is useful for comparing structural service advantage rather than just plotting stops. The main weakness is that the live alert component is a time-sensitive snapshot, so some rankings may be less stable than the narrative implies.",
+  "score": 8.5,
+  "rationale": "Refined tie-break score: this notebook builds a thoughtful composite measure of transit privilege by combining rapid-transit access, live alert exposure, and chronic Blue Book wait-time reliability. The geospatial joins, ethical framing, sensitivity controls, and factor breakdown make it more rigorous than a simple map. It ranks just below the top 8-range entry because the live-alert component is time-sensitive and the composite weighting remains exploratory, so the finding is useful but less cleanly decisive.",
   "model": "gpt-5.5",
-  "scoredAt": "2026-05-14T01:08:00.000Z",
-  "scorerVersion": 1
+  "scoredAt": "2026-05-14T12:08:00.000Z",
+  "scorerVersion": 2
 }

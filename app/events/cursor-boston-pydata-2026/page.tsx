@@ -8,7 +8,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import eventsData from "@/content/events.json";
 import type { EventsData } from "@/types/events";
-import { PyDataAccessGate } from "@/components/events/PyDataAccessGate";
 import { CursorSubmitPromptButton } from "@/components/events/CursorSubmitPromptButton";
 import {
   PYDATA_2026_EVENT_SLUG,
@@ -51,8 +50,6 @@ export const metadata: Metadata = {
   title: "Cursor Boston × PyData — Hackathon submissions",
   description:
     "Submit your hackathon notebook and browse merged submissions from the May 13 Cursor Boston × PyData evening hack at Moderna HQ.",
-  // Gated page — no need to be in search results or social previews.
-  robots: { index: false, follow: false },
 };
 
 // Linking to the branch (not /compare) so GitHub renders its "Contribute"
@@ -67,8 +64,7 @@ export default function PyDataHackathonHubPage() {
   const submissions = getPyDataSubmissions();
 
   return (
-    <PyDataAccessGate>
-      <main className="flex flex-col bg-neutral-50 dark:bg-neutral-950">
+    <main className="flex flex-col bg-neutral-50 dark:bg-neutral-950">
         {/* Breadcrumb */}
         <nav
           className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-800"
@@ -96,7 +92,7 @@ export default function PyDataHackathonHubPage() {
         <section className="px-6 py-10 border-b border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950">
           <div className="max-w-6xl mx-auto">
             <span className="inline-block px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-semibold rounded-full mb-3 uppercase tracking-wide">
-              You&apos;re in
+              Public showcase
             </span>
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
               {event?.title ?? "Cursor Boston × PyData — Hackathon hub"}
@@ -170,8 +166,7 @@ export default function PyDataHackathonHubPage() {
 
         {/* Submissions grid */}
         <SubmissionsGrid submissions={submissions} />
-      </main>
-    </PyDataAccessGate>
+    </main>
   );
 }
 
@@ -564,7 +559,9 @@ function SubmissionInstructions() {
           <code className="rounded bg-neutral-200 px-1.5 py-0.5 text-xs font-mono dark:bg-neutral-800">
             {PYDATA_SUBMISSIONS_BRANCH}
           </code>{" "}
-          branch. Once a maintainer merges it through to{" "}
+          branch. The event is over, but the exercise stays open: anyone can
+          do the notebook later and open a PR to be listed with the others.
+          Once a maintainer merges it through to{" "}
           <code className="rounded bg-neutral-200 px-1.5 py-0.5 text-xs font-mono dark:bg-neutral-800">
             main
           </code>
@@ -757,31 +754,120 @@ function Step({
 }
 
 function SubmissionsGrid({ submissions }: { submissions: PyDataSubmission[] }) {
+  const eligible = submissions.filter((s) => s.winnerEligible);
+  const afterDeadline = submissions.filter((s) => !s.winnerEligible);
+
   return (
     <section className="px-6 py-12">
       <div className="max-w-6xl mx-auto">
-        <div className="mb-6 flex items-baseline justify-between gap-4 flex-wrap">
-          <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-            Merged submissions{" "}
-            <span className="text-neutral-500 font-normal tabular-nums">
-              ({submissions.length})
-            </span>
-          </h2>
-          <p className="text-sm text-neutral-500 dark:text-neutral-400">
-            Each card links to the rendered notebook on GitHub.
+        <div className="mb-8 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-5 dark:border-emerald-400/20 dark:bg-emerald-400/5">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">
+            Final judging board
           </p>
+          <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground">
+                Merged submissions{" "}
+                <span className="text-neutral-500 font-normal tabular-nums">
+                  ({submissions.length})
+                </span>
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm text-neutral-600 dark:text-neutral-300">
+                Cards are sorted by AI judge score. Only PRs opened before 9:00
+                PM Eastern on May 13 are winner eligible; later PRs are shown
+                separately for showcase visibility.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-right">
+              <div className="rounded-xl bg-white px-4 py-3 shadow-sm dark:bg-neutral-950">
+                <p className="text-2xl font-bold tabular-nums text-emerald-700 dark:text-emerald-300">
+                  {eligible.length}
+                </p>
+                <p className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
+                  Eligible
+                </p>
+              </div>
+              <div className="rounded-xl bg-white px-4 py-3 shadow-sm dark:bg-neutral-950">
+                <p className="text-2xl font-bold tabular-nums text-amber-700 dark:text-amber-300">
+                  {afterDeadline.length}
+                </p>
+                <p className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
+                  After 9 PM
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {submissions.length === 0 ? (
           <EmptyState />
         ) : (
-          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {submissions.map((s) => (
-              <SubmissionCard key={s.githubHandle} submission={s} />
-            ))}
-          </ul>
+          <div className="space-y-10">
+            <SubmissionSection
+              title="Winner eligible"
+              description="PR opened before 9:00 PM Eastern on May 13."
+              submissions={eligible}
+              tone="eligible"
+            />
+            <SubmissionSection
+              title="After deadline showcase"
+              description="PR opened after 9:00 PM Eastern. Included on the page, but not eligible for winner selection."
+              submissions={afterDeadline}
+              tone="late"
+            />
+          </div>
         )}
       </div>
+    </section>
+  );
+}
+
+function SubmissionSection({
+  title,
+  description,
+  submissions,
+  tone,
+}: {
+  title: string;
+  description: string;
+  submissions: PyDataSubmission[];
+  tone: "eligible" | "late";
+}) {
+  const countColor =
+    tone === "eligible"
+      ? "text-emerald-700 dark:text-emerald-300"
+      : "text-amber-700 dark:text-amber-300";
+
+  return (
+    <section>
+      <div className="mb-4 flex items-baseline justify-between gap-4 flex-wrap">
+        <div>
+          <h3 className="text-xl font-bold text-foreground">
+            {title}{" "}
+            <span className={`font-mono text-base font-semibold ${countColor}`}>
+              ({submissions.length})
+            </span>
+          </h3>
+          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+            {description}
+          </p>
+        </div>
+      </div>
+      {submissions.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-neutral-300 bg-white p-5 text-sm text-neutral-500 dark:border-neutral-700 dark:bg-neutral-900">
+          No submissions in this group.
+        </div>
+      ) : (
+        <ul className="grid gap-4">
+          {submissions.map((s) => (
+            <SubmissionCard
+              key={s.githubHandle}
+              submission={s}
+              eligibilityTone={tone}
+            />
+          ))}
+        </ul>
+      )}
     </section>
   );
 }
@@ -803,121 +889,168 @@ function EmptyState() {
   );
 }
 
-function SubmissionCard({ submission }: { submission: PyDataSubmission }) {
+function SubmissionCard({
+  submission,
+  eligibilityTone,
+}: {
+  submission: PyDataSubmission;
+  eligibilityTone: "eligible" | "late";
+}) {
   const handleHref = `https://github.com/${submission.githubHandle}`;
+  const badgeClass =
+    eligibilityTone === "eligible"
+      ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+      : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300";
+  const badgeText =
+    eligibilityTone === "eligible" ? "Winner eligible" : "After deadline";
+
   return (
-    <li className="flex flex-col rounded-xl border border-neutral-200 bg-white p-5 transition-colors hover:border-emerald-500/40 dark:border-neutral-800 dark:bg-neutral-900">
-      <h3 className="text-lg font-semibold text-foreground line-clamp-2">
-        <a
-          href={submission.notebookUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
-        >
-          {submission.title}
-        </a>
-      </h3>
-      <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-        by{" "}
-        <a
-          href={handleHref}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-medium text-neutral-700 hover:text-emerald-600 dark:text-neutral-300 dark:hover:text-emerald-400"
-        >
-          {submission.displayName}
-        </a>
-        <span className="text-neutral-400"> · @{submission.githubHandle}</span>
-      </p>
-
-      <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400 line-clamp-4">
-        {submission.description}
-      </p>
-
-      {submission.tags.length > 0 ? (
-        <ul className="mt-4 flex flex-wrap gap-1.5">
-          {submission.tags.map((tag) => (
-            <li
-              key={tag}
-              className="rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-medium text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300"
-            >
-              {tag}
-            </li>
-          ))}
-        </ul>
-      ) : null}
-
-      {submission.score ? (
-        <div className="mt-4 rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3 dark:border-emerald-400/20 dark:bg-emerald-400/5">
-          <div className="flex items-baseline justify-between gap-2">
-            <span className="text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
-              AI judge score
-            </span>
-            <span className="font-mono text-sm font-semibold tabular-nums text-emerald-700 dark:text-emerald-400">
-              {submission.score.score}/10
-            </span>
-          </div>
-          <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
-            {submission.score.rationale}
-          </p>
-        </div>
-      ) : null}
-
-      {submission.collaborators.length > 0 ? (
-        <p className="mt-3 text-xs text-neutral-500 dark:text-neutral-400">
-          With:{" "}
-          {submission.collaborators.map((c, i) => (
-            <span key={`${c.displayName}-${i}`}>
-              {i > 0 ? ", " : ""}
-              {c.githubHandle ? (
-                <a
-                  href={`https://github.com/${c.githubHandle}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-neutral-700 hover:text-emerald-600 dark:text-neutral-300 dark:hover:text-emerald-400"
-                >
-                  {c.displayName}
-                </a>
-              ) : (
-                c.displayName
-              )}
-            </span>
-          ))}
-        </p>
-      ) : null}
-
-      <div className="mt-auto pt-5 flex items-center justify-between text-xs">
-        <a
-          href={submission.notebookUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 font-medium text-emerald-600 hover:text-emerald-500 dark:text-emerald-400"
-        >
-          View notebook
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
+    <li className="grid gap-5 rounded-xl border border-neutral-200 bg-white p-5 transition-colors hover:border-emerald-500/40 dark:border-neutral-800 dark:bg-neutral-900 lg:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="min-w-0">
+        <h3 className="text-lg font-semibold text-foreground">
+          <a
+            href={submission.notebookUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
           >
-            <path d="M7 17l9.2-9.2M17 17V7H7" />
-          </svg>
-        </a>
-        <a
-          href={submission.folderUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
-        >
-          Folder
-        </a>
+            {submission.title}
+          </a>
+        </h3>
+        <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+          by{" "}
+          <a
+            href={handleHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-neutral-700 hover:text-emerald-600 dark:text-neutral-300 dark:hover:text-emerald-400"
+          >
+            {submission.displayName}
+          </a>
+          <span className="text-neutral-400">
+            {" "}
+            · @{submission.githubHandle}
+          </span>
+        </p>
+
+        <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
+          {submission.description}
+        </p>
+
+        {submission.tags.length > 0 ? (
+          <ul className="mt-4 flex flex-wrap gap-1.5">
+            {submission.tags.map((tag) => (
+              <li
+                key={tag}
+                className="rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-medium text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300"
+              >
+                {tag}
+              </li>
+            ))}
+          </ul>
+        ) : null}
+
+        {submission.collaborators.length > 0 ? (
+          <p className="mt-3 text-xs text-neutral-500 dark:text-neutral-400">
+            With:{" "}
+            {submission.collaborators.map((c, i) => (
+              <span key={`${c.displayName}-${i}`}>
+                {i > 0 ? ", " : ""}
+                {c.githubHandle ? (
+                  <a
+                    href={`https://github.com/${c.githubHandle}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-neutral-700 hover:text-emerald-600 dark:text-neutral-300 dark:hover:text-emerald-400"
+                  >
+                    {c.displayName}
+                  </a>
+                ) : (
+                  c.displayName
+                )}
+              </span>
+            ))}
+          </p>
+        ) : null}
+      </div>
+
+      <div className="flex min-w-0 flex-col gap-3 lg:border-l lg:border-neutral-200 lg:pl-5 lg:dark:border-neutral-800">
+        <div className="flex items-center justify-between gap-3">
+          <span
+            className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${badgeClass}`}
+          >
+            {badgeText}
+          </span>
+          {submission.submittedAt ? (
+            <time
+              dateTime={submission.submittedAt}
+              className="text-[11px] text-neutral-500 dark:text-neutral-400"
+            >
+              {formatSubmissionTime(submission.submittedAt)}
+            </time>
+          ) : null}
+        </div>
+
+        {submission.score ? (
+          <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3 dark:border-emerald-400/20 dark:bg-emerald-400/5">
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+                AI judge score
+              </span>
+              <span className="font-mono text-sm font-semibold tabular-nums text-emerald-700 dark:text-emerald-400">
+                {submission.score.score}/10
+              </span>
+            </div>
+            <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
+              {submission.score.rationale}
+            </p>
+          </div>
+        ) : null}
+
+        <div className="mt-auto flex items-center justify-between text-xs">
+          <a
+            href={submission.notebookUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 font-medium text-emerald-600 hover:text-emerald-500 dark:text-emerald-400"
+          >
+            View notebook
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M7 17l9.2-9.2M17 17V7H7" />
+            </svg>
+          </a>
+          <a
+            href={submission.folderUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+          >
+            Folder
+          </a>
+        </div>
       </div>
     </li>
   );
+}
+
+function formatSubmissionTime(iso: string): string {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+  }).format(new Date(iso));
 }

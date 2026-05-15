@@ -38,7 +38,7 @@ function writeSubmission(
   root: string,
   handle: string,
   meta: unknown | null,
-  options: { notebook?: boolean } = {}
+  options: { notebook?: boolean; score?: unknown } = {}
 ): void {
   const folder = path.join(root, PYDATA_SUBMISSIONS_DIR, handle);
   fs.mkdirSync(folder, { recursive: true });
@@ -48,6 +48,9 @@ function writeSubmission(
   if (meta !== null) {
     const body = typeof meta === "string" ? meta : JSON.stringify(meta);
     fs.writeFileSync(path.join(folder, "meta.json"), body);
+  }
+  if (options.score !== undefined) {
+    fs.writeFileSync(path.join(folder, "score.json"), JSON.stringify(options.score));
   }
 }
 
@@ -90,6 +93,8 @@ describe("getPyDataSubmissions", () => {
     expect(s.folderUrl).toBe(
       `${PYDATA_SUBMISSIONS_REPO_URL}/tree/main/${PYDATA_SUBMISSIONS_DIR}/adam-sychla`
     );
+    expect(s.submittedAt).toBeNull();
+    expect(s.winnerEligible).toBe(false);
   });
 
   it("skips a folder missing submission.py", () => {
@@ -153,27 +158,85 @@ describe("getPyDataSubmissions", () => {
     expect(result.map((s) => s.githubHandle)).toEqual(["valid-user"]);
   });
 
-  it("falls back to handle when displayName is missing, sorts alphabetically", () => {
+  it("falls back to handle when displayName is missing, sorts by score then alphabetically", () => {
     const result = withTempCwd((root) => {
       writeSubmission(root, "zach", {
         title: "Z work",
         description: "Z description",
+      }, {
+        score: {
+          score: 9,
+          rationale: "Strong.",
+          model: "test",
+          scoredAt: "2026-05-14T00:00:00.000Z",
+        },
+      });
+      writeSubmission(root, "barry", {
+        title: "B work",
+        description: "B description",
+      }, {
+        score: {
+          score: 9,
+          rationale: "Also strong.",
+          model: "test",
+          scoredAt: "2026-05-14T00:00:00.000Z",
+        },
       });
       writeSubmission(root, "amy", {
         title: "A work",
         description: "A description",
         displayName: "Amy A",
       });
-      writeSubmission(root, "barry", {
-        title: "B work",
-        description: "B description",
-      });
     });
-    // displayName for "zach" falls back to the handle "zach"; "amy" maps
-    // to its set displayName "Amy A"; "barry" falls back to "barry".
-    // Sort is alphabetical case-insensitive: Amy A, barry, zach.
-    expect(result.map((s) => s.displayName)).toEqual(["Amy A", "barry", "zach"]);
-    expect(result.map((s) => s.githubHandle)).toEqual(["amy", "barry", "zach"]);
+    // Scores sort descending first; equal scores use displayName as a stable
+    // case-insensitive tie-breaker. Unscored submissions come last.
+    expect(result.map((s) => s.displayName)).toEqual(["barry", "zach", "Amy A"]);
+    expect(result.map((s) => s.githubHandle)).toEqual(["barry", "zach", "amy"]);
+  });
+
+  it("marks submissions opened before the winner cutoff as eligible", () => {
+    const result = withTempCwd((root) => {
+      writeSubmission(
+        root,
+        "aaravraina3",
+        {
+          title: "Eligible",
+          description: "Submitted before the deadline.",
+          displayName: "Eligible Person",
+        },
+        {
+          score: {
+            score: 9,
+            rationale: "Strong.",
+            model: "test",
+            scoredAt: "2026-05-14T00:00:00.000Z",
+          },
+        }
+      );
+      writeSubmission(
+        root,
+        "trevordcampbell",
+        {
+          title: "Late",
+          description: "Submitted after the deadline.",
+          displayName: "Late Person",
+        },
+        {
+          score: {
+            score: 9,
+            rationale: "Also strong.",
+            model: "test",
+            scoredAt: "2026-05-14T00:00:00.000Z",
+          },
+        }
+      );
+    });
+
+    const byHandle = Object.fromEntries(result.map((s) => [s.githubHandle, s]));
+    expect(byHandle.aaravraina3.submittedAt).toBe("2026-05-14T00:40:39Z");
+    expect(byHandle.aaravraina3.winnerEligible).toBe(true);
+    expect(byHandle.trevordcampbell.submittedAt).toBe("2026-05-14T01:04:01Z");
+    expect(byHandle.trevordcampbell.winnerEligible).toBe(false);
   });
 
   it("clamps tags to a max of 6 and ignores non-string entries", () => {

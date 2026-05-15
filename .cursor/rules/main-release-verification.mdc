@@ -1,0 +1,14 @@
+---
+description: Require local production verification before main releases
+alwaysApply: true
+---
+
+# Main Release Verification
+
+Before merging or pushing any change all the way to `main`, verify the production build locally:
+
+1. Run `npm run build`.
+2. Run `npm start` against that build.
+3. Give the user the local URL and wait for explicit confirmation before creating or merging the `develop` → `main` release PR.
+
+This is required even when CI or type checks are green, so we do not repeatedly trigger Vercel production deploys for UI issues that can be caught locally.

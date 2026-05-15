@@ -25,10 +25,11 @@ import { useDiscordConnection } from "@/app/(auth)/profile/_hooks/useDiscordConn
 import {
   SUMMER_COHORTS,
   SUMMER_COHORT_C1_DEFAULT_TAB,
-  SUMMER_COHORT_C1_VOTE_WEEKS,
   SUMMER_COHORT_GOAL_PER_COHORT,
   SUMMER_COHORT_IMMERSION,
   SUMMER_COHORT_RETURN_TO,
+  getPrimarySummerCohort,
+  getSummerCohortRuntime,
   type SummerCohortId,
 } from "@/lib/summer-cohort";
 import { ClaimSpotByPRCard } from "./_components/ClaimSpotByPRCard";
@@ -56,7 +57,9 @@ interface ApplicationDto {
   isLocal: boolean | null;
   wantsToPresent: boolean | null;
   mayImmersionRsvped: boolean;
-  /** Server timestamp (ms) of when the user self-attested dev env ready. */
+  /** Server timestamp (ms) of when the user self-attested dev env ready.
+   *  Field name still says "cohort1" for back-compat with existing data;
+   *  it's the cohort-agnostic dev-env confirmation now. */
   cohort1DevEnvConfirmedAt: number | null;
   createdAt: number | null;
   updatedAt: number | null;
@@ -478,8 +481,11 @@ function SummerCohortPageInner() {
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  // Default to only the cohorts still open for signup. New applicants
+  // can't join Cohort 1 (kickoff already happened) — pre-checking it
+  // would just produce a confusing 403 on submit.
   const [pickedCohorts, setPickedCohorts] = useState<Set<SummerCohortId>>(
-    new Set(SUMMER_COHORTS.map((c) => c.id))
+    new Set(SUMMER_COHORTS.filter((c) => !c.signupsClosed).map((c) => c.id))
   );
   const [isLocal, setIsLocal] = useState<boolean | null>(null);
   const [wantsToPresent, setWantsToPresent] = useState<boolean | null>(null);
@@ -561,15 +567,15 @@ function SummerCohortPageInner() {
     };
   }, [loading, user]);
 
-  // Fetch intake-survey status whenever the user is an admitted Cohort 1
-  // applicant. Non-admitted users never see the gate, so the effect short-
-  // circuits without touching state — `showSurveyGate` already requires
-  // `showTabs`, so a stale `intakeStatus` can't leak through to the UI.
+  // Fetch intake-survey status whenever the user is an admitted cohort
+  // applicant (any cohort). Non-admitted users never see the gate, so the
+  // effect short-circuits without touching state — `showSurveyGate` already
+  // requires `showTabs`, so a stale `intakeStatus` can't leak through to the UI.
   useEffect(() => {
     if (loading || !user) return;
     if (
       application?.status !== "admitted" ||
-      !application.cohorts.includes("cohort-1")
+      application.cohorts.length === 0
     ) {
       return;
     }
@@ -601,7 +607,7 @@ function SummerCohortPageInner() {
     if (intakeStatus !== "incomplete") return;
     if (
       application?.status !== "admitted" ||
-      !application.cohorts.includes("cohort-1")
+      application.cohorts.length === 0
     ) {
       return;
     }
@@ -760,7 +766,9 @@ function SummerCohortPageInner() {
       setApplication(null);
       setName(user.displayName || "");
       setPhone("");
-      setPickedCohorts(new Set(SUMMER_COHORTS.map((c) => c.id)));
+      setPickedCohorts(
+        new Set(SUMMER_COHORTS.filter((c) => !c.signupsClosed).map((c) => c.id))
+      );
       setIsLocal(null);
       setWantsToPresent(null);
       setSubmitSuccess(null);
@@ -777,25 +785,39 @@ function SummerCohortPageInner() {
     return (id: SummerCohortId) => map.get(id) || id;
   }, []);
 
+  // Primary cohort drives the dashboard runtime (dates, branches, zoom/discord
+  // placeholders). Cohort 1 takes priority when the user is admitted to both.
+  const primaryCohort: SummerCohortId | null = application
+    ? getPrimarySummerCohort(application.cohorts)
+    : null;
+  const runtime = primaryCohort ? getSummerCohortRuntime(primaryCohort) : null;
   const showTabs =
-    application?.status === "admitted" &&
-    application.cohorts.includes("cohort-1");
+    application?.status === "admitted" && primaryCohort !== null;
   // Soft gate: the intake survey is now a tab, not a blocker. The tab
   // appears (with a callout banner above the tabs) until the user has
   // submitted. Once submitted, the tab disappears.
   const showIntakeSurveyTab = showTabs && intakeStatus === "incomplete";
   const myInfoVisible = !showTabs || activeTab === "my-info";
-  const cohort1Count = applicationCounts["cohort-1"] ?? 0;
+  const cohortCount = primaryCohort ? applicationCounts[primaryCohort] ?? 0 : 0;
 
   const localityDone =
     application?.isLocal !== null && application?.wantsToPresent !== null;
   const rsvpDone = application?.mayImmersionRsvped === true;
-  const moveCompletedSetupToInfo = showTabs && localityDone && rsvpDone;
+  // Only cohort 1 has an in-person immersion event; for other cohorts the
+  // "RSVP done" check is moot, so the completed-setup summary becomes a pure
+  // locality check.
+  const isCohort1Primary = primaryCohort === "cohort-1";
+  const moveCompletedSetupToInfo =
+    showTabs &&
+    localityDone &&
+    (isCohort1Primary ? rsvpDone : true);
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10 md:px-6 md:py-14">
-      {showTabs ? (
+      {showTabs && runtime ? (
         <SetupReadinessModal
+          cohortLabel={runtime.label}
+          kickoffLabel={runtime.kickoffLabel}
           needsDiscord={!discord.discordInfo}
           needsGithub={!github.githubInfo?.login}
           needsSurvey={intakeStatus === "incomplete"}
@@ -873,16 +895,39 @@ function SummerCohortPageInner() {
         </div>
       ) : !user ? (
         <section className="rounded-xl border border-neutral-200 bg-neutral-50 p-6 dark:border-neutral-800 dark:bg-neutral-900/40">
-          <h2 className="text-lg font-semibold">Sign in to apply</h2>
+          <h2 className="text-lg font-semibold">Create an account to apply</h2>
           <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-            We need an account on file to follow up on your application.
+            Takes 30 seconds with Google or GitHub. We need an account on file
+            to follow up on your application.
           </p>
-          <Link
-            href={`/login?redirect=${encodeURIComponent(SUMMER_COHORT_RETURN_TO)}`}
-            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-400"
-          >
-            Sign in
-          </Link>
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <Link
+              href={`/signup?redirect=${encodeURIComponent(SUMMER_COHORT_RETURN_TO)}`}
+              className="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-400"
+            >
+              Create account
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.25"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M5 12h14M13 5l7 7-7 7" />
+              </svg>
+            </Link>
+            <Link
+              href={`/login?redirect=${encodeURIComponent(SUMMER_COHORT_RETURN_TO)}`}
+              className="inline-flex items-center gap-2 rounded-lg border border-neutral-300 bg-white px-4 py-2.5 text-sm font-semibold text-neutral-700 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:bg-transparent dark:text-neutral-300 dark:hover:bg-neutral-800"
+            >
+              Already have an account? Sign in
+            </Link>
+          </div>
         </section>
       ) : appLoading ? (
         <div className="rounded-xl border border-neutral-200 p-6 text-sm text-neutral-500 dark:border-neutral-800">
@@ -895,7 +940,7 @@ function SummerCohortPageInner() {
       ) : (
         <>
           {application ? (
-            showTabs ? (
+            showTabs && runtime && primaryCohort ? (
               <>
                 <ApplicationStatusPanel
                   application={application}
@@ -946,21 +991,27 @@ function SummerCohortPageInner() {
                     ) : (
                       <IntakeSurveyForm
                         defaultEmail={user?.email ?? application.email ?? ""}
-                        cohortId={application.cohorts[0] ?? "cohort-1"}
+                        cohortId={primaryCohort}
                         onComplete={() => setIntakeStatus("completed")}
                       />
                     )
                   ) : activeTab === "info" ? (
                     <InfoTabPanel
-                      cohort1Count={cohort1Count}
+                      cohortId={primaryCohort}
+                      cohortLabel={runtime.label}
+                      cohortCount={cohortCount}
+                      discordInviteUrl={runtime.discordInviteUrl}
                       application={
                         moveCompletedSetupToInfo ? application : undefined
                       }
                     />
                   ) : activeTab === "week-1" ? (
                     <WeekVotePanel
-                      week={SUMMER_COHORT_C1_VOTE_WEEKS[0]}
+                      week={runtime.voteWeeks[0]}
                       tabId="week-1"
+                      cohortId={primaryCohort}
+                      cohortLabel={runtime.label}
+                      zoomUrl={runtime.zoomUrl}
                       currentUserGithubHandle={
                         github.githubInfo?.login ?? null
                       }
@@ -972,8 +1023,11 @@ function SummerCohortPageInner() {
                     />
                   ) : activeTab === "week-2" ? (
                     <WeekVotePanel
-                      week={SUMMER_COHORT_C1_VOTE_WEEKS[1]}
+                      week={runtime.voteWeeks[1]}
                       tabId="week-2"
+                      cohortId={primaryCohort}
+                      cohortLabel={runtime.label}
+                      zoomUrl={runtime.zoomUrl}
                       currentUserGithubHandle={
                         github.githubInfo?.login ?? null
                       }
@@ -985,8 +1039,11 @@ function SummerCohortPageInner() {
                     />
                   ) : activeTab === "week-3" ? (
                     <WeekVotePanel
-                      week={SUMMER_COHORT_C1_VOTE_WEEKS[2]}
+                      week={runtime.voteWeeks[2]}
                       tabId="week-3"
+                      cohortId={primaryCohort}
+                      cohortLabel={runtime.label}
+                      zoomUrl={runtime.zoomUrl}
                       currentUserGithubHandle={
                         github.githubInfo?.login ?? null
                       }
@@ -997,13 +1054,27 @@ function SummerCohortPageInner() {
                       onSwitchToMyInfo={() => setActiveTab("my-info")}
                     />
                   ) : activeTab === "week-4" ? (
-                    <Week4LudwittPanel />
+                    <Week4LudwittPanel
+                      week={runtime.week4}
+                      cohortLabel={runtime.label}
+                      zoomUrl={runtime.zoomUrl}
+                    />
                   ) : activeTab === "week-5" ? (
-                    <Week5StartupPanel />
+                    <Week5StartupPanel
+                      week={runtime.week5}
+                      cohortLabel={runtime.label}
+                      zoomUrl={runtime.zoomUrl}
+                    />
                   ) : activeTab === "week-6" ? (
-                    <Week6OssPanel />
+                    <Week6OssPanel
+                      week={runtime.week6}
+                      cohortLabel={runtime.label}
+                      zoomUrl={runtime.zoomUrl}
+                    />
                   ) : activeTab === "setup" ? (
-                    <SetupInstructionsPanel />
+                    <SetupInstructionsPanel
+                      kickoffLabel={runtime.kickoffLabel}
+                    />
                   ) : activeTab === "game" ? (
                     <GamePromoPanel />
                   ) : null}
@@ -1176,23 +1247,45 @@ function SummerCohortPageInner() {
                   Which cohort(s)? Pick at least one.
                 </legend>
                 <div className="mt-2 space-y-2">
-                  {SUMMER_COHORTS.map((cohort) => (
-                    <label
-                      key={cohort.id}
-                      className="flex items-center gap-3 rounded-lg border border-neutral-200 px-3 py-2.5 text-sm dark:border-neutral-800"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={pickedCohorts.has(cohort.id)}
-                        onChange={() => toggleCohort(cohort.id)}
-                        className="h-4 w-4 rounded border-neutral-300 text-emerald-500 focus:ring-emerald-500"
-                      />
-                      <span className="font-semibold">{cohort.label}</span>
-                      <span className="text-xs text-neutral-600 dark:text-neutral-400">
-                        {cohort.startLabel} – {cohort.endLabel}
-                      </span>
-                    </label>
-                  ))}
+                  {SUMMER_COHORTS.map((cohort) => {
+                    const closed = cohort.signupsClosed === true;
+                    // Existing applicants who already opted into a now-closed
+                    // cohort can still see/edit it; brand-new applicants
+                    // can't pick it (the API rejects with a 403 anyway —
+                    // disabling here surfaces that constraint up front).
+                    const alreadyHas =
+                      application?.cohorts.includes(cohort.id) === true;
+                    const disabled = closed && !alreadyHas;
+                    return (
+                      <label
+                        key={cohort.id}
+                        className={`flex items-center gap-3 rounded-lg border px-3 py-2.5 text-sm ${
+                          disabled
+                            ? "border-neutral-200 bg-neutral-100/60 dark:border-neutral-800 dark:bg-neutral-900/40 opacity-70"
+                            : "border-neutral-200 dark:border-neutral-800"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={pickedCohorts.has(cohort.id)}
+                          onChange={() => toggleCohort(cohort.id)}
+                          disabled={disabled}
+                          className="h-4 w-4 rounded border-neutral-300 text-emerald-500 focus:ring-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
+                        />
+                        <span className={`font-semibold ${disabled ? "text-neutral-500" : ""}`}>
+                          {cohort.label}
+                        </span>
+                        <span className="text-xs text-neutral-600 dark:text-neutral-400">
+                          {cohort.startLabel} – {cohort.endLabel}
+                        </span>
+                        {closed ? (
+                          <span className="ml-auto text-[10px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full border border-neutral-300 text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
+                            Closed
+                          </span>
+                        ) : null}
+                      </label>
+                    );
+                  })}
                 </div>
               </fieldset>
               <fieldset>

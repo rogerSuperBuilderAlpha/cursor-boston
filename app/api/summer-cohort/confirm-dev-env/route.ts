@@ -23,9 +23,12 @@ export const dynamic = "force-dynamic";
  * POST /api/summer-cohort/confirm-dev-env
  *
  * Auth-required. Stamps `cohort1DevEnvConfirmedAt` on the current user's
- * cohort application. Gated to admitted Cohort 1 applicants — the readiness
+ * cohort application. Gated to ANY admitted cohort applicant — the readiness
  * modal already hides the affordance from anyone else, but we re-check here
  * so the API can't be poked from a stale tab.
+ *
+ * Field name still says "cohort1" for back-compat with existing data; it's
+ * the cohort-agnostic dev-env confirmation timestamp now.
  *
  * Idempotent: re-stamps the timestamp on every call. The modal closes once
  * the timestamp is non-null, so re-clicks have no UX consequence.
@@ -58,9 +61,9 @@ async function handlePost(request: NextRequest) {
   const app = appSnap.data() || {};
   const status = typeof app.status === "string" ? app.status : "pending";
   const cohorts = Array.isArray(app.cohorts) ? (app.cohorts as string[]) : [];
-  if (status !== "admitted" || !cohorts.includes("cohort-1")) {
+  if (status !== "admitted" || cohorts.length === 0) {
     return NextResponse.json(
-      { error: "Only admitted Cohort 1 applicants can confirm dev env" },
+      { error: "Only admitted cohort applicants can confirm dev env" },
       { status: 403 }
     );
   }

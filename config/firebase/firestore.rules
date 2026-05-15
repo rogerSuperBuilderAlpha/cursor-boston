@@ -44,12 +44,17 @@ service cloud.firestore {
                   || (request.auth != null && request.auth.uid == userId);
       allow create: if request.auth != null
                     && request.auth.uid == userId
-                    && !request.resource.data.keys().hasAny(['earnedBadgeIds', 'pullRequestsCount', 'hackASprint2026ShowcaseBadge', 'hackASprint2026ShowcaseAwards', 'hackASprint2026Unlocked', 'hackASprint2026UnlockedAt', 'hackASprint2026CreditEmailSentAt']);
+                    && !request.resource.data.keys().hasAny(['cursor', 'earnedBadgeIds', 'pullRequestsCount', 'hackASprint2026ShowcaseBadge', 'hackASprint2026ShowcaseAwards', 'hackASprint2026Unlocked', 'hackASprint2026UnlockedAt', 'hackASprint2026CreditEmailSentAt']);
       allow update: if request.auth != null 
                     && request.auth.uid == userId
                     && !request.resource.data.diff(resource.data).affectedKeys()
-                        .hasAny(['uid', 'createdAt', 'role', 'email', 'earnedBadgeIds', 'pullRequestsCount', 'hackASprint2026ShowcaseBadge', 'hackASprint2026ShowcaseAwards', 'hackASprint2026Unlocked', 'hackASprint2026UnlockedAt', 'hackASprint2026CreditEmailSentAt']);
+                        .hasAny(['uid', 'createdAt', 'role', 'email', 'cursor', 'earnedBadgeIds', 'pullRequestsCount', 'hackASprint2026ShowcaseBadge', 'hackASprint2026ShowcaseAwards', 'hackASprint2026Unlocked', 'hackASprint2026UnlockedAt', 'hackASprint2026CreditEmailSentAt']);
       allow delete: if false; // Users cannot delete their own accounts via client
+
+      // Cursor API keys are encrypted and stored server-side only.
+      match /secrets/{docId} {
+        allow read, write: if false;
+      }
     }
     
     // Email lookup collection - maps emails to user UIDs for multi-email login
@@ -225,6 +230,13 @@ service cloud.firestore {
       allow read: if resource.data.visibility.isPublic == true 
                   || (request.auth != null && request.auth.uid == resource.data.ownerId);
       allow write: if false; // Only server-side writes via Admin SDK
+    }
+
+    // Cursor Cloud Agent idea runs - users can read their own run history,
+    // while creation, refresh, cancellation, archive, and deletion stay server-side.
+    match /cursorAgentRuns/{runId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow write: if false;
     }
 
     // Coworking sessions - read-only for clients, server manages slots

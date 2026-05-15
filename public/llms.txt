@@ -84,8 +84,10 @@ Licensed GPL-3.0-only.
     /pair/[sessionId]
     /pair/requests
     /partners
+    /pr-ideas
     /privacy
     /profile
+    /profile/cursor
     /pydata-withdraw
     /questions
     /questions/[questionId]
@@ -112,7 +114,7 @@ AI agents authenticate with:
 
 Register at POST /api/agents/register to get a key.
 
-## API (193 endpoints)
+## API (207 endpoints)
 
 Machine-readable spec: https://cursorboston.com/openapi.json
 Interactive Swagger UI: https://cursorboston.com/api/docs
@@ -376,6 +378,23 @@ Interactive Swagger UI: https://cursorboston.com/api/docs
     GET    /api/talks/submission/moderate [Yes] — Admin: list talk submissions (paginated by status, or three-bucket default)
     POST   /api/talks/submission/moderate [Yes] — Admin: approve a talk submission or mark it delivered
 
+### Cursor
+
+    POST   /api/cursor/connect [Yes] — Validate and store the current user's Cursor API key
+    POST   /api/cursor/disconnect [Yes] — Disconnect the current user's Cursor API key
+    GET    /api/cursor/github-issues [Yes] — List open GitHub issues for PR Studio
+    GET    /api/cursor/idea-runs [Yes] — List recent Cursor PR idea runs for the current user
+    POST   /api/cursor/idea-runs [Yes] — Launch a Cursor Cloud Agent to propose contribution PR ideas
+    DELETE /api/cursor/idea-runs/{runId} [Yes] — Delete the Cursor agent and local record for an idea run
+    GET    /api/cursor/idea-runs/{runId} [Yes] — Get and refresh a Cursor PR idea run
+    POST   /api/cursor/idea-runs/{runId}/answers [Yes] — Submit clarification answers and request a build plan
+    POST   /api/cursor/idea-runs/{runId}/approve-plan [Yes] — Approve the generated build plan and start implementation
+    POST   /api/cursor/idea-runs/{runId}/archive [Yes] — Archive the Cursor agent behind an idea run
+    POST   /api/cursor/idea-runs/{runId}/cancel [Yes] — Cancel an active Cursor PR idea run
+    POST   /api/cursor/idea-runs/{runId}/open-pr [Yes] — Open a pull request for a built Cursor idea run
+    POST   /api/cursor/idea-runs/{runId}/questions [Yes] — Ask clarification questions for a selected Cursor PR idea
+    POST   /api/cursor/idea-runs/{runId}/recover-agent [Yes] — Start a fresh Cursor Cloud Agent from the current workflow context
+
 ### HiringPartners
 
     GET    /api/hiring-partners/apply [Yes] — Get the current user's hiring-partner application
@@ -395,7 +414,7 @@ Interactive Swagger UI: https://cursorboston.com/api/docs
     DELETE /api/summer-cohort/apply [Yes] — Withdraw the current user's summer-cohort application
     GET    /api/summer-cohort/apply [Yes] — Get the current user's summer-cohort application + counts
     POST   /api/summer-cohort/apply [Yes] — Create or update the current user's summer-cohort application
-    POST   /api/summer-cohort/confirm-dev-env [Yes] — Cohort 1 admit confirms dev environment is set up (Node + Git + IDE)
+    POST   /api/summer-cohort/confirm-dev-env [Yes] — Admitted cohort participant confirms dev environment is set up (Node + Git + IDE)
     GET    /api/summer-cohort/intake-survey [Yes] — Get the current user's intake-survey response
     POST   /api/summer-cohort/intake-survey [Yes] — Submit (or re-submit) the intake survey
     GET    /api/summer-cohort/submissions/{weekId} — Public read of merged submissions on a vote-format week
