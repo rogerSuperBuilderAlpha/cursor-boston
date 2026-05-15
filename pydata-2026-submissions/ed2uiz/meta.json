@@ -1,6 +1,6 @@
 {
-  "title": "Ed's One Big Insight",
-  "description": "PyData x Cursor 2026 hackathon submission.",
+  "title": "One BIG Idea: explore GTEx without moving the matrix",
+  "description": "A Marimo notebook that uses Mosaic-linked views and DuckDB's Quack protocol to explore liver-like GTEx tissues while keeping the heavy expression matrix remote instead of moving it through notebook or browser memory.",
   "displayName": "Ed Ruiz",
-  "tags": ["ai", "marimo"]
+  "tags": ["gtex", "duckdb", "quack", "marimo", "mosaic", "biology"]
 }
