@@ -1,8 +1,8 @@
 {
   "githubHandle": "Smokeybear10",
   "name": "Thomas Ou",
-  "repoUrl": "https://github.com/Smokeybear10/cursor-boston-w1pm-placeholder",
-  "liveUrl": "https://example.com",
-  "pitch": "Late entry — placeholder while I get the PM tool shipped.",
+  "repoUrl": "https://github.com/Smokeybear10/shipped",
+  "liveUrl": "https://shipped-neon.vercel.app",
+  "pitch": "shipped — a self-referential cohort dashboard that pulls submissions straight from this repo: per-week feed, leaderboard, and a randomized Friday voting view.",
   "competeForWin": false
 }
