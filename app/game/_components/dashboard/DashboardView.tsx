@@ -177,6 +177,7 @@ export function DashboardView({ player, data }: DashboardViewProps) {
         <SealsPanel
           worldMeta={data.worldMeta}
           topLeaders={data.topLeaders}
+          playerTilesHeld={player.stats.tilesHeld}
         />
 
         <div className="mb-8">
