@@ -6,10 +6,9 @@
 
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { User } from "firebase/auth";
-import type { GamePlayer, MapTile } from "@/lib/game/types";
+import type { GamePlayer } from "@/lib/game/types";
 import { magicMultiplier } from "@/lib/game/combat";
 import {
   ARMAGEDDON_TILE_GATE,
@@ -21,12 +20,15 @@ import {
 interface ApocalypsePanelProps {
   user: User;
   player: GamePlayer;
-  tiles: MapTile[];
+  /** Count of magic-typed tiles the player owns. Parent derives from its
+   *  own tile list and passes in — keeps this panel from importing MapTile
+   *  and lets the parent cache / override the value. */
+  magicLandCount: number;
   // Optional global counter so the panel can display "M / 7 seals broken"
   // without an extra fetch. Pass null when unknown.
   sealsBroken: number | null;
-  /** Refresh the dashboard-level player + worldMeta after a successful cast.
-   *  Called regardless of cast outcome (turns deducted either way). */
+  /** Called regardless of cast outcome (turns deducted either way). Use to
+   *  refresh parent state after the API returns. */
   onAfterCast?: () => void;
 }
 
@@ -38,24 +40,21 @@ interface LastCast {
 }
 
 /**
- * Top-of-page panel on /game/spells that surfaces the universal Armageddon
- * spell. Locked under ARMAGEDDON_TILE_GATE tiles. When unlocked, shows the
- * live success chance (derived from magic-land count + magic-multiplier
- * upgrades) and a destructive cast button. Outcome flash is rendered in-
- * place so the player doesn't lose context after rolling.
+ * Top-of-page panel on /game/armageddon that surfaces the universal
+ * Armageddon spell. Locked under ARMAGEDDON_TILE_GATE tiles. When
+ * unlocked, shows the live success chance (derived from magic-land
+ * count + magic-multiplier upgrades) and a destructive cast button.
+ * Outcome flash renders in-place so the player doesn't lose context
+ * after rolling.
  */
 export function ApocalypsePanel({
   user,
   player,
-  tiles,
+  magicLandCount,
   sealsBroken,
   onAfterCast,
 }: ApocalypsePanelProps) {
   const tilesHeld = player.stats?.tilesHeld ?? 0;
-  const magicLandCount = useMemo(
-    () => tiles.filter((t) => t.ownerId === player.userId && t.type === "magic").length,
-    [tiles, player.userId]
-  );
   const successChance = useMemo(() => {
     const mm = magicMultiplier(magicLandCount, player.activeUpgrades ?? {});
     return computeArmageddonSuccessChanceFromMultiplier(mm);
@@ -115,19 +114,11 @@ export function ApocalypsePanel({
           : "border-neutral-300 dark:border-neutral-800 bg-neutral-100/50 dark:bg-neutral-900/30 text-neutral-700 dark:text-neutral-300")
       }
     >
-      <div className="flex flex-wrap items-baseline justify-between gap-2 mb-2">
-        <div>
-          <div className="text-xs uppercase tracking-widest opacity-70">
-            Apocalypse
-          </div>
-          <h2 className="text-2xl font-bold mt-1">Armageddon</h2>
+      <div className="mb-2">
+        <div className="text-xs uppercase tracking-widest opacity-70">
+          Apocalypse
         </div>
-        <Link
-          href="/game/armageddon"
-          className="text-xs underline opacity-80 hover:opacity-100"
-        >
-          Hall of fame →
-        </Link>
+        <h2 className="text-2xl font-bold mt-1">Armageddon</h2>
       </div>
 
       <p className="text-sm leading-relaxed mb-4 opacity-90">
