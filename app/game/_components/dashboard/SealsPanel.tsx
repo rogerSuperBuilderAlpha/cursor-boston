@@ -38,6 +38,9 @@ interface SealsPanelProps {
    *  ("at the gate") when any exist; otherwise the top 5 ("path to the
    *  gate"). Empty array → render no contender list. */
   topLeaders: TopLeaderRow[];
+  /** Calling player's current tilesHeld so the panel can show personal
+   *  progress toward the Armageddon gate. */
+  playerTilesHeld: number;
 }
 
 /**
@@ -47,11 +50,24 @@ interface SealsPanelProps {
  * count). When armageddonState === "resolving", overlays a banner so
  * everyone knows turn-spending is briefly refused.
  */
-export function SealsPanel({ worldMeta, topLeaders }: SealsPanelProps) {
+export function SealsPanel({
+  worldMeta,
+  topLeaders,
+  playerTilesHeld,
+}: SealsPanelProps) {
   if (!worldMeta) return null;
   const sealsBroken = worldMeta.sealsBroken ?? 0;
   const seasonNumber = worldMeta.seasonNumber ?? 1;
   const armageddonState = worldMeta.armageddonState ?? "active";
+
+  // Calling-player progress toward the Armageddon gate. Capped at 100% so
+  // the bar can't visually overflow — but the gate-reached state gets its
+  // own copy ("at the gate") regardless.
+  const playerAtGate = playerTilesHeld >= ARMAGEDDON_TILE_GATE;
+  const progressPercent = Math.min(
+    100,
+    (playerTilesHeld / ARMAGEDDON_TILE_GATE) * 100
+  );
 
   // Build the canonical 7-slot view, defaulting any missing entries.
   const seals: SealRecord[] = Array.from({ length: SEAL_COUNT }, (_, i) => {
@@ -93,6 +109,40 @@ export function SealsPanel({ worldMeta, topLeaders }: SealsPanelProps) {
           actions are refused until the next age begins.
         </div>
       )}
+
+      <div className="mb-4">
+        <div className="flex items-baseline justify-between text-xs uppercase tracking-wide text-neutral-500 mb-1">
+          <span>Your kingdom</span>
+          <span
+            className={
+              playerAtGate
+                ? "text-red-700 dark:text-red-300 font-semibold normal-case tracking-normal"
+                : "normal-case tracking-normal"
+            }
+          >
+            {playerAtGate
+              ? "✦ At the gate"
+              : `${progressPercent.toFixed(1)}% to the gate`}
+          </span>
+        </div>
+        <div className="text-base font-mono text-neutral-900 dark:text-neutral-100">
+          {playerTilesHeld.toLocaleString()}{" "}
+          <span className="text-neutral-500 dark:text-neutral-400 text-sm">
+            / {ARMAGEDDON_TILE_GATE.toLocaleString()} tiles
+          </span>
+        </div>
+        <div className="mt-1.5 h-1.5 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
+          <div
+            className={
+              "h-full transition-all " +
+              (playerAtGate
+                ? "bg-red-600 dark:bg-red-500"
+                : "bg-emerald-500 dark:bg-emerald-400")
+            }
+            style={{ width: `${progressPercent}%` }}
+          />
+        </div>
+      </div>
 
       <div className="flex flex-wrap gap-2">
         {seals.map((s, i) => {
