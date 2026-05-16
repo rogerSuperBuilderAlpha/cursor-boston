@@ -43,6 +43,7 @@ import type {
   ActionProgress,
   Eligibility,
   OwnerSummary,
+  TopLeaderRow,
 } from "./dashboard-types";
 
 /**
@@ -101,6 +102,11 @@ export function useDashboardData() {
   // casts Armageddon, and refetched whenever the server returns a state
   // change (resolving, fresh season).
   const [worldMeta, setWorldMeta] = useState<GameWorldMeta | null>(null);
+
+  // Top kingdoms by tilesHeld (NPCs included). Surfaced by the SealsPanel
+  // to show who's approaching or past the Armageddon gate. Fetched once
+  // on mount; refresh by calling fetchPlayer.
+  const [topLeaders, setTopLeaders] = useState<TopLeaderRow[]>([]);
 
   /**
    * Patch the local owned-tile list AND the localStorage map cache so
@@ -178,6 +184,7 @@ export function useDashboardData() {
       setWorldOwners,
       setArtifacts,
       setWorldMeta,
+      setTopLeaders,
       setError,
       setLoading,
     });
@@ -420,6 +427,7 @@ export function useDashboardData() {
     handleFlyover,
     handleCastSpell,
     worldMeta,
+    topLeaders,
     handleCastArmageddon,
   };
 }
