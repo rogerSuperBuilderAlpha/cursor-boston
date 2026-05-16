@@ -26,7 +26,6 @@ import { ShieldCard } from "./ShieldCard";
 import { SealsPanel } from "./SealsPanel";
 import { ExploreFrontier } from "./ExploreFrontier";
 import { FarExpedition } from "./FarExpedition";
-import { SpyAction } from "./SpyAction";
 import { BulkDistribute } from "./BulkDistribute";
 import { BulkUnassign } from "./BulkUnassign";
 import { MiniMap } from "./MiniMap";
@@ -76,7 +75,6 @@ export function DashboardView({ player, data }: DashboardViewProps) {
     handleSetName,
     handleAdminGrant,
     handleFarExpedition,
-    handleCastIntelSpell,
     recentReports,
   } = data;
 
@@ -176,14 +174,10 @@ export function DashboardView({ player, data }: DashboardViewProps) {
 
         <RecommendedAction rec={recommended} phase={player.phase} />
 
-        <SealsPanel worldMeta={data.worldMeta} />
-
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <LandsCard counts={counts} />
-          <ArmyCard army={army} cap={unitCap} />
-          <ThreatCard threats={threats} shielded={shieldStatus.shielded} />
-          <ShieldCard shield={shieldStatus} />
-        </div>
+        <SealsPanel
+          worldMeta={data.worldMeta}
+          topLeaders={data.topLeaders}
+        />
 
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           <div className="md:col-span-2 space-y-4">
@@ -202,15 +196,6 @@ export function DashboardView({ player, data }: DashboardViewProps) {
               <FarExpedition
                 turnsRemaining={player.turnsRemaining}
                 onLaunch={handleFarExpedition}
-              />
-            )}
-
-            {player.phase === "play" && player.caste && (
-              <SpyAction
-                caste={player.caste}
-                tilesHeld={player.stats.tilesHeld}
-                turnsRemaining={player.turnsRemaining}
-                onCast={handleCastIntelSpell}
               />
             )}
 
@@ -265,6 +250,17 @@ export function DashboardView({ player, data }: DashboardViewProps) {
           </div>
         </div>
 
+        <DashboardReports reports={recentReports} />
+
+        <CommunityPanel user={data.user} isAdmin={isAdmin} />
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-8 mb-6">
+          <LandsCard counts={counts} />
+          <ArmyCard army={army} cap={unitCap} />
+          <ThreatCard threats={threats} shielded={shieldStatus.shielded} />
+          <ShieldCard shield={shieldStatus} />
+        </div>
+
         <NavGrid phase={player.phase} />
 
         {isAdmin && (
@@ -281,10 +277,6 @@ export function DashboardView({ player, data }: DashboardViewProps) {
             </button>
           </div>
         )}
-
-        <DashboardReports reports={recentReports} />
-
-        <CommunityPanel user={data.user} isAdmin={isAdmin} />
       </div>
     </div>
   );
