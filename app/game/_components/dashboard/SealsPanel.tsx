@@ -8,7 +8,11 @@
 
 import Link from "next/link";
 import type { GameWorldMeta, SealRecord } from "@/lib/game/types";
-import { SEAL_COUNT } from "@/lib/game/content/armageddon";
+import {
+  ARMAGEDDON_TILE_GATE,
+  SEAL_COUNT,
+} from "@/lib/game/content/armageddon";
+import type { TopLeaderRow } from "../../_lib/dashboard-types";
 
 function formatRelative(value: SealRecord["brokenAt"]): string {
   if (!value) return "";
@@ -30,6 +34,10 @@ function formatRelative(value: SealRecord["brokenAt"]): string {
 
 interface SealsPanelProps {
   worldMeta: GameWorldMeta | null;
+  /** Top kingdoms by tilesHeld. The panel renders kingdoms ≥10k tiles
+   *  ("at the gate") when any exist; otherwise the top 5 ("path to the
+   *  gate"). Empty array → render no contender list. */
+  topLeaders: TopLeaderRow[];
 }
 
 /**
@@ -39,7 +47,7 @@ interface SealsPanelProps {
  * count). When armageddonState === "resolving", overlays a banner so
  * everyone knows turn-spending is briefly refused.
  */
-export function SealsPanel({ worldMeta }: SealsPanelProps) {
+export function SealsPanel({ worldMeta, topLeaders }: SealsPanelProps) {
   if (!worldMeta) return null;
   const sealsBroken = worldMeta.sealsBroken ?? 0;
   const seasonNumber = worldMeta.seasonNumber ?? 1;
@@ -49,6 +57,16 @@ export function SealsPanel({ worldMeta }: SealsPanelProps) {
   const seals: SealRecord[] = Array.from({ length: SEAL_COUNT }, (_, i) => {
     return worldMeta.seals?.[i] ?? { index: i, broken: false };
   });
+
+  // Contender list: kingdoms over the Armageddon gate (≥10k tiles) get
+  // top billing; if nobody's there yet, fall back to the top 5 by tiles
+  // so the dashboard always shows "who's coming for the gate".
+  const atGate = topLeaders.filter((p) => p.tilesHeld >= ARMAGEDDON_TILE_GATE);
+  const contenders = atGate.length > 0 ? atGate : topLeaders.slice(0, 5);
+  const contenderHeading =
+    atGate.length > 0
+      ? `${atGate.length} kingdom${atGate.length === 1 ? "" : "s"} at the gate (≥${ARMAGEDDON_TILE_GATE.toLocaleString()} tiles)`
+      : "Top kingdoms — path to the gate";
 
   return (
     <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 p-4 mb-6">
@@ -103,6 +121,47 @@ export function SealsPanel({ worldMeta }: SealsPanelProps) {
           );
         })}
       </div>
+
+      {contenders.length > 0 && (
+        <div className="mt-4 rounded-md border border-neutral-200 dark:border-neutral-800 bg-white/60 dark:bg-neutral-950/40 p-3">
+          <div className="text-xs uppercase tracking-wide text-neutral-500 mb-2">
+            {contenderHeading}
+          </div>
+          <ol className="space-y-1 text-sm">
+            {contenders.map((p, i) => {
+              const atGateMarker = p.tilesHeld >= ARMAGEDDON_TILE_GATE;
+              return (
+                <li
+                  key={p.userId}
+                  className="flex items-baseline justify-between gap-3"
+                >
+                  <span className="truncate">
+                    <span className="font-mono text-xs opacity-60 mr-2">
+                      #{i + 1}
+                    </span>
+                    <strong className="text-neutral-900 dark:text-neutral-100">
+                      {p.displayName || "—"}
+                    </strong>
+                    {p.caste && (
+                      <span className="text-xs opacity-70 ml-1">
+                        ({p.caste})
+                      </span>
+                    )}
+                    {atGateMarker && (
+                      <span className="ml-2 text-xs font-semibold text-red-700 dark:text-red-300">
+                        ✦ at the gate
+                      </span>
+                    )}
+                  </span>
+                  <span className="font-mono text-xs whitespace-nowrap text-neutral-700 dark:text-neutral-300">
+                    {p.tilesHeld.toLocaleString()} tiles
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      )}
 
       <p className="mt-3 text-xs text-neutral-500 dark:text-neutral-400">
         At <span className="font-mono">10,000</span> tiles, the Armageddon

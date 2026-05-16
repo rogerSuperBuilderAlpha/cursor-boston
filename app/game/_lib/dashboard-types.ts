@@ -62,6 +62,16 @@ export interface ActionProgress {
   artifactsFound: number;
 }
 
+/** Slim leaderboard row used by the SealsPanel contender list. Just enough
+ *  to render rank + name + caste + tile count; full leaderboard lives on
+ *  /game/leaderboard. */
+export interface TopLeaderRow {
+  userId: string;
+  displayName: string;
+  caste: Caste | null;
+  tilesHeld: number;
+}
+
 /** Output of `recommendNext()` — the "what should I do" callout. */
 export interface Recommendation {
   title: string;

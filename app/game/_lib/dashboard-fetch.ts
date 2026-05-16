@@ -19,7 +19,11 @@ import type {
   GameWorldMeta,
   MapTile,
 } from "@/lib/game/types";
-import type { Eligibility, OwnerSummary } from "./dashboard-types";
+import type {
+  Eligibility,
+  OwnerSummary,
+  TopLeaderRow,
+} from "./dashboard-types";
 
 /** State setters the initial-load fetcher reaches back into. */
 export interface FetchSetters {
@@ -31,6 +35,7 @@ export interface FetchSetters {
   setWorldOwners: (m: Map<string, OwnerSummary>) => void;
   setArtifacts: (a: GameArtifact[]) => void;
   setWorldMeta: (m: GameWorldMeta | null) => void;
+  setTopLeaders: (rows: TopLeaderRow[]) => void;
   setError: (msg: string | null) => void;
   setLoading: (v: boolean) => void;
 }
@@ -72,6 +77,12 @@ interface WorldMetaResponse {
   error?: { message?: string } | string;
 }
 
+interface LeaderboardResponse {
+  success: boolean;
+  players?: TopLeaderRow[];
+  error?: { message?: string } | string;
+}
+
 /**
  * Initial-load fetcher: pulls the player, eligibility, and (from cache
  * or fresh) the personal map view. Hand-runs once on mount and again
@@ -85,20 +96,27 @@ export async function fetchInitialData(
   set.setLoading(true);
   try {
     const token = await user.getIdToken();
-    const [playerRes, elgRes, artifactsRes, worldMetaRes] = await Promise.all([
-      fetch("/api/game/player", {
-        headers: { Authorization: `Bearer ${token}` },
-      }),
-      fetch("/api/game/eligibility", {
-        headers: { Authorization: `Bearer ${token}` },
-      }),
-      fetch("/api/game/artifacts?limit=100", {
-        headers: { Authorization: `Bearer ${token}` },
-      }),
-      fetch("/api/game/world-meta", {
-        headers: { Authorization: `Bearer ${token}` },
-      }),
-    ]);
+    const [playerRes, elgRes, artifactsRes, worldMetaRes, leaderRes] =
+      await Promise.all([
+        fetch("/api/game/player", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch("/api/game/eligibility", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch("/api/game/artifacts?limit=100", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch("/api/game/world-meta", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        // Top-10 by tilesHeld. The SealsPanel uses this to surface kingdoms
+        // approaching (or already at) the Armageddon gate. NPCs included so
+        // an NPC at 9,500 tiles is visible too.
+        fetch("/api/game/leaderboard?limit=10", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
     const data = (await playerRes.json()) as PlayerResponse;
     if (!data.success) throw new Error(data.error ?? "Failed to load player");
     set.setPlayer(data.player);
@@ -122,6 +140,11 @@ export async function fetchInitialData(
     const worldMetaData = (await worldMetaRes.json()) as WorldMetaResponse;
     if (worldMetaData.success && worldMetaData.worldMeta) {
       set.setWorldMeta(worldMetaData.worldMeta);
+    }
+
+    const leaderData = (await leaderRes.json()) as LeaderboardResponse;
+    if (leaderData.success && Array.isArray(leaderData.players)) {
+      set.setTopLeaders(leaderData.players);
     }
 
     // Map data — cache is source of truth. If absent, fetch /map/me
