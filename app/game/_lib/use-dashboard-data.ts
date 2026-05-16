@@ -12,6 +12,7 @@ import { mergeTiles as mergeTilesIntoCache } from "@/lib/game/local-map-cache";
 import type {
   GameArtifact,
   GamePlayer,
+  GameWorldMeta,
   LandType,
   MapTile,
   TurnReport,
@@ -23,6 +24,7 @@ import {
   armDefenseSpell,
   attack,
   bulkDistribute,
+  castArmageddon,
   castIntelSpell,
   castSpell,
   createPlayer,
@@ -41,6 +43,7 @@ import type {
   ActionProgress,
   Eligibility,
   OwnerSummary,
+  TopLeaderRow,
 } from "./dashboard-types";
 
 /**
@@ -93,6 +96,17 @@ export function useDashboardData() {
   // use endpoint). Threats page + tile-detail page consume this directly so
   // every action button knows what's available without a refetch.
   const [artifacts, setArtifacts] = useState<GameArtifact[]>([]);
+
+  // Global game-world singleton: season, seal count, armageddon state.
+  // Fetched alongside player on mount, patched in place after the player
+  // casts Armageddon, and refetched whenever the server returns a state
+  // change (resolving, fresh season).
+  const [worldMeta, setWorldMeta] = useState<GameWorldMeta | null>(null);
+
+  // Top kingdoms by tilesHeld (NPCs included). Surfaced by the SealsPanel
+  // to show who's approaching or past the Armageddon gate. Fetched once
+  // on mount; refresh by calling fetchPlayer.
+  const [topLeaders, setTopLeaders] = useState<TopLeaderRow[]>([]);
 
   /**
    * Patch the local owned-tile list AND the localStorage map cache so
@@ -153,6 +167,7 @@ export function useDashboardData() {
     mergeOwnedTiles,
     mergeBorderTiles,
     mergeArtifacts,
+    setWorldMeta,
   };
 
   const fetchPlayer = useCallback(async () => {
@@ -168,6 +183,8 @@ export function useDashboardData() {
       setWorldTiles,
       setWorldOwners,
       setArtifacts,
+      setWorldMeta,
+      setTopLeaders,
       setError,
       setLoading,
     });
@@ -345,6 +362,23 @@ export function useDashboardData() {
     [user]
   );
 
+  const handleCastArmageddon = useCallback(async () => {
+    if (!user) return null;
+    const result = await castArmageddon(user, mut);
+    // If the cast broke seal #7, refetch worldMeta + player shortly after
+    // so the dashboard picks up the resolver's eventual "armageddonState
+    // === active, seasonNumber++" flip and the deleted player doc. The
+    // wipe takes seconds; a single delayed refetch covers the typical
+    // case and the user can manually refresh if the wipe runs long.
+    if (result?.shouldTriggerResolve) {
+      setTimeout(() => {
+        void fetchPlayer();
+      }, 12_000);
+    }
+    return result;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mut is rebuilt every render but its members are stable
+  }, [user, fetchPlayer]);
+
   return {
     user,
     authLoading,
@@ -392,6 +426,9 @@ export function useDashboardData() {
     handleSiege,
     handleFlyover,
     handleCastSpell,
+    worldMeta,
+    topLeaders,
+    handleCastArmageddon,
   };
 }
 

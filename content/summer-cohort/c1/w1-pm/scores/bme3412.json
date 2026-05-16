@@ -1,0 +1,7 @@
+{
+  "score": 8,
+  "rationale": "Launchpad is a substantive backend build behind a password gate. Next.js + Prisma ORM + 10 API routes (auth, comments, feed, gate, join, profile, reactions, signout, submit, vote) — the broadest CRUD + social surface in the batch. Votes, reactions, comments, profiles, and a gate system for cohort access. The [handle] dynamic route suggests per-user profile pages. @vercel/blob in dependencies confirms real file upload support. Tech choices are coherent: Prisma for the ORM, Vercel Blob for uploads, an explicit gate route for 'ask in the Discord if you don't have the password' — the gate UI is a deliberate UX choice, not an unfinished auth flow. 11 kB README + 27 commits + 314 kB TS confirm steady iteration over the week.\n\nScored at 8 rather than 9 because the schema design depth isn't visible without the Prisma schema file content (vs. jfleck25 where the schema's 40+ fields are inspectable), and there's no explicit LLM integration in the dependency list — the 'motivation layer' here is the social feed + reactions, not an AI-driven mechanic. The API surface is the most 'social Twitter-for-cohort' implementation in the batch, which is a legitimate distinct angle from Momentum (streaks) and Codehab (community staging). If the gate-protected app is as polished as the gate page implies, this could justifiably move up to 9.",
+  "model": "claude-opus-4-7",
+  "scoredAt": "2026-05-15T20:30:00.000Z",
+  "scorerVersion": 1
+}

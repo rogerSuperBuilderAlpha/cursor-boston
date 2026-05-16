@@ -24,6 +24,7 @@ import { certificateContract } from "./certificate";
 import { cfpContract } from "./cfp";
 import { communityContract } from "./community";
 import { cookbookContract } from "./cookbook";
+import { cursorContract } from "./cursor";
 import { discordContract } from "./discord";
 import { eventsContract } from "./events";
 import { gameContract } from "./game";
@@ -59,6 +60,7 @@ export const apiContract = c.router({
   cfp: cfpContract,
   community: communityContract,
   cookbook: cookbookContract,
+  cursor: cursorContract,
   discord: discordContract,
   events: eventsContract,
   game: gameContract,

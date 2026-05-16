@@ -12,6 +12,7 @@ import type {
   GameArtifact,
   GamePlayer,
   GameTile,
+  GameWorldMeta,
   IntelReport,
   LandType,
   MapTile,
@@ -40,6 +41,9 @@ export interface DashboardMutators {
   /** Patch the artifacts inventory after a use / find. Pass artifact docs
    *  with `used` flipped or freshly-found artifacts. */
   mergeArtifacts: (updates: GameArtifact[]) => void;
+  /** Patch the dashboard's worldMeta snapshot (seal count, season number,
+   *  armageddon state). Used by the Armageddon cast handler. */
+  setWorldMeta?: (m: GameWorldMeta | null) => void;
 }
 
 /**
@@ -709,6 +713,65 @@ export async function castSpell(
     };
   } catch (e) {
     mut.setError(e instanceof Error ? e.message : "Spell cast failed");
+    return null;
+  }
+}
+
+/**
+ * POST /api/game/spell/armageddon — fire the end-game Armageddon spell.
+ * No body. Costs 100 turns regardless of outcome. Returns:
+ *   - success: was a seal broken?
+ *   - successChance: the probability rolled against (for display)
+ *   - sealsBroken: global count after this cast (0..7)
+ *   - shouldTriggerResolve: true when this cast broke seal #7
+ */
+export async function castArmageddon(
+  user: User,
+  mut: DashboardMutators
+): Promise<{
+  sealBroken: boolean;
+  successChance: number;
+  sealsBroken: number;
+  seasonNumber: number;
+  shouldTriggerResolve: boolean;
+} | null> {
+  mut.setError(null);
+  try {
+    const token = await user.getIdToken();
+    const res = await fetch("/api/game/spell/armageddon", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({}),
+    });
+    const data = await res.json();
+    if (!data.success) {
+      throw new Error(asErrorMessage(data, "Armageddon cast failed"));
+    }
+    if (data.player) mut.setPlayer(data.player as GamePlayer);
+    // Patch the local worldMeta snapshot if the dashboard hook wired it.
+    // The full seal-attribution detail arrives on the next world-meta
+    // refetch (called from the dashboard hook after this resolves).
+    if (mut.setWorldMeta) {
+      mut.setWorldMeta({
+        playerCount: 0, // unknown here; overwritten on next refetch
+        seasonNumber: data.seasonNumber as number,
+        sealsBroken: data.sealsBroken as number,
+        seals: [],
+        armageddonState: data.shouldTriggerResolve ? "resolving" : "active",
+      });
+    }
+    return {
+      sealBroken: Boolean(data.sealBroken),
+      successChance: Number(data.successChance ?? 0),
+      sealsBroken: Number(data.sealsBroken ?? 0),
+      seasonNumber: Number(data.seasonNumber ?? 1),
+      shouldTriggerResolve: Boolean(data.shouldTriggerResolve),
+    };
+  } catch (e) {
+    mut.setError(e instanceof Error ? e.message : "Armageddon cast failed");
     return null;
   }
 }

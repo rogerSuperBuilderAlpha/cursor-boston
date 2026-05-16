@@ -49,6 +49,9 @@ export function isOriginAllowed(request: NextRequest): boolean {
 
   // Check if origin matches allowed list
   if (origin) {
+    if (origin === new URL(request.url).origin) {
+      return true;
+    }
     if (ALLOWED_ORIGINS.includes(origin)) {
       return true;
     }
@@ -64,6 +67,9 @@ export function isOriginAllowed(request: NextRequest): boolean {
   if (referer) {
     try {
       const refererOrigin = new URL(referer).origin;
+      if (refererOrigin === new URL(request.url).origin) {
+        return true;
+      }
       if (ALLOWED_ORIGINS.includes(refererOrigin)) {
         return true;
       }

@@ -9,6 +9,8 @@ import { getGithubRepoPair } from "./github-recent-merged-prs";
 import { logger } from "./logger";
 import {
   SUMMER_COHORT_C1_VOTE_WEEKS,
+  SUMMER_COHORT_C2_VOTE_WEEKS,
+  type SummerCohortId,
   type SummerCohortVoteWeek,
 } from "./summer-cohort";
 
@@ -51,14 +53,32 @@ function getDirectoryPath(submissionPath: string): string {
   return idx >= 0 ? submissionPath.slice(0, idx) : submissionPath;
 }
 
-const VOTE_WEEK_BY_ID: Record<string, SummerCohortVoteWeek> = {
-  "week-1": SUMMER_COHORT_C1_VOTE_WEEKS[0],
-  "week-2": SUMMER_COHORT_C1_VOTE_WEEKS[1],
-  "week-3": SUMMER_COHORT_C1_VOTE_WEEKS[2],
+const VOTE_WEEK_BY_ID: Record<
+  SummerCohortId,
+  Record<string, SummerCohortVoteWeek>
+> = {
+  "cohort-1": {
+    "week-1": SUMMER_COHORT_C1_VOTE_WEEKS[0],
+    "week-2": SUMMER_COHORT_C1_VOTE_WEEKS[1],
+    "week-3": SUMMER_COHORT_C1_VOTE_WEEKS[2],
+  },
+  "cohort-2": {
+    "week-1": SUMMER_COHORT_C2_VOTE_WEEKS[0],
+    "week-2": SUMMER_COHORT_C2_VOTE_WEEKS[1],
+    "week-3": SUMMER_COHORT_C2_VOTE_WEEKS[2],
+  },
 };
 
-export function getVoteWeekById(weekId: string): SummerCohortVoteWeek | null {
-  return VOTE_WEEK_BY_ID[weekId] ?? null;
+/**
+ * Look up a vote-format week (week-1 / week-2 / week-3) for a given cohort.
+ * Different cohorts have different submission branches + dates, so callers
+ * must specify which cohort's view they're rendering.
+ */
+export function getVoteWeekById(
+  weekId: string,
+  cohortId: SummerCohortId = "cohort-1"
+): SummerCohortVoteWeek | null {
+  return VOTE_WEEK_BY_ID[cohortId]?.[weekId] ?? null;
 }
 
 interface ContentsApiItem {

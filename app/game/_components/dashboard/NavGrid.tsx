@@ -74,6 +74,7 @@ export function NavGrid({ phase }: NavGridProps) {
                 { href: "/game/upgrades", label: "Upgrades" },
                 { href: "/game/artifacts", label: "Artifacts" },
                 { href: "/game/attacks", label: "Attack log" },
+                { href: "/game/armageddon", label: "Armageddon" },
               ]
         }
       />

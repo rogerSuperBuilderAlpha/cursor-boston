@@ -1,10 +1,12 @@
 # PyData × Cursor Boston — Hackathon submissions
 
 This directory holds the Marimo notebook submissions from the **May 13, 2026
-Cursor Boston × PyData evening hack at Moderna HQ**. Marimo saves notebooks
-as plain Python files (`.py`), so every submission is a `submission.py`.
+Cursor Boston × PyData evening hack at Moderna HQ**. The event is over, but
+the exercise stays open: anyone can complete it later and open a PR to have
+their work listed on the public showcase. Marimo saves notebooks as plain
+Python files (`.py`), so every submission is a `submission.py`.
 
-Each subfolder is one attendee's submission. The gated event page at
+Each subfolder is one attendee's submission. The public showcase page at
 [cursorboston.com/events/cursor-boston-pydata-2026](https://cursorboston.com/events/cursor-boston-pydata-2026)
 reads this directory at build time and renders a card per merged submission.
 

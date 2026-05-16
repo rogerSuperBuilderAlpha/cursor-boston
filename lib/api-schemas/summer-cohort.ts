@@ -36,8 +36,12 @@ const IntakeSurveyBody = z
 
 const WeekIdParam = z.object({ weekId: z.string().min(1) });
 
+const CohortIdEnum = z.enum(["cohort-1", "cohort-2"]);
+
 const VotesQuery = z.object({
   weekId: z.enum(["week-1", "week-2", "week-3"]),
+  // Optional for back-compat with old clients; defaults to cohort-1 server-side.
+  cohortId: CohortIdEnum.optional(),
 });
 
 const VotesPostBody = z
@@ -48,6 +52,8 @@ const VotesPostBody = z
       .min(1)
       .max(80)
       .regex(/^[a-zA-Z0-9_-]+$/),
+    // Optional for back-compat with old clients; defaults to cohort-1 server-side.
+    cohortId: CohortIdEnum.optional(),
   })
   .openapi("SummerCohortVoteBody");
 
@@ -122,7 +128,7 @@ export const summerCohortContract = c.router(
       method: "POST",
       path: "/api/summer-cohort/confirm-dev-env",
       summary:
-        "Cohort 1 admit confirms dev environment is set up (Node + Git + IDE)",
+        "Admitted cohort participant confirms dev environment is set up (Node + Git + IDE)",
       body: ConfirmDevEnvBody,
       responses: {
         200: ConfirmDevEnvResponse,
@@ -169,6 +175,23 @@ export const summerCohortContract = c.router(
       summary: "Public read of merged submissions on a vote-format week",
       responses: { 200: PassthroughOk, 404: ApiErrorSchema },
       metadata: { errorCodes: ["NOT_FOUND"] as const },
+    },
+    myScoreByWeek: {
+      method: "GET",
+      path: "/api/summer-cohort/my-score/:weekId",
+      pathParams: WeekIdParam,
+      query: z.object({ cohortId: CohortIdEnum.optional() }),
+      summary:
+        "Return only the calling user's own AI-judge score for a vote-format week — other users' scores are never exposed by this endpoint",
+      responses: {
+        200: PassthroughOk,
+        401: ApiErrorSchema,
+        404: ApiErrorSchema,
+        500: ApiErrorSchema,
+      },
+      metadata: {
+        errorCodes: ["UNAUTHORIZED", "NOT_FOUND", "SERVER_ERROR"] as const,
+      },
     },
     votesGet: {
       method: "GET",

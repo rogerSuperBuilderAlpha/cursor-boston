@@ -1,0 +1,7 @@
+{
+  "score": 2,
+  "rationale": "aaravraina3/coffee-chat-crm returns 404 — the repository does not exist on the submitter's account. The live URL coffee-chat-crm.vercel.app returns 404 as well, so the Vercel project doesn't exist either; this isn't a case of a broken deployment, it's a case of nothing having been pushed.\n\nAmong the 13 pitches, 'a coffee-chat CRM that surfaces overdue follow-ups so you stop dropping the ball during recruiting' is the most concrete product idea — it has a specific user (someone running recruiting coffee chats), a specific pain (dropped follow-ups), and an obvious dataset (calendar invites + sent emails). The framing would translate well outside the cohort context as a general productivity tool. But nothing is shipped — no code, no deploy, no demo. Score 2 reflects 'promising idea, no accessible deliverable'. Worth following up with the submitter to ask if a repo exists under a different name or is private; if so, please surface it and we'll re-evaluate.",
+  "model": "claude-opus-4-7",
+  "scoredAt": "2026-05-15T20:30:00.000Z",
+  "scorerVersion": 1
+}

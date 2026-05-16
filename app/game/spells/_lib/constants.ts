@@ -32,6 +32,7 @@ export const TYPE_LABEL: Record<SpellType, string> = {
   siege: "Siege",
   disarm: "Disarm",
   attrition: "Attrition",
+  armageddon: "Armageddon",
 };
 
 export const RARITY_TEXT: Record<string, string> = {

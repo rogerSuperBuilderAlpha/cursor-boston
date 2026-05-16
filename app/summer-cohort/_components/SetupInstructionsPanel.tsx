@@ -10,7 +10,14 @@ import { CheckCircle2, ExternalLink, Laptop, MessageCircle } from "lucide-react"
 
 const ALC_URL = "https://ludwitt.com/alc";
 
-export function SetupInstructionsPanel() {
+interface SetupInstructionsPanelProps {
+  /** Kickoff date headline, e.g. "Mon, May 11" / "Mon, Jun 29". */
+  kickoffLabel: string;
+}
+
+export function SetupInstructionsPanel({
+  kickoffLabel,
+}: SetupInstructionsPanelProps) {
   return (
     <section
       role="tabpanel"
@@ -31,8 +38,8 @@ export function SetupInstructionsPanel() {
         Get your machine ready
       </h2>
       <p className="mt-2 text-sm text-neutral-700 dark:text-neutral-300">
-        You&apos;ll be writing and shipping code from your laptop starting Mon
-        May 11. Three things have to be installed and working:
+        You&apos;ll be writing and shipping code from your laptop starting{" "}
+        {kickoffLabel}. Three things have to be installed and working:
       </p>
 
       <ul className="mt-5 space-y-3 text-sm text-neutral-800 dark:text-neutral-200">

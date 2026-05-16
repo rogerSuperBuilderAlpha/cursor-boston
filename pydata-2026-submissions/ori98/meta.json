@@ -1,0 +1,6 @@
+{
+  "title": "Which Neighborhoods Are Transit-Privileged?",
+  "description": "This notebook joins BPDA neighborhood boundaries with MBTA rapid-transit access, a real-time service-alert exposure index, and MassDOT Blue Book reliability ratios (ArcGIS) to compare which Boston neighborhoods look most and least transit-privileged when access, disruption messaging, and chronic wait-time performance are combined.",
+  "displayName": "Orijit",
+  "tags": ["transit", "mbta", "geospatial", "boston", "exploratory"]
+}

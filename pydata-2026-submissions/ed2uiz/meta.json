@@ -1,0 +1,6 @@
+{
+  "title": "One BIG Idea: explore GTEx without moving the matrix",
+  "description": "A Marimo notebook that uses Mosaic-linked views and DuckDB's Quack protocol to explore liver-like GTEx tissues while keeping the heavy expression matrix remote instead of moving it through notebook or browser memory.",
+  "displayName": "Ed Ruiz",
+  "tags": ["gtex", "duckdb", "quack", "marimo", "mosaic", "biology"]
+}

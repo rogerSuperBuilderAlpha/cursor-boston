@@ -104,6 +104,7 @@ function LoginPageContent() {
 
   // Get redirect URL from query params, default to home
   const redirectUrl = searchParams.get("redirect") || "/";
+  const isSummerCohortLogin = redirectUrl.startsWith("/summer-cohort");
 
   // Show a friendly banner if the Ludwitt OAuth flow bounced us back with an error
   const ludwittError =
@@ -209,11 +210,53 @@ function LoginPageContent() {
     <div className="min-h-[80vh] flex items-center justify-center px-4 md:px-6 py-8 md:py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">Welcome Back</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+            {isSummerCohortLogin ? "Sign in to finish your application" : "Welcome Back"}
+          </h1>
           <p className="text-neutral-600 dark:text-neutral-400 text-sm md:text-base">
-            Sign in to your Cursor Boston account
+            {isSummerCohortLogin
+              ? "We'll drop you straight back into the Summer Cohort 2 application after you sign in."
+              : "Sign in to your Cursor Boston account"}
           </p>
         </div>
+
+        {isSummerCohortLogin && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="mb-4 flex items-start gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-200"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="mt-0.5 shrink-0 text-emerald-400"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="4" />
+              <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+            </svg>
+            <span>
+              <strong className="block text-emerald-100">Summer Cohort 2 — kicks off Mon, Jun 29</strong>
+              <span className="text-emerald-200/90">
+                New here?{" "}
+                <Link
+                  href={`/signup?redirect=${encodeURIComponent(redirectUrl)}`}
+                  className="font-semibold underline decoration-emerald-300/60 underline-offset-2 hover:decoration-emerald-200"
+                >
+                  Create an account
+                </Link>{" "}
+                instead — it&apos;s the faster path to applying.
+              </span>
+            </span>
+          </div>
+        )}
 
         <div className="bg-white dark:bg-neutral-900 rounded-xl md:rounded-2xl p-5 md:p-8 border border-neutral-200 dark:border-neutral-800">
           {formError && (
@@ -382,7 +425,11 @@ function LoginPageContent() {
         <p className="text-center mt-6 text-neutral-600 dark:text-neutral-400">
           Don&apos;t have an account?{" "}
           <Link
-            href="/signup"
+            href={
+              redirectUrl !== "/"
+                ? `/signup?redirect=${encodeURIComponent(redirectUrl)}`
+                : "/signup"
+            }
             className="text-foreground hover:underline font-medium"
           >
             Sign up

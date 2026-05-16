@@ -36,6 +36,7 @@
     "dev": "cross-env NODE_OPTIONS=--no-deprecation next dev --webpack -H localhost",
     "build": "next build --webpack",
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
+    "serve": "cross-env NODE_OPTIONS=--no-deprecation next start",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
     "test": "jest --config config/jest.config.js",
@@ -73,6 +74,7 @@
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^7.3.0",
+    "@cursor/sdk": "^1.0.13",
     "@tailwindcss/postcss": "^4.3.0",
     "@ts-rest/core": "^3.51.0",
     "@ts-rest/open-api": "^3.51.0",
@@ -181,7 +183,9 @@
     "postcss": "^8.5.12",
     "basic-ftp": "^5.3.1",
     "uuid": "^11.1.1",
-    "hono": "^4.12.16"
+    "hono": "^4.12.16",
+    "tar": "^7.5.15",
+    "undici": "^6.25.0"
   },
   "lint-staged": {
     "**/*.{ts,tsx}": [

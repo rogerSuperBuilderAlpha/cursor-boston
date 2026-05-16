@@ -18,6 +18,7 @@ You don't need to do anything to keep the branch fresh — that's a maintainer t
 |---|---|
 | Standard code, bug fix, feature work, docs | **`develop`** |
 | Submitting a PyData hackathon notebook | **`pydata-2026-submissions`** ([see README](../pydata-2026-submissions/README.md)) |
+| Submitting a Hack-a-Sprint showcase project | **`hack-a-sprint-2026-submissions`** ([see README](../content/hackathons/hack-a-sprint-2026/submissions/README.md)) |
 | Summer cohort week N submission (PM / comms / marketing / education / startup / oss) | **`c1w1pm-submission`**, **`c1w2comms-submission`**, **`c1w3mkt-submission`**, **`c1w4edu-submission`**, **`c1w5startup-submission`**, or **`c1w6oss-submission`** |
 | Game-mode content (units, artifacts, lore, balance tweaks) | **`game-contributions`** |
 | Applying to become a maintainer | **`maintainer-application`** (see [GOVERNANCE](../.github/GOVERNANCE.md#becoming-a-maintainer)) |
@@ -33,6 +34,7 @@ If you're unsure, default to `develop` and a maintainer will redirect you in rev
 - `c1w5startup-submission` — week 5 (startup)
 - `c1w6oss-submission` — week 6 (open source)
 - `pydata-2026-submissions` — May 13, 2026 PyData × Cursor Boston hack at Moderna HQ
+- `hack-a-sprint-2026-submissions` — Hack-a-Sprint 2026 showcase projects
 - `game-contributions` — ongoing in-game content (units, artifacts, lore)
 - `maintainer-application` — async maintainer applications
 

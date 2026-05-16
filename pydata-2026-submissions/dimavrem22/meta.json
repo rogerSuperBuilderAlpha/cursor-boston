@@ -1,0 +1,5 @@
+{
+  "title": "Should you cheat? Solving Push-T without diffusion",
+  "description": "Should you cheat? Push-T is meant to be solved with image-only diffusion policies, but a single Mac can't run that, so this notebook feature-engineers the T-pose out of raw frames — fitting (x, y, θ, scale) by Powell optimization on a green-channel mask — turning a perception problem into a tractable one.",
+  "displayName": "Dima Vremenko"
+}

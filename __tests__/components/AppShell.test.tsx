@@ -98,6 +98,7 @@ describe("AppShell", () => {
   it("renders expected navigation links", () => {
     render(<AppShell>Content</AppShell>);
     expect(screen.getByText("Events")).toBeInTheDocument();
+    expect(screen.getByText("PR Studio")).toBeInTheDocument();
     expect(screen.getByText("Talks")).toBeInTheDocument();
     expect(screen.getByText("Members")).toBeInTheDocument();
     expect(screen.getByText("Hackathons")).toBeInTheDocument();

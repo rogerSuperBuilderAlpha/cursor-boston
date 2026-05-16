@@ -1,0 +1,7 @@
+{
+  "score": 5,
+  "rationale": "Jackie is a well-decomposed React + Vite client-only app — separate data.js (50 hardcoded fake projects spanning May 11-15 with realistic names like 'Sprintline', 'Pulseboard'), a weekTaskStorage.js localStorage wrapper, and ~12 components for the cohort browser + personal task tracking. Component naming (CohortTab, MyStuff, CohortView, WeekTaskView) shows clear UI thinking — the split between 'my stuff' and 'cohort stuff' is a real product decision, not arbitrary file organization.\n\nThe 'un-project management tool that gets the job done' positioning is good — distinct from the Kanban / dashboard / feed crowd by deliberately rejecting the conventional surface area. But there's no backend whatsoever, no auth, no real data; everything is hardcoded constants and browser-local persistence. 6 commits + 47 kB is on the lighter side of effort for a one-week build. Tied with SimranKumari30 (ShipTrack) at 5 — both are honest functional prototypes that demonstrate the use case without the backend to make it real. ProductChameleon's component structure is slightly cleaner and the conceptual positioning is sharper; SimranKumari30's countdown timer + polling polish gives it slightly more 'real product' feel on first paint. Either ordering is defensible.",
+  "model": "claude-opus-4-7",
+  "scoredAt": "2026-05-15T20:30:00.000Z",
+  "scorerVersion": 1
+}

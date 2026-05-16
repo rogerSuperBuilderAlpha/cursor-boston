@@ -29,7 +29,13 @@ export type SpellType =
   //                  proportionally to current composition.
   | "siege"
   | "disarm"
-  | "attrition";
+  | "attrition"
+  // End-game tier. Caste-agnostic, single global spell. Cast via
+  // castArmageddonServer (not castSpellServer); success rolls against a
+  // success-chance derived from the caster's magic-optimization, and on
+  // success breaks one of the 7 global Seals. When the 7th breaks, the
+  // game enters resolution and resets. See lib/game/content/armageddon.ts.
+  | "armageddon";
 
 // Reveal scope for intel-type artifacts and spells. Used by both
 // SpellDefinition.intelScope and ArtifactDefinition.intelDepth (the latter
@@ -68,7 +74,10 @@ export type SpellTier = 1 | 2 | 3 | 4 | 5;
 
 export interface SpellDefinition {
   id: string;
-  caste: Caste;
+  // "neutral" is reserved for caste-agnostic spells (currently: Armageddon).
+  // Caste-bound casting flows must check `spell.caste === player.caste`; the
+  // Armageddon spell bypasses that check via its dedicated server entrypoint.
+  caste: Caste | "neutral";
   type: SpellType;
   name: string;
   // Flat power applied to attacker (offense) or defender (defense) combat totals,
@@ -224,6 +233,14 @@ export interface GamePlayer {
   // to {} via getActiveUpgrades(player) before use.
   activeUpgrades?: Record<string, string>;
   stats: PlayerStats;
+  // ── End-game / Armageddon (optional for backward-compat with existing docs;
+  // readers treat undefined as 0 / season 1). All three reset to zero when
+  // the player respawns post-Armageddon. seasonNumber is stamped at spawn
+  // time and checked against worldMeta.seasonNumber on every turn-spending
+  // action so a stale doc from a prior season can't act in the new one.
+  armageddonSealsBroken?: number;
+  armageddonCastsAttempted?: number;
+  seasonNumber?: number;
   createdAt: Timestamp | Date;
   updatedAt: Timestamp | Date;
 }
@@ -673,7 +690,15 @@ export type CommunityEventKind =
   | "caste_pick"
   | "caste_change"
   | "attack"
-  | "milestone_1k_tiles";
+  | "milestone_1k_tiles"
+  // End-game / Armageddon lifecycle events. All denormalized at write-time
+  // (actor name + caste captured into the event row) so the feed survives
+  // the post-Armageddon player-doc wipe.
+  | "seal_broken"
+  | "armageddon_started"
+  | "armageddon_completed"
+  | "armageddon_winner"
+  | "armageddon_cast_failed";
 
 /** Single entry in the `game_community_events` log. Denormalized so the
  *  feed renderer never needs to join against game_players. */
@@ -693,6 +718,110 @@ export interface CommunityEvent {
   // Caste-change-specific fields
   fromCaste?: Caste;
   toCaste?: Caste;
+  // Armageddon-specific fields
+  sealIndex?: number;            // seal_broken: which of the 7 (0..6)
+  seasonNumber?: number;         // armageddon_started / completed / winner
+  winnerRank?: number;           // armageddon_winner: 1..10
+  tilesHeld?: number;            // armageddon_winner: tile count at draw
+  sealsBroken?: number;          // armageddon_winner: personal seals broken
+  tickets?: number;              // armageddon_winner: weighted ticket count
+}
+
+// =====================================================================
+// End-game / Armageddon
+// =====================================================================
+
+/** State of the global game-world singleton (`game_world_meta/singleton`).
+ *  All fields except `playerCount` are introduced by the Armageddon end-game.
+ *  Fields are optional so existing docs (which predate Armageddon) parse —
+ *  readers coalesce to safe defaults (sealsBroken=0, armageddonState="active",
+ *  seasonNumber=1) when absent. */
+export interface GameWorldMeta {
+  /** Lifetime count of player spawns — drives the hex-spiral spawn index.
+   *  Not reset by Armageddon (otherwise post-reset spawn centers would
+   *  collide with pre-reset ghost tiles in the next world). */
+  playerCount: number;
+  /** Current season number, starting at 1. Incremented when an Armageddon
+   *  fully resolves. Every player doc carries the seasonNumber it was
+   *  spawned in; any mismatch on a turn-spending action errors out and
+   *  prompts the player to claim a fresh spawn. */
+  seasonNumber?: number;
+  /** 0..7. Increments each time a player successfully casts Armageddon
+   *  and breaks a Seal. At 7 the world enters resolution. */
+  sealsBroken?: number;
+  /** Per-seal audit. Length 7 always (or absent for pre-Armageddon docs).
+   *  Each entry records who broke it and when. */
+  seals?: SealRecord[];
+  /** Lifecycle gate. "active" → casts allowed; "resolving" → 7th seal just
+   *  broke, the wipe job is running, ALL turn-spending mutations refuse;
+   *  flipped back to "active" by the resolver after the new season is
+   *  staged. */
+  armageddonState?: "active" | "resolving";
+  /** Wall-clock instant the 7th seal broke. Used by the UI banner. */
+  armageddonStartedAt?: Timestamp | Date;
+  /** Wall-clock instant the most recent resolver bumped season + reset. */
+  armageddonResolvedAt?: Timestamp | Date;
+  lastSpawnAt?: Timestamp | Date;
+  updatedAt?: Timestamp | Date;
+}
+
+/** One of the 7 Seals. Unbroken seals have only `index` and `broken=false`.
+ *  Broken seals carry the casting player's identity (denormalized so the UI
+ *  doesn't need to join against the player doc — which may be wiped). */
+export interface SealRecord {
+  index: number;       // 0..6
+  broken: boolean;
+  brokenBy?: {
+    userId: string;
+    displayName: string;
+    caste: Caste;
+  };
+  brokenAt?: Timestamp | Date;
+}
+
+/** One ranked winner of an Armageddon lottery draw. */
+export interface ArmageddonWinner {
+  rank: number;             // 1..10
+  userId: string;
+  displayName: string;
+  caste: Caste;
+  tilesHeld: number;        // at moment of draw
+  sealsBroken: number;      // personally broken this season
+  tickets: number;          // weighted lottery tickets = tilesHeld × (1 + sealsBroken)
+}
+
+/** A single Armageddon's hall-of-fame record. One doc per past Armageddon
+ *  in `game_armageddon_events`, doc id = seasonNumber. Persisted before
+ *  the world wipe so the historical record survives even if the wipe
+ *  crashes mid-batch. */
+export interface ArmageddonEventRecord {
+  seasonNumber: number;
+  triggeredAt: Timestamp | Date;
+  /** Player who broke the 7th seal. */
+  triggeredBy: {
+    userId: string;
+    displayName: string;
+    caste: Caste;
+  };
+  /** Full audit trail of all 7 seals from this season. */
+  seals: SealRecord[];
+  /** Number of players with > 0 tickets at draw time. */
+  totalParticipants: number;
+  /** Sum of all tickets at draw time. */
+  totalTickets: number;
+  /** Top-10 weighted-draw winners, in rank order. May be < 10 if fewer
+   *  participants had tickets. */
+  winners: ArmageddonWinner[];
+  /** Snapshot of top-50-by-tilesHeld at draw time, for posterity. May
+   *  overlap with winners (the same player can appear in both). */
+  topByTilesSnapshot: Array<{
+    rank: number;       // 1..50
+    userId: string;
+    displayName: string;
+    caste: Caste;
+    tilesHeld: number;
+    sealsBroken: number;
+  }>;
 }
 
 /** Single message in the `game_community_messages` collection. */

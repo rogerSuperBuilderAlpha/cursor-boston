@@ -1,0 +1,7 @@
+{
+  "score": 9,
+  "rationale": "Substantial, polished single-evening build that uses GTEx v10 (a competition dataset) to compute liver–tissue similarity across 5,000 high-variance genes via DuckDB, then serves the warehouse to a thin notebook client through the new Quack protocol with linked Mosaic views inside Marimo. The architectural insight — keeping the expression matrix remote so the notebook stays narrative-only — is sharp, well-motivated (cites two open Marimo dataframe-rendering issues), and honestly hedged with a controlled local-vs-Quack benchmark. Held back from a 10 because the biological finding itself (the nearest non-liver tissue) is more illustrative of the architecture than a novel discovery.",
+  "model": "claude-opus-4-7",
+  "scoredAt": "2026-05-15T20:15:00.000Z",
+  "scorerVersion": 1
+}

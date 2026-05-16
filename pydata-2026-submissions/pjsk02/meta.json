@@ -1,0 +1,12 @@
+{
+  "title": "TERRA: Project Hail Mary–style exoplanet explorer (NASA archive + mission mode)",
+  "description": "Loads confirmed planets from the NASA Exoplanet Archive (with a synthetic fallback if TAP is unreachable), scores candidates with an Earth Similarity Index and optional distance-weighted viability, and lets you filter and explore top systems in interactive Plotly charts—plus a “Mission Mode” for nearer-star prioritization.",
+  "displayName": "pjsk02",
+  "tags": ["exoplanets", "nasa", "marimo", "visualization", "astronomy", "interactive"],
+  "collaborators": [
+    {
+      "displayName": "Gnana Shishir Kumar",
+      "githubHandle": "gnana-shishir-kumar"
+    }
+  ]
+}

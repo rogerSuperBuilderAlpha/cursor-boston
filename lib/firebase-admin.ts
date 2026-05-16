@@ -72,6 +72,16 @@ export function getAdminDb(): Firestore | null {
   }
 
   adminDb = getFirestore(app);
+  // Settings must be applied before the first read/write. Match Firestore's
+  // recommended Node.js default so optional fields can be left as `undefined`
+  // in write payloads instead of failing the request.
+  try {
+    adminDb.settings({ ignoreUndefinedProperties: true });
+  } catch {
+    // settings() throws if it has already been applied (e.g. hot reload reuses
+    // the same singleton). The existing instance already has the setting, so
+    // there is nothing to do.
+  }
   return adminDb;
 }
 
