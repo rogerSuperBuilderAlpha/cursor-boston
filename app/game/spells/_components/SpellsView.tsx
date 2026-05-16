@@ -8,7 +8,6 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import type { User } from "firebase/auth";
 import { ALL_SPELLS } from "@/lib/game/content";
 import {
   computeTileThreat,
@@ -17,7 +16,6 @@ import {
 } from "@/lib/game/threat";
 import type {
   GamePlayer,
-  GameWorldMeta,
   MapTile,
   SpellDefinition,
 } from "@/lib/game/types";
@@ -25,19 +23,15 @@ import { TIERS } from "../_lib/constants";
 import type { OwnerSummary } from "../_lib/types";
 import type { SpellActions } from "../_lib/use-spell-actions";
 import { ActiveProductionList } from "./ActiveProductionList";
-import { ApocalypsePanel } from "./ApocalypsePanel";
 import { ArmedTilesList } from "./ArmedTilesList";
 import { ReportLog } from "./ReportLog";
 import { TierSection } from "./TierSection";
 
 interface Props {
-  user: User;
   player: GamePlayer;
   tiles: MapTile[];
   borderTiles: MapTile[];
   owners: Map<string, OwnerSummary>;
-  worldMeta: GameWorldMeta | null;
-  onAfterArmageddon: () => void;
   error: string | null;
   actions: SpellActions;
 }
@@ -48,13 +42,10 @@ interface Props {
  * (`spellByTierAndType`, `armableTiles`, `threatRanked`).
  */
 export function SpellsView({
-  user,
   player,
   tiles,
   borderTiles,
   owners,
-  worldMeta,
-  onAfterArmageddon,
   error,
   actions,
 }: Props) {
@@ -152,14 +143,6 @@ export function SpellsView({
         {error && (
           <p className="mb-4 text-sm text-red-600 dark:text-red-400">{error}</p>
         )}
-
-        <ApocalypsePanel
-          user={user}
-          player={player}
-          tiles={tiles}
-          sealsBroken={worldMeta?.sealsBroken ?? null}
-          onAfterCast={onAfterArmageddon}
-        />
 
         <div className="space-y-6 mb-10">
           {TIERS.map(({ tier, minTiles }) => (

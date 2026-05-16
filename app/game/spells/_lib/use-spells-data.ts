@@ -13,7 +13,7 @@ import {
   saveCachedMap,
   type CachedMapView,
 } from "@/lib/game/local-map-cache";
-import type { GamePlayer, GameWorldMeta, MapTile } from "@/lib/game/types";
+import type { GamePlayer, MapTile } from "@/lib/game/types";
 import type { MapMeResponse, OwnerSummary, PlayerResponse } from "./types";
 
 /**
@@ -32,9 +32,6 @@ export function useSpellsData() {
   // handlers across the game pages.
   const [borderTiles, setBorderTiles] = useState<MapTile[]>([]);
   const [owners, setOwners] = useState<Map<string, OwnerSummary>>(new Map());
-  // Global game-world singleton (seal count + season + state). Used by
-  // the Apocalypse panel for the "M / 7 seals" display.
-  const [worldMeta, setWorldMeta] = useState<GameWorldMeta | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,15 +46,10 @@ export function useSpellsData() {
     setError(null);
     try {
       const token = await user.getIdToken();
-      const [playerRes, metaRes] = await Promise.all([
-        fetch("/api/game/player", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch("/api/game/world-meta", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ]);
-      const data = (await playerRes.json()) as PlayerResponse;
+      const res = await fetch("/api/game/player", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = (await res.json()) as PlayerResponse;
       if (!data.success) {
         const msg =
           typeof data.error === "string"
@@ -67,13 +59,6 @@ export function useSpellsData() {
       }
       setPlayer(data.player);
       setTiles(data.tiles ?? []);
-      const metaData = (await metaRes.json()) as {
-        success: boolean;
-        worldMeta?: GameWorldMeta;
-      };
-      if (metaData.success && metaData.worldMeta) {
-        setWorldMeta(metaData.worldMeta);
-      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load");
     } finally {
@@ -130,8 +115,6 @@ export function useSpellsData() {
     setTiles,
     borderTiles,
     owners,
-    worldMeta,
-    refreshPlayer,
     loading,
     error,
     setError,

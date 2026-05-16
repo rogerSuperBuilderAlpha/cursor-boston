@@ -179,6 +179,34 @@ export function DashboardView({ player, data }: DashboardViewProps) {
           topLeaders={data.topLeaders}
         />
 
+        <div className="mb-8">
+          <NavGrid phase={player.phase} />
+        </div>
+
+        <CommunityPanel user={data.user} isAdmin={isAdmin} />
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6 mb-6">
+          <LandsCard counts={counts} />
+          <ArmyCard army={army} cap={unitCap} />
+          <ThreatCard threats={threats} shielded={shieldStatus.shielded} />
+          <ShieldCard shield={shieldStatus} />
+        </div>
+
+        {isAdmin && (
+          <div className="mb-8 pt-4 border-t border-dashed border-neutral-300 dark:border-neutral-700">
+            <p className="text-[11px] uppercase tracking-wide text-neutral-500 mb-2">
+              Admin
+            </p>
+            <button
+              onClick={handleAdminGrant}
+              className="px-4 py-2 border border-amber-400 text-amber-700 dark:text-amber-300 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors text-sm"
+              title="Manual override. The Sunday cron is the primary mechanism."
+            >
+              Grant 100 turns (admin)
+            </button>
+          </div>
+        )}
+
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           <div className="md:col-span-2 space-y-4">
             {player.phase === "play" && (
@@ -251,32 +279,6 @@ export function DashboardView({ player, data }: DashboardViewProps) {
         </div>
 
         <DashboardReports reports={recentReports} />
-
-        <CommunityPanel user={data.user} isAdmin={isAdmin} />
-
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-8 mb-6">
-          <LandsCard counts={counts} />
-          <ArmyCard army={army} cap={unitCap} />
-          <ThreatCard threats={threats} shielded={shieldStatus.shielded} />
-          <ShieldCard shield={shieldStatus} />
-        </div>
-
-        <NavGrid phase={player.phase} />
-
-        {isAdmin && (
-          <div className="mt-4 pt-4 border-t border-dashed border-neutral-300 dark:border-neutral-700">
-            <p className="text-[11px] uppercase tracking-wide text-neutral-500 mb-2">
-              Admin
-            </p>
-            <button
-              onClick={handleAdminGrant}
-              className="px-4 py-2 border border-amber-400 text-amber-700 dark:text-amber-300 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors text-sm"
-              title="Manual override. The Sunday cron is the primary mechanism."
-            >
-              Grant 100 turns (admin)
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
