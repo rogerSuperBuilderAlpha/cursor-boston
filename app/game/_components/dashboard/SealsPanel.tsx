@@ -7,11 +7,16 @@
 "use client";
 
 import Link from "next/link";
-import type { GameWorldMeta, SealRecord } from "@/lib/game/types";
+import type { GameWorldMeta, MapTile, SealRecord } from "@/lib/game/types";
 import {
   ARMAGEDDON_TILE_GATE,
   SEAL_COUNT,
 } from "@/lib/game/content/armageddon";
+import {
+  MAGIC_HERO_VIRTUAL_LANDS,
+  specialtyArmageddonMult,
+  staminaScale,
+} from "@/lib/game/content/heroes";
 import type { TopLeaderRow } from "../../_lib/dashboard-types";
 
 function formatRelative(value: SealRecord["brokenAt"]): string {
@@ -41,6 +46,9 @@ interface SealsPanelProps {
   /** Calling player's current tilesHeld so the panel can show personal
    *  progress toward the Armageddon gate. */
   playerTilesHeld: number;
+  /** Calling player's tiles. Used to surface magic-hero contribution to
+   *  the Armageddon success chance ("X virtual magic lands"). */
+  playerTiles: ReadonlyArray<MapTile>;
 }
 
 /**
@@ -54,6 +62,7 @@ export function SealsPanel({
   worldMeta,
   topLeaders,
   playerTilesHeld,
+  playerTiles,
 }: SealsPanelProps) {
   if (!worldMeta) return null;
   const sealsBroken = worldMeta.sealsBroken ?? 0;
@@ -73,6 +82,23 @@ export function SealsPanel({
   const seals: SealRecord[] = Array.from({ length: SEAL_COUNT }, (_, i) => {
     return worldMeta.seals?.[i] ?? { index: i, broken: false };
   });
+
+  // Magic-hero contribution to Armageddon: each magic hero contributes
+  // MAGIC_HERO_VIRTUAL_LANDS × staminaScale × armageddon-specialty-mult to
+  // the magicMultiplier input. The hero's current stamina isn't visible
+  // here (we'd need the hero's owner.turnsSpentTotal to regen first), so
+  // this preview uses the persisted stamina value — slightly stale by up
+  // to one cycle but close enough for the "what would my odds be" copy.
+  let virtualMagicLands = 0;
+  let magicHeroCount = 0;
+  for (const t of playerTiles) {
+    if (!t.hero || t.hero.class !== "magic") continue;
+    magicHeroCount += 1;
+    virtualMagicLands +=
+      MAGIC_HERO_VIRTUAL_LANDS *
+      staminaScale(t.hero) *
+      specialtyArmageddonMult(t.hero);
+  }
 
   // Contender list: kingdoms over the Armageddon gate (≥10k tiles) get
   // top billing; if nobody's there yet, fall back to the top 5 by tiles
@@ -213,6 +239,16 @@ export function SealsPanel({
         </div>
       )}
 
+      {magicHeroCount > 0 && (
+        <p className="mt-3 text-xs text-violet-700 dark:text-violet-300">
+          ✦ {magicHeroCount} magic hero{magicHeroCount === 1 ? "" : "es"} →{" "}
+          <span className="font-mono">
+            +{virtualMagicLands.toFixed(2)}
+          </span>{" "}
+          virtual magic land{virtualMagicLands === 1 ? "" : "s"} on your
+          Armageddon roll.
+        </p>
+      )}
       <p className="mt-3 text-xs text-neutral-500 dark:text-neutral-400">
         At <span className="font-mono">10,000</span> tiles, the Armageddon
         spell unlocks. Each cast costs 100 turns and rolls for a single

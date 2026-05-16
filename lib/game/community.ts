@@ -28,6 +28,8 @@ import type {
   Caste,
   CommunityEvent,
   CommunityMessage,
+  HeroClass,
+  HeroSpecialty,
 } from "./types";
 
 function adminDbOrThrow(): Firestore {
@@ -110,6 +112,41 @@ interface ArmageddonCastFailedEvent extends BaseEventInput {
   seasonNumber: number;
 }
 
+interface HeroEmergedEvent extends BaseEventInput {
+  kind: "hero_emerged";
+  tileId: string;
+  heroId: string;
+  heroName: string;
+  heroClass: HeroClass;
+  heroSpecialty: HeroSpecialty;
+}
+
+interface HeroDefectedEvent extends BaseEventInput {
+  kind: "hero_defected";
+  tileId: string;
+  heroId: string;
+  heroName: string;
+  heroClass: HeroClass;
+  heroSpecialty: HeroSpecialty;
+  // Original owner whose hero defected to the actor.
+  otherUserId: string;
+  otherDisplayName: string;
+  otherCaste: Caste | null;
+}
+
+interface HeroSlainEvent extends BaseEventInput {
+  kind: "hero_slain";
+  tileId: string;
+  heroId: string;
+  heroName: string;
+  heroClass: HeroClass;
+  heroSpecialty: HeroSpecialty;
+  // Attacker who chose the kill outcome.
+  otherUserId: string;
+  otherDisplayName: string;
+  otherCaste: Caste | null;
+}
+
 export type CommunityEventInput =
   | PlayerJoinEvent
   | CastePickEvent
@@ -120,7 +157,10 @@ export type CommunityEventInput =
   | ArmageddonStartedEvent
   | ArmageddonCompletedEvent
   | ArmageddonWinnerEvent
-  | ArmageddonCastFailedEvent;
+  | ArmageddonCastFailedEvent
+  | HeroEmergedEvent
+  | HeroDefectedEvent
+  | HeroSlainEvent;
 
 /**
  * Writes one community-event doc inside an existing transaction.
@@ -178,6 +218,25 @@ export function logCommunityEventInTx(
       sealsBroken: input.sealsBroken,
       tickets: input.tickets,
     };
+  } else if (input.kind === "hero_emerged") {
+    extra = {
+      tileId: input.tileId,
+      heroId: input.heroId,
+      heroName: input.heroName,
+      heroClass: input.heroClass,
+      heroSpecialty: input.heroSpecialty,
+    };
+  } else if (input.kind === "hero_defected" || input.kind === "hero_slain") {
+    extra = {
+      tileId: input.tileId,
+      heroId: input.heroId,
+      heroName: input.heroName,
+      heroClass: input.heroClass,
+      heroSpecialty: input.heroSpecialty,
+      otherUserId: input.otherUserId,
+      otherDisplayName: input.otherDisplayName,
+      otherCaste: input.otherCaste,
+    };
   }
   tx.set(ref, { ...base, ...extra });
 }
@@ -224,6 +283,25 @@ export async function logCommunityEvent(
       tilesHeld: input.tilesHeld,
       sealsBroken: input.sealsBroken,
       tickets: input.tickets,
+    };
+  } else if (input.kind === "hero_emerged") {
+    extra = {
+      tileId: input.tileId,
+      heroId: input.heroId,
+      heroName: input.heroName,
+      heroClass: input.heroClass,
+      heroSpecialty: input.heroSpecialty,
+    };
+  } else if (input.kind === "hero_defected" || input.kind === "hero_slain") {
+    extra = {
+      tileId: input.tileId,
+      heroId: input.heroId,
+      heroName: input.heroName,
+      heroClass: input.heroClass,
+      heroSpecialty: input.heroSpecialty,
+      otherUserId: input.otherUserId,
+      otherDisplayName: input.otherDisplayName,
+      otherCaste: input.otherCaste,
     };
   }
   await ref.set({ ...base, ...extra });

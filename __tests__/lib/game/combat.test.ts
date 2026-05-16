@@ -660,6 +660,82 @@ describe("resolveAttack — intel-effect bonuses", () => {
   });
 });
 
+describe("resolveAttack — hero bonuses (May 2026)", () => {
+  it("applies attacker.heroAttackBonus multiplicatively to attackPower", () => {
+    const tile = defaultTile(2000);
+    const baseline = resolveAttack(
+      defaultAttacker({ caste: "red" }),
+      defaultDefender({ caste: "white" }),
+      tile,
+      makeSeededRng("hero-attack-base")
+    );
+    const buffed = resolveAttack(
+      defaultAttacker({ caste: "red", heroAttackBonus: 0.2 }),
+      defaultDefender({ caste: "white" }),
+      tile,
+      makeSeededRng("hero-attack-base")
+    );
+    expect(buffed.attackPower).toBeCloseTo(baseline.attackPower * 1.2, 1);
+  });
+
+  it("applies defender.heroDefenseBonus multiplicatively to defensePower", () => {
+    const tile = defaultTile(2000);
+    const baseline = resolveAttack(
+      defaultAttacker({ caste: "red" }),
+      defaultDefender({ caste: "white" }),
+      tile,
+      makeSeededRng("hero-defense-base")
+    );
+    const buffed = resolveAttack(
+      defaultAttacker({ caste: "red" }),
+      defaultDefender({ caste: "white", heroDefenseBonus: 0.25 }),
+      tile,
+      makeSeededRng("hero-defense-base")
+    );
+    expect(buffed.defensePower).toBeCloseTo(baseline.defensePower * 1.25, 1);
+  });
+
+  it("stacks multiplicatively with intel bonuses (same numeric stage)", () => {
+    const tile = defaultTile(2000);
+    const baseline = resolveAttack(
+      defaultAttacker({ caste: "red" }),
+      defaultDefender({ caste: "white" }),
+      tile,
+      makeSeededRng("hero+intel")
+    );
+    const stacked = resolveAttack(
+      defaultAttacker({
+        caste: "red",
+        intelOffenseBonus: 0.1,
+        heroAttackBonus: 0.2,
+      }),
+      defaultDefender({ caste: "white" }),
+      tile,
+      makeSeededRng("hero+intel")
+    );
+    // 1.10 × 1.20 = 1.32
+    expect(stacked.attackPower).toBeCloseTo(baseline.attackPower * 1.32, 1);
+  });
+
+  it("zero hero bonus is a no-op", () => {
+    const tile = defaultTile(2000);
+    const a = resolveAttack(
+      defaultAttacker({ heroAttackBonus: 0 }),
+      defaultDefender({ heroDefenseBonus: 0 }),
+      tile,
+      makeSeededRng("hero-zero")
+    );
+    const b = resolveAttack(
+      defaultAttacker(),
+      defaultDefender(),
+      tile,
+      makeSeededRng("hero-zero")
+    );
+    expect(a.attackPower).toBe(b.attackPower);
+    expect(a.defensePower).toBe(b.defensePower);
+  });
+});
+
 describe("resolveAttack — air-intel passives", () => {
   it("White Hawk's Eye reveals the defender's armed-spell tier when air ≥ 1", () => {
     const tile = defaultTile(2000);

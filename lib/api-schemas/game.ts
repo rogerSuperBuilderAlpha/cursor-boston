@@ -276,6 +276,13 @@ const AttackBody = z
     targetTileId: z.string().min(1),
     units: UnitStackSchema,
     offenseSpellId: z.string().nullish(),
+    // Heroes (May 2026). What to do with the defender's hero on a winning
+    // combat. Ignored when the target tile has no hero. Default: "kill"
+    // (preserves legacy behavior). "convert" requires the hero to be at
+    // or below STAMINA_CONVERSION_THRESHOLD; if the convert roll fails,
+    // `heroActionOnConvertFail` is applied as the fallback.
+    heroAction: z.enum(["kill", "spare", "convert"]).optional(),
+    heroActionOnConvertFail: z.enum(["kill", "spare"]).optional(),
   })
   .openapi("GameAttackBody");
 
@@ -290,6 +297,21 @@ const SiegeBody = z
     targetTileId: z.string().min(1),
   })
   .openapi("GameSiegeBody");
+
+// Heroes (May 2026): caste-themed special unit station / recall. Tied to
+// a SpecialUnitInstance held in the player's pool.
+const SpecialUnitSummonBody = z
+  .object({
+    instanceId: z.string().min(1),
+    targetTileId: z.string().min(1),
+  })
+  .openapi("GameSpecialUnitSummonBody");
+
+const SpecialUnitUnsummonBody = z
+  .object({
+    instanceId: z.string().min(1),
+  })
+  .openapi("GameSpecialUnitUnsummonBody");
 
 const FlyoverBody = z
   .object({
@@ -1018,6 +1040,35 @@ export const gameContract = c.router(
       path: "/api/game/upgrades/remove",
       summary: "Remove an upgrade from a target",
       body: UpgradesRemoveBody,
+      responses: { 200: PlayerOkResponse, ...actionErrorResponses },
+      metadata: {
+        errorCodes: ["UNAUTHORIZED", "VALIDATION_ERROR", "SERVER_ERROR"] as const,
+      },
+    },
+
+    // Heroes (May 2026): caste-themed special-unit station / recall.
+    specialUnitsSummon: {
+      method: "POST",
+      path: "/api/game/special-units/summon",
+      summary: "Station a caste-themed special unit on one of your tiles",
+      body: SpecialUnitSummonBody,
+      responses: {
+        200: z.object({
+          success: z.literal(true),
+          player: GamePlayerSchema,
+          tileId: z.string(),
+        }),
+        ...actionErrorResponses,
+      },
+      metadata: {
+        errorCodes: ["UNAUTHORIZED", "VALIDATION_ERROR", "SERVER_ERROR"] as const,
+      },
+    },
+    specialUnitsUnsummon: {
+      method: "POST",
+      path: "/api/game/special-units/unsummon",
+      summary: "Recall a stationed special unit back into your pool",
+      body: SpecialUnitUnsummonBody,
       responses: { 200: PlayerOkResponse, ...actionErrorResponses },
       metadata: {
         errorCodes: ["UNAUTHORIZED", "VALIDATION_ERROR", "SERVER_ERROR"] as const,

@@ -55,6 +55,26 @@ export function TileHexagon({
   const strokeWidth = isOwn ? 1.5 : isForeign ? 3.5 : 2.25;
   const text = TYPE_TEXT[t.type];
   const armed = !!t.armedDefenseSpellId;
+  // Heroes (May 2026). Tile hex carries a small class-glyph badge in the
+  // bottom-left so the player can see at a glance which tiles host a hero
+  // without opening the tile-actions modal. Positioned away from the
+  // armed-spell dot (top-right) and shield emoji (top-left). Glyph color
+  // mirrors the type fill of the hero's home land type for quick read.
+  const hero = t.hero;
+  let heroGlyph: string | null = null;
+  let heroGlyphFill = "#fff";
+  if (hero) {
+    if (hero.class === "military") {
+      heroGlyph = "⚔"; // ⚔
+      heroGlyphFill = "#f87171";
+    } else if (hero.class === "farm") {
+      heroGlyph = "⚘"; // ⚘
+      heroGlyphFill = "#fbbf24";
+    } else {
+      heroGlyph = "✦"; // ✦
+      heroGlyphFill = "#a78bfa";
+    }
+  }
   // BASE+SUPER: hex visual intensity reflects total defender force, not
   // just recruited units. An undefended military tile with 45 BASE should
   // look as armed as one with 45 SUPER.
@@ -141,6 +161,28 @@ export function TileHexagon({
         >
           🛡
         </text>
+      )}
+      {heroGlyph && (
+        <g style={{ pointerEvents: "none" }}>
+          <circle
+            cx={x - HEX_SIZE * 0.55}
+            cy={y + HEX_SIZE * 0.55}
+            r={5}
+            fill="#1f2937"
+            stroke="#fff"
+            strokeWidth={1}
+          />
+          <text
+            x={x - HEX_SIZE * 0.55}
+            y={y + HEX_SIZE * 0.55 + 3}
+            textAnchor="middle"
+            fontSize={8}
+            fontWeight={700}
+            fill={heroGlyphFill}
+          >
+            {heroGlyph}
+          </text>
+        </g>
       )}
     </g>
   );

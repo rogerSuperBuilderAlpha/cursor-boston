@@ -31,6 +31,8 @@ import {
   GameSealsExhaustedError,
   GameSelfAttackError,
   GameShieldedError,
+  GameSpecialUnitAlreadyStationedError,
+  GameSpecialUnitNotFoundError,
   GameStaleSeasonError,
   GameTileFullError,
   GameTileNotFoundError,
@@ -52,6 +54,7 @@ export function mapGameError(error: unknown): NextResponse {
     error instanceof GamePlayerNotFoundError ||
     error instanceof GameTileNotFoundError ||
     error instanceof GameArtifactNotFoundError ||
+    error instanceof GameSpecialUnitNotFoundError ||
     error instanceof UpgradeNotFoundError ||
     error instanceof UpgradeUnknownTargetError
   ) {
@@ -83,6 +86,7 @@ export function mapGameError(error: unknown): NextResponse {
     error instanceof GameArmageddonInProgressError ||
     error instanceof GameStaleSeasonError ||
     error instanceof GameSealsExhaustedError ||
+    error instanceof GameSpecialUnitAlreadyStationedError ||
     error instanceof UpgradeAlreadyActiveError ||
     error instanceof UpgradeNotActiveError
   ) {
