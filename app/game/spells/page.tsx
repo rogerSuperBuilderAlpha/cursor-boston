@@ -27,6 +27,8 @@ export default function SpellsPage() {
     setTiles,
     borderTiles,
     owners,
+    worldMeta,
+    refreshPlayer,
     loading,
     error,
     setError,
@@ -41,10 +43,13 @@ export default function SpellsPage() {
 
   return (
     <SpellsView
+      user={user}
       player={player}
       tiles={tiles}
       borderTiles={borderTiles}
       owners={owners}
+      worldMeta={worldMeta}
+      onAfterArmageddon={refreshPlayer}
       error={error}
       actions={actions}
     />
