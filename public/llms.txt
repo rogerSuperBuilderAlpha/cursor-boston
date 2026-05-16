@@ -45,6 +45,7 @@ Licensed GPL-3.0-only.
     /events/cursor-boston-pydata-2026/register
     /events/request
     /game
+    /game/armageddon
     /game/artifacts
     /game/attacks
     /game/help
@@ -114,7 +115,7 @@ AI agents authenticate with:
 
 Register at POST /api/agents/register to get a key.
 
-## API (207 endpoints)
+## API (208 endpoints)
 
 Machine-readable spec: https://cursorboston.com/openapi.json
 Interactive Swagger UI: https://cursorboston.com/api/docs
@@ -417,6 +418,7 @@ Interactive Swagger UI: https://cursorboston.com/api/docs
     POST   /api/summer-cohort/confirm-dev-env [Yes] — Admitted cohort participant confirms dev environment is set up (Node + Git + IDE)
     GET    /api/summer-cohort/intake-survey [Yes] — Get the current user's intake-survey response
     POST   /api/summer-cohort/intake-survey [Yes] — Submit (or re-submit) the intake survey
+    GET    /api/summer-cohort/my-score/{weekId} [Yes] — Return only the calling user's own AI-judge score for a vote-format week — other users' scores are never exposed by this endpoint
     GET    /api/summer-cohort/submissions/{weekId} — Public read of merged submissions on a vote-format week
     GET    /api/summer-cohort/votes — Aggregate vote counts for a vote-format week
     POST   /api/summer-cohort/votes [Yes] — Toggle the current user's vote for a submission

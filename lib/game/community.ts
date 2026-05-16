@@ -80,12 +80,47 @@ interface MilestoneEvent extends BaseEventInput {
   kind: "milestone_1k_tiles";
 }
 
+interface SealBrokenEvent extends BaseEventInput {
+  kind: "seal_broken";
+  sealIndex: number;       // 0..6
+  seasonNumber: number;
+}
+
+interface ArmageddonStartedEvent extends BaseEventInput {
+  kind: "armageddon_started";
+  seasonNumber: number;
+}
+
+interface ArmageddonCompletedEvent extends BaseEventInput {
+  kind: "armageddon_completed";
+  seasonNumber: number;
+}
+
+interface ArmageddonWinnerEvent extends BaseEventInput {
+  kind: "armageddon_winner";
+  seasonNumber: number;
+  winnerRank: number;      // 1..10
+  tilesHeld: number;
+  sealsBroken: number;
+  tickets: number;
+}
+
+interface ArmageddonCastFailedEvent extends BaseEventInput {
+  kind: "armageddon_cast_failed";
+  seasonNumber: number;
+}
+
 export type CommunityEventInput =
   | PlayerJoinEvent
   | CastePickEvent
   | CasteChangeEvent
   | AttackEvent
-  | MilestoneEvent;
+  | MilestoneEvent
+  | SealBrokenEvent
+  | ArmageddonStartedEvent
+  | ArmageddonCompletedEvent
+  | ArmageddonWinnerEvent
+  | ArmageddonCastFailedEvent;
 
 /**
  * Writes one community-event doc inside an existing transaction.
@@ -127,6 +162,22 @@ export function logCommunityEventInTx(
     };
   } else if (input.kind === "caste_change") {
     extra = { fromCaste: input.fromCaste, toCaste: input.toCaste };
+  } else if (input.kind === "seal_broken") {
+    extra = { sealIndex: input.sealIndex, seasonNumber: input.seasonNumber };
+  } else if (
+    input.kind === "armageddon_started" ||
+    input.kind === "armageddon_completed" ||
+    input.kind === "armageddon_cast_failed"
+  ) {
+    extra = { seasonNumber: input.seasonNumber };
+  } else if (input.kind === "armageddon_winner") {
+    extra = {
+      seasonNumber: input.seasonNumber,
+      winnerRank: input.winnerRank,
+      tilesHeld: input.tilesHeld,
+      sealsBroken: input.sealsBroken,
+      tickets: input.tickets,
+    };
   }
   tx.set(ref, { ...base, ...extra });
 }
@@ -158,6 +209,22 @@ export async function logCommunityEvent(
     };
   } else if (input.kind === "caste_change") {
     extra = { fromCaste: input.fromCaste, toCaste: input.toCaste };
+  } else if (input.kind === "seal_broken") {
+    extra = { sealIndex: input.sealIndex, seasonNumber: input.seasonNumber };
+  } else if (
+    input.kind === "armageddon_started" ||
+    input.kind === "armageddon_completed" ||
+    input.kind === "armageddon_cast_failed"
+  ) {
+    extra = { seasonNumber: input.seasonNumber };
+  } else if (input.kind === "armageddon_winner") {
+    extra = {
+      seasonNumber: input.seasonNumber,
+      winnerRank: input.winnerRank,
+      tilesHeld: input.tilesHeld,
+      sealsBroken: input.sealsBroken,
+      tickets: input.tickets,
+    };
   }
   await ref.set({ ...base, ...extra });
 }

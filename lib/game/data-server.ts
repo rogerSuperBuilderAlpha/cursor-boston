@@ -15,12 +15,19 @@ import {
   baseUnitsTarget,
   computeTileCapacity,
   distributeUnitKills,
+  magicMultiplier,
   makeSeededRng,
   realizedSpellMagnitude,
   resolveAttack,
   rollSpellEffectiveness,
 } from "./combat";
 import { ARTIFACTS_BY_ID, SPELLS_BY_ID } from "./content";
+import {
+  ARMAGEDDON_TILE_GATE,
+  ARMAGEDDON_TURN_COST,
+  SEAL_COUNT,
+  computeArmageddonSuccessChanceFromMultiplier,
+} from "./content/armageddon";
 import { rollArtifact } from "./artifacts";
 import { logCommunityEventInTx } from "./community";
 import { buildIntelReportServer } from "./intel";
@@ -71,6 +78,7 @@ import {
 import {
   SIEGE_ACTION_MAGNITUDE,
   SIEGE_DEBUFF_MAX_MAGNITUDE,
+  type ArmageddonEventRecord,
   type ArtifactDefinition,
   type Caste,
   type CombatResult,
@@ -78,9 +86,11 @@ import {
   type GameAttack,
   type GamePlayer,
   type GameTile,
+  type GameWorldMeta,
   type IntelReport,
   type LandType,
   type MapTile,
+  type SealRecord,
   type TurnAction,
   type TurnReport,
   type UnitStack,
@@ -306,6 +316,33 @@ export class GameNoEnemyKingdomsError extends Error {
   }
 }
 
+export class GameArmageddonInProgressError extends Error {
+  constructor() {
+    super(
+      "Armageddon is upon us. The world is being remade — turn-spending actions are temporarily refused."
+    );
+    this.name = "GameArmageddonInProgressError";
+  }
+}
+
+export class GameStaleSeasonError extends Error {
+  constructor(playerSeason: number, worldSeason: number) {
+    super(
+      `Your record is from season ${playerSeason}, but the current season is ${worldSeason}. Claim your fresh spawn to continue.`
+    );
+    this.name = "GameStaleSeasonError";
+  }
+}
+
+export class GameSealsExhaustedError extends Error {
+  constructor() {
+    super(
+      "All seven Seals have been broken — Armageddon is already underway."
+    );
+    this.name = "GameSealsExhaustedError";
+  }
+}
+
 const COLLECTIONS = {
   PLAYERS: "game_players",
   TILES: "game_tiles",
@@ -319,6 +356,10 @@ const COLLECTIONS = {
   // Community chat: free-form messages from authenticated players,
   // moderated by author or by an admin (delete-only).
   COMMUNITY_MESSAGES: "game_community_messages",
+  // End-game / Armageddon hall-of-fame: one doc per past Armageddon
+  // (doc id = seasonNumber). Persisted before the wipe so the record
+  // survives even if the resolver crashes mid-batch.
+  ARMAGEDDON_EVENTS: "game_armageddon_events",
 } as const;
 
 const WORLD_META_DOC = "singleton";
@@ -339,6 +380,69 @@ function adminDbOrThrow() {
   const db = getAdminDb();
   if (!db) throw new Error("Firebase Admin not initialized");
   return db;
+}
+
+// ── End-game / Armageddon helpers ─────────────────────────────────────
+// Coalesce a possibly-pre-Armageddon worldMeta doc to a full GameWorldMeta
+// with safe defaults. Pre-Armageddon docs (and freshly-bootstrapped envs)
+// don't have sealsBroken / armageddonState / seasonNumber set; treat
+// season as 1 and state as "active" so legacy reads behave correctly.
+function defaultedWorldMeta(raw: Partial<GameWorldMeta> | undefined): GameWorldMeta {
+  return {
+    playerCount: raw?.playerCount ?? 0,
+    seasonNumber: raw?.seasonNumber ?? 1,
+    sealsBroken: raw?.sealsBroken ?? 0,
+    seals: raw?.seals ?? [],
+    armageddonState: raw?.armageddonState ?? "active",
+    armageddonStartedAt: raw?.armageddonStartedAt,
+    armageddonResolvedAt: raw?.armageddonResolvedAt,
+    lastSpawnAt: raw?.lastSpawnAt,
+    updatedAt: raw?.updatedAt,
+  };
+}
+
+/** Refuses turn-spending actions while the world is being remade. Also
+ *  refuses stale player docs (left over from a prior season after a
+ *  partial wipe — should be rare since the resolver deletes them, but
+ *  defends against the edge case). Call this immediately after reading
+ *  both the player doc and the worldMeta singleton inside a transaction. */
+function assertGameActiveInTx(
+  player: GamePlayer,
+  worldMeta: GameWorldMeta
+): void {
+  if (worldMeta.armageddonState && worldMeta.armageddonState !== "active") {
+    throw new GameArmageddonInProgressError();
+  }
+  const playerSeason = player.seasonNumber ?? 1;
+  const worldSeason = worldMeta.seasonNumber ?? 1;
+  if (playerSeason !== worldSeason) {
+    throw new GameStaleSeasonError(playerSeason, worldSeason);
+  }
+}
+
+/** Reads the world-meta singleton inside a transaction and returns a
+ *  fully-defaulted GameWorldMeta. Mutators that need to update meta should
+ *  hold the underlying doc reference; this helper just sources values. */
+async function readWorldMetaInTx(
+  tx: Transaction,
+  db: Firestore
+): Promise<{ meta: GameWorldMeta; ref: FirebaseFirestore.DocumentReference }> {
+  const ref = db.collection(COLLECTIONS.WORLD_META).doc(WORLD_META_DOC);
+  const snap = await tx.get(ref);
+  const raw = snap.exists ? (snap.data() as Partial<GameWorldMeta>) : undefined;
+  return { meta: defaultedWorldMeta(raw), ref };
+}
+
+/** Read-only world-meta fetch for dashboard / hall-of-fame surfacing.
+ *  Returns the defaulted shape even when the doc doesn't exist yet. */
+export async function getWorldMetaServer(): Promise<GameWorldMeta> {
+  const db = adminDbOrThrow();
+  const snap = await db
+    .collection(COLLECTIONS.WORLD_META)
+    .doc(WORLD_META_DOC)
+    .get();
+  const raw = snap.exists ? (snap.data() as Partial<GameWorldMeta>) : undefined;
+  return defaultedWorldMeta(raw);
 }
 
 // Rolls (3% chance) for an artifact and stages a tx.set() to persist it if
@@ -2098,7 +2202,10 @@ export async function castIntelSpellServer(
     source: "spell",
     sourceId: spell.id,
     capturedAtTurn: txResult.turnsSpentTotal,
-    attackerCaste: spell.caste,
+    // spell.caste is widened to Caste | "neutral" for Armageddon, but intel
+    // spells are caste-bound (validated inside the tx). Read the validated
+    // caste off the returned player so the type narrows to a real Caste.
+    attackerCaste: txResult.player.caste as Caste,
   });
 
   // Black & Green spies are detected by the defender; the alert is now
@@ -5253,4 +5360,206 @@ export async function removeUpgradeServer(args: {
       },
     };
   });
+}
+
+// =====================================================================
+// End-game / Armageddon
+// =====================================================================
+
+/**
+ * Casts the universal end-game Armageddon spell. Costs ARMAGEDDON_TURN_COST
+ * turns regardless of outcome (the spell is a deliberate gamble). On a
+ * successful roll, breaks one of the 7 global Seals; when the 7th breaks,
+ * the worldMeta state flips to "resolving" and the caller should fire the
+ * resolveArmageddon orchestrator outside this transaction.
+ *
+ * Concurrency: two casts racing on seal #7 serialize on the worldMeta
+ * singleton — Firestore aborts and retries the loser, which then re-reads
+ * sealsBroken === SEAL_COUNT and short-circuits with GameSealsExhaustedError.
+ * The losing player's turns were already deducted by their own retry; this
+ * is by design — the spell is high-risk by construction.
+ */
+export async function castArmageddonServer(args: {
+  userId: string;
+  now?: Date;
+}): Promise<{
+  success: boolean;
+  successChance: number;
+  sealsBroken: number;       // after this cast
+  seasonNumber: number;
+  player: GamePlayer;
+  shouldTriggerResolve: boolean;
+}> {
+  const now = args.now ?? new Date();
+  const db = adminDbOrThrow();
+  const playerRef = db.collection(COLLECTIONS.PLAYERS).doc(args.userId);
+
+  // Pre-tx land-count read (mirrors castSpellServer). Magic-land count is
+  // the primary input to the success formula; a few ms of staleness is fine.
+  const landCounts = await getOwnedLandCounts(args.userId);
+
+  return db.runTransaction(async (tx) => {
+    const [playerSnap, worldMetaResult] = await Promise.all([
+      tx.get(playerRef),
+      readWorldMetaInTx(tx, db),
+    ]);
+    if (!playerSnap.exists) throw new GamePlayerNotFoundError();
+    const player = playerSnap.data() as GamePlayer;
+    const worldMeta = worldMetaResult.meta;
+
+    assertGameActiveInTx(player, worldMeta);
+
+    if (player.phase !== "play") {
+      throw new GameInvalidPhaseError("play", player.phase);
+    }
+    if (player.caste === null) {
+      throw new GameInvalidPhaseError("play (caste required)", player.phase);
+    }
+    if (player.stats.tilesHeld < ARMAGEDDON_TILE_GATE) {
+      throw new GameInvalidSpellError(
+        `Armageddon requires ${ARMAGEDDON_TILE_GATE} tiles held; you have ${player.stats.tilesHeld}`
+      );
+    }
+    if (player.turnsRemaining < ARMAGEDDON_TURN_COST) {
+      throw new GameInsufficientTurnsError(
+        ARMAGEDDON_TURN_COST,
+        player.turnsRemaining
+      );
+    }
+    const sealsBrokenBefore = worldMeta.sealsBroken ?? 0;
+    if (sealsBrokenBefore >= SEAL_COUNT) {
+      throw new GameSealsExhaustedError();
+    }
+
+    // Success roll. Seed includes a fresh cast id so replays are independent
+    // and no two casts share a deterministic outcome.
+    const castId = randomUUID();
+    const rng = makeSeededRng(`armageddon-${castId}`);
+    const mm = magicMultiplier(
+      landCounts.magic,
+      player.activeUpgrades ?? {}
+    );
+    const successChance = computeArmageddonSuccessChanceFromMultiplier(mm);
+    const success = rng() < successChance;
+
+    // Turns + cast counter deduct regardless of success (high-risk gamble).
+    const turnsSpentTotal = player.turnsSpentTotal + ARMAGEDDON_TURN_COST;
+    const armageddonCastsAttempted =
+      (player.armageddonCastsAttempted ?? 0) + 1;
+    let armageddonSealsBroken = player.armageddonSealsBroken ?? 0;
+
+    const seasonNumber = worldMeta.seasonNumber ?? 1;
+    let sealsBrokenAfter = sealsBrokenBefore;
+    let shouldTriggerResolve = false;
+
+    if (success) {
+      const sealIndex = sealsBrokenBefore;
+      // Build the canonical 7-slot seals array, defaulting any missing
+      // entries to unbroken. The Armageddon flow always writes back a full
+      // length-7 array so readers don't need null-checks.
+      const seals: SealRecord[] = Array.from({ length: SEAL_COUNT }, (_, i) => {
+        const existing = worldMeta.seals?.[i];
+        if (existing) return existing;
+        return { index: i, broken: false };
+      });
+      seals[sealIndex] = {
+        index: sealIndex,
+        broken: true,
+        brokenBy: {
+          userId: player.userId,
+          displayName: player.displayName,
+          caste: player.caste,
+        },
+        brokenAt: now,
+      };
+      sealsBrokenAfter = sealsBrokenBefore + 1;
+      armageddonSealsBroken += 1;
+
+      const metaPatch: Partial<GameWorldMeta> = {
+        sealsBroken: sealsBrokenAfter,
+        seals,
+        seasonNumber, // re-stamp for backfill on legacy docs
+        updatedAt: now,
+      };
+      if (sealsBrokenAfter >= SEAL_COUNT) {
+        metaPatch.armageddonState = "resolving";
+        metaPatch.armageddonStartedAt = now;
+        shouldTriggerResolve = true;
+      }
+      tx.set(worldMetaResult.ref, metaPatch, { merge: true });
+
+      logCommunityEventInTx(
+        tx,
+        db,
+        {
+          kind: "seal_broken",
+          actorUserId: player.userId,
+          actorDisplayName: player.displayName,
+          actorCaste: player.caste,
+          sealIndex,
+          seasonNumber,
+        },
+        now
+      );
+      if (shouldTriggerResolve) {
+        logCommunityEventInTx(
+          tx,
+          db,
+          {
+            kind: "armageddon_started",
+            actorUserId: player.userId,
+            actorDisplayName: player.displayName,
+            actorCaste: player.caste,
+            seasonNumber,
+          },
+          now
+        );
+      }
+    }
+    // (Failure-event logging is skipped to keep the community feed signal-
+    // to-noise high; a failed cast is a private experience for the caster.)
+
+    tx.update(playerRef, {
+      turnsRemaining: player.turnsRemaining - ARMAGEDDON_TURN_COST,
+      turnsSpentTotal,
+      armageddonCastsAttempted,
+      armageddonSealsBroken,
+      seasonNumber, // backfill in case the doc predated the field
+      updatedAt: now,
+    });
+
+    const updatedPlayer: GamePlayer = {
+      ...player,
+      turnsRemaining: player.turnsRemaining - ARMAGEDDON_TURN_COST,
+      turnsSpentTotal,
+      armageddonCastsAttempted,
+      armageddonSealsBroken,
+      seasonNumber,
+      updatedAt: now,
+    };
+
+    return {
+      success,
+      successChance,
+      sealsBroken: sealsBrokenAfter,
+      seasonNumber,
+      player: updatedPlayer,
+      shouldTriggerResolve,
+    };
+  });
+}
+
+/** Lists the most-recent N past Armageddons (hall-of-fame). Doc ID is the
+ *  season number, so ordering by ID descending is the canonical order.
+ *  No composite index required. */
+export async function listArmageddonHistoryServer(
+  limit: number = 50
+): Promise<ArmageddonEventRecord[]> {
+  const db = adminDbOrThrow();
+  const snap = await db
+    .collection(COLLECTIONS.ARMAGEDDON_EVENTS)
+    .orderBy("seasonNumber", "desc")
+    .limit(Math.max(1, Math.min(200, limit)))
+    .get();
+  return snap.docs.map((d) => d.data() as ArmageddonEventRecord);
 }

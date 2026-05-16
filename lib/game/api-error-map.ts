@@ -9,6 +9,7 @@ import { apiError } from "@/lib/api-response";
 import { logger } from "@/lib/logger";
 import {
   GameAlreadyRevealedError,
+  GameArmageddonInProgressError,
   GameArtifactAlreadyUsedError,
   GameArtifactNotFoundError,
   GameCasteAlreadySetError,
@@ -27,8 +28,10 @@ import {
   GameNotAdjacentError,
   GamePlayerAlreadyExistsError,
   GamePlayerNotFoundError,
+  GameSealsExhaustedError,
   GameSelfAttackError,
   GameShieldedError,
+  GameStaleSeasonError,
   GameTileFullError,
   GameTileNotFoundError,
   GameTileNotOwnedError,
@@ -77,6 +80,9 @@ export function mapGameError(error: unknown): NextResponse {
     error instanceof GameNoEnemyKingdomsError ||
     error instanceof GameArtifactAlreadyUsedError ||
     error instanceof GameNameTakenError ||
+    error instanceof GameArmageddonInProgressError ||
+    error instanceof GameStaleSeasonError ||
+    error instanceof GameSealsExhaustedError ||
     error instanceof UpgradeAlreadyActiveError ||
     error instanceof UpgradeNotActiveError
   ) {

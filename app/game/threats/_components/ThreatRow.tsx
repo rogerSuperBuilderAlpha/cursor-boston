@@ -170,7 +170,10 @@ export function ThreatRow(props: ThreatRowProps) {
         s.id,
         realizedSpellMagnitude({
           baseStrength: s.baseStrength,
-          caste: s.caste,
+          // Offense spells are always caste-bound; Armageddon is the only
+          // "neutral"-caste spell and it has type !== "offense" so it never
+          // appears in offenseSpells. Cast narrows the runtime invariant.
+          caste: s.caste as Exclude<typeof s.caste, "neutral">,
           spellType: s.type,
           magicLandCount: myMagicLandCount,
           activeUpgrades: player.activeUpgrades ?? {},

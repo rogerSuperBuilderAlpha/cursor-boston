@@ -8,7 +8,7 @@
 
 All endpoints are under `/api/`. Authentication uses Firebase Auth ID tokens (Bearer) or session cookies. Spec: [`/openapi.json`](https://cursorboston.com/openapi.json) · interactive: [`/api/docs`](https://cursorboston.com/api/docs).
 
-**171 paths, 207 operations across 32 areas.**
+**172 paths, 208 operations across 32 areas.**
 
 ---
 
@@ -430,6 +430,7 @@ _Talk-submission moderation queue._
 | POST | `/api/summer-cohort/confirm-dev-env` | Yes | Admitted cohort participant confirms dev environment is set up (Node + Git + IDE) |
 | GET | `/api/summer-cohort/intake-survey` | Yes | Get the current user's intake-survey response |
 | POST | `/api/summer-cohort/intake-survey` | Yes | Submit (or re-submit) the intake survey |
+| GET | `/api/summer-cohort/my-score/{weekId}` | Yes | Return only the calling user's own AI-judge score for a vote-format week — other users' scores are never exposed by this endpoint |
 | GET | `/api/summer-cohort/submissions/{weekId}` | No | Public read of merged submissions on a vote-format week |
 | GET | `/api/summer-cohort/votes` | No | Aggregate vote counts for a vote-format week |
 | POST | `/api/summer-cohort/votes` | Yes | Toggle the current user's vote for a submission |
