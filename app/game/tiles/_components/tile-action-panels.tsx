@@ -339,7 +339,9 @@ export function EnemyTilePanel({
   const selectedOffenseExpected = selectedOffense
     ? realizedSpellMagnitude({
         baseStrength: selectedOffense.baseStrength,
-        caste: selectedOffense.caste,
+        // Offense spells are always caste-bound; the "neutral"-caste
+        // Armageddon spell never appears here (different SpellType).
+        caste: selectedOffense.caste as Exclude<typeof selectedOffense.caste, "neutral">,
         spellType: selectedOffense.type,
         magicLandCount: playerMagicLandCount,
         activeUpgrades: player.activeUpgrades ?? {},
@@ -540,7 +542,7 @@ export function EnemyTilePanel({
             {offenseSpells.map((s) => {
               const expected = realizedSpellMagnitude({
                 baseStrength: s.baseStrength,
-                caste: s.caste,
+                caste: s.caste as Exclude<typeof s.caste, "neutral">,
                 spellType: s.type,
                 magicLandCount: playerMagicLandCount,
                 activeUpgrades: player.activeUpgrades ?? {},

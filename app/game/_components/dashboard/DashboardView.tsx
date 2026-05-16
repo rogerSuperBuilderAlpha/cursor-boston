@@ -23,6 +23,7 @@ import { LandsCard } from "./LandsCard";
 import { ArmyCard } from "./ArmyCard";
 import { ThreatCard } from "./ThreatCard";
 import { ShieldCard } from "./ShieldCard";
+import { SealsPanel } from "./SealsPanel";
 import { ExploreFrontier } from "./ExploreFrontier";
 import { FarExpedition } from "./FarExpedition";
 import { SpyAction } from "./SpyAction";
@@ -174,6 +175,8 @@ export function DashboardView({ player, data }: DashboardViewProps) {
         />
 
         <RecommendedAction rec={recommended} phase={player.phase} />
+
+        <SealsPanel worldMeta={data.worldMeta} />
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <LandsCard counts={counts} />

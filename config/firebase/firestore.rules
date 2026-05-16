@@ -454,6 +454,16 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
+    // Game — Armageddon hall of fame. One doc per resolved Armageddon
+    // (doc id = seasonNumber). Persists the lottery winners + seal audit
+    // trail + top-by-tiles snapshot so glory survives the world wipe.
+    // Authenticated read; writes are Admin-SDK only via the resolver
+    // (lib/game/armageddon-resolve.ts).
+    match /game_armageddon_events/{eventId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if false;
+    }
+
     // Game — Community chat (free-form message board). Reads are
     // authenticated. All writes (create + soft-delete) flow through
     // /api/game/community/chat which validates ownership and admin
