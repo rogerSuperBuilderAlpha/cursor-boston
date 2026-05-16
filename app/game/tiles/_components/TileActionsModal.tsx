@@ -10,7 +10,14 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { ALL_SPELLS } from "@/lib/game/content";
-import type { GamePlayer, GameTile, MapTile } from "@/lib/game/types";
+import { STAMINA_CONVERSION_THRESHOLD } from "@/lib/game/content/heroes";
+import type {
+  GameHero,
+  GamePlayer,
+  GameTile,
+  HeroBattleAction,
+  MapTile,
+} from "@/lib/game/types";
 import {
   EnemyTilePanel,
   OwnTilePanel,
@@ -25,6 +32,7 @@ function asMapTile(t: GameTile): MapTile {
     ownerId: t.ownerId ?? null,
     units: t.units,
     armedDefenseSpellId: t.armedDefenseSpellId ?? null,
+    ...(t.hero ? { hero: t.hero } : {}),
   };
 }
 
@@ -58,6 +66,12 @@ export function TileActionsModal({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  // Hero kill/spare/convert chooser state. Only meaningful when the target
+  // tile has a hero and the player is attacking (foreign tile path).
+  const [heroAction, setHeroAction] = useState<HeroBattleAction>("kill");
+  const [heroActionOnConvertFail, setHeroActionOnConvertFail] = useState<
+    "kill" | "spare"
+  >("kill");
 
   const callApi = useCallback(
     async (path: string, body: unknown) => {
@@ -185,20 +199,41 @@ export function TileActionsModal({
             }
           />
         ) : (
-          <EnemyTilePanel
-            tile={tile}
-            player={player}
-            ownedTiles={ownedTiles}
-            busy={busy}
-            onAttack={(sourceTileId, units, offenseSpellId) =>
-              callApi("/api/game/attack", {
-                sourceTileId,
-                targetTileId: tile.tileId,
-                units,
-                offenseSpellId,
-              })
-            }
-          />
+          <>
+            {tile.hero && (
+              <HeroOnTileCard
+                hero={tile.hero}
+                isForeign
+                heroAction={heroAction}
+                onHeroActionChange={setHeroAction}
+                heroActionOnConvertFail={heroActionOnConvertFail}
+                onHeroActionOnConvertFailChange={setHeroActionOnConvertFail}
+              />
+            )}
+            <EnemyTilePanel
+              tile={tile}
+              player={player}
+              ownedTiles={ownedTiles}
+              busy={busy}
+              onAttack={(sourceTileId, units, offenseSpellId) =>
+                callApi("/api/game/attack", {
+                  sourceTileId,
+                  targetTileId: tile.tileId,
+                  units,
+                  offenseSpellId,
+                  // Only forward hero choices when the target actually has a
+                  // hero — keeps the request shape clean for normal tiles.
+                  ...(tile.hero ? { heroAction } : {}),
+                  ...(tile.hero && heroAction === "convert"
+                    ? { heroActionOnConvertFail }
+                    : {}),
+                })
+              }
+            />
+          </>
+        )}
+        {isOwn && tile.hero && (
+          <HeroOnTileCard hero={tile.hero} isForeign={false} />
         )}
 
         <div className="mt-4 pt-3 border-t border-neutral-200 dark:border-neutral-800 flex flex-wrap gap-x-4 gap-y-2 text-xs">
@@ -219,5 +254,122 @@ export function TileActionsModal({
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * Hero-on-tile card. For the owner view, this is read-only — class,
+ * specialty, stamina bar. For an enemy attack view, it adds the
+ * kill / spare / convert chooser; "convert" is disabled when the hero's
+ * stamina is above STAMINA_CONVERSION_THRESHOLD (the server would reject
+ * it anyway).
+ */
+function HeroOnTileCard({
+  hero,
+  isForeign,
+  heroAction,
+  onHeroActionChange,
+  heroActionOnConvertFail,
+  onHeroActionOnConvertFailChange,
+}: {
+  hero: GameHero;
+  isForeign: boolean;
+  heroAction?: HeroBattleAction;
+  onHeroActionChange?: (next: HeroBattleAction) => void;
+  heroActionOnConvertFail?: "kill" | "spare";
+  onHeroActionOnConvertFailChange?: (next: "kill" | "spare") => void;
+}) {
+  const staminaPct = Math.max(
+    0,
+    Math.min(100, Math.round((hero.stamina / hero.staminaMax) * 100))
+  );
+  const classGlyph =
+    hero.class === "military" ? "⚔" : hero.class === "farm" ? "⚘" : "✦";
+  const classColor =
+    hero.class === "military"
+      ? "text-red-600 dark:text-red-400"
+      : hero.class === "farm"
+        ? "text-amber-600 dark:text-amber-400"
+        : "text-violet-600 dark:text-violet-400";
+  const convertAvailable = hero.stamina <= STAMINA_CONVERSION_THRESHOLD;
+  return (
+    <section className="mb-4 rounded-lg border border-neutral-200 dark:border-neutral-800 p-3">
+      <div className="flex items-baseline gap-2 flex-wrap">
+        <span className={`text-lg font-semibold ${classColor}`}>
+          {classGlyph} {hero.name}
+        </span>
+        <span className="text-xs text-neutral-500 capitalize">
+          {hero.specialty.replace(/-/g, " ")} {hero.class} hero
+        </span>
+      </div>
+      <div className="mt-2 flex items-center gap-2">
+        <span className="text-xs text-neutral-500 w-20">Stamina</span>
+        <div className="flex-1 h-2 bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden">
+          <div
+            className={`h-full ${staminaPct < 30 ? "bg-red-500" : staminaPct < 60 ? "bg-amber-500" : "bg-emerald-500"}`}
+            style={{ width: `${staminaPct}%` }}
+          />
+        </div>
+        <span className="text-xs font-mono w-12 text-right">
+          {hero.stamina}/{hero.staminaMax}
+        </span>
+      </div>
+      {isForeign && onHeroActionChange && (
+        <div className="mt-3 pt-3 border-t border-neutral-200 dark:border-neutral-800 space-y-2">
+          <div className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+            If you win this combat:
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {(["kill", "spare", "convert"] as const).map((action) => {
+              const disabled = action === "convert" && !convertAvailable;
+              const selected = heroAction === action;
+              const label =
+                action === "kill"
+                  ? "Kill + take tile"
+                  : action === "spare"
+                    ? "Spare (wear down, tile stays)"
+                    : "Attempt conversion";
+              return (
+                <button
+                  key={action}
+                  onClick={() => onHeroActionChange(action)}
+                  disabled={disabled}
+                  className={`px-2.5 py-1 text-xs rounded border transition-colors ${
+                    selected
+                      ? "bg-emerald-600 text-white border-emerald-600"
+                      : "bg-white dark:bg-neutral-900 border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                  } disabled:opacity-40 disabled:cursor-not-allowed`}
+                  title={
+                    disabled
+                      ? `Convert is unavailable until stamina ≤ ${STAMINA_CONVERSION_THRESHOLD}.`
+                      : undefined
+                  }
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+          {heroAction === "convert" && onHeroActionOnConvertFailChange && (
+            <div className="text-xs text-neutral-500">
+              If conversion fails →{" "}
+              {(["kill", "spare"] as const).map((fb) => (
+                <button
+                  key={fb}
+                  onClick={() => onHeroActionOnConvertFailChange(fb)}
+                  className={`ml-1 px-2 py-0.5 rounded border ${
+                    heroActionOnConvertFail === fb
+                      ? "bg-neutral-700 text-white border-neutral-700"
+                      : "bg-white dark:bg-neutral-900 border-neutral-300 dark:border-neutral-700"
+                  }`}
+                >
+                  {fb}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </section>
   );
 }

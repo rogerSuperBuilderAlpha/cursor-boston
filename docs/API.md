@@ -8,7 +8,7 @@
 
 All endpoints are under `/api/`. Authentication uses Firebase Auth ID tokens (Bearer) or session cookies. Spec: [`/openapi.json`](https://cursorboston.com/openapi.json) · interactive: [`/api/docs`](https://cursorboston.com/api/docs).
 
-**172 paths, 208 operations across 32 areas.**
+**174 paths, 210 operations across 32 areas.**
 
 ---
 
@@ -164,6 +164,8 @@ _Strategy game endpoints (leaderboard, attacks, artifacts, turns)._
 | POST | `/api/game/setup/distribute` | Yes | Distribute land type to a tile during onboarding |
 | POST | `/api/game/setup/explore` | Yes | Frontier-explore tiles during onboarding |
 | POST | `/api/game/siege` | Yes | Soften a target tile's standing-defense floor |
+| POST | `/api/game/special-units/summon` | Yes | Station a caste-themed special unit on one of your tiles |
+| POST | `/api/game/special-units/unsummon` | Yes | Recall a stationed special unit back into your pool |
 | POST | `/api/game/spell/arm` | Yes | Arm a defense spell on one tile (single) or many (bulk) |
 | POST | `/api/game/spell/cast` | Yes | Cast a standalone siege/disarm/attrition spell against a target tile |
 | POST | `/api/game/spell/produce` | Yes | Cast a production spell (with optional batch count) |

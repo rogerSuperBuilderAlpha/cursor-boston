@@ -6,10 +6,10 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { apiError, apiSuccess, parseRequestBody } from "@/lib/api-response";
-import { mapGameError } from "@/lib/game/api-error-map";
-import { attackTileServer } from "@/lib/game/data-server";
-import { getVerifiedUser } from "@/lib/server-auth";
 import { gameContract } from "@/lib/api-schemas/game";
+import { mapGameError } from "@/lib/game/api-error-map";
+import { summonSpecialUnitServer } from "@/lib/game/data-server";
+import { getVerifiedUser } from "@/lib/server-auth";
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,29 +18,19 @@ export async function POST(request: NextRequest) {
 
     const bodyOrError = await parseRequestBody(request);
     if (bodyOrError instanceof NextResponse) return bodyOrError;
-
-    const parsed = gameContract.attack.body.safeParse(bodyOrError);
+    const parsed = gameContract.specialUnitsSummon.body.safeParse(bodyOrError);
     if (!parsed.success) {
       return apiError(parsed.error.issues[0]?.message ?? "Invalid body", 400);
     }
 
-    const result = await attackTileServer({
-      attackerId: user.uid,
-      sourceTileId: parsed.data.sourceTileId,
+    const result = await summonSpecialUnitServer({
+      userId: user.uid,
+      instanceId: parsed.data.instanceId,
       targetTileId: parsed.data.targetTileId,
-      units: parsed.data.units,
-      offenseSpellId: parsed.data.offenseSpellId ?? null,
-      heroAction: parsed.data.heroAction,
-      heroActionOnConvertFail: parsed.data.heroActionOnConvertFail,
     });
     return apiSuccess({
-      attack: result.attack,
-      attackerPlayer: result.attackerPlayer,
-      sourceTile: result.sourceTile,
-      targetTile: result.targetTile,
-      report: result.report,
-      combat: result.combat,
-      ...(result.intelReport ? { intelReport: result.intelReport } : {}),
+      player: result.player,
+      tileId: result.tileId,
     });
   } catch (error) {
     return mapGameError(error);
