@@ -60,7 +60,8 @@ Most PRs go to `develop`. A handful go to **long-lived submission branches** —
 | Standard code, bug fix, feature, docs | **`develop`** |
 | PyData hackathon notebook | **`pydata-2026-submissions`** ([details](../pydata-2026-submissions/README.md)) |
 | Hack-a-Sprint showcase project | **`hack-a-sprint-2026-submissions`** ([details](../content/hackathons/hack-a-sprint-2026/submissions/README.md)) |
-| Summer cohort week N submission | **`c1w1pm-submission`** / **`c1w2comms-submission`** / **`c1w3mkt-submission`** / **`c1w4edu-submission`** / **`c1w5startup-submission`** / **`c1w6oss-submission`** |
+| Summer cohort 1 week N submission | **`c1w1pm-submission`** / **`c1w2comms-submission`** / **`c1w3mkt-submission`** / **`c1w4edu-submission`** / **`c1w5startup-submission`** / **`c1w6oss-submission`** |
+| Summer cohort 2 vote-format week N submission | **`c2w1pm-submission`** / **`c2w2comms-submission`** / **`c2w3mkt-submission`** |
 | Game-mode content (units, artifacts, lore) | **`game-contributions`** |
 | Maintainer application | **`maintainer-application`** (see [GOVERNANCE](GOVERNANCE.md#becoming-a-maintainer)) |
 

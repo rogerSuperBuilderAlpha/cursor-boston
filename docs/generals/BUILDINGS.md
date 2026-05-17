@@ -1,8 +1,10 @@
 # Buildings (tile upgrades)
 
-Buildings are an empty content surface today. The v1 game ships without any buildings; `lib/game/content/buildings/index.ts` exports `[]`. That empty array **is the contract** — adding a building means appending to it.
+Buildings are the **per-caste, per-land-type structures** that get placed when a tile is assigned. There are 15 today — one for each `caste × landType` combination (5 castes × 3 productive land types: `military`, `food`, `magic`).
 
-This doc tells you what shape buildings should take, where they hook into combat, and what bands they live in.
+`lib/game/content/buildings/index.ts` re-exports `BUILDING_SEEDS` from `seeds.ts`. The seed list is the contract — every productive land type for every caste must have exactly one entry, and the `id` follows the convention `<caste>-<landType>-building`.
+
+This doc tells you what shape buildings take, where they hook into combat, and what bands they live in.
 
 ---
 

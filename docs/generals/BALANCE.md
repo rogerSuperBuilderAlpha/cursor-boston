@@ -149,3 +149,20 @@ If you're not sure your numbers are balanced, sketch a worst-case scenario:
 > "If I'm a caste-X player with 50 magic lands, full unit cap from food, and I cast my new offense spell with a legendary offense artifact equipped, what's the total power?"
 
 If that number is above ~3,000, you're outside the design space. Most fights resolve in the 500–1,500 range; the underdog bonus and the 0.9–1.1 RNG band are calibrated for that.
+
+---
+
+## Armageddon balance
+
+The end-game adds its own balance surface. See [ARMAGEDDON.md](ARMAGEDDON.md) for the full mechanic; the levers to be careful with:
+
+- **10,000-tile gate** (`ARMAGEDDON_TILE_GATE` in `lib/game/content/armageddon.ts`) — the only structural gate on casting. Lowering it compresses the late game; raising it makes it a grind for one or two players.
+- **Magic-multiplier success curve** — folds raw `magic`-type tiles + magic-hero specialty bonuses (`spellcasting` ×1.25, `armageddon` ×2.0) + active production spells. Targets ~3–5 casts per seal break at typical late-game magic optimization.
+- **Lottery ticket formula** `tilesHeld × (1 + sealsBroken)` — a player who breaks one seal gets 2× the lottery weight, capped only by their tile count. The +1 base means a non-breaker with lots of tiles still has a real shot, which is intentional.
+- **Hero `armageddon` specialty** (×2 magic multiplier) is the single biggest stat in the game. Treat changes to it as P0 balance work.
+
+## Non-turn activities — intentionally non-impactful on balance
+
+The ten non-turn activities ([NON_TURN_ACTIVITIES.md](NON_TURN_ACTIVITIES.md)) — profiles, titles, reactions, chapters, epitaphs, inscriptions, caste chat, dispatches, pacts, prophecies — are deliberately **not** gameplay-impactful. Titles are cosmetic. Pacts are reputational, not enforced. Prophecies grant a cosmetic Seer / Oracle title and nothing else.
+
+When extending the non-turn surface, keep this invariant: don't smuggle gameplay through cosmetic features. If you find yourself wanting a reaction to grant +1 stamina, you've drifted — surface that as a separate turn-costed mechanic instead.

@@ -8,6 +8,7 @@ import { Metadata } from "next";
 import talksData from "@/content/talks.json";
 import articlesData from "@/content/articles.json";
 import { NeedsWorkBanner } from "@/components/NeedsWorkBanner";
+import { SectionHelp } from "@/components/SectionHelp";
 
 export const metadata: Metadata = {
   title: "Talks",
@@ -36,6 +37,42 @@ export default function TalksPage() {
           </p>
         </div>
       </section>
+
+      <div className="px-6 py-6 max-w-4xl mx-auto w-full">
+        <SectionHelp
+          title="Submitting a talk"
+          intro={
+            <>
+              Anyone can pitch a talk. Sessions are typically 10–20 min and
+              cover prompting patterns, agentic workflows, codebases built
+              with Cursor, or process / craft. Submit a proposal below and
+              we&apos;ll get back to you before the next event slot opens.
+            </>
+          }
+          faq={[
+            {
+              q: "What format should I submit?",
+              a: "A short title, a one-paragraph abstract, and your preferred format (lightning, full talk, demo, panel). If you have a draft deck or repo, link it.",
+            },
+            {
+              q: "When do I find out if it's accepted?",
+              a: "We batch reviews against the upcoming event calendar — usually a week-to-two-week turnaround. Acceptance is async over email or Discord.",
+            },
+            {
+              q: "Are talks recorded?",
+              a: "Recording is opt-in. If you want your talk recorded and posted to the archive, say so in the submission; we'll handle capture at the event and the post-event upload.",
+            },
+          ]}
+          links={[
+            { label: "Submit a talk proposal", href: "/talks/submit" },
+            {
+              label: "Discord — pitch ideas in #talks",
+              href: "https://discord.gg/Wsncg8YYqc",
+              external: true,
+            },
+          ]}
+        />
+      </div>
 
       {/* Categories */}
       <section className="py-12 px-6 bg-neutral-50 dark:bg-neutral-950">

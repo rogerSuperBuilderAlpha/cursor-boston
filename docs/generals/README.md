@@ -14,7 +14,10 @@ If you have not yet sent a PR to this repo, read [docs/FIRST_CONTRIBUTION.md](..
 | Units (per-caste ground/siege/air) | [UNITS.md](UNITS.md) | `lib/game/content/units/{caste}/{type}.ts` |
 | Spells (per-caste offense/defense/production) | [SPELLS.md](SPELLS.md) | `lib/game/content/spells/{caste}/{type}.ts` |
 | Artifacts (single-use, found on turn-spend) | [ARTIFACTS.md](ARTIFACTS.md) | `lib/game/content/artifacts/{common,rare,epic,legendary}.ts` |
-| Buildings / tile upgrades | [BUILDINGS.md](BUILDINGS.md) | `lib/game/content/buildings/index.ts` (currently empty — v2 surface) |
+| Buildings / tile upgrades | [BUILDINGS.md](BUILDINGS.md) | `lib/game/content/buildings/index.ts` + the v2 upgrade content (see doc) |
+| **Heroes** (registry, classes, stamina, kill/spare/convert, backstories) | [HEROES.md](HEROES.md) | `lib/game/content/heroes.ts`, `lib/game/heroes.ts`, `lib/game/hero-registry.ts`, `lib/game/content/hero-backstories/*.md` |
+| **Armageddon** (7 seals, lottery, hall of fame, prophecies) | [ARMAGEDDON.md](ARMAGEDDON.md) | `lib/game/content/armageddon.ts`, `lib/game/armageddon-resolve.ts`, `lib/game/prophecies.ts` |
+| **Non-turn activities** (profiles, titles, reactions, chapters, epitaphs, inscriptions, caste chat, dispatches, pacts) | [NON_TURN_ACTIVITIES.md](NON_TURN_ACTIVITIES.md) | `lib/game/{titles,reactions,hero-lore,pacts,prophecies}.ts` |
 | Castes (rename, redesign, add new) | [CASTES.md](CASTES.md) | `lib/game/content/castes.ts` + cascade edits |
 | UI pages, components, icons, color palette | [UI_AND_GRAPHICS.md](UI_AND_GRAPHICS.md) | `app/game/**`, `components/**`, `public/**` |
 | Cross-cutting balance principles | [BALANCE.md](BALANCE.md) | Read before touching numbers anywhere |

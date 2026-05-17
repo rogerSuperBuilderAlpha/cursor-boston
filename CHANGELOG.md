@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Tracks work accumulated since the v0.1.0 tag (2026-01-27). The next tagged release will be cut from this section.
 
+### Added — `/game` (Generals)
+
+- **Heroes v1 + v2** (#961, #963) — three-class (military / farm / magic) hero system that emerges from class-aligned actions; kill / spare / convert outcomes on combat; stamina + age; persistent registry with per-hero event log; visibility rules that hide live-hero location from non-adjacent viewers; backstory markdown chapters; in-app chapters + epitaphs (#969); Hall of the Fallen browser.
+- **Armageddon end-game** (#952, #954, #956, #958, #967) — 7 Seals broken by `armageddon` spell casts; per-cast magic-multiplier success roll; per-season weighted lottery (`tilesHeld × (1 + sealsBroken)`); hall-of-fame doc per season; dashboard SealsPanel shows the player's own progress; `/game/armageddon` is the cast home.
+- **Ten non-turn player activities** (#969) — `/game/players/[playerId]` profile pages with editable bio + derived titles (Tile Baron / Lord / Knight, Warlord / Raider / First Blood, Veteran / Campaigner, Sealbreaker / Apocalypse Bringer, Hero Commander / Marshal, Renegade, Seer / Oracle); ⚔️ / 🛡️ / 📜 reactions on chat, feed, and hero-event rows; tile inscriptions revealed via intel; caste-scoped chat rooms; battle dispatches (≤280-char taunts attached to attacks); public non-aggression pacts auto-flagged on break; pre-filed Armageddon prophecies that resolve when the predicted seal falls.
+
 ### Added
 
 - Three additional maintainers onboarded (Brad Egan, Neha Chaudhari, Aaron Grace) — see [`MAINTAINERS.md`](MAINTAINERS.md) for area ownership

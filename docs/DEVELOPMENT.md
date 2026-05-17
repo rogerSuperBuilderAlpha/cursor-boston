@@ -118,6 +118,14 @@ cat path/to/serviceAccount.json | jq -c . | pbcopy
 | `npm run test:rules` | Firestore security rules tests | When editing `config/firebase/firestore.rules` (requires Firebase emulator) |
 | `npm run validate-env` | Validate required environment variables | Debugging build failures |
 
+#### Emergency build escape hatch — `SKIP_TYPECHECK=1`
+
+`next.config.js` honors `SKIP_TYPECHECK=1` to disable both the TypeScript and ESLint build checks for one invocation. Use it only when pre-existing in-flight branch state has typecheck/lint errors in unrelated files and you need a local production build for visual QA. **Never set this in CI** — CI is the boundary that catches type errors; bypassing it locally is fine because you're the boundary.
+
+```bash
+SKIP_TYPECHECK=1 npm run build && npm start
+```
+
 ### Admin/Ops Scripts
 
 These require `FIREBASE_SERVICE_ACCOUNT_JSON` in `.env.local`:
