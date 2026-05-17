@@ -6,6 +6,7 @@
 
 import { Metadata } from "next";
 import opportunitiesData from "@/content/opportunities.json";
+import { SectionHelp } from "@/components/SectionHelp";
 
 export const metadata: Metadata = {
   title: "Opportunities",
@@ -149,6 +150,41 @@ export default function OpportunitiesPage() {
           </p>
         </div>
       </section>
+
+      <div className="px-6 py-6 max-w-4xl mx-auto w-full">
+        <SectionHelp
+          title="What we list (and don't)"
+          intro={
+            <>
+              Roles, gigs, and co-founder calls from Boston-area members.
+              Submissions are reviewed for fit — we keep this focused on
+              builders working with AI/Cursor, not generic job postings.
+            </>
+          }
+          faq={[
+            {
+              q: "How do I post an opportunity?",
+              a: "Open a PR adding an entry to content/opportunities.json. Include a clear role, company link, and contact channel.",
+            },
+            {
+              q: "Are these vetted?",
+              a: "Maintainers spot-check for spam, scams, and obvious mismatches, but listings are not endorsements. Do your own diligence.",
+            },
+            {
+              q: "What about contract or part-time?",
+              a: "Yes — type filters cover full-time, contract, co-founder, and equity. Pick the closest fit when posting.",
+            },
+          ]}
+          links={[
+            {
+              label: "Adding content (PR guide)",
+              href: "https://github.com/rogerSuperBuilderAlpha/cursor-boston/blob/develop/docs/ADD_CONTENT.md#add-an-opportunity",
+              external: true,
+            },
+            { label: "Pair programming", href: "/pair" },
+          ]}
+        />
+      </div>
 
       {/* Contribute CTA */}
       <section className="py-6 px-6 border-b border-neutral-200 dark:border-neutral-800">

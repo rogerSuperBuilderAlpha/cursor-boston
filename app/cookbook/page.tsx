@@ -15,6 +15,7 @@ import { CATEGORY_LABELS } from "@/lib/cookbook-labels";
 import { CookbookEntries } from "@/components/cookbook/CookbookEntries";
 import { EntryDetailModal } from "@/components/cookbook/EntryDetailModal";
 import { SubmitForm } from "@/components/cookbook/SubmitForm";
+import { SectionHelp } from "@/components/SectionHelp";
 
 type CookbookSort = "newest" | "oldest" | "top";
 
@@ -139,10 +140,12 @@ export default function CookbookPage() {
   }, [user]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void fetchEntries();
   }, [fetchEntries]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void fetchVotes();
   }, [fetchVotes]);
 
@@ -210,6 +213,41 @@ export default function CookbookPage() {
           </p>
         </div>
       </section>
+
+      <div className="px-6 py-6 max-w-4xl mx-auto w-full">
+        <SectionHelp
+          title="What recipes belong here"
+          intro={
+            <>
+              Prompts, rules files, agent configs, and reproducible Cursor
+              workflows. Submit a recipe with a clear use case, the exact
+              prompt or rules, and what it&apos;s known to work well with.
+            </>
+          }
+          faq={[
+            {
+              q: "How do votes work?",
+              a: "Logged-in members can upvote or downvote a recipe once. The top sort surfaces highest net votes; you can switch to newest/oldest with the filter row.",
+            },
+            {
+              q: "Is there a length or style guide?",
+              a: "Keep prompts focused and reproducible. If your recipe depends on a specific Cursor version or model, say so in the description.",
+            },
+            {
+              q: "Can I edit my submission?",
+              a: "Yes — open your submission and use the edit action. Edits are visible to admins for moderation.",
+            },
+          ]}
+          links={[
+            { label: "How to add other content (blog, talks, etc.)", href: "/open-source" },
+            {
+              label: "Discord — share recipes",
+              href: "https://discord.gg/Wsncg8YYqc",
+              external: true,
+            },
+          ]}
+        />
+      </div>
 
       <section className="px-6 py-10 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950/50">
         <div className="max-w-6xl mx-auto">

@@ -13,6 +13,7 @@ import Avatar from "@/components/Avatar";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { getMentorshipProfile } from "@/lib/mentorship/data";
+import { SectionHelp } from "@/components/SectionHelp";
 import type {
   MentorshipProfile,
   MentorshipMatchScore,
@@ -183,6 +184,40 @@ export default function MentorshipPage() {
             Edit Profile
           </button>
         </div>
+
+        <SectionHelp
+          title="How mentorship matching works"
+          intro={
+            <>
+              Set up a profile as a mentor, mentee, or both. We surface the
+              top matches based on shared expertise, learning goals, and
+              overlapping availability. You initiate the connection — there
+              are no automatic introductions.
+            </>
+          }
+          faq={[
+            {
+              q: "How is mentorship different from pair programming?",
+              a: "Mentorship is an ongoing relationship aimed at growth in specific skills. Pair sessions in /pair are one-off and focused on a shared task or block.",
+            },
+            {
+              q: "What if I don't get a response?",
+              a: "Mentors are volunteers and may be at capacity. Send focused requests with clear goals; if you hear nothing in 7 days, reach out to another good match.",
+            },
+            {
+              q: "Can I be both a mentor and a mentee?",
+              a: "Yes — pick the \"Both\" role when setting up your profile. You'll appear in matches for both sides.",
+            },
+          ]}
+          links={[
+            { label: "Try pair programming instead", href: "/pair" },
+            {
+              label: "Discord — #mentorship channel",
+              href: "https://discord.gg/Wsncg8YYqc",
+              external: true,
+            },
+          ]}
+        />
 
         {/* Profile summary badge */}
         <div className="mb-8 flex items-center gap-3 p-4 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl">

@@ -15,6 +15,7 @@ import type { ProfileDataApiResponse } from "@/lib/profile-data-types";
 import type { Certificate, CertificateClaimResponse } from "@/types/certificate";
 import { CertificateCard } from "./_components/CertificateCard";
 import { CertificateProgress } from "./_components/CertificateProgress";
+import { SectionHelp } from "@/components/SectionHelp";
 
 export default function CertificatePage() {
   const { user, userProfile, loading } = useAuth();
@@ -143,6 +144,36 @@ export default function CertificatePage() {
             {CERTIFICATE_PR_THRESHOLD} pull requests, then add it to your LinkedIn profile.
           </p>
         </section>
+
+        <SectionHelp
+          title="About the certificate"
+          intro={
+            <>
+              After {CERTIFICATE_PR_THRESHOLD} merged PRs against this repo,
+              you can claim a LinkedIn-compatible Cursor Boston Open Source
+              Contributor certificate. The merge count is auto-detected from
+              your linked GitHub account.
+            </>
+          }
+          faq={[
+            {
+              q: "Which PRs count?",
+              a: "Any merged PR into this repo that has your linked GitHub login as the author. Closed/unmerged PRs don't count.",
+            },
+            {
+              q: "Why isn't my count updating?",
+              a: "Make sure your GitHub account is linked from your profile. The page will trigger a reconciliation; if it stays at 0, check that the GitHub username on your profile is correct.",
+            },
+            {
+              q: "Can I add it to LinkedIn?",
+              a: "Yes — after claiming, the Add-to-Profile button generates a one-click LinkedIn link with the certificate details prefilled.",
+            },
+          ]}
+          links={[
+            { label: "Your profile / link GitHub", href: "/profile" },
+            { label: "First contribution guide", href: "/open-source" },
+          ]}
+        />
 
         {loadingData ? (
           <div className="flex items-center justify-center py-12">

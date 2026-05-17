@@ -22,6 +22,7 @@ import type { BadgeEligibilityMap } from "@/lib/badges/types";
 import { getEarnedBadgeIds } from "@/lib/badges/utils";
 import { BadgeGrid } from "@/components/badges/BadgeGrid";
 import type { BadgeDefinition } from "@/lib/badges/types";
+import { SectionHelp } from "@/components/SectionHelp";
 
 export default function BadgesPage() {
   const { user, userProfile, loading } = useAuth();
@@ -70,17 +71,22 @@ export default function BadgesPage() {
 
   useEffect(() => {
     if (!user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setEligibilityMap(undefined);
+       
       setUserBadgeMap({});
+       
       setBadgeDataStatus({
         state: "failed",
         isAuthoritative: false,
         failedSources: [],
       });
+       
       setBadgePersistenceStatus({ state: "complete" });
       return;
     }
 
+     
     setLoadingBadges(true);
     (async () => {
       try {
@@ -161,6 +167,35 @@ export default function BadgesPage() {
             Track your milestones across profile completion, community participation, events, and contributions.
           </p>
         </section>
+
+        <SectionHelp
+          title="About badges"
+          intro={
+            <>
+              Badges recognize milestones — profile completion, event
+              attendance, PR merges, game wins, etc. They&apos;re cosmetic
+              recognition only and don&apos;t unlock special access.
+            </>
+          }
+          faq={[
+            {
+              q: "How do I earn a badge?",
+              a: "Each badge has criteria — e.g. \"merged your first PR\", \"attended a meetup\". Hover or tap a badge to see what it requires.",
+            },
+            {
+              q: "Are they retroactive?",
+              a: "Yes — eligibility is recomputed from your existing activity (PR merges, RSVPs, profile state). New badges land for prior activity automatically.",
+            },
+            {
+              q: "Can I see other people's badges?",
+              a: "Earned badges appear on public profiles for members who opted into the directory.",
+            },
+          ]}
+          links={[
+            { label: "Your profile", href: "/profile" },
+            { label: "Browse the member directory", href: "/members" },
+          ]}
+        />
 
         <section className="mb-4">
           <div className="inline-flex items-center gap-2 rounded-full border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 px-3 py-1.5 text-sm">

@@ -11,6 +11,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import showcaseData from "@/content/showcase.json";
 import { NeedsWorkBanner } from "@/components/NeedsWorkBanner";
+import { SectionHelp } from "@/components/SectionHelp";
 
 interface ProjectContact {
   github?: string;
@@ -547,6 +548,37 @@ export default function ShowcasePage() {
           </p>
         </div>
       </section>
+
+      <div className="px-6 py-6 max-w-4xl mx-auto w-full">
+        <SectionHelp
+          title="About the showcase"
+          intro={
+            <>
+              A gallery of projects built by community members. Submit your
+              own to get visibility; vote on others to surface the best.
+              Submissions go through light moderation before they appear.
+            </>
+          }
+          faq={[
+            {
+              q: "Who can submit?",
+              a: "Any signed-in member. The project should be yours (or you should have permission from the team) and built with substantial AI/Cursor use.",
+            },
+            {
+              q: "How does voting work?",
+              a: "One up- or down-vote per member per project. Top-voted projects appear first; you can switch sort order.",
+            },
+            {
+              q: "How long does approval take?",
+              a: "Usually under a week. We check for spam, broken links, and obvious mismatches. Resubmit after fixing if rejected.",
+            },
+          ]}
+          links={[
+            { label: "Add other content (blog, talks)", href: "/open-source" },
+            { label: "Hackathon submissions", href: "/hackathons" },
+          ]}
+        />
+      </div>
 
       {/* How to Submit Banner */}
       <section className="px-6 py-10 border-b border-neutral-800 bg-neutral-950">
