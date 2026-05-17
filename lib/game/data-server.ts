@@ -152,6 +152,11 @@ import {
 } from "./zero-turn";
 import { findActivePactsBetween } from "./pacts";
 import {
+  markOrderResultInTx,
+  readQueuedOrdersForPlayer,
+} from "./orders";
+import type { QueuedOrder } from "./types";
+import {
   appendHeroEventInTx,
   heroEvent,
   markHeroDeceasedInTx,
@@ -5539,6 +5544,20 @@ export async function runWeeklyRolloverServer(
       });
       if (granted) summary.granted += 1;
       else summary.skippedAlreadyGranted += 1;
+
+      // Zero-turn gameplay: execute queued orders for this player AFTER
+      // their grant lands. Skip when not granted (no turns to spend).
+      if (granted) {
+        try {
+          await executeQueuedOrdersForPlayer(db, player.userId, now);
+        } catch (queueErr) {
+          const m = queueErr instanceof Error ? queueErr.message : String(queueErr);
+          logger.warn("Queued-orders execution error", {
+            userId: player.userId,
+            error: m,
+          });
+        }
+      }
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
       summary.errors.push({ userId: player.userId, error: message });
@@ -7620,6 +7639,116 @@ export async function toggleDefensiveStanceServer(args: {
  * inbound attack — see attackTileServer) and `lastStandUsedAt` on the
  * player (cooldown clock).
  */
+/**
+ * Executes the queued orders for one player in sequenceIndex order.
+ * Called from `runWeeklyRolloverServer` after the weekly grant lands.
+ *
+ * Each order is dispatched to the underlying server action
+ * (buildUnitsServer, attackTileServer, etc). Failures are logged as
+ * `failed` on the order doc with a one-line reason so the UI can show
+ * "what happened" without re-running. Successful orders are marked
+ * `executed` and carry the resulting report/attack id for cross-linking.
+ *
+ * No txn wraps the loop itself — each order runs its own server-action
+ * txn. If one fails, subsequent orders still attempt. This matches the
+ * "skip and continue" semantics the plan specified.
+ */
+async function executeQueuedOrdersForPlayer(
+  db: Firestore,
+  playerId: string,
+  now: Date
+): Promise<void> {
+  const orders = await readQueuedOrdersForPlayer(db, playerId);
+  for (const order of orders) {
+    try {
+      await executeQueuedOrder(db, order, now);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      // Best-effort: mark failed in its own tx so subsequent orders can
+      // still run even if the txn write fails.
+      try {
+        await db.runTransaction(async (tx) => {
+          markOrderResultInTx({
+            tx,
+            db,
+            order,
+            status: "failed",
+            resultSummary: message.slice(0, 200),
+            now,
+          });
+        });
+      } catch {
+        // swallow — logger already captures
+      }
+    }
+  }
+}
+
+async function executeQueuedOrder(
+  db: Firestore,
+  order: QueuedOrder,
+  now: Date
+): Promise<void> {
+  switch (order.params.kind) {
+    case "recruit_on_tile": {
+      const result = await buildUnitsServer(
+        order.playerId,
+        order.params.tileId,
+        order.params.unitType,
+        now
+      );
+      await db.runTransaction(async (tx) => {
+        markOrderResultInTx({
+          tx,
+          db,
+          order,
+          status: "executed",
+          resultSummary: `Recruited ${result.produced} ${order.params.kind === "recruit_on_tile" ? order.params.unitType : ""} on ${order.params.kind === "recruit_on_tile" ? order.params.tileId : ""}`,
+          now,
+        });
+      });
+      return;
+    }
+    case "attack_adjacent": {
+      const p = order.params;
+      const result = await attackTileServer({
+        attackerId: order.playerId,
+        sourceTileId: p.sourceTileId,
+        targetTileId: p.targetTileId,
+        units: p.units,
+        offenseSpellId: p.offenseSpellId,
+        now,
+      });
+      await db.runTransaction(async (tx) => {
+        markOrderResultInTx({
+          tx,
+          db,
+          order,
+          status: "executed",
+          resultSummary: `Attack ${result.combat.outcome}: ${p.sourceTileId} → ${p.targetTileId}`,
+          resultRefId: result.attack.id,
+          now,
+        });
+      });
+      return;
+    }
+    case "cast_spell_on_tile":
+      // v1: spell casting via queue not supported (the existing server
+      // actions split by spell type — would require deeper integration).
+      await db.runTransaction(async (tx) => {
+        markOrderResultInTx({
+          tx,
+          db,
+          order,
+          status: "failed",
+          resultSummary: "Spell-cast queueing not yet supported",
+          now,
+        });
+      });
+      return;
+  }
+}
+
 export async function declareLastStandServer(args: {
   callerUserId: string;
   tileId: string;

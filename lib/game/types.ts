@@ -1370,9 +1370,11 @@ export type QueuedOrderStatus =
   | "failed"
   | "cancelled";
 
-/** Per-kind params payload. Discriminated by `kind`. */
+/** Per-kind params payload. Discriminated by `kind`. Each enqueued
+ *  order represents ONE action; players queue multiple orders if they
+ *  want a sequence. */
 export type QueuedOrderParams =
-  | { kind: "recruit_on_tile"; tileId: string; unitType: UnitType; quantity: number }
+  | { kind: "recruit_on_tile"; tileId: string; unitType: UnitType }
   | { kind: "attack_adjacent"; sourceTileId: string; targetTileId: string; units: UnitStack; offenseSpellId: string | null }
   | { kind: "cast_spell_on_tile"; tileId: string; spellId: string };
 
