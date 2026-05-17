@@ -182,6 +182,14 @@ export const userOwnedCollections: ReadonlyArray<UserOwnedCollection> = [
     fields: ["attackerId", "defenderId"],
     behavior: { type: "delete" },
   },
+  // Zero-turn gameplay: queued battle plans the player has not yet
+  // executed. On account deletion these have no meaning — delete them.
+  {
+    collection: "game_order_queue",
+    mode: "fieldEqualsUid",
+    field: "playerId",
+    behavior: { type: "delete" },
+  },
 
   // ---------------------------------------------------------------------
   // arrayContains — delete (sessions where user is one of N participants)

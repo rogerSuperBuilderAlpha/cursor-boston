@@ -23,6 +23,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { sanitizeText } from "@/lib/sanitize";
 import type { Caste, GameWorldMeta, Prophecy } from "./types";
+import { PROPHECY_BONUS_TURNS } from "./types";
 import { logCommunityEventInTx } from "./community";
 
 const PROPHECIES = "game_prophecies";
@@ -201,10 +202,20 @@ export async function resolveProphesiesForSealInTx(args: {
       resolvedAt: args.now,
       fulfilledBy: args.brokenBy,
     });
-    // Bump the author's seer counter.
+    // Bump the author's seer counter AND stake them a small bonus toward
+    // their next weekly turn grant (zero-turn gameplay: prophecy stakes).
+    // Capped at PROPHECY_BONUS_TURNS_MAX so multiple resolutions in one
+    // week don't compound. The cap is enforced at consume-time in
+    // runWeeklyRolloverServer using Math.min — the per-resolution write
+    // here doesn't need to know the cap because it's a monotonic field
+    // we read-then-write later. We add unconditionally here; the cap
+    // applies when the bonus is actually consumed.
     args.tx.update(
       args.db.collection(PLAYERS).doc(data.authorId),
-      { prophecyFulfilledCount: FieldValue.increment(1) }
+      {
+        prophecyFulfilledCount: FieldValue.increment(1),
+        pendingProphecyBonus: FieldValue.increment(PROPHECY_BONUS_TURNS),
+      }
     );
     logCommunityEventInTx(
       args.tx,

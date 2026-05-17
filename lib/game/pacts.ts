@@ -172,6 +172,41 @@ function pactExpiresAtMs(p: Pact): number {
 }
 
 /**
+ * Returns the live (not-deleted, not-broken, not-expired) pacts where
+ * `attackerId` is the author and `defenderId` is the target. Empty array
+ * if there are no active pacts. Used by the attack handler to decide
+ * whether the Oathbreaker mark applies to the imminent attack.
+ *
+ * Reads outside any transaction — the lookup is informational, and the
+ * subsequent `markPactsBrokenInTx` is responsible for the actual brokenAt
+ * write inside the transaction.
+ */
+export async function findActivePactsBetween(args: {
+  db: Firestore;
+  attackerId: string;
+  defenderId: string;
+  now: Date;
+}): Promise<Pact[]> {
+  const snap = await args.db
+    .collection(PACTS)
+    .where("authorId", "==", args.attackerId)
+    .where("targetId", "==", args.defenderId)
+    .get();
+  if (snap.empty) return [];
+  const nowMs = args.now.getTime();
+  const out: Pact[] = [];
+  for (const doc of snap.docs) {
+    const pact = doc.data() as Pact;
+    if (pact.deletedAt) continue;
+    if (pact.brokenAt) continue;
+    const expiresMs = pactExpiresAtMs(pact);
+    if (expiresMs < nowMs) continue;
+    out.push(pact);
+  }
+  return out;
+}
+
+/**
  * Called inside attackTileServer's transaction. Scans the attacker's
  * active pacts targeting the defender; for each not-yet-broken pact
  * still inside its window, sets `brokenAt` and posts a `pact_broken`

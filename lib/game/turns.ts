@@ -7,6 +7,7 @@
 import { magicMultiplier, unitCapFromFoodLands } from "./combat";
 import { SPELLS_BY_ID, getCasteProfile } from "./content";
 import type { ActiveProductionSpell, GamePlayer, Phase } from "./types";
+import { PROPHECY_BONUS_TURNS_MAX } from "./types";
 
 export const WEEKLY_TURN_GRANT = 100;
 // Initial bucket granted at spawn. Larger than the weekly grant so a fresh
@@ -202,14 +203,21 @@ export function shouldGrantWeeklyTurns(
 
 // Adds WEEKLY_TURN_GRANT on top of any unspent turns — banking is rewarded,
 // not penalized. A player who hoarded 300 going into the rollover ends at 400.
+// Zero-turn gameplay: consumes any pendingProphecyBonus (capped at
+// PROPHECY_BONUS_TURNS_MAX) so a fulfilled prophecy stakes the prophet
+// extra turns on their next grant. The pending counter is zeroed in the
+// returned player; the caller is responsible for writing this back.
 export function applyWeeklyGrant(
   player: GamePlayer,
   weekStartIso: string,
   now: Date = new Date()
 ): GamePlayer {
+  const bonusRaw = player.pendingProphecyBonus ?? 0;
+  const bonus = Math.min(PROPHECY_BONUS_TURNS_MAX, Math.max(0, bonusRaw));
   return {
     ...player,
-    turnsRemaining: player.turnsRemaining + WEEKLY_TURN_GRANT,
+    turnsRemaining: player.turnsRemaining + WEEKLY_TURN_GRANT + bonus,
+    pendingProphecyBonus: 0,
     lastWeeklyGrantAt: now,
     lastWeeklyGrantWeekStart: weekStartIso,
     updatedAt: now,

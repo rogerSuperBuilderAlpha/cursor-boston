@@ -539,6 +539,16 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
+    // Zero-turn gameplay: queued battle plans that execute at the next
+    // weekly turn grant. A player can only read their own queue.
+    // Writes go through /api/game/orders (validation + per-player cap)
+    // and through the rollover executor when orders fire.
+    match /game_order_queue/{orderId} {
+      allow read: if request.auth != null
+        && resource.data.playerId == request.auth.uid;
+      allow create, update, delete: if false;
+    }
+
     // Game — Artifacts (v2): a player can only read their own inventory.
     // All writes go through the Admin SDK via turn-spending API routes.
     match /game_artifacts/{artifactId} {
