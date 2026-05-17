@@ -211,9 +211,14 @@ export default function LeaderboardPage() {
                     {i + 1}
                   </td>
                   <td className="py-2 pr-2 text-sm">
-                    {r.userId === user.uid
-                      ? `${r.displayName || "You"} (you)`
-                      : r.displayName || "—"}
+                    <Link
+                      href={`/game/players/${r.userId}`}
+                      className="hover:underline"
+                    >
+                      {r.userId === user.uid
+                        ? `${r.displayName || "You"} (you)`
+                        : r.displayName || "—"}
+                    </Link>
                   </td>
                   <td className="py-2 pr-2 capitalize">{r.caste ?? "—"}</td>
                   <td className="py-2 pr-2 text-right">{r.tilesHeld}</td>

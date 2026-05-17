@@ -30,6 +30,8 @@ import {
 } from "./content/armageddon";
 import { rollArtifact } from "./artifacts";
 import { logCommunityEventInTx } from "./community";
+import { markPactsBrokenInTx } from "./pacts";
+import { resolveProphesiesForSealInTx } from "./prophecies";
 import { buildIntelReportServer } from "./intel";
 import {
   deleteIntelEffectsInTx,
@@ -51,6 +53,7 @@ import {
 } from "./turn-report";
 import { notifyConquest } from "./discord-game";
 import { logger } from "@/lib/logger";
+import { sanitizeText } from "@/lib/sanitize";
 import {
   paginateFirestoreQuery,
   paginateInMemory,
@@ -466,6 +469,18 @@ export class GameArtifactAlreadyUsedError extends Error {
   constructor() {
     super("Artifact has already been used");
     this.name = "GameArtifactAlreadyUsedError";
+  }
+}
+export class GamePlayerBioTooLongError extends Error {
+  constructor() {
+    super("Bio cannot exceed 500 characters");
+    this.name = "GamePlayerBioTooLongError";
+  }
+}
+export class GameInscriptionTooLongError extends Error {
+  constructor() {
+    super("Inscription cannot exceed 120 characters");
+    this.name = "GameInscriptionTooLongError";
   }
 }
 export class GameInvalidNameError extends Error {
@@ -3109,6 +3124,9 @@ export async function attackTileServer(args: {
   // Fallback when heroAction === "convert" and the roll fails. Defaults
   // to "kill" (legacy semantics: you won, you take the tile).
   heroActionOnConvertFail?: Exclude<HeroBattleAction, "convert">;
+  // Optional ≤280-char attacker-authored taunt attached to the attack
+  // record. Sanitized server-side. Empty/missing = no dispatch.
+  dispatch?: string;
   now?: Date;
 }): Promise<{
   attack: GameAttack;
@@ -3731,6 +3749,21 @@ export async function attackTileServer(args: {
       },
       now
     );
+
+    // Phase 7: if the attacker has an active pact targeting this
+    // defender, stamp it broken + post a `pact_broken` feed event.
+    // The lookup runs outside any txn read, so this comes after all
+    // other tx.get() calls on the attack path.
+    await markPactsBrokenInTx({
+      tx,
+      db,
+      attackerId: args.attackerId,
+      attackerDisplayName: attacker.displayName,
+      attackerCaste: attacker.caste,
+      defenderId,
+      defenderDisplayName: defender.displayName,
+      now,
+    });
     if (
       attacker.stats.tilesHeld < 1000 &&
       attackerStats.tilesHeld >= 1000
@@ -3996,6 +4029,9 @@ export async function attackTileServer(args: {
       });
     }
 
+    const dispatch = args.dispatch
+      ? sanitizeText(args.dispatch).slice(0, 280)
+      : "";
     const attack: GameAttack = {
       id: attackId,
       attackerId: args.attackerId,
@@ -4013,6 +4049,7 @@ export async function attackTileServer(args: {
       outcome: result.outcome,
       turnsCost: turnCost,
       createdAt: now,
+      ...(dispatch ? { dispatch } : {}),
     };
     tx.set(attackRef, attack);
 
@@ -5379,6 +5416,94 @@ export async function setGeneralNameServer(
     });
     return { ...(snap.data() as GamePlayer), displayName: cleaned, updatedAt: now };
   });
+}
+
+const MAX_BIO_LENGTH = 500;
+const MAX_INSCRIPTION_LENGTH = 120;
+
+/**
+ * Sets the owner-authored inscription on a tile. Cosmetic — surfaces
+ * via intel scans / attack outcomes. Owner-only write. Empty string
+ * clears the inscription.
+ */
+export async function setTileInscriptionServer(
+  userId: string,
+  tileId: string,
+  rawInscription: string,
+  now: Date = new Date()
+): Promise<GameTile> {
+  const cleaned = sanitizeText(rawInscription);
+  if (cleaned.length > MAX_INSCRIPTION_LENGTH) {
+    throw new GameInscriptionTooLongError();
+  }
+  const db = adminDbOrThrow();
+  const tileRef = db.collection(COLLECTIONS.TILES).doc(tileId);
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(tileRef);
+    if (!snap.exists) throw new GameTileNotFoundError();
+    const tile = snap.data() as GameTile;
+    if (tile.ownerId !== userId) throw new GameTileNotOwnedError();
+    tx.update(tileRef, {
+      inscription: cleaned,
+      inscriptionUpdatedAt: now,
+      updatedAt: now,
+    });
+    return {
+      ...tile,
+      inscription: cleaned,
+      inscriptionUpdatedAt: now,
+      updatedAt: now,
+    };
+  });
+}
+
+/**
+ * Updates the player's free-form public bio shown on the profile page.
+ * No turn cost; rate-limited at the route layer. Passing an empty
+ * string clears the bio. Sanitizes via sanitizeText() before write so
+ * control chars / stray tabs don't leak into Firestore.
+ */
+export async function setPlayerBioServer(
+  userId: string,
+  rawBio: string,
+  now: Date = new Date()
+): Promise<GamePlayer> {
+  const cleaned = sanitizeText(rawBio);
+  if (cleaned.length > MAX_BIO_LENGTH) {
+    throw new GamePlayerBioTooLongError();
+  }
+  const db = adminDbOrThrow();
+  const playerRef = db.collection(COLLECTIONS.PLAYERS).doc(userId);
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(playerRef);
+    if (!snap.exists) throw new GamePlayerNotFoundError();
+    tx.update(playerRef, {
+      bio: cleaned,
+      bioUpdatedAt: now,
+      updatedAt: now,
+    });
+    return {
+      ...(snap.data() as GamePlayer),
+      bio: cleaned,
+      bioUpdatedAt: now,
+      updatedAt: now,
+    };
+  });
+}
+
+/**
+ * Public read for /game/players/[playerId]. Returns the player doc as-
+ * is — the page renders only the public-safe fields, and `game_players`
+ * is already world-readable for the leaderboard, so there's no extra
+ * secret to filter out. Returns null if the player doesn't exist.
+ */
+export async function getPublicPlayerProfileServer(
+  userId: string
+): Promise<GamePlayer | null> {
+  const db = adminDbOrThrow();
+  const snap = await db.collection(COLLECTIONS.PLAYERS).doc(userId).get();
+  if (!snap.exists) return null;
+  return snap.data() as GamePlayer;
 }
 
 export async function getLeaderboardServer(opts: {
@@ -6860,6 +6985,25 @@ export async function castArmageddonServer(args: {
         },
         now
       );
+
+      // Phase 7: resolve any prophecies targeting this seal — stamp
+      // them fulfilled, increment authors' prophecyFulfilledCount, and
+      // post `prophecy_fulfilled` feed events.
+      if (player.caste) {
+        await resolveProphesiesForSealInTx({
+          tx,
+          db,
+          // Prophecies are filed against 1-indexed seal numbers; the
+          // internal sealIndex is 0-indexed.
+          brokenSealNumber: sealIndex + 1,
+          brokenBy: {
+            userId: player.userId,
+            displayName: player.displayName,
+            caste: player.caste,
+          },
+          now,
+        });
+      }
       if (shouldTriggerResolve) {
         logCommunityEventInTx(
           tx,

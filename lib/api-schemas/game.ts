@@ -398,6 +398,10 @@ const AttackBody = z
     // `heroActionOnConvertFail` is applied as the fallback.
     heroAction: z.enum(["kill", "spare", "convert"]).optional(),
     heroActionOnConvertFail: z.enum(["kill", "spare"]).optional(),
+    // Optional attacker-authored ≤280-char taunt attached to the attack
+    // record. Surfaces in /game/attacks on both sides. Cosmetic only —
+    // no combat impact.
+    dispatch: z.string().max(280).optional(),
   })
   .openapi("GameAttackBody");
 

@@ -187,7 +187,11 @@ export function DashboardView({ player, data }: DashboardViewProps) {
           <NavGrid phase={player.phase} />
         </div>
 
-        <CommunityPanel user={data.user} isAdmin={isAdmin} />
+        <CommunityPanel
+          user={data.user}
+          isAdmin={isAdmin}
+          myCaste={player.caste}
+        />
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6 mb-6">
           <LandsCard counts={counts} />

@@ -252,8 +252,68 @@ export interface GamePlayer {
   // via summonSpecialUnitServer, the entry carries the tile id and folds
   // into combat math at that tile.
   summonableSpecialUnits?: SpecialUnitInstance[];
+  // Free-form public bio shown on /game/players/[playerId]. Sanitized via
+  // sanitizeText() on write; 500 chars max. Soft-deletable: empty string
+  // means "no bio set" (not yet authored or cleared by author/admin).
+  bio?: string;
+  bioUpdatedAt?: Timestamp | Date;
+  // Phase 7. Incremented when one of this player's prophecies resolves
+  // (the predicted seal breaks). Drives the Seer title.
+  prophecyFulfilledCount?: number;
   createdAt: Timestamp | Date;
   updatedAt: Timestamp | Date;
+}
+
+/** Derived achievement title surfaced on the player profile page. Titles
+ *  are computed at read time from already-stored fields on GamePlayer +
+ *  related collections (no separate "earned titles" doc) so they stay in
+ *  sync with reality automatically. */
+export interface PlayerTitle {
+  id: string;
+  label: string;
+  description: string;
+}
+
+/** Public non-aggression pact between two generals. No combat
+ *  enforcement — if the author attacks the target during the window,
+ *  the attack handler stamps `brokenAt` and posts a `pact_broken`
+ *  community event. Reputation system, not a rules system. */
+export interface Pact {
+  id: string;
+  authorId: string;
+  authorDisplayName: string;
+  authorCaste: Caste | null;
+  targetId: string;
+  targetDisplayName: string;
+  targetCaste: Caste | null;
+  statement: string;
+  createdAt: Timestamp | Date;
+  expiresAt: Timestamp | Date;
+  /** Set when the author attacks the target inside the window. */
+  brokenAt?: Timestamp | Date;
+  deletedAt?: Timestamp | Date;
+  deletedByAdmin?: boolean;
+}
+
+/** A pre-filed prediction about a specific Armageddon seal. Marked
+ *  `resolvedAt` the moment that seal breaks; the breaker's identity is
+ *  captured for the "Seer" title attribution. */
+export interface Prophecy {
+  id: string;
+  authorId: string;
+  authorDisplayName: string;
+  authorCaste: Caste | null;
+  targetSealNumber: number; // 1..7
+  prediction: string;
+  createdAt: Timestamp | Date;
+  resolvedAt?: Timestamp | Date;
+  fulfilledBy?: {
+    userId: string;
+    displayName: string;
+    caste: Caste;
+  };
+  deletedAt?: Timestamp | Date;
+  deletedByAdmin?: boolean;
 }
 
 export interface GameTile {
@@ -295,6 +355,11 @@ export interface GameTile {
   // magic: spell cast from here). Optional for back-compat — legacy tile
   // docs without the field parse as "no hero". See lib/game/heroes.ts.
   hero?: GameHero;
+  // Owner-authored inscription (≤120 chars). Cosmetic — surfaces on
+  // intel scans and post-attack outcomes for any other player who
+  // interacts with the tile. Server-sanitized on write.
+  inscription?: string;
+  inscriptionUpdatedAt?: Timestamp | Date;
   createdAt: Timestamp | Date;
   updatedAt: Timestamp | Date;
 }
@@ -522,6 +587,8 @@ export interface GameHeroEvent {
   unitType?: UnitType;          // recruited
   unitsBuilt?: number;          // recruited
   specialUnitDefId?: string;    // special_unit_summoned
+  /** Per-reaction counters surfaced on the hero detail event row. */
+  reactions?: ReactionMap;
 }
 
 /** Canonical persistent record for a hero. Survives Armageddon wipes
@@ -632,6 +699,9 @@ export interface GameAttack {
   rngSeed: string;
   outcome: AttackOutcome;
   turnsCost: number;
+  /** Optional attacker-authored ≤280-char taunt. Server-sanitized on
+   *  write. Cosmetic only; no combat impact. */
+  dispatch?: string;
   createdAt: Timestamp | Date;
 }
 
@@ -838,6 +908,10 @@ export interface IntelReport {
     units: UnitStack;
     armedDefenseSpellId: string | null;
     isolatedSpawn: boolean;
+    /** Owner-authored inscription, if any. Surfaced to the spy as part
+     *  of the tile's "personality" — added in Phase 4 of the non-turn
+     *  features rollout. Empty / missing = no inscription set. */
+    inscription?: string;
   };
   neighbors?: Array<{
     tileId: string;
@@ -995,6 +1069,29 @@ export type LossCurveTag =
 // Community feed + chat
 // =====================================================================
 
+/** Reaction emoji set surfaced on chat / feed / hero-event rows. Counts
+ *  are server-incremented via FieldValue.increment; the per-user "have I
+ *  reacted?" tracker lives in `game_reactions` (one doc per user-scope-
+ *  doc-reaction). Adding a new emoji: extend this list, update the
+ *  validator in `app/api/game/reactions/route.ts`, and the renderer in
+ *  `app/game/_components/dashboard/ReactionsRow.tsx`. */
+export const REACTION_EMOJIS = ["⚔️", "🛡️", "📜"] as const;
+export type ReactionEmoji = (typeof REACTION_EMOJIS)[number];
+export type ReactionMap = Partial<Record<ReactionEmoji, number>>;
+export type ReactionScope = "chat" | "feed" | "hero_event";
+
+/** Idempotency tracker doc stored in `game_reactions`. Doc id is
+ *  `{userId}_{scope}_{docId}_{reactionIndex}` — existence means "this
+ *  user has placed this reaction." Toggle off = delete. */
+export interface ReactionTracker {
+  userId: string;
+  scope: ReactionScope;
+  docId: string;
+  reaction: ReactionEmoji;
+  heroId?: string; // hero_event scope only — to resolve subcollection path
+  createdAt: Timestamp | Date;
+}
+
 /** Events surfaced in the dashboard's CommunityPanel activity feed. */
 export type CommunityEventKind =
   | "player_join"
@@ -1016,7 +1113,10 @@ export type CommunityEventKind =
   // + specialty so the feed survives the hero record going away.
   | "hero_emerged"
   | "hero_defected"
-  | "hero_slain";
+  | "hero_slain"
+  // Phase 7 (non-turn social): public reputation events.
+  | "pact_broken"
+  | "prophecy_fulfilled";
 
 /** Single entry in the `game_community_events` log. Denormalized so the
  *  feed renderer never needs to join against game_players. */
@@ -1055,6 +1155,15 @@ export interface CommunityEvent {
   otherUserId?: string;
   otherDisplayName?: string;
   otherCaste?: Caste | null;
+  // Phase 7. pact_broken / prophecy_fulfilled.
+  pactId?: string;
+  pactStatement?: string;
+  prophecyId?: string;
+  prophecyPrediction?: string;
+  prophecyTargetSealNumber?: number;
+  /** Per-reaction counters. Server-incremented via FieldValue.increment
+   *  by /api/game/reactions. Absent = no reactions yet. */
+  reactions?: ReactionMap;
 }
 
 // =====================================================================
@@ -1154,6 +1263,12 @@ export interface ArmageddonEventRecord {
   }>;
 }
 
+/** Scope for community chat messages. `global` is the default open
+ *  room; `caste:<name>` rooms are gated to members of that caste at
+ *  post time. Existing rows without a scope field are treated as
+ *  `global`. */
+export type ChatScope = "global" | `caste:${Caste}`;
+
 /** Single message in the `game_community_messages` collection. */
 export interface CommunityMessage {
   id: string;
@@ -1162,9 +1277,14 @@ export interface CommunityMessage {
   caste: Caste | null;
   body: string;
   createdAt: Timestamp | Date;
+  /** Room the message was posted to. Absent on legacy rows — readers
+   *  coerce missing to `'global'`. */
+  scope?: ChatScope;
   /** Set when the message has been soft-deleted (by the author or an
    *  admin). The chat renderer hides deleted messages by default. */
   deletedAt?: Timestamp | Date;
   /** True when the deletion was performed by an admin. */
   deletedByAdmin?: boolean;
+  /** Per-reaction counters. */
+  reactions?: ReactionMap;
 }
