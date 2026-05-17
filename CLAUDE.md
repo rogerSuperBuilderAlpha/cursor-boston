@@ -8,6 +8,16 @@ Conventions and behaviors that apply to every session in this repo.
 
 The workflow validates that `firestore.indexes.json` parses before deploying. The Firestore emulator isn't run on every commit — that's a heavyweight check (needs Java) and CI's "Firestore rules tests" job already covers it on every PR.
 
+> **Known issue (May 2026):** every run of the `Deploy Firestore rules + indexes` workflow since 2026-05-12 has failed with `403 Permission denied to get service [firestore.googleapis.com]` — the service account in the `FIREBASE_SERVICE_ACCOUNT_JSON` secret is missing `roles/serviceusage.serviceUsageConsumer` on the `cursor-boston` GCP project. Until that role is granted to the SA, rules/index deploys must be done locally with `firebase deploy --only firestore:rules,firestore:indexes --project cursor-boston` from a maintainer machine. This is the explicit exception to "don't `firebase deploy` by hand."
+
+## Local production verification — emergency typecheck bypass
+
+`next.config.js` honors a `SKIP_TYPECHECK=1` env var that disables both the TypeScript and ESLint build checks. Use it ONLY when pre-existing in-flight branch state has typecheck/lint errors in unrelated files and you need a local build for visual QA. **Never set it in CI.** CI is the boundary that catches type errors; bypassing it locally is fine because you're the boundary.
+
+```bash
+SKIP_TYPECHECK=1 npm run build && npm start
+```
+
 ## Verify locally before any develop→main release
 
 Before merging or pushing any change all the way to `main`, run a local production verification:
@@ -28,7 +38,7 @@ Current core branches:
 
 - `c1w1pm-submission`, `c1w2comms-submission`, `c1w3mkt-submission`, `c1w4edu-submission`, `c1w5startup-submission`, `c1w6oss-submission` — summer cohort 1 weekly submissions
 - `c2w1pm-submission`, `c2w2comms-submission`, `c2w3mkt-submission` — summer cohort 2 vote-format weekly submissions (create from `origin/develop` before c2 Week 1 kickoff on Mon Jun 29; the dashboard already references these branches via `SUMMER_COHORT_C2_VOTE_WEEKS` in `lib/summer-cohort.ts`)
-- `pydata-2026-submissions` — PyData attendee notebooks
+- `pydata-2026-submissions` — PyData attendee notebooks. **Mirrored at root** as `pydata-2026-submissions/` directory; submissions PR into both the branch and the root directory (the scorer + the event page read from the directory; the branch is the staging surface).
 - `hack-a-sprint-2026-submissions` — Hack-a-Sprint showcase JSON submissions
 - `game-contributions`
 
