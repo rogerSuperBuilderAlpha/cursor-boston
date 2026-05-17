@@ -177,6 +177,11 @@ export default function ArmageddonPage() {
           </div>
         )}
 
+        <PropheciesPanel
+          user={user}
+          currentSealsBroken={worldMeta?.sealsBroken ?? 0}
+        />
+
         <h2 className="text-xl font-semibold mb-4 mt-8">Hall of Fame — Past Armageddons</h2>
 
         {history.length === 0 ? (
@@ -308,5 +313,140 @@ function ArmageddonCard({ ev }: { ev: ArmageddonEventRecord }) {
         </details>
       )}
     </div>
+  );
+}
+
+function PropheciesPanel({
+  user,
+  currentSealsBroken,
+}: {
+  user: { uid: string; getIdToken: () => Promise<string> };
+  currentSealsBroken: number;
+}) {
+  const nextSeal = Math.min(7, currentSealsBroken + 1);
+  const [prophecies, setProphecies] = useState<Array<{
+    id: string;
+    authorId: string;
+    authorDisplayName: string;
+    prediction: string;
+    resolvedAt?: string | { seconds: number };
+    fulfilledBy?: { displayName: string };
+  }>>([]);
+  const [draft, setDraft] = useState("");
+  const [posting, setPosting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const refresh = useCallback(async () => {
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch(`/api/game/prophecies?seal=${nextSeal}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) setProphecies(data.prophecies ?? []);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load prophecies");
+    }
+  }, [user, nextSeal]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    refresh();
+  }, [refresh]);
+
+  const submit = useCallback(async () => {
+    const prediction = draft.trim();
+    if (!prediction) return;
+    setPosting(true);
+    setError(null);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch("/api/game/prophecies", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ targetSealNumber: nextSeal, prediction }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(
+          typeof data.error === "string"
+            ? data.error
+            : data.error?.message ?? "Failed to file"
+        );
+      }
+      setDraft("");
+      await refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to file");
+    } finally {
+      setPosting(false);
+    }
+  }, [user, draft, nextSeal, refresh]);
+
+  if (currentSealsBroken >= 7) return null;
+
+  return (
+    <section className="mb-8 rounded-lg border border-purple-300 dark:border-purple-800 bg-purple-50/40 dark:bg-purple-950/20 p-5">
+      <h2 className="text-lg font-semibold mb-1">
+        Prophecies for Seal #{nextSeal}
+      </h2>
+      <p className="text-xs text-neutral-600 dark:text-neutral-400 mb-4">
+        File a prediction before the next seal falls. Prophecies that resolve
+        when the seal breaks earn you the Seer title.
+      </p>
+      {error && (
+        <p className="mb-3 text-sm text-red-600 dark:text-red-400">{error}</p>
+      )}
+      <div className="mb-4">
+        <textarea
+          value={draft}
+          onChange={(e) => setDraft(e.target.value.slice(0, 200))}
+          rows={2}
+          placeholder="A prediction about who will break the next seal, or what comes after…"
+          className="w-full resize-none rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm dark:border-neutral-700 dark:bg-neutral-950"
+          maxLength={200}
+        />
+        <div className="mt-1 flex items-center justify-between text-[11px]">
+          <span className="text-neutral-500">
+            {200 - draft.length} chars left · 1 prophecy / day
+          </span>
+          <button
+            type="button"
+            onClick={submit}
+            disabled={posting || draft.trim().length === 0}
+            className="rounded bg-purple-600 px-2 py-0.5 font-semibold text-white hover:bg-purple-500 disabled:opacity-50"
+          >
+            {posting ? "Filing…" : "File prophecy"}
+          </button>
+        </div>
+      </div>
+      {prophecies.length === 0 ? (
+        <p className="text-sm italic text-neutral-500">
+          No prophecies filed for this seal yet.
+        </p>
+      ) : (
+        <ul className="space-y-2">
+          {prophecies.map((p) => (
+            <li
+              key={p.id}
+              className="rounded-md border border-purple-200 dark:border-purple-900/60 bg-white dark:bg-neutral-900 px-3 py-2 text-sm"
+            >
+              <p className="italic">&ldquo;{p.prediction}&rdquo;</p>
+              <div className="mt-1 text-[11px] text-neutral-500">
+                — <strong className="capitalize">{p.authorDisplayName}</strong>
+                {p.resolvedAt && (
+                  <span className="ml-2 inline-block rounded-full bg-emerald-100 dark:bg-emerald-900/40 px-2 py-0.5 text-[10px] text-emerald-700 dark:text-emerald-300">
+                    Fulfilled
+                  </span>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }

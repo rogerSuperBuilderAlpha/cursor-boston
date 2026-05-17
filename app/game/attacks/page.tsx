@@ -222,6 +222,18 @@ function AttackRow({ attack, myUserId }: { attack: GameAttack; myUserId: string 
         {" / "}
         defender: G{attack.unitsLostDefender.ground} S{attack.unitsLostDefender.siege} A{attack.unitsLostDefender.air}
       </div>
+      {attack.dispatch && (
+        <div
+          className={`mt-2 rounded-md border-l-2 px-2 py-1 text-sm italic ${
+            iAttacked
+              ? "border-emerald-300 bg-emerald-50/50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-900/10 dark:text-emerald-200"
+              : "border-red-300 bg-red-50/50 text-red-800 dark:border-red-900 dark:bg-red-900/10 dark:text-red-200"
+          }`}
+        >
+          {iAttacked ? "Your dispatch:" : "Attacker's dispatch:"} &ldquo;
+          {attack.dispatch}&rdquo;
+        </div>
+      )}
     </div>
   );
 }

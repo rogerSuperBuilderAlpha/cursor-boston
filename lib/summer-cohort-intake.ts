@@ -23,7 +23,16 @@
  */
 
 export const SUMMER_COHORT_INTAKE_COLLECTION = "summerCohortIntakeSurveys";
-export const SUMMER_COHORT_INTAKE_VERSION = "c1-v1";
+/** Bumped to v2 with the per-cohort split: docs now keyed by
+ *  `{uid}_{cohortId}` and carry `participatedInCohort1` for c2 docs. */
+export const SUMMER_COHORT_INTAKE_VERSION = "v2";
+
+/** Firestore doc id for the (user, cohort) intake survey. Cohort 1 surveys
+ *  written before v2 were keyed by uid only — see the GET route's fallback
+ *  lookup for back-compat. */
+export function intakeSurveyDocId(uid: string, cohortId: string): string {
+  return `${uid}_${cohortId}`;
+}
 
 // ---------------------------------------------------------------------------
 // Enums (string literal unions)
@@ -161,6 +170,11 @@ export type IntakeSurveyResponse = {
   email: string;
   cohort: string;
   consentToResearch: boolean;
+  /** Only meaningful on cohort-2 surveys. The server fills this from the
+   *  application record (was the user admitted to cohort-1?) and ignores any
+   *  client-supplied value — the form renders it pre-selected + disabled so
+   *  the participant can see the linkage. Null on cohort-1 surveys. */
+  participatedInCohort1: boolean | null;
 
   // Section 2: Demographics
   age: number | null;
@@ -280,6 +294,10 @@ export function validateIntakeSurvey(
     email: clampStr(r.email, INTAKE_LIMITS.email).toLowerCase(),
     cohort: clampStr(r.cohort, 64),
     consentToResearch: r.consentToResearch === true,
+    // Server fills this from the application lookup; the validator just
+    // coerces what came in. POST handler overwrites with the authoritative
+    // value derived from `summerCohortApplications`.
+    participatedInCohort1: boolOrNull(r.participatedInCohort1),
 
     age: intOrNull(r.age, INTAKE_LIMITS.minAge, INTAKE_LIMITS.maxAge),
     gender: inEnum(r.gender, GENDER_OPTIONS),

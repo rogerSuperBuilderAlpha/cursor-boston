@@ -481,6 +481,23 @@ service cloud.firestore {
         allow read: if request.auth != null;
         allow create, update, delete: if false;
       }
+
+      // In-game chronicle chapters contributed via the hero detail page.
+      // Authenticated read; all writes flow through /api/game/heroes/
+      // [heroId]/chapter (rate-limited, owner-auto-approves, others
+      // submit pending). Soft-delete by author or admin.
+      match /chapters/{chapterId} {
+        allow read: if request.auth != null;
+        allow create, update, delete: if false;
+      }
+
+      // Eulogies posted on deceased / awaiting-resurrection heroes.
+      // Authenticated read; writes flow through /api/game/heroes/
+      // [heroId]/epitaph. Soft-delete by author or admin.
+      match /epitaphs/{epitaphId} {
+        allow read: if request.auth != null;
+        allow create, update, delete: if false;
+      }
     }
 
     // Game — Community chat (free-form message board). Reads are
@@ -489,6 +506,35 @@ service cloud.firestore {
     // status before delegating to the Admin SDK. Direct client writes
     // would bypass the rate-limit + length checks, so deny.
     match /game_community_messages/{messageId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if false;
+    }
+
+    // Game — Per-user reaction trackers. Doc id encodes
+    // {userId}_{scope}_{docId}_{emojiIndex}; existence means "user has
+    // placed this reaction." Reads are authenticated; writes flow only
+    // through /api/game/reactions which keeps counters on the target
+    // docs in sync via FieldValue.increment.
+    match /game_reactions/{trackerId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if false;
+    }
+
+    // Phase 7: public non-aggression pacts. Authenticated read; writes
+    // through /api/game/pacts (rate-limited, server-side denorm of
+    // author/target display name + caste). Attack handler marks
+    // pact.brokenAt when the author attacks the target inside the
+    // window.
+    match /game_pacts/{pactId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if false;
+    }
+
+    // Phase 7: pre-filed Armageddon prophecies. Authenticated read;
+    // writes through /api/game/prophecies. Resolution (resolvedAt +
+    // fulfilledBy) is stamped by the Armageddon-cast handler when the
+    // targeted seal breaks.
+    match /game_prophecies/{prophecyId} {
       allow read: if request.auth != null;
       allow create, update, delete: if false;
     }
