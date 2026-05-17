@@ -12,7 +12,10 @@ import { Suspense } from "react";
 import { TabBar } from "./_components/TabBar";
 import { CastesTab } from "./_components/tabs/CastesTab";
 import { CombatTab } from "./_components/tabs/CombatTab";
+import { CommunityTab } from "./_components/tabs/CommunityTab";
 import { ContributorTab } from "./_components/tabs/ContributorTab";
+import { EndgameTab } from "./_components/tabs/EndgameTab";
+import { HeroesTab } from "./_components/tabs/HeroesTab";
 import { OverviewTab } from "./_components/tabs/OverviewTab";
 import { PhasesTab } from "./_components/tabs/PhasesTab";
 import { WorldTab } from "./_components/tabs/WorldTab";
@@ -46,8 +49,9 @@ function HelpPageInner() {
         <p className="text-neutral-600 dark:text-neutral-300 mb-6 leading-relaxed">
           Generals is a slow, persistent, turn-based strategy game shared by
           the whole cursor-boston community. Read whichever tab fits where you
-          are: new players start with Overview; long-time players head for
-          Combat and Contributor.
+          are: new players start with <strong>Overview</strong>; long-time
+          players head for <strong>Combat</strong>, <strong>Heroes</strong>,
+          <strong> Endgame</strong>, and <strong>Community</strong>.
         </p>
 
         <TabBar active={active} onChange={setTab} />
@@ -56,6 +60,9 @@ function HelpPageInner() {
         {active === "phases" && <PhasesTab />}
         {active === "castes" && <CastesTab />}
         {active === "combat" && <CombatTab />}
+        {active === "heroes" && <HeroesTab />}
+        {active === "endgame" && <EndgameTab />}
+        {active === "community" && <CommunityTab />}
         {active === "world" && <WorldTab />}
         {active === "contributor" && <ContributorTab />}
 
