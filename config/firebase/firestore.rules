@@ -464,6 +464,25 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
+    // Game — Heroes v2 registry. Persistent records for every hero that
+    // has ever existed; survives Armageddon. World-readable so the All
+    // Heroes / Hall of the Fallen views work. Per-hero visibility filtering
+    // (hide currentTileId/stamina unless viewer is adjacent or owner) is
+    // enforced at the API layer, not in rules. All writes go through the
+    // Admin SDK via lib/game/hero-registry.ts.
+    match /game_heroes/{heroId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if false;
+
+      // Per-hero append-only event log. Same rule shape — authenticated
+      // read, server-only writes. Event filtering (only show events from
+      // your tenure unless hero is deceased) is enforced at the API layer.
+      match /events/{eventId} {
+        allow read: if request.auth != null;
+        allow create, update, delete: if false;
+      }
+    }
+
     // Game — Community chat (free-form message board). Reads are
     // authenticated. All writes (create + soft-delete) flow through
     // /api/game/community/chat which validates ownership and admin

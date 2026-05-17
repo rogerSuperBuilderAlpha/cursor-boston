@@ -40,6 +40,7 @@ const LandTypeEnum = z.enum([
 ]);
 const UnitTypeEnum = z.enum(["ground", "siege", "air"]);
 const AttackSideEnum = z.enum(["sent", "received", "all"]);
+const AttackOutcomeEnum = z.enum(["captured", "repelled", "stalemate"]);
 const LeaderboardAudienceEnum = z.enum(["all", "npc", "real"]);
 
 const UnitStackSchema = z.object({
@@ -245,6 +246,120 @@ const ArtifactsOk = z
   })
   .merge(PaginationFieldsSchema);
 
+// ──────────────────── Heroes (v2) ────────────────────
+
+const HeroClassEnum = z.enum(["military", "farm", "magic"]);
+const HeroListScopeEnum = z.enum(["mine", "all", "fallen"]);
+const HeroSpecialtyEnum = z.enum([
+  "ground",
+  "siege",
+  "air",
+  "garrison",
+  "raid",
+  "supply",
+  "ground-recruit",
+  "siege-recruit",
+  "air-recruit",
+  "summoner",
+  "kingdom-buff",
+  "spellcasting",
+  "armageddon",
+  "offense-spells",
+  "defense-spells",
+  "spying",
+  "production-spells",
+]);
+const HeroEventKindEnum = z.enum([
+  "emerged",
+  "engaged_attacker",
+  "engaged_defender",
+  "slain",
+  "defected",
+  "moved_on_capture",
+  "spell_cast",
+  "recruited",
+  "special_unit_summoned",
+  "season_ended",
+]);
+
+/** Safe (visibility-filtered) projection of a hero — matches
+ *  `SafeHeroSummary` in lib/game/types.ts. Location/stamina fields are
+ *  omitted when the viewer isn't entitled to see them. */
+const SafeHeroSummarySchema = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    class: HeroClassEnum,
+    specialty: HeroSpecialtyEnum,
+    caste: SetupCasteEnum,
+    currentOwnerId: z.string().nullable(),
+    isDeceased: z.boolean(),
+    awaitingResurrection: z.boolean(),
+    emergedSeasonNumber: z.number().int().nonnegative(),
+    hasBackstory: z.boolean(),
+    currentTileId: z.string().optional(),
+    deceasedTileId: z.string().optional(),
+    stamina: z.number().int().nonnegative().optional(),
+    staminaMax: z.number().int().nonnegative().optional(),
+  })
+  .openapi("GameSafeHero");
+
+const SafeHeroEventSchema = z
+  .object({
+    id: z.string(),
+    kind: HeroEventKindEnum,
+    createdAt: z.string().describe("ISO-8601 timestamp"),
+    tileId: z.string(),
+    ownerIdAtTime: z.string().nullable(),
+    seasonNumber: z.number().int().nonnegative(),
+    attackerId: z.string().optional(),
+    defenderId: z.string().optional(),
+    outcome: AttackOutcomeEnum.optional(),
+    fromOwnerId: z.string().optional(),
+    toOwnerId: z.string().optional(),
+    fromTileId: z.string().optional(),
+    spellId: z.string().optional(),
+    targetTileId: z.string().optional(),
+    unitType: UnitTypeEnum.optional(),
+    unitsBuilt: z.number().int().nonnegative().optional(),
+    specialUnitDefId: z.string().optional(),
+  })
+  .openapi("GameHeroEvent");
+
+const HeroesListOk = z
+  .object({
+    success: z.literal(true),
+    heroes: z.array(SafeHeroSummarySchema),
+  })
+  .merge(PaginationFieldsSchema);
+
+const HeroDetailOk = z.object({
+  success: z.literal(true),
+  hero: SafeHeroSummarySchema,
+  events: z.array(SafeHeroEventSchema),
+  nextCursor: z.string().nullable(),
+  hasMore: z.boolean(),
+});
+
+const HeroEventsOk = z
+  .object({
+    success: z.literal(true),
+    events: z.array(SafeHeroEventSchema),
+  })
+  .merge(PaginationFieldsSchema);
+
+const HeroBackstoryOk = z.object({
+  success: z.literal(true),
+  heroId: z.string(),
+  markdown: z.string().nullable(),
+});
+
+const HeroIdParam = z.object({ heroId: z.string().min(1) });
+
+const HeroesListQuery = PaginationQuerySchema.extend({
+  scope: HeroListScopeEnum.optional(),
+});
+
 // ──────────────────── Body schemas ────────────────────
 
 const AdminGrantBody = z
@@ -276,6 +391,13 @@ const AttackBody = z
     targetTileId: z.string().min(1),
     units: UnitStackSchema,
     offenseSpellId: z.string().nullish(),
+    // Heroes (May 2026). What to do with the defender's hero on a winning
+    // combat. Ignored when the target tile has no hero. Default: "kill"
+    // (preserves legacy behavior). "convert" requires the hero to be at
+    // or below STAMINA_CONVERSION_THRESHOLD; if the convert roll fails,
+    // `heroActionOnConvertFail` is applied as the fallback.
+    heroAction: z.enum(["kill", "spare", "convert"]).optional(),
+    heroActionOnConvertFail: z.enum(["kill", "spare"]).optional(),
   })
   .openapi("GameAttackBody");
 
@@ -290,6 +412,21 @@ const SiegeBody = z
     targetTileId: z.string().min(1),
   })
   .openapi("GameSiegeBody");
+
+// Heroes (May 2026): caste-themed special unit station / recall. Tied to
+// a SpecialUnitInstance held in the player's pool.
+const SpecialUnitSummonBody = z
+  .object({
+    instanceId: z.string().min(1),
+    targetTileId: z.string().min(1),
+  })
+  .openapi("GameSpecialUnitSummonBody");
+
+const SpecialUnitUnsummonBody = z
+  .object({
+    instanceId: z.string().min(1),
+  })
+  .openapi("GameSpecialUnitUnsummonBody");
 
 const FlyoverBody = z
   .object({
@@ -452,8 +589,6 @@ const CommunityEventKindEnum = z.enum([
   "attack",
   "milestone_1k_tiles",
 ]);
-const AttackOutcomeEnum = z.enum(["captured", "repelled", "stalemate"]);
-
 const CommunityEventSchema = z
   .object({
     id: z.string(),
@@ -1024,6 +1159,35 @@ export const gameContract = c.router(
       },
     },
 
+    // Heroes (May 2026): caste-themed special-unit station / recall.
+    specialUnitsSummon: {
+      method: "POST",
+      path: "/api/game/special-units/summon",
+      summary: "Station a caste-themed special unit on one of your tiles",
+      body: SpecialUnitSummonBody,
+      responses: {
+        200: z.object({
+          success: z.literal(true),
+          player: GamePlayerSchema,
+          tileId: z.string(),
+        }),
+        ...actionErrorResponses,
+      },
+      metadata: {
+        errorCodes: ["UNAUTHORIZED", "VALIDATION_ERROR", "SERVER_ERROR"] as const,
+      },
+    },
+    specialUnitsUnsummon: {
+      method: "POST",
+      path: "/api/game/special-units/unsummon",
+      summary: "Recall a stationed special unit back into your pool",
+      body: SpecialUnitUnsummonBody,
+      responses: { 200: PlayerOkResponse, ...actionErrorResponses },
+      metadata: {
+        errorCodes: ["UNAUTHORIZED", "VALIDATION_ERROR", "SERVER_ERROR"] as const,
+      },
+    },
+
     // Cron + admin
     rollover: {
       method: "POST",
@@ -1182,6 +1346,71 @@ export const gameContract = c.router(
           "NOT_FOUND",
           "SERVER_ERROR",
         ] as const,
+      },
+    },
+
+    // Heroes (v2) — lore + registry browser. Visibility filter runs
+    // server-side: location and stamina are omitted from hero rows when
+    // the viewer is neither the current owner nor adjacent (deceased
+    // heroes are fully public). Event rows are filtered by tenure
+    // (`event.ownerIdAtTime === viewerId`) for living heroes.
+    getHeroesList: {
+      method: "GET",
+      path: "/api/game/heroes",
+      summary: "List heroes (mine / all living / fallen)",
+      description:
+        "`scope=mine` returns heroes the viewer currently owns. `scope=all` (default) returns every living hero with location hidden unless visible. `scope=fallen` returns deceased + past-season heroes, fully public.",
+      query: HeroesListQuery,
+      responses: { 200: HeroesListOk, ...baseErrorResponses },
+      metadata: { errorCodes: ["UNAUTHORIZED", "SERVER_ERROR"] as const },
+    },
+    getHeroDetail: {
+      method: "GET",
+      path: "/api/game/heroes/:heroId",
+      summary: "Get a hero's profile + first page of events",
+      description:
+        "Visibility filter applied to both the hero summary (location / stamina) and the events list (tenure-scoped for living heroes; fully public for deceased / past-season heroes).",
+      pathParams: HeroIdParam,
+      responses: {
+        200: HeroDetailOk,
+        404: ApiErrorSchema.openapi({ description: "Hero not found" }),
+        ...baseErrorResponses,
+      },
+      metadata: {
+        errorCodes: ["UNAUTHORIZED", "NOT_FOUND", "SERVER_ERROR"] as const,
+      },
+    },
+    getHeroEvents: {
+      method: "GET",
+      path: "/api/game/heroes/:heroId/events",
+      summary: "Paginated event log for a hero",
+      description:
+        "Cursor-paginated. Living-hero events are tenure-filtered to the viewer; deceased / past-season hero events are fully public.",
+      pathParams: HeroIdParam,
+      query: PaginationQuerySchema,
+      responses: {
+        200: HeroEventsOk,
+        404: ApiErrorSchema.openapi({ description: "Hero not found" }),
+        ...baseErrorResponses,
+      },
+      metadata: {
+        errorCodes: ["UNAUTHORIZED", "NOT_FOUND", "SERVER_ERROR"] as const,
+      },
+    },
+    getHeroBackstory: {
+      method: "GET",
+      path: "/api/game/heroes/:heroId/backstory",
+      summary: "Get the markdown backstory for a hero, if one exists",
+      description:
+        "Returns the raw markdown content from `lib/game/content/hero-backstories/<heroId>.md`, or `markdown: null` if no chapter has been contributed yet.",
+      pathParams: HeroIdParam,
+      responses: {
+        200: HeroBackstoryOk,
+        404: ApiErrorSchema.openapi({ description: "Hero not found" }),
+        ...baseErrorResponses,
+      },
+      metadata: {
+        errorCodes: ["UNAUTHORIZED", "NOT_FOUND", "SERVER_ERROR"] as const,
       },
     },
   },

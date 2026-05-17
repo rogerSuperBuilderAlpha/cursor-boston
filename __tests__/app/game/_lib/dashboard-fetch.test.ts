@@ -44,10 +44,20 @@ function makeSetters() {
     setWorldTiles: jest.fn(),
     setWorldOwners: jest.fn(),
     setArtifacts: jest.fn(),
+    setWorldMeta: jest.fn(),
+    setTopLeaders: jest.fn(),
     setError: jest.fn(),
     setLoading: jest.fn(),
   };
 }
+
+// World-meta + leaderboard responses are static enough to share across
+// tests — both endpoints are fetched on every fetchInitialData() call.
+const WORLD_META_OK = {
+  success: true,
+  worldMeta: { sealsBroken: 0, season: 1 },
+};
+const LEADERBOARD_OK = { success: true, players: [] };
 
 /** Mock fetch with one queued response per request, in order. */
 function mockFetchSequence(...responses: unknown[]) {
@@ -97,7 +107,11 @@ describe("fetchInitialData", () => {
           { id: "a", used: false },
           { id: "b", used: true },
         ],
-      }
+      },
+      // /api/game/world-meta
+      WORLD_META_OK,
+      // /api/game/leaderboard
+      LEADERBOARD_OK
     );
     const setters = makeSetters();
     await fetchInitialData(makeUser(), setters);
@@ -129,7 +143,9 @@ describe("fetchInitialData", () => {
         windowStartIso: "2026-05-08T00:00:00Z",
       },
       { success: true, artifacts: [] },
-      // /api/game/map/me
+      WORLD_META_OK,
+      LEADERBOARD_OK,
+      // /api/game/map/me (only fetched when no cache)
       {
         success: true,
         myTiles: [],
@@ -148,7 +164,9 @@ describe("fetchInitialData", () => {
     mockFetchSequence(
       { success: false, error: "auth failed" },
       { success: true, githubLogin: null, mergedPrCountThisWeek: 0, nextRolloverIso: "x", windowStartIso: "y" },
-      { success: true, artifacts: [] }
+      { success: true, artifacts: [] },
+      WORLD_META_OK,
+      LEADERBOARD_OK
     );
     const setters = makeSetters();
     await fetchInitialData(makeUser(), setters);
@@ -166,7 +184,9 @@ describe("fetchInitialData", () => {
     mockFetchSequence(
       { success: true, player: FAKE_PLAYER, tiles: [], isAdmin: false },
       { success: true, githubLogin: null, mergedPrCountThisWeek: 0, nextRolloverIso: "x", windowStartIso: "y" },
-      { success: false }
+      { success: false },
+      WORLD_META_OK,
+      LEADERBOARD_OK
     );
     const setters = makeSetters();
     await fetchInitialData(makeUser(), setters);

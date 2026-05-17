@@ -34,6 +34,8 @@ import { DashboardReports } from "./DashboardReports";
 import { CasteChangeCard } from "./CasteChangeCard";
 import { CommunityPanel } from "./CommunityPanel";
 import { DesignersWantedCard } from "./DesignersWantedCard";
+import { HeroesRosterCard } from "./HeroesRosterCard";
+import { SummonableUnitsCard } from "./SummonableUnitsCard";
 import { OnboardingWizard } from "../onboarding/OnboardingWizard";
 import type { GamePlayer } from "@/lib/game/types";
 
@@ -178,6 +180,7 @@ export function DashboardView({ player, data }: DashboardViewProps) {
           worldMeta={data.worldMeta}
           topLeaders={data.topLeaders}
           playerTilesHeld={player.stats.tilesHeld}
+          playerTiles={tiles}
         />
 
         <div className="mb-8">
@@ -192,6 +195,9 @@ export function DashboardView({ player, data }: DashboardViewProps) {
           <ThreatCard threats={threats} shielded={shieldStatus.shielded} />
           <ShieldCard shield={shieldStatus} />
         </div>
+
+        <HeroesRosterCard tiles={tiles} />
+        <SummonableUnitsCard player={player} onRefresh={data.refresh} />
 
         {isAdmin && (
           <div className="mb-8 pt-4 border-t border-dashed border-neutral-300 dark:border-neutral-700">
