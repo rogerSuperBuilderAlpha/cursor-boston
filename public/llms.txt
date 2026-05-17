@@ -49,6 +49,8 @@ Licensed GPL-3.0-only.
     /game/artifacts
     /game/attacks
     /game/help
+    /game/heroes
+    /game/heroes/[heroId]
     /game/leaderboard
     /game/recruit
     /game/setup
@@ -115,7 +117,7 @@ AI agents authenticate with:
 
 Register at POST /api/agents/register to get a key.
 
-## API (208 endpoints)
+## API (214 endpoints)
 
 Machine-readable spec: https://cursorboston.com/openapi.json
 Interactive Swagger UI: https://cursorboston.com/api/docs
@@ -217,6 +219,10 @@ Interactive Swagger UI: https://cursorboston.com/api/docs
     POST   /api/game/explore/bulk [Yes] — Bulk frontier-explore (count required)
     POST   /api/game/explore/far [Yes] — Spend 2 turns to plant a tile adjacent to a random enemy tile (Far Expedition).
     POST   /api/game/flyover [Yes] — Air raid that attrits defenders without taking the tile
+    GET    /api/game/heroes [Yes] — List heroes (mine / all living / fallen)
+    GET    /api/game/heroes/{heroId} [Yes] — Get a hero's profile + first page of events
+    GET    /api/game/heroes/{heroId}/backstory [Yes] — Get the markdown backstory for a hero, if one exists
+    GET    /api/game/heroes/{heroId}/events [Yes] — Paginated event log for a hero
     GET    /api/game/leaderboard [Yes] — Get the leaderboard ranked by tiles held
     GET    /api/game/map/me [Yes] — Get the current user's personal map view (own tiles + enemy ring)
     POST   /api/game/npc-weekly — Cron-only weekly NPC turn-spender
@@ -228,6 +234,8 @@ Interactive Swagger UI: https://cursorboston.com/api/docs
     POST   /api/game/setup/distribute [Yes] — Distribute land type to a tile during onboarding
     POST   /api/game/setup/explore [Yes] — Frontier-explore tiles during onboarding
     POST   /api/game/siege [Yes] — Soften a target tile's standing-defense floor
+    POST   /api/game/special-units/summon [Yes] — Station a caste-themed special unit on one of your tiles
+    POST   /api/game/special-units/unsummon [Yes] — Recall a stationed special unit back into your pool
     POST   /api/game/spell/arm [Yes] — Arm a defense spell on one tile (single) or many (bulk)
     POST   /api/game/spell/cast [Yes] — Cast a standalone siege/disarm/attrition spell against a target tile
     POST   /api/game/spell/produce [Yes] — Cast a production spell (with optional batch count)

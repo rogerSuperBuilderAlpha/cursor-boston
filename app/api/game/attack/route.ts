@@ -30,6 +30,8 @@ export async function POST(request: NextRequest) {
       targetTileId: parsed.data.targetTileId,
       units: parsed.data.units,
       offenseSpellId: parsed.data.offenseSpellId ?? null,
+      heroAction: parsed.data.heroAction,
+      heroActionOnConvertFail: parsed.data.heroActionOnConvertFail,
     });
     return apiSuccess({
       attack: result.attack,

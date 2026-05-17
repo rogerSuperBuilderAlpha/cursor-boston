@@ -241,4 +241,94 @@ describe("buildAttackReport", () => {
     expect(report.artifactFound).toBeDefined();
     expect(report.artifactFound?.definitionId).toBe(artifact.id);
   });
+
+  describe("heroes (May 2026)", () => {
+    const baseHero = {
+      id: "hero-1",
+      name: "Sir Test",
+      class: "military" as const,
+      specialty: "ground" as const,
+    };
+
+    it("stamps heroEmerged onto outcome and adds an emergence line", () => {
+      const report = buildAttackReport({
+        turnIndex: 100,
+        cost: 1,
+        targetTileId: "5_-2",
+        unitsSent: sent,
+        combat: makeCombat("captured"),
+        artifactFound: null,
+        rng: makeSeededRng("atk:hero-emerge"),
+        heroEmerged: {
+          id: "hero-2",
+          ownerId: "user-a",
+          tileId: "5_-2",
+          class: "military",
+          specialty: "raid",
+          name: "Dame Raid",
+          caste: "white",
+          stamina: 100,
+          staminaMax: 100,
+          emergedAtTurn: 100,
+          lastEngagedAtTurn: 100,
+        },
+      });
+      const outcome = report.outcome as { heroEmerged?: { name: string } };
+      expect(outcome.heroEmerged?.name).toBe("Dame Raid");
+      expect(report.narrative.some((l) => l.includes("Dame Raid"))).toBe(true);
+    });
+
+    it("spare action changes the summary to 'Wore down hero'", () => {
+      const report = buildAttackReport({
+        turnIndex: 100,
+        cost: 1,
+        targetTileId: "5_-2",
+        unitsSent: sent,
+        combat: makeCombat("captured"),
+        artifactFound: null,
+        rng: makeSeededRng("atk:hero-spare"),
+        heroAction: "spare",
+      });
+      expect(report.summary).toContain("Wore down");
+      const outcome = report.outcome as { heroAction?: string };
+      expect(outcome.heroAction).toBe("spare");
+    });
+
+    it("heroDefected swaps the summary + narrative to mention defection", () => {
+      const report = buildAttackReport({
+        turnIndex: 100,
+        cost: 1,
+        targetTileId: "5_-2",
+        unitsSent: sent,
+        combat: makeCombat("captured"),
+        artifactFound: null,
+        rng: makeSeededRng("atk:hero-defect"),
+        heroAction: "convert",
+        heroDefected: baseHero,
+      });
+      expect(report.summary).toContain("Hero defected");
+      expect(
+        report.narrative.some((l) => l.includes("defected"))
+      ).toBe(true);
+    });
+
+    it("heroSlain adds a narrative line about the kill", () => {
+      const report = buildAttackReport({
+        turnIndex: 100,
+        cost: 1,
+        targetTileId: "5_-2",
+        unitsSent: sent,
+        combat: makeCombat("captured"),
+        artifactFound: null,
+        rng: makeSeededRng("atk:hero-slain"),
+        heroAction: "kill",
+        heroSlain: baseHero,
+      });
+      expect(
+        report.narrative.some((l) => l.includes("fell with the tile"))
+      ).toBe(true);
+      const outcome = report.outcome as { heroSlain?: { name: string } };
+      expect(outcome.heroSlain?.name).toBe("Sir Test");
+    });
+  });
 });

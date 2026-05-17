@@ -241,6 +241,17 @@ export interface GamePlayer {
   armageddonSealsBroken?: number;
   armageddonCastsAttempted?: number;
   seasonNumber?: number;
+  // ── Heroes (optional for back-compat with existing docs).
+  // `heroCount` is a denormalized counter for cheap "does the player have
+  // any heroes" rendering decisions on the dashboard; the canonical roster
+  // lives on the tile docs (`GameTile.hero`). Maintained by the server on
+  // hero emerge / hero defect / hero death.
+  heroCount?: number;
+  // Caste-themed special units summoned by farm heroes. Entries without
+  // `stationedTileId` live in the player's unsummoned pool; once stationed
+  // via summonSpecialUnitServer, the entry carries the tile id and folds
+  // into combat math at that tile.
+  summonableSpecialUnits?: SpecialUnitInstance[];
   createdAt: Timestamp | Date;
   updatedAt: Timestamp | Date;
 }
@@ -279,6 +290,11 @@ export interface GameTile {
   isolatedSpawn?: boolean;
   lastAttackedAt?: Timestamp | Date;
   revealedAt?: Timestamp | Date;
+  // One hero per tile. Emerges probabilistically from class-specific
+  // actions performed at this tile (military: won battle; farm: recruit;
+  // magic: spell cast from here). Optional for back-compat — legacy tile
+  // docs without the field parse as "no hero". See lib/game/heroes.ts.
+  hero?: GameHero;
   createdAt: Timestamp | Date;
   updatedAt: Timestamp | Date;
 }
@@ -301,6 +317,282 @@ export interface IntrinsicTileBuff {
   expiresAt?: Timestamp | Date;
 }
 
+// =====================================================================
+// Heroes (May 2026 sim feature)
+// =====================================================================
+//
+// Heroes are tile-bound entities that emerge probabilistically from
+// class-specific actions and modify the math of their parent subsystem.
+// Three classes, each tied to a tile land type:
+//   - "military"  → emerges on a won battle (attack capture OR defended
+//                   repel). Attached to the captured/defended tile.
+//                   Boosts attack from / defense on that tile. Moves to
+//                   the new tile when the hero tile attacks and captures.
+//   - "farm"      → emerges on recruitment on a food tile. Boosts
+//                   recruitment kingdom-wide AND each recruit on the hero
+//                   tile has a chance to spawn a caste-themed special unit.
+//   - "magic"     → emerges on spell cast from a magic tile. Boosts spells
+//                   cast from that tile AND contributes "virtual magic
+//                   lands" toward the player's Armageddon success chance.
+//
+// One hero per tile maximum. Tuning lives in lib/game/content/heroes.ts.
+// Stamina mechanics + kill/spare/convert flow live in lib/game/heroes.ts
+// (pure) and lib/game/data-server.ts (server side-effects).
+//
+// Persistence: optional on GameTile / GamePlayer so existing docs parse
+// without backfill — same back-compat pattern as `baseUnits`, `intrinsicBuffs`.
+export type HeroClass = "military" | "farm" | "magic";
+
+// Random sub-affinity rolled at emergence. Flat union across all classes
+// so a single field can store it and renderers can switch on it. Each
+// specialty maps loosely to an existing taxonomy:
+//   military  → unit-type (ground/siege/air), garrison, raid, supply
+//   farm      → per-unit-type recruit bonus, summoner (special-unit roll
+//               chance), kingdom-buff (global recruit %)
+//   magic     → SpellType analogues + armageddon (seal-break boost)
+export type HeroSpecialty =
+  // military
+  | "ground"
+  | "siege"
+  | "air"
+  | "garrison"
+  | "raid"
+  | "supply"
+  // farm
+  | "ground-recruit"
+  | "siege-recruit"
+  | "air-recruit"
+  | "summoner"
+  | "kingdom-buff"
+  // magic
+  | "spellcasting"
+  | "armageddon"
+  | "offense-spells"
+  | "defense-spells"
+  | "spying"
+  | "production-spells";
+
+export interface GameHero {
+  // uuid — stable across re-renders and persistence.
+  id: string;
+  // Owner is decoupled from the tile owner (e.g. transiently between a
+  // conversion roll succeeding and the tile-ownership write). Combat reads
+  // hero.ownerId, not tile.ownerId, when deciding whether to apply the
+  // attacker- or defender-side bonus.
+  ownerId: string;
+  // Current home tile. Mutates when a military hero moves on capture.
+  tileId: string;
+  class: HeroClass;
+  specialty: HeroSpecialty;
+  // Picked deterministically at emergence from the caste's name pool.
+  name: string;
+  // Caste at emergence. Survives later owner caste changes (lore: loyal
+  // to their general, not the kingdom). Drives flavor copy and name pool.
+  caste: Caste;
+  // 0..staminaMax. Decreases on every engagement (attacker hero whose tile
+  // attacks; defender hero whose tile is attacked — regardless of outcome).
+  // Regenerates lazily based on `lastEngagedAtTurn` vs. owner's
+  // turnsSpentTotal. Conversion is only available when stamina drops below
+  // STAMINA_CONVERSION_THRESHOLD.
+  stamina: number;
+  staminaMax: number;
+  // Owner's `turnsSpentTotal` at emergence — used for "X turns old" labels.
+  emergedAtTurn: number;
+  // Owner's `turnsSpentTotal` at last engagement (or emergence if never
+  // engaged). Drives lazy regen at read time. Updated whenever stamina
+  // changes (engagement, conversion, move-on-capture).
+  lastEngagedAtTurn: number;
+}
+
+// Resolution choice when an attacker wins a battle against a hero tile.
+// `kill` matches the legacy capture flow (tile flips, hero discarded).
+// `spare` is wear-down only — tile stays with the defender, hero stamina
+// is reduced (attacker still pays turn cost + casualties). `convert` is
+// only valid when the hero's stamina is at/below STAMINA_CONVERSION_THRESHOLD;
+// rolls for hero defection. On convert-failure, falls back to
+// `heroActionOnConvertFail`.
+export type HeroBattleAction = "kill" | "spare" | "convert";
+
+// Caste-themed named units summoned by farm heroes. Defined as content
+// in lib/game/content/special-units/<caste>.ts and registered via
+// SPECIAL_UNITS_BY_CASTE. NOT heroes — no stamina, no conversion. Roll
+// fires on recruitment at a farm-hero tile; the resulting instance enters
+// the player's unsummoned pool and can be deployed to any owned tile via
+// summonSpecialUnitServer. Contributors add new variants by appending to
+// the appropriate caste file.
+export interface SpecialUnitDef {
+  // e.g. "white-knight-of-the-broken-lance"
+  id: string;
+  caste: Caste;
+  name: string;
+  description: string;
+  // Flat add to the tile's attack power when the special unit is
+  // stationed there and the tile attacks.
+  attackBonus: number;
+  // Flat add to the tile's defense power when the special unit is
+  // stationed there and the tile is attacked.
+  defenseBonus: number;
+  // Optional thematic line shown on emergence + in the catalog UI.
+  flavor?: string;
+  imageUrl?: string;
+}
+
+export interface SpecialUnitInstance {
+  // uuid for this specific summoned unit (an instance of SpecialUnitDef).
+  instanceId: string;
+  // Foreign key into SPECIAL_UNITS_BY_CASTE[player.caste].
+  defId: string;
+  // Owner's turnsSpentTotal at spawn — used for "X turns old" labels.
+  spawnedAtTurn: number;
+  // Set once the unit has been summoned to a tile. Combat reads the
+  // attack/defense bonus from the def. Absent ⇒ unit is in the player's
+  // unsummoned pool, awaiting `summonSpecialUnitServer`.
+  stationedTileId?: string;
+}
+
+// =====================================================================
+// Heroes v2 — registry + history + visibility
+// =====================================================================
+//
+// v1 stored heroes only inline on `GameTile.hero?`; when a hero died, the
+// data vanished. v2 adds a persistent collection so heroes become
+// permanent lore characters with a full history.
+//
+// Storage:
+//   - `game_heroes/{heroId}` — one doc per hero (this collection survives
+//     Armageddon season wipes — see lib/game/armageddon-resolve.ts).
+//   - `game_heroes/{heroId}/events/{eventId}` — append-only event log.
+//
+// Combat path still reads `GameTile.hero` (hot path). Registry is
+// dual-written from the same Firestore transactions as `tile.hero`
+// mutations so the two never drift.
+
+/** Append-only event-log entries for a hero's history. */
+export type HeroEventKind =
+  // Hero appeared on a tile (military: won battle; farm: recruit on food;
+  // magic: spell cast / arm-defense on magic).
+  | "emerged"
+  // The hero's tile attacked another tile (hero is on `source`).
+  | "engaged_attacker"
+  // The hero's tile was attacked (hero is on `target`). Outcome may be
+  // any of captured / repelled / stalemate; the engagement happened either way.
+  | "engaged_defender"
+  // Hero was killed in battle. Terminal — `GameHeroDoc.isDeceased` is set
+  // alongside this event.
+  | "slain"
+  // Hero converted to a new owner (attacker chose `convert` and the roll
+  // succeeded). Carries `fromOwnerId` + `toOwnerId`.
+  | "defected"
+  // Military hero followed source-tile capture to the new tile.
+  | "moved_on_capture"
+  // Magic hero on source tile when a spell was cast from it.
+  | "spell_cast"
+  // Farm hero on tile when units were recruited (one event per recruit cycle).
+  | "recruited"
+  // Farm hero's special-unit roll fired and dropped a SpecialUnitInstance
+  // into the player's pool.
+  | "special_unit_summoned"
+  // Armageddon resolved during this hero's lifetime. Living heroes enter
+  // limbo (awaitingResurrection); deceased heroes just record the season.
+  | "season_ended";
+
+export interface GameHeroEvent {
+  // uuid. Subcollection doc id.
+  id: string;
+  kind: HeroEventKind;
+  createdAt: Timestamp | Date;
+  // The hero's tile at the moment the event fired. Always present even
+  // for in-limbo events (the last known tile is recorded).
+  tileId: string;
+  // The hero's owner at the moment the event fired. `null` during limbo
+  // (between season-end and resurrection). Used as the primary filter for
+  // "events from my tenure" visibility (per the v2 visibility rules).
+  ownerIdAtTime: string | null;
+  // The world season the event fired in.
+  seasonNumber: number;
+  // Kind-specific fields. All optional — populated per kind.
+  attackerId?: string;          // engaged_defender, slain
+  defenderId?: string;          // engaged_attacker
+  outcome?: AttackOutcome;      // engaged_attacker, engaged_defender
+  fromOwnerId?: string;         // defected, moved_on_capture
+  toOwnerId?: string;           // defected
+  fromTileId?: string;          // moved_on_capture
+  spellId?: string;             // spell_cast
+  targetTileId?: string;        // spell_cast, engaged_attacker
+  unitType?: UnitType;          // recruited
+  unitsBuilt?: number;          // recruited
+  specialUnitDefId?: string;    // special_unit_summoned
+}
+
+/** Canonical persistent record for a hero. Survives Armageddon wipes
+ *  (see lib/game/armageddon-resolve.ts COLLECTIONS — NOT included). */
+export interface GameHeroDoc {
+  // Stable uuid; matches `GameHero.id` on the inline tile snapshot.
+  id: string;
+  name: string;
+  class: HeroClass;
+  specialty: HeroSpecialty;
+  caste: Caste;
+  // Current ownership/location. Both null when in limbo (deceased OR
+  // awaiting resurrection in a new season).
+  currentOwnerId: string | null;
+  currentTileId: string | null;
+  // Combat-relevant denorm for the All Heroes browse view. During the
+  // current season, the canonical source of truth for combat is
+  // `GameTile.hero.stamina`; this denorm is updated alongside it.
+  stamina: number;
+  staminaMax: number;
+  // Status flags
+  isDeceased: boolean;
+  // True between season-end and next resurrection. Set by armageddon-resolve.
+  // v2 ships this flag but no resurrection UX yet — deferred to v3.
+  awaitingResurrection: boolean;
+  deceasedAt?: Timestamp | Date;
+  // Last-known tile when killed. Public to everyone once deceased
+  // (visibility rule: deceased = fully public).
+  deceasedTileId?: string;
+  // Lifecycle bookkeeping
+  emergedAtTurn: number;
+  emergedSeasonNumber: number;
+  // Seasons this hero lived through (survived past the seal-7 break).
+  // Pushed-onto by armageddon-resolve.
+  survivedSeasons: number[];
+  // Denormalized timestamp of the newest event in the subcollection.
+  // Drives sort order in the list views without a per-hero events query.
+  lastEventAt: Timestamp | Date;
+  createdAt: Timestamp | Date;
+  updatedAt: Timestamp | Date;
+}
+
+/** Pagination cursor for hero list / events queries. Stringified per
+ *  the existing firestore-pagination helpers. */
+export type HeroListScope = "mine" | "all" | "fallen";
+
+/** Safe projection of a hero for API responses — fields hidden per the
+ *  visibility rules (see lib/game/hero-visibility.ts) are absent rather
+ *  than null so the client knows the difference between "explicitly
+ *  unknown" and "not yet loaded". */
+export interface SafeHeroSummary {
+  id: string;
+  name: string;
+  class: HeroClass;
+  specialty: HeroSpecialty;
+  caste: Caste;
+  currentOwnerId: string | null;
+  isDeceased: boolean;
+  awaitingResurrection: boolean;
+  emergedSeasonNumber: number;
+  // Present only when visible per the rule table (current owner OR
+  // adjacent OR deceased / past-season).
+  currentTileId?: string;
+  deceasedTileId?: string;
+  stamina?: number;
+  staminaMax?: number;
+  // Set when a backstory markdown file exists for this hero. Drives the
+  // "Add the next chapter" vs "Read the chronicle" CTA in the UI.
+  hasBackstory: boolean;
+}
+
 // Lightweight projection of GameTile for map-fetch payloads. Strips
 // neighborTileIds (~6 strings × N tiles), upgradeIds, level, and timestamps
 // — fields the dashboard/hex-map/recruit/spells pages don't use. Tile detail
@@ -317,6 +609,11 @@ export interface MapTile {
   // {0,0,0} when absent.
   baseUnits?: UnitStack;
   armedDefenseSpellId: string | null;
+  // Hero on this tile, if any. Surfaced in the lightweight map projection so
+  // the hex renderer can draw the hero badge without a full tile fetch. The
+  // tile detail modal still loads the full GameTile (and its hero) for the
+  // detailed Hero card. Optional for v2-snapshot back-compat.
+  hero?: GameHero;
 }
 
 export interface GameAttack {
@@ -361,6 +658,13 @@ export interface CombatAttackerInput {
   // attackPower; not re-amplified by source-tile magic mult (the spell was
   // cast and rolled already). Optional; legacy callers default to 0.
   preCastOffenseBonus?: number;
+  // Pre-resolved additive offense multiplier from a military hero stationed
+  // on the source tile (stamina-scaled and specialty-weighted by the server
+  // before passing in). Stacks multiplicatively on attackPower at the same
+  // numeric stage as `intelOffenseBonus`. Includes any stationed special-
+  // unit attackBonus contribution rolled into the same channel. Optional;
+  // legacy callers default to 0.
+  heroAttackBonus?: number;
 }
 
 export interface CombatDefenderInput {
@@ -387,6 +691,13 @@ export interface CombatDefenderInput {
   // nullified ("defense-disarm" effect rolled by the attacker). 1 fully
   // dispels; 0.5 halves; 0 is a no-op. Optional; legacy callers default 0.
   defenseDisarmFraction?: number;
+  // Pre-resolved additive defense multiplier from a military hero stationed
+  // on the defended tile (stamina-scaled and specialty-weighted by the server
+  // before passing in). Stacks multiplicatively on defensePower at the same
+  // numeric stage as `intelDefenseBonus`. Also folds in any stationed
+  // special-unit defenseBonus contribution. Optional; legacy callers default
+  // to 0.
+  heroDefenseBonus?: number;
 }
 
 export interface CombatTileInput {
@@ -698,7 +1009,14 @@ export type CommunityEventKind =
   | "armageddon_started"
   | "armageddon_completed"
   | "armageddon_winner"
-  | "armageddon_cast_failed";
+  | "armageddon_cast_failed"
+  // Heroes (May 2026). Public feed entries fire on emergence, defection
+  // (conversion success), and death (kill choice or hero tile captured
+  // with kill action). Each carries the hero's denormalized name + class
+  // + specialty so the feed survives the hero record going away.
+  | "hero_emerged"
+  | "hero_defected"
+  | "hero_slain";
 
 /** Single entry in the `game_community_events` log. Denormalized so the
  *  feed renderer never needs to join against game_players. */
@@ -725,6 +1043,18 @@ export interface CommunityEvent {
   tilesHeld?: number;            // armageddon_winner: tile count at draw
   sealsBroken?: number;          // armageddon_winner: personal seals broken
   tickets?: number;              // armageddon_winner: weighted ticket count
+  // Hero-specific fields (hero_emerged / hero_defected / hero_slain).
+  // Denormalized so the feed survives the hero leaving its tile.
+  heroId?: string;
+  heroName?: string;
+  heroClass?: HeroClass;
+  heroSpecialty?: HeroSpecialty;
+  // hero_defected / hero_slain: the OTHER player involved.
+  // For defect: original owner (whose hero was taken).
+  // For slay: the killer (attacker who chose kill outcome).
+  otherUserId?: string;
+  otherDisplayName?: string;
+  otherCaste?: Caste | null;
 }
 
 // =====================================================================

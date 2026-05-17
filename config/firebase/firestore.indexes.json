@@ -366,6 +366,30 @@
         { "fieldPath": "role", "order": "ASCENDING" },
         { "fieldPath": "normalizedLearningGoals", "arrayConfig": "CONTAINS" }
       ]
+    },
+    {
+      "collectionGroup": "game_heroes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "currentOwnerId", "order": "ASCENDING" },
+        { "fieldPath": "lastEventAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "game_heroes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "isDeceased", "order": "ASCENDING" },
+        { "fieldPath": "lastEventAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "events",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "ownerIdAtTime", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

@@ -938,6 +938,14 @@ export function resolveAttack(
     attackPower *= 1 + attacker.intelOffenseBonus;
   }
 
+  // Hero attack bonus (May 2026 Heroes feature). Pre-resolved by the
+  // server: stamina-scaled, specialty-weighted, and includes any stationed
+  // special-unit attackBonus contribution rolled into the same channel.
+  // Stacks multiplicatively at the same stage as `intelOffenseBonus`.
+  if (attacker.heroAttackBonus && attacker.heroAttackBonus > 0) {
+    attackPower *= 1 + attacker.heroAttackBonus;
+  }
+
   // Source-tile attack multiplier (military ×1.20, food ×0.75). Applied
   // after spell + intel offense bonuses so the multiplier scales the full
   // realized attack value the way a player would expect ("my army is
@@ -985,6 +993,13 @@ export function resolveAttack(
   // Alert-vs-caster intel effects (Black Vein of Truth, Green Root Whisper).
   if (defender.intelDefenseBonus && defender.intelDefenseBonus > 0) {
     defensePower *= 1 + defender.intelDefenseBonus;
+  }
+
+  // Hero defense bonus (May 2026 Heroes feature). Same stage as
+  // `intelDefenseBonus`; pre-resolved by the server with stamina + specialty
+  // weighting and stationed special-unit defenseBonus folded in.
+  if (defender.heroDefenseBonus && defender.heroDefenseBonus > 0) {
+    defensePower *= 1 + defender.heroDefenseBonus;
   }
 
   let underdogApplied = false;
