@@ -309,6 +309,16 @@
       "website": "https://www.flagshippioneering.com",
       "description": "Venture firm and platform that originates, founds, and scales companies at the frontier of life sciences and AI.",
       "tags": ["VC", "life sciences", "biotech"]
+    },
+    {
+      "id": "resilient-coders",
+      "name": "Resilient Coders",
+      "fullName": "Resilient Coders",
+      "category": "nonprofit",
+      "location": "Boston, MA",
+      "website": "https://www.resilientcoders.org",
+      "description": "Resilient Coders is a free and stipended coding bootcamp that trains underrepresented talent for software engineering careers.",
+      "tags": ["software engineering", "workforce development", "community"]
     }
   ]
 }
