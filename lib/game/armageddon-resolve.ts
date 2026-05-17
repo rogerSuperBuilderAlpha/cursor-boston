@@ -30,6 +30,7 @@
  */
 
 import { randomUUID } from "node:crypto";
+import { FieldValue } from "firebase-admin/firestore";
 import type {
   CollectionReference,
   Firestore,
@@ -44,10 +45,16 @@ import {
   WINNER_COUNT,
   computeLotteryTickets,
 } from "./content/armageddon";
+import {
+  HEROES_COLLECTION,
+  heroEvent,
+  heroEventsCollection,
+} from "./hero-registry";
 import type {
   ArmageddonEventRecord,
   ArmageddonWinner,
   Caste,
+  GameHeroDoc,
   GamePlayer,
   GameWorldMeta,
   SealRecord,
@@ -286,6 +293,21 @@ export async function resolveArmageddon(args: {
     );
   }
 
+  // ── Step 6.5: hero limbo. The game_heroes collection survives the
+  // wipe by design (NOT in COLLECTIONS above). Every living hero flips
+  // to no-owner / no-tile / awaitingResurrection=true; every hero
+  // (alive or dead) gets a `season_ended` event so the hall-of-the-
+  // fallen reflects which seasons they witnessed. See lib/game/types.ts
+  // for the GameHeroDoc shape and the v3 resurrection placeholder.
+  const heroesDeltaSummary = await clearHeroesForArmageddon(
+    db,
+    currentSeason,
+    now
+  );
+  logger.info(
+    `[armageddon-resolve] hero limbo: ${heroesDeltaSummary.living} living → limbo, ${heroesDeltaSummary.deceased} deceased (events appended)`
+  );
+
   // ── Step 7: batch-delete the world. Order matters for surprise: tiles
   // first (largest), then artifacts/intel-effects (mid), attacks last
   // (small but most numerous per-player). Players LAST so any straggler
@@ -339,4 +361,78 @@ export async function resolveArmageddon(args: {
   logger.info(
     `[armageddon-resolve] season ${currentSeason} → ${currentSeason + 1} complete`
   );
+}
+
+/**
+ * Step 6.5 implementation. Iterates every hero in `game_heroes`:
+ *   - Living heroes flip to `currentOwnerId: null`, `currentTileId: null`,
+ *     `awaitingResurrection: true`, and `survivedSeasons` gets the current
+ *     season pushed.
+ *   - Deceased heroes are left functionally alone but still receive a
+ *     `season_ended` event so the hall-of-the-fallen reads naturally.
+ *
+ * Batched commits at BATCH_SIZE/2 to leave headroom for both the doc
+ * update + the event subcollection write per hero (2 writes each).
+ */
+async function clearHeroesForArmageddon(
+  db: Firestore,
+  seasonNumber: number,
+  now: Date
+): Promise<{ living: number; deceased: number }> {
+  const snap = await db.collection(HEROES_COLLECTION).get();
+  let living = 0;
+  let deceased = 0;
+  let batch = db.batch();
+  let pending = 0;
+  // Each hero needs up to 2 writes (doc patch + event). Budget at most
+  // BATCH_SIZE/2 heroes per batch to stay well under the 500-op limit.
+  const HEROES_PER_BATCH = Math.floor(BATCH_SIZE / 2);
+  for (const doc of snap.docs) {
+    const hero = doc.data() as GameHeroDoc;
+    const wasAlive = !hero.isDeceased;
+    if (wasAlive) living++;
+    else deceased++;
+
+    // Doc patch: push season into survivedSeasons; flip to limbo if alive.
+    const docPatch: Record<string, unknown> = {
+      survivedSeasons: FieldValue.arrayUnion(seasonNumber),
+      updatedAt: now,
+    };
+    if (wasAlive) {
+      docPatch.currentOwnerId = null;
+      docPatch.currentTileId = null;
+      docPatch.awaitingResurrection = true;
+    }
+    batch.set(doc.ref, docPatch, { merge: true });
+
+    // Event: season_ended. tileId records the LAST known location (limbo
+    // means no current tile; we keep the historical one for the event).
+    const eventId = randomUUID();
+    const tileIdAtEnd = hero.currentTileId ?? hero.deceasedTileId ?? "limbo";
+    const ownerIdAtEnd = hero.currentOwnerId;
+    const eventDoc = heroEvent.seasonEnded({
+      tileId: tileIdAtEnd,
+      ownerIdAtTime: ownerIdAtEnd,
+      seasonNumber,
+    });
+    batch.set(heroEventsCollection(db, hero.id).doc(eventId), {
+      id: eventId,
+      ...eventDoc,
+      createdAt: now,
+    });
+    batch.set(
+      doc.ref,
+      { lastEventAt: now },
+      { merge: true }
+    );
+
+    pending++;
+    if (pending >= HEROES_PER_BATCH) {
+      await batch.commit();
+      batch = db.batch();
+      pending = 0;
+    }
+  }
+  if (pending > 0) await batch.commit();
+  return { living, deceased };
 }

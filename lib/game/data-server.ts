@@ -132,6 +132,13 @@ import {
   maybeEmergeHero,
 } from "./heroes";
 import {
+  appendHeroEventInTx,
+  heroEvent,
+  markHeroDeceasedInTx,
+  transferHeroOwnerInTx,
+  upsertHeroInTx,
+} from "./hero-registry";
+import {
   type AxialCoord,
   axialFromTileId,
   neighborTileIds,
@@ -2030,6 +2037,50 @@ export async function buildUnitsServer(
       );
     }
 
+    // v2 registry: dual-write the persistent record + an `emerged` event
+    // on emergence, and a `recruited` / `special_unit_summoned` event on
+    // the relevant tile's farm hero (regen-applied above as `tileFarmHero`).
+    const playerSeasonNumber = player.seasonNumber ?? 1;
+    if (emergedHero) {
+      upsertHeroInTx({ tx, db, hero: emergedHero, seasonNumber: playerSeasonNumber, now });
+      appendHeroEventInTx({
+        tx,
+        db,
+        heroId: emergedHero.id,
+        event: heroEvent.emerged(emergedHero, playerSeasonNumber),
+        now,
+      });
+    }
+    if (tileFarmHero) {
+      appendHeroEventInTx({
+        tx,
+        db,
+        heroId: tileFarmHero.id,
+        event: heroEvent.recruited({
+          tileId,
+          ownerIdAtTime: userId,
+          unitType,
+          unitsBuilt: unitsThisCycle,
+          seasonNumber: playerSeasonNumber,
+        }),
+        now,
+      });
+      if (summonedSpecialUnit) {
+        appendHeroEventInTx({
+          tx,
+          db,
+          heroId: tileFarmHero.id,
+          event: heroEvent.specialUnitSummoned({
+            tileId,
+            ownerIdAtTime: userId,
+            specialUnitDefId: summonedSpecialUnit.defId,
+            seasonNumber: playerSeasonNumber,
+          }),
+          now,
+        });
+      }
+    }
+
     const report = buildBuildReport({
       turnIndex: turnsSpentTotal,
       cost: BUILD_UNITS_TURN_COST,
@@ -2275,7 +2326,42 @@ export async function bulkBuildUnitsServer(
               },
               now
             );
+            // v2 registry: create persistent record + emergence event.
+            const seasonNumberLocal = player.seasonNumber ?? 1;
+            upsertHeroInTx({
+              tx,
+              db,
+              hero: emergedHero,
+              seasonNumber: seasonNumberLocal,
+              now,
+            });
+            appendHeroEventInTx({
+              tx,
+              db,
+              heroId: emergedHero.id,
+              event: heroEvent.emerged(emergedHero, seasonNumberLocal),
+              now,
+            });
           }
+        }
+
+        // v2 registry: log a `recruited` event on the existing farm hero
+        // on this tile (if any), so hero history reflects the recruit.
+        if (tileFarmHero) {
+          const seasonNumberLocal = player.seasonNumber ?? 1;
+          appendHeroEventInTx({
+            tx,
+            db,
+            heroId: tileFarmHero.id,
+            event: heroEvent.recruited({
+              tileId: entry.tileId,
+              ownerIdAtTime: userId,
+              unitType: entry.unitType,
+              unitsBuilt: unitsThisCycle,
+              seasonNumber: seasonNumberLocal,
+            }),
+            now,
+          });
         }
 
         // Special-unit roll on a farm-hero tile.
@@ -2298,6 +2384,19 @@ export async function bulkBuildUnitsServer(
                 ...(summonableSpecialUnits ?? []),
                 summonedSpecialUnit,
               ];
+              // v2 registry event for the farm hero.
+              appendHeroEventInTx({
+                tx,
+                db,
+                heroId: tileFarmHero.id,
+                event: heroEvent.specialUnitSummoned({
+                  tileId: entry.tileId,
+                  ownerIdAtTime: userId,
+                  specialUnitDefId: def.id,
+                  seasonNumber: player.seasonNumber ?? 1,
+                }),
+                now,
+              });
             }
           }
         }
@@ -2511,6 +2610,22 @@ export async function armDefenseSpellServer(
         },
         now
       );
+      // v2 registry: persist + emergence event.
+      const seasonNumberLocal = player.seasonNumber ?? 1;
+      upsertHeroInTx({
+        tx,
+        db,
+        hero: emergedHero,
+        seasonNumber: seasonNumberLocal,
+        now,
+      });
+      appendHeroEventInTx({
+        tx,
+        db,
+        heroId: emergedHero.id,
+        event: heroEvent.emerged(emergedHero, seasonNumberLocal),
+        now,
+      });
     }
 
     const report = buildArmDefenseReport({
@@ -3700,6 +3815,187 @@ export async function attackTileServer(args: {
       );
     }
 
+    // ── v2 hero registry dual-writes ─────────────────────────────────
+    //
+    // Mirror every hero state change into the persistent collection so
+    // history survives the death of the inline `tile.hero` snapshot.
+    // Ordering matters slightly: emergence writes (which create the doc)
+    // before event writes (which require the doc to exist). The order
+    // below also matches the chronological "what happened" sequence so
+    // the events subcollection reads naturally.
+    const attackerSeasonNumber = attacker.seasonNumber ?? 1;
+    const defenderSeasonNumber = defender.seasonNumber ?? 1;
+
+    // 1. Engagement events for any hero present pre-attack. The source
+    //    hero engages when the attack proceeds (deployed > 0, which is
+    //    guaranteed here since we're past the early-return). The target
+    //    hero engages when its tile was attacked.
+    if (sourceHeroRegened) {
+      appendHeroEventInTx({
+        tx,
+        db,
+        heroId: sourceHeroRegened.id,
+        event: heroEvent.engagedAttacker({
+          tileId: args.sourceTileId,
+          ownerIdAtTime: args.attackerId,
+          defenderId,
+          targetTileId: args.targetTileId,
+          outcome: result.outcome,
+          seasonNumber: attackerSeasonNumber,
+        }),
+        now,
+      });
+    }
+    if (targetHeroPreEngagement) {
+      appendHeroEventInTx({
+        tx,
+        db,
+        heroId: targetHeroPreEngagement.id,
+        event: heroEvent.engagedDefender({
+          tileId: target.tileId,
+          ownerIdAtTime: defenderId,
+          attackerId: args.attackerId,
+          outcome: result.outcome,
+          seasonNumber: defenderSeasonNumber,
+        }),
+        now,
+      });
+    }
+
+    // 2. Resolution events: slain, defected, moved on capture.
+    if (heroSlain) {
+      markHeroDeceasedInTx({
+        tx,
+        db,
+        heroId: heroSlain.id,
+        deceasedTileId: target.tileId,
+        now,
+      });
+      appendHeroEventInTx({
+        tx,
+        db,
+        heroId: heroSlain.id,
+        event: heroEvent.slain({
+          tileId: target.tileId,
+          ownerIdAtTime: defenderId,
+          attackerId: args.attackerId,
+          seasonNumber: defenderSeasonNumber,
+        }),
+        now,
+      });
+    }
+    if (heroDefected && nextTargetHero) {
+      transferHeroOwnerInTx({
+        tx,
+        db,
+        heroId: heroDefected.id,
+        newOwnerId: args.attackerId,
+        newTileId: target.tileId,
+        newStamina: nextTargetHero.stamina,
+        now,
+      });
+      appendHeroEventInTx({
+        tx,
+        db,
+        heroId: heroDefected.id,
+        event: heroEvent.defected({
+          tileId: target.tileId,
+          fromOwnerId: defenderId,
+          toOwnerId: args.attackerId,
+          seasonNumber: defenderSeasonNumber,
+        }),
+        now,
+      });
+    }
+    // Military hero moved on capture: source.hero was cleared and the
+    // hero now occupies the captured tile under the attacker.
+    const heroMovedOnCapture =
+      captured &&
+      nextTargetHero != null &&
+      sourceHeroRegened != null &&
+      nextSourceHero == null &&
+      sourceHeroRegened.id === nextTargetHero.id;
+    if (heroMovedOnCapture && nextTargetHero) {
+      upsertHeroInTx({
+        tx,
+        db,
+        hero: nextTargetHero,
+        seasonNumber: attackerSeasonNumber,
+        now,
+      });
+      appendHeroEventInTx({
+        tx,
+        db,
+        heroId: nextTargetHero.id,
+        event: heroEvent.movedOnCapture({
+          tileId: target.tileId,
+          fromTileId: args.sourceTileId,
+          ownerIdAtTime: args.attackerId,
+          seasonNumber: attackerSeasonNumber,
+        }),
+        now,
+      });
+    } else if (sourceHeroRegened && nextSourceHero) {
+      // Source hero stayed but had stamina decremented — refresh registry.
+      upsertHeroInTx({
+        tx,
+        db,
+        hero: nextSourceHero,
+        seasonNumber: attackerSeasonNumber,
+        now,
+      });
+    }
+    // Target hero stayed (spare or repel) — refresh registry stamina.
+    if (
+      targetHeroPreEngagement &&
+      nextTargetHero &&
+      !heroMovedOnCapture &&
+      !heroDefected
+    ) {
+      upsertHeroInTx({
+        tx,
+        db,
+        hero: nextTargetHero,
+        seasonNumber: defenderSeasonNumber,
+        now,
+      });
+    }
+
+    // 3. Fresh emergences (military). Either an attacker emergence on
+    //    capture OR a defender emergence on repel.
+    if (attackerEmergedHero) {
+      upsertHeroInTx({
+        tx,
+        db,
+        hero: attackerEmergedHero,
+        seasonNumber: attackerSeasonNumber,
+        now,
+      });
+      appendHeroEventInTx({
+        tx,
+        db,
+        heroId: attackerEmergedHero.id,
+        event: heroEvent.emerged(attackerEmergedHero, attackerSeasonNumber),
+        now,
+      });
+    }
+    if (defenderEmergedHero) {
+      upsertHeroInTx({
+        tx,
+        db,
+        hero: defenderEmergedHero,
+        seasonNumber: defenderSeasonNumber,
+        now,
+      });
+      appendHeroEventInTx({
+        tx,
+        db,
+        heroId: defenderEmergedHero.id,
+        event: heroEvent.emerged(defenderEmergedHero, defenderSeasonNumber),
+        now,
+      });
+    }
+
     const attack: GameAttack = {
       id: attackId,
       attackerId: args.attackerId,
@@ -4729,6 +5025,44 @@ export async function castSpellServer(args: {
           now
         );
       }
+    }
+
+    // v2 registry: emergence + spell_cast event for the source magic hero
+    // (either the freshly emerged one OR a pre-existing one).
+    const castSeasonNumber = attacker.seasonNumber ?? 1;
+    const magicHeroOnSource =
+      emergedHero ??
+      (source.hero && source.hero.class === "magic" ? source.hero : null);
+    if (emergedHero) {
+      upsertHeroInTx({
+        tx,
+        db,
+        hero: emergedHero,
+        seasonNumber: castSeasonNumber,
+        now,
+      });
+      appendHeroEventInTx({
+        tx,
+        db,
+        heroId: emergedHero.id,
+        event: heroEvent.emerged(emergedHero, castSeasonNumber),
+        now,
+      });
+    }
+    if (magicHeroOnSource) {
+      appendHeroEventInTx({
+        tx,
+        db,
+        heroId: magicHeroOnSource.id,
+        event: heroEvent.spellCast({
+          tileId: args.sourceTileId,
+          ownerIdAtTime: args.attackerId,
+          spellId: spell.id,
+          targetTileId: args.targetTileId,
+          seasonNumber: castSeasonNumber,
+        }),
+        now,
+      });
     }
 
     const attackerUpdate: Record<string, unknown> = {
