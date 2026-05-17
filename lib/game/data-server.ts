@@ -79,6 +79,16 @@ import {
   validateRemoveUpgrade,
 } from "./upgrades";
 import {
+  DEFENSIVE_STANCE_LOCK_MS,
+  LAST_STAND_COOLDOWN_MS,
+  LAST_STAND_THREAT_WINDOW_MS,
+  LAST_STAND_WINDOW_MS,
+  MEDITATION_DURATION_MS,
+  MEDITATION_MAX_ACTIVE_SLOTS,
+  OATHBREAKER_ATTACK_PENALTY,
+  OATHBREAKER_DURATION_MS,
+  PEP_TALK_STAMINA_GAIN,
+  REDISTRIBUTE_MAX_PER_DAY,
   SIEGE_ACTION_MAGNITUDE,
   SIEGE_DEBUFF_MAX_MAGNITUDE,
   type ArmageddonEventRecord,
@@ -134,6 +144,13 @@ import {
   applyStaminaRegen,
   maybeEmergeHero,
 } from "./heroes";
+import {
+  computeZeroTurnDefenseBonus,
+  isHeroMeditating,
+  isTileInDefensiveStance,
+  oathbreakerAttackPenalty,
+} from "./zero-turn";
+import { findActivePactsBetween } from "./pacts";
 import {
   appendHeroEventInTx,
   heroEvent,
@@ -200,11 +217,13 @@ export function unitsPerTurnForLand(landType: LandType): number {
  *  [0, FARM_HERO_GLOBAL_RECRUIT_CAP]. */
 function computeFarmHeroKingdomBuff(
   heroes: ReadonlyArray<GameHero>,
-  ownerTurnsSpentTotal: number
+  ownerTurnsSpentTotal: number,
+  now: Date = new Date()
 ): number {
   let total = 0;
   for (const hero of heroes) {
     if (hero.class !== "farm") continue;
+    if (isHeroMeditating(hero, now)) continue;
     const regened = applyStaminaRegen(hero, ownerTurnsSpentTotal);
     total +=
       FARM_HERO_GLOBAL_RECRUIT_BONUS *
@@ -220,11 +239,13 @@ function computeFarmHeroKingdomBuff(
  *  small bump. Fractional — magicMultiplier handles the curve. */
 function countMagicHeroVirtualLands(
   heroes: ReadonlyArray<GameHero>,
-  ownerTurnsSpentTotal: number
+  ownerTurnsSpentTotal: number,
+  now: Date = new Date()
 ): number {
   let total = 0;
   for (const hero of heroes) {
     if (hero.class !== "magic") continue;
+    if (isHeroMeditating(hero, now)) continue;
     const regened = applyStaminaRegen(hero, ownerTurnsSpentTotal);
     total +=
       MAGIC_HERO_VIRTUAL_LANDS *
@@ -264,10 +285,15 @@ function computeStationedSpecialUnitBonuses(
 function combinedHeroAttackBonus(
   player: GamePlayer,
   sourceTile: GameTile,
-  targetTile: Pick<GameTile, "type">
+  targetTile: Pick<GameTile, "type">,
+  now: Date = new Date()
 ): number {
   let bonus = 0;
-  if (sourceTile.hero && sourceTile.hero.class === "military") {
+  if (
+    sourceTile.hero &&
+    sourceTile.hero.class === "military" &&
+    !isHeroMeditating(sourceTile.hero, now)
+  ) {
     const h = applyStaminaRegen(sourceTile.hero, player.turnsSpentTotal);
     bonus +=
       HERO_ATTACK_BONUS *
@@ -287,10 +313,15 @@ function combinedHeroAttackBonus(
 function combinedHeroDefenseBonus(
   defender: GamePlayer,
   targetTile: GameTile,
-  sourceTile: Pick<GameTile, "type">
+  sourceTile: Pick<GameTile, "type">,
+  now: Date = new Date()
 ): number {
   let bonus = 0;
-  if (targetTile.hero && targetTile.hero.class === "military") {
+  if (
+    targetTile.hero &&
+    targetTile.hero.class === "military" &&
+    !isHeroMeditating(targetTile.hero, now)
+  ) {
     const h = applyStaminaRegen(targetTile.hero, defender.turnsSpentTotal);
     bonus +=
       HERO_DEFENSE_BONUS *
@@ -307,9 +338,11 @@ function combinedHeroDefenseBonus(
 function magicHeroSpellMultiplier(
   casterTurnsSpentTotal: number,
   sourceTile: GameTile,
-  spell: Pick<SpellDefinition, "type">
+  spell: Pick<SpellDefinition, "type">,
+  now: Date = new Date()
 ): number {
   if (!sourceTile.hero || sourceTile.hero.class !== "magic") return 1;
+  if (isHeroMeditating(sourceTile.hero, now)) return 1;
   const h = applyStaminaRegen(sourceTile.hero, casterTurnsSpentTotal);
   return (
     1 +
@@ -552,6 +585,84 @@ export class GameSpecialUnitAlreadyStationedError extends Error {
   }
 }
 
+// Zero-turn gameplay errors -----------------------------------------------
+export class GameDefensiveStanceBlockedError extends Error {
+  constructor() {
+    super(
+      "This tile is in defensive stance and cannot attack until the stance lifts."
+    );
+    this.name = "GameDefensiveStanceBlockedError";
+  }
+}
+export class GameDefensiveStanceLockedError extends Error {
+  constructor() {
+    super(
+      "Defensive stance is still locked. You cannot exit stance until the cooldown elapses."
+    );
+    this.name = "GameDefensiveStanceLockedError";
+  }
+}
+export class GameDefensiveStanceCapError extends Error {
+  constructor(public cap: number) {
+    super(`You can have at most ${cap} tile(s) in defensive stance.`);
+    this.name = "GameDefensiveStanceCapError";
+  }
+}
+export class GameMeditationSlotFullError extends Error {
+  constructor() {
+    super("You already have a hero in meditation.");
+    this.name = "GameMeditationSlotFullError";
+  }
+}
+export class GameHeroAlreadyMeditatingError extends Error {
+  constructor() {
+    super("That hero is already meditating.");
+    this.name = "GameHeroAlreadyMeditatingError";
+  }
+}
+export class GameHeroNotOwnedError extends Error {
+  constructor() {
+    super("That hero is not yours.");
+    this.name = "GameHeroNotOwnedError";
+  }
+}
+export class GameHeroNotFoundError extends Error {
+  constructor() {
+    super("Hero not found.");
+    this.name = "GameHeroNotFoundError";
+  }
+}
+export class GamePepTalkRequiresZeroTurnsError extends Error {
+  constructor() {
+    super("Pep talks are only available when you have 0 turns remaining.");
+    this.name = "GamePepTalkRequiresZeroTurnsError";
+  }
+}
+export class GameRedistributeRateLimitError extends Error {
+  constructor(public retryAfterMs: number) {
+    super("You've used your daily redistribution allowance.");
+    this.name = "GameRedistributeRateLimitError";
+  }
+}
+export class GameLastStandCooldownError extends Error {
+  constructor(public retryAfterMs: number) {
+    super("Last Stand is still on cooldown.");
+    this.name = "GameLastStandCooldownError";
+  }
+}
+export class GameLastStandRequiresZeroTurnsError extends Error {
+  constructor() {
+    super("Last Stand is only available when you have 0 turns remaining.");
+    this.name = "GameLastStandRequiresZeroTurnsError";
+  }
+}
+export class GameLastStandNoThreatError extends Error {
+  constructor() {
+    super("No inbound attack threat detected on that tile.");
+    this.name = "GameLastStandNoThreatError";
+  }
+}
+
 const COLLECTIONS = {
   PLAYERS: "game_players",
   TILES: "game_tiles",
@@ -569,6 +680,9 @@ const COLLECTIONS = {
   // (doc id = seasonNumber). Persisted before the wipe so the record
   // survives even if the resolver crashes mid-batch.
   ARMAGEDDON_EVENTS: "game_armageddon_events",
+  // Zero-turn gameplay: queued battle plans that execute at next weekly
+  // grant. Owned by player; writes Admin-SDK only.
+  ORDER_QUEUE: "game_order_queue",
 } as const;
 
 const WORLD_META_DOC = "singleton";
@@ -3198,6 +3312,26 @@ export async function attackTileServer(args: {
     defenderTileId: args.targetTileId,
   });
 
+  // Zero-turn gameplay: detect any active pact the attacker is about to
+  // break. The attack still resolves, but with an Oathbreaker penalty on
+  // attackPower AND the attacker gets the public mark for 7 days. The
+  // lookup runs outside the txn (like markPactsBrokenInTx, which we'll
+  // call later to actually stamp brokenAt).
+  const pactsToBreak = await findActivePactsBetween({
+    db,
+    attackerId: args.attackerId,
+    defenderId,
+    now,
+  });
+  const willBreakPact = pactsToBreak.length > 0;
+  // Also detect any already-active oathbreaker mark from a PRIOR breach.
+  const priorOathbreakerPenalty = oathbreakerAttackPenalty(attackerPre, now);
+  // Effective penalty for THIS attack: max of prior mark and breach-now.
+  const oathbreakerPenaltyForThisAttack = Math.max(
+    priorOathbreakerPenalty,
+    willBreakPact ? OATHBREAKER_ATTACK_PENALTY : 0
+  );
+
   if (offenseSpell) {
     // We can't validate caste-match yet without reading the player; deferred
     // into the transaction below.
@@ -3248,6 +3382,12 @@ export async function attackTileServer(args: {
     if (target.ownerId === args.attackerId) throw new GameSelfAttackError();
     if (!source.neighborTileIds.includes(args.targetTileId)) {
       throw new GameNotAdjacentError();
+    }
+    // Zero-turn gameplay: a tile in defensive stance trades its offensive
+    // option for the +25% defense bonus and cannot launch attacks until
+    // the stance lifts (see toggleDefensiveStanceServer).
+    if (isTileInDefensiveStance(source, now)) {
+      throw new GameDefensiveStanceBlockedError();
     }
     if (offenseSpell && offenseSpell.caste !== attacker.caste) {
       throw new GameInvalidSpellError(
@@ -3337,8 +3477,18 @@ export async function attackTileServer(args: {
     // stationed special-unit contributions folded into the same channel).
     // Combat math applies (1 + bonus) at the same numeric stage as the
     // existing intel bonuses; see combat.ts:resolveAttack.
-    const heroAttackBonus = combinedHeroAttackBonus(attacker, source, target);
-    const heroDefenseBonus = combinedHeroDefenseBonus(defender, target, source);
+    const heroAttackBonus = combinedHeroAttackBonus(attacker, source, target, now);
+    const heroDefenseBonus = combinedHeroDefenseBonus(defender, target, source, now);
+    // Zero-turn gameplay: fold defensive-stance and Last Stand into the
+    // defender's combat input. Adjacent-rally penalties (rally pulls
+    // reserves from neighbors) are not applied here — they're picked up
+    // by attacks against THOSE neighbors which read this tile's
+    // activeLastStand. For the target tile itself the bonus is purely
+    // additive.
+    const zeroTurnDefenseBonus = computeZeroTurnDefenseBonus({
+      tile: target,
+      now,
+    });
 
     const result = resolveAttack(
       {
@@ -3352,6 +3502,7 @@ export async function attackTileServer(args: {
         sourceLandType: source.type,
         preCastOffenseBonus: intelContext.preCastOffenseBonus,
         heroAttackBonus,
+        oathbreakerPenalty: oathbreakerPenaltyForThisAttack,
       },
       {
         caste: defender.caste,
@@ -3364,6 +3515,7 @@ export async function attackTileServer(args: {
         intelDefenseBonus: intelContext.alertVsCasterDefenseBonus,
         defenseDisarmFraction: intelContext.defenseDisarmFraction,
         heroDefenseBonus,
+        zeroTurnDefenseBonus,
       },
       {
         capacity: tileCapacity,
@@ -3664,6 +3816,16 @@ export async function attackTileServer(args: {
       // Tile had a hero before; explicitly clear it (kill OR moved away).
       targetWrite.hero = null;
     }
+    // Zero-turn gameplay: Last Stand is single-use — consume on any inbound
+    // attack, whether or not it was active at resolution time (clears the
+    // window so the player has to declare again). Defensive stance clears
+    // on capture (new owner doesn't inherit) and is preserved on repel.
+    if (target.activeLastStand) {
+      targetWrite.activeLastStand = null;
+    }
+    if (captured && target.defensiveStance) {
+      targetWrite.defensiveStance = null;
+    }
     tx.update(targetRef, targetWrite);
 
     // ── Stationed special-unit cleanup on tile capture ───────────────────
@@ -3715,6 +3877,24 @@ export async function attackTileServer(args: {
         (attacker.heroCount ?? 0) + attackerHeroDelta
       );
     }
+    // Zero-turn gameplay: stamp the Oathbreaker mark when this attack
+    // breaks one or more active pacts. The penalty already applied to
+    // attackPower above; this write makes the mark visible on the public
+    // profile + applies to subsequent attacks within the window. Use the
+    // larger of any existing oathbreakerUntil and the new expiry so a
+    // fresh breach during an existing window extends the punishment.
+    if (willBreakPact) {
+      const oathbreakerUntil = new Date(
+        Math.max(
+          attacker.oathbreakerUntil instanceof Date
+            ? attacker.oathbreakerUntil.getTime()
+            : 0,
+          now.getTime() + OATHBREAKER_DURATION_MS
+        )
+      );
+      attackerUpdate.oathbreakerUntil = oathbreakerUntil;
+      attackerUpdate.oathbreakerLastPactId = pactsToBreak[0].id;
+    }
     tx.update(attackerRef, attackerUpdate);
 
     const defenderUpdate: Record<string, unknown> = {
@@ -3729,6 +3909,15 @@ export async function attackTileServer(args: {
     }
     if (nextDefenderSummonable !== defender.summonableSpecialUnits) {
       defenderUpdate.summonableSpecialUnits = nextDefenderSummonable;
+    }
+    // Zero-turn gameplay: if the captured tile was in defensive stance,
+    // decrement the defender's denormalized counter so the cap check
+    // stays accurate.
+    if (captured && isTileInDefensiveStance(target, now)) {
+      defenderUpdate.activeDefensiveStanceCount = Math.max(
+        0,
+        (defender.activeDefensiveStanceCount ?? 0) - 1
+      );
     }
     tx.update(defenderRef, defenderUpdate);
 
@@ -4048,6 +4237,13 @@ export async function attackTileServer(args: {
       rngSeed: `attack-${attackId}`,
       outcome: result.outcome,
       turnsCost: turnCost,
+      // Zero-turn gameplay: pre-attack defender composition snapshot for
+      // the Battle Autopsy feature. Surfaced on /game/attacks/[attackId]
+      // so the loser can run counterfactual "what would have flipped this"
+      // simulations. The composite is BASE+SUPER; baseUnitsOnTargetPreAttack
+      // splits the BASE portion for finer attribution.
+      unitsOnTargetPreAttack: defenderComposite,
+      baseUnitsOnTargetPreAttack: targetBase,
       createdAt: now,
       ...(dispatch ? { dispatch } : {}),
     };
@@ -5333,6 +5529,8 @@ export async function runWeeklyRolloverServer(
         const updated = applyWeeklyGrant(freshData, wkStart, now);
         tx.update(playerRef, {
           turnsRemaining: updated.turnsRemaining,
+          // Zero-turn gameplay: consume any pending prophecy bonus on grant.
+          pendingProphecyBonus: 0,
           lastWeeklyGrantAt: updated.lastWeeklyGrantAt,
           lastWeeklyGrantWeekStart: updated.lastWeeklyGrantWeekStart,
           updatedAt: updated.updatedAt,
@@ -5567,6 +5765,8 @@ export async function adminGrantTurnsServer(
     const granted = applyWeeklyGrant(player, wkStart, now);
     tx.update(playerRef, {
       turnsRemaining: granted.turnsRemaining,
+      // Zero-turn gameplay: consume any pending prophecy bonus on grant.
+      pendingProphecyBonus: 0,
       lastWeeklyGrantAt: granted.lastWeeklyGrantAt,
       lastWeeklyGrantWeekStart: granted.lastWeeklyGrantWeekStart,
       updatedAt: granted.updatedAt,
@@ -7065,4 +7265,410 @@ export async function listArmageddonHistoryServer(
     .limit(Math.max(1, Math.min(200, limit)))
     .get();
   return snap.docs.map((d) => d.data() as ArmageddonEventRecord);
+}
+
+// =====================================================================
+// Zero-turn gameplay: new server actions
+// =====================================================================
+//
+// These functions are the entrypoints for the May 2026 zero-turn
+// gameplay features. Each enforces its own gating (rate limits, caps,
+// cooldowns, 0-turn predicates) so the actions complement rather than
+// replace the turn economy.
+
+/**
+ * Grants PEP_TALK_STAMINA_GAIN stamina to one of the caller's heroes.
+ *
+ * Gating:
+ *   - Caller must currently have turnsRemaining === 0 (consolation
+ *     mechanic; doesn't trivialize stamina for active players).
+ *   - Per-day rate limit is enforced at the API route layer (3/day).
+ *
+ * The target hero is identified by its `tileId` — pep talks always go
+ * to "the hero on this tile." This avoids needing a separate heroId
+ * lookup index when the hero registry has the canonical id but the
+ * tile snapshot is what combat reads.
+ */
+export async function pepTalkHeroServer(args: {
+  callerUserId: string;
+  tileId: string;
+  now?: Date;
+}): Promise<GameTile> {
+  const now = args.now ?? new Date();
+  const db = adminDbOrThrow();
+  const playerRef = db.collection(COLLECTIONS.PLAYERS).doc(args.callerUserId);
+  const tileRef = db.collection(COLLECTIONS.TILES).doc(args.tileId);
+  return db.runTransaction(async (tx) => {
+    const [playerSnap, tileSnap] = await Promise.all([
+      tx.get(playerRef),
+      tx.get(tileRef),
+    ]);
+    if (!playerSnap.exists) throw new GamePlayerNotFoundError();
+    if (!tileSnap.exists) throw new GameTileNotFoundError();
+    const player = playerSnap.data() as GamePlayer;
+    const tile = tileSnap.data() as GameTile;
+    if (player.turnsRemaining > 0) {
+      throw new GamePepTalkRequiresZeroTurnsError();
+    }
+    if (tile.ownerId !== args.callerUserId) throw new GameTileNotOwnedError();
+    if (!tile.hero) throw new GameHeroNotFoundError();
+    if (tile.hero.ownerId !== args.callerUserId) {
+      throw new GameHeroNotOwnedError();
+    }
+    const updatedHero: GameHero = {
+      ...tile.hero,
+      stamina: Math.min(
+        tile.hero.staminaMax,
+        tile.hero.stamina + PEP_TALK_STAMINA_GAIN
+      ),
+      lastEngagedAtTurn: player.turnsSpentTotal,
+    };
+    tx.update(tileRef, { hero: updatedHero, updatedAt: now });
+    // Mirror the stamina onto the persistent registry doc so the All
+    // Heroes browse view stays accurate.
+    tx.update(
+      db.collection("game_heroes").doc(updatedHero.id),
+      { stamina: updatedHero.stamina, updatedAt: now }
+    );
+    return { ...tile, hero: updatedHero, updatedAt: now };
+  });
+}
+
+/**
+ * Puts one of the caller's heroes into meditation for
+ * MEDITATION_DURATION_MS. Stamina is set to staminaMax immediately and
+ * the hero is marked off-duty — combat and engagement skip them until
+ * the timer expires.
+ *
+ * Gating:
+ *   - The hero must be owned by the caller and on a tile.
+ *   - The hero must not already be meditating.
+ *   - The caller can have at most MEDITATION_MAX_ACTIVE_SLOTS heroes
+ *     meditating at once (default 1).
+ */
+export async function meditateHeroServer(args: {
+  callerUserId: string;
+  tileId: string;
+  now?: Date;
+}): Promise<GameTile> {
+  const now = args.now ?? new Date();
+  const db = adminDbOrThrow();
+  const playerRef = db.collection(COLLECTIONS.PLAYERS).doc(args.callerUserId);
+  const tileRef = db.collection(COLLECTIONS.TILES).doc(args.tileId);
+  // Count the player's currently-meditating heroes via a non-tx query
+  // (Firestore can't `where` inside a tx). Slight race: a second concurrent
+  // call could double-spend the slot. Acceptable for the cap of 1 — worst
+  // case the player ends up with 2 meditating, the cap reasserts after.
+  const ownedSnap = await db
+    .collection(COLLECTIONS.TILES)
+    .where("ownerId", "==", args.callerUserId)
+    .get();
+  let meditating = 0;
+  for (const doc of ownedSnap.docs) {
+    const t = doc.data() as GameTile;
+    if (t.hero && t.hero.meditatingUntil) {
+      const until =
+        t.hero.meditatingUntil instanceof Date
+          ? t.hero.meditatingUntil
+          : (t.hero.meditatingUntil as { toDate: () => Date }).toDate?.() ??
+            null;
+      if (until && until.getTime() > now.getTime()) meditating += 1;
+    }
+  }
+  if (meditating >= MEDITATION_MAX_ACTIVE_SLOTS) {
+    throw new GameMeditationSlotFullError();
+  }
+  return db.runTransaction(async (tx) => {
+    const [playerSnap, tileSnap] = await Promise.all([
+      tx.get(playerRef),
+      tx.get(tileRef),
+    ]);
+    if (!playerSnap.exists) throw new GamePlayerNotFoundError();
+    if (!tileSnap.exists) throw new GameTileNotFoundError();
+    const tile = tileSnap.data() as GameTile;
+    if (tile.ownerId !== args.callerUserId) throw new GameTileNotOwnedError();
+    if (!tile.hero) throw new GameHeroNotFoundError();
+    if (tile.hero.ownerId !== args.callerUserId) {
+      throw new GameHeroNotOwnedError();
+    }
+    if (tile.hero.meditatingUntil) {
+      const until =
+        tile.hero.meditatingUntil instanceof Date
+          ? tile.hero.meditatingUntil
+          : null;
+      if (until && until.getTime() > now.getTime()) {
+        throw new GameHeroAlreadyMeditatingError();
+      }
+    }
+    const meditatingUntil = new Date(now.getTime() + MEDITATION_DURATION_MS);
+    const updatedHero: GameHero = {
+      ...tile.hero,
+      stamina: tile.hero.staminaMax,
+      meditatingUntil,
+      lastEngagedAtTurn: (playerSnap.data() as GamePlayer).turnsSpentTotal,
+    };
+    tx.update(tileRef, { hero: updatedHero, updatedAt: now });
+    tx.update(
+      db.collection("game_heroes").doc(updatedHero.id),
+      {
+        stamina: updatedHero.stamina,
+        meditatingUntil,
+        updatedAt: now,
+      }
+    );
+    return { ...tile, hero: updatedHero, updatedAt: now };
+  });
+}
+
+/**
+ * Moves units between two adjacent tiles the caller owns. Applies the
+ * REDISTRIBUTE_TRANSIT_LOSS haircut to the moved stack. Capped at
+ * REDISTRIBUTE_MAX_PER_DAY per player per rolling 24h window.
+ */
+export async function redistributeUnitsServer(args: {
+  callerUserId: string;
+  sourceTileId: string;
+  destTileId: string;
+  units: UnitStack;
+  now?: Date;
+}): Promise<{ source: GameTile; dest: GameTile }> {
+  const now = args.now ?? new Date();
+  const db = adminDbOrThrow();
+  const playerRef = db.collection(COLLECTIONS.PLAYERS).doc(args.callerUserId);
+  const sourceRef = db.collection(COLLECTIONS.TILES).doc(args.sourceTileId);
+  const destRef = db.collection(COLLECTIONS.TILES).doc(args.destTileId);
+  return db.runTransaction(async (tx) => {
+    const [playerSnap, sourceSnap, destSnap] = await Promise.all([
+      tx.get(playerRef),
+      tx.get(sourceRef),
+      tx.get(destRef),
+    ]);
+    if (!playerSnap.exists) throw new GamePlayerNotFoundError();
+    if (!sourceSnap.exists) throw new GameTileNotFoundError();
+    if (!destSnap.exists) throw new GameTileNotFoundError();
+    const player = playerSnap.data() as GamePlayer;
+    const source = sourceSnap.data() as GameTile;
+    const dest = destSnap.data() as GameTile;
+    if (source.ownerId !== args.callerUserId) {
+      throw new GameTileNotOwnedError();
+    }
+    if (dest.ownerId !== args.callerUserId) {
+      throw new GameTileNotOwnedError();
+    }
+    if (!source.neighborTileIds.includes(args.destTileId)) {
+      throw new GameNotAdjacentError();
+    }
+    if (!stackHasAtLeast(source.units, args.units)) {
+      throw new GameInsufficientUnitsError();
+    }
+    // Pruned rolling-24h counter from the player's recentRedistributions.
+    const recent = (player.recentRedistributions ?? []).filter((entry) => {
+      const ms =
+        entry instanceof Date
+          ? entry.getTime()
+          : ((entry as { toMillis?: () => number }).toMillis?.() ?? 0);
+      return now.getTime() - ms < 24 * 60 * 60 * 1000;
+    });
+    if (recent.length >= REDISTRIBUTE_MAX_PER_DAY) {
+      // Find the oldest entry to compute retryAfter.
+      const oldest = recent[0];
+      const oldestMs =
+        oldest instanceof Date
+          ? oldest.getTime()
+          : ((oldest as { toMillis?: () => number }).toMillis?.() ?? 0);
+      const retryAfter = 24 * 60 * 60 * 1000 - (now.getTime() - oldestMs);
+      throw new GameRedistributeRateLimitError(Math.max(0, retryAfter));
+    }
+    // Apply the transit-loss haircut.
+    const arrived = {
+      ground: Math.floor(
+        args.units.ground * (1 - 0.08) // REDISTRIBUTE_TRANSIT_LOSS
+      ),
+      siege: Math.floor(args.units.siege * (1 - 0.08)),
+      air: Math.floor(args.units.air * (1 - 0.08)),
+    };
+    const newSourceUnits: UnitStack = {
+      ground: source.units.ground - args.units.ground,
+      siege: source.units.siege - args.units.siege,
+      air: source.units.air - args.units.air,
+    };
+    const newDestUnits: UnitStack = {
+      ground: dest.units.ground + arrived.ground,
+      siege: dest.units.siege + arrived.siege,
+      air: dest.units.air + arrived.air,
+    };
+    // Cap check on destination: SUPER stack can't exceed tile capacity.
+    const destCapacity = computeTileCapacity(
+      dest.type,
+      player.caste,
+      dest.upgradeIds,
+      player.activeUpgrades ?? {}
+    );
+    if (sumStack(newDestUnits) > destCapacity) {
+      throw new GameTileFullError(
+        Math.max(0, destCapacity - sumStack(dest.units)),
+        sumStack(arrived)
+      );
+    }
+    const nextRecent = [...recent, now];
+    tx.update(sourceRef, { units: newSourceUnits, updatedAt: now });
+    tx.update(destRef, { units: newDestUnits, updatedAt: now });
+    tx.update(playerRef, {
+      recentRedistributions: nextRecent,
+      updatedAt: now,
+    });
+    return {
+      source: { ...source, units: newSourceUnits, updatedAt: now },
+      dest: { ...dest, units: newDestUnits, updatedAt: now },
+    };
+  });
+}
+
+/**
+ * Toggles defensive stance on/off on an owned tile.
+ *
+ * Toggling ON:
+ *   - Tile must be owned by caller.
+ *   - Tile must not already be in stance.
+ *   - Caller's activeDefensiveStanceCount must be below the cap
+ *     (max(1, floor(tilesHeld / 100))).
+ *
+ * Toggling OFF:
+ *   - Only allowed if `defensiveStance.lockedUntil <= now` (the 6h
+ *     cooldown has elapsed). Prevents pre-attack flicker.
+ */
+export async function toggleDefensiveStanceServer(args: {
+  callerUserId: string;
+  tileId: string;
+  desiredActive: boolean;
+  now?: Date;
+}): Promise<GameTile> {
+  const now = args.now ?? new Date();
+  const db = adminDbOrThrow();
+  const playerRef = db.collection(COLLECTIONS.PLAYERS).doc(args.callerUserId);
+  const tileRef = db.collection(COLLECTIONS.TILES).doc(args.tileId);
+  return db.runTransaction(async (tx) => {
+    const [playerSnap, tileSnap] = await Promise.all([
+      tx.get(playerRef),
+      tx.get(tileRef),
+    ]);
+    if (!playerSnap.exists) throw new GamePlayerNotFoundError();
+    if (!tileSnap.exists) throw new GameTileNotFoundError();
+    const player = playerSnap.data() as GamePlayer;
+    const tile = tileSnap.data() as GameTile;
+    if (tile.ownerId !== args.callerUserId) throw new GameTileNotOwnedError();
+
+    const currentlyActive = isTileInDefensiveStance(tile, now);
+    if (args.desiredActive && currentlyActive) {
+      // No-op: already on.
+      return tile;
+    }
+    if (!args.desiredActive && !currentlyActive) {
+      // No-op: already off.
+      return tile;
+    }
+    if (args.desiredActive) {
+      // Check the cap based on the denormalized counter.
+      const cap = Math.max(1, Math.floor((player.stats?.tilesHeld ?? 0) / 100));
+      const active = player.activeDefensiveStanceCount ?? 0;
+      if (active >= cap) {
+        throw new GameDefensiveStanceCapError(cap);
+      }
+      const stance = {
+        active: true,
+        since: now,
+        lockedUntil: new Date(now.getTime() + DEFENSIVE_STANCE_LOCK_MS),
+      };
+      tx.update(tileRef, { defensiveStance: stance, updatedAt: now });
+      tx.update(playerRef, {
+        activeDefensiveStanceCount: active + 1,
+        updatedAt: now,
+      });
+      return { ...tile, defensiveStance: stance, updatedAt: now };
+    }
+    // Toggle OFF: must wait for lockedUntil.
+    if (tile.defensiveStance) {
+      const lockedMs =
+        tile.defensiveStance.lockedUntil instanceof Date
+          ? tile.defensiveStance.lockedUntil.getTime()
+          : 0;
+      if (lockedMs > now.getTime()) {
+        throw new GameDefensiveStanceLockedError();
+      }
+    }
+    tx.update(tileRef, { defensiveStance: null, updatedAt: now });
+    tx.update(playerRef, {
+      activeDefensiveStanceCount: Math.max(
+        0,
+        (player.activeDefensiveStanceCount ?? 0) - 1
+      ),
+      updatedAt: now,
+    });
+    return { ...tile, defensiveStance: null as never, updatedAt: now };
+  });
+}
+
+/**
+ * Declares Last Stand on an owned tile. Requires:
+ *   - turnsRemaining === 0
+ *   - Inbound attack threat within LAST_STAND_THREAT_WINDOW_MS (the tile
+ *     has been attacked recently OR a neighbor enemy tile has had a
+ *     burst of activity — we use lastAttackedAt as a simple signal)
+ *   - LAST_STAND_COOLDOWN_MS has elapsed since the last declare
+ *
+ * On success, stamps `activeLastStand` on the tile (consumed by the next
+ * inbound attack — see attackTileServer) and `lastStandUsedAt` on the
+ * player (cooldown clock).
+ */
+export async function declareLastStandServer(args: {
+  callerUserId: string;
+  tileId: string;
+  now?: Date;
+}): Promise<GameTile> {
+  const now = args.now ?? new Date();
+  const db = adminDbOrThrow();
+  const playerRef = db.collection(COLLECTIONS.PLAYERS).doc(args.callerUserId);
+  const tileRef = db.collection(COLLECTIONS.TILES).doc(args.tileId);
+  return db.runTransaction(async (tx) => {
+    const [playerSnap, tileSnap] = await Promise.all([
+      tx.get(playerRef),
+      tx.get(tileRef),
+    ]);
+    if (!playerSnap.exists) throw new GamePlayerNotFoundError();
+    if (!tileSnap.exists) throw new GameTileNotFoundError();
+    const player = playerSnap.data() as GamePlayer;
+    const tile = tileSnap.data() as GameTile;
+    if (tile.ownerId !== args.callerUserId) throw new GameTileNotOwnedError();
+    if (player.turnsRemaining > 0) {
+      throw new GameLastStandRequiresZeroTurnsError();
+    }
+    // Cooldown check.
+    if (player.lastStandUsedAt) {
+      const used =
+        player.lastStandUsedAt instanceof Date
+          ? player.lastStandUsedAt.getTime()
+          : 0;
+      const elapsed = now.getTime() - used;
+      if (elapsed < LAST_STAND_COOLDOWN_MS) {
+        throw new GameLastStandCooldownError(
+          LAST_STAND_COOLDOWN_MS - elapsed
+        );
+      }
+    }
+    // Threat check: tile has been attacked within the threat window.
+    const lastAttackedMs =
+      tile.lastAttackedAt instanceof Date
+        ? tile.lastAttackedAt.getTime()
+        : 0;
+    if (now.getTime() - lastAttackedMs > LAST_STAND_THREAT_WINDOW_MS) {
+      throw new GameLastStandNoThreatError();
+    }
+    const activeLastStand = {
+      declaredAt: now,
+      expiresAt: new Date(now.getTime() + LAST_STAND_WINDOW_MS),
+    };
+    tx.update(tileRef, { activeLastStand, updatedAt: now });
+    tx.update(playerRef, { lastStandUsedAt: now, updatedAt: now });
+    return { ...tile, activeLastStand, updatedAt: now };
+  });
 }
