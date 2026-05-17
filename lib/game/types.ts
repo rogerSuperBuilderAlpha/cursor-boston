@@ -260,6 +260,29 @@ export interface GamePlayer {
   // Phase 7. Incremented when one of this player's prophecies resolves
   // (the predicted seal breaks). Drives the Seer title.
   prophecyFulfilledCount?: number;
+  // Zero-turn gameplay features (May 2026 sim follow-up).
+  // Oathbreaker debuff window: when set and > now, attacks launched by this
+  // player resolve with -OATHBREAKER_ATTACK_PENALTY on attackPower. Stamped
+  // by the attack handler when the attacker breaks an active pact.
+  oathbreakerUntil?: Timestamp | Date;
+  // Stamped alongside oathbreakerUntil so the UI knows the source attack id
+  // for the public Oathbreaker badge on the profile.
+  oathbreakerLastPactId?: string;
+  // Turns to be added to the next weekly grant from a fulfilled prophecy.
+  // Capped at PROPHECY_BONUS_TURNS_MAX so multiple resolutions in one week
+  // don't compound. Consumed (zeroed) by runWeeklyRolloverServer on grant.
+  pendingProphecyBonus?: number;
+  // Last time this player declared Last Stand. Used for the 24h cooldown
+  // check in declareLastStandServer. Absent ⇒ never used.
+  lastStandUsedAt?: Timestamp | Date;
+  // Denormalized counter of tiles currently in defensive stance. Maintained
+  // alongside GameTile.defensiveStance writes so the cap check
+  // (max = floor(tilesHeld / 100), min 1) doesn't have to query all tiles.
+  // Optional for back-compat; readers coalesce to 0.
+  activeDefensiveStanceCount?: number;
+  // Denormalized list of the last 24h of redistribution timestamps for the
+  // per-day rate limit (3/day). Pruned on each write. Optional for back-compat.
+  recentRedistributions?: Array<Timestamp | Date>;
   createdAt: Timestamp | Date;
   updatedAt: Timestamp | Date;
 }
@@ -360,6 +383,26 @@ export interface GameTile {
   // interacts with the tile. Server-sanitized on write.
   inscription?: string;
   inscriptionUpdatedAt?: Timestamp | Date;
+  // Zero-turn gameplay: defensive-stance toggle. When `active`, this tile
+  // gets DEFENSIVE_STANCE_DEFENSE_BONUS on its defense power and the attack
+  // handler refuses attacks launched FROM this tile until the toggle lifts.
+  // `lockedUntil` enforces a one-way cooldown — toggling on is free, but
+  // toggling off can't happen until lockedUntil < now (prevents pre-attack
+  // flicker). Absent ⇒ tile is in normal stance.
+  defensiveStance?: {
+    active: boolean;
+    since: Timestamp | Date;
+    lockedUntil: Timestamp | Date;
+  };
+  // Zero-turn gameplay: Last Stand declaration. When set, the next inbound
+  // attack against this tile resolves with LAST_STAND_DEFENSE_BONUS on
+  // defense power AND adjacent owned tiles take LAST_STAND_ADJACENT_PENALTY
+  // on theirs (rally pulls reserves). Single-use — combat consumes (deletes)
+  // on next attack. Stamped by declareLastStandServer.
+  activeLastStand?: {
+    declaredAt: Timestamp | Date;
+    expiresAt: Timestamp | Date;
+  };
   createdAt: Timestamp | Date;
   updatedAt: Timestamp | Date;
 }
@@ -467,6 +510,11 @@ export interface GameHero {
   // engaged). Drives lazy regen at read time. Updated whenever stamina
   // changes (engagement, conversion, move-on-capture).
   lastEngagedAtTurn: number;
+  // Zero-turn gameplay: meditation. When set and > now, the hero is on
+  // sabbatical — combat skips its attack/defense bonus contribution, and
+  // stamina regen runs at MEDITATION_REGEN_MULTIPLIER × normal rate.
+  // Absent ⇒ hero is active. Set by meditateHeroServer; auto-expires.
+  meditatingUntil?: Timestamp | Date;
 }
 
 // Resolution choice when an attacker wins a battle against a hero tile.
@@ -609,6 +657,10 @@ export interface GameHeroDoc {
   // `GameTile.hero.stamina`; this denorm is updated alongside it.
   stamina: number;
   staminaMax: number;
+  // Zero-turn gameplay: meditation denorm. Mirrors GameHero.meditatingUntil
+  // on the tile snapshot so the All Heroes browse view can render the
+  // "meditating" badge without joining against the tile. Absent ⇒ active.
+  meditatingUntil?: Timestamp | Date;
   // Status flags
   isDeceased: boolean;
   // True between season-end and next resurrection. Set by armageddon-resolve.
@@ -655,6 +707,9 @@ export interface SafeHeroSummary {
   deceasedTileId?: string;
   stamina?: number;
   staminaMax?: number;
+  // Zero-turn gameplay: meditation state surfaced when the hero is visible.
+  // Absent / past ⇒ active. Present and > now ⇒ meditating until that time.
+  meditatingUntil?: Timestamp | Date;
   // Set when a backstory markdown file exists for this hero. Drives the
   // "Add the next chapter" vs "Read the chronicle" CTA in the UI.
   hasBackstory: boolean;
@@ -702,6 +757,15 @@ export interface GameAttack {
   /** Optional attacker-authored ≤280-char taunt. Server-sanitized on
    *  write. Cosmetic only; no combat impact. */
   dispatch?: string;
+  /** Zero-turn gameplay: pre-attack snapshot of the defender's units on
+   *  the target tile (BASE + SUPER combined). Used by the Battle Autopsy
+   *  feature to run speculative counterfactuals — what would have happened
+   *  with +50 siege, -20% defense, etc. Absent on legacy attack docs;
+   *  autopsy degrades to "no counterfactual available" when missing. */
+  unitsOnTargetPreAttack?: UnitStack;
+  /** Zero-turn gameplay: pre-attack base portion of unitsOnTargetPreAttack,
+   *  for counterfactual loss-attribution. Optional/back-compat. */
+  baseUnitsOnTargetPreAttack?: UnitStack;
   createdAt: Timestamp | Date;
 }
 
@@ -735,6 +799,12 @@ export interface CombatAttackerInput {
   // unit attackBonus contribution rolled into the same channel. Optional;
   // legacy callers default to 0.
   heroAttackBonus?: number;
+  // Zero-turn gameplay: Oathbreaker penalty. Subtracted from attackPower as
+  // a multiplicative reduction (e.g. 0.10 = -10% attack). Stamped by the
+  // server when an attacker has an active oathbreaker mark from breaking
+  // a pact within OATHBREAKER_DURATION_MS. Optional; legacy callers default
+  // to 0.
+  oathbreakerPenalty?: number;
 }
 
 export interface CombatDefenderInput {
@@ -768,6 +838,14 @@ export interface CombatDefenderInput {
   // special-unit defenseBonus contribution. Optional; legacy callers default
   // to 0.
   heroDefenseBonus?: number;
+  // Zero-turn gameplay: additive defense multiplier from the target tile
+  // being in Defensive Stance (DEFENSIVE_STANCE_DEFENSE_BONUS) plus any
+  // active Last Stand (LAST_STAND_DEFENSE_BONUS). Subtract any Last Stand
+  // adjacent-penalty when the target is adjacent to a tile that declared
+  // last stand against a different attacker. Server folds these into a
+  // single channel before calling resolveAttack. Optional; legacy callers
+  // default to 0.
+  zeroTurnDefenseBonus?: number;
 }
 
 export interface CombatTileInput {
@@ -1263,6 +1341,62 @@ export interface ArmageddonEventRecord {
   }>;
 }
 
+// =====================================================================
+// Zero-turn gameplay: Queued orders
+// =====================================================================
+//
+// Players can pre-plan a battle plan that executes at the next weekly
+// turn grant. Each order carries its normal turn cost when it fires; if
+// the player has insufficient turns when the order's slot comes up the
+// order is skipped with a reason logged into the per-player report feed.
+//
+// Stored as one doc per order in `game_order_queue` (top-level
+// collection, server-write-only). Ordered by sequenceIndex within a
+// player's queue. Failed orders are marked `status: "failed"` rather
+// than deleted so the UI can show "what happened" after the grant.
+
+/** Order kinds supported by the queue v1. New kinds extend this union
+ *  and add a handler branch in executeQueuedOrderServer. */
+export type QueuedOrderKind =
+  | "recruit_on_tile"
+  | "attack_adjacent"
+  | "cast_spell_on_tile";
+
+/** Per-order status. Lifecycle: queued → executing (transient) →
+ *  executed | failed | cancelled. */
+export type QueuedOrderStatus =
+  | "queued"
+  | "executed"
+  | "failed"
+  | "cancelled";
+
+/** Per-kind params payload. Discriminated by `kind`. Each enqueued
+ *  order represents ONE action; players queue multiple orders if they
+ *  want a sequence. */
+export type QueuedOrderParams =
+  | { kind: "recruit_on_tile"; tileId: string; unitType: UnitType }
+  | { kind: "attack_adjacent"; sourceTileId: string; targetTileId: string; units: UnitStack; offenseSpellId: string | null }
+  | { kind: "cast_spell_on_tile"; tileId: string; spellId: string };
+
+/** Single order in a player's queue. */
+export interface QueuedOrder {
+  id: string;
+  playerId: string;
+  kind: QueuedOrderKind;
+  params: QueuedOrderParams;
+  // Position within the player's queue at submission time. Lower fires first.
+  sequenceIndex: number;
+  status: QueuedOrderStatus;
+  // Set when status transitions out of "queued".
+  executedAt?: Timestamp | Date;
+  // For "failed" and "executed": one-line reason / outcome for the player.
+  resultSummary?: string;
+  // For "executed": denormalized reference to the resulting report/attack id.
+  resultRefId?: string;
+  createdAt: Timestamp | Date;
+  updatedAt: Timestamp | Date;
+}
+
 /** Scope for community chat messages. `global` is the default open
  *  room; `caste:<name>` rooms are gated to members of that caste at
  *  post time. Existing rows without a scope field are treated as
@@ -1288,3 +1422,70 @@ export interface CommunityMessage {
   /** Per-reaction counters. */
   reactions?: ReactionMap;
 }
+
+// =====================================================================
+// Zero-turn gameplay tuning constants
+// =====================================================================
+//
+// Centralized so balance changes don't require code archaeology. Each
+// constant is referenced from server logic (data-server.ts / heroes.ts /
+// pacts.ts / armageddon-resolve.ts) and tested via the unit tests under
+// __tests__/lib/game/zero-turn.test.ts.
+
+/** Defensive Stance: multiplicative defense bonus on a stance tile. */
+export const DEFENSIVE_STANCE_DEFENSE_BONUS = 0.25;
+/** Defensive Stance: minimum lockedUntil window after toggling on, before
+ *  the tile can toggle off. Prevents flicker right before an inbound attack. */
+export const DEFENSIVE_STANCE_LOCK_MS = 6 * 60 * 60 * 1000;
+
+/** Last Stand: multiplicative defense bonus on the declared tile. */
+export const LAST_STAND_DEFENSE_BONUS = 0.50;
+/** Last Stand: multiplicative defense penalty on adjacent owned tiles
+ *  while a last stand is queued on a neighbor (rally pulls reserves). */
+export const LAST_STAND_ADJACENT_PENALTY = 0.25;
+/** Last Stand: how long after declaring the effect remains armed. If no
+ *  inbound attack lands within this window, the effect expires unused
+ *  but the cooldown still counts. */
+export const LAST_STAND_WINDOW_MS = 60 * 60 * 1000;
+/** Last Stand: how long after declaring before the player can declare
+ *  another. One per 24h. */
+export const LAST_STAND_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+/** Last Stand: how recent an inbound attack signal must be to make the
+ *  declare button available. */
+export const LAST_STAND_THREAT_WINDOW_MS = 30 * 60 * 1000;
+
+/** Tile redistribution: multiplicative haircut applied to the moved
+ *  stack. Prevents free perfect optimization. */
+export const REDISTRIBUTE_TRANSIT_LOSS = 0.08;
+/** Tile redistribution: per-day rate limit per player. */
+export const REDISTRIBUTE_MAX_PER_DAY = 3;
+
+/** Hero pep talk: stamina granted per call. */
+export const PEP_TALK_STAMINA_GAIN = 15;
+/** Hero pep talk: per-day cap across all the player's heroes. */
+export const PEP_TALK_MAX_PER_DAY = 3;
+
+/** Hero meditation: how long the hero remains on sabbatical. */
+export const MEDITATION_DURATION_MS = 24 * 60 * 60 * 1000;
+/** Hero meditation: how many slots the player can have active at once.
+ *  Forces a real opportunity-cost choice — meditating heroes don't fight. */
+export const MEDITATION_MAX_ACTIVE_SLOTS = 1;
+/** Hero meditation: stamina regen multiplier while meditating. */
+export const MEDITATION_REGEN_MULTIPLIER = 2;
+
+/** Oathbreaker: multiplicative attack penalty on attacks launched while
+ *  the mark is active. */
+export const OATHBREAKER_ATTACK_PENALTY = 0.10;
+/** Oathbreaker: how long the mark persists after a pact breach. */
+export const OATHBREAKER_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
+
+/** Prophecy stakes: turns added to the prophet's NEXT weekly grant when
+ *  a prophecy resolves. Capped to a single application per week. */
+export const PROPHECY_BONUS_TURNS = 5;
+/** Prophecy stakes: hard ceiling on `pendingProphecyBonus`. Even if a
+ *  player has multiple prophecies resolve within a single week, the
+ *  weekly grant adds at most this many extra turns. */
+export const PROPHECY_BONUS_TURNS_MAX = 5;
+
+/** Queued orders: max queued (status === "queued") per player. */
+export const QUEUED_ORDERS_MAX_PER_PLAYER = 20;

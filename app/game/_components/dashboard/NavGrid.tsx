@@ -76,6 +76,8 @@ export function NavGrid({ phase }: NavGridProps) {
                 { href: "/game/heroes", label: "My Heroes" },
                 { href: "/game/attacks", label: "Attack log" },
                 { href: "/game/armageddon", label: "Armageddon" },
+                { href: "/game/zero-turn", label: "Between turns" },
+                { href: "/game/orders", label: "Order queue" },
               ]
         }
       />

@@ -2,9 +2,12 @@
 
 Players in Generals start a week with **100 turns** (300 for new players) and every meaningful gameplay action — explore, build, attack, cast, siege, upgrade, Armageddon — consumes turns. Burn through the budget on Monday and there's nothing to *do* until the next grant.
 
-PR #969 added **ten participatory player actions that don't consume turns** to bridge that gap. They're social, creative, and lore-oriented — explicitly designed to *not* affect combat or economy balance. The goal is to deepen mid-week engagement without inflating the turn economy.
+This is the contributor-facing reference for **non-turn activities**: features players can use without spending turns. Two layers, by design intent:
 
-This page is for contributors changing those activities, adding new ones, or extending the patterns to other parts of the site.
+- **PR #969 (May 2026) — cosmetic / social / lore layer.** Ten activities (reactions, pacts, prophecies, hero chapters/epitaphs, profiles+bios, titles, tile inscriptions, battle dispatches, caste chat) that explicitly do *not* affect combat or economy balance.
+- **Zero-turn gameplay (May 2026 follow-up) — gameplay-operative layer.** Nine activities that *do* affect outcomes (defense, hero state, intel, diplomacy with teeth, queued execution, autopsy decisions) but are gated by non-turn resources (rate limits, caps, cooldowns, opportunity cost, or 0-turn predicates) so they complement turn-spend rather than replace it.
+
+**Policy in one line:** A non-turn feature can affect gameplay if it's gated by a non-turn resource. Balance is enforced by the gate, not by being cosmetic.
 
 ## The ten activities
 
@@ -85,9 +88,45 @@ Indexes deploy automatically when `main` moves and `firestore.indexes.json` chan
 
 ## What's intentionally *not* in the patterns
 
-- **No turn cost**, full stop. If you find yourself reaching for `turnsRemaining` on one of these features, you've drifted from the design intent. Surface it as a separate gameplay feature instead.
-- **No gameplay-impactful side effects.** Reactions don't buff units. Titles don't boost magic. Pacts don't enforce. Prophecies don't unlock anything in combat. The Seer / Oracle titles are cosmetic. Don't smuggle gameplay through the cosmetic surface.
-- **No combat involvement.** Pacts watch the attack handler and stamp `brokenAt` if a vow is violated; they do **not** prevent the attack. The community feed event is the punishment — reputational, not mechanical.
+For the PR #969 (cosmetic / social / lore) layer:
+
+- **No turn cost**, full stop.
+- **No gameplay-impactful side effects.** Reactions don't buff units. Titles don't boost magic. Hero chapters don't grant XP.
+
+The **zero-turn gameplay layer** (added May 2026 follow-up) intentionally relaxes the "no gameplay impact" rule under a different gating model. See the next section.
+
+## Zero-turn gameplay layer
+
+Nine activities that *do* affect outcomes. Each has a non-turn gate so it doesn't displace turn-spend strategy:
+
+| # | Feature | Gate(s) | Key file(s) |
+|---|---|---|---|
+| Z1 | Hero pep talk (+15 stamina) | 0-turn-only + 3/day Upstash | `pepTalkHeroServer` in `lib/game/data-server.ts`, `app/api/game/heroes/pep-talk/route.ts` |
+| Z2 | Hero meditation (24h sabbatical) | 1 active slot, no engagement while meditating | `meditateHeroServer`, `app/api/game/heroes/meditate/route.ts`, combat skip in `combinedHero{Attack,Defense}Bonus` |
+| Z3 | Tile redistribution (move units) | 3/day (player-doc counter) + 8% transit loss + adjacency | `redistributeUnitsServer`, `app/api/game/redistribute/route.ts` |
+| Z4 | Defensive stance (+25% defense, no attack out) | scaling cap (`floor(tilesHeld/100)`) + 6h lock | `toggleDefensiveStanceServer`, `app/api/game/tiles/stance/route.ts`, `combat.ts` reads `zeroTurnDefenseBonus` |
+| Z5 | Last Stand (+50% defense, -25% adjacent) | 0-turn-only + threat-window + 24h cooldown + single-use | `declareLastStandServer`, `app/api/game/last-stand/route.ts` |
+| Z6 | Enforced pacts (Oathbreaker mark on breach) | -10% attack for 7 days + public mark + caste broadcast | `findActivePactsBetween` in `lib/game/pacts.ts`, hook in `attackTileServer` |
+| Z7 | Prophecy stakes (+5 turns on next grant) | per-prophecy resolution + per-week cap | `resolveProphesiesForSealInTx` in `lib/game/prophecies.ts`, consume in `applyWeeklyGrant` |
+| Z8 | Queued orders (recruit/attack at next grant) | 20 queued/player cap; each fires at normal turn cost | `lib/game/orders.ts`, `app/api/game/orders/route.ts`, executor hook in `runWeeklyRolloverServer` |
+| Z9 | Battle Autopsy (counterfactual replay) | pre-attack snapshot stored on attack record | `runAutopsy` + `defaultLossPerturbations` in `lib/game/zero-turn.ts`, `/game/attacks/[attackId]` |
+
+All nine route their gating logic through pure helpers in `lib/game/zero-turn.ts` (testable) plus the server actions in `lib/game/data-server.ts` and `lib/game/orders.ts` (Firestore writes).
+
+### Tuning constants
+
+Centralized at the bottom of `lib/game/types.ts` (`DEFENSIVE_STANCE_DEFENSE_BONUS`, `LAST_STAND_*`, `OATHBREAKER_*`, `MEDITATION_*`, `PEP_TALK_*`, `REDISTRIBUTE_*`, `PROPHECY_BONUS_*`, `QUEUED_ORDERS_MAX_PER_PLAYER`). Change them there and the server + tests pick up the new value.
+
+### Adding a zero-turn gameplay feature
+
+The PR #969 checklist below still applies, plus:
+
+1. **Pick a gate.** Rate limit / opportunity cost / cooldown / 0-turn predicate / RNG / social cost. If you can't name the gate, the feature is too strong.
+2. **Pure helper in `lib/game/zero-turn.ts`** for the math — testable, no Firestore.
+3. **Server action in `lib/game/data-server.ts`** for the write — txn-bound, error class declared, mapped in `lib/game/api-error-map.ts`.
+4. **Combat channels**: if the feature affects combat, add a new optional bonus/penalty channel on `CombatAttackerInput` or `CombatDefenderInput` in `lib/game/types.ts` and apply it at the same numeric stage as the existing hero/intel bonuses in `combat.ts`. Server pre-resolves the value.
+5. **Tests**: pure-helper tests in `__tests__/lib/game/zero-turn.test.ts`; weekly-rollover effects in `__tests__/lib/game/turns.test.ts`.
+6. **Player-facing surface**: a row on `/game/zero-turn` (the central hub) + optional integration into the relevant existing surface (tile detail, hero card, threat card).
 
 ## Adding an eleventh activity
 
@@ -106,4 +145,4 @@ The 10 activities are the canonical reference — copy the closest one and mutat
 
 ## Player-facing surface
 
-For player documentation on what these features do and where to find them, see the **Community** and **Endgame** tabs in `/game/help`.
+For player documentation on what these features do and where to find them, see the **Community** and **Endgame** tabs in `/game/help`, plus the `/game/zero-turn` hub page (linked from the dashboard nav as "Between turns") which centralizes the zero-turn gameplay actions.
