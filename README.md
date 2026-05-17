@@ -146,6 +146,7 @@ Each feature is **fully isolated** — new routes, new Firestore collections, no
 
 ## 📚 Community
 - [Documentation index](docs/README.md) - Order of docs for newcomers vs maintainers
+- [User Guide](docs/USER_GUIDE.md) - Map of every section on cursorboston.com (visitor sitemap)
 - [Get Started (No Experience Needed)](docs/GET_STARTED.md) - Plain-language guide for complete beginners
 - [Development Guide](docs/DEVELOPMENT.md) - Setup, scripts, troubleshooting, architecture
 - [First Contribution](docs/FIRST_CONTRIBUTION.md) - Step-by-step first PR walkthrough
