@@ -20,6 +20,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Sun } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { DiscordIcon, GitHubIcon } from "@/components/icons";
+import { SectionHelp } from "@/components/SectionHelp";
 import { useGithubConnection } from "@/app/(auth)/profile/_hooks/useGithubConnection";
 import { useDiscordConnection } from "@/app/(auth)/profile/_hooks/useDiscordConnection";
 import {
@@ -924,6 +925,62 @@ function SummerCohortPageInner() {
           developers, founders, and students.
         </p>
       </header>
+
+      <SectionHelp
+        title="About the Summer Cohort"
+        intro={
+          <>
+            Six weeks, one theme per week, one submission per participant per
+            week. <strong>Cohort 1</strong> ran with rubric-graded weekly
+            picks; <strong>Cohort 2</strong> uses a public-vote tally on the
+            same dashboard. You don&apos;t need to attend in-person — every
+            week is async-friendly and ships through a dedicated GitHub
+            submission branch.
+          </>
+        }
+        faq={[
+          {
+            q: "How do I submit for a week?",
+            a: (
+              <>
+                Fork the repo, branch off the week&apos;s submission branch
+                (e.g. <code>c2w1pm-submission</code>), add a folder under{" "}
+                <code>content/summer-cohort/&lt;cohort&gt;/&lt;week&gt;/submissions/&lt;your-handle&gt;/</code>
+                , and open a PR back to that submission branch. A maintainer
+                will batch it into <code>develop</code> at the end of the
+                week. See the submission-branches doc linked below.
+              </>
+            ),
+          },
+          {
+            q: "Cohort 1 vs Cohort 2 — what changed?",
+            a: (
+              <>
+                Same six weekly themes (PM, comms, marketing, education,
+                startup, OSS). Cohort 1 picked weekly winners by rubric;
+                Cohort 2 surfaces them by public vote on the cohort
+                dashboard. The submission flow is identical.
+              </>
+            ),
+          },
+          {
+            q: "I missed the kickoff — can I still join?",
+            a: "Yes. Cohorts are designed for async catch-up. Join the Discord and pick the next week's theme; older weeks remain visible for reference but aren't accepting new submissions.",
+          },
+        ]}
+        links={[
+          {
+            label: "Submission branches doc (where your PR goes)",
+            href: "https://github.com/rogerSuperBuilderAlpha/cursor-boston/blob/develop/docs/SUBMISSION_BRANCHES.md",
+            external: true,
+          },
+          {
+            label: "Discord — ask questions",
+            href: "https://discord.gg/Wsncg8YYqc",
+            external: true,
+          },
+        ]}
+      />
 
       <CohortSwitcher
         selectedCohort={selectedCohort}

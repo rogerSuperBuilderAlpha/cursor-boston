@@ -41,6 +41,15 @@
 
 Cursor Boston is a community-led platform designed to bring together the most ambitious developers, students, and founders in the Boston area. We focus on **AI-native development workflows**—leveraging tools like Cursor to ship production code at the speed of thought.
 
+### 🧩 Major programs
+
+- **[Summer Cohort](https://cursorboston.com/summer-cohort)** — 5-week intensive fellowship; weekly submissions land in long-lived submission branches (`c1w*-submission`, `c2w*-submission`).
+- **[Hackathons](https://cursorboston.com/hackathons)** — monthly virtual + in-person events with team formation, submission gallery, and AI-judged scoring (Hack-a-Sprint, Sports Hack, PyData notebooks).
+- **[Generals](https://cursorboston.com/game)** — a persistent turn-based strategy MMO contributors can play and contribute to. Includes Heroes, Armageddon end-game, public profiles, pacts, prophecies, and a public-vote chronicle system. Game contribution docs live under [`docs/generals/`](docs/generals/README.md).
+- **[Mentorship](https://cursorboston.com/mentorship)** & **[Pair Programming](https://cursorboston.com/pair)** — matchmaking between members.
+- **[Talks](https://cursorboston.com/talks)** & **[Showcase](https://cursorboston.com/showcase)** — community presentations + project gallery.
+- **[Questions](https://cursorboston.com/questions)** — community Q&A on Cursor workflows, prompting patterns, and engineering process.
+
 ### 🎯 Who is this for?
 - **🌱 Beginners & Students**: Pick up AI-assisted development from day one — no experience required.
 - **💼 Interns & Early-Career Devs**: Level up fast by building real features with real tools.
@@ -74,7 +83,7 @@ graph TB
 
     subgraph Vercel["Vercel"]
         Pages["Pages & Layouts<br/>(SSR / Static)"]
-        API["API Routes<br/>(160+ endpoints)"]
+        API["API Routes<br/>(214+ endpoints)"]
         MW["Middleware<br/>(CSRF, Rate Limit, Logging)"]
     end
 
@@ -137,6 +146,7 @@ Each feature is **fully isolated** — new routes, new Firestore collections, no
 
 ## 📚 Community
 - [Documentation index](docs/README.md) - Order of docs for newcomers vs maintainers
+- [User Guide](docs/USER_GUIDE.md) - Map of every section on cursorboston.com (visitor sitemap)
 - [Get Started (No Experience Needed)](docs/GET_STARTED.md) - Plain-language guide for complete beginners
 - [Development Guide](docs/DEVELOPMENT.md) - Setup, scripts, troubleshooting, architecture
 - [First Contribution](docs/FIRST_CONTRIBUTION.md) - Step-by-step first PR walkthrough

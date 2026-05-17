@@ -14,6 +14,7 @@ import { MemberDirectory } from "@/components/members/MemberDirectory";
 import { CommunityFeed } from "@/components/feed/CommunityFeed";
 import { MembersPageSkeleton } from "@/components/skeletons/MembersPageSkeleton";
 import { NeedsWorkBanner } from "@/components/NeedsWorkBanner";
+import { SectionHelp } from "@/components/SectionHelp";
 
 type PageTab = "members" | "feed";
 
@@ -108,6 +109,41 @@ function MembersPageContent() {
           </div>
         </div>
       </section>
+
+      <div className="max-w-4xl mx-auto w-full px-6 pt-6">
+        <SectionHelp
+          title="About the community page"
+          intro={
+            <>
+              Browse opted-in members and a moderated feed of community
+              activity. Visibility is per-member — only people who set their
+              profile public appear here.
+            </>
+          }
+          faq={[
+            {
+              q: "How do I appear in the directory?",
+              a: "Sign in, edit your profile, and enable \"public profile\". You can hide again at any time.",
+            },
+            {
+              q: "Can I report content in the feed?",
+              a: "Yes — use the report action on any feed item. Moderators review on a regular cadence.",
+            },
+            {
+              q: "Where does the feed come from?",
+              a: "It surfaces posts members share via their profile. It is not a chat — for live discussion, use the Discord server.",
+            },
+          ]}
+          links={[
+            { label: "Edit your profile", href: "/profile" },
+            {
+              label: "Discord — community chat",
+              href: "https://discord.gg/Wsncg8YYqc",
+              external: true,
+            },
+          ]}
+        />
+      </div>
 
       {/* Tab Content */}
            {activeTab === "feed" ? (

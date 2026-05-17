@@ -9,6 +9,9 @@ export const TABS = [
   { id: "phases", label: "Phases" },
   { id: "castes", label: "Castes" },
   { id: "combat", label: "Combat" },
+  { id: "heroes", label: "Heroes" },
+  { id: "endgame", label: "Endgame" },
+  { id: "community", label: "Community" },
   { id: "world", label: "World & Lore" },
   { id: "contributor", label: "Contributor" },
 ] as const;

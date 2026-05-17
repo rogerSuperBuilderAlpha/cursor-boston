@@ -6,6 +6,7 @@
 
 import type { Metadata } from "next";
 import { QuestionsListing } from "@/components/questions/QuestionsListing";
+import { SectionHelp } from "@/components/SectionHelp";
 
 export const metadata: Metadata = {
   title: "Community Q&A | Cursor Boston",
@@ -16,6 +17,39 @@ export const metadata: Metadata = {
 export default function QuestionsPage() {
   return (
     <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+      <SectionHelp
+        title="How Q&A works"
+        intro={
+          <>
+            Ask anything about Cursor, AI-assisted workflows, or the
+            community. Anyone signed in can answer; askers can accept the
+            answer that solved their problem, and votes surface the best
+            answers.
+          </>
+        }
+        faq={[
+          {
+            q: "What makes a good question?",
+            a: "Be specific. Include what you tried, what failed, and the Cursor version or model where relevant. Short, focused questions get answered faster.",
+          },
+          {
+            q: "How does \"accepted answer\" work?",
+            a: "Only the asker can accept. Accepting one answer doesn't downvote the others — it just marks which one solved the problem.",
+          },
+          {
+            q: "Where should I ask vs. Discord?",
+            a: "Use Q&A for questions whose answers benefit others later. Use Discord for real-time troubleshooting and casual chat.",
+          },
+        ]}
+        links={[
+          { label: "Ask a question", href: "/questions/ask" },
+          {
+            label: "Discord — real-time help",
+            href: "https://discord.gg/Wsncg8YYqc",
+            external: true,
+          },
+        ]}
+      />
       <QuestionsListing />
     </main>
   );

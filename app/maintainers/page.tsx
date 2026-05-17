@@ -10,6 +10,7 @@ import {
   MAINTAINER_APPLICATION_BRANCH,
   getMaintainerApplicationBranchTreeUrl,
 } from "@/lib/maintainer-application";
+import { SectionHelp } from "@/components/SectionHelp";
 
 const panelClass =
   "rounded-xl border border-neutral-800 bg-neutral-950/60 p-6 md:p-8 hover:border-neutral-700 transition-colors";
@@ -52,6 +53,41 @@ export default function MaintainersPage() {
       </section>
 
       <section className="py-10 md:py-14 px-6">
+        <div className="max-w-3xl mx-auto mb-6">
+          <SectionHelp
+            title="What maintainers do here"
+            intro={
+              <>
+                Maintainers help review PRs, triage issues, run CI, cut
+                releases, and welcome new contributors. The role is volunteer
+                and async — most work happens on GitHub with a short weekly
+                check-in.
+              </>
+            }
+            faq={[
+              {
+                q: "How long does the application review take?",
+                a: "Async, usually within one or two weekly cycles. We look at your prior contributions and the JSON application PR.",
+              },
+              {
+                q: "Do I need to be in Boston?",
+                a: "No — we have remote maintainers. Boston attendance is a plus for in-person events but not required.",
+              },
+              {
+                q: "What if I'm not ready to apply yet?",
+                a: "Land a few PRs against develop first. We weigh prior contributions when reviewing applications.",
+              },
+            ]}
+            links={[
+              { label: "First contribution guide", href: "/open-source" },
+              {
+                label: "Governance & decision-making",
+                href: `${repoBase}/blob/develop/.github/GOVERNANCE.md`,
+                external: true,
+              },
+            ]}
+          />
+        </div>
         <div className="max-w-3xl mx-auto grid gap-6 md:grid-cols-1">
           <Link href="/maintainers/apply" className={`${panelClass} block group`}>
             <h2 className="text-lg font-semibold text-white mb-2 group-hover:text-violet-300 transition-colors">

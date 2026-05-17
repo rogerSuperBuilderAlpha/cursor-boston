@@ -19,7 +19,8 @@ You don't need to do anything to keep the branch fresh — that's a maintainer t
 | Standard code, bug fix, feature work, docs | **`develop`** |
 | Submitting a PyData hackathon notebook | **`pydata-2026-submissions`** ([see README](../pydata-2026-submissions/README.md)) |
 | Submitting a Hack-a-Sprint showcase project | **`hack-a-sprint-2026-submissions`** ([see README](../content/hackathons/hack-a-sprint-2026/submissions/README.md)) |
-| Summer cohort week N submission (PM / comms / marketing / education / startup / oss) | **`c1w1pm-submission`**, **`c1w2comms-submission`**, **`c1w3mkt-submission`**, **`c1w4edu-submission`**, **`c1w5startup-submission`**, or **`c1w6oss-submission`** |
+| Summer cohort 1 week N submission (PM / comms / marketing / education / startup / oss) | **`c1w1pm-submission`**, **`c1w2comms-submission`**, **`c1w3mkt-submission`**, **`c1w4edu-submission`**, **`c1w5startup-submission`**, or **`c1w6oss-submission`** |
+| Summer cohort 2 vote-format week N submission (PM / comms / marketing) | **`c2w1pm-submission`**, **`c2w2comms-submission`**, or **`c2w3mkt-submission`** |
 | Game-mode content (units, artifacts, lore, balance tweaks) | **`game-contributions`** |
 | Applying to become a maintainer | **`maintainer-application`** (see [GOVERNANCE](../.github/GOVERNANCE.md#becoming-a-maintainer)) |
 
@@ -33,10 +34,15 @@ If you're unsure, default to `develop` and a maintainer will redirect you in rev
 - `c1w4edu-submission` — week 4 (education)
 - `c1w5startup-submission` — week 5 (startup)
 - `c1w6oss-submission` — week 6 (open source)
+- `c2w1pm-submission` — summer cohort 2, week 1 (product management, **vote format** — see note below)
+- `c2w2comms-submission` — summer cohort 2, week 2 (communications, vote format)
+- `c2w3mkt-submission` — summer cohort 2, week 3 (marketing, vote format)
 - `pydata-2026-submissions` — May 13, 2026 PyData × Cursor Boston hack at Moderna HQ
 - `hack-a-sprint-2026-submissions` — Hack-a-Sprint 2026 showcase projects
 - `game-contributions` — ongoing in-game content (units, artifacts, lore)
 - `maintainer-application` — async maintainer applications
+
+**Cohort 2 vote-format note:** the C2 weekly weeks use a public-vote tally on the cohort dashboard to surface that week's winner, rather than the rubric-based selection used for C1. The submission branches still serve as the staging surface — the format change is purely about how winners are selected after batched promote. Wired up via `SUMMER_COHORT_C2_VOTE_WEEKS` in `lib/summer-cohort.ts`.
 
 ## How to PR against a submission branch
 

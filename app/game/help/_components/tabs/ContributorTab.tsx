@@ -164,6 +164,55 @@ export const WHITE_DEFENSE_SPELLS = buildSpellTiers({
           discover one.
         </p>
       </Section>
+      <Section title="Deeper contributor guides">
+        <p>
+          Three subsystems have their own deeper docs under{" "}
+          <code className="text-xs px-1 rounded bg-neutral-100 dark:bg-neutral-800">
+            docs/generals/
+          </code>{" "}
+          covering registry shape, server hooks, and gotchas:
+        </p>
+        <ul className="list-disc ml-6 mt-3 space-y-1">
+          <li>
+            <a
+              href="https://github.com/rogerSuperBuilderAlpha/cursor-boston/blob/develop/docs/generals/HEROES.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-emerald-700 dark:text-emerald-400 hover:underline"
+            >
+              docs/generals/HEROES.md
+            </a>{" "}
+            — adding a hero class, specialty, emergence trigger, or backstory
+            chapter.
+          </li>
+          <li>
+            <a
+              href="https://github.com/rogerSuperBuilderAlpha/cursor-boston/blob/develop/docs/generals/ARMAGEDDON.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-emerald-700 dark:text-emerald-400 hover:underline"
+            >
+              docs/generals/ARMAGEDDON.md
+            </a>{" "}
+            — the 7-seal mechanic, resolution path, prophecy hook, what
+            survives the wipe.
+          </li>
+          <li>
+            <a
+              href="https://github.com/rogerSuperBuilderAlpha/cursor-boston/blob/develop/docs/generals/NON_TURN_ACTIVITIES.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-emerald-700 dark:text-emerald-400 hover:underline"
+            >
+              docs/generals/NON_TURN_ACTIVITIES.md
+            </a>{" "}
+            — the five shared patterns (sanitize, rate-limit, soft-delete,
+            tracker idempotency, composite indexes) and a checklist for an
+            11th activity.
+          </li>
+        </ul>
+      </Section>
+
       <Section title="Submitting changes">
         <p>
           The repo&apos;s{" "}
