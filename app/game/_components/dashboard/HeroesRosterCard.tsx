@@ -73,7 +73,12 @@ export function HeroesRosterCard({ tiles }: HeroesRosterCardProps) {
               <span className={`text-lg ${color}`}>{glyph}</span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline gap-2 flex-wrap">
-                  <span className="font-semibold truncate">{h.name}</span>
+                  <Link
+                    href={`/game/heroes/${encodeURIComponent(h.id)}`}
+                    className="font-semibold truncate hover:underline"
+                  >
+                    {h.name}
+                  </Link>
                   <span className="text-xs text-neutral-500 capitalize">
                     {h.specialty.replace(/-/g, " ")}
                   </span>

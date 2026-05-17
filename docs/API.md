@@ -8,7 +8,7 @@
 
 All endpoints are under `/api/`. Authentication uses Firebase Auth ID tokens (Bearer) or session cookies. Spec: [`/openapi.json`](https://cursorboston.com/openapi.json) · interactive: [`/api/docs`](https://cursorboston.com/api/docs).
 
-**174 paths, 210 operations across 32 areas.**
+**178 paths, 214 operations across 32 areas.**
 
 ---
 
@@ -153,6 +153,10 @@ _Strategy game endpoints (leaderboard, attacks, artifacts, turns)._
 | POST | `/api/game/explore/bulk` | Yes | Bulk frontier-explore (count required) |
 | POST | `/api/game/explore/far` | Yes | Spend 2 turns to plant a tile adjacent to a random enemy tile (Far Expedition). |
 | POST | `/api/game/flyover` | Yes | Air raid that attrits defenders without taking the tile |
+| GET | `/api/game/heroes` | Yes | List heroes (mine / all living / fallen) |
+| GET | `/api/game/heroes/{heroId}` | Yes | Get a hero's profile + first page of events |
+| GET | `/api/game/heroes/{heroId}/backstory` | Yes | Get the markdown backstory for a hero, if one exists |
+| GET | `/api/game/heroes/{heroId}/events` | Yes | Paginated event log for a hero |
 | GET | `/api/game/leaderboard` | Yes | Get the leaderboard ranked by tiles held |
 | GET | `/api/game/map/me` | Yes | Get the current user's personal map view (own tiles + enemy ring) |
 | POST | `/api/game/npc-weekly` | No | Cron-only weekly NPC turn-spender |

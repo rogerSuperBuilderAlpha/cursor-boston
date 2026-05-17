@@ -450,6 +450,149 @@ export interface SpecialUnitInstance {
   stationedTileId?: string;
 }
 
+// =====================================================================
+// Heroes v2 — registry + history + visibility
+// =====================================================================
+//
+// v1 stored heroes only inline on `GameTile.hero?`; when a hero died, the
+// data vanished. v2 adds a persistent collection so heroes become
+// permanent lore characters with a full history.
+//
+// Storage:
+//   - `game_heroes/{heroId}` — one doc per hero (this collection survives
+//     Armageddon season wipes — see lib/game/armageddon-resolve.ts).
+//   - `game_heroes/{heroId}/events/{eventId}` — append-only event log.
+//
+// Combat path still reads `GameTile.hero` (hot path). Registry is
+// dual-written from the same Firestore transactions as `tile.hero`
+// mutations so the two never drift.
+
+/** Append-only event-log entries for a hero's history. */
+export type HeroEventKind =
+  // Hero appeared on a tile (military: won battle; farm: recruit on food;
+  // magic: spell cast / arm-defense on magic).
+  | "emerged"
+  // The hero's tile attacked another tile (hero is on `source`).
+  | "engaged_attacker"
+  // The hero's tile was attacked (hero is on `target`). Outcome may be
+  // any of captured / repelled / stalemate; the engagement happened either way.
+  | "engaged_defender"
+  // Hero was killed in battle. Terminal — `GameHeroDoc.isDeceased` is set
+  // alongside this event.
+  | "slain"
+  // Hero converted to a new owner (attacker chose `convert` and the roll
+  // succeeded). Carries `fromOwnerId` + `toOwnerId`.
+  | "defected"
+  // Military hero followed source-tile capture to the new tile.
+  | "moved_on_capture"
+  // Magic hero on source tile when a spell was cast from it.
+  | "spell_cast"
+  // Farm hero on tile when units were recruited (one event per recruit cycle).
+  | "recruited"
+  // Farm hero's special-unit roll fired and dropped a SpecialUnitInstance
+  // into the player's pool.
+  | "special_unit_summoned"
+  // Armageddon resolved during this hero's lifetime. Living heroes enter
+  // limbo (awaitingResurrection); deceased heroes just record the season.
+  | "season_ended";
+
+export interface GameHeroEvent {
+  // uuid. Subcollection doc id.
+  id: string;
+  kind: HeroEventKind;
+  createdAt: Timestamp | Date;
+  // The hero's tile at the moment the event fired. Always present even
+  // for in-limbo events (the last known tile is recorded).
+  tileId: string;
+  // The hero's owner at the moment the event fired. `null` during limbo
+  // (between season-end and resurrection). Used as the primary filter for
+  // "events from my tenure" visibility (per the v2 visibility rules).
+  ownerIdAtTime: string | null;
+  // The world season the event fired in.
+  seasonNumber: number;
+  // Kind-specific fields. All optional — populated per kind.
+  attackerId?: string;          // engaged_defender, slain
+  defenderId?: string;          // engaged_attacker
+  outcome?: AttackOutcome;      // engaged_attacker, engaged_defender
+  fromOwnerId?: string;         // defected, moved_on_capture
+  toOwnerId?: string;           // defected
+  fromTileId?: string;          // moved_on_capture
+  spellId?: string;             // spell_cast
+  targetTileId?: string;        // spell_cast, engaged_attacker
+  unitType?: UnitType;          // recruited
+  unitsBuilt?: number;          // recruited
+  specialUnitDefId?: string;    // special_unit_summoned
+}
+
+/** Canonical persistent record for a hero. Survives Armageddon wipes
+ *  (see lib/game/armageddon-resolve.ts COLLECTIONS — NOT included). */
+export interface GameHeroDoc {
+  // Stable uuid; matches `GameHero.id` on the inline tile snapshot.
+  id: string;
+  name: string;
+  class: HeroClass;
+  specialty: HeroSpecialty;
+  caste: Caste;
+  // Current ownership/location. Both null when in limbo (deceased OR
+  // awaiting resurrection in a new season).
+  currentOwnerId: string | null;
+  currentTileId: string | null;
+  // Combat-relevant denorm for the All Heroes browse view. During the
+  // current season, the canonical source of truth for combat is
+  // `GameTile.hero.stamina`; this denorm is updated alongside it.
+  stamina: number;
+  staminaMax: number;
+  // Status flags
+  isDeceased: boolean;
+  // True between season-end and next resurrection. Set by armageddon-resolve.
+  // v2 ships this flag but no resurrection UX yet — deferred to v3.
+  awaitingResurrection: boolean;
+  deceasedAt?: Timestamp | Date;
+  // Last-known tile when killed. Public to everyone once deceased
+  // (visibility rule: deceased = fully public).
+  deceasedTileId?: string;
+  // Lifecycle bookkeeping
+  emergedAtTurn: number;
+  emergedSeasonNumber: number;
+  // Seasons this hero lived through (survived past the seal-7 break).
+  // Pushed-onto by armageddon-resolve.
+  survivedSeasons: number[];
+  // Denormalized timestamp of the newest event in the subcollection.
+  // Drives sort order in the list views without a per-hero events query.
+  lastEventAt: Timestamp | Date;
+  createdAt: Timestamp | Date;
+  updatedAt: Timestamp | Date;
+}
+
+/** Pagination cursor for hero list / events queries. Stringified per
+ *  the existing firestore-pagination helpers. */
+export type HeroListScope = "mine" | "all" | "fallen";
+
+/** Safe projection of a hero for API responses — fields hidden per the
+ *  visibility rules (see lib/game/hero-visibility.ts) are absent rather
+ *  than null so the client knows the difference between "explicitly
+ *  unknown" and "not yet loaded". */
+export interface SafeHeroSummary {
+  id: string;
+  name: string;
+  class: HeroClass;
+  specialty: HeroSpecialty;
+  caste: Caste;
+  currentOwnerId: string | null;
+  isDeceased: boolean;
+  awaitingResurrection: boolean;
+  emergedSeasonNumber: number;
+  // Present only when visible per the rule table (current owner OR
+  // adjacent OR deceased / past-season).
+  currentTileId?: string;
+  deceasedTileId?: string;
+  stamina?: number;
+  staminaMax?: number;
+  // Set when a backstory markdown file exists for this hero. Drives the
+  // "Add the next chapter" vs "Read the chronicle" CTA in the UI.
+  hasBackstory: boolean;
+}
+
 // Lightweight projection of GameTile for map-fetch payloads. Strips
 // neighborTileIds (~6 strings × N tiles), upgradeIds, level, and timestamps
 // — fields the dashboard/hex-map/recruit/spells pages don't use. Tile detail

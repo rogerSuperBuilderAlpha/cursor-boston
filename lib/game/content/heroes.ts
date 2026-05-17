@@ -265,6 +265,13 @@ export function specialtyTypeRecruitMult(
   return 1;
 }
 
+// ── v2: pagination ──────────────────────────────────────────────────────
+
+/** Page size for the per-hero events subcollection query. */
+export const HERO_EVENTS_PAGE_SIZE = 50;
+/** Page size for the heroes list endpoints (mine / all / fallen). */
+export const HEROES_LIST_PAGE_SIZE = 30;
+
 /** Caste-agnostic re-export so call sites that don't want to import the
  *  Caste union directly can still iterate. */
 export const HERO_CLASSES: ReadonlyArray<HeroClass> = ["military", "farm", "magic"];
