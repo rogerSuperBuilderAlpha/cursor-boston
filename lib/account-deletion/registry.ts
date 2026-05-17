@@ -259,6 +259,21 @@ export const KNOWN_NON_USER_COLLECTIONS: ReadonlySet<string> = new Set([
   // ARE handled above) drops them out of the next snapshot rebuild
   // automatically.
   "game_world_snapshots",
+  // Public Armageddon event log — world-history audit, not user data.
+  // Keyed by event id; an actor's account deletion doesn't rewrite
+  // the recorded history of past seasons.
+  "game_armageddon_events",
+  // Persistent hero registry (v2 Heroes). Heroes are public lore
+  // characters with a permanent record that survives season wipes; a
+  // deleted user's `currentOwnerId` reference becomes a stale pointer
+  // but the hero's history (and any contributed backstory) is preserved
+  // as community lore. Behaves like the Hall of Fame entries above.
+  "game_heroes",
+  // Subcollection under game_heroes/{heroId}/events — append-only
+  // per-hero history. Inherits the lore-not-user-data classification
+  // from its parent; allowlisted explicitly because firestore.rules
+  // declares it as a named collection.
+  "events",
 
   // Q&A nested collections (handled via parent `questions` registry entry)
   "answers",
