@@ -384,6 +384,14 @@
       ]
     },
     {
+      "collectionGroup": "game_heroes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "awaitingResurrection", "order": "ASCENDING" },
+        { "fieldPath": "lastEventAt", "order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "events",
       "queryScope": "COLLECTION",
       "fields": [
