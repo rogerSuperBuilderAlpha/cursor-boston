@@ -72,6 +72,7 @@ export async function buildIntelReportServer(args: {
       units: target.units,
       armedDefenseSpellId: target.armedDefenseSpellId,
       isolatedSpawn: target.isolatedSpawn ?? false,
+      ...(target.inscription ? { inscription: target.inscription } : {}),
     },
   };
 

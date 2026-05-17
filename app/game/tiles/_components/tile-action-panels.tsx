@@ -267,7 +267,8 @@ export function EnemyTilePanel({
   onAttack: (
     sourceTileId: string,
     units: UnitStack,
-    offenseSpellId: string | null
+    offenseSpellId: string | null,
+    dispatch?: string
   ) => void;
   // Optional: when present, renders a Spy section that casts the player's
   // caste intel spell on this tile. Wires straight to /api/game/spy.
@@ -314,6 +315,7 @@ export function EnemyTilePanel({
   const [siege, setSiege] = useState(0);
   const [air, setAir] = useState(0);
   const [offenseSpellId, setOffenseSpellId] = useState<string>("");
+  const [dispatch, setDispatch] = useState("");
 
   const source = myBorders.find((t) => t.tileId === sourceTileId) ?? null;
   const sentTotal = ground + siege + air;
@@ -557,12 +559,27 @@ export function EnemyTilePanel({
           </select>
         </label>
 
+        <label className="block">
+          <span className="block text-xs text-neutral-500 mb-1">
+            Dispatch (optional) — ≤280 char taunt attached to the attack
+          </span>
+          <textarea
+            value={dispatch}
+            onChange={(e) => setDispatch(e.target.value.slice(0, 280))}
+            rows={2}
+            placeholder="Leave a message for the defender…"
+            className="w-full resize-none rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm dark:border-neutral-700 dark:bg-neutral-950"
+            maxLength={280}
+          />
+        </label>
+
         <button
           onClick={() =>
             onAttack(
               sourceTileId,
               { ground, siege, air },
-              offenseSpellId || null
+              offenseSpellId || null,
+              dispatch.trim() || undefined
             )
           }
           disabled={busy || !canAttack}

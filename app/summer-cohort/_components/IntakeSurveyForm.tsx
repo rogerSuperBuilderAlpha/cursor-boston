@@ -145,6 +145,11 @@ type Props = {
   defaultEmail: string;
   /** Cohort id from the application (read-only display). */
   cohortId: string;
+  /** Server-authoritative answer to "did this user participate in cohort 1?",
+   *  computed by the parent from the application record. Only used when
+   *  cohortId === "cohort-2" — the c2 survey renders this pre-selected and
+   *  disabled so the participant sees the linkage. Ignored on c1. */
+  participatedInCohort1: boolean;
   /** Called after a successful submit so the parent can re-fetch + show the dashboard. */
   onComplete: () => void;
 };
@@ -153,6 +158,7 @@ const EMPTY: IntakeSurveyResponse = {
   email: "",
   cohort: "",
   consentToResearch: false,
+  participatedInCohort1: null,
 
   age: null,
   gender: null,
@@ -196,12 +202,21 @@ const EMPTY: IntakeSurveyResponse = {
   eightWeekGoal: "",
 };
 
-export function IntakeSurveyForm({ defaultEmail, cohortId, onComplete }: Props) {
+export function IntakeSurveyForm({
+  defaultEmail,
+  cohortId,
+  participatedInCohort1,
+  onComplete,
+}: Props) {
   const { user } = useAuth();
+  const isCohort2 = cohortId === "cohort-2";
   const [r, setR] = useState<IntakeSurveyResponse>(() => ({
     ...EMPTY,
     email: defaultEmail,
     cohort: cohortId,
+    // The server overwrites this on POST; we seed it here so the form
+    // renders the disabled toggle in the correct position from the start.
+    participatedInCohort1: isCohort2 ? participatedInCohort1 : null,
   }));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -353,6 +368,51 @@ export function IntakeSurveyForm({ defaultEmail, cohortId, onComplete }: Props) 
               className={READONLY_INPUT_CLASS}
             />
           </Field>
+
+          {isCohort2 ? (
+            <Field label="Participated in Cohort 1?">
+              <div className="mt-1 grid grid-cols-2 gap-2">
+                <label
+                  className={`flex items-center gap-3 rounded-lg border px-3 py-2.5 text-sm ${
+                    participatedInCohort1
+                      ? "border-emerald-300 bg-emerald-50 text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200"
+                      : "border-neutral-200 bg-neutral-100/60 text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900/40"
+                  } opacity-90`}
+                >
+                  <input
+                    type="radio"
+                    name="participatedInCohort1"
+                    checked={participatedInCohort1 === true}
+                    disabled
+                    readOnly
+                    className="h-4 w-4 border-neutral-300 text-emerald-500"
+                  />
+                  <span>Yes — admitted to Cohort 1</span>
+                </label>
+                <label
+                  className={`flex items-center gap-3 rounded-lg border px-3 py-2.5 text-sm ${
+                    !participatedInCohort1
+                      ? "border-emerald-300 bg-emerald-50 text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200"
+                      : "border-neutral-200 bg-neutral-100/60 text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900/40"
+                  } opacity-90`}
+                >
+                  <input
+                    type="radio"
+                    name="participatedInCohort1"
+                    checked={participatedInCohort1 === false}
+                    disabled
+                    readOnly
+                    className="h-4 w-4 border-neutral-300 text-emerald-500"
+                  />
+                  <span>No — Cohort 2 only</span>
+                </label>
+              </div>
+              <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                Pulled from your application — not editable here. Lets us
+                analyse Cohort 2 outcomes separately for returning participants.
+              </p>
+            </Field>
+          ) : null}
         </fieldset>
 
         {/* ----------------------------------------------------------------

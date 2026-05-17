@@ -17,6 +17,8 @@ import type {
   HeroEventKind,
   SafeHeroSummary,
 } from "@/lib/game/types";
+import { ReactionsRow } from "@/app/game/_components/dashboard/ReactionsRow";
+import { HeroLoreSection } from "./HeroLoreSection";
 
 // A subset of the SafeHeroEvent surfaced by the server. We don't need
 // every optional field to render — the renderer below only reads the
@@ -39,6 +41,7 @@ interface UiHeroEvent {
   unitType?: "ground" | "siege" | "air";
   unitsBuilt?: number;
   specialUnitDefId?: string;
+  reactions?: import("@/lib/game/types").ReactionMap;
 }
 
 interface HeroDetailResponse {
@@ -321,6 +324,14 @@ export default function HeroDetailPage({
           )}
         </section>
 
+        <HeroLoreSection
+          user={user}
+          heroId={heroId}
+          isFallen={isFallen}
+          isAdmin={false}
+        />
+
+
         <section>
           <h2 className="text-lg font-semibold mb-3">History</h2>
           {events.length === 0 ? (
@@ -340,6 +351,13 @@ export default function HeroDetailPage({
                     <p className="text-xs text-neutral-500 mt-0.5">
                       {formatTimestamp(e.createdAt)} · Season {e.seasonNumber}
                     </p>
+                    <ReactionsRow
+                      user={user}
+                      scope="hero_event"
+                      docId={e.id}
+                      heroId={heroId}
+                      initialReactions={e.reactions}
+                    />
                   </div>
                 </li>
               ))}

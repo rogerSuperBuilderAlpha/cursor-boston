@@ -17,6 +17,7 @@ import {
   Trash2,
   UserPlus,
 } from "lucide-react";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import type { User } from "firebase/auth";
 import type {
@@ -24,6 +25,7 @@ import type {
   CommunityEvent,
   CommunityMessage,
 } from "@/lib/game/types";
+import { ReactionsRow } from "./ReactionsRow";
 
 const CASTE_SWATCH: Record<Caste, string> = {
   white: "#e5e7eb",
@@ -38,7 +40,11 @@ const MAX_BODY = 500;
 interface Props {
   user: User | null;
   isAdmin: boolean;
+  /** Caster's current caste — gates which caste room they can post in. */
+  myCaste: Caste | null;
 }
+
+type ChatRoom = "global" | "caste";
 
 /**
  * Collapsible community panel mounted at the bottom of the dashboard.
@@ -51,7 +57,7 @@ interface Props {
  * No real-time listeners — refresh button + auto-fetch on first
  * expansion. Cheaper and more predictable than push.
  */
-export function CommunityPanel({ user, isAdmin }: Props) {
+export function CommunityPanel({ user, isAdmin, myCaste }: Props) {
   const [open, setOpen] = useState(false);
   const [events, setEvents] = useState<CommunityEvent[]>([]);
   const [messages, setMessages] = useState<CommunityMessage[]>([]);
@@ -59,6 +65,9 @@ export function CommunityPanel({ user, isAdmin }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [posting, setPosting] = useState(false);
   const [draft, setDraft] = useState("");
+  const [room, setRoom] = useState<ChatRoom>("global");
+
+  const scope = room === "caste" && myCaste ? `caste:${myCaste}` : "global";
 
   const refresh = useCallback(async () => {
     if (!user) return;
@@ -67,9 +76,10 @@ export function CommunityPanel({ user, isAdmin }: Props) {
     try {
       const token = await user.getIdToken();
       const headers = { Authorization: `Bearer ${token}` };
+      const chatUrl = `/api/game/community/chat?scope=${encodeURIComponent(scope)}`;
       const [feedRes, chatRes] = await Promise.all([
         fetch("/api/game/community/feed", { headers }),
-        fetch("/api/game/community/chat", { headers }),
+        fetch(chatUrl, { headers }),
       ]);
       const feedData = await feedRes.json();
       const chatData = await chatRes.json();
@@ -87,7 +97,7 @@ export function CommunityPanel({ user, isAdmin }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, scope]);
 
   // Lazy-load on first expansion. The refresh() call sets state via
   // setEvents/setMessages which the lint rule flags conservatively —
@@ -99,6 +109,12 @@ export function CommunityPanel({ user, isAdmin }: Props) {
       void refresh();
     }
   }, [open]);
+  // Refetch when the player switches rooms.
+  useEffect(() => {
+    if (open) {
+      void refresh();
+    }
+  }, [room]);
   /* eslint-enable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
 
   async function postMessage() {
@@ -115,7 +131,10 @@ export function CommunityPanel({ user, isAdmin }: Props) {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ body: trimmed }),
+        body: JSON.stringify({
+          body: trimmed,
+          ...(scope !== "global" ? { scope } : {}),
+        }),
       });
       const data = await res.json();
       if (!data.success) {
@@ -212,17 +231,54 @@ export function CommunityPanel({ user, isAdmin }: Props) {
           )}
 
           <div className="grid gap-4 md:grid-cols-2">
-            <ActivityFeed events={events} />
-            <ChatBoard
-              messages={messages}
-              draft={draft}
-              setDraft={setDraft}
-              posting={posting}
-              onPost={() => void postMessage()}
-              onDelete={(id) => void deleteMessage(id)}
-              currentUserId={user?.uid ?? null}
-              isAdmin={isAdmin}
-            />
+            <ActivityFeed events={events} user={user} />
+            <div className="flex min-h-0 flex-col">
+              {myCaste && (
+                <div
+                  role="tablist"
+                  aria-label="Chat room"
+                  className="mb-2 inline-flex self-start rounded-lg border border-neutral-200 dark:border-neutral-800 p-0.5 bg-neutral-50 dark:bg-neutral-900/40"
+                >
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={room === "global"}
+                    onClick={() => setRoom("global")}
+                    className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                      room === "global"
+                        ? "bg-white dark:bg-neutral-800 shadow-sm font-medium"
+                        : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200"
+                    }`}
+                  >
+                    Global
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={room === "caste"}
+                    onClick={() => setRoom("caste")}
+                    className={`px-3 py-1 text-xs rounded-md transition-colors capitalize ${
+                      room === "caste"
+                        ? "bg-white dark:bg-neutral-800 shadow-sm font-medium"
+                        : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200"
+                    }`}
+                  >
+                    {myCaste}
+                  </button>
+                </div>
+              )}
+              <ChatBoard
+                messages={messages}
+                draft={draft}
+                setDraft={setDraft}
+                posting={posting}
+                onPost={() => void postMessage()}
+                onDelete={(id) => void deleteMessage(id)}
+                currentUserId={user?.uid ?? null}
+                isAdmin={isAdmin}
+                user={user}
+              />
+            </div>
           </div>
         </div>
       )}
@@ -234,7 +290,13 @@ export function CommunityPanel({ user, isAdmin }: Props) {
 // Activity feed (left column)
 // ---------------------------------------------------------------------------
 
-function ActivityFeed({ events }: { events: CommunityEvent[] }) {
+function ActivityFeed({
+  events,
+  user,
+}: {
+  events: CommunityEvent[];
+  user: User | null;
+}) {
   return (
     <div>
       <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold">
@@ -252,7 +314,7 @@ function ActivityFeed({ events }: { events: CommunityEvent[] }) {
       ) : (
         <ul className="max-h-[400px] space-y-1.5 overflow-y-auto pr-1 text-sm">
           {events.map((e) => (
-            <EventRow key={e.id} event={e} />
+            <EventRow key={e.id} event={e} user={user} />
           ))}
         </ul>
       )}
@@ -260,7 +322,13 @@ function ActivityFeed({ events }: { events: CommunityEvent[] }) {
   );
 }
 
-function EventRow({ event }: { event: CommunityEvent }) {
+function EventRow({
+  event,
+  user,
+}: {
+  event: CommunityEvent;
+  user: User | null;
+}) {
   const at = parseTimestamp(event.createdAt);
   const swatch = event.actorCaste
     ? CASTE_SWATCH[event.actorCaste]
@@ -279,6 +347,12 @@ function EventRow({ event }: { event: CommunityEvent }) {
         <p className="text-[10px] text-neutral-500">
           {at ? at.toLocaleString() : ""}
         </p>
+        <ReactionsRow
+          user={user}
+          scope="feed"
+          docId={event.id}
+          initialReactions={event.reactions}
+        />
       </div>
       <EventIcon kind={event.kind} />
     </li>
@@ -376,6 +450,7 @@ interface ChatBoardProps {
   onPost: () => void;
   onDelete: (id: string) => void;
   currentUserId: string | null;
+  user: User | null;
   isAdmin: boolean;
 }
 
@@ -387,6 +462,7 @@ function ChatBoard({
   onPost,
   onDelete,
   currentUserId,
+  user,
   isAdmin,
 }: ChatBoardProps) {
   const remaining = MAX_BODY - draft.length;
@@ -414,6 +490,7 @@ function ChatBoard({
                 currentUserId === m.userId || isAdmin
               }
               onDelete={() => onDelete(m.id)}
+              user={user}
             />
           ))}
         </ul>
@@ -465,10 +542,12 @@ function MessageRow({
   message,
   canDelete,
   onDelete,
+  user,
 }: {
   message: CommunityMessage;
   canDelete: boolean;
   onDelete: () => void;
+  user: User | null;
 }) {
   const at = parseTimestamp(message.createdAt);
   const swatch = message.caste ? CASTE_SWATCH[message.caste] : "#737373";
@@ -481,7 +560,12 @@ function MessageRow({
       />
       <div className="flex-1 min-w-0">
         <p className="text-[12.5px] leading-snug">
-          <strong className="capitalize">{message.displayName}</strong>{" "}
+          <Link
+            href={`/game/players/${message.userId}`}
+            className="hover:underline"
+          >
+            <strong className="capitalize">{message.displayName}</strong>
+          </Link>{" "}
           <span className="text-[10px] text-neutral-500">
             {at ? at.toLocaleString() : ""}
           </span>
@@ -489,6 +573,12 @@ function MessageRow({
         <p className="whitespace-pre-wrap break-words text-[12.5px] leading-snug text-neutral-700 dark:text-neutral-200">
           {message.body}
         </p>
+        <ReactionsRow
+          user={user}
+          scope="chat"
+          docId={message.id}
+          initialReactions={message.reactions}
+        />
       </div>
       {canDelete && (
         <button

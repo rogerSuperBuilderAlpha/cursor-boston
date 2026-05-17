@@ -22,8 +22,10 @@ import {
   GameInvalidNameError,
   GameInvalidPhaseError,
   GameInvalidSpellError,
+  GameInscriptionTooLongError,
   GameNameTakenError,
   GameNoEnemyKingdomsError,
+  GamePlayerBioTooLongError,
   GameNoUnrevealedTilesError,
   GameNotAdjacentError,
   GamePlayerAlreadyExistsError,
@@ -99,6 +101,8 @@ export function mapGameError(error: unknown): NextResponse {
     error instanceof GameNotAdjacentError ||
     error instanceof GameSelfAttackError ||
     error instanceof GameInvalidNameError ||
+    error instanceof GamePlayerBioTooLongError ||
+    error instanceof GameInscriptionTooLongError ||
     error instanceof UpgradeWrongCasteError
   ) {
     return apiError(error.message, 400);
