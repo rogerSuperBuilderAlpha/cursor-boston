@@ -52,6 +52,7 @@ Licensed GPL-3.0-only.
     /game/heroes
     /game/heroes/[heroId]
     /game/leaderboard
+    /game/players/[playerId]
     /game/recruit
     /game/setup
     /game/spells
