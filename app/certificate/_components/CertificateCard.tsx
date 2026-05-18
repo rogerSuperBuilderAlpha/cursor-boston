@@ -47,10 +47,20 @@ export function CertificateCard({ certificate, linkedInAddToProfileUrl }: Certif
           <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
             @{certificate.githubLogin}
           </p>
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1 text-sm">
-            <span className="text-emerald-700 dark:text-emerald-300 font-medium">
-              {certificate.pullRequestsCount} merged PRs
-            </span>
+          <div className="flex justify-center">
+            {certificate.kind === "cohort-winner" ? (
+              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1 text-sm">
+                <span className="text-emerald-700 dark:text-emerald-300 font-medium">
+                  {certificate.voteCount ?? 0} cohort votes
+                </span>
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1 text-sm">
+                <span className="text-emerald-700 dark:text-emerald-300 font-medium">
+                  {certificate.pullRequestsCount ?? 0} merged PRs
+                </span>
+              </div>
+            )}
           </div>
           <p className="mt-4 text-xs text-neutral-400 dark:text-neutral-500">
             Issued {formattedDate}
