@@ -1,0 +1,34 @@
+# Line endings — normalize on commit, use platform native on checkout
+* text=auto eol=lf
+
+# Explicitly mark binaries (skip diff + line-ending conversion)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.avif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.tar binary
+*.gz binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.mp4 binary
+*.mov binary
+*.webm binary
+
+# Linguist — keep generated / vendored files out of language stats
+package-lock.json linguist-generated=true
+docs/API.md       linguist-generated=true
+public/openapi.json linguist-generated=true
+docs/**           linguist-documentation=true
+*.md              linguist-detectable=true
+
+# Diff hints — better diffs for these languages
+*.ts diff=typescript
+*.tsx diff=typescript
+*.css diff=css
