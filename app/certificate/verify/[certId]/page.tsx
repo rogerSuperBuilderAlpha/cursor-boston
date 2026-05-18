@@ -39,12 +39,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: "Certificate Not Found | Cursor Boston" };
   }
 
+  const isCohortWinner = cert.kind === "cohort-winner";
+  const description = isCohortWinner
+    ? `${cert.displayName} (@${cert.githubLogin}) earned the ${cert.certName} certificate with ${cert.voteCount ?? 0} cohort votes.`
+    : `${cert.displayName} (@${cert.githubLogin}) earned the ${cert.certName} certificate with ${cert.pullRequestsCount ?? 0} merged pull requests.`;
+
   return {
     title: `${cert.displayName} - ${cert.certName} | Cursor Boston`,
-    description: `${cert.displayName} (@${cert.githubLogin}) earned the ${cert.certName} certificate with ${cert.pullRequestsCount} merged pull requests.`,
+    description,
     openGraph: {
       title: `${cert.displayName} - ${cert.certName}`,
-      description: `Verified open source contributor with ${cert.pullRequestsCount} merged PRs to Cursor Boston.`,
+      description: isCohortWinner
+        ? `Verified Summer Cohort weekly winner at Cursor Boston.`
+        : `Verified open source contributor with ${cert.pullRequestsCount ?? 0} merged PRs to Cursor Boston.`,
       type: "profile",
     },
   };
@@ -64,6 +71,8 @@ export default async function CertificateVerifyPage({ params }: Props) {
     month: "long",
     day: "numeric",
   });
+
+  const isCohortWinner = cert.kind === "cohort-winner";
 
   return (
     <div className="min-h-[80vh] px-6 py-8 md:py-12">
@@ -109,7 +118,9 @@ export default async function CertificateVerifyPage({ params }: Props) {
             <div className="flex justify-center">
               <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1 text-sm">
                 <span className="text-emerald-700 dark:text-emerald-300 font-medium">
-                  {cert.pullRequestsCount} merged PRs
+                  {isCohortWinner
+                    ? `${cert.voteCount ?? 0} cohort votes`
+                    : `${cert.pullRequestsCount ?? 0} merged PRs`}
                 </span>
               </div>
             </div>
@@ -136,9 +147,25 @@ export default async function CertificateVerifyPage({ params }: Props) {
               <dd className="text-foreground">{formattedDate}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-neutral-500 dark:text-neutral-400">Merged PRs at Issuance</dt>
-              <dd className="text-foreground">{cert.pullRequestsCount}</dd>
+              <dt className="text-neutral-500 dark:text-neutral-400">
+                {isCohortWinner ? "Cohort votes at issuance" : "Merged PRs at Issuance"}
+              </dt>
+              <dd className="text-foreground">
+                {isCohortWinner ? cert.voteCount ?? 0 : cert.pullRequestsCount ?? 0}
+              </dd>
             </div>
+            {isCohortWinner && cert.cohortId && cert.weekId ? (
+              <>
+                <div className="flex justify-between">
+                  <dt className="text-neutral-500 dark:text-neutral-400">Cohort</dt>
+                  <dd className="text-foreground">{cert.cohortId}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-neutral-500 dark:text-neutral-400">Week</dt>
+                  <dd className="text-foreground">{cert.weekId}</dd>
+                </div>
+              </>
+            ) : null}
           </dl>
         </div>
 
@@ -149,17 +176,31 @@ export default async function CertificateVerifyPage({ params }: Props) {
             className="hover:underline"
           >
             Cursor Boston
-          </a>{" "}
-          for open source contributions to the{" "}
-          <a
-            href="https://github.com/rogerSuperBuilderAlpha/cursor-boston"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:underline"
-          >
-            cursor-boston
-          </a>{" "}
-          repository.
+          </a>
+          {isCohortWinner ? (
+            <>
+              {" "}
+              for winning the cohort weekly vote on{" "}
+              <a href="https://cursorboston.com/summer-cohort" className="hover:underline">
+                Summer Cohort
+              </a>
+              .
+            </>
+          ) : (
+            <>
+              {" "}
+              for open source contributions to the{" "}
+              <a
+                href="https://github.com/rogerSuperBuilderAlpha/cursor-boston"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:underline"
+              >
+                cursor-boston
+              </a>{" "}
+              repository.
+            </>
+          )}
         </p>
       </div>
     </div>

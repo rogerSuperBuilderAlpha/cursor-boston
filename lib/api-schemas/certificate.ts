@@ -20,6 +20,19 @@ const PassthroughOk = z.object({}).passthrough();
 
 export const certificateContract = c.router(
   {
+    mine: {
+      method: "GET",
+      path: "/api/certificate/mine",
+      summary: "List LinkedIn certificates issued to the signed-in user",
+      responses: {
+        200: PassthroughOk,
+        401: ApiErrorSchema,
+        500: ApiErrorSchema,
+      },
+      metadata: {
+        errorCodes: ["UNAUTHORIZED", "SERVER_ERROR"] as const,
+      },
+    },
     claim: {
       method: "POST",
       path: "/api/certificate/claim",

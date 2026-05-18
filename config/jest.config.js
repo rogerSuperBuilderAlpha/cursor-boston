@@ -35,6 +35,12 @@ const customJestConfig = {
   testPathIgnorePatterns: [
     '<rootDir>/__tests__/config/firebase/firestore.rules.test.ts',
     '<rootDir>/e2e/',
+    // next/jest testMatch includes every file under __tests__/; exclude shared fixtures.
+    '<rootDir>/__tests__/_helpers/firebase-admin-mock.ts',
+    '<rootDir>/__tests__/_helpers/firebase-client-mock.ts',
+    '<rootDir>/__tests__/_helpers/route-test-utils.ts',
+    '<rootDir>/__tests__/_helpers/server-auth-mock.ts',
+    '<rootDir>/__tests__/_helpers/component-test-utils.ts',
   ],
   // Global thresholds — kept just below current CI totals so new UI without tests fails CI loudly.
   // Re-aligned 2026-05-12 after the PyData hackathon hub + access-gate
