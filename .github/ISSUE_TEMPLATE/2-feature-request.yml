@@ -1,0 +1,94 @@
+name: Feature request
+description: Propose a new feature or an enhancement to an existing feature.
+title: "[feature] "
+labels: ["enhancement", "feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to propose a feature.
+
+        For **substantial changes** (new core API, major refactor, new subsystem), please open an RFC under [`docs/rfcs/`](https://github.com/rogerSuperBuilderAlpha/cursor-boston/tree/develop/docs/rfcs) instead. This form is for smaller, well-scoped feature work.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which subsystem would this feature live in?
+      options:
+        - "auth (sign-in, sign-up, sessions)"
+        - "community (posts, replies, reactions, moderation)"
+        - "events / luma"
+        - "hackathons (submissions, voting, scoring)"
+        - "summer cohort (weekly submissions, dashboards)"
+        - "mentorship / pair programming"
+        - "talks / showcase / questions / cookbook"
+        - "game (Generals)"
+        - "profile / settings / notifications"
+        - "PR Studio"
+        - "docs"
+        - "new subsystem / cross-cutting"
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What problem does this feature solve? Whose problem is it?
+      placeholder: As a mentor, I can't tell whether my mentee has actually read my last message, so I follow up too aggressively.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What would the feature do? Keep it concrete — a one-line summary plus the user-visible behavior.
+      placeholder: Add a "read" receipt on mentorship messages, defaulting to off; mentees opt in per-conversation.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What other approaches did you consider, and why didn't you propose them?
+      placeholder: |
+        - In-product nudge after 7 days of no reply — too invasive.
+        - Email digest — out of scope (we'd need a new notification surface).
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-cases
+    attributes:
+      label: Use cases / acceptance criteria
+      description: How does someone know this is "done"? Bullet 2-4 concrete user flows that should work.
+      placeholder: |
+        - Mentor sees a small "✓ read" marker when the mentee has loaded the conversation
+        - Mentee can toggle this off per conversation
+        - Mentor can toggle it off for all conversations in profile settings
+
+  - type: dropdown
+    id: claim
+    attributes:
+      label: Are you proposing to ship this yourself?
+      options:
+        - "Yes — I'll open the PR"
+        - "Maybe — I'd like feedback before claiming"
+        - "No — proposing for someone else to pick up"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks before submitting
+      options:
+        - label: I searched existing issues and didn't find a duplicate or related discussion.
+          required: true
+        - label: This fits the project's scope — see [GOVERNANCE.md](https://github.com/rogerSuperBuilderAlpha/cursor-boston/blob/develop/.github/GOVERNANCE.md) for what's in/out.
+          required: true
+        - label: For substantial / cross-cutting changes, I considered whether an [RFC](https://github.com/rogerSuperBuilderAlpha/cursor-boston/tree/develop/docs/rfcs) would be the right venue.
+          required: true

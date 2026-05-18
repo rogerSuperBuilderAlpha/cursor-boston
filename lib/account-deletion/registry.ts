@@ -190,6 +190,37 @@ export const userOwnedCollections: ReadonlyArray<UserOwnedCollection> = [
     field: "playerId",
     behavior: { type: "delete" },
   },
+  // Phase 7 non-turn activities: reactions (⚔️ / 🛡️ / 📜) the user
+  // has placed on chat/feed/hero-event rows. Hard-delete so the
+  // deleted user's UID does not continue to appear in reaction
+  // counters or per-reaction tracker docs.
+  {
+    collection: "game_reactions",
+    mode: "fieldEqualsUid",
+    field: "userId",
+    behavior: { type: "delete" },
+  },
+  // Phase 7: public non-aggression pacts. Two-sided: deleting the
+  // author should remove pacts they wrote; deleting the target
+  // should also remove pacts where they were the named target so
+  // their UID doesn't linger in others' contracts. Field paths are
+  // nested (author.userId) — Firestore supports dotted-path queries.
+  {
+    collection: "game_pacts",
+    mode: "twoSidedField",
+    fields: ["author.userId", "targetId"],
+    behavior: { type: "delete" },
+  },
+  // Phase 7: pre-filed Armageddon prophecies. Hard-delete the
+  // deleted user's predictions; resolved prophecies pointing at
+  // them as the fulfiller become stale pointers (acceptable —
+  // similar to currentOwnerId references in game_heroes).
+  {
+    collection: "game_prophecies",
+    mode: "fieldEqualsUid",
+    field: "author.userId",
+    behavior: { type: "delete" },
+  },
 
   // ---------------------------------------------------------------------
   // arrayContains — delete (sessions where user is one of N participants)
@@ -282,6 +313,15 @@ export const KNOWN_NON_USER_COLLECTIONS: ReadonlySet<string> = new Set([
   // from its parent; allowlisted explicitly because firestore.rules
   // declares it as a named collection.
   "events",
+  // Subcollections under game_heroes/{heroId}/ — chapters and epitaphs
+  // are community-authored lore content attached to heroes. Inherit
+  // the lore-preservation classification from the parent game_heroes
+  // entry (heroes are public lore characters with permanent records
+  // that survive account deletion; an author's contributed lore is
+  // preserved as community content with the author identity scrubbed
+  // by the normal authoring flow when the parent hero is read).
+  "chapters",
+  "epitaphs",
 
   // Q&A nested collections (handled via parent `questions` registry entry)
   "answers",
