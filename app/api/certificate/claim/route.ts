@@ -120,6 +120,7 @@ export async function POST(request: NextRequest) {
       issuedAt: FieldValue.serverTimestamp(),
       certName: CERTIFICATE_NAME,
       certUrl,
+      kind: "contributor",
     });
 
     // Read back to get the server timestamp resolved
