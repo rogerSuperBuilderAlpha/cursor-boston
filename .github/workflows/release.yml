@@ -164,17 +164,18 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${{ github.event.inputs.version || github.ref_name }}"
+          # cosign v2 deprecated --output-signature / --output-certificate in
+          # favor of a single --bundle file that contains both. Use the new
+          # bundle format for both SBOMs.
           cosign sign-blob --yes \
-            --output-signature sbom.json.sig \
-            --output-certificate sbom.json.cert \
+            --bundle sbom.json.cosign.bundle \
             sbom.json
           cosign sign-blob --yes \
-            --output-signature sbom.spdx.json.sig \
-            --output-certificate sbom.spdx.json.cert \
+            --bundle sbom.spdx.json.cosign.bundle \
             sbom.spdx.json
           gh release upload "$TAG" \
-            sbom.json.sig sbom.json.cert \
-            sbom.spdx.json.sig sbom.spdx.json.cert \
+            sbom.json.cosign.bundle \
+            sbom.spdx.json.cosign.bundle \
             --repo "${{ github.repository }}"
 
       - name: Attest SLSA build provenance for SBOMs
