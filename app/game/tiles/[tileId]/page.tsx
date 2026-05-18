@@ -394,6 +394,14 @@ export default function TileDetailPage({
           </p>
         )}
 
+        <TileInscriptionPanel
+          user={user}
+          tileId={tile.tileId}
+          initialInscription={tile.inscription ?? ""}
+          isOwn={isOwn}
+          onUpdated={refresh}
+        />
+
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
           <Stat label="Owner" value={isOwn ? "You" : tile.ownerId ? "Enemy" : "Unclaimed"} />
           <Stat label="Type" value={tile.type} />
@@ -454,12 +462,13 @@ export default function TileDetailPage({
             ownedTiles={ownedTiles}
             artifacts={artifacts}
             busy={busy}
-            onAttack={(sourceTileId, units, offenseSpellId) =>
+            onAttack={(sourceTileId, units, offenseSpellId, dispatch) =>
               callApi("/api/game/attack", {
                 sourceTileId,
                 targetTileId: tile.tileId,
                 units,
                 offenseSpellId,
+                ...(dispatch ? { dispatch } : {}),
               })
             }
             onSpy={(spellId) =>
@@ -650,5 +659,134 @@ function ReportLog({ reports }: { reports: TurnReport[] }) {
         ))}
       </div>
     </div>
+  );
+}
+
+function TileInscriptionPanel({
+  user,
+  tileId,
+  initialInscription,
+  isOwn,
+  onUpdated,
+}: {
+  user: { uid: string; getIdToken: () => Promise<string> } | null;
+  tileId: string;
+  initialInscription: string;
+  isOwn: boolean;
+  onUpdated: () => void;
+}) {
+  const MAX = 120;
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(initialInscription);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Sync external prop into internal draft state when the parent
+    // refetches the tile (e.g. after a save). This is a deliberate
+    // prop-to-state mirror, not the cascading-render anti-pattern
+    // the lint rule is trying to catch.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDraft(initialInscription);
+  }, [initialInscription]);
+
+  const save = useCallback(async () => {
+    if (!user) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch(`/api/game/tile/${tileId}/inscription`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ inscription: draft }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(
+          typeof data.error === "string"
+            ? data.error
+            : data.error?.message ?? "Failed to save"
+        );
+      }
+      setEditing(false);
+      onUpdated();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to save");
+    } finally {
+      setSaving(false);
+    }
+  }, [user, tileId, draft, onUpdated]);
+
+  if (!isOwn && !initialInscription) return null;
+
+  return (
+    <section className="mb-6 rounded-lg border border-amber-200 dark:border-amber-900/40 bg-amber-50/30 dark:bg-amber-900/5 p-3 text-sm">
+      <div className="mb-1 flex items-center justify-between">
+        <span className="text-[10px] uppercase tracking-wide text-amber-700 dark:text-amber-300">
+          Inscription
+        </span>
+        {isOwn && !editing && (
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            className="text-xs text-emerald-600 hover:text-emerald-500"
+          >
+            Edit
+          </button>
+        )}
+      </div>
+      {editing ? (
+        <div>
+          <textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value.slice(0, MAX))}
+            rows={2}
+            placeholder="A short inscription visible to scouts and invaders…"
+            className="w-full resize-none rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm focus:border-emerald-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-950"
+            maxLength={MAX}
+          />
+          <div className="mt-1 flex items-center justify-between text-[11px]">
+            <span className="text-neutral-500">{MAX - draft.length} chars left</span>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setEditing(false);
+                  setDraft(initialInscription);
+                }}
+                className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-400"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={save}
+                disabled={saving}
+                className="rounded bg-emerald-500 px-2 py-0.5 font-semibold text-white hover:bg-emerald-400 disabled:opacity-50"
+              >
+                {saving ? "Saving…" : "Save"}
+              </button>
+            </div>
+          </div>
+          {error && (
+            <p className="mt-1 text-[11px] text-red-500" role="alert">
+              {error}
+            </p>
+          )}
+        </div>
+      ) : (
+        <p className="italic text-amber-900 dark:text-amber-100">
+          {initialInscription || (
+            <span className="text-amber-700/60 dark:text-amber-300/60">
+              No inscription set.
+            </span>
+          )}
+        </p>
+      )}
+    </section>
   );
 }

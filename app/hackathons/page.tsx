@@ -7,6 +7,7 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { getCurrentVirtualHackathonId, getMonthEndFromVirtualId } from "@/lib/hackathons";
+import { SectionHelp } from "@/components/SectionHelp";
 import {
   getLumaCheckoutEventId,
   getLumaCheckoutHref,
@@ -90,6 +91,61 @@ export default function HackathonsPage() {
           </div>
         </div>
       </section>
+
+      <div className="px-6 py-6 max-w-4xl mx-auto w-full">
+        <SectionHelp
+          title="How hackathons work here"
+          intro={
+            <>
+              We run two formats: <strong>monthly virtual</strong> hackathons
+              that anyone can join async, and <strong>in-person events</strong>{" "}
+              tied to specific dates. Both use the same flow: form (or join)
+              a team of up to three, build with Cursor, ship a submission, and
+              show up for the showcase.
+            </>
+          }
+          faq={[
+            {
+              q: "How do I find a team?",
+              a: (
+                <>
+                  Use <strong>Find a team</strong> above to join the public
+                  pool, then send a join request to any team that needs your
+                  skill set. Team captains can also invite you directly. If
+                  you&apos;d rather solo, you can submit as a team of one.
+                </>
+              ),
+            },
+            {
+              q: "How does scoring work?",
+              a: "Submissions are scored by an AI judge against a published rubric (e.g. the Hack-a-Sprint and PyData events publish their rubric in-repo), plus a peer-voted prize for showcase favorites. Past results are visible on each event's results page.",
+            },
+            {
+              q: "Where do I send my submission?",
+              a: (
+                <>
+                  Each event has its own submission branch — see the{" "}
+                  submission-branches doc linked below. Most events also
+                  publish a per-event README with the exact directory layout
+                  and required fields.
+                </>
+              ),
+            },
+          ]}
+          links={[
+            {
+              label: "Submission branches doc",
+              href: "https://github.com/rogerSuperBuilderAlpha/cursor-boston/blob/develop/docs/SUBMISSION_BRANCHES.md",
+              external: true,
+            },
+            {
+              label: "Hack-a-Sprint 2026 ops doc (event runbook)",
+              href: "https://github.com/rogerSuperBuilderAlpha/cursor-boston/blob/develop/docs/HACK_A_SPRINT_2026_OPS.md",
+              external: true,
+            },
+          ]}
+        />
+      </div>
 
       {/* Featured in-person — wide layout so copy + Luma embed share space evenly */}
       <section className="py-12 px-6 border-b border-neutral-200 dark:border-neutral-800">

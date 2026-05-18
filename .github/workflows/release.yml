@@ -14,7 +14,8 @@ on:
 permissions:
   contents: write
   pull-requests: read
-  id-token: write  # Required for Sigstore keyless signing
+  id-token: write       # Required for Sigstore keyless signing
+  attestations: write   # Required for actions/attest-build-provenance (SLSA L2)
 
 jobs:
   release:
@@ -26,6 +27,30 @@ jobs:
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           fetch-depth: 0
+
+      # Enforce the signed-tag policy from docs/RELEASING.md.
+      # Tags from v0.3.0 forward MUST be cryptographically signed (gitsign or GPG).
+      # Older tags (v0.2.x) predate the policy and are exempted by the version check.
+      # We check the tag object for a signature block (PGP or x509). Full
+      # cryptographic verification is the maintainer's responsibility before
+      # pushing — the workflow's role is to enforce the policy, not to act as
+      # the trust anchor.
+      - name: Verify release tag is signed
+        if: github.event_name == 'push'
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          MAJOR_MINOR=$(echo "$TAG" | sed -E 's/^v([0-9]+\.[0-9]+).*/\1/')
+          require=$(awk -v v="$MAJOR_MINOR" 'BEGIN{ split(v,p,"."); print (p[1]>0 || p[2]>=3) ? "yes" : "no" }')
+          if [ "$require" = "no" ]; then
+            echo "Tag $TAG predates the signed-tag policy (floor: v0.3.0). Skipping signature check."
+            exit 0
+          fi
+          if git cat-file -p "$TAG" | grep -qE '^-----BEGIN (PGP SIGNATURE|SIGNED MESSAGE|SSH SIGNATURE)-----'; then
+            echo "Tag $TAG has a signature block. Policy satisfied."
+          else
+            echo "::error::Tag $TAG is not signed. See docs/RELEASING.md § Signed tags for one-time gitsign/GPG setup."
+            exit 1
+          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
@@ -164,17 +189,18 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${{ github.event.inputs.version || github.ref_name }}"
+          # cosign v2 deprecated --output-signature / --output-certificate in
+          # favor of a single --bundle file that contains both. Use the new
+          # bundle format for both SBOMs.
           cosign sign-blob --yes \
-            --output-signature sbom.json.sig \
-            --output-certificate sbom.json.cert \
+            --bundle sbom.json.cosign.bundle \
             sbom.json
           cosign sign-blob --yes \
-            --output-signature sbom.spdx.json.sig \
-            --output-certificate sbom.spdx.json.cert \
+            --bundle sbom.spdx.json.cosign.bundle \
             sbom.spdx.json
           gh release upload "$TAG" \
-            sbom.json.sig sbom.json.cert \
-            sbom.spdx.json.sig sbom.spdx.json.cert \
+            sbom.json.cosign.bundle \
+            sbom.spdx.json.cosign.bundle \
             --repo "${{ github.repository }}"
 
       - name: Attest SLSA build provenance for SBOMs

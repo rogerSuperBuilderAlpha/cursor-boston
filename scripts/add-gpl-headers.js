@@ -5,7 +5,14 @@ const path = require("path");
 
 const ROOT_DIRS = ["app", "lib", "components", "hooks", "contexts", "types"];
 
+// Header format. Updated 2026-05-18 to include the SPDX-License-Identifier
+// per the REUSE.software 3.3 spec — every source file should be one-line
+// machine-readable as to its license. The detector below recognizes BOTH
+// the old (no-SPDX) and new (SPDX-present) variants as "has header" so
+// existing files don't get a duplicate header injected. A separate
+// one-time backfill script can ratchet existing files to include SPDX.
 const HEADER = `/**
+ * SPDX-License-Identifier: GPL-3.0-only
  * Copyright (C) 2026 Cursor Boston
  * This file is part of Cursor Boston, licensed under GPL-3.0.
  * See LICENSE file for details.

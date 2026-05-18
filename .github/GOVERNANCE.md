@@ -44,6 +44,31 @@ Maintainers are contributors who have demonstrated a sustained commitment to the
 
 **Current Maintainers:** the canonical roster — including names, GitHub handles, role tier, and per-area ownership — lives in [`MAINTAINERS.md`](../MAINTAINERS.md). This document describes the *rules* maintainers operate under; the roster file describes *who* the maintainers are at any given moment.
 
+#### Contributor ladder
+
+The promotion path from first contribution to maintainer responsibility. Modeled on [kubernetes/community community-membership.md](https://github.com/kubernetes/community/blob/master/community-membership.md) with project-scale adjustments.
+
+| Level | Capabilities | Requirements to enter | Sponsor | Granted by |
+|---|---|---|---|---|
+| **Contributor** | Open PRs, file issues, participate in discussions | Open ≥1 PR or issue. Automatic. | n/a | — |
+| **Reviewer** | Trusted to review PRs in an area, but not to merge. Listed in `CODEOWNERS` for that area. | ≥5 merged PRs in the area over ≥30 days; CoC compliance; code-review judgment demonstrated in PR comments | 1 maintainer in the area | Maintainer consensus + Project Lead approval |
+| **Maintainer** | Merge PRs, triage issues, set technical direction in their area. Repo write access. | Active as Reviewer for ≥3 months; sustained code-review activity; CoC compliance; area expertise; bus-factor relief (each new maintainer must reduce single-point dependence somewhere) | 2 maintainers | Maintainer consensus + Project Lead approval |
+| **Community Maintainer** | Same merge rights as Maintainer; expected to focus on welcoming, contributor support, and external-facing surfaces rather than deep code review on `lib/` or `app/api/` | Active contribution to community surface (docs, events, organizing, partner pages) for ≥3 months; CoC compliance | 1 maintainer | Maintainer consensus + Project Lead approval |
+| **Project Lead** | Final decision authority; one seat. | Documented succession (current Project Lead names a successor publicly) | n/a | Outgoing Project Lead, ratified by maintainer consensus |
+
+**Promotion happens at a regular cadence** — not on demand. Quarterly (Jan, Apr, Jul, Oct) the maintainer team reviews who has met the next-level criteria and makes promotion decisions. Self-nomination is encouraged and follows Path B below; nomination by an existing maintainer follows Path A.
+
+**Demotion / step-down** is graceful — see "Step down gracefully" in Maintainer Responsibilities below. A maintainer who has been inactive for ≥6 months is moved to **Maintainer Emeritus** (no merge rights, retained recognition) at the next quarterly review unless they ask to stay. The emeritus list lives in [`MAINTAINERS.md`](../MAINTAINERS.md#emeritus).
+
+**Succession plan for the Project Lead role:**
+
+1. The Project Lead names a designated successor in [`MAINTAINERS.md`](../MAINTAINERS.md) (currently: vacant — to be filled).
+2. If the Project Lead becomes unreachable for >30 days without prior notice:
+   - The maintainer team takes over decisions by consensus.
+   - The maintainer team selects an Acting Project Lead within 14 days.
+   - Repo admin / secrets / external accounts (Discord, GitHub Sponsorship, domain registrar) are transferred to the Acting Project Lead via the access path documented in `docs/SECURITY_OPERATIONS.md` (planned).
+3. The Acting Project Lead serves until the original Project Lead returns or until a new Project Lead is ratified by maintainer consensus at the next quarterly review.
+
 #### Becoming a Maintainer
 
 Contributors may become maintainers based on:

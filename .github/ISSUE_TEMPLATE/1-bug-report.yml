@@ -1,0 +1,132 @@
+name: Bug report
+description: Something isn't working as expected on the platform or in the codebase.
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug.
+
+        Before submitting:
+        - Search [existing issues](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues?q=is%3Aissue) to avoid duplicates.
+        - For setup or "how do I…" questions, prefer [Discord](https://discord.gg/Wsncg8YYqc) — issues are for actionable bugs and feature work.
+        - For **security vulnerabilities**, do not open a public issue. Follow the [security policy](https://github.com/rogerSuperBuilderAlpha/cursor-boston/blob/develop/.github/SECURITY.md) instead.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which subsystem does this bug affect?
+      options:
+        - "auth (sign-in, sign-up, sessions)"
+        - "community (posts, replies, reactions, moderation)"
+        - "events / luma"
+        - "hackathons (submissions, voting, scoring)"
+        - "summer cohort (weekly submissions, dashboards)"
+        - "mentorship / pair programming"
+        - "talks / showcase / questions / cookbook"
+        - "game (Generals — combat, exploration, NPCs, armageddon)"
+        - "profile / settings / notifications"
+        - "PR Studio"
+        - "API contracts / lib/api-schemas"
+        - "build / CI / dev environment"
+        - "docs"
+        - "other / unsure"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What is the bug? Be specific — "it doesn't work" is not actionable.
+      placeholder: When I try to X, I see Y. I expected Z.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Numbered list of the exact steps from a fresh state.
+      placeholder: |
+        1. Go to /community
+        2. Click "New post"
+        3. Type "hello" and hit enter
+        4. Observe error in console
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: The post should appear in the feed within 1s.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      placeholder: Nothing happens; the console shows a 401.
+    validations:
+      required: true
+
+  - type: input
+    id: node-version
+    attributes:
+      label: Node version (only if reproducible locally)
+      description: Run `node --version`. Leave blank for issues on the deployed site.
+      placeholder: v22.11.0
+
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser (if a UI bug)
+      options:
+        - "Chrome / Chromium"
+        - "Safari"
+        - "Firefox"
+        - "Edge"
+        - "Mobile Safari (iOS)"
+        - "Mobile Chrome (Android)"
+        - "Not a UI bug / not applicable"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: env
+    attributes:
+      label: Environment
+      options:
+        - "Production (cursorboston.com)"
+        - "Local dev (npm run dev)"
+        - "Local prod build (npm run build && npm start)"
+        - "CI"
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs, error messages, or screenshots
+      description: Paste relevant console output / network errors. Drag images into the box.
+      render: shell
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Anything else useful — a hypothesis, a related PR, a regression suspect.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks before submitting
+      options:
+        - label: I searched existing issues and didn't find a duplicate.
+          required: true
+        - label: I read [SECURITY.md](https://github.com/rogerSuperBuilderAlpha/cursor-boston/blob/develop/.github/SECURITY.md) — this is not a security vulnerability.
+          required: true

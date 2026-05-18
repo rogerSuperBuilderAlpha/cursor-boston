@@ -1,0 +1,101 @@
+name: Cut signed release tag
+
+# Cuts a Sigstore-signed (gitsign / keyless OIDC) annotated tag from the
+# current ref. Pushing the tag triggers the existing `Release` workflow,
+# which verifies the signature block and runs the rest of the release flow.
+#
+# Why this exists: the OpenSSF Best Practices Silver criterion
+# `version_tags_signed` requires release tags to be cryptographically
+# signed. Doing this locally requires every maintainer to install gitsign
+# and complete an OIDC browser flow. Doing it in CI requires neither — the
+# Actions runner's OIDC token IS the signing identity, with no browser
+# step. This workflow is the on-ramp.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to tag (e.g., v0.3.0 — must match vMAJOR.MINOR.PATCH)'
+        required: true
+        type: string
+      ref:
+        description: 'Commit, branch, or tag to tag (defaults to main)'
+        required: false
+        default: 'main'
+        type: string
+      message:
+        description: 'Tag message (defaults to "release: <version>")'
+        required: false
+        type: string
+
+permissions:
+  contents: write          # push the tag
+  id-token: write          # mint OIDC token for gitsign
+
+jobs:
+  cut-signed-tag:
+    name: Cut signed tag via gitsign
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate version input
+        run: |
+          if ! echo "${{ inputs.version }}" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+(-[a-z0-9]+(\.[0-9]+)?)?$'; then
+            echo "::error::version must match v<MAJOR>.<MINOR>.<PATCH> (optionally followed by -<pre>); got '${{ inputs.version }}'"
+            exit 1
+          fi
+
+      - name: Checkout requested ref
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+
+      - name: Reject duplicate tag
+        run: |
+          if git rev-parse "refs/tags/${{ inputs.version }}" >/dev/null 2>&1; then
+            echo "::error::Tag ${{ inputs.version }} already exists. Pick a different version."
+            exit 1
+          fi
+
+      - name: Install gitsign
+        env:
+          GITSIGN_VERSION: '0.13.0'
+        run: |
+          set -euo pipefail
+          curl -fsSL "https://github.com/sigstore/gitsign/releases/download/v${GITSIGN_VERSION}/gitsign_${GITSIGN_VERSION}_linux_amd64" \
+            -o /usr/local/bin/gitsign
+          chmod +x /usr/local/bin/gitsign
+          gitsign --version
+
+      - name: Configure git + gitsign for keyless signing
+        run: |
+          # Identity required by git; cert identity comes from the OIDC token.
+          git config --global user.email "noreply@cursorboston.com"
+          git config --global user.name  "Cursor Boston Release Bot"
+          git config --global commit.gpgsign true
+          git config --global tag.gpgsign true
+          git config --global gpg.x509.program gitsign
+          git config --global gpg.format x509
+          # gitsign in CI uses the Actions OIDC token; no browser flow.
+          git config --global gitsign.connectorID "https://token.actions.githubusercontent.com"
+
+      - name: Create signed annotated tag
+        env:
+          MSG: ${{ inputs.message }}
+        run: |
+          TAG="${{ inputs.version }}"
+          if [ -z "$MSG" ]; then
+            MSG="release: $TAG"
+          fi
+          git tag -s "$TAG" -m "$MSG"
+          # Confirm the tag object carries a signature block.
+          if ! git cat-file -p "$TAG" | grep -qE '^-----BEGIN (PGP SIGNATURE|SIGNED MESSAGE|SSH SIGNATURE)-----'; then
+            echo "::error::gitsign produced an unsigned tag. Aborting."
+            exit 1
+          fi
+          echo "Signed tag $TAG created at $(git rev-parse "$TAG")."
+
+      - name: Push tag
+        run: |
+          git push origin "refs/tags/${{ inputs.version }}"
+          echo "Pushed ${{ inputs.version }}. The Release workflow will now verify the signature and publish."

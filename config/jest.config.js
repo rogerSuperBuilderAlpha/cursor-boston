@@ -41,19 +41,31 @@ const customJestConfig = {
   // landed: the new gated event page (server component, ~500 LOC) and
   // the access API route are exercised manually + via Playwright but
   // have no Jest unit tests, which dropped global numbers ~1-2pp.
-  // Pure lib pieces (pydata-2026-access, pydata-submissions) have full
-  // unit tests; the gate + banner components are tested via RTL.
-  // Current totals: statements 33.35%, branches 25.63%, lines 34.62%, functions 25.38%.
-  // Floors set ~1pp below current → any regression fails CI.
-  // Ratchet these UP as tests are added; the OSS-readiness lift (Sprints 2-5)
-  // targets statements ≥75% by adding ~150 tests across the 95 untested API
-  // route handlers and the game data layer at lib/game/data-server.ts etc.
+  // Re-aligned again 2026-05-17 after Heroes v2 (#963) landed: ~1000 LOC
+  // of new server-rendered UI (/game/heroes tab browser + per-hero
+  // detail page) and four thin API route handlers added without Jest
+  // tests (pure visibility / registry / contract logic IS covered:
+  // hero-visibility 12 tests, hero-registry 11 tests, heroes-server 3
+  // tests). UI + route shells are exercised manually + via Playwright.
+  // Re-aligned 2026-05-18 after the Phase 5 OSS-lift expansion of
+  // lib/account-deletion/registry.ts to cover the zero-turn gameplay
+  // collections (game_reactions, game_pacts, game_prophecies + 2
+  // allowlisted lore subcollections — chapters, epitaphs). Registry
+  // additions are static data covered transitively by the existing
+  // registry self-check test; cascade-test growth lags by ~1pp.
+  // Current totals (2026-05-18 CI, after coverage pushes #23-44): statements ~37.5%,
+  // branches ~28.2%, lines ~38.7%, functions ~30.1%.
+  // Floors set ~0.5pp below current → any regression fails CI.
+  // Ratchet these UP as tests are added; the OSS-readiness lift (Phase 5.4)
+  // targets statements ≥80% (OpenSSF Silver `test_statement_coverage80`) by
+  // adding tests across the 95 untested API route handlers and the game data
+  // layer at lib/game/data-server.ts etc.
   coverageThreshold: {
     global: {
-      branches: 25,
-      functions: 25,
-      lines: 34,
-      statements: 33,
+      branches: 27,
+      functions: 29,
+      lines: 38,
+      statements: 37,
     },
   },
   // Generate JSON summary for CI coverage checks

@@ -217,6 +217,37 @@ describe("shouldGrantWeeklyTurns + applyWeeklyGrant", () => {
     const granted = applyWeeklyGrant(flush, "2026-05-03");
     expect(granted.turnsRemaining).toBe(300 + WEEKLY_TURN_GRANT);
   });
+
+  // Zero-turn gameplay: prophecy stakes
+  it("applyWeeklyGrant consumes pendingProphecyBonus and zeros it", () => {
+    const withBonus: GamePlayer = {
+      ...p(),
+      turnsRemaining: 0,
+      pendingProphecyBonus: 5,
+    };
+    const granted = applyWeeklyGrant(withBonus, "2026-05-03");
+    expect(granted.turnsRemaining).toBe(WEEKLY_TURN_GRANT + 5);
+    expect(granted.pendingProphecyBonus).toBe(0);
+  });
+
+  it("applyWeeklyGrant caps pendingProphecyBonus at the max", () => {
+    const massive: GamePlayer = {
+      ...p(),
+      turnsRemaining: 0,
+      pendingProphecyBonus: 999, // multiple resolutions stacked
+    };
+    const granted = applyWeeklyGrant(massive, "2026-05-03");
+    // Cap = PROPHECY_BONUS_TURNS_MAX (5). Adds 5, zeros pending.
+    expect(granted.turnsRemaining).toBe(WEEKLY_TURN_GRANT + 5);
+    expect(granted.pendingProphecyBonus).toBe(0);
+  });
+
+  it("applyWeeklyGrant handles missing pendingProphecyBonus", () => {
+    const granted = applyWeeklyGrant(p(), "2026-05-03");
+    // newPlayer() starts at STARTING_TURN_GRANT (300); grant adds 100.
+    expect(granted.turnsRemaining).toBe(STARTING_TURN_GRANT + WEEKLY_TURN_GRANT);
+    expect(granted.pendingProphecyBonus).toBe(0);
+  });
 });
 
 describe("nextPhase", () => {

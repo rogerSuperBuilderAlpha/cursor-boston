@@ -252,8 +252,91 @@ export interface GamePlayer {
   // via summonSpecialUnitServer, the entry carries the tile id and folds
   // into combat math at that tile.
   summonableSpecialUnits?: SpecialUnitInstance[];
+  // Free-form public bio shown on /game/players/[playerId]. Sanitized via
+  // sanitizeText() on write; 500 chars max. Soft-deletable: empty string
+  // means "no bio set" (not yet authored or cleared by author/admin).
+  bio?: string;
+  bioUpdatedAt?: Timestamp | Date;
+  // Phase 7. Incremented when one of this player's prophecies resolves
+  // (the predicted seal breaks). Drives the Seer title.
+  prophecyFulfilledCount?: number;
+  // Zero-turn gameplay features (May 2026 sim follow-up).
+  // Oathbreaker debuff window: when set and > now, attacks launched by this
+  // player resolve with -OATHBREAKER_ATTACK_PENALTY on attackPower. Stamped
+  // by the attack handler when the attacker breaks an active pact.
+  oathbreakerUntil?: Timestamp | Date;
+  // Stamped alongside oathbreakerUntil so the UI knows the source attack id
+  // for the public Oathbreaker badge on the profile.
+  oathbreakerLastPactId?: string;
+  // Turns to be added to the next weekly grant from a fulfilled prophecy.
+  // Capped at PROPHECY_BONUS_TURNS_MAX so multiple resolutions in one week
+  // don't compound. Consumed (zeroed) by runWeeklyRolloverServer on grant.
+  pendingProphecyBonus?: number;
+  // Last time this player declared Last Stand. Used for the 24h cooldown
+  // check in declareLastStandServer. Absent ⇒ never used.
+  lastStandUsedAt?: Timestamp | Date;
+  // Denormalized counter of tiles currently in defensive stance. Maintained
+  // alongside GameTile.defensiveStance writes so the cap check
+  // (max = floor(tilesHeld / 100), min 1) doesn't have to query all tiles.
+  // Optional for back-compat; readers coalesce to 0.
+  activeDefensiveStanceCount?: number;
+  // Denormalized list of the last 24h of redistribution timestamps for the
+  // per-day rate limit (3/day). Pruned on each write. Optional for back-compat.
+  recentRedistributions?: Array<Timestamp | Date>;
   createdAt: Timestamp | Date;
   updatedAt: Timestamp | Date;
+}
+
+/** Derived achievement title surfaced on the player profile page. Titles
+ *  are computed at read time from already-stored fields on GamePlayer +
+ *  related collections (no separate "earned titles" doc) so they stay in
+ *  sync with reality automatically. */
+export interface PlayerTitle {
+  id: string;
+  label: string;
+  description: string;
+}
+
+/** Public non-aggression pact between two generals. No combat
+ *  enforcement — if the author attacks the target during the window,
+ *  the attack handler stamps `brokenAt` and posts a `pact_broken`
+ *  community event. Reputation system, not a rules system. */
+export interface Pact {
+  id: string;
+  authorId: string;
+  authorDisplayName: string;
+  authorCaste: Caste | null;
+  targetId: string;
+  targetDisplayName: string;
+  targetCaste: Caste | null;
+  statement: string;
+  createdAt: Timestamp | Date;
+  expiresAt: Timestamp | Date;
+  /** Set when the author attacks the target inside the window. */
+  brokenAt?: Timestamp | Date;
+  deletedAt?: Timestamp | Date;
+  deletedByAdmin?: boolean;
+}
+
+/** A pre-filed prediction about a specific Armageddon seal. Marked
+ *  `resolvedAt` the moment that seal breaks; the breaker's identity is
+ *  captured for the "Seer" title attribution. */
+export interface Prophecy {
+  id: string;
+  authorId: string;
+  authorDisplayName: string;
+  authorCaste: Caste | null;
+  targetSealNumber: number; // 1..7
+  prediction: string;
+  createdAt: Timestamp | Date;
+  resolvedAt?: Timestamp | Date;
+  fulfilledBy?: {
+    userId: string;
+    displayName: string;
+    caste: Caste;
+  };
+  deletedAt?: Timestamp | Date;
+  deletedByAdmin?: boolean;
 }
 
 export interface GameTile {
@@ -295,6 +378,31 @@ export interface GameTile {
   // magic: spell cast from here). Optional for back-compat — legacy tile
   // docs without the field parse as "no hero". See lib/game/heroes.ts.
   hero?: GameHero;
+  // Owner-authored inscription (≤120 chars). Cosmetic — surfaces on
+  // intel scans and post-attack outcomes for any other player who
+  // interacts with the tile. Server-sanitized on write.
+  inscription?: string;
+  inscriptionUpdatedAt?: Timestamp | Date;
+  // Zero-turn gameplay: defensive-stance toggle. When `active`, this tile
+  // gets DEFENSIVE_STANCE_DEFENSE_BONUS on its defense power and the attack
+  // handler refuses attacks launched FROM this tile until the toggle lifts.
+  // `lockedUntil` enforces a one-way cooldown — toggling on is free, but
+  // toggling off can't happen until lockedUntil < now (prevents pre-attack
+  // flicker). Absent ⇒ tile is in normal stance.
+  defensiveStance?: {
+    active: boolean;
+    since: Timestamp | Date;
+    lockedUntil: Timestamp | Date;
+  };
+  // Zero-turn gameplay: Last Stand declaration. When set, the next inbound
+  // attack against this tile resolves with LAST_STAND_DEFENSE_BONUS on
+  // defense power AND adjacent owned tiles take LAST_STAND_ADJACENT_PENALTY
+  // on theirs (rally pulls reserves). Single-use — combat consumes (deletes)
+  // on next attack. Stamped by declareLastStandServer.
+  activeLastStand?: {
+    declaredAt: Timestamp | Date;
+    expiresAt: Timestamp | Date;
+  };
   createdAt: Timestamp | Date;
   updatedAt: Timestamp | Date;
 }
@@ -402,6 +510,11 @@ export interface GameHero {
   // engaged). Drives lazy regen at read time. Updated whenever stamina
   // changes (engagement, conversion, move-on-capture).
   lastEngagedAtTurn: number;
+  // Zero-turn gameplay: meditation. When set and > now, the hero is on
+  // sabbatical — combat skips its attack/defense bonus contribution, and
+  // stamina regen runs at MEDITATION_REGEN_MULTIPLIER × normal rate.
+  // Absent ⇒ hero is active. Set by meditateHeroServer; auto-expires.
+  meditatingUntil?: Timestamp | Date;
 }
 
 // Resolution choice when an attacker wins a battle against a hero tile.
@@ -450,6 +563,158 @@ export interface SpecialUnitInstance {
   stationedTileId?: string;
 }
 
+// =====================================================================
+// Heroes v2 — registry + history + visibility
+// =====================================================================
+//
+// v1 stored heroes only inline on `GameTile.hero?`; when a hero died, the
+// data vanished. v2 adds a persistent collection so heroes become
+// permanent lore characters with a full history.
+//
+// Storage:
+//   - `game_heroes/{heroId}` — one doc per hero (this collection survives
+//     Armageddon season wipes — see lib/game/armageddon-resolve.ts).
+//   - `game_heroes/{heroId}/events/{eventId}` — append-only event log.
+//
+// Combat path still reads `GameTile.hero` (hot path). Registry is
+// dual-written from the same Firestore transactions as `tile.hero`
+// mutations so the two never drift.
+
+/** Append-only event-log entries for a hero's history. */
+export type HeroEventKind =
+  // Hero appeared on a tile (military: won battle; farm: recruit on food;
+  // magic: spell cast / arm-defense on magic).
+  | "emerged"
+  // The hero's tile attacked another tile (hero is on `source`).
+  | "engaged_attacker"
+  // The hero's tile was attacked (hero is on `target`). Outcome may be
+  // any of captured / repelled / stalemate; the engagement happened either way.
+  | "engaged_defender"
+  // Hero was killed in battle. Terminal — `GameHeroDoc.isDeceased` is set
+  // alongside this event.
+  | "slain"
+  // Hero converted to a new owner (attacker chose `convert` and the roll
+  // succeeded). Carries `fromOwnerId` + `toOwnerId`.
+  | "defected"
+  // Military hero followed source-tile capture to the new tile.
+  | "moved_on_capture"
+  // Magic hero on source tile when a spell was cast from it.
+  | "spell_cast"
+  // Farm hero on tile when units were recruited (one event per recruit cycle).
+  | "recruited"
+  // Farm hero's special-unit roll fired and dropped a SpecialUnitInstance
+  // into the player's pool.
+  | "special_unit_summoned"
+  // Armageddon resolved during this hero's lifetime. Living heroes enter
+  // limbo (awaitingResurrection); deceased heroes just record the season.
+  | "season_ended";
+
+export interface GameHeroEvent {
+  // uuid. Subcollection doc id.
+  id: string;
+  kind: HeroEventKind;
+  createdAt: Timestamp | Date;
+  // The hero's tile at the moment the event fired. Always present even
+  // for in-limbo events (the last known tile is recorded).
+  tileId: string;
+  // The hero's owner at the moment the event fired. `null` during limbo
+  // (between season-end and resurrection). Used as the primary filter for
+  // "events from my tenure" visibility (per the v2 visibility rules).
+  ownerIdAtTime: string | null;
+  // The world season the event fired in.
+  seasonNumber: number;
+  // Kind-specific fields. All optional — populated per kind.
+  attackerId?: string;          // engaged_defender, slain
+  defenderId?: string;          // engaged_attacker
+  outcome?: AttackOutcome;      // engaged_attacker, engaged_defender
+  fromOwnerId?: string;         // defected, moved_on_capture
+  toOwnerId?: string;           // defected
+  fromTileId?: string;          // moved_on_capture
+  spellId?: string;             // spell_cast
+  targetTileId?: string;        // spell_cast, engaged_attacker
+  unitType?: UnitType;          // recruited
+  unitsBuilt?: number;          // recruited
+  specialUnitDefId?: string;    // special_unit_summoned
+  /** Per-reaction counters surfaced on the hero detail event row. */
+  reactions?: ReactionMap;
+}
+
+/** Canonical persistent record for a hero. Survives Armageddon wipes
+ *  (see lib/game/armageddon-resolve.ts COLLECTIONS — NOT included). */
+export interface GameHeroDoc {
+  // Stable uuid; matches `GameHero.id` on the inline tile snapshot.
+  id: string;
+  name: string;
+  class: HeroClass;
+  specialty: HeroSpecialty;
+  caste: Caste;
+  // Current ownership/location. Both null when in limbo (deceased OR
+  // awaiting resurrection in a new season).
+  currentOwnerId: string | null;
+  currentTileId: string | null;
+  // Combat-relevant denorm for the All Heroes browse view. During the
+  // current season, the canonical source of truth for combat is
+  // `GameTile.hero.stamina`; this denorm is updated alongside it.
+  stamina: number;
+  staminaMax: number;
+  // Zero-turn gameplay: meditation denorm. Mirrors GameHero.meditatingUntil
+  // on the tile snapshot so the All Heroes browse view can render the
+  // "meditating" badge without joining against the tile. Absent ⇒ active.
+  meditatingUntil?: Timestamp | Date;
+  // Status flags
+  isDeceased: boolean;
+  // True between season-end and next resurrection. Set by armageddon-resolve.
+  // v2 ships this flag but no resurrection UX yet — deferred to v3.
+  awaitingResurrection: boolean;
+  deceasedAt?: Timestamp | Date;
+  // Last-known tile when killed. Public to everyone once deceased
+  // (visibility rule: deceased = fully public).
+  deceasedTileId?: string;
+  // Lifecycle bookkeeping
+  emergedAtTurn: number;
+  emergedSeasonNumber: number;
+  // Seasons this hero lived through (survived past the seal-7 break).
+  // Pushed-onto by armageddon-resolve.
+  survivedSeasons: number[];
+  // Denormalized timestamp of the newest event in the subcollection.
+  // Drives sort order in the list views without a per-hero events query.
+  lastEventAt: Timestamp | Date;
+  createdAt: Timestamp | Date;
+  updatedAt: Timestamp | Date;
+}
+
+/** Pagination cursor for hero list / events queries. Stringified per
+ *  the existing firestore-pagination helpers. */
+export type HeroListScope = "mine" | "all" | "fallen";
+
+/** Safe projection of a hero for API responses — fields hidden per the
+ *  visibility rules (see lib/game/hero-visibility.ts) are absent rather
+ *  than null so the client knows the difference between "explicitly
+ *  unknown" and "not yet loaded". */
+export interface SafeHeroSummary {
+  id: string;
+  name: string;
+  class: HeroClass;
+  specialty: HeroSpecialty;
+  caste: Caste;
+  currentOwnerId: string | null;
+  isDeceased: boolean;
+  awaitingResurrection: boolean;
+  emergedSeasonNumber: number;
+  // Present only when visible per the rule table (current owner OR
+  // adjacent OR deceased / past-season).
+  currentTileId?: string;
+  deceasedTileId?: string;
+  stamina?: number;
+  staminaMax?: number;
+  // Zero-turn gameplay: meditation state surfaced when the hero is visible.
+  // Absent / past ⇒ active. Present and > now ⇒ meditating until that time.
+  meditatingUntil?: Timestamp | Date;
+  // Set when a backstory markdown file exists for this hero. Drives the
+  // "Add the next chapter" vs "Read the chronicle" CTA in the UI.
+  hasBackstory: boolean;
+}
+
 // Lightweight projection of GameTile for map-fetch payloads. Strips
 // neighborTileIds (~6 strings × N tiles), upgradeIds, level, and timestamps
 // — fields the dashboard/hex-map/recruit/spells pages don't use. Tile detail
@@ -489,6 +754,18 @@ export interface GameAttack {
   rngSeed: string;
   outcome: AttackOutcome;
   turnsCost: number;
+  /** Optional attacker-authored ≤280-char taunt. Server-sanitized on
+   *  write. Cosmetic only; no combat impact. */
+  dispatch?: string;
+  /** Zero-turn gameplay: pre-attack snapshot of the defender's units on
+   *  the target tile (BASE + SUPER combined). Used by the Battle Autopsy
+   *  feature to run speculative counterfactuals — what would have happened
+   *  with +50 siege, -20% defense, etc. Absent on legacy attack docs;
+   *  autopsy degrades to "no counterfactual available" when missing. */
+  unitsOnTargetPreAttack?: UnitStack;
+  /** Zero-turn gameplay: pre-attack base portion of unitsOnTargetPreAttack,
+   *  for counterfactual loss-attribution. Optional/back-compat. */
+  baseUnitsOnTargetPreAttack?: UnitStack;
   createdAt: Timestamp | Date;
 }
 
@@ -522,6 +799,12 @@ export interface CombatAttackerInput {
   // unit attackBonus contribution rolled into the same channel. Optional;
   // legacy callers default to 0.
   heroAttackBonus?: number;
+  // Zero-turn gameplay: Oathbreaker penalty. Subtracted from attackPower as
+  // a multiplicative reduction (e.g. 0.10 = -10% attack). Stamped by the
+  // server when an attacker has an active oathbreaker mark from breaking
+  // a pact within OATHBREAKER_DURATION_MS. Optional; legacy callers default
+  // to 0.
+  oathbreakerPenalty?: number;
 }
 
 export interface CombatDefenderInput {
@@ -555,6 +838,14 @@ export interface CombatDefenderInput {
   // special-unit defenseBonus contribution. Optional; legacy callers default
   // to 0.
   heroDefenseBonus?: number;
+  // Zero-turn gameplay: additive defense multiplier from the target tile
+  // being in Defensive Stance (DEFENSIVE_STANCE_DEFENSE_BONUS) plus any
+  // active Last Stand (LAST_STAND_DEFENSE_BONUS). Subtract any Last Stand
+  // adjacent-penalty when the target is adjacent to a tile that declared
+  // last stand against a different attacker. Server folds these into a
+  // single channel before calling resolveAttack. Optional; legacy callers
+  // default to 0.
+  zeroTurnDefenseBonus?: number;
 }
 
 export interface CombatTileInput {
@@ -695,6 +986,10 @@ export interface IntelReport {
     units: UnitStack;
     armedDefenseSpellId: string | null;
     isolatedSpawn: boolean;
+    /** Owner-authored inscription, if any. Surfaced to the spy as part
+     *  of the tile's "personality" — added in Phase 4 of the non-turn
+     *  features rollout. Empty / missing = no inscription set. */
+    inscription?: string;
   };
   neighbors?: Array<{
     tileId: string;
@@ -852,6 +1147,29 @@ export type LossCurveTag =
 // Community feed + chat
 // =====================================================================
 
+/** Reaction emoji set surfaced on chat / feed / hero-event rows. Counts
+ *  are server-incremented via FieldValue.increment; the per-user "have I
+ *  reacted?" tracker lives in `game_reactions` (one doc per user-scope-
+ *  doc-reaction). Adding a new emoji: extend this list, update the
+ *  validator in `app/api/game/reactions/route.ts`, and the renderer in
+ *  `app/game/_components/dashboard/ReactionsRow.tsx`. */
+export const REACTION_EMOJIS = ["⚔️", "🛡️", "📜"] as const;
+export type ReactionEmoji = (typeof REACTION_EMOJIS)[number];
+export type ReactionMap = Partial<Record<ReactionEmoji, number>>;
+export type ReactionScope = "chat" | "feed" | "hero_event";
+
+/** Idempotency tracker doc stored in `game_reactions`. Doc id is
+ *  `{userId}_{scope}_{docId}_{reactionIndex}` — existence means "this
+ *  user has placed this reaction." Toggle off = delete. */
+export interface ReactionTracker {
+  userId: string;
+  scope: ReactionScope;
+  docId: string;
+  reaction: ReactionEmoji;
+  heroId?: string; // hero_event scope only — to resolve subcollection path
+  createdAt: Timestamp | Date;
+}
+
 /** Events surfaced in the dashboard's CommunityPanel activity feed. */
 export type CommunityEventKind =
   | "player_join"
@@ -873,7 +1191,10 @@ export type CommunityEventKind =
   // + specialty so the feed survives the hero record going away.
   | "hero_emerged"
   | "hero_defected"
-  | "hero_slain";
+  | "hero_slain"
+  // Phase 7 (non-turn social): public reputation events.
+  | "pact_broken"
+  | "prophecy_fulfilled";
 
 /** Single entry in the `game_community_events` log. Denormalized so the
  *  feed renderer never needs to join against game_players. */
@@ -912,6 +1233,15 @@ export interface CommunityEvent {
   otherUserId?: string;
   otherDisplayName?: string;
   otherCaste?: Caste | null;
+  // Phase 7. pact_broken / prophecy_fulfilled.
+  pactId?: string;
+  pactStatement?: string;
+  prophecyId?: string;
+  prophecyPrediction?: string;
+  prophecyTargetSealNumber?: number;
+  /** Per-reaction counters. Server-incremented via FieldValue.increment
+   *  by /api/game/reactions. Absent = no reactions yet. */
+  reactions?: ReactionMap;
 }
 
 // =====================================================================
@@ -1011,6 +1341,68 @@ export interface ArmageddonEventRecord {
   }>;
 }
 
+// =====================================================================
+// Zero-turn gameplay: Queued orders
+// =====================================================================
+//
+// Players can pre-plan a battle plan that executes at the next weekly
+// turn grant. Each order carries its normal turn cost when it fires; if
+// the player has insufficient turns when the order's slot comes up the
+// order is skipped with a reason logged into the per-player report feed.
+//
+// Stored as one doc per order in `game_order_queue` (top-level
+// collection, server-write-only). Ordered by sequenceIndex within a
+// player's queue. Failed orders are marked `status: "failed"` rather
+// than deleted so the UI can show "what happened" after the grant.
+
+/** Order kinds supported by the queue v1. New kinds extend this union
+ *  and add a handler branch in executeQueuedOrderServer. */
+export type QueuedOrderKind =
+  | "recruit_on_tile"
+  | "attack_adjacent"
+  | "cast_spell_on_tile";
+
+/** Per-order status. Lifecycle: queued → executing (transient) →
+ *  executed | failed | cancelled. */
+export type QueuedOrderStatus =
+  | "queued"
+  | "executed"
+  | "failed"
+  | "cancelled";
+
+/** Per-kind params payload. Discriminated by `kind`. Each enqueued
+ *  order represents ONE action; players queue multiple orders if they
+ *  want a sequence. */
+export type QueuedOrderParams =
+  | { kind: "recruit_on_tile"; tileId: string; unitType: UnitType }
+  | { kind: "attack_adjacent"; sourceTileId: string; targetTileId: string; units: UnitStack; offenseSpellId: string | null }
+  | { kind: "cast_spell_on_tile"; tileId: string; spellId: string };
+
+/** Single order in a player's queue. */
+export interface QueuedOrder {
+  id: string;
+  playerId: string;
+  kind: QueuedOrderKind;
+  params: QueuedOrderParams;
+  // Position within the player's queue at submission time. Lower fires first.
+  sequenceIndex: number;
+  status: QueuedOrderStatus;
+  // Set when status transitions out of "queued".
+  executedAt?: Timestamp | Date;
+  // For "failed" and "executed": one-line reason / outcome for the player.
+  resultSummary?: string;
+  // For "executed": denormalized reference to the resulting report/attack id.
+  resultRefId?: string;
+  createdAt: Timestamp | Date;
+  updatedAt: Timestamp | Date;
+}
+
+/** Scope for community chat messages. `global` is the default open
+ *  room; `caste:<name>` rooms are gated to members of that caste at
+ *  post time. Existing rows without a scope field are treated as
+ *  `global`. */
+export type ChatScope = "global" | `caste:${Caste}`;
+
 /** Single message in the `game_community_messages` collection. */
 export interface CommunityMessage {
   id: string;
@@ -1019,9 +1411,81 @@ export interface CommunityMessage {
   caste: Caste | null;
   body: string;
   createdAt: Timestamp | Date;
+  /** Room the message was posted to. Absent on legacy rows — readers
+   *  coerce missing to `'global'`. */
+  scope?: ChatScope;
   /** Set when the message has been soft-deleted (by the author or an
    *  admin). The chat renderer hides deleted messages by default. */
   deletedAt?: Timestamp | Date;
   /** True when the deletion was performed by an admin. */
   deletedByAdmin?: boolean;
+  /** Per-reaction counters. */
+  reactions?: ReactionMap;
 }
+
+// =====================================================================
+// Zero-turn gameplay tuning constants
+// =====================================================================
+//
+// Centralized so balance changes don't require code archaeology. Each
+// constant is referenced from server logic (data-server.ts / heroes.ts /
+// pacts.ts / armageddon-resolve.ts) and tested via the unit tests under
+// __tests__/lib/game/zero-turn.test.ts.
+
+/** Defensive Stance: multiplicative defense bonus on a stance tile. */
+export const DEFENSIVE_STANCE_DEFENSE_BONUS = 0.25;
+/** Defensive Stance: minimum lockedUntil window after toggling on, before
+ *  the tile can toggle off. Prevents flicker right before an inbound attack. */
+export const DEFENSIVE_STANCE_LOCK_MS = 6 * 60 * 60 * 1000;
+
+/** Last Stand: multiplicative defense bonus on the declared tile. */
+export const LAST_STAND_DEFENSE_BONUS = 0.50;
+/** Last Stand: multiplicative defense penalty on adjacent owned tiles
+ *  while a last stand is queued on a neighbor (rally pulls reserves). */
+export const LAST_STAND_ADJACENT_PENALTY = 0.25;
+/** Last Stand: how long after declaring the effect remains armed. If no
+ *  inbound attack lands within this window, the effect expires unused
+ *  but the cooldown still counts. */
+export const LAST_STAND_WINDOW_MS = 60 * 60 * 1000;
+/** Last Stand: how long after declaring before the player can declare
+ *  another. One per 24h. */
+export const LAST_STAND_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+/** Last Stand: how recent an inbound attack signal must be to make the
+ *  declare button available. */
+export const LAST_STAND_THREAT_WINDOW_MS = 30 * 60 * 1000;
+
+/** Tile redistribution: multiplicative haircut applied to the moved
+ *  stack. Prevents free perfect optimization. */
+export const REDISTRIBUTE_TRANSIT_LOSS = 0.08;
+/** Tile redistribution: per-day rate limit per player. */
+export const REDISTRIBUTE_MAX_PER_DAY = 3;
+
+/** Hero pep talk: stamina granted per call. */
+export const PEP_TALK_STAMINA_GAIN = 15;
+/** Hero pep talk: per-day cap across all the player's heroes. */
+export const PEP_TALK_MAX_PER_DAY = 3;
+
+/** Hero meditation: how long the hero remains on sabbatical. */
+export const MEDITATION_DURATION_MS = 24 * 60 * 60 * 1000;
+/** Hero meditation: how many slots the player can have active at once.
+ *  Forces a real opportunity-cost choice — meditating heroes don't fight. */
+export const MEDITATION_MAX_ACTIVE_SLOTS = 1;
+/** Hero meditation: stamina regen multiplier while meditating. */
+export const MEDITATION_REGEN_MULTIPLIER = 2;
+
+/** Oathbreaker: multiplicative attack penalty on attacks launched while
+ *  the mark is active. */
+export const OATHBREAKER_ATTACK_PENALTY = 0.10;
+/** Oathbreaker: how long the mark persists after a pact breach. */
+export const OATHBREAKER_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
+
+/** Prophecy stakes: turns added to the prophet's NEXT weekly grant when
+ *  a prophecy resolves. Capped to a single application per week. */
+export const PROPHECY_BONUS_TURNS = 5;
+/** Prophecy stakes: hard ceiling on `pendingProphecyBonus`. Even if a
+ *  player has multiple prophecies resolve within a single week, the
+ *  weekly grant adds at most this many extra turns. */
+export const PROPHECY_BONUS_TURNS_MAX = 5;
+
+/** Queued orders: max queued (status === "queued") per player. */
+export const QUEUED_ORDERS_MAX_PER_PLAYER = 20;

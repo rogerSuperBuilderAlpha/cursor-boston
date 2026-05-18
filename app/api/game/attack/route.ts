@@ -32,6 +32,7 @@ export async function POST(request: NextRequest) {
       offenseSpellId: parsed.data.offenseSpellId ?? null,
       heroAction: parsed.data.heroAction,
       heroActionOnConvertFail: parsed.data.heroActionOnConvertFail,
+      dispatch: parsed.data.dispatch,
     });
     return apiSuccess({
       attack: result.attack,

@@ -123,5 +123,9 @@ This Code of Conduct is adapted from the [Contributor Covenant](https://www.cont
 version 2.1, available at
 https://www.contributor-covenant.org/version/2/1/code_of_conduct.html
 
+**Why 2.1 rather than 3.0?** Contributor Covenant 3.0 was released in 2025 with restructured "Encouraged / Restricted Behaviors" sections and a renamed Enforcement Ladder (Warning → Temporarily Limited Activities → Temporary Suspension → Permanent Ban). The 3.0 wording is good. The 2.1 wording is also good, and our Enforcement section (above) is **customized for this project** — it routes reports to our in-product `Report` flow, our `block-user` affordance, and a triaged email channel rather than the generic Covenant boilerplate. That customization is the most valuable part of this document for actual incident response, and a wholesale swap to 3.0 verbatim would erase it. We've reviewed 3.0 (2026-05-18) and consciously retained 2.1 + project customizations. We will revisit on the next 90-day OSS review cycle (2026-08-18).
+
 For answers to common questions about this code of conduct, see
 https://www.contributor-covenant.org/faq
+
+_Last reviewed: 2026-05-18 against Contributor Covenant 3.0._

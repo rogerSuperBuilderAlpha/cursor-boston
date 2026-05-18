@@ -215,12 +215,13 @@ export function TileActionsModal({
               player={player}
               ownedTiles={ownedTiles}
               busy={busy}
-              onAttack={(sourceTileId, units, offenseSpellId) =>
+              onAttack={(sourceTileId, units, offenseSpellId, dispatch) =>
                 callApi("/api/game/attack", {
                   sourceTileId,
                   targetTileId: tile.tileId,
                   units,
                   offenseSpellId,
+                  ...(dispatch ? { dispatch } : {}),
                   // Only forward hero choices when the target actually has a
                   // hero — keeps the request shape clean for normal tiles.
                   ...(tile.hero ? { heroAction } : {}),

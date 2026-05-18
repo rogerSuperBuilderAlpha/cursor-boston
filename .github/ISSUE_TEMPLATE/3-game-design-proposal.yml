@@ -1,0 +1,86 @@
+name: Game design proposal (Generals)
+description: Propose a change to the Generals game — new unit, spell, hero, balance change, narrative addition, UI/icon work.
+title: "[game] "
+labels: ["enhancement", "game"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for proposing a change to Generals.
+
+        Before filing this, please read the relevant doc under [`docs/generals/`](https://github.com/rogerSuperBuilderAlpha/cursor-boston/tree/develop/docs/generals) — every game subsystem (units, spells, heroes, artifacts, castes, buildings, balance, lore, UI) has its own canonical doc that defines the design constraints. Proposals that ignore those constraints will be redirected.
+
+  - type: dropdown
+    id: subsystem
+    attributes:
+      label: Subsystem
+      description: Which game area does this affect? Read the linked doc first.
+      options:
+        - "units (docs/generals/UNITS.md)"
+        - "spells (docs/generals/SPELLS.md)"
+        - "heroes (docs/generals/HEROES.md)"
+        - "artifacts (docs/generals/ARTIFACTS.md)"
+        - "castes (docs/generals/CASTES.md)"
+        - "buildings (docs/generals/BUILDINGS.md)"
+        - "armageddon end-game (docs/generals/ARMAGEDDON.md)"
+        - "non-turn activities — profiles, titles, reactions, dispatches, pacts, prophecies (docs/generals/NON_TURN_ACTIVITIES.md)"
+        - "lore / narrative (docs/generals/LORE.md)"
+        - "balance — numeric tuning (docs/generals/BALANCE.md)"
+        - "UI / icons / graphics (docs/generals/UI_AND_GRAPHICS.md)"
+        - "cross-cutting / new subsystem"
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: One paragraph. What is the change? Don't justify it yet — just describe it.
+      placeholder: Add a "Plague" spell to Necromancer caste — 3 tiles range, 2-turn cooldown, deals 10% population damage per turn for 3 turns.
+    validations:
+      required: true
+
+  - type: textarea
+    id: narrative-fit
+    attributes:
+      label: Narrative fit
+      description: How does this fit the caste / world lore? Reference [`LORE.md`](https://github.com/rogerSuperBuilderAlpha/cursor-boston/blob/develop/docs/generals/LORE.md) or existing units/spells/heroes that justify the addition.
+      placeholder: Necromancer caste is already the "decay / corruption" caste (per LORE.md §3). A plague spell extends that thematic rather than introducing a new domain.
+    validations:
+      required: true
+
+  - type: textarea
+    id: balance
+    attributes:
+      label: Balance impact
+      description: How does this interact with existing numeric bands (see [`BALANCE.md`](https://github.com/rogerSuperBuilderAlpha/cursor-boston/blob/develop/docs/generals/BALANCE.md))? What does it counter / what counters it?
+      placeholder: Plague (10%/turn × 3 = 27% net population loss) sits between Fireball (15% one-shot) and Famine (30% over 5 turns). Hard-countered by the Cleric's Purify spell.
+    validations:
+      required: true
+
+  - type: textarea
+    id: implementation-notes
+    attributes:
+      label: Implementation notes (optional)
+      description: File paths likely to change. Look at `lib/game/` and `app/api/game/` for the surface.
+
+  - type: dropdown
+    id: claim
+    attributes:
+      label: Are you proposing to ship this yourself?
+      options:
+        - "Yes — I'll open the PR against the `game-contributions` branch"
+        - "Maybe — I'd like feedback first"
+        - "No — proposing for someone else to pick up"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks before submitting
+      options:
+        - label: I read the relevant doc(s) under `docs/generals/` and my proposal honors the constraints defined there.
+          required: true
+        - label: I read `docs/generals/BALANCE.md` and my proposal fits the existing numeric bands (or I have explained why it should expand them).
+          required: true

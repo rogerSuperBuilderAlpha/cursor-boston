@@ -13,6 +13,8 @@ Read docs in this order depending on your goal:
 | 7 | [VERCEL.md](VERCEL.md) | Why PRs do not deploy to Vercel; production-only settings |
 | 8 | [Architecture Decision Records](adr/README.md) | Why the project is built the way it is |
 
+**Site visitor map:** [USER_GUIDE.md](USER_GUIDE.md) lists every public section on cursorboston.com with one-line descriptions — start here when you're trying to find where something lives.
+
 **Generals (the strategy game at `/game`):** open contribution surface for lore, units, spells, artifacts, castes, buildings, and UI. Start at [generals/README.md](generals/README.md).
 
 **Operations / events** (not required for typical code contributions):

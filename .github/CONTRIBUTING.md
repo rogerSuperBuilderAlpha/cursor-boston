@@ -39,6 +39,41 @@ Thank you for your interest in contributing to Cursor Boston! This document prov
 >
 > **New to open source?** Follow the [First Contribution Guide](../docs/FIRST_CONTRIBUTION.md) for a step-by-step walkthrough, or the [Development Guide](../docs/DEVELOPMENT.md) for full setup, scripts, and troubleshooting.
 
+## Your first PR in 5 minutes
+
+If you already know how to use Git and just want the shortest path from a blank slate to a merged PR:
+
+1. **Fork this repo on GitHub.** Click *Fork* at the top right of [the repo page](https://github.com/rogerSuperBuilderAlpha/cursor-boston). This creates `your-username/cursor-boston` on your account.
+2. **Clone your fork** and add the upstream remote:
+   ```bash
+   git clone https://github.com/your-username/cursor-boston.git
+   cd cursor-boston
+   git remote add upstream https://github.com/rogerSuperBuilderAlpha/cursor-boston.git
+   npm install
+   cp .env.local.demo .env.local   # zero-config demo mode
+   npm run dev                      # opens http://localhost:3000
+   ```
+3. **Make your change** on a branch off `develop`:
+   ```bash
+   git checkout -b feature/your-change
+   ```
+   Edit, save, and verify the dev server reflects what you intended.
+4. **Commit with a DCO sign-off** (the `-s` flag is required):
+   ```bash
+   git commit -s -m "feat(scope): short imperative description"
+   ```
+5. **Push and open a pull request** against `develop`:
+   ```bash
+   git push origin feature/your-change
+   ```
+   Then click the *Compare & pull request* button on your fork's GitHub page. Make sure the base branch is `develop` (the default).
+
+That's the loop. Everything below explains the policy, code style, branching, claiming issues, and the long list of things the maintainer team checks before merge. If you want the model of what an excellent contributor-facing surface looks like for a focused subsystem, read **[`docs/generals/README.md`](../docs/generals/README.md)** — the Generals (game) contributor docs are the highest-quality contribution surface in the repo and are explicitly the model future feature projects should imitate.
+
+For substantial changes (new core API, major refactor, new subsystem), open an **[RFC](../docs/rfcs/README.md)** before opening implementation PRs. ADRs in [`docs/adr/`](../docs/adr/README.md) record the *why* after the fact; RFCs propose changes *before* they ship.
+
+The current roadmap lives at **[ROADMAP.md](../ROADMAP.md)** — claim-and-build feature projects, planned releases, and where each is in its cycle.
+
 ## Contribution policy (fork and pull request only)
 
 **If you are contributing code or content, you must use the fork workflow.** Fork this repo on GitHub, set **`origin` to your fork**, push branches there, and open a **pull request** into `rogerSuperBuilderAlpha/cursor-boston` with base branch **`develop`**. Do **not** push feature branches directly to the upstream repository (you typically will not have permission; if you do, that path is still not the supported contribution model). Maintainers merge approved PRs; contributors do not self-merge unless [GOVERNANCE](GOVERNANCE.md) explicitly allows it.
@@ -60,7 +95,8 @@ Most PRs go to `develop`. A handful go to **long-lived submission branches** —
 | Standard code, bug fix, feature, docs | **`develop`** |
 | PyData hackathon notebook | **`pydata-2026-submissions`** ([details](../pydata-2026-submissions/README.md)) |
 | Hack-a-Sprint showcase project | **`hack-a-sprint-2026-submissions`** ([details](../content/hackathons/hack-a-sprint-2026/submissions/README.md)) |
-| Summer cohort week N submission | **`c1w1pm-submission`** / **`c1w2comms-submission`** / **`c1w3mkt-submission`** / **`c1w4edu-submission`** / **`c1w5startup-submission`** / **`c1w6oss-submission`** |
+| Summer cohort 1 week N submission | **`c1w1pm-submission`** / **`c1w2comms-submission`** / **`c1w3mkt-submission`** / **`c1w4edu-submission`** / **`c1w5startup-submission`** / **`c1w6oss-submission`** |
+| Summer cohort 2 vote-format week N submission | **`c2w1pm-submission`** / **`c2w2comms-submission`** / **`c2w3mkt-submission`** |
 | Game-mode content (units, artifacts, lore) | **`game-contributions`** |
 | Maintainer application | **`maintainer-application`** (see [GOVERNANCE](GOVERNANCE.md#becoming-a-maintainer)) |
 
@@ -76,12 +112,24 @@ We document significant architectural choices in short, numbered records so futu
 
 **When to update an existing ADR:** If your PR supersedes a previous decision, update the old ADR's status to `Superseded` and link to the new one.
 
+## RFCs — proposing substantial changes
+
+ADRs record decisions *after* implementation. **RFCs** propose substantial changes *before* implementation begins, so the community can shape the design while the cost of changing direction is still low. RFCs live in [`docs/rfcs/`](../docs/rfcs/README.md) with a [template](../docs/rfcs/0000-template.md).
+
+**Open an RFC** when the change introduces a new subsystem, a new public contract, a major refactor (>10 files), a new load-bearing external dependency, or touches governance / release process. The RFC stays open for at least 7 days (14 for substantial proposals) before a decision.
+
+**Don't open an RFC** for bug fixes, docs improvements, balance changes to Generals (use the [game design proposal issue template](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/new/choose) instead), or features that fit an existing subsystem and contract pattern. When in doubt, ask in `#maintainers` on Discord.
+
+After the RFC ships, a corresponding ADR is added under [`docs/adr/`](../docs/adr/README.md) as the canonical post-hoc record. The RFC stays as the historical proposal.
+
 ## Table of Contents
 
+- [Your first PR in 5 minutes](#your-first-pr-in-5-minutes)
 - [Contribution policy (fork and pull request only)](#contribution-policy-fork-and-pull-request-only)
 - [Branching model (develop and main)](#branching-model-develop-and-main)
 - [Where to PR — submission branch routing](#where-to-pr--submission-branch-routing)
 - [Architecture Decision Records](#architecture-decision-records)
+- [RFCs — proposing substantial changes](#rfcs--proposing-substantial-changes)
 - [Code of Conduct](#code-of-conduct)
 - [Developer Certificate of Origin](#developer-certificate-of-origin)
 - [Getting Started](#getting-started)
@@ -100,28 +148,13 @@ This project adheres to a [Code of Conduct](CODE_OF_CONDUCT.md). By participatin
 
 ## Developer Certificate of Origin
 
-This project uses the [Developer Certificate of Origin (DCO)](DCO.md) to ensure that contributors have the right to submit their contributions under the project's open source license.
-
-**All commits must be signed off** to indicate your agreement with the DCO:
+All commits must be signed off (the `-s` flag) to certify the contribution under the [DCO](DCO.md):
 
 ```bash
 git commit -s -m "Your commit message"
 ```
 
-The `-s` flag adds a `Signed-off-by` line to your commit message:
-
-```
-Signed-off-by: Your Name <your.email@example.com>
-```
-
-Make sure your Git name and email are configured:
-
-```bash
-git config --global user.name "Your Name"
-git config --global user.email "your.email@example.com"
-```
-
-Pull requests with unsigned commits will not be merged. See [DCO.md](DCO.md) for more details.
+This adds a `Signed-off-by: Your Name <your.email@example.com>` line to the commit. PRs with unsigned commits are blocked by the `dco.yml` workflow. See [DCO.md](DCO.md) for the full text of what you're certifying and how to fix a missing sign-off on past commits.
 
 ## Getting Started
 
@@ -555,8 +588,8 @@ If you have questions or need help:
    - Check our [Luma events](https://lu.ma/cursor-boston)
 
 4. **Report Issues**
-   - Use the [bug report template](.github/ISSUE_TEMPLATE/bug_report.md)
-   - Include steps to reproduce and environment details
+   - Pick the right [issue template](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/new/choose) — bug report, feature request, or game design proposal
+   - Bug reports use a YAML form with required fields (area dropdown, env, browser, repro steps)
 
 ## Additional Resources
 

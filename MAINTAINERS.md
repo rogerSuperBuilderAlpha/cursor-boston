@@ -38,4 +38,18 @@ Aaron holds the **Community Maintainer** title rather than the standard Maintain
 - [`.github/CONTRIBUTING.md`](.github/CONTRIBUTING.md) — fork workflow, `develop` / `main`, DCO, submission-branch routing
 - [`docs/RELEASING.md`](docs/RELEASING.md) — tag-driven releases, GitHub Releases, release PRs
 - [`docs/SUBMISSION_BRANCHES.md`](docs/SUBMISSION_BRANCHES.md) — what the persistent contribution branches are and when they're used
-- [`.github/ACTIVE_ISSUES.md`](.github/ACTIVE_ISSUES.md) — current roadmap and where to file new issues
+- [`ROADMAP.md`](ROADMAP.md) — current roadmap and where to file new issues (mirrored at `.github/ACTIVE_ISSUES.md`)
+
+## Emeritus
+
+Maintainers who have stepped down but whose contributions are recognized. None currently.
+
+_When a maintainer steps down (graceful step-down per [GOVERNANCE.md](.github/GOVERNANCE.md), or 6+ months of inactivity at a quarterly review), they're moved here with the date they joined and the date they stepped down. The emeritus role retains community recognition but no merge rights._
+
+## Project Lead succession
+
+Current Project Lead: **Roger Hunt** ([@rogerSuperBuilderAlpha](https://github.com/rogerSuperBuilderAlpha)).
+
+Designated successor: _vacant — to be filled at the 2026-Q3 quarterly review._
+
+The succession process is documented in [`.github/GOVERNANCE.md`](.github/GOVERNANCE.md) § Contributor ladder → Succession plan for the Project Lead role. In short: if the Project Lead becomes unreachable for >30 days without prior notice, the maintainer team takes over by consensus and selects an Acting Project Lead within 14 days.

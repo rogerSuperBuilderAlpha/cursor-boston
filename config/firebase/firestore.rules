@@ -464,6 +464,42 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
+    // Game — Heroes v2 registry. Persistent records for every hero that
+    // has ever existed; survives Armageddon. World-readable so the All
+    // Heroes / Hall of the Fallen views work. Per-hero visibility filtering
+    // (hide currentTileId/stamina unless viewer is adjacent or owner) is
+    // enforced at the API layer, not in rules. All writes go through the
+    // Admin SDK via lib/game/hero-registry.ts.
+    match /game_heroes/{heroId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if false;
+
+      // Per-hero append-only event log. Same rule shape — authenticated
+      // read, server-only writes. Event filtering (only show events from
+      // your tenure unless hero is deceased) is enforced at the API layer.
+      match /events/{eventId} {
+        allow read: if request.auth != null;
+        allow create, update, delete: if false;
+      }
+
+      // In-game chronicle chapters contributed via the hero detail page.
+      // Authenticated read; all writes flow through /api/game/heroes/
+      // [heroId]/chapter (rate-limited, owner-auto-approves, others
+      // submit pending). Soft-delete by author or admin.
+      match /chapters/{chapterId} {
+        allow read: if request.auth != null;
+        allow create, update, delete: if false;
+      }
+
+      // Eulogies posted on deceased / awaiting-resurrection heroes.
+      // Authenticated read; writes flow through /api/game/heroes/
+      // [heroId]/epitaph. Soft-delete by author or admin.
+      match /epitaphs/{epitaphId} {
+        allow read: if request.auth != null;
+        allow create, update, delete: if false;
+      }
+    }
+
     // Game — Community chat (free-form message board). Reads are
     // authenticated. All writes (create + soft-delete) flow through
     // /api/game/community/chat which validates ownership and admin
@@ -471,6 +507,45 @@ service cloud.firestore {
     // would bypass the rate-limit + length checks, so deny.
     match /game_community_messages/{messageId} {
       allow read: if request.auth != null;
+      allow create, update, delete: if false;
+    }
+
+    // Game — Per-user reaction trackers. Doc id encodes
+    // {userId}_{scope}_{docId}_{emojiIndex}; existence means "user has
+    // placed this reaction." Reads are authenticated; writes flow only
+    // through /api/game/reactions which keeps counters on the target
+    // docs in sync via FieldValue.increment.
+    match /game_reactions/{trackerId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if false;
+    }
+
+    // Phase 7: public non-aggression pacts. Authenticated read; writes
+    // through /api/game/pacts (rate-limited, server-side denorm of
+    // author/target display name + caste). Attack handler marks
+    // pact.brokenAt when the author attacks the target inside the
+    // window.
+    match /game_pacts/{pactId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if false;
+    }
+
+    // Phase 7: pre-filed Armageddon prophecies. Authenticated read;
+    // writes through /api/game/prophecies. Resolution (resolvedAt +
+    // fulfilledBy) is stamped by the Armageddon-cast handler when the
+    // targeted seal breaks.
+    match /game_prophecies/{prophecyId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if false;
+    }
+
+    // Zero-turn gameplay: queued battle plans that execute at the next
+    // weekly turn grant. A player can only read their own queue.
+    // Writes go through /api/game/orders (validation + per-player cap)
+    // and through the rollover executor when orders fire.
+    match /game_order_queue/{orderId} {
+      allow read: if request.auth != null
+        && resource.data.playerId == request.auth.uid;
       allow create, update, delete: if false;
     }
 

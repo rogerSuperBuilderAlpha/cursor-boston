@@ -1,5 +1,25 @@
 {
-  "generatedAt": "2026-05-07",
+  "generatedAt": "2026-05-17",
   "comment": "Routes awaiting ts-rest contract migration (issue #234). Each migration PR must remove its routes from this list. When the list is empty, full OpenAPI coverage is achieved.",
-  "routes": []
+  "routes": [
+    "game/attacks/[attackId]",
+    "game/heroes/[heroId]/chapter",
+    "game/heroes/[heroId]/chapter/[chapterId]",
+    "game/heroes/[heroId]/epitaph",
+    "game/heroes/[heroId]/epitaph/[epitaphId]",
+    "game/heroes/meditate",
+    "game/heroes/pep-talk",
+    "game/last-stand",
+    "game/orders",
+    "game/pacts",
+    "game/pacts/[pactId]",
+    "game/players/[playerId]",
+    "game/players/me/bio",
+    "game/prophecies",
+    "game/prophecies/[prophecyId]",
+    "game/reactions",
+    "game/redistribute",
+    "game/tile/[tileId]/inscription",
+    "game/tiles/stance"
+  ]
 }

@@ -182,6 +182,13 @@ The five existing castes are intentionally elemental + abstract:
 
 A new caste should fit the same shape. Things that work: amber/memory, slate/stone, sea/depths, void/silence, ash/aftermath. Things that don't: anything that maps to a real ethnic, religious, or political group.
 
+### Caste-scoped chat + special units (Phase 7 of non-turn activities)
+
+Two caste-specific surfaces ship with the game today:
+
+- **Caste-scoped chat rooms** — the dashboard `CommunityPanel` has a `Global` / `<your-caste>` tab. Messages posted in the caste room are only visible to members of that caste. Wired through `ChatScope = 'global' | 'caste:<color>'` in `lib/game/types.ts` and the chat handler validates that `scope === \`caste:${player.caste}\`` before accepting the post. See [NON_TURN_ACTIVITIES.md](NON_TURN_ACTIVITIES.md).
+- **Caste-themed special units** — farm heroes with the `summoner` specialty have a chance to roll caste-themed special units that join the player's pool, stationable on any owned tile. The special-unit pool lives at `lib/game/content/special-units/<caste>.ts`. If you add a new caste, you need to add a special-unit file for it (the farm-hero `summoner` path will throw otherwise). See [HEROES.md](HEROES.md).
+
 ---
 
 ## Things to ask before submitting
