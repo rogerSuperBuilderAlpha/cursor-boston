@@ -16,7 +16,7 @@
 
 All endpoints are under `/api/`. Authentication uses Firebase Auth ID tokens (Bearer) or session cookies. Spec: [`/openapi.json`](https://cursorboston.com/openapi.json) · interactive: [`/api/docs`](https://cursorboston.com/api/docs).
 
-**178 paths, 214 operations across 32 areas.**
+**179 paths, 215 operations across 32 areas.**
 
 ---
 
@@ -69,6 +69,7 @@ _Verifiable merged-PR certificates._
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
 | POST | `/api/certificate/claim` | Yes | Claim a Cursor Boston merged-PR certificate |
+| GET | `/api/certificate/mine` | Yes | List LinkedIn certificates issued to the signed-in user |
 
 ## Cfp
 

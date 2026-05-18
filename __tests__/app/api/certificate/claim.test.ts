@@ -166,6 +166,7 @@ describe("POST /api/certificate/claim", () => {
         issuedAt: { toDate: () => new Date("2026-01-01") },
         certName: "Cursor Boston Open Source Contributor",
         certUrl: "https://cursorboston.com/certificates/cert-u1",
+        kind: "contributor",
       },
     });
     mockGetAdminDb.mockReturnValue(db);
@@ -204,6 +205,7 @@ describe("POST /api/certificate/claim", () => {
         issuedAt: { toDate: () => new Date("2026-05-12") },
         certName: "Cursor Boston Open Source Contributor",
         certUrl: "https://cursorboston.com/certificates/cert-u1",
+        kind: "contributor",
       },
     });
     mockGetAdminDb.mockReturnValue(db);
@@ -219,6 +221,7 @@ describe("POST /api/certificate/claim", () => {
     expect(payload.githubLogin).toBe("octocat");
     expect(payload.displayName).toBe("Pat Dev");
     expect(payload.pullRequestsCount).toBe(15);
+    expect(payload.kind).toBe("contributor");
   });
 
   it("returns 500 when the read-back of the created certificate fails to parse", async () => {
