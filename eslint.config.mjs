@@ -96,6 +96,15 @@ const config = tseslint.config(
     },
   },
   {
+    // Test files use mock `next/image` shims that render a bare <img>;
+    // alt-text and other a11y rules don't apply to test mocks. Keep
+    // these as advisory in tests rather than blocking.
+    files: ["__tests__/**/*.{ts,tsx}", "**/*.test.{ts,tsx}", "e2e/**/*.{ts,tsx}"],
+    rules: {
+      "jsx-a11y/alt-text": "off",
+    },
+  },
+  {
     ignores: [
       ".next/**",
       "out/**",
