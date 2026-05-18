@@ -53,19 +53,19 @@ const customJestConfig = {
   // allowlisted lore subcollections — chapters, epitaphs). Registry
   // additions are static data covered transitively by the existing
   // registry self-check test; cascade-test growth lags by ~1pp.
-  // Current totals (2026-05-18 CI, after coverage pushes #23-71): statements ~45.5%,
-  // branches ~33.4%, lines ~46.9%, functions ~35.8%. Push #71 added the
-  // app/api/all-routes-smoke.test.ts bulk import sweep, lifting statements
-  // +2.5pp in one shot. Floors set ~0.5pp below current → any regression
-  // fails CI. Ratchet these UP as tests are added; the OSS-readiness lift
-  // (Phase 5.4) targets statements ≥80% (OpenSSF Silver
-  // `test_statement_coverage80`).
+  // Current totals (2026-05-18 CI, after coverage pushes #23-73): statements ~48.5%,
+  // branches ~33.4%, lines ~50.2%, functions ~35.8%. Pushes #71-73 added
+  // the bulk smoke-import sweeps for app/api/, app/**/_components/,
+  // components/, and app/**/page.tsx — lifted statements +5pp and lines
+  // +6pp in three PRs (branches + functions unchanged because module-init
+  // doesn't add new branches or function declarations).
+  // Floors set ~0.5pp below current → any regression fails CI.
   coverageThreshold: {
     global: {
       branches: 33,
       functions: 35,
-      lines: 46,
-      statements: 45,
+      lines: 50,
+      statements: 48,
     },
   },
   // Generate JSON summary for CI coverage checks
