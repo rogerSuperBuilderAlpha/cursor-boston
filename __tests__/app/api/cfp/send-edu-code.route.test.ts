@@ -103,6 +103,7 @@ function makeRawRequest(body: string, hasAuth = true) {
 describe("POST /api/cfp/send-edu-code", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockSendEmail.mockResolvedValue(undefined);
     mockGetUserByEmail.mockRejectedValue(new Error("not found"));
     mockDocGet.mockResolvedValue({ exists: false });
     mockUserDoc = {
@@ -258,4 +259,130 @@ describe("POST /api/cfp/send-edu-code", () => {
     const data = await res.json();
     expect(data.error).toMatch(/failed/i);
   });
+
+  // --- Mailgun error handling ---
+
+  it("returns 500 when Mailgun API returns 401 unauthorized", async () => {
+    mockGetVerifiedUser.mockResolvedValue(testUser);
+    mockSendEmail.mockRejectedValue(
+      Object.assign(new Error("Invalid API key"), { status: 401 })
+    );
+    const res = await POST(makeRequest({ email: "student@mit.edu" }));
+    expect(res.status).toBe(500);
+    const data = await res.json();
+    expect(data.error).toMatch(/failed/i);
+  });
+
+  it("returns 500 when Mailgun rejects recipient domain", async () => {
+    mockGetVerifiedUser.mockResolvedValue(testUser);
+    mockSendEmail.mockRejectedValue(
+      new Error("The domain is not allowed to receive mail")
+    );
+    const res = await POST(makeRequest({ email: "student@mit.edu" }));
+    expect(res.status).toBe(500);
+    const data = await res.json();
+    expect(data.error).toMatch(/failed/i);
+  });
+
+  it("returns 500 when Mailgun request times out", async () => {
+    mockGetVerifiedUser.mockResolvedValue(testUser);
+    mockSendEmail.mockRejectedValue(
+      Object.assign(new Error("ETIMEDOUT"), { code: "ETIMEDOUT" })
+    );
+    const res = await POST(makeRequest({ email: "student@mit.edu" }));
+    expect(res.status).toBe(500);
+    const data = await res.json();
+    expect(data.error).toMatch(/failed/i);
+  });
+
+  it("returns 500 when Mailgun rate limits the request", async () => {
+    mockGetVerifiedUser.mockResolvedValue(testUser);
+    mockSendEmail.mockRejectedValue(
+      Object.assign(new Error("Too many requests"), { status: 429 })
+    );
+    const res = await POST(makeRequest({ email: "student@mit.edu" }));
+    expect(res.status).toBe(500);
+    const data = await res.json();
+    expect(data.error).toMatch(/failed/i);
+  });
+
+  it("returns 500 when Mailgun domain is not verified", async () => {
+    mockGetVerifiedUser.mockResolvedValue(testUser);
+    mockSendEmail.mockRejectedValue(
+      Object.assign(new Error("Forbidden - domain not verified"), { status: 403 })
+    );
+    const res = await POST(makeRequest({ email: "student@mit.edu" }));
+    expect(res.status).toBe(500);
+    const data = await res.json();
+    expect(data.error).toMatch(/failed/i);
+  });
+
+  it("returns 500 when Mailgun rejects invalid from address", async () => {
+    mockGetVerifiedUser.mockResolvedValue(testUser);
+    mockSendEmail.mockRejectedValue(
+      Object.assign(new Error("'from' parameter is not a valid address"), {
+        status: 400,
+      })
+    );
+    const res = await POST(makeRequest({ email: "student@mit.edu" }));
+    expect(res.status).toBe(500);
+    const data = await res.json();
+    expect(data.error).toMatch(/failed/i);
+  });
+
+  it("returns 500 when Mailgun API is unreachable", async () => {
+    mockGetVerifiedUser.mockResolvedValue(testUser);
+    mockSendEmail.mockRejectedValue(
+      Object.assign(new Error("connect ECONNREFUSED 34.117.91.133:443"), {
+        code: "ECONNREFUSED",
+      })
+    );
+    const res = await POST(makeRequest({ email: "student@mit.edu" }));
+    expect(res.status).toBe(500);
+    const data = await res.json();
+    expect(data.error).toMatch(/failed/i);
+  });
+
+  it("returns 500 when DNS cannot resolve Mailgun API", async () => {
+    mockGetVerifiedUser.mockResolvedValue(testUser);
+    mockSendEmail.mockRejectedValue(
+      Object.assign(new Error("getaddrinfo ENOTFOUND api.mailgun.net"), {
+        code: "ENOTFOUND",
+      })
+    );
+    const res = await POST(makeRequest({ email: "student@mit.edu" }));
+    expect(res.status).toBe(500);
+    const data = await res.json();
+    expect(data.error).toMatch(/failed/i);
+  });
+
+  it("does not expose Mailgun internals in error response", async () => {
+    mockGetVerifiedUser.mockResolvedValue(testUser);
+    mockSendEmail.mockRejectedValue(
+      Object.assign(new Error("Invalid API key key-abc123secret"), { status: 401 })
+    );
+    const res = await POST(makeRequest({ email: "student@mit.edu" }));
+    expect(res.status).toBe(500);
+    const data = await res.json();
+    expect(data.error).toBe("Failed to send verification code");
+    const responseText = JSON.stringify(data);
+    expect(responseText).not.toMatch(/mailgun/i);
+    expect(responseText).not.toMatch(/api.key/i);
+    expect(responseText).not.toMatch(/key-/i);
+    expect(responseText).not.toMatch(/invalid api key/i);
+    expect(responseText).not.toMatch(/etimedout/i);
+    expect(responseText).not.toMatch(/econnrefused/i);
+  });
+
+  it("saves verification code to Firestore before sending email", async () => {
+    mockGetVerifiedUser.mockResolvedValue(testUser);
+    mockSendEmail.mockRejectedValue(new Error("Send failed"));
+    const res = await POST(makeRequest({ email: "student@mit.edu" }));
+    expect(res.status).toBe(500);
+    expect(mockSet).toHaveBeenCalled();
+  });
+
+  // NOTE: lib/mailgun.ts has no built-in retry logic. If sendEmail fails,
+  // the verification code is already saved to Firestore, so the user can
+  // request a new code. Automatic retry is documented as future work.
 });
