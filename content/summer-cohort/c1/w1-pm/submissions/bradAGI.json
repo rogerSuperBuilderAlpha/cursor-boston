@@ -1,0 +1,10 @@
+{
+  "githubHandle": "bradAGI",
+  "name": "Brad Egan",
+  "photoUrl": "https://lh3.googleusercontent.com/a/ACg8ocIC-U9ZMsY6U_D0bkeaoiX_7F8Tfp7v07O0hkwyduAZPbb-Ow=s96-c",
+  "repoUrl": "https://github.com/bradAGI/project_management_cursor",
+  "liveUrl": "https://cohort-tracker.fly.dev",
+  "loomUrl": "https://www.loom.com/share/PLACEHOLDER",
+  "pitch": "A live cohort tracker built for cohorts like this one — admins run weekly rounds, builders submit projects, and the cohort votes the winner; deployed end-to-end on Fly.io this week.",
+  "competeForWin": false
+}
