@@ -53,12 +53,11 @@ const customJestConfig = {
   // allowlisted lore subcollections — chapters, epitaphs). Registry
   // additions are static data covered transitively by the existing
   // registry self-check test; cascade-test growth lags by ~1pp.
-  // Current totals (2026-05-18 CI, after coverage pushes #23-58): statements ~40.7%,
-  // branches ~31.4%, lines ~41.9%, functions ~33.2%. Pushes #45-58 lifted
-  // statements ~3.3pp via lib/game/{data-server-{constants,errors,reads},
-  // community,hero-lore,world-snapshot,armageddon-resolve,reactions} +
-  // lib/{maintainer-github-queue,cursor/cloud-agents,summer-cohort-{intake,
-  // submissions},hackathon-asprint-2026-credit-eligibility,blog}.
+  // Current totals (2026-05-18 CI, after coverage pushes #23-64): statements ~41.9%,
+  // branches ~32.5%, lines ~43.1%, functions ~34.6%. Pushes #59-64 added
+  // lib/hackathon-{pool-dashboard-server,asprint-2026-award-profile-sync,
+  // showcase-admin}, lib/mentorship/data-server, lib/questions/service (52→96%),
+  // and lib/live-sessions/client (14→96%).
   // Floors set ~0.5pp below current → any regression fails CI.
   // Ratchet these UP as tests are added; the OSS-readiness lift (Phase 5.4)
   // targets statements ≥80% (OpenSSF Silver `test_statement_coverage80`) by
@@ -66,10 +65,10 @@ const customJestConfig = {
   // layer at lib/game/data-server.ts etc.
   coverageThreshold: {
     global: {
-      branches: 30,
-      functions: 32,
-      lines: 41,
-      statements: 40,
+      branches: 32,
+      functions: 34,
+      lines: 43,
+      statements: 41,
     },
   },
   // Generate JSON summary for CI coverage checks
