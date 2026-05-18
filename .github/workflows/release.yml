@@ -14,7 +14,8 @@ on:
 permissions:
   contents: write
   pull-requests: read
-  id-token: write  # Required for Sigstore keyless signing
+  id-token: write       # Required for Sigstore keyless signing
+  attestations: write   # Required for actions/attest-build-provenance (SLSA L2)
 
 jobs:
   release:
