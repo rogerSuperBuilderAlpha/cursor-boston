@@ -504,6 +504,13 @@ function SummerCohortPageInner() {
    *  expanding shows the editable form. */
   const [editingDetails, setEditingDetails] = useState(false);
 
+  // Tonight's (Mon May 18 2026) 6pm EST Zoom call banner — auto-hides after
+  // the cutoff. Captured once at mount via lazy initializer to keep render
+  // pure (react-hooks/purity).
+  const [showTonightZoomBanner] = useState(
+    () => Date.now() < new Date("2026-05-19T04:00:00Z").getTime()
+  );
+
   const [activeTab, setActiveTab] = useState<CohortTabId>(
     SUMMER_COHORT_C1_DEFAULT_TAB
   );
@@ -1098,6 +1105,41 @@ function SummerCohortPageInner() {
                       Take it →
                     </span>
                   </button>
+                ) : null}
+                {isCohort1Selected && showTonightZoomBanner ? (
+                  <div className="mt-6 rounded-xl border border-sky-300 bg-sky-50 p-4 dark:border-sky-800 dark:bg-sky-950/30">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-sky-900 dark:text-sky-100">
+                          Tonight · Mon May 18 · 6 pm EST — Week 1 review + Week 2 kickoff
+                        </p>
+                        <p className="mt-0.5 text-xs text-sky-800 dark:text-sky-200">
+                          Hop on Zoom — we&apos;ll walk through what people shipped in Week 1, then kick off Week 2 (Comms build).
+                        </p>
+                        <p className="mt-1 text-xs text-sky-700 dark:text-sky-300">
+                          Meeting ID:{" "}
+                          <strong className="font-semibold">924 1507 7928</strong>
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 flex-wrap gap-2">
+                        <a
+                          href="https://bentley.zoom.us/j/92415077928"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center rounded-lg bg-sky-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-sky-700"
+                        >
+                          Join Zoom →
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab("week-2")}
+                          className="inline-flex items-center rounded-lg border border-sky-300 bg-white px-3 py-2 text-xs font-semibold text-sky-800 transition-colors hover:bg-sky-100 dark:border-sky-700 dark:bg-neutral-900 dark:text-sky-200 dark:hover:bg-sky-900/40"
+                        >
+                          Open Week 2 →
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 ) : null}
                 <CohortTabs
                   activeTab={activeTab}
