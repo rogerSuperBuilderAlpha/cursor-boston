@@ -6,5 +6,5 @@
   "liveUrl": "https://cohort-tracker.fly.dev",
   "loomUrl": "https://www.loom.com/share/PLACEHOLDER",
   "pitch": "A live cohort tracker built for cohorts like this one — admins run weekly rounds, builders submit projects, and the cohort votes the winner; deployed end-to-end on Fly.io this week.",
-  "competeForWin": true
+  "competeForWin": false
 }
