@@ -9,16 +9,19 @@ Releases are **tag-driven**. The workflow [`.github/workflows/release.yml`](../.
 
 ## Steps
 
-1. Ensure `develop` is green (all required checks passing).
-2. From the commit you want to tag (usually the merge commit on `main` or `develop` per your policy), create a **signed** annotated tag (see [§ Signed tags](#signed-tags) below for one-time setup):
-   ```bash
-   git checkout main   # release from main; develop is also acceptable per repo policy
-   git pull
-   git tag -s v0.3.0 -m "release: v0.3.0"
-   git push origin v0.3.0
-   ```
-   The `-s` flag is required for releases from v0.3.0 forward — the release workflow rejects unsigned tags. The signature uses [gitsign](https://github.com/sigstore/gitsign) (keyless OIDC via Sigstore) by default; GPG also works.
-3. The **Release** workflow creates the GitHub Release. Verify assets, signed SBOMs (`.cosign.bundle`), and notes on the [Releases](https://github.com/rogerSuperBuilderAlpha/cursor-boston/releases) page.
+1. Ensure `develop` is green (all required checks passing) and that the develop → main release PR has merged.
+2. **Cut the signed tag** — preferred path is the **Cut signed release tag** GitHub Actions workflow, which uses the runner's OIDC token to sign via Sigstore (no local install needed):
+   - Go to **Actions → Cut signed release tag → Run workflow**.
+   - Inputs: `version` = `v0.3.0`, `ref` = `main` (default), `message` optional.
+   - The workflow creates a gitsign-signed annotated tag and pushes it. Pushing the tag triggers the **Release** workflow, which verifies the signature, signs the SBOMs via cosign, attests SLSA L2 provenance, and publishes the GitHub Release.
+   - Local-machine fallback (if Actions is unavailable) — see [§ Signed tags](#signed-tags) for one-time gitsign or GPG setup, then:
+     ```bash
+     git checkout main && git pull
+     git tag -s v0.3.0 -m "release: v0.3.0"
+     git push origin v0.3.0
+     ```
+   - Unsigned tags are rejected by the release workflow from v0.3.0 forward.
+3. Verify the GitHub Release on the [Releases](https://github.com/rogerSuperBuilderAlpha/cursor-boston/releases) page — assets include `sbom.json`, `sbom.spdx.json`, `*.cosign.bundle` signature bundles, and a SLSA provenance attestation.
 4. Update [CHANGELOG.md](../CHANGELOG.md) with the released version (keep [Keep a Changelog](https://keepachangelog.com/) style).
 
 ## Signed tags
