@@ -63,6 +63,14 @@
       "url": "https://www.bu.edu/articles/2025/open-source-ai-infectious-diseases-monitoring-tool",
       "date": "2025",
       "description": "BEACON combines AI analysis with human expert verification to monitor infectious disease outbreaks globally."
+    },
+    {
+      "id": "google-pair-guidebook",
+      "title": "People + AI Guidebook",
+      "source": "withGoogle",
+      "url": "https://pair.withgoogle.com/guidebook/",
+      "date": "2025",
+      "description": "The People + AI Guidebook is a collection of practical guidance for designing human-centered AI products."
     }
   ]
 }
