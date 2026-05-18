@@ -53,17 +53,19 @@ const customJestConfig = {
   // allowlisted lore subcollections — chapters, epitaphs). Registry
   // additions are static data covered transitively by the existing
   // registry self-check test; cascade-test growth lags by ~1pp.
-  // Current totals (2026-05-18 CI): statements ~31.9%, branches ~23.7%, lines ~32.4%, functions ~24.0%.
+  // Current totals (2026-05-18 CI, after coverage pushes #23-44): statements ~37.5%,
+  // branches ~28.2%, lines ~38.7%, functions ~30.1%.
   // Floors set ~0.5pp below current → any regression fails CI.
   // Ratchet these UP as tests are added; the OSS-readiness lift (Phase 5.4)
-  // targets statements ≥75% by adding ~150 tests across the 95 untested API
-  // route handlers and the game data layer at lib/game/data-server.ts etc.
+  // targets statements ≥80% (OpenSSF Silver `test_statement_coverage80`) by
+  // adding tests across the 95 untested API route handlers and the game data
+  // layer at lib/game/data-server.ts etc.
   coverageThreshold: {
     global: {
-      branches: 23,
-      functions: 23,
-      lines: 32,
-      statements: 31,
+      branches: 27,
+      functions: 29,
+      lines: 38,
+      statements: 37,
     },
   },
   // Generate JSON summary for CI coverage checks

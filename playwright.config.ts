@@ -25,7 +25,7 @@ export default defineConfig({
     command: 'npm run build && npm run start',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
+    timeout: 300_000,
     env: {
       NEXT_PUBLIC_FIREBASE_API_KEY: 'test-api-key',
       NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: 'test-project.firebaseapp.com',
