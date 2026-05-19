@@ -268,4 +268,107 @@ describe("GET /api/hackathons/showcase/hack-a-sprint-2026/admin-dashboard", () =
     const body = await res.json();
     expect(body.error).toBe("Failed to load dashboard");
   });
+
+  it("returns 401-like 403 when caller is unauthenticated (no user)", async () => {
+    mockGetVerifiedUser.mockResolvedValue(null);
+    const res = await GET(
+      makeAuthedRequest({
+        path: "/api/hackathons/showcase/hack-a-sprint-2026/admin-dashboard",
+      }),
+    );
+    expect(res.status).toBe(403);
+  });
+
+  it("handles submissions with no score docs (all null fields, rawScore null)", async () => {
+    mockGetVerifiedUser.mockResolvedValue(adminUser);
+    mockFetchSubmissions.mockResolvedValue([sampleSubmission] as never);
+    mockGetJudgeUidSet.mockReturnValue(new Set(["judge-1"]));
+    mockGetParticipantDocs.mockResolvedValue([]);
+    mockResolveVoterGithub.mockResolvedValue(new Map());
+
+    // No score data — getAll returns docs with exists=false
+    const db = buildDashboardDb();
+    mockGetAdminDb.mockReturnValue(db as never);
+
+    const { status, body } = await readJson<{ submissions: Array<{ rawScore: number | null; aiScore: number | null }> }>(
+      await GET(
+        makeAuthedRequest({
+          path: "/api/hackathons/showcase/hack-a-sprint-2026/admin-dashboard",
+        }),
+      ),
+    );
+    expect(status).toBe(200);
+    expect(body.submissions[0]?.aiScore).toBeNull();
+    expect(body.submissions[0]?.rawScore).toBeNull();
+  });
+
+  it("filters out judge scores outside the 1-10 range when computing judgeAverage", async () => {
+    mockGetVerifiedUser.mockResolvedValue(adminUser);
+    mockFetchSubmissions.mockResolvedValue([sampleSubmission] as never);
+    mockGetJudgeUidSet.mockReturnValue(new Set(["judge-1"]));
+    mockGetParticipantDocs.mockResolvedValue([]);
+    mockResolveVoterGithub.mockResolvedValue(new Map());
+
+    const db = buildDashboardDb();
+    db.getAll.mockImplementation(async (...refs: Array<{ id: string }>) =>
+      refs.map((ref) => ({
+        exists: true,
+        data: () => ({
+          aiScore: 11, // out-of-range, should be null
+          judgeScores: {
+            "judge-1": 99, // out-of-range, filtered
+            "judge-2": 0, // out-of-range, filtered
+            "judge-3": 7, // valid
+            "judge-4": "not-a-number", // wrong type, filtered
+          },
+          peerVoteCount: "not-a-number", // wrong type → 0
+        }),
+        id: ref.id,
+      })),
+    );
+    mockGetAdminDb.mockReturnValue(db as never);
+
+    const { body } = await readJson<{ submissions: Array<{ aiScore: number | null; judgeAverage: number | null; peerVoteCount: number }> }>(
+      await GET(
+        makeAuthedRequest({
+          path: "/api/hackathons/showcase/hack-a-sprint-2026/admin-dashboard",
+        }),
+      ),
+    );
+    expect(body.submissions[0].aiScore).toBeNull();
+    expect(body.submissions[0].judgeAverage).toBe(7); // only judge-3 counted
+    expect(body.submissions[0].peerVoteCount).toBe(0);
+  });
+
+  it("handles aiReasoning as a non-string (set to null) and empty whitespace (null)", async () => {
+    mockGetVerifiedUser.mockResolvedValue(adminUser);
+    mockFetchSubmissions.mockResolvedValue([sampleSubmission] as never);
+    mockGetJudgeUidSet.mockReturnValue(new Set([]));
+    mockGetParticipantDocs.mockResolvedValue([]);
+    mockResolveVoterGithub.mockResolvedValue(new Map());
+
+    const db = buildDashboardDb();
+    db.getAll.mockImplementation(async (...refs: Array<{ id: string }>) =>
+      refs.map((ref) => ({
+        exists: true,
+        data: () => ({
+          aiScore: 8,
+          aiReasoning: "   ", // whitespace-only
+          judgeScores: {}, // empty obj
+        }),
+        id: ref.id,
+      })),
+    );
+    mockGetAdminDb.mockReturnValue(db as never);
+
+    const { body } = await readJson<{ submissions: Array<{ aiReasoning: string | null; judgeAverage: number | null }> }>(
+      await GET(
+        makeAuthedRequest({
+          path: "/api/hackathons/showcase/hack-a-sprint-2026/admin-dashboard",
+        }),
+      ),
+    );
+    expect(body.submissions[0].aiReasoning).toBeNull();
+    expect(body.submissions[0].judgeAverage).toBeNull();
+  });
 });
