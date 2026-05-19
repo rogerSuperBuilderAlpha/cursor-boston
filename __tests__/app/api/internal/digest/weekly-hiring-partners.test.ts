@@ -3,8 +3,9 @@
  */
 
 import { NextRequest } from "next/server";
-import { GET } from "@/app/api/internal/digest/weekly-hiring-partners/route";
+import { GET, POST } from "@/app/api/internal/digest/weekly-hiring-partners/route";
 import { sendEmail } from "@/lib/mailgun";
+import { getAdminDb } from "@/lib/firebase-admin";
 
 jest.mock("@/lib/mailgun", () => ({
   sendEmail: jest.fn().mockResolvedValue(undefined),
@@ -20,7 +21,12 @@ jest.mock("@/lib/firebase-admin", () => ({
   })),
 }));
 
+jest.mock("@/lib/logger", () => ({
+  logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), logError: jest.fn() },
+}));
+
 const mockSendEmail = sendEmail as jest.MockedFunction<typeof sendEmail>;
+const mockGetAdminDb = getAdminDb as jest.MockedFunction<typeof getAdminDb>;
 
 const ORIGINAL_CRON_SECRET = process.env.CRON_SECRET;
 
@@ -120,5 +126,105 @@ describe("GET /api/internal/digest/weekly-hiring-partners", () => {
     expect(args.subject).toContain("2 pending");
     expect(args.text).toContain("Alice");
     expect(args.text).toContain("Bob");
+  });
+
+  it("returns 500 when CRON_SECRET env is missing", async () => {
+    const saved = process.env.CRON_SECRET;
+    delete process.env.CRON_SECRET;
+    try {
+      const res = await GET(makeReq({ "x-cron-secret": "anything" }));
+      expect(res.status).toBe(500);
+      const body = await res.json();
+      expect(body.error).toContain("CRON_SECRET not set");
+    } finally {
+      if (saved !== undefined) process.env.CRON_SECRET = saved;
+    }
+  });
+
+  it("returns 500 when admin db is unavailable", async () => {
+    mockGetAdminDb.mockReturnValueOnce(null as never);
+    const res = await GET(makeReq({ "x-cron-secret": "test-secret" }));
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body.error).toBe("Server not configured");
+  });
+
+  it("formats null appliedAtMs as '(unknown date)' in the rendered text", async () => {
+    mockWhereGet.mockResolvedValue({
+      docs: [
+        {
+          id: "user-no-date",
+          data: () => ({
+            contactName: "Carol",
+            email: "carol@example.com",
+            // No createdAt → toMillis undefined → appliedAtMs is null
+          }),
+        },
+      ],
+    });
+    const res = await GET(makeReq({ "x-cron-secret": "test-secret" }));
+    expect(res.status).toBe(200);
+    const args = mockSendEmail.mock.calls[0][0];
+    expect(args.text).toContain("(unknown date)");
+  });
+
+  it("returns 500 with the error message when the firestore query throws", async () => {
+    mockWhereGet.mockRejectedValueOnce(new Error("firestore down"));
+    const res = await GET(makeReq({ "x-cron-secret": "test-secret" }));
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body.ok).toBe(false);
+    expect(body.error).toBe("firestore down");
+  });
+
+  it("returns 500 with stringified non-Error throw", async () => {
+    mockWhereGet.mockRejectedValueOnce("hard-failure-string");
+    const res = await GET(makeReq({ "x-cron-secret": "test-secret" }));
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body.error).toBe("hard-failure-string");
+  });
+
+  it("escapes HTML special chars in row fields", async () => {
+    mockWhereGet.mockResolvedValue({
+      docs: [
+        {
+          id: "user-evil",
+          data: () => ({
+            contactName: "<script>alert(1)</script>",
+            email: "evil@example.com",
+            companyWebsite: "https://x.example.com?a=1&b=2",
+            rolesHiring: "ops & \"engineering\"",
+            notes: "needs 'help'",
+            createdAt: { toMillis: () => 1_700_000_000_000 },
+          }),
+        },
+      ],
+    });
+    const res = await GET(makeReq({ "x-cron-secret": "test-secret" }));
+    expect(res.status).toBe(200);
+    const args = mockSendEmail.mock.calls[0][0];
+    const html = args.html ?? "";
+    expect(html).toContain("&lt;script&gt;alert(1)&lt;/script&gt;");
+    expect(html).toContain("&amp;b=2");
+    expect(html).toContain("&quot;engineering&quot;");
+    expect(html).toContain("&#39;help&#39;");
+  });
+});
+
+describe("POST /api/internal/digest/weekly-hiring-partners", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("shares the same handler — accepts cron secret and returns 200", async () => {
+    mockWhereGet.mockResolvedValue({ docs: [] });
+    const res = await POST(makeReq({ "x-cron-secret": "test-secret" }));
+    expect(res.status).toBe(200);
+  });
+
+  it("returns 401 unauthorized without secret", async () => {
+    const res = await POST(makeReq());
+    expect(res.status).toBe(401);
   });
 });
