@@ -4,7 +4,10 @@
 
 import { GET } from "@/app/api/members/public/route";
 import { getAdminDb } from "@/lib/firebase-admin";
-import { computePublicMembersSnapshot } from "@/lib/members-public-snapshot";
+import {
+  computePublicMembersSnapshot,
+  rebuildPublicMembersSnapshot,
+} from "@/lib/members-public-snapshot";
 import type { PublicMember } from "@/types/members";
 
 jest.mock("@/lib/firebase-admin", () => ({
@@ -14,11 +17,15 @@ jest.mock("@/lib/firebase-admin", () => ({
 jest.mock("@/lib/members-public-snapshot", () => ({
   MEMBERS_SNAPSHOT_CACHE_TTL_MS: 6 * 60 * 60 * 1000,
   computePublicMembersSnapshot: jest.fn(),
+  rebuildPublicMembersSnapshot: jest.fn(),
 }));
 
 const mockGetAdminDb = getAdminDb as jest.MockedFunction<typeof getAdminDb>;
 const mockComputePublicMembersSnapshot = computePublicMembersSnapshot as jest.MockedFunction<
   typeof computePublicMembersSnapshot
+>;
+const mockRebuildPublicMembersSnapshot = rebuildPublicMembersSnapshot as jest.MockedFunction<
+  typeof rebuildPublicMembersSnapshot
 >;
 
 function buildMember(overrides: Partial<PublicMember> = {}): PublicMember {
@@ -71,6 +78,7 @@ describe("GET /api/members/public", () => {
     expect(res.status).toBe(200);
     expect(body.members).toEqual([member]);
     expect(mockComputePublicMembersSnapshot).not.toHaveBeenCalled();
+    expect(mockRebuildPublicMembersSnapshot).not.toHaveBeenCalled();
     expect(set).not.toHaveBeenCalled();
   });
 
@@ -80,21 +88,15 @@ describe("GET /api/members/public", () => {
       members: [],
       expiresAt: new Date(Date.now() + 60_000),
     });
-    mockComputePublicMembersSnapshot.mockResolvedValue([member]);
+    mockRebuildPublicMembersSnapshot.mockResolvedValue([member]);
 
     const res = await GET();
     const body = await res.json();
 
     expect(res.status).toBe(200);
     expect(body.members).toEqual([member]);
-    expect(mockComputePublicMembersSnapshot).toHaveBeenCalledTimes(1);
-    expect(set).toHaveBeenCalledWith(
-      expect.objectContaining({
-        members: [member],
-        expiresAt: expect.any(Date),
-        updatedAt: expect.any(Date),
-      })
-    );
+    expect(mockRebuildPublicMembersSnapshot).toHaveBeenCalledTimes(1);
+    expect(set).not.toHaveBeenCalled();
   });
 
   it("falls back to stale snapshot data if the rebuild fails", async () => {
@@ -103,7 +105,7 @@ describe("GET /api/members/public", () => {
       members: [member],
       expiresAt: new Date(Date.now() - 60_000),
     });
-    mockComputePublicMembersSnapshot.mockRejectedValue(new Error("rebuild failed"));
+    mockRebuildPublicMembersSnapshot.mockRejectedValue(new Error("rebuild failed"));
 
     const res = await GET();
     const body = await res.json();
