@@ -315,4 +315,172 @@ describe("useDashboardData", () => {
     expect(castSpell).toHaveBeenCalled();
     expect(castArmageddon).toHaveBeenCalled();
   });
+
+  // OpenSSF Gold coverage push #6 — exercises the merge-callback bodies
+  // (mergeOwnedTiles / mergeBorderTiles / mergeArtifacts) and the
+  // shouldTriggerResolve setTimeout branch on castArmageddon.
+
+  it("mergeOwnedTiles patches tiles state when action returns updates (Gold push)", async () => {
+    const user = makeUser();
+    mockUseAuth.mockReturnValue({ user, userProfile: null, loading: false });
+
+    // Seed initial tiles via fetchInitialData
+    (fetchInitialData as jest.Mock).mockImplementation(async (_user, set) => {
+      set.setTiles([FAKE_TILE]);
+      set.setLoading(false);
+    });
+    // frontierExplore mock invokes mergeOwnedTiles with a NEW tile to
+    // exercise lines 119-124 of use-dashboard-data.ts.
+    const NEW_TILE: MapTile = {
+      ...FAKE_TILE,
+      tileId: "2_0",
+      q: 2,
+    };
+    (frontierExplore as jest.Mock).mockImplementation(async (_u, _c, mut) => {
+      mut.mergeOwnedTiles([NEW_TILE]);
+    });
+
+    const { result } = renderHook(() => useDashboardData());
+    await waitFor(() => expect(result.current.tiles).toHaveLength(1));
+
+    await act(async () => {
+      await result.current.handleFrontierExplore(1);
+    });
+
+    await waitFor(() => expect(result.current.tiles).toHaveLength(2));
+    expect(result.current.tiles.map((t) => t.tileId).sort()).toEqual(["1_0", "2_0"]);
+  });
+
+  it("mergeOwnedTiles no-ops on empty updates (early-return branch)", async () => {
+    const user = makeUser();
+    mockUseAuth.mockReturnValue({ user, userProfile: null, loading: false });
+    (fetchInitialData as jest.Mock).mockImplementation(async (_u, set) => {
+      set.setTiles([FAKE_TILE]);
+      set.setLoading(false);
+    });
+    (frontierExplore as jest.Mock).mockImplementation(async (_u, _c, mut) => {
+      mut.mergeOwnedTiles([]);
+    });
+
+    const { result } = renderHook(() => useDashboardData());
+    await waitFor(() => expect(result.current.tiles).toHaveLength(1));
+
+    await act(async () => {
+      await result.current.handleFrontierExplore(1);
+    });
+    expect(result.current.tiles).toHaveLength(1);
+  });
+
+  it("mergeBorderTiles patches worldTiles for other-owner updates", async () => {
+    const user = makeUser();
+    mockUseAuth.mockReturnValue({ user, userProfile: null, loading: false });
+    (fetchInitialData as jest.Mock).mockImplementation(async (_u, set) => {
+      set.setLoading(false);
+    });
+    // attack mock invokes mergeBorderTiles with another-owner tile to
+    // exercise lines 137-144.
+    const OTHER_TILE: MapTile = {
+      ...FAKE_TILE,
+      tileId: "5_5",
+      ownerId: "other-user",
+    };
+    (attack as jest.Mock).mockImplementation(async (_u, _p, mut) => {
+      mut.mergeBorderTiles([OTHER_TILE]);
+    });
+
+    const { result } = renderHook(() => useDashboardData());
+    await waitFor(() => expect(fetchInitialData).toHaveBeenCalled());
+
+    await act(async () => {
+      await result.current.handleAttack({
+        sourceTileId: "1_0",
+        targetTileId: "5_5",
+        units: { ground: 1, air: 0, siege: 0 },
+        offenseSpellId: null,
+      });
+    });
+
+    expect(attack).toHaveBeenCalled();
+  });
+
+  it("mergeBorderTiles is a no-op when all updates are own-owner tiles", async () => {
+    const user = makeUser();
+    mockUseAuth.mockReturnValue({ user, userProfile: null, loading: false });
+    (fetchInitialData as jest.Mock).mockImplementation(async (_u, set) => {
+      set.setLoading(false);
+    });
+    // Own-owner tile: filter strips it; setWorldTiles is not called.
+    const OWN_TILE: MapTile = { ...FAKE_TILE, ownerId: user.uid };
+    (attack as jest.Mock).mockImplementation(async (_u, _p, mut) => {
+      mut.mergeBorderTiles([OWN_TILE]);
+    });
+
+    const { result } = renderHook(() => useDashboardData());
+    await waitFor(() => expect(fetchInitialData).toHaveBeenCalled());
+    await act(async () => {
+      await result.current.handleAttack({
+        sourceTileId: "1_0",
+        targetTileId: "1_0",
+        units: { ground: 1, air: 0, siege: 0 },
+        offenseSpellId: null,
+      });
+    });
+    expect(attack).toHaveBeenCalled();
+  });
+
+  it("mergeArtifacts patches inventory and filters out used artifacts", async () => {
+    const user = makeUser();
+    mockUseAuth.mockReturnValue({ user, userProfile: null, loading: false });
+    (fetchInitialData as jest.Mock).mockImplementation(async (_u, set) => {
+      set.setArtifacts([
+        { id: "art-1", used: false, type: "crown" },
+        { id: "art-2", used: false, type: "scroll" },
+      ] as never);
+      set.setLoading(false);
+    });
+    // spendArtifact returns an update marking art-1 used; the merge body
+    // filters it out so only art-2 remains.
+    (spendArtifact as jest.Mock).mockImplementation(async (_u, _id, _tile, mut) => {
+      mut.mergeArtifacts([
+        { id: "art-1", used: true, type: "crown" },
+        { id: "art-3", used: false, type: "ring" },
+      ]);
+    });
+
+    const { result } = renderHook(() => useDashboardData());
+    await waitFor(() => expect(result.current.artifacts).toHaveLength(2));
+
+    await act(async () => {
+      await result.current.handleUseArtifact("art-1", "1_0");
+    });
+
+    await waitFor(() => {
+      const ids = result.current.artifacts.map((a) => a.id).sort();
+      expect(ids).toEqual(["art-2", "art-3"]);
+    });
+  });
+
+  it("castArmageddon shouldTriggerResolve schedules a delayed fetchPlayer", async () => {
+    jest.useFakeTimers();
+    const user = makeUser();
+    mockUseAuth.mockReturnValue({ user, userProfile: null, loading: false });
+    (fetchInitialData as jest.Mock).mockImplementation(async (_u, set) => {
+      set.setLoading(false);
+    });
+    (castArmageddon as jest.Mock).mockResolvedValue({ shouldTriggerResolve: true });
+
+    const { result } = renderHook(() => useDashboardData());
+    await waitFor(() => expect(fetchInitialData).toHaveBeenCalledTimes(1));
+
+    await act(async () => {
+      await result.current.handleCastArmageddon();
+    });
+
+    // Advance past the 12s setTimeout and verify the second fetch landed.
+    await act(async () => {
+      jest.advanceTimersByTime(12_500);
+    });
+    await waitFor(() => expect(fetchInitialData).toHaveBeenCalledTimes(2));
+    jest.useRealTimers();
+  });
 });
