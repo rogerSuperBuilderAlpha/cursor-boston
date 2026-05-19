@@ -289,4 +289,124 @@ describe("validateIntakeSurvey", () => {
     expect(out.ok).toBe(true);
     if (out.ok) expect(out.data.consentToResearch).toBe(false);
   });
+
+  it("captures highestDegreeOther when highestDegree === 'other'", () => {
+    const out = validateIntakeSurvey({
+      ...VALID_PAYLOAD,
+      highestDegree: "other",
+      highestDegreeOther: "Professional certificate",
+    });
+    expect(out.ok).toBe(true);
+    if (out.ok) expect(out.data.highestDegreeOther).toBe("Professional certificate");
+  });
+
+  it("nulls postedAsCreatorWhich when postedAsCreator is true but the field is blank", () => {
+    const out = validateIntakeSurvey({
+      ...VALID_PAYLOAD,
+      postedAsCreator: true,
+      postedAsCreatorWhich: "",
+    });
+    expect(out.ok).toBe(true);
+    if (out.ok) expect(out.data.postedAsCreatorWhich).toBeNull();
+  });
+
+  it("captures postedAsCreatorWhich when postedAsCreator === true", () => {
+    const out = validateIntakeSurvey({
+      ...VALID_PAYLOAD,
+      postedAsCreator: true,
+      postedAsCreatorWhich: "YouTube",
+    });
+    expect(out.ok).toBe(true);
+    if (out.ok) expect(out.data.postedAsCreatorWhich).toBe("YouTube");
+  });
+
+  it("nulls postedAsCreatorWhich when postedAsCreator is not true", () => {
+    const out = validateIntakeSurvey({
+      ...VALID_PAYLOAD,
+      postedAsCreator: false,
+      postedAsCreatorWhich: "ignored",
+    });
+    expect(out.ok).toBe(true);
+    if (out.ok) expect(out.data.postedAsCreatorWhich).toBeNull();
+  });
+
+  it("nulls gigPlatformDetails when gigPlatformWork is true but the field is blank", () => {
+    const out = validateIntakeSurvey({
+      ...VALID_PAYLOAD,
+      gigPlatformWork: true,
+      gigPlatformDetails: "",
+    });
+    expect(out.ok).toBe(true);
+    if (out.ok) expect(out.data.gigPlatformDetails).toBeNull();
+  });
+
+  it("captures gigPlatformDetails when gigPlatformWork === true", () => {
+    const out = validateIntakeSurvey({
+      ...VALID_PAYLOAD,
+      gigPlatformWork: true,
+      gigPlatformDetails: "Freelance on Upwork",
+    });
+    expect(out.ok).toBe(true);
+    if (out.ok) expect(out.data.gigPlatformDetails).toBe("Freelance on Upwork");
+  });
+
+  it("rejects hoursPerWeekAi above the weekly cap", () => {
+    const out = validateIntakeSurvey({
+      ...VALID_PAYLOAD,
+      hoursPerWeekAi: INTAKE_LIMITS.maxHoursPerWeek + 1,
+    });
+    expect(out.ok).toBe(false);
+    if (!out.ok) expect(out.errors).toContain("hoursPerWeekAi");
+  });
+
+  it("rejects hoursPerWeekSocial above the weekly cap", () => {
+    const out = validateIntakeSurvey({
+      ...VALID_PAYLOAD,
+      hoursPerWeekSocial: 200,
+    });
+    expect(out.ok).toBe(false);
+    if (!out.ok) expect(out.errors).toContain("hoursPerWeekSocial");
+  });
+
+  it("clamps long free-text fields to INTAKE_LIMITS.longText", () => {
+    const long = "x".repeat(INTAKE_LIMITS.longText + 50);
+    const out = validateIntakeSurvey({
+      ...VALID_PAYLOAD,
+      whyJoined: long,
+      eightWeekGoal: long,
+    });
+    expect(out.ok).toBe(true);
+    if (out.ok) {
+      expect(out.data.whyJoined.length).toBe(INTAKE_LIMITS.longText);
+      expect(out.data.eightWeekGoal.length).toBe(INTAKE_LIMITS.longText);
+    }
+  });
+
+  it("coerces participatedInCohort1 from a boolean wire value", () => {
+    const out = validateIntakeSurvey({
+      ...VALID_PAYLOAD,
+      participatedInCohort1: true,
+    });
+    expect(out.ok).toBe(true);
+    if (out.ok) expect(out.data.participatedInCohort1).toBe(true);
+
+    const ignored = validateIntakeSurvey({
+      ...VALID_PAYLOAD,
+      participatedInCohort1: "yes",
+    });
+    expect(ignored.ok).toBe(true);
+    if (ignored.ok) expect(ignored.data.participatedInCohort1).toBeNull();
+  });
+
+  it("keeps shippedWithAiDescription when shippedWithAi === true", () => {
+    const out = validateIntakeSurvey({
+      ...VALID_PAYLOAD,
+      shippedWithAi: true,
+      shippedWithAiDescription: "  Shipped a CLI tool  ",
+    });
+    expect(out.ok).toBe(true);
+    if (out.ok) {
+      expect(out.data.shippedWithAiDescription).toBe("Shipped a CLI tool");
+    }
+  });
 });

@@ -9,10 +9,22 @@ import type { User } from "firebase/auth";
 import { useDashboardData } from "@/app/game/_lib/use-dashboard-data";
 import { fetchInitialData } from "@/app/game/_lib/dashboard-fetch";
 import {
+  adminGrant,
+  armDefenseSpell,
   attack,
+  bulkDistribute,
+  castArmageddon,
+  castIntelSpell,
+  castSpell,
   createPlayer,
+  distributeTile,
+  farExpedition,
+  flyover,
   frontierExplore,
   recruitUnits,
+  setPlayerName,
+  siege,
+  spendArtifact,
 } from "@/app/game/_lib/dashboard-actions";
 import type { MapTile } from "@/lib/game/types";
 
@@ -253,5 +265,54 @@ describe("useDashboardData", () => {
     });
 
     expect(result.current.exploreCount).toBe(4);
+  });
+
+  it("wires remaining dashboard action handlers", async () => {
+    const user = makeUser();
+    mockUseAuth.mockReturnValue({ user, userProfile: null, loading: false });
+
+    const { result } = renderHook(() => useDashboardData());
+    await waitFor(() => expect(fetchInitialData).toHaveBeenCalled());
+
+    await act(async () => {
+      await result.current.handleSetName("General");
+      await result.current.handleBulkDistribute(
+        "food",
+        1,
+        () => true,
+        "all",
+      );
+      await result.current.handleAdminGrant();
+      await result.current.handleFarExpedition();
+      await result.current.handleCastIntelSpell("red-intel-scout", "1_0");
+      await result.current.handleArmDefenseSpell("1_0", "red-defense-fire-wall");
+      await result.current.handleDistributeTile("1_0", "military");
+      await result.current.handleUseArtifact("art-1", "1_0");
+      await result.current.handleSiege("1_0", "2_0");
+      await result.current.handleFlyover("1_0", "2_0", {
+        ground: 1,
+        air: 0,
+        siege: 0,
+      });
+      await result.current.handleCastSpell(
+        "red-offense-inferno",
+        "1_0",
+        "2_0",
+      );
+      await result.current.handleCastArmageddon();
+    });
+
+    expect(setPlayerName).toHaveBeenCalled();
+    expect(bulkDistribute).toHaveBeenCalled();
+    expect(adminGrant).toHaveBeenCalled();
+    expect(farExpedition).toHaveBeenCalled();
+    expect(castIntelSpell).toHaveBeenCalled();
+    expect(armDefenseSpell).toHaveBeenCalled();
+    expect(distributeTile).toHaveBeenCalled();
+    expect(spendArtifact).toHaveBeenCalled();
+    expect(siege).toHaveBeenCalled();
+    expect(flyover).toHaveBeenCalled();
+    expect(castSpell).toHaveBeenCalled();
+    expect(castArmageddon).toHaveBeenCalled();
   });
 });
