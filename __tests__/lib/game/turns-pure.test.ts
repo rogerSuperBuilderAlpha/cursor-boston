@@ -63,6 +63,24 @@ describe("lib/game/turns (pure)", () => {
         `at most ${GENERAL_NAME_MAX}`,
       );
     });
+
+    it("rejects non-string input", () => {
+      expect(() => validateGeneralName(42 as unknown as string)).toThrow(
+        "Name must be a string",
+      );
+    });
+
+    it("rejects names with disallowed characters (e.g. emoji)", () => {
+      expect(() => validateGeneralName("Ada 🚀")).toThrow(
+        /only letters, digits, spaces/,
+      );
+    });
+
+    it("rejects names with leading or trailing apostrophes/hyphens", () => {
+      expect(() => validateGeneralName("-Ada")).toThrow();
+      expect(() => validateGeneralName("Ada-")).toThrow();
+      expect(() => validateGeneralName("'Ada")).toThrow();
+    });
   });
 
   it("newPlayer seeds starting turns and explore phase", () => {
