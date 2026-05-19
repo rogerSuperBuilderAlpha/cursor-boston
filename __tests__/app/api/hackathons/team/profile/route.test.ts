@@ -241,4 +241,90 @@ describe("PATCH /api/hackathons/team/profile", () => {
     const data = await res.json();
     expect(data.error).toMatch(/invalid logoUrl/i);
   });
+
+  it("returns 404 when team doc has no data()", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", email: "u1@test.com" });
+    mockGetAdminDb.mockReturnValue({
+      collection: jest.fn(() => ({
+        doc: jest.fn(() => ({
+          get: jest.fn(async () => ({
+            exists: true,
+            data: () => undefined, // exists but no data
+          })),
+        })),
+      })),
+    } as never);
+    const res = await PATCH(makeRequest({ teamId: "team123", name: "New" }));
+    expect(res.status).toBe(404);
+  });
+
+  it("clears logoUrl to null when an empty string is provided", async () => {
+    const updateMock = jest.fn().mockResolvedValue(undefined);
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", email: "u1@test.com" });
+    mockGetAdminDb.mockReturnValue({
+      collection: jest.fn(() => ({
+        doc: jest.fn(() => ({
+          get: jest.fn(async () => ({
+            exists: true,
+            data: () => ({ memberIds: ["u1"], wins: 1 }),
+          })),
+          update: updateMock,
+        })),
+      })),
+    } as never);
+    const res = await PATCH(makeRequest({ teamId: "team123", logoUrl: "" }));
+    expect(res.status).toBe(200);
+    expect(updateMock).toHaveBeenCalledWith(
+      expect.objectContaining({ logoUrl: null }),
+    );
+  });
+
+  it("returns 500 'Failed to update profile' when firestore update throws", async () => {
+    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", email: "u1@test.com" });
+    mockGetAdminDb.mockReturnValue({
+      collection: jest.fn(() => ({
+        doc: jest.fn(() => ({
+          get: jest.fn(async () => ({
+            exists: true,
+            data: () => ({ memberIds: ["u1"], wins: 1 }),
+          })),
+          update: jest.fn().mockRejectedValue(new Error("firestore write failed")),
+        })),
+      })),
+    } as never);
+    const res = await PATCH(makeRequest({ teamId: "team123", name: "New" }));
+    expect(res.status).toBe(500);
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("returns 200 with both name and logoUrl set in the same call", async () => {
+    const updateMock = jest.fn().mockResolvedValue(undefined);
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", email: "u1@test.com" });
+    mockGetAdminDb.mockReturnValue({
+      collection: jest.fn(() => ({
+        doc: jest.fn(() => ({
+          get: jest.fn(async () => ({
+            exists: true,
+            data: () => ({ memberIds: ["u1"], wins: 5 }),
+          })),
+          update: updateMock,
+        })),
+      })),
+    } as never);
+    const res = await PATCH(
+      makeRequest({
+        teamId: "team123",
+        name: "Cool Team",
+        logoUrl: "https://example.com/logo.png",
+      }),
+    );
+    expect(res.status).toBe(200);
+    expect(updateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "Cool Team",
+        logoUrl: "https://example.com/logo.png",
+      }),
+    );
+  });
 });
