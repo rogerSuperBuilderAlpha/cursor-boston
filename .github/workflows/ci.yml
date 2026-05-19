@@ -45,6 +45,20 @@ jobs:
       - name: Run type check
         run: npm run type-check
 
+      - name: SPDX license header check
+        # Every .ts/.tsx file under the ROOT_DIRS that add-gpl-headers.js
+        # touches must carry an SPDX-License-Identifier line. Required for
+        # OpenSSF Gold criterion `license_per_file`. Run
+        # `node scripts/add-gpl-headers.js` (new files) or
+        # `node scripts/backfill-spdx-headers.js` (legacy files) to fix.
+        run: |
+          missing=$(find app lib components hooks contexts types -type f \( -name "*.ts" -o -name "*.tsx" \) -print0 | xargs -0 grep -L "SPDX-License-Identifier")
+          if [ -n "$missing" ]; then
+            echo "::error::Files missing SPDX-License-Identifier header:"
+            echo "$missing"
+            exit 1
+          fi
+
       - name: Check API.md is up-to-date with contracts
         # Regenerate openapi.json and docs/API.md from the ts-rest contracts.
         # docs/API.md is checked into git; openapi.json is a build artifact.
