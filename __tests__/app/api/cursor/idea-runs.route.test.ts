@@ -863,6 +863,216 @@ describe("Cursor idea runs API", () => {
     expect(docs.has("run-1")).toBe(false);
   });
 
+  // -----------------------------
+  // POST / GET /api/cursor/idea-runs (root) — coverage push #26 (continued)
+  // -----------------------------
+
+  it("POST root returns 401 when unauthenticated", async () => {
+    mockGetVerifiedUser.mockResolvedValueOnce(null);
+    const { POST } = await import("@/app/api/cursor/idea-runs/route");
+    const res = await POST(request("/api/cursor/idea-runs", "POST", { interests: "x" }));
+    expect(res.status).toBe(401);
+  });
+
+  it("POST root returns 500 when admin db missing", async () => {
+    const fbAdmin = require("@/lib/firebase-admin");
+    fbAdmin.getAdminDb.mockReturnValueOnce(null);
+    const { POST } = await import("@/app/api/cursor/idea-runs/route");
+    const res = await POST(request("/api/cursor/idea-runs", "POST", { interests: "x" }));
+    expect(res.status).toBe(500);
+    expect(await res.json()).toMatchObject({ error: "not_configured" });
+  });
+
+  it("POST root returns 400 when body is not valid JSON", async () => {
+    const { POST } = await import("@/app/api/cursor/idea-runs/route");
+    const req = new NextRequest("http://localhost/api/cursor/idea-runs", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "not json",
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(400);
+    expect(await res.json()).toMatchObject({ error: "invalid_body" });
+  });
+
+  it("POST root returns 400 when body fails schema validation", async () => {
+    const { POST } = await import("@/app/api/cursor/idea-runs/route");
+    // interests must be a string; pass a number to trip the schema
+    const res = await POST(request("/api/cursor/idea-runs", "POST", { interests: 42 }));
+    expect(res.status).toBe(400);
+  });
+
+  it("POST root returns 500 launch_failed when launchPrIdeaRun throws (non-connection)", async () => {
+    mockLaunchPrIdeaRun.mockRejectedValueOnce(new Error("cursor sdk 500"));
+    const { POST } = await import("@/app/api/cursor/idea-runs/route");
+    const res = await POST(request("/api/cursor/idea-runs", "POST", { interests: "x" }));
+    expect(res.status).toBe(500);
+    expect(await res.json()).toMatchObject({ error: "launch_failed" });
+    // The error doc was persisted on the run row
+    expect(docs.get("run-1")).toMatchObject({ status: "error" });
+  });
+
+  it("GET root returns 401 when unauthenticated", async () => {
+    mockGetVerifiedUser.mockResolvedValueOnce(null);
+    const { GET } = await import("@/app/api/cursor/idea-runs/route");
+    const res = await GET(request("/api/cursor/idea-runs"));
+    expect(res.status).toBe(401);
+  });
+
+  it("GET root returns 500 when admin db missing", async () => {
+    const fbAdmin = require("@/lib/firebase-admin");
+    fbAdmin.getAdminDb.mockReturnValueOnce(null);
+    const { GET } = await import("@/app/api/cursor/idea-runs/route");
+    const res = await GET(request("/api/cursor/idea-runs"));
+    expect(res.status).toBe(500);
+  });
+
+  it("GET root returns 500 list_failed when firestore query throws", async () => {
+    const originalGet = collectionRef.get;
+    collectionRef.get = jest.fn().mockRejectedValueOnce(new Error("query failed"));
+    try {
+      const { GET } = await import("@/app/api/cursor/idea-runs/route");
+      const res = await GET(request("/api/cursor/idea-runs"));
+      expect(res.status).toBe(500);
+      expect(await res.json()).toMatchObject({ error: "list_failed" });
+    } finally {
+      collectionRef.get = originalGet;
+    }
+  });
+
+  it("GET root with refresh=false skips refreshNonTerminalRuns", async () => {
+    docs.set("run-1", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "running",
+      workflowStage: "ideas",
+      cursorAgentId: "bc-agent-1",
+      cursorRunId: "run-sdk-1",
+      prompt: "Prompt",
+      inputs: {},
+      createdAt: "2026-05-19T12:00:00Z",
+    });
+    const { GET } = await import("@/app/api/cursor/idea-runs/route");
+    const res = await GET(request("/api/cursor/idea-runs?refresh=false"));
+    expect(res.status).toBe(200);
+    expect(mockGetCursorRunSnapshot).not.toHaveBeenCalled();
+  });
+
+  it("GET root swallows MissingCursorConnectionError from getCursorApiKeyForUser during refresh", async () => {
+    docs.set("run-1", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "running",
+      workflowStage: "ideas",
+      cursorAgentId: "bc-agent-1",
+      cursorRunId: "run-sdk-1",
+      prompt: "Prompt",
+      inputs: {},
+    });
+    mockGetCursorApiKeyForUser.mockRejectedValueOnce(new MissingCursorConnectionError());
+    const { GET } = await import("@/app/api/cursor/idea-runs/route");
+    const res = await GET(request("/api/cursor/idea-runs"));
+    expect(res.status).toBe(200);
+    // No snapshot call because api key fetch failed
+    expect(mockGetCursorRunSnapshot).not.toHaveBeenCalled();
+  });
+
+  it("GET root logs per-run errors from getCursorRunSnapshot but still returns 200", async () => {
+    docs.set("run-1", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "running",
+      workflowStage: "ideas",
+      cursorAgentId: "bc-agent-1",
+      cursorRunId: "run-sdk-1",
+      prompt: "Prompt",
+      inputs: {},
+    });
+    mockGetCursorRunSnapshot.mockRejectedValueOnce(new Error("snapshot failed"));
+    const { GET } = await import("@/app/api/cursor/idea-runs/route");
+    const res = await GET(request("/api/cursor/idea-runs"));
+    expect(res.status).toBe(200);
+  });
+
+  it("GET root sorts runs by createdAt millis using string and toMillis variants", async () => {
+    docs.set("run-1", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "finished",
+      prompt: "Prompt",
+      inputs: {},
+      createdAt: "2026-05-19T10:00:00Z", // String date branch
+    });
+    docs.set("run-2", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "finished",
+      prompt: "Prompt",
+      inputs: {},
+      createdAt: { toMillis: () => new Date("2026-05-19T12:00:00Z").getTime() }, // toMillis branch
+    });
+    docs.set("run-3", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "finished",
+      prompt: "Prompt",
+      inputs: {},
+      createdAt: null, // null branch → 0
+    });
+    const { GET } = await import("@/app/api/cursor/idea-runs/route");
+    const res = await GET(request("/api/cursor/idea-runs?refresh=false"));
+    const body = await res.json();
+    // toMillis (later time) first, then string, then null
+    expect(body.runs[0].id).toBe("run-2");
+    expect(body.runs[1].id).toBe("run-1");
+    expect(body.runs[2].id).toBe("run-3");
+  });
+
+  it("GET root refreshes a workflow run needing planning refresh (no buildPlan yet)", async () => {
+    docs.set("run-1", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "finished", // terminal status, but workflow needs refresh
+      workflowStage: "planning",
+      cursorAgentId: "bc-agent-1",
+      planRunId: "plan-run-1",
+      // buildPlan absent → needsWorkflowRefresh true
+      prompt: "Prompt",
+      inputs: {},
+    });
+    const { GET } = await import("@/app/api/cursor/idea-runs/route");
+    await GET(request("/api/cursor/idea-runs"));
+    expect(mockGetCursorRunSnapshot).toHaveBeenCalledWith(
+      "cursor-key",
+      "bc-agent-1",
+      "plan-run-1",
+    );
+  });
+
+  it("GET root sorts runs by createdAt millis desc using Date instances", async () => {
+    docs.set("run-1", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "finished",
+      prompt: "Prompt",
+      inputs: {},
+      createdAt: new Date(1000),
+    });
+    docs.set("run-2", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "finished",
+      prompt: "Prompt",
+      inputs: {},
+      createdAt: new Date(2000),
+    });
+    const { GET } = await import("@/app/api/cursor/idea-runs/route");
+    const res = await GET(request("/api/cursor/idea-runs"));
+    const body = await res.json();
+    expect(body.runs[0].id).toBe("run-2");
+    expect(body.runs[1].id).toBe("run-1");
+  });
+
   it("DELETE [runId] returns 500 when the firestore delete itself throws", async () => {
     docs.set("run-1", {
       userId: "user-1",
