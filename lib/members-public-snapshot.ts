@@ -9,6 +9,7 @@ import type { Firestore } from "firebase-admin/firestore";
 import type { PublicMember, MemberType } from "@/types/members";
 
 export const MEMBERS_SNAPSHOT_CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours (aligned with analytics job)
+const MEMBERS_SNAPSHOT_DOC = "latest";
 
 function toPlainJson(value: unknown): unknown {
   if (value === undefined || value === null) return value;
@@ -94,4 +95,14 @@ export async function computePublicMembersSnapshot(db: Firestore): Promise<Publi
         : b.createdAt?.toDate?.()?.getTime() || 0;
     return tb - ta;
   });
+}
+
+export async function rebuildPublicMembersSnapshot(db: Firestore): Promise<PublicMember[]> {
+  const members = await computePublicMembersSnapshot(db);
+  await db.collection("members_snapshots").doc(MEMBERS_SNAPSHOT_DOC).set({
+    members,
+    expiresAt: new Date(Date.now() + MEMBERS_SNAPSHOT_CACHE_TTL_MS),
+    updatedAt: new Date(),
+  });
+  return members;
 }

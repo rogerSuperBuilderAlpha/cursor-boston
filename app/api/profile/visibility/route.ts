@@ -14,6 +14,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { getClientIdentifier } from "@/lib/rate-limit";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 import { profileContract } from "@/lib/api-schemas/profile";
+import { rebuildPublicMembersSnapshot } from "@/lib/members-public-snapshot";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -84,6 +85,13 @@ export async function PATCH(request: NextRequest) {
       ...visibilityUpdates,
       updatedAt: FieldValue.serverTimestamp(),
     });
+
+    // Keep members directory visibility in sync after profile privacy changes.
+    try {
+      await rebuildPublicMembersSnapshot(db);
+    } catch (snapshotError) {
+      console.warn("[profile/visibility] Failed to refresh members snapshot", snapshotError);
+    }
 
     // Get updated profile
     const updatedSnap = await userRef.get();

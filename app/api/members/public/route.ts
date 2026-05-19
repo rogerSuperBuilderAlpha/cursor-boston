@@ -8,7 +8,7 @@
 import { NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
 import {
-  computePublicMembersSnapshot,
+  rebuildPublicMembersSnapshot,
   MEMBERS_SNAPSHOT_CACHE_TTL_MS,
 } from "@/lib/members-public-snapshot";
 import type { PublicMember } from "@/types/members";
@@ -66,12 +66,7 @@ async function loadPublicMembersFromSnapshot(): Promise<PublicMember[]> {
   }
 
   try {
-    const members = await computePublicMembersSnapshot(db);
-    await db.collection("members_snapshots").doc("latest").set({
-      members,
-      expiresAt: new Date(Date.now() + MEMBERS_SNAPSHOT_CACHE_TTL_MS),
-      updatedAt: new Date(),
-    });
+    const members = await rebuildPublicMembersSnapshot(db);
     return members;
   } catch (e) {
     console.error("[api/members/public] Failed to rebuild members snapshot fallback", e);
