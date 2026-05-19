@@ -2,11 +2,11 @@
  * @jest-environment node
  */
 
-import { NextRequest } from "next/server";
 import { GET, POST } from "@/app/api/cookbook/entries/route";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { makeAuthedRequest, makeRequest, readJson } from "@/__tests__/_helpers/route-test-utils";
 
 jest.mock("@/lib/logger", () => ({
   logger: { logError: jest.fn(), warn: jest.fn() },
@@ -104,19 +104,13 @@ function buildMockDb({
 }
 
 function makeGetRequest(params: Record<string, string> = {}) {
-  const url = new URL("http://localhost/api/cookbook/entries");
-  for (const [k, v] of Object.entries(params)) {
-    url.searchParams.set(k, v);
-  }
-  return new NextRequest(url);
+  return makeRequest({ path: "/api/cookbook/entries", searchParams: params });
 }
 
-function makePostRequest(body: Record<string, unknown>) {
-  return new NextRequest("http://localhost/api/cookbook/entries", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
+function makePostRequest(body: Record<string, unknown> | string) {
+  return typeof body === "string"
+    ? makeRequest({ method: "POST", path: "/api/cookbook/entries", body })
+    : makeAuthedRequest({ method: "POST", path: "/api/cookbook/entries", body });
 }
 
 /* ─── GET tests ─── */
@@ -296,11 +290,23 @@ describe("POST /api/cookbook/entries", () => {
   it("returns 429 when rate limited", async () => {
     mockCheckRateLimit.mockReturnValue({ success: false, retryAfter: 30 });
     const res = await POST(
-      makePostRequest({ title: "T", description: "D", promptContent: "P" })
+      makeRequest({ method: "POST", path: "/api/cookbook/entries", body: { title: "T", description: "D", promptContent: "P" } }),
     );
     expect(res.status).toBe(429);
     const body = await res.json();
     expect(body.error).toMatch(/too many/i);
+  });
+
+  it("returns 400 for invalid JSON body", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", name: "Test" });
+    const { db } = buildMockDb();
+    mockGetAdminDb.mockReturnValue(db as never);
+    const res = await POST(
+      makeAuthedRequest({ method: "POST", path: "/api/cookbook/entries", body: "not-json" }),
+    );
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toMatch(/invalid payload/i);
   });
 
   it("returns 401 when not authenticated", async () => {

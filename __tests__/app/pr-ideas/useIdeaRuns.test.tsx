@@ -6,9 +6,11 @@ import type { User } from "firebase/auth";
 import { useIdeaRuns } from "@/app/pr-ideas/_hooks/useIdeaRuns";
 import type { CursorIdeaRun } from "@/app/pr-ideas/_lib/types";
 
+const mockReplace = jest.fn();
+
 jest.mock("next/navigation", () => ({
   useRouter: () => ({
-    replace: jest.fn(),
+    replace: mockReplace,
   }),
 }));
 
@@ -249,6 +251,262 @@ describe("useIdeaRuns", () => {
 
     expect(result.current.selectedRunId).toBe("run-2");
     expect(result.current.selectedRun?.id).toBe("run-2");
+  });
+
+  it("loadGithubIssues fetches issues once", async () => {
+    (global.fetch as jest.Mock).mockImplementation(async (url: string) => {
+      if (url.endsWith("/api/cursor/github-issues")) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            issues: [{ number: 42, title: "Fix tests", body: "", url: "https://github.com/x/y/issues/42", labels: [] }],
+          }),
+        };
+      }
+      return {
+        ok: true,
+        status: 200,
+        headers: { get: () => null },
+        json: async () => ({ runs: [] }),
+      };
+    });
+
+    const { result } = renderHook(() =>
+      useIdeaRuns({ user: mockUser, cursorConnected: true }),
+    );
+
+    await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+
+    await act(async () => {
+      await result.current.loadGithubIssues();
+    });
+
+    expect(result.current.githubIssues).toHaveLength(1);
+    expect(result.current.githubIssues[0]?.number).toBe(42);
+  });
+
+  it("pauses polling after repeated 500 errors", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: false,
+      status: 500,
+      headers: { get: () => null },
+      json: async () => ({ error: "list_failed", errorId: "e1" }),
+    });
+
+    const { result, rerender } = renderHook(() =>
+      useIdeaRuns({ user: mockUser, cursorConnected: true }),
+    );
+
+    await waitFor(() => expect(result.current.error).toBeTruthy());
+
+    (global.fetch as jest.Mock).mockClear();
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: false,
+      status: 500,
+      headers: { get: () => null },
+      json: async () => ({ error: "list_failed", errorId: "e2" }),
+    });
+
+    await act(async () => {
+      await result.current.loadRuns(true, "refreshing");
+    });
+    await act(async () => {
+      await result.current.loadRuns(true, "refreshing");
+    });
+    rerender();
+
+    expect(result.current.error).toMatch(/Polling paused/i);
+  });
+
+  it("redirects to cursor profile when launch reports cursor_not_connected", async () => {
+    (global.fetch as jest.Mock).mockImplementation(async (url: string, init) => {
+      if (init?.method === "POST" && url.endsWith("/api/cursor/idea-runs")) {
+        return {
+          ok: false,
+          status: 400,
+          json: async () => ({ error: "cursor_not_connected" }),
+        };
+      }
+      return {
+        ok: true,
+        status: 200,
+        headers: { get: () => null },
+        json: async () => ({ runs: [] }),
+      };
+    });
+
+    const { result } = renderHook(() =>
+      useIdeaRuns({ user: mockUser, cursorConnected: true }),
+    );
+    await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+
+    await act(async () => {
+      const created = await result.current.launchIdeaRun({
+        mode: "idea",
+        interests: [],
+        skills: [],
+        preferredArea: [],
+        constraints: [],
+        freeform: "",
+        issue: null,
+      });
+      expect(created).toBeNull();
+    });
+
+    expect(mockReplace).toHaveBeenCalledWith("/profile/cursor?return=/pr-ideas");
+  });
+
+  it("mutateRun archive updates the run in place", async () => {
+    const archived = { ...FINISHED_RUN, status: "archived" as const };
+    (global.fetch as jest.Mock).mockImplementation(async (url: string, init) => {
+      if (init?.method === "POST" && url.endsWith("/archive")) {
+        return { ok: true, status: 200, json: async () => ({ run: archived }) };
+      }
+      return {
+        ok: true,
+        status: 200,
+        headers: { get: () => null },
+        json: async () => ({ runs: [FINISHED_RUN] }),
+      };
+    });
+
+    const { result } = renderHook(() =>
+      useIdeaRuns({ user: mockUser, cursorConnected: true }),
+    );
+    await waitFor(() => expect(result.current.runs).toHaveLength(1));
+
+    await act(async () => {
+      await result.current.mutateRun("run-1", "archive");
+    });
+
+    expect(result.current.runs[0]?.status).toBe("archived");
+  });
+
+  it("mutateRun delete aborts when confirm is dismissed", async () => {
+    jest.spyOn(window, "confirm").mockReturnValue(false);
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      status: 200,
+      headers: { get: () => null },
+      json: async () => ({ runs: [FINISHED_RUN] }),
+    });
+
+    const { result } = renderHook(() =>
+      useIdeaRuns({ user: mockUser, cursorConnected: true }),
+    );
+    await waitFor(() => expect(result.current.runs).toHaveLength(1));
+
+    await act(async () => {
+      await result.current.mutateRun("run-1", "delete");
+    });
+
+    expect(result.current.runs).toHaveLength(1);
+    expect(global.fetch).not.toHaveBeenCalledWith(
+      expect.stringContaining("/api/cursor/idea-runs/run-1"),
+      expect.objectContaining({ method: "DELETE" }),
+    );
+  });
+
+  it("advanceWorkflow surfaces agent_recovery_required on the run", async () => {
+    (global.fetch as jest.Mock).mockImplementation(async (url: string, init) => {
+      if (init?.method === "POST" && url.endsWith("/recover-agent")) {
+        return {
+          ok: false,
+          status: 409,
+          json: async () => ({ error: "agent_recovery_required" }),
+        };
+      }
+      return {
+        ok: true,
+        status: 200,
+        headers: { get: () => null },
+        json: async () => ({ runs: [ACTIVE_RUN] }),
+      };
+    });
+
+    const { result } = renderHook(() =>
+      useIdeaRuns({ user: mockUser, cursorConnected: true }),
+    );
+    await waitFor(() => expect(result.current.runs).toHaveLength(1));
+
+    await act(async () => {
+      const returned = await result.current.advanceWorkflow("run-2", "recover-agent");
+      expect(returned).toBeNull();
+    });
+
+    expect(result.current.runErrors["run-2"]).toMatch(/no longer available/i);
+  });
+
+  it("refreshRun redirects when cursor is disconnected on the server", async () => {
+    (global.fetch as jest.Mock).mockImplementation(async (url: string) => {
+      if (url === "/api/cursor/idea-runs/run-1") {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ refreshSkipped: "cursor_not_connected" }),
+        };
+      }
+      return {
+        ok: true,
+        status: 200,
+        headers: { get: () => null },
+        json: async () => ({ runs: [FINISHED_RUN] }),
+      };
+    });
+
+    const { result } = renderHook(() =>
+      useIdeaRuns({ user: mockUser, cursorConnected: true }),
+    );
+    await waitFor(() => expect(result.current.runs).toHaveLength(1));
+
+    await act(async () => {
+      await result.current.refreshRun("run-1");
+    });
+
+    expect(mockReplace).toHaveBeenCalledWith("/profile/cursor?return=/pr-ideas");
+  });
+
+  it("pauses refresh on 429 with Retry-After header", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: false,
+      status: 429,
+      headers: { get: (name: string) => (name === "Retry-After" ? "30" : null) },
+      json: async () => ({ error: "rate_limited" }),
+    });
+
+    const { result } = renderHook(() =>
+      useIdeaRuns({ user: mockUser, cursorConnected: true }),
+    );
+
+    await waitFor(() => {
+      expect(result.current.error).toMatch(/syncing too often/i);
+    });
+  });
+
+  it("loadGithubIssues sets error when the API fails", async () => {
+    (global.fetch as jest.Mock).mockImplementation(async (url: string) => {
+      if (url.endsWith("/api/cursor/github-issues")) {
+        return { ok: false, status: 500, json: async () => ({}) };
+      }
+      return {
+        ok: true,
+        status: 200,
+        headers: { get: () => null },
+        json: async () => ({ runs: [] }),
+      };
+    });
+
+    const { result } = renderHook(() =>
+      useIdeaRuns({ user: mockUser, cursorConnected: true }),
+    );
+    await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+
+    await act(async () => {
+      await result.current.loadGithubIssues();
+    });
+
+    expect(result.current.githubIssuesError).toMatch(/Could not load GitHub issues/i);
   });
 
   it("clearError resets the banner message", async () => {

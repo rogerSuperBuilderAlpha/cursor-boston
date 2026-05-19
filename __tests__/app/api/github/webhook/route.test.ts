@@ -5,7 +5,8 @@
  */
 import { NextRequest } from "next/server";
 import { GET, POST } from "@/app/api/github/webhook/route";
-import { verifyWebhookSignature } from "@/lib/github";
+import { verifyWebhookSignature, processPullRequest, isTargetRepository } from "@/lib/github";
+import { makeRequest, readJson } from "@/__tests__/_helpers/route-test-utils";
 
 jest.mock("@/lib/github", () => ({
   verifyWebhookSignature: jest.fn(),
@@ -53,6 +54,12 @@ jest.mock("@/lib/rate-limit", () => ({
 
 const mockVerify = verifyWebhookSignature as jest.MockedFunction<
   typeof verifyWebhookSignature
+>;
+const mockProcessPullRequest = processPullRequest as jest.MockedFunction<
+  typeof processPullRequest
+>;
+const mockIsTargetRepository = isTargetRepository as jest.MockedFunction<
+  typeof isTargetRepository
 >;
 
 describe("GET /api/github/webhook", () => {
@@ -112,5 +119,61 @@ describe("POST /api/github/webhook", () => {
     });
     const res = await POST(req);
     expect(res.status).toBe(413);
+  });
+
+  it("returns 400 when pull_request payload is missing required fields", async () => {
+    mockVerify.mockReturnValue(true);
+    const req = makeRequest({
+      method: "POST",
+      path: "/api/github/webhook",
+      body: { action: "opened" },
+      headers: {
+        "x-hub-signature-256": "sha256=abc",
+        "x-github-event": "pull_request",
+      },
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toMatch(/invalid payload structure/i);
+  });
+
+  it("processes pull_request opened and returns received", async () => {
+    mockVerify.mockReturnValue(true);
+    mockProcessPullRequest.mockResolvedValue(undefined);
+    mockIsTargetRepository.mockReturnValue(false);
+
+    const payload = {
+      action: "opened",
+      pull_request: {
+        number: 42,
+        title: "Add feature",
+        state: "open",
+        merged: false,
+        user: { login: "octocat", avatar_url: "https://example.com/a.png" },
+        html_url: "https://github.com/org/repo/pull/42",
+        created_at: "2026-05-19T00:00:00Z",
+        updated_at: "2026-05-19T00:00:00Z",
+      },
+      repository: { owner: { login: "org" }, name: "repo" },
+    };
+
+    const req = makeRequest({
+      method: "POST",
+      path: "/api/github/webhook",
+      body: payload,
+      headers: {
+        "x-hub-signature-256": "sha256=abc",
+        "x-github-event": "pull_request",
+      },
+    });
+
+    const { status, body } = await readJson(await POST(req));
+
+    expect(status).toBe(200);
+    expect(body).toMatchObject({ received: true, action: "opened" });
+    expect(mockProcessPullRequest).toHaveBeenCalledWith(
+      expect.objectContaining({ number: 42, merged: false }),
+    );
   });
 });

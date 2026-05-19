@@ -60,16 +60,17 @@ const customJestConfig = {
   // allowlisted lore subcollections — chapters, epitaphs). Registry
   // additions are static data covered transitively by the existing
   // registry self-check test; cascade-test growth lags by ~1pp.
-  // Current totals (2026-05-18, OpenSSF sprint wave 13): statements ~67.8%,
-  // branches ~51.0%, lines ~70.4%, functions ~55.4%. Added richer hackathon
-  // page state, game hooks/components, and full-suite timeout stability.
-  // Silver target: 80% statements. Floors ~0.5pp below measured.
+  // Current totals (2026-05-19, OpenSSF sprint wave 15 + gap-fill): statements
+  // ~80.25%, branches ~66.0%, lines ~83.2%, functions ~72.9%. Multi-agent
+  // coverage sprint: data-server waves 10–15, page gap-fill waves 2–6,
+  // route/hook/component deep tests (~4,914 Jest tests).
+  // Silver target: 80% statements (met). Floors ~0.5pp below measured.
   coverageThreshold: {
     global: {
-      branches: 50,
-      functions: 54,
-      lines: 70,
-      statements: 67,
+      branches: 65,
+      functions: 72,
+      lines: 82,
+      statements: 79.5,
     },
   },
   // Generate JSON summary for CI coverage checks

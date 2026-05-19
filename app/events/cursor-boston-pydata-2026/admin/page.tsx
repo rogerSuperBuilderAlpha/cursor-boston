@@ -121,7 +121,7 @@ export default function PyDataAdminPage() {
   const { user, loading: authLoading } = useAuth();
   const [data, setData] = useState<Response | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [lastRefresh, setLastRefresh] = useState<string>("");
 
