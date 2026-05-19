@@ -91,4 +91,49 @@ describe("POST /api/auth/resolve-email", () => {
     const res = await POST(req);
     expect(res.status).toBe(400);
   });
+
+  it("returns 500 when admin db is null", async () => {
+    const fb = require("@/lib/firebase-admin");
+    fb.getAdminDb.mockReturnValueOnce(null);
+    const res = await POST(makeRequest({ email: "alice@example.com" }));
+    expect(res.status).toBe(500);
+  });
+
+  it("returns 500 when admin auth is null", async () => {
+    const fb = require("@/lib/firebase-admin");
+    fb.getAdminAuth.mockReturnValueOnce(null);
+    const res = await POST(makeRequest({ email: "alice@example.com" }));
+    expect(res.status).toBe(500);
+  });
+
+  it("returns null when emailLookup doc has no data", async () => {
+    mockGetUserByEmail.mockRejectedValue(new Error("not found"));
+    mockGet.mockResolvedValueOnce({
+      exists: true,
+      data: () => undefined,
+    });
+    const res = await POST(makeRequest({ email: "alias@example.com" }));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.primaryEmail).toBeNull();
+    expect(body.message).toBe("Email not found");
+  });
+
+  it("returns null when user record has no primary email", async () => {
+    mockGetUserByEmail.mockRejectedValue(new Error("not found"));
+    mockGet.mockResolvedValueOnce({
+      exists: true,
+      data: () => ({ uid: "u1" }),
+    });
+    mockGet.mockResolvedValueOnce({
+      exists: true,
+      data: () => ({}),
+    });
+    const res = await POST(makeRequest({ email: "orphan@example.com" }));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.primaryEmail).toBeNull();
+    expect(body.message).toContain("no primary email");
+  });
+
 });
