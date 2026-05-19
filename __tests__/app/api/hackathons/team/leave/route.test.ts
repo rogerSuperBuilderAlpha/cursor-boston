@@ -261,4 +261,36 @@ describe("POST /api/hackathons/team/leave", () => {
     expect(res.status).toBe(200);
     expect(mockUpdate).toHaveBeenCalled();
   });
+
+  it("returns 404 when team data() returns undefined", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", email: "u1@test.com" });
+    mockGetAdminDb.mockReturnValue({
+      collection: jest.fn(() => ({
+        doc: jest.fn(() => ({
+          get: jest.fn().mockResolvedValue({
+            exists: true,
+            data: () => undefined,
+          }),
+        })),
+      })),
+    } as never);
+    const res = await POST(makeRequest({ teamId: "team1" }));
+    expect(res.status).toBe(404);
+  });
+
+  it("returns 500 'Failed to leave team' on unexpected throw", async () => {
+    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", email: "u1@test.com" });
+    mockGetAdminDb.mockReturnValue({
+      collection: jest.fn(() => {
+        throw new Error("firestore unreachable");
+      }),
+      runTransaction: jest.fn(),
+    } as never);
+    const res = await POST(makeRequest({ teamId: "team1" }));
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body.error).toBe("Failed to leave team");
+    consoleErrorSpy.mockRestore();
+  });
 });
