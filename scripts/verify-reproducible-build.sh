@@ -56,14 +56,38 @@ npm run build > /dev/null || exit 2
 mv "$TMP_NEXT" "$OUT2"
 
 echo "==> Diffing"
-# Compare the artifacts that define the deployable app.
-# Known irreducibles excluded (see docs/REPRODUCIBLE_BUILD.md):
-#   *.map        — source maps may contain absolute paths / timestamps
-#   trace        — Next.js build trace (timestamps)
-#   *.nft.json   — Node File Trace output (absolute paths)
-#   webpack-stats*.json
-#   cache/       — webpack cache (deleted between runs)
+# Hard gate on deterministic deploy artifacts:
+#   - BUILD_ID (commit-derived)
+#   - static JS chunks
+#   - server JS chunks
+CORE_DIFF=""
+if ! cmp -s "$OUT1/BUILD_ID" "$OUT2/BUILD_ID"; then
+  CORE_DIFF="${CORE_DIFF}diff -r ${OUT1}/BUILD_ID ${OUT2}/BUILD_ID"$'\n'
+fi
 
+STATIC_CHUNK_DIFF=$(
+  diff -r "$OUT1/static/chunks" "$OUT2/static/chunks" 2>&1 || true
+)
+if [ -n "$STATIC_CHUNK_DIFF" ]; then
+  CORE_DIFF="${CORE_DIFF}${STATIC_CHUNK_DIFF}"$'\n'
+fi
+
+SERVER_CHUNK_DIFF=$(
+  diff -r "$OUT1/server/chunks" "$OUT2/server/chunks" 2>&1 || true
+)
+if [ -n "$SERVER_CHUNK_DIFF" ]; then
+  CORE_DIFF="${CORE_DIFF}${SERVER_CHUNK_DIFF}"$'\n'
+fi
+
+if [ -n "$CORE_DIFF" ]; then
+  echo "::error::Deterministic build artifacts differ (BUILD_ID or chunk outputs)."
+  sed -n '1,80p' <<<"$CORE_DIFF"
+  exit 1
+fi
+
+# Report the broader tree diff as warning-only because Next.js 16 injects
+# per-build security secrets and route-manifest ordering differences into
+# generated app/server outputs (documented in docs/REPRODUCIBLE_BUILD.md).
 DIFF=$(
   diff -r \
     --exclude='*.map' \
@@ -77,34 +101,16 @@ DIFF=$(
 )
 
 if [ -n "$DIFF" ]; then
-  # Per docs/REPRODUCIBLE_BUILD.md: Next.js 16 generates per-build security
-  # secrets (server-actions encryption key, preview mode IDs) that cascade
-  # into content-hashed file names. These secrets are NOT configurable via
-  # env vars in Next.js 16 and are unique per deploy by security design.
-  # The diff is reported here for human review and tracked as a known
-  # irreducibility, but does not fail the build. The criterion is met by
-  # the structural-determinism settings in next.config.js (deterministic
-  # moduleIds/chunkIds, generateBuildId derived from git SHA) plus this
-  # detection script — see docs/REPRODUCIBLE_BUILD.md for details.
-  echo "::warning::Build output differs in files affected by Next.js per-build secrets (see docs/REPRODUCIBLE_BUILD.md):"
+  echo "::warning::Build output differs in known volatile Next.js artifacts (see docs/REPRODUCIBLE_BUILD.md):"
   # Avoid SIGPIPE exit 141 under `set -o pipefail` when truncating long diff output.
   sed -n '1,30p' <<<"$DIFF"
   DIFF_LINES=$(echo "$DIFF" | wc -l)
   if [ "$DIFF_LINES" -gt 30 ]; then
     echo "...(${DIFF_LINES} total diff lines)"
   fi
-  # Count how many files actually differ (vs just hash-name differences)
   ONLY_IN=$(echo "$DIFF" | grep -c "^Only in" || true)
   REAL_DIFF=$(echo "$DIFF" | grep -c "^diff -r" || true)
-  echo "==> Summary: ${ONLY_IN} added/removed files, ${REAL_DIFF} content diffs"
-  # Hard-fail only if the diff is wildly larger than the known
-  # irreducibility budget — defends against an upstream change that
-  # introduces broad nondeterminism we should investigate.
-  if [ "$REAL_DIFF" -gt 10 ]; then
-    echo "::error::Build diff exceeds the known-irreducible budget (>10 content diffs). Investigate before merging."
-    exit 1
-  fi
-  exit 0
+  echo "==> Warning summary: ${ONLY_IN} added/removed files, ${REAL_DIFF} content diffs"
 fi
 
-echo "==> OK — builds byte-identical (modulo documented irreducibles)"
+echo "==> OK — deterministic deploy artifacts are byte-identical"
