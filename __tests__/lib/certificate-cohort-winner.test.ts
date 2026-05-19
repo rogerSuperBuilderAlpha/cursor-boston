@@ -106,4 +106,109 @@ describe("cohort winner certificates", () => {
     const certs = await listCertificatesForUser(db, "u1");
     expect(certs.map((c) => c.kind)).toEqual(["cohort-winner", "contributor"]);
   });
+
+  it("parseCertificateFromFirestore: returns null when required fields are missing", () => {
+    expect(
+      parseCertificateFromFirestore("c1", {
+        userId: "u1",
+        displayName: "Alice",
+        // missing githubLogin
+        issuedAt: "2026-05-19T00:00:00.000Z",
+      }),
+    ).toBeNull();
+    expect(
+      parseCertificateFromFirestore("c2", {
+        userId: "u1",
+        displayName: "Alice",
+        githubLogin: "alice",
+        // missing issuedAt
+      }),
+    ).toBeNull();
+  });
+
+  it("parseCertificateFromFirestore: accepts a Firestore Timestamp via toDate()", () => {
+    const cert = parseCertificateFromFirestore("c3", {
+      userId: "u1",
+      displayName: "Alice",
+      githubLogin: "alice",
+      issuedAt: { toDate: () => new Date("2026-05-19T00:00:00.000Z") },
+      kind: "contributor",
+      pullRequestsCount: 4,
+    });
+    expect(cert?.issuedAt).toBe("2026-05-19T00:00:00.000Z");
+  });
+
+  it("parseCertificateFromFirestore: accepts a `seconds` epoch shape", () => {
+    const cert = parseCertificateFromFirestore("c4", {
+      userId: "u1",
+      displayName: "Alice",
+      githubLogin: "alice",
+      issuedAt: { seconds: 1_700_000_000 },
+      kind: "contributor",
+      pullRequestsCount: 7,
+    });
+    expect(cert?.issuedAt).toBe(new Date(1_700_000_000 * 1000).toISOString());
+  });
+
+  it("parseCertificateFromFirestore: contributor missing pullRequestsCount returns null", () => {
+    expect(
+      parseCertificateFromFirestore("c5", {
+        userId: "u1",
+        displayName: "Alice",
+        githubLogin: "alice",
+        issuedAt: "2026-05-19T00:00:00.000Z",
+        kind: "contributor",
+      }),
+    ).toBeNull();
+  });
+
+  it("parseCertificateFromFirestore: cohort-winner missing cohortId/weekId returns null", () => {
+    expect(
+      parseCertificateFromFirestore("c6", {
+        userId: "u1",
+        displayName: "Alice",
+        githubLogin: "alice",
+        issuedAt: "2026-05-19T00:00:00.000Z",
+        kind: "cohort-winner",
+        weekId: "week-1",
+      }),
+    ).toBeNull();
+  });
+
+  it("listCertificatesForUser: sorts contributor certs by issuedAt desc when kinds equal", async () => {
+    const db: any = {
+      collection: jest.fn(() => ({
+        where: jest.fn(() => ({
+          get: jest.fn().mockResolvedValue({
+            docs: [
+              {
+                id: "cert_old",
+                data: () => ({
+                  userId: "u1",
+                  displayName: "Pat",
+                  githubLogin: "pat",
+                  pullRequestsCount: 5,
+                  issuedAt: "2026-01-01T00:00:00.000Z",
+                  kind: "contributor",
+                }),
+              },
+              {
+                id: "cert_new",
+                data: () => ({
+                  userId: "u1",
+                  displayName: "Pat",
+                  githubLogin: "pat",
+                  pullRequestsCount: 12,
+                  issuedAt: "2026-04-01T00:00:00.000Z",
+                  kind: "contributor",
+                }),
+              },
+            ],
+          }),
+        })),
+      })),
+    };
+    const certs = await listCertificatesForUser(db, "u1");
+    expect(certs.map((c) => c.id)).toEqual(["cert_new", "cert_old"]);
+  });
 });
