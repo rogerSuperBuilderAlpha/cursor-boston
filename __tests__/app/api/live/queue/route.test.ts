@@ -131,4 +131,130 @@ describe("POST /api/live/[sessionId]/queue", () => {
     });
     expect(duplicateRes.status).toBe(409);
   });
+
+  it("returns 400 when sessionId is whitespace-only", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", email: "u@x" });
+    const res = await POST(makeRequest({ talkTitle: "Demo", durationMinutes: 3 }), {
+      params: Promise.resolve({ sessionId: "   " }),
+    });
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toContain("Session ID");
+  });
+
+  it("returns 400 when request body is not valid JSON", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", email: "u@x" });
+    const req = new NextRequest("http://localhost/api/live/session-1/queue", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "not json",
+    });
+    const res = await POST(req, { params: Promise.resolve({ sessionId: "session-1" }) });
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toContain("Invalid JSON");
+  });
+
+  it("returns 400 when talkTitle is a non-string type (normalizeTalkTitle)", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", email: "u@x" });
+    const res = await POST(
+      makeRequest({ talkTitle: 12345, durationMinutes: 3 }),
+      { params: Promise.resolve({ sessionId: "session-1" }) },
+    );
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toContain("Talk title");
+  });
+
+  it("returns 400 when talkTitle exceeds 140 char max", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", email: "u@x" });
+    const longTitle = "x".repeat(141);
+    const res = await POST(
+      makeRequest({ talkTitle: longTitle, durationMinutes: 3 }),
+      { params: Promise.resolve({ sessionId: "session-1" }) },
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 400 with duration error when durationMinutes is a non-number type", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", email: "u@x" });
+    const res = await POST(
+      makeRequest({ talkTitle: "Demo", durationMinutes: "not-a-number" }),
+      { params: Promise.resolve({ sessionId: "session-1" }) },
+    );
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toContain("Duration");
+  });
+
+  it("returns 400 with duration error when durationMinutes is not in LIVE_TALK_DURATIONS", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", email: "u@x" });
+    const res = await POST(
+      makeRequest({ talkTitle: "Demo", durationMinutes: 7 }),
+      { params: Promise.resolve({ sessionId: "session-1" }) },
+    );
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toContain("Duration");
+  });
+
+  it("falls back to email then 'Speaker' when user.name is missing", async () => {
+    mockGetVerifiedUser.mockResolvedValue({
+      uid: "u1",
+      email: "fallback@example.com",
+    });
+    mockEnqueueSpeakerServer.mockResolvedValue({
+      id: "entry-2",
+      sessionId: "session-1",
+      userId: "u1",
+      speakerName: "fallback@example.com",
+      speakerPhotoUrl: null,
+      talkTitle: "Demo",
+      durationMinutes: 3,
+      status: "queued",
+      createdAtMs: 1,
+      updatedAtMs: 1,
+    });
+    await POST(makeRequest({ talkTitle: "Demo", durationMinutes: 3 }), {
+      params: Promise.resolve({ sessionId: "session-1" }),
+    });
+    expect(mockEnqueueSpeakerServer).toHaveBeenCalledWith(
+      expect.objectContaining({ speakerName: "fallback@example.com", speakerPhotoUrl: null }),
+    );
+  });
+
+  it("uses 'Speaker' default when both name and email are missing", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1" } as never);
+    mockEnqueueSpeakerServer.mockResolvedValue({
+      id: "entry-3",
+      sessionId: "session-1",
+      userId: "u1",
+      speakerName: "Speaker",
+      speakerPhotoUrl: null,
+      talkTitle: "Demo",
+      durationMinutes: 3,
+      status: "queued",
+      createdAtMs: 1,
+      updatedAtMs: 1,
+    });
+    await POST(makeRequest({ talkTitle: "Demo", durationMinutes: 3 }), {
+      params: Promise.resolve({ sessionId: "session-1" }),
+    });
+    expect(mockEnqueueSpeakerServer).toHaveBeenCalledWith(
+      expect.objectContaining({ speakerName: "Speaker" }),
+    );
+  });
+
+  it("returns 500 on unknown error from enqueueSpeakerServer", async () => {
+    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", email: "u@x" });
+    mockEnqueueSpeakerServer.mockRejectedValueOnce(new Error("unexpected"));
+    const res = await POST(makeRequest({ talkTitle: "Demo", durationMinutes: 3 }), {
+      params: Promise.resolve({ sessionId: "session-1" }),
+    });
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body.error).toBe("Internal server error");
+    consoleErrorSpy.mockRestore();
+  });
 });
