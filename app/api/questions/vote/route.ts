@@ -11,6 +11,7 @@ import {
   getQuestionsService,
   QuestionNotFoundError,
   AnswerNotFoundError,
+  UnauthorizedError,
 } from "@/lib/questions/service";
 import { logger } from "@/lib/logger";
 import { getClientIdentifier } from "@/lib/rate-limit";
@@ -74,6 +75,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof QuestionNotFoundError || error instanceof AnswerNotFoundError) {
       return NextResponse.json({ error: error.message }, { status: 404 });
+    }
+    if (error instanceof UnauthorizedError) {
+      return NextResponse.json({ error: error.message }, { status: 403 });
     }
     logger.logError(error, { endpoint: "POST /api/questions/vote" });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

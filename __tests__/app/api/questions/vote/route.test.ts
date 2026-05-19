@@ -37,6 +37,12 @@ jest.mock("@/lib/questions/service", () => ({
   AnswerNotFoundError: class extends Error {
     constructor() { super("Answer not found"); this.name = "AnswerNotFoundError"; }
   },
+  UnauthorizedError: class extends Error {
+    constructor(msg = "Unauthorized") {
+      super(msg);
+      this.name = "UnauthorizedError";
+    }
+  },
 }));
 
 const { getVerifiedUser } = jest.requireMock("@/lib/server-auth") as {
@@ -100,6 +106,96 @@ describe("POST /api/questions/vote", () => {
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(data.action).toBe("added");
+    expect(mockVote).toHaveBeenCalledWith("question", "q1", "u1", "up", undefined);
+  });
+
+  it("adds a downvote", async () => {
+    getVerifiedUser.mockResolvedValue(testUser);
+    mockVote.mockResolvedValue({
+      action: "added", type: "down", upCount: 0, downCount: 1, netScore: -1,
+    });
+
+    const res = await POST(
+      makePostRequest({ targetType: "question", targetId: "q1", type: "down" })
+    );
+    expect(res.status).toBe(200);
+    expect((await res.json()).action).toBe("added");
+  });
+
+  it("switches vote from up to down", async () => {
+    getVerifiedUser.mockResolvedValue(testUser);
+    mockVote.mockResolvedValue({
+      action: "switched",
+      type: "down",
+      previousType: "up",
+      upCount: 0,
+      downCount: 1,
+      netScore: -1,
+    });
+
+    const res = await POST(
+      makePostRequest({ targetType: "question", targetId: "q1", type: "down" })
+    );
+    const data = await res.json();
+    expect(data.action).toBe("switched");
+    expect(data.previousType).toBe("up");
+  });
+
+  it("removes vote when toggling same type (unvote)", async () => {
+    getVerifiedUser.mockResolvedValue(testUser);
+    mockVote.mockResolvedValue({
+      action: "removed", type: "up", upCount: 0, downCount: 0, netScore: 0,
+    });
+
+    const res = await POST(
+      makePostRequest({ targetType: "question", targetId: "q1", type: "up" })
+    );
+    const data = await res.json();
+    expect(data.action).toBe("removed");
+    expect(data.upCount).toBe(0);
+  });
+
+  it("votes on an answer with questionId", async () => {
+    getVerifiedUser.mockResolvedValue(testUser);
+    mockVote.mockResolvedValue({
+      action: "added", type: "up", upCount: 1, downCount: 0, netScore: 1,
+    });
+
+    const res = await POST(
+      makePostRequest({
+        targetType: "answer",
+        targetId: "a1",
+        questionId: "q1",
+        type: "up",
+      })
+    );
+    expect(res.status).toBe(200);
+    expect(mockVote).toHaveBeenCalledWith("answer", "a1", "u1", "up", "q1");
+  });
+
+  it("returns 404 when question not found", async () => {
+    getVerifiedUser.mockResolvedValue(testUser);
+    const { QuestionNotFoundError } = jest.requireMock("@/lib/questions/service");
+    mockVote.mockRejectedValue(new QuestionNotFoundError());
+
+    const res = await POST(
+      makePostRequest({ targetType: "question", targetId: "missing", type: "up" })
+    );
+    expect(res.status).toBe(404);
+  });
+
+  it("returns 403 when voting on own content", async () => {
+    getVerifiedUser.mockResolvedValue(testUser);
+    const { UnauthorizedError } = jest.requireMock("@/lib/questions/service");
+    mockVote.mockRejectedValue(
+      new UnauthorizedError("You cannot vote on your own content")
+    );
+
+    const res = await POST(
+      makePostRequest({ targetType: "question", targetId: "q1", type: "up" })
+    );
+    expect(res.status).toBe(403);
+    expect((await res.json()).error).toBe("You cannot vote on your own content");
   });
 });
 
