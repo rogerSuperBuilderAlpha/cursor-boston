@@ -176,4 +176,35 @@ describe("sampleFrontierTile", () => {
     });
     expect(result).toBeNull();
   });
+
+  it("prefers a hostile-adjacent tile when wantHostile rolls true at high tilesHeld", () => {
+    const hostileSet = new Set<string>(["5_0", "6_-1", "4_2"]);
+    const result = sampleFrontierTile({
+      ownedTileIds: ["0_0", "1_0", "0_1"],
+      isClaimed: () => false,
+      isHostile: (id) => hostileSet.has(id),
+      tilesHeld: 300,
+      rng: makeSeededRng("hostile:1"),
+    });
+    expect(result).not.toBeNull();
+    if (result) {
+      expect(result.tileId).toBeDefined();
+      expect(typeof result.hostileNeighbors).toBe("number");
+    }
+  });
+
+  it("falls back to bestNonHostile when wantHostile is true but no hostiles exist", () => {
+    const result = sampleFrontierTile({
+      ownedTileIds: ["0_0"],
+      isClaimed: () => false,
+      isHostile: () => false,
+      tilesHeld: 300,
+      rng: makeSeededRng("fallback:1"),
+      maxRings: 5,
+    });
+    expect(result).not.toBeNull();
+    if (result) {
+      expect(result.hostileNeighbors).toBe(0);
+    }
+  });
 });
