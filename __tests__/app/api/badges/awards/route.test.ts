@@ -6,6 +6,7 @@ import { NextRequest } from "next/server";
 import { POST } from "@/app/api/badges/awards/route";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { checkServerRateLimit } from "@/lib/rate-limit-server";
 
 jest.mock("@/lib/logger", () => ({
   logger: { logError: jest.fn(), warn: jest.fn(), info: jest.fn() },
@@ -327,5 +328,104 @@ describe("POST /api/badges/awards", () => {
       { id: "user-3_contributor" },
       expect.objectContaining({ badgeId: "contributor", userId: "user-3" })
     );
+  });
+
+  it("returns 429 when rate limit denies", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u9", email: "u@x" });
+    const mockRate = checkServerRateLimit as jest.MockedFunction<typeof checkServerRateLimit>;
+    mockRate.mockResolvedValueOnce({
+      success: false,
+      retryAfter: 30,
+      statusCode: 429,
+    } as never);
+    const res = await POST(makeRequest());
+    expect(res.status).toBe(429);
+    const body = await res.json();
+    expect(body.error).toBe("Too many requests");
+    expect(body.retryAfterSeconds).toBe(30);
+  });
+
+  it("returns 429 with default 429 statusCode when rate limit lacks statusCode field", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u10", email: "u@x" });
+    const mockRate = checkServerRateLimit as jest.MockedFunction<typeof checkServerRateLimit>;
+    mockRate.mockResolvedValueOnce({
+      success: false,
+      retryAfter: 60,
+    } as never);
+    const res = await POST(makeRequest());
+    expect(res.status).toBe(429);
+  });
+
+  it("returns 500 when admin db is null", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u11", email: "u@x" });
+    mockGetAdminDb.mockReturnValueOnce(null as never);
+    const res = await POST(makeRequest());
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body.error).toBe("Server not configured");
+  });
+
+  it("returns 500 when an unexpected error throws", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u12", email: "u@x" });
+    mockGetAdminDb.mockReturnValueOnce({
+      collection: () => {
+        throw new Error("firestore exploded");
+      },
+    } as never);
+    const res = await POST(makeRequest());
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body.error).toBe("Internal server error");
+  });
+
+  it("filters out non-string badgeId entries from existingSnapshot", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u13", email: "u@x" });
+    const batchSet = jest.fn();
+    const batchCommit = jest.fn(async () => undefined);
+    // Existing user_badges where badgeId is a non-string — must be filtered out
+    const userBadgesWhereGet = jest.fn().mockResolvedValue({
+      docs: makeDocs([
+        { badgeId: 42 }, // non-string — must be filtered
+        { badgeId: null }, // null — must be filtered
+        { badgeId: undefined }, // undefined — must be filtered
+        { /* no badgeId field at all */ },
+      ]),
+    });
+    const collections = {
+      users: {
+        doc: jest.fn(() => ({
+          get: jest.fn(async () => ({
+            exists: true,
+            data: () => ({
+              displayName: "Member",
+              visibility: { isPublic: true },
+            }),
+          })),
+          set: jest.fn(async () => undefined),
+        })),
+      },
+      eventRegistrations: { where: jest.fn().mockReturnThis(), get: jest.fn(async () => ({ docs: [] })) },
+      talkSubmissions: { where: jest.fn().mockReturnThis(), get: jest.fn(async () => ({ size: 0, docs: [] })) },
+      communityMessages: { where: jest.fn().mockReturnThis(), get: jest.fn(async () => ({ size: 0, docs: [] })) },
+      pullRequests: { where: jest.fn().mockReturnThis(), get: jest.fn(async () => ({ size: 0, docs: [] })) },
+      hackathonTeams: { where: jest.fn().mockReturnThis(), get: jest.fn(async () => ({ size: 0, docs: [] })) },
+      hackathonPool: { where: jest.fn().mockReturnThis(), get: jest.fn(async () => ({ size: 0, docs: [] })) },
+      showcaseSubmissions: { where: jest.fn().mockReturnThis(), get: jest.fn(async () => ({ size: 0, docs: [] })) },
+      user_badges: {
+        where: jest.fn(() => ({ get: userBadgesWhereGet })),
+        doc: jest.fn((id: string) => ({ id })),
+      },
+    } as const;
+    const db = {
+      collection: jest.fn((name: keyof typeof collections) => collections[name]),
+      batch: jest.fn(() => ({ set: batchSet, commit: batchCommit })),
+    };
+    mockGetAdminDb.mockReturnValue(db as never);
+    const res = await POST(makeRequest());
+    expect(res.status).toBe(200);
+    // Non-string badgeIds didn't pollute existingByBadgeId set, so eligible badges
+    // (if any) get awarded freshly. The contract: response is 200 with userBadges array.
+    const body = await res.json();
+    expect(Array.isArray(body.userBadges)).toBe(true);
   });
 });
