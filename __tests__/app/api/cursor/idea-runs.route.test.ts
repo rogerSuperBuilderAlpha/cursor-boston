@@ -215,6 +215,148 @@ describe("Cursor idea runs API", () => {
     expect(docs.get("run-1")).toMatchObject({ status: "cancelled" });
   });
 
+  it("cancel returns 401 when unauthenticated", async () => {
+    mockGetVerifiedUser.mockResolvedValueOnce(null);
+    const { POST } = await import("@/app/api/cursor/idea-runs/[runId]/cancel/route");
+    const res = await POST(request("/api/cursor/idea-runs/run-1/cancel", "POST"), params("run-1"));
+    expect(res.status).toBe(401);
+  });
+
+  it("cancel returns 500 when admin db is null", async () => {
+    const fbAdmin = require("@/lib/firebase-admin");
+    fbAdmin.getAdminDb.mockReturnValueOnce(null);
+    const { POST } = await import("@/app/api/cursor/idea-runs/[runId]/cancel/route");
+    const res = await POST(request("/api/cursor/idea-runs/run-1/cancel", "POST"), params("run-1"));
+    expect(res.status).toBe(500);
+  });
+
+  it("cancel returns 404 when run not found", async () => {
+    const { POST } = await import("@/app/api/cursor/idea-runs/[runId]/cancel/route");
+    const res = await POST(
+      request("/api/cursor/idea-runs/ghost/cancel", "POST"),
+      params("ghost"),
+    );
+    expect(res.status).toBe(404);
+  });
+
+  it("cancel skips cursor API call for terminal-status runs", async () => {
+    docs.set("run-1", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "finished", // terminal
+      cursorAgentId: "bc-agent-1",
+      cursorRunId: "run-sdk-1",
+      prompt: "Prompt",
+      inputs: {},
+    });
+    const { POST } = await import("@/app/api/cursor/idea-runs/[runId]/cancel/route");
+    const res = await POST(request("/api/cursor/idea-runs/run-1/cancel", "POST"), params("run-1"));
+    expect(res.status).toBe(200);
+    // Terminal status → no cancel SDK call
+    expect(mockCancelCursorRun).not.toHaveBeenCalled();
+    // Still marks the doc cancelled
+    expect(docs.get("run-1")).toMatchObject({ status: "cancelled" });
+  });
+
+  it("cancel skips cursor API call when no cursorAgentId is present", async () => {
+    docs.set("run-1", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "running",
+      // No cursorAgentId
+      cursorRunId: "run-sdk-1",
+      prompt: "Prompt",
+      inputs: {},
+    });
+    const { POST } = await import("@/app/api/cursor/idea-runs/[runId]/cancel/route");
+    const res = await POST(request("/api/cursor/idea-runs/run-1/cancel", "POST"), params("run-1"));
+    expect(res.status).toBe(200);
+    expect(mockCancelCursorRun).not.toHaveBeenCalled();
+  });
+
+  it("cancel uses questionRunId when workflowStage='questions'", async () => {
+    docs.set("run-1", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "running",
+      workflowStage: "questions",
+      cursorAgentId: "bc-agent-1",
+      questionRunId: "question-run-1",
+      cursorRunId: "run-sdk-1", // ignored
+      prompt: "Prompt",
+      inputs: {},
+    });
+    const { POST } = await import("@/app/api/cursor/idea-runs/[runId]/cancel/route");
+    await POST(request("/api/cursor/idea-runs/run-1/cancel", "POST"), params("run-1"));
+    expect(mockCancelCursorRun).toHaveBeenCalledWith("cursor-key", "bc-agent-1", "question-run-1");
+  });
+
+  it("cancel uses planRunId when workflowStage='planning'", async () => {
+    docs.set("run-1", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "running",
+      workflowStage: "planning",
+      cursorAgentId: "bc-agent-1",
+      planRunId: "plan-run-1",
+      cursorRunId: "run-sdk-1", // would be ignored
+      prompt: "Prompt",
+      inputs: {},
+    });
+    const { POST } = await import("@/app/api/cursor/idea-runs/[runId]/cancel/route");
+    await POST(request("/api/cursor/idea-runs/run-1/cancel", "POST"), params("run-1"));
+    expect(mockCancelCursorRun).toHaveBeenCalledWith("cursor-key", "bc-agent-1", "plan-run-1");
+  });
+
+  it("cancel uses buildRunId when workflowStage='building'", async () => {
+    docs.set("run-1", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "running",
+      workflowStage: "building",
+      cursorAgentId: "bc-agent-1",
+      buildRunId: "build-run-1",
+      prompt: "Prompt",
+      inputs: {},
+    });
+    const { POST } = await import("@/app/api/cursor/idea-runs/[runId]/cancel/route");
+    await POST(request("/api/cursor/idea-runs/run-1/cancel", "POST"), params("run-1"));
+    expect(mockCancelCursorRun).toHaveBeenCalledWith("cursor-key", "bc-agent-1", "build-run-1");
+  });
+
+  it("cancel uses prRunId when workflowStage='pr_open'", async () => {
+    docs.set("run-1", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "running",
+      workflowStage: "pr_open",
+      cursorAgentId: "bc-agent-1",
+      prRunId: "pr-run-1",
+      prompt: "Prompt",
+      inputs: {},
+    });
+    const { POST } = await import("@/app/api/cursor/idea-runs/[runId]/cancel/route");
+    await POST(request("/api/cursor/idea-runs/run-1/cancel", "POST"), params("run-1"));
+    expect(mockCancelCursorRun).toHaveBeenCalledWith("cursor-key", "bc-agent-1", "pr-run-1");
+  });
+
+  it("cancel returns 500 'cancel_failed' when cancelCursorRun throws", async () => {
+    docs.set("run-1", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "running",
+      cursorAgentId: "bc-agent-1",
+      cursorRunId: "run-sdk-1",
+      prompt: "Prompt",
+      inputs: {},
+    });
+    mockCancelCursorRun.mockRejectedValueOnce(new Error("cursor api down"));
+    const { POST } = await import("@/app/api/cursor/idea-runs/[runId]/cancel/route");
+    const res = await POST(request("/api/cursor/idea-runs/run-1/cancel", "POST"), params("run-1"));
+    expect(res.status).toBe(500);
+    expect(await res.json()).toMatchObject({ error: "cancel_failed" });
+  });
+
   it("archives the backing Cursor agent", async () => {
     docs.set("run-1", {
       userId: "user-1",
