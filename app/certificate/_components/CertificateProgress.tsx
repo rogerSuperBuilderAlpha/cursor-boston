@@ -8,9 +8,14 @@ import { CERTIFICATE_PR_THRESHOLD } from "@/lib/certificate";
 
 interface CertificateProgressProps {
   pullRequestsCount: number;
+  /** When true, omit the lock framing (e.g. user already has a cohort award). */
+  compact?: boolean;
 }
 
-export function CertificateProgress({ pullRequestsCount }: CertificateProgressProps) {
+export function CertificateProgress({
+  pullRequestsCount,
+  compact = false,
+}: CertificateProgressProps) {
   const remaining = CERTIFICATE_PR_THRESHOLD - pullRequestsCount;
   const percentage = Math.min(
     100,
@@ -20,13 +25,19 @@ export function CertificateProgress({ pullRequestsCount }: CertificateProgressPr
   return (
     <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-6">
       <div className="flex items-center gap-3 mb-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800">
-          <span className="text-lg">🔒</span>
-        </div>
+        {!compact ? (
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800">
+            <span className="text-lg">🔒</span>
+          </div>
+        ) : null}
         <div>
-          <h2 className="text-lg font-semibold text-foreground">Certificate Locked</h2>
+          <h2 className="text-lg font-semibold text-foreground">
+            {compact ? "Open Source Contributor" : "Contributor Certificate Locked"}
+          </h2>
           <p className="text-sm text-neutral-500 dark:text-neutral-400">
-            Merge {remaining} more PR{remaining !== 1 ? "s" : ""} to unlock
+            {compact
+              ? "Optional — merge PRs to earn a separate contributor certificate."
+              : `Merge ${remaining} more PR${remaining !== 1 ? "s" : ""} to unlock the contributor certificate`}
           </p>
         </div>
       </div>
