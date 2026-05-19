@@ -135,6 +135,43 @@ describe("isOriginAllowed", () => {
       isOriginAllowed(makeRequest({ method: "POST", referer: "not a url" }))
     ).toBe(false);
   });
+
+  it("returns true when origin equals the request URL origin (same-origin POST)", () => {
+    expect(
+      isOriginAllowed(
+        makeRequest({
+          method: "POST",
+          origin: "http://localhost:3000",
+          url: "http://localhost:3000/api/x",
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  it("returns true when referer origin equals the request URL origin (same-origin)", () => {
+    expect(
+      isOriginAllowed(
+        makeRequest({
+          method: "POST",
+          referer: "http://localhost:3000/path/to/page",
+          url: "http://localhost:3000/api/x",
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  it("returns true when referer origin matches NEXT_PUBLIC_APP_URL", () => {
+    process.env.NEXT_PUBLIC_APP_URL = "https://staging.example.com";
+    expect(
+      isOriginAllowed(
+        makeRequest({
+          method: "POST",
+          referer: "https://staging.example.com/some/page",
+        }),
+      ),
+    ).toBe(true);
+    delete process.env.NEXT_PUBLIC_APP_URL;
+  });
 });
 
 describe("withCsrfProtection", () => {
