@@ -8,9 +8,12 @@ import {
   buildArmDefenseReport,
   buildAttackReport,
   buildBuildReport,
+  buildCastSpellReport,
   buildDistributeReport,
   buildExploreReport,
+  buildFlyoverReport,
   buildProduceReport,
+  buildSiegeReport,
 } from "@/lib/game/turn-report";
 import { makeSeededRng } from "@/lib/game/combat";
 import { ALL_ARTIFACTS } from "@/lib/game/content/artifacts";
@@ -330,5 +333,204 @@ describe("buildAttackReport", () => {
       const outcome = report.outcome as { heroSlain?: { name: string } };
       expect(outcome.heroSlain?.name).toBe("Sir Test");
     });
+  });
+});
+
+describe("buildSiegeReport", () => {
+  it("includes the targetTileId and magnitude percentage in the summary", () => {
+    const report = buildSiegeReport({
+      turnIndex: 30,
+      cost: 1,
+      targetTileId: "7_-3",
+      magnitudeApplied: 0.25,
+      totalMagnitudeAfter: 0.5,
+      rng: makeSeededRng("siege:1"),
+    });
+    expect(report.action).toBe("siege");
+    expect(report.cost).toBe(1);
+    expect(report.summary).toContain("7_-3");
+    expect(report.summary).toContain("25%");
+    expect(report.narrative).toHaveLength(1);
+    expect(report.outcome).toEqual({
+      targetTileId: "7_-3",
+      magnitudeApplied: 0.25,
+      totalMagnitudeAfter: 0.5,
+    });
+  });
+});
+
+describe("buildCastSpellReport", () => {
+  it("siege variant: stamps magnitude in summary and outcome.siege", () => {
+    const report = buildCastSpellReport({
+      turnIndex: 5,
+      cost: 1,
+      spellId: "spell-1",
+      spellName: "Siege Hex",
+      spellType: "siege",
+      targetTileId: "1_0",
+      siege: { magnitudeApplied: 0.3, totalMagnitudeAfter: 0.6 },
+      rng: makeSeededRng("cast:siege"),
+    });
+    expect(report.action).toBe("spell-cast");
+    expect(report.summary).toContain("Siege Hex");
+    expect(report.summary).toContain("1_0");
+    expect(report.summary).toContain("30%");
+    const outcome = report.outcome as Record<string, unknown>;
+    expect(outcome.spellType).toBe("siege");
+    expect(outcome.siege).toEqual({ magnitudeApplied: 0.3, totalMagnitudeAfter: 0.6 });
+  });
+
+  it("siege variant: defaults magnitude to 0 when payload missing", () => {
+    const report = buildCastSpellReport({
+      turnIndex: 5,
+      cost: 1,
+      spellId: "spell-1",
+      spellName: "Siege Hex",
+      spellType: "siege",
+      targetTileId: "1_0",
+      // No siege payload
+      rng: makeSeededRng("cast:siege:miss"),
+    });
+    expect(report.summary).toContain("0%");
+  });
+
+  it("disarm variant: stamps fraction in summary and outcome.disarm", () => {
+    const report = buildCastSpellReport({
+      turnIndex: 5,
+      cost: 1,
+      spellId: "spell-2",
+      spellName: "Wardbreak",
+      spellType: "disarm",
+      targetTileId: "2_0",
+      disarm: { fractionApplied: 0.4 },
+      rng: makeSeededRng("cast:disarm"),
+    });
+    expect(report.summary).toContain("Wardbreak");
+    expect(report.summary).toContain("40%");
+    expect(report.summary).toContain("disarm");
+    const outcome = report.outcome as Record<string, unknown>;
+    expect(outcome.spellType).toBe("disarm");
+    expect(outcome.disarm).toEqual({ fractionApplied: 0.4 });
+  });
+
+  it("disarm variant: defaults fraction to 0 when payload missing", () => {
+    const report = buildCastSpellReport({
+      turnIndex: 5,
+      cost: 1,
+      spellId: "spell-2",
+      spellName: "Wardbreak",
+      spellType: "disarm",
+      targetTileId: "2_0",
+      rng: makeSeededRng("cast:disarm:miss"),
+    });
+    expect(report.summary).toContain("0%");
+  });
+
+  it("attrition variant: sums unitsKilled and stamps outcome.attrition", () => {
+    const report = buildCastSpellReport({
+      turnIndex: 5,
+      cost: 1,
+      spellId: "spell-3",
+      spellName: "Plague Veil",
+      spellType: "attrition",
+      targetTileId: "3_0",
+      attrition: { unitsKilled: { ground: 5, siege: 2, air: 1 } },
+      rng: makeSeededRng("cast:attr"),
+    });
+    expect(report.summary).toContain("Plague Veil");
+    expect(report.summary).toContain("8"); // 5 + 2 + 1
+    expect(report.summary).toContain("defenders lost");
+    const outcome = report.outcome as Record<string, unknown>;
+    expect(outcome.spellType).toBe("attrition");
+  });
+
+  it("attrition variant: defaults total to 0 when payload missing", () => {
+    const report = buildCastSpellReport({
+      turnIndex: 5,
+      cost: 1,
+      spellId: "spell-3",
+      spellName: "Plague Veil",
+      spellType: "attrition",
+      targetTileId: "3_0",
+      rng: makeSeededRng("cast:attr:miss"),
+    });
+    expect(report.summary).toContain("0 defenders");
+  });
+
+  it("attaches heroEmerged when provided", () => {
+    const report = buildCastSpellReport({
+      turnIndex: 5,
+      cost: 1,
+      spellId: "spell-1",
+      spellName: "Siege Hex",
+      spellType: "siege",
+      targetTileId: "1_0",
+      siege: { magnitudeApplied: 0.3, totalMagnitudeAfter: 0.6 },
+      rng: makeSeededRng("cast:hero"),
+      heroEmerged: {
+        id: "hero-9",
+        name: "Spell Caster",
+        class: "magical" as never,
+        specialty: "ground" as never,
+      } as never,
+    });
+    const outcome = report.outcome as Record<string, unknown>;
+    expect(outcome.heroEmerged).toBeDefined();
+  });
+});
+
+describe("buildFlyoverReport", () => {
+  const flyoverCombat: CombatResult = {
+    outcome: "repelled",
+    unitsDeployed: { ground: 0, siege: 0, air: 20 },
+    unitsClampedFromCapacity: 0,
+    attackPower: 150,
+    defensePower: 100,
+    attackerLosses: { ground: 0, siege: 0, air: 6 },
+    defenderLosses: { ground: 4, siege: 0, air: 0 },
+    underdogApplied: false,
+    supplyMultiplier: 1,
+    rng: { attackerRoll: 1, defenderRoll: 1 },
+    appliedSpells: { offenseId: null, defenseId: null },
+  };
+
+  it("returns a flyover report with both narrative lines and full outcome shape", () => {
+    const sent: UnitStack = { ground: 0, siege: 0, air: 20 };
+    const report = buildFlyoverReport({
+      turnIndex: 22,
+      cost: 1,
+      targetTileId: "4_5",
+      unitsSent: sent,
+      combat: flyoverCombat,
+      artifactFound: null,
+      rng: makeSeededRng("fly:1"),
+    });
+    expect(report.action).toBe("flyover");
+    expect(report.cost).toBe(1);
+    expect(report.summary).toContain("Flyover");
+    expect(report.summary).toContain("4_5");
+    expect(report.narrative).toHaveLength(2);
+    // Second narrative line documents the 2× penalty
+    expect(report.narrative[1]).toContain("2×");
+    const outcome = report.outcome as Record<string, unknown>;
+    expect(outcome.result).toBe("repelled");
+    expect(outcome.attackPower).toBe(150);
+    expect(outcome.defensePower).toBe(100);
+  });
+
+  it("attaches artifact when one is found on the tile", () => {
+    const artifact = ALL_ARTIFACTS[0];
+    const sent: UnitStack = { ground: 0, siege: 0, air: 10 };
+    const report = buildFlyoverReport({
+      turnIndex: 22,
+      cost: 1,
+      targetTileId: "4_5",
+      unitsSent: sent,
+      combat: flyoverCombat,
+      artifactFound: artifact,
+      rng: makeSeededRng("fly:art"),
+    });
+    expect(report.artifactFound).toBeDefined();
+    expect(report.artifactFound?.definitionId).toBe(artifact.id);
   });
 });
