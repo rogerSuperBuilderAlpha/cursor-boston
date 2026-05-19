@@ -711,6 +711,94 @@ describe("Cursor idea runs API", () => {
     });
   });
 
+  it("approve-plan returns 401 when unauthenticated", async () => {
+    mockGetVerifiedUser.mockResolvedValueOnce(null);
+    const { POST } = await import("@/app/api/cursor/idea-runs/[runId]/approve-plan/route");
+    const res = await POST(
+      request("/api/cursor/idea-runs/run-1/approve-plan", "POST", {}),
+      params("run-1"),
+    );
+    expect(res.status).toBe(401);
+  });
+
+  it("approve-plan returns 500 when admin db is null", async () => {
+    const fbAdmin = require("@/lib/firebase-admin");
+    fbAdmin.getAdminDb.mockReturnValueOnce(null);
+    const { POST } = await import("@/app/api/cursor/idea-runs/[runId]/approve-plan/route");
+    const res = await POST(
+      request("/api/cursor/idea-runs/run-1/approve-plan", "POST", {}),
+      params("run-1"),
+    );
+    expect(res.status).toBe(500);
+  });
+
+  it("approve-plan returns 404 when run missing or buildPlan absent", async () => {
+    docs.set("run-1", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "finished",
+      workflowStage: "plan_approval",
+      cursorAgentId: "bc-agent-1",
+      // No buildPlan
+      prompt: "Prompt",
+      inputs: {},
+    });
+    const { POST } = await import("@/app/api/cursor/idea-runs/[runId]/approve-plan/route");
+    const res = await POST(
+      request("/api/cursor/idea-runs/run-1/approve-plan", "POST", {}),
+      params("run-1"),
+    );
+    expect(res.status).toBe(404);
+  });
+
+  it("approve-plan falls back to launchCursorAgentRun when sendCursorFollowUp throws", async () => {
+    docs.set("run-1", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "finished",
+      workflowStage: "plan_approval",
+      cursorAgentId: "bc-agent-1",
+      buildPlan: "## Plan",
+      prompt: "Prompt",
+      inputs: {},
+    });
+    mockSendCursorFollowUp.mockRejectedValueOnce(new Error("follow-up failed"));
+    const { POST } = await import("@/app/api/cursor/idea-runs/[runId]/approve-plan/route");
+    const res = await POST(
+      request("/api/cursor/idea-runs/run-1/approve-plan", "POST", {}),
+      params("run-1"),
+    );
+    expect(res.status).toBe(202);
+    expect(mockLaunchCursorAgentRun).toHaveBeenCalled();
+    expect(docs.get("run-1")).toMatchObject({
+      cursorAgentId: "bc-agent-fresh",
+      buildRunId: "fresh-run-1",
+      workflowStage: "building",
+    });
+  });
+
+  it("approve-plan returns 500 'approval_failed' when both follow-up and fresh agent fail", async () => {
+    docs.set("run-1", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "finished",
+      workflowStage: "plan_approval",
+      cursorAgentId: "bc-agent-1",
+      buildPlan: "## Plan",
+      prompt: "Prompt",
+      inputs: {},
+    });
+    mockSendCursorFollowUp.mockRejectedValueOnce(new Error("follow-up failed"));
+    mockLaunchCursorAgentRun.mockRejectedValueOnce(new Error("fresh agent failed"));
+    const { POST } = await import("@/app/api/cursor/idea-runs/[runId]/approve-plan/route");
+    const res = await POST(
+      request("/api/cursor/idea-runs/run-1/approve-plan", "POST", {}),
+      params("run-1"),
+    );
+    expect(res.status).toBe(500);
+    expect(await res.json()).toMatchObject({ error: "approval_failed" });
+  });
+
   it("opens a PR after build readiness", async () => {
     docs.set("run-1", {
       userId: "user-1",
