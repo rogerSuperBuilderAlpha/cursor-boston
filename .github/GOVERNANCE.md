@@ -164,24 +164,35 @@ All code changes require review before merging.
 
 ### Tiers
 
-- **Minor changes** (typos, docs, small fixes): One maintainer approval.
-- **Standard changes** (features, bug fixes): One maintainer approval, 24-hour waiting period for objections.
-- **Major changes** (architecture, breaking changes): Two maintainer approvals, 72-hour waiting period.
+- **Minor changes** (typos, docs-only edits, dependency bumps with no changelog impact, generated-file refreshes, badge/README link tweaks): **One maintainer approval**. No waiting period.
+- **Standard changes** (features, bug fixes, non-trivial refactors, any change touching `lib/`, `app/api/`, `config/`, or workflows): **Two maintainer approvals**, 24-hour waiting period for objections.
+- **Major changes** (architecture changes, breaking changes, governance edits, security-policy edits): **Two maintainer approvals**, 72-hour waiting period.
+
+The 2-reviewer requirement on Standard and Major changes is enforced at the GitHub level via branch protection on `develop` and `main` (`required_approving_review_count: 2`). See [`docs/BRANCH_PROTECTION.md`](../docs/BRANCH_PROTECTION.md) for the live settings and OpenSSF Best Practices Gold criterion `two_person_review` for the rationale.
 
 ### No self-approval
 
-The author of a PR cannot approve their own changes. A maintainer may merge their own PR **only after** another maintainer has submitted a GitHub "Approve" review on that PR. This rule applies to every PR, including governance/docs PRs and including the Project Lead.
+The author of a PR cannot approve their own changes. A maintainer may merge their own PR **only after** the required number of other maintainer "Approve" reviews have landed. This rule applies to every PR, including governance/docs PRs and including the Project Lead.
 
-This is enforced procedurally (maintainers are expected to follow it) and observably (GitHub's review history on each PR is the audit trail). If the maintainer team observes that the rule is being skipped in practice, the next governance update should move enforcement to a required-status-check on the branch protection rules.
+This is enforced both procedurally (maintainers are expected to follow it) and observably (GitHub's review history on each PR is the audit trail).
 
-### Exception: solo-emergency merges
+### Project Lead bypass
 
-If only one maintainer is reachable and the change is urgent (security patch, production outage), that maintainer may merge without a second reviewer. The merged PR must then be:
+The Project Lead may use `gh pr merge --admin` to bypass the 2-reviewer requirement in two narrow cases:
 
-1. Linked in `#maintainers` on Discord with the reason for the exception.
-2. Reviewed retroactively by a second maintainer within 7 days; any issues found are fixed via a follow-up PR.
+1. **Develop → main release PRs** — `--admin` is the documented mechanism to bypass DCO failures and the `mergeStateStatus=BEHIND` topology quirk that affects rebase-style releases.
+2. **Urgent production fixes** — security patches or live-incident hotfixes when a second reviewer is not reachable within the window the incident allows.
 
-This exception exists so the rule never blocks a security fix, not as a routine path.
+Every bypass is audit-trail-visible in the GitHub merge metadata (the API records which user merged with admin privileges). Bypasses MUST be:
+
+- Linked in `#maintainers` on Discord within 24 hours with the reason.
+- Reviewed retroactively by a second maintainer within 7 days; any issues found are fixed via a follow-up PR.
+
+The bypass exists so the policy never blocks a security fix or a clean release, not as a routine path for feature work.
+
+### Exception: solo-emergency merges (legacy alias)
+
+The "solo-emergency merge" terminology previously documented in this section is now covered by the Project Lead bypass clause above. The mechanics are the same: emergency merge, link in `#maintainers` within 24 hours, retroactive second review within 7 days.
 
 ## Releases
 

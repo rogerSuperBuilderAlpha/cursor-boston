@@ -20,6 +20,7 @@ If the live settings drift from this document, treat the document as the source 
 **Required protections:**
 
 - **Require a pull request before merging.** No direct pushes. Release PRs from `develop` are the only mechanism.
+- **Require 2 approving reviews** (`required_approving_review_count: 2`). Implements OpenSSF Best Practices Gold criterion `two_person_review` for Standard and Major changes per [`.github/GOVERNANCE.md` § Code Review](../.github/GOVERNANCE.md#code-review).
 - **Require status checks to pass before merging:**
   - `CI / lint-and-typecheck`
   - `CI / test` (Jest)
@@ -33,6 +34,7 @@ If the live settings drift from this document, treat the document as the source 
 - **No force pushes.** Disabled.
 - **No deletions.** Disabled.
 - **Restrict who can push.** Only maintainers (currently `@rogerSuperBuilderAlpha`).
+- **`enforce_admins: false`** — admins (Project Lead) are NOT subject to the rules, which makes the documented `gh pr merge --admin` bypass work. The bypass is policy-restricted per GOVERNANCE.md to release PRs and urgent fixes only.
 
 **Admin-bypass case:**
 
@@ -51,6 +53,7 @@ The April 2026 referral-code postmortem ([`docs/security-incident-2026-04-11.md`
 **Required protections:**
 
 - **Require a pull request before merging.** No direct pushes.
+- **Require 2 approving reviews** (`required_approving_review_count: 2`) on every PR — Standard and Major changes per [`.github/GOVERNANCE.md` § Code Review](../.github/GOVERNANCE.md#code-review). Minor changes (typos, docs-only, dependency bumps) still need 1 reviewer per the GitHub setting; the policy distinguishes Minor procedurally via the PR description.
 - **Require status checks to pass before merging:**
   - `CI / lint-and-typecheck`
   - `CI / test`
@@ -63,6 +66,7 @@ The April 2026 referral-code postmortem ([`docs/security-incident-2026-04-11.md`
 - **Require signed-off commits.** Enforced via DCO.
 - **No force pushes.** Disabled.
 - **No deletions.** Disabled.
+- **`enforce_admins: false`** — admins (Project Lead) can use `gh pr merge --admin` for the policy-restricted bypass cases in GOVERNANCE.md (release PRs, urgent fixes). Bypasses are auditable and require retroactive review within 7 days.
 
 `develop` does **not** restrict push permissions beyond the "requires PR" rule — maintainers merge approved PRs but do not push branches directly.
 

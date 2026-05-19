@@ -40,6 +40,17 @@ Aaron holds the **Community Maintainer** title rather than the standard Maintain
 - [`docs/SUBMISSION_BRANCHES.md`](docs/SUBMISSION_BRANCHES.md) — what the persistent contribution branches are and when they're used
 - [`ROADMAP.md`](ROADMAP.md) — current roadmap and where to file new issues (mirrored at `.github/ACTIVE_ISSUES.md`)
 
+## Maintainer account security
+
+Required for all maintainers and any GitHub account with merge rights on this repository (OpenSSF Best Practices Gold criteria `require_2FA` and `secure_2FA`):
+
+1. **Two-factor authentication is mandatory.** Every maintainer MUST have 2FA enabled on their GitHub account. The `rogerSuperBuilderAlpha` organization enforces this at the org level — accounts without 2FA cannot be members.
+2. **Phishing-resistant 2FA only.** The second factor MUST be either a hardware security key (FIDO2 / WebAuthn — YubiKey, Titan, etc.) or a passkey synced via a platform authenticator (iCloud Keychain, 1Password, Bitwarden, etc.). **TOTP-only (Authy, Google Authenticator) is not sufficient** for maintainer accounts because TOTP codes can be phished. SMS 2FA is explicitly forbidden.
+3. **Recovery codes** stored offline (printed and locked, or in a hardware-backed password manager). Lost-key scenarios are recovered via the maintainer team consensus and the Project Lead, not by SMS reset.
+4. **Local commit signing** is encouraged but not required (DCO sign-off is the enforced minimum).
+
+A maintainer who cannot meet the phishing-resistant 2FA requirement (e.g., no access to a hardware key) should contact the Project Lead. The expectation is that hardware keys or passkeys are obtained within 30 days of joining the maintainer team.
+
 ## Emeritus
 
 Maintainers who have stepped down but whose contributions are recognized. None currently.
