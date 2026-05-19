@@ -83,4 +83,46 @@ describe("POST /api/auth/remove-email", () => {
     expect(mockUpdate).toHaveBeenCalled();
     expect(mockDelete).toHaveBeenCalled();
   });
+
+  it("returns 500 when admin db is null", async () => {
+    const fb = require("@/lib/firebase-admin");
+    fb.getAdminDb.mockReturnValueOnce(null);
+    const res = await POST(makeRequest({ email: "test@example.com" }));
+    expect(res.status).toBe(500);
+  });
+
+  it("returns 400 for invalid JSON body", async () => {
+    const req = new NextRequest("http://localhost/api/auth/remove-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "not-json",
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(400);
+  });
+
+  it("treats user.additionalEmails missing as empty (still 400 with not found)", async () => {
+    mockUserGet.mockResolvedValue({
+      data: () => ({}),
+    });
+    const res = await POST(makeRequest({ email: "test@example.com" }));
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toContain("not found");
+  });
+
+  it("returns 500 'Failed to remove email' on unexpected throw", async () => {
+    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    mockUserGet.mockResolvedValue({
+      data: () => ({
+        additionalEmails: [{ email: "test@example.com" }],
+      }),
+    });
+    mockUpdate.mockRejectedValueOnce(new Error("firestore write failed"));
+    const res = await POST(makeRequest({ email: "test@example.com" }));
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body.error).toBe("Failed to remove email");
+    consoleErrorSpy.mockRestore();
+  });
 });
