@@ -212,6 +212,10 @@ External attestations:
 - OpenSSF Scorecard: https://scorecard.dev/viewer/?uri=github.com/rogerSuperBuilderAlpha/cursor-boston
 - Sigstore-signed release artifacts: see https://github.com/rogerSuperBuilderAlpha/cursor-boston/releases — every release after v0.2.2 includes `.cosign.bundle` and SLSA provenance.
 
+Internal attestations:
+
+- Codebase security review: [`docs/SECURITY_REVIEW.md`](SECURITY_REVIEW.md) — last review 2026-05-19, clean. Quarterly cadence.
+
 ---
 
 ## 8. Known gaps and forward plan
