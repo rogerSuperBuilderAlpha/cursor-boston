@@ -270,6 +270,88 @@ describe("getPyDataSubmissions", () => {
       { displayName: "Co B", githubHandle: null },
     ]);
   });
+
+  it("silently ignores a malformed score.json (still returns the submission, no score)", () => {
+    const result = withTempCwd((root) => {
+      const folder = path.join(root, PYDATA_SUBMISSIONS_DIR, "scored-bad");
+      fs.mkdirSync(folder, { recursive: true });
+      fs.writeFileSync(path.join(folder, "submission.py"), "# marimo notebook\n");
+      fs.writeFileSync(
+        path.join(folder, "meta.json"),
+        JSON.stringify({ title: "T", description: "D", displayName: "T" }),
+      );
+      fs.writeFileSync(path.join(folder, "score.json"), "{ not valid json");
+    });
+    expect(result).toHaveLength(1);
+    expect(result[0].score).toBeNull();
+  });
+
+  it("ignores a score.json with out-of-range score", () => {
+    const result = withTempCwd((root) => {
+      writeSubmission(
+        root,
+        "scored-oor",
+        { title: "T", description: "D", displayName: "T" },
+        { score: { score: 11, rationale: "too high", model: "claude" } },
+      );
+    });
+    expect(result[0].score).toBeNull();
+  });
+
+  it("ignores a score.json with non-numeric score", () => {
+    const result = withTempCwd((root) => {
+      writeSubmission(
+        root,
+        "scored-non-num",
+        { title: "T", description: "D", displayName: "T" },
+        { score: { score: "not a number", rationale: "x", model: "claude" } },
+      );
+    });
+    expect(result[0].score).toBeNull();
+  });
+
+  it("ignores a score.json with empty rationale", () => {
+    const result = withTempCwd((root) => {
+      writeSubmission(
+        root,
+        "scored-no-rationale",
+        { title: "T", description: "D", displayName: "T" },
+        { score: { score: 7, rationale: "", model: "claude" } },
+      );
+    });
+    expect(result[0].score).toBeNull();
+  });
+
+  it("defaults missing model to 'unknown' in a valid score.json", () => {
+    const result = withTempCwd((root) => {
+      writeSubmission(
+        root,
+        "scored-no-model",
+        { title: "T", description: "D", displayName: "T" },
+        { score: { score: 8, rationale: "good work" } },
+      );
+    });
+    expect(result[0].score?.model).toBe("unknown");
+  });
+
+  it("returns [] when the on-disk readdir throws (e.g. permission denied)", () => {
+    const original = process.cwd();
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "pydata-readdir-throw-"));
+    try {
+      process.chdir(tmp);
+      const base = path.join(tmp, PYDATA_SUBMISSIONS_DIR);
+      fs.mkdirSync(base, { recursive: true });
+      const readdirSpy = jest.spyOn(fs, "readdirSync").mockImplementation(() => {
+        throw new Error("EACCES");
+      });
+      const result = getPyDataSubmissions();
+      expect(result).toEqual([]);
+      readdirSpy.mockRestore();
+    } finally {
+      process.chdir(original);
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
 });
 
 describe("submissions constants", () => {
