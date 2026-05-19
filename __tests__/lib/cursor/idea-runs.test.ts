@@ -5,8 +5,10 @@
  */
 
 import {
+  buildApprovedImplementationPrompt,
   buildIdeaPlanPrompt,
   buildIdeaQuestionsPrompt,
+  buildOpenPrPrompt,
   buildPrIdeaPrompt,
   normalizeRunInputs,
   validateIdeaWorkflowAction,
@@ -134,5 +136,196 @@ describe("validateIdeaWorkflowAction", () => {
         "open-pr",
       ),
     ).toBe("build_not_ready");
+  });
+
+  it("rejects questions when in wrong workflowStage", () => {
+    expect(
+      validateIdeaWorkflowAction(workflowRun({ workflowStage: "planning" }), "questions"),
+    ).toBe("invalid_stage");
+  });
+
+  it("rejects questions when ideas are not ready (no result)", () => {
+    expect(
+      validateIdeaWorkflowAction(workflowRun({ result: null }), "questions"),
+    ).toBe("ideas_not_ready");
+  });
+
+  it("rejects questions when selectedIdea already exists", () => {
+    expect(
+      validateIdeaWorkflowAction(
+        workflowRun({ selectedIdea: "already chosen" }),
+        "questions",
+      ),
+    ).toBe("direction_already_selected");
+  });
+
+  it("allows answers when ready", () => {
+    expect(
+      validateIdeaWorkflowAction(
+        workflowRun({
+          workflowStage: "questions",
+          selectedIdea: "build it",
+          questions: [{ id: "q1", question: "?", suggestions: ["a"] }],
+        }),
+        "answers",
+      ),
+    ).toBeNull();
+  });
+
+  it("rejects answers when agent missing", () => {
+    expect(
+      validateIdeaWorkflowAction(
+        workflowRun({ cursorAgentId: undefined, workflowStage: "questions" }),
+        "answers",
+      ),
+    ).toBe("agent_missing");
+  });
+
+  it("rejects answers when wrong workflowStage", () => {
+    expect(
+      validateIdeaWorkflowAction(
+        workflowRun({ workflowStage: "ideas" }),
+        "answers",
+      ),
+    ).toBe("invalid_stage");
+  });
+
+  it("rejects answers when no direction selected", () => {
+    expect(
+      validateIdeaWorkflowAction(
+        workflowRun({
+          workflowStage: "questions",
+          selectedIdea: null,
+        }),
+        "answers",
+      ),
+    ).toBe("direction_missing");
+  });
+
+  it("rejects answers when no questions are ready", () => {
+    expect(
+      validateIdeaWorkflowAction(
+        workflowRun({
+          workflowStage: "questions",
+          selectedIdea: "x",
+          questions: [],
+        }),
+        "answers",
+      ),
+    ).toBe("questions_not_ready");
+  });
+
+  it("rejects answers when already submitted", () => {
+    expect(
+      validateIdeaWorkflowAction(
+        workflowRun({
+          workflowStage: "questions",
+          selectedIdea: "x",
+          questions: [{ id: "q1", question: "?", suggestions: [] }],
+          answersSubmittedAt: new Date(),
+        }),
+        "answers",
+      ),
+    ).toBe("answers_already_submitted");
+  });
+
+  it("rejects approve-plan when in wrong workflowStage", () => {
+    expect(
+      validateIdeaWorkflowAction(
+        workflowRun({ workflowStage: "questions", buildPlan: "p" }),
+        "approve-plan",
+      ),
+    ).toBe("invalid_stage");
+  });
+
+  it("rejects approve-plan when buildPlan missing", () => {
+    expect(
+      validateIdeaWorkflowAction(
+        workflowRun({ workflowStage: "plan_approval", buildPlan: null }),
+        "approve-plan",
+      ),
+    ).toBe("plan_missing");
+  });
+
+  it("rejects open-pr when agent missing", () => {
+    expect(
+      validateIdeaWorkflowAction(
+        workflowRun({ cursorAgentId: undefined, workflowStage: "ready_for_pr" }),
+        "open-pr",
+      ),
+    ).toBe("agent_missing");
+  });
+
+  it("rejects open-pr when wrong workflowStage", () => {
+    expect(
+      validateIdeaWorkflowAction(
+        workflowRun({ workflowStage: "planning", buildResult: "done" }),
+        "open-pr",
+      ),
+    ).toBe("invalid_stage");
+  });
+
+  it("rejects open-pr when PR is already open", () => {
+    expect(
+      validateIdeaWorkflowAction(
+        workflowRun({
+          workflowStage: "ready_for_pr",
+          buildResult: "done",
+          pr: { status: "open", url: "https://github.com/x/y/pull/1" },
+        }),
+        "open-pr",
+      ),
+    ).toBe("pr_already_open");
+  });
+
+  it("allows open-pr when ready and pr.url absent (status alone is fine)", () => {
+    expect(
+      validateIdeaWorkflowAction(
+        workflowRun({
+          workflowStage: "ready_for_pr",
+          buildResult: "done",
+          pr: { status: "not_started" },
+        }),
+        "open-pr",
+      ),
+    ).toBeNull();
+  });
+});
+
+describe("buildApprovedImplementationPrompt", () => {
+  it("includes the approved build plan in the prompt body", () => {
+    const prompt = buildApprovedImplementationPrompt("## Plan\n- step 1");
+    expect(prompt).toContain("approved this build plan");
+    expect(prompt).toContain("step 1");
+    expect(prompt).toContain("Do not open a pull request yet");
+  });
+});
+
+describe("buildOpenPrPrompt", () => {
+  it("instructs the agent to open a PR against the cloud-agent base ref", () => {
+    const prompt = buildOpenPrPrompt();
+    expect(prompt).toContain("Open a pull request");
+    expect(prompt).toContain("cloud-agent");
+    expect(prompt).toContain("PR URL");
+  });
+});
+
+describe("normalizeRunInputs — extra branches", () => {
+  it("treats non-object input as empty {} with default mode='idea'", () => {
+    const result = normalizeRunInputs(null);
+    expect(result.mode).toBe("idea");
+    expect("interests" in result).toBe(false);
+  });
+
+  it("treats undefined input as empty {} with default mode='idea'", () => {
+    const result = normalizeRunInputs(undefined);
+    expect(result.mode).toBe("idea");
+  });
+
+  it("clamps over-long text fields to their max length", () => {
+    const big = "a".repeat(1000);
+    const inputs = normalizeRunInputs({ mode: "idea", interests: big });
+    // interests max is 500
+    expect(inputs.interests?.length).toBeLessThanOrEqual(500);
   });
 });
