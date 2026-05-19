@@ -5,8 +5,7 @@
  */
 
 import React from "react";
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 /* ------------------------------------------------------------------ */
 /*  Mocks                                                              */
@@ -172,8 +171,7 @@ describe("AppShell", () => {
     expect(screen.getByLabelText("Collapse navigation")).toBeInTheDocument();
   });
 
-  it("toggles nav group sections on click", async () => {
-    const user = userEvent.setup();
+  it("toggles nav group sections on click", () => {
     render(<AppShell>Content</AppShell>);
 
     // Live section should be open by default (multi-item group)
@@ -181,13 +179,13 @@ describe("AppShell", () => {
 
     // Click the Live group header to collapse it
     const liveBtn = screen.getByText("Live");
-    await user.click(liveBtn);
+    fireEvent.click(liveBtn);
 
     // Events should no longer be visible
     expect(screen.queryByText("Events")).not.toBeInTheDocument();
 
     // Click again to expand
-    await user.click(liveBtn);
+    fireEvent.click(liveBtn);
     expect(screen.getByText("Events")).toBeInTheDocument();
   });
 

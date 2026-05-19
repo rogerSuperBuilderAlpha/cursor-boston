@@ -218,7 +218,7 @@ External attestations:
 
 Honesty matters more than a clean score. The following gaps are tracked in [`docs/REVIEW_ACTION_PLAN.md`](REVIEW_ACTION_PLAN.md):
 
-1. **Test statement coverage** (~32%) — below the 80% OpenSSF Silver target. Plan: incrementally add tests on under-covered `lib/` modules and raise Jest thresholds.
+1. **Test statement coverage** (**~67.8%** statements as of 2026-05-18 OpenSSF sprint wave 13: 23,206 / 34,205 covered; branches ~51.0%, lines ~70.4%, functions ~55.4%; 4,026 tests) — still below the 80% OpenSSF Silver target (`test_statement_coverage80`; **~4,158 statements** still needed). Waves 9–13 added deeper `lib/game/data-server.ts` hero/stance coverage, game page RTL (`artifacts`, `orders`, `armageddon`, `upgrades`), Q&A component flows, onboarding hook actions, auth pages, certificates, moderation, partners, PR Studio, richer hackathon page states, and game hooks/components. Jest floors are ratcheted to 67% statements in `config/jest.config.js`. **Next:** continue `lib/game/data-server.ts` (~78% file) and high-LOC `app/` pages until ≥80%, then update [bestpractices.dev #12883](https://www.bestpractices.dev/projects/12883/edit).
 2. **Production observability** — application-level error tracking (Sentry) is planned but not shipped. Platform-level logs are available in Vercel + Firebase.
 3. **Signed git tags** — release artifacts are Sigstore-signed; git tags themselves are migrating to signed tags from v0.3.0 onward.
 4. **Independent security audit** — no external auditor has reviewed the codebase. The OpenSSF Best Practices + Scorecard + the maintainer review process are the current substitute.
