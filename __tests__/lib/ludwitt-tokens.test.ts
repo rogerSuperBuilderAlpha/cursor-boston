@@ -397,4 +397,111 @@ describe("lib/ludwitt-tokens", () => {
       expect(call.mock.calls).toEqual([["AT0"], ["AT1"]]);
     });
   });
+
+  // ---------------------------------------------------------------------------
+  // Lock-wait path — coverage push #32
+  // ---------------------------------------------------------------------------
+
+  describe("refreshLudwittTokens — lock-wait path", () => {
+    function lockedTokenDb(initialSnap: ReturnType<typeof tokenSnap>, refreshedSnap?: ReturnType<typeof tokenSnap>) {
+      const update = jest.fn().mockResolvedValue(undefined);
+      // The post-claim re-read of the doc returns refreshedSnap if provided
+      const get = jest
+        .fn()
+        .mockResolvedValueOnce(initialSnap)
+        .mockResolvedValue(refreshedSnap ?? initialSnap);
+      const docRef = { get, update };
+      const collection = jest.fn().mockReturnValue({
+        doc: jest.fn().mockReturnValue(docRef),
+      });
+      // Transaction sees a fresh lock that hasn't expired → returns false (lock-wait branch)
+      const runTransaction = jest.fn(async (fn: (tx: unknown) => unknown) => {
+        const tx = {
+          get: jest.fn().mockResolvedValue(initialSnap),
+          update: jest.fn(),
+        };
+        return fn(tx);
+      });
+      const db = { collection, runTransaction };
+      return { db, docRef, get, update };
+    }
+
+    it("waits and returns fresh tokens when another caller releases the lock", async () => {
+      // Initial snapshot: lock held (expires in 5s)
+      const locked = tokenSnap({
+        accessToken: "AT0",
+        refreshToken: "RT0",
+        accessExpiresAt: tsLikeMs(0),
+        refreshLockId: "other-lock",
+        refreshLockExpiresAt: tsLikeMs(Date.now() + 5000),
+      });
+      // After the wait, the lock is gone and the tokens are fresh
+      const released = tokenSnap({
+        accessToken: "AT1",
+        refreshToken: "RT1",
+        scope: "read",
+        accessExpiresAt: tsLikeMs(Date.now() + 3600 * 1000),
+        // refreshLockId absent → unlocked
+      });
+      const { db } = lockedTokenDb(locked, released);
+      adminDbMock.mockReturnValueOnce(db);
+
+      const out = await refreshLudwittTokens("u1");
+      expect(out.accessToken).toBe("AT1");
+      expect(out.refreshToken).toBe("RT1");
+    });
+
+    it("times out after LOCK_WAIT_MAX_ATTEMPTS polls when lock is never released", async () => {
+      const locked = tokenSnap({
+        accessToken: "AT0",
+        refreshToken: "RT0",
+        accessExpiresAt: tsLikeMs(0),
+        refreshLockId: "other-lock",
+        refreshLockExpiresAt: tsLikeMs(Date.now() + 60_000),
+      });
+      const { db } = lockedTokenDb(locked, locked);
+      adminDbMock.mockReturnValueOnce(db);
+
+      await expect(refreshLudwittTokens("u1")).rejects.toThrow("ludwitt_refresh_lock_timeout");
+    }, 10_000);
+
+    it("throws ludwitt_tokens_missing if doc disappears during wait", async () => {
+      const locked = tokenSnap({
+        accessToken: "AT0",
+        refreshToken: "RT0",
+        accessExpiresAt: tsLikeMs(0),
+        refreshLockId: "other-lock",
+        refreshLockExpiresAt: tsLikeMs(Date.now() + 60_000),
+      });
+      const gone = tokenSnap(null);
+      const { db } = lockedTokenDb(locked, gone);
+      adminDbMock.mockReturnValueOnce(db);
+
+      await expect(refreshLudwittTokens("u1")).rejects.toThrow("ludwitt_tokens_missing");
+    }, 10_000);
+
+    it("ignores expired locks and continues the wait loop", async () => {
+      const lockedExpired = tokenSnap({
+        accessToken: "AT0",
+        refreshToken: "RT0",
+        accessExpiresAt: tsLikeMs(0),
+        refreshLockId: "stale-lock",
+        // Expired lock — wait loop should accept tokens
+        refreshLockExpiresAt: tsLikeMs(Date.now() - 1000),
+      });
+      // The transaction sees an active lock first (so we enter the wait loop)
+      const lockedActive = tokenSnap({
+        accessToken: "AT0",
+        refreshToken: "RT0",
+        accessExpiresAt: tsLikeMs(0),
+        refreshLockId: "active-lock",
+        refreshLockExpiresAt: tsLikeMs(Date.now() + 60_000),
+      });
+      const { db } = lockedTokenDb(lockedActive, lockedExpired);
+      adminDbMock.mockReturnValueOnce(db);
+
+      const out = await refreshLudwittTokens("u1");
+      expect(out.accessToken).toBe("AT0");
+    });
+  });
 });
