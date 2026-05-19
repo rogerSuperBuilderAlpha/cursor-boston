@@ -76,4 +76,48 @@ describe("hackathon-event-signup", () => {
       profileMatchesHackathonJudgeCheckinException(null, { email: "participant@example.com" })
     ).toBe(false);
   });
+
+  it("blocks when public but no GitHub linked", () => {
+    expect(
+      getHackathonEventSignupBlockReason({
+        visibility: { isPublic: true },
+        // No github
+        discord: { id: "1" },
+      }),
+    ).toBe("Connect GitHub in your profile to sign up.");
+  });
+
+  it("blocks when public + github but no Discord", () => {
+    expect(
+      getHackathonEventSignupBlockReason({
+        visibility: { isPublic: true },
+        github: { login: "u" },
+        // No discord
+      }),
+    ).toBe("Connect Discord in your profile to sign up.");
+  });
+
+  it("judge exception: token mismatch + undefined profile returns false (no further checks)", () => {
+    expect(
+      profileMatchesHackathonJudgeCheckinException("not-a-judge@example.com", undefined),
+    ).toBe(false);
+  });
+
+  it("judge exception: additionalEmails with verified=false is ignored", () => {
+    expect(
+      profileMatchesHackathonJudgeCheckinException(null, {
+        email: "non-judge@example.com",
+        additionalEmails: [{ verified: false, email: "MikeBoensel@gmail.com" }],
+      }),
+    ).toBe(false);
+  });
+
+  it("judge exception: additionalEmails entry without email field is skipped", () => {
+    expect(
+      profileMatchesHackathonJudgeCheckinException(null, {
+        email: "non-judge@example.com",
+        additionalEmails: [{ verified: true }],
+      }),
+    ).toBe(false);
+  });
 });
