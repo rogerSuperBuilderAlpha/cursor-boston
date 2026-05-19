@@ -7,7 +7,7 @@
  */
 
 import { NextRequest } from "next/server";
-import { POST } from "@/app/api/mentorship/request/route";
+import { POST, GET } from "@/app/api/mentorship/request/route";
 import type { VerifiedUser } from "@/lib/server-auth";
 import { getVerifiedUser } from "@/lib/server-auth";
 
@@ -112,5 +112,94 @@ describe("POST /api/mentorship/request", () => {
   it("returns 400 when goals array is empty", async () => {
     const res = await POST(makeRequest({ ...validBody, goals: [] }));
     expect(res.status).toBe(400);
+  });
+
+  it("returns 400 when a goal is whitespace-only", async () => {
+    const res = await POST(makeRequest({ ...validBody, goals: ["valid", "   "] }));
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toContain("Each goal");
+  });
+
+  it("returns 400 when message is whitespace-only", async () => {
+    const res = await POST(makeRequest({ ...validBody, message: "   " }));
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toContain("Message");
+  });
+
+  it("returns 500 'Failed to create request' when service throws", async () => {
+    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    const { createMentorshipRequestServer } = jest.requireMock("@/lib/mentorship/data-server") as {
+      createMentorshipRequestServer: jest.Mock;
+    };
+    createMentorshipRequestServer.mockRejectedValueOnce(new Error("db down"));
+    const res = await POST(makeRequest(validBody));
+    expect(res.status).toBe(500);
+    const json = await res.json();
+    expect(json.error).toBe("Failed to create request");
+    consoleErrorSpy.mockRestore();
+  });
+});
+
+describe("GET /api/mentorship/request", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("returns 401 when unauthenticated", async () => {
+    mockGetVerifiedUser.mockResolvedValue(null);
+    const req = new NextRequest("http://localhost/api/mentorship/request");
+    const res = await GET(req);
+    expect(res.status).toBe(401);
+  });
+
+  it("returns received requests by default", async () => {
+    mockGetVerifiedUser.mockResolvedValue(testUser);
+    const { getMentorshipRequestsForUserServer } = jest.requireMock("@/lib/mentorship/data-server") as {
+      getMentorshipRequestsForUserServer: jest.Mock;
+    };
+    getMentorshipRequestsForUserServer.mockResolvedValueOnce([{ id: "r1" }]);
+    const req = new NextRequest("http://localhost/api/mentorship/request");
+    const res = await GET(req);
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.requests).toEqual([{ id: "r1" }]);
+    expect(getMentorshipRequestsForUserServer).toHaveBeenCalledWith("u1", "received");
+  });
+
+  it("returns sent requests when type=sent is in the query string", async () => {
+    mockGetVerifiedUser.mockResolvedValue(testUser);
+    const { getMentorshipRequestsForUserServer } = jest.requireMock("@/lib/mentorship/data-server") as {
+      getMentorshipRequestsForUserServer: jest.Mock;
+    };
+    getMentorshipRequestsForUserServer.mockResolvedValueOnce([]);
+    const req = new NextRequest("http://localhost/api/mentorship/request?type=sent");
+    await GET(req);
+    expect(getMentorshipRequestsForUserServer).toHaveBeenCalledWith("u1", "sent");
+  });
+
+  it("defaults to received for unrecognized type query value", async () => {
+    mockGetVerifiedUser.mockResolvedValue(testUser);
+    const { getMentorshipRequestsForUserServer } = jest.requireMock("@/lib/mentorship/data-server") as {
+      getMentorshipRequestsForUserServer: jest.Mock;
+    };
+    getMentorshipRequestsForUserServer.mockResolvedValueOnce([]);
+    const req = new NextRequest("http://localhost/api/mentorship/request?type=garbage");
+    await GET(req);
+    expect(getMentorshipRequestsForUserServer).toHaveBeenCalledWith("u1", "received");
+  });
+
+  it("returns 500 'Failed to fetch requests' when service throws", async () => {
+    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    mockGetVerifiedUser.mockResolvedValue(testUser);
+    const { getMentorshipRequestsForUserServer } = jest.requireMock("@/lib/mentorship/data-server") as {
+      getMentorshipRequestsForUserServer: jest.Mock;
+    };
+    getMentorshipRequestsForUserServer.mockRejectedValueOnce(new Error("db down"));
+    const req = new NextRequest("http://localhost/api/mentorship/request");
+    const res = await GET(req);
+    expect(res.status).toBe(500);
+    consoleErrorSpy.mockRestore();
   });
 });
