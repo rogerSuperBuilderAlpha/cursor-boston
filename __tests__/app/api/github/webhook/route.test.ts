@@ -5,8 +5,29 @@
  */
 import { NextRequest } from "next/server";
 import { GET, POST } from "@/app/api/github/webhook/route";
-import { verifyWebhookSignature, processPullRequest, isTargetRepository } from "@/lib/github";
+import {
+  verifyWebhookSignature,
+  processPullRequest,
+  isTargetRepository,
+  fetchPullRequestChangedFilenames,
+} from "@/lib/github";
+import { ensureHackASprint2026ScoreDoc } from "@/lib/hackathon-asprint-2026-scores";
+import { awardHackASprint2026ShowcaseBadge } from "@/lib/hackathon-showcase-admin";
+import { maybeAutoAdmitOnPRMerge } from "@/lib/summer-cohort-auto-admit";
+import {
+  notifyPROpened,
+  notifyPRMerged,
+  notifyHackASprintSubmissionMerged,
+} from "@/lib/discord";
+import { getAdminDb } from "@/lib/firebase-admin";
 import { makeRequest, readJson } from "@/__tests__/_helpers/route-test-utils";
+
+// Quiet the next/cache revalidate calls in jest while preserving the rest
+jest.mock("next/cache", () => ({
+  ...jest.requireActual("next/cache"),
+  revalidatePath: jest.fn(),
+  revalidateTag: jest.fn(),
+}));
 
 jest.mock("@/lib/github", () => ({
   verifyWebhookSignature: jest.fn(),
@@ -72,6 +93,10 @@ describe("GET /api/github/webhook", () => {
 });
 
 describe("POST /api/github/webhook", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it("returns 401 when signature is invalid", async () => {
     mockVerify.mockReturnValue(false);
     const req = new NextRequest("http://localhost/api/github/webhook", {
@@ -175,5 +200,263 @@ describe("POST /api/github/webhook", () => {
     expect(mockProcessPullRequest).toHaveBeenCalledWith(
       expect.objectContaining({ number: 42, merged: false }),
     );
+  });
+
+  it("calls notifyPROpened on pull_request opened action", async () => {
+    mockVerify.mockReturnValue(true);
+    mockProcessPullRequest.mockResolvedValue(undefined);
+    const req = makeRequest({
+      method: "POST",
+      path: "/api/github/webhook",
+      body: {
+        action: "opened",
+        pull_request: {
+          number: 1,
+          title: "PR",
+          state: "open",
+          merged: false,
+          user: { login: "u", avatar_url: "x" },
+          html_url: "u",
+          created_at: "2026-01-01",
+          updated_at: "2026-01-01",
+        },
+        repository: { owner: { login: "o" }, name: "r" },
+      },
+      headers: {
+        "x-hub-signature-256": "sha256=abc",
+        "x-github-event": "pull_request",
+      },
+    });
+    await POST(req);
+    expect(notifyPROpened).toHaveBeenCalled();
+  });
+
+  it("calls notifyPRMerged when closed + merged=true", async () => {
+    mockVerify.mockReturnValue(true);
+    mockIsTargetRepository.mockReturnValue(false);
+    const req = makeRequest({
+      method: "POST",
+      path: "/api/github/webhook",
+      body: {
+        action: "closed",
+        pull_request: {
+          number: 2,
+          title: "Done",
+          state: "closed",
+          merged: true,
+          merged_at: "2026-05-01",
+          user: { login: "u", avatar_url: "x" },
+          html_url: "u",
+          created_at: "2026-04-30",
+          updated_at: "2026-05-01",
+        },
+        repository: { owner: { login: "o" }, name: "r" },
+      },
+      headers: {
+        "x-hub-signature-256": "sha256=abc",
+        "x-github-event": "pull_request",
+      },
+    });
+    await POST(req);
+    expect(notifyPRMerged).toHaveBeenCalled();
+  });
+
+  it("skips showcase award when filenames don't touch the showcase path", async () => {
+    mockVerify.mockReturnValue(true);
+    mockIsTargetRepository.mockReturnValue(true);
+    (fetchPullRequestChangedFilenames as jest.Mock).mockResolvedValue([
+      "src/some-file.ts",
+    ]);
+    const req = makeRequest({
+      method: "POST",
+      path: "/api/github/webhook",
+      body: {
+        action: "closed",
+        pull_request: {
+          number: 3,
+          title: "Merged",
+          state: "closed",
+          merged: true,
+          merged_at: "2026-05-01",
+          user: { login: "u", avatar_url: "x" },
+          html_url: "u",
+          created_at: "2026-04-30",
+          updated_at: "2026-05-01",
+        },
+        repository: { owner: { login: "o" }, name: "r" },
+      },
+      headers: {
+        "x-hub-signature-256": "sha256=abc",
+        "x-github-event": "pull_request",
+      },
+    });
+    await POST(req);
+    expect(awardHackASprint2026ShowcaseBadge).not.toHaveBeenCalled();
+  });
+
+  it("awards showcase badge + ensures score doc when filenames touch hackathon submissions path", async () => {
+    mockVerify.mockReturnValue(true);
+    mockIsTargetRepository.mockReturnValue(true);
+    (fetchPullRequestChangedFilenames as jest.Mock).mockResolvedValue([
+      "content/hackathons/hack-a-sprint-2026/submissions/team-alpha.json",
+      "content/hackathons/hack-a-sprint-2026/submissions/team-beta.json",
+    ]);
+    (getAdminDb as jest.Mock).mockReturnValue({ collection: jest.fn() });
+    const req = makeRequest({
+      method: "POST",
+      path: "/api/github/webhook",
+      body: {
+        action: "closed",
+        pull_request: {
+          number: 4,
+          title: "Showcase",
+          state: "closed",
+          merged: true,
+          merged_at: "2026-05-01",
+          user: { login: "team-alpha", avatar_url: "x" },
+          html_url: "u",
+          created_at: "2026-04-30",
+          updated_at: "2026-05-01",
+        },
+        repository: { owner: { login: "o" }, name: "r" },
+      },
+      headers: {
+        "x-hub-signature-256": "sha256=abc",
+        "x-github-event": "pull_request",
+      },
+    });
+    await POST(req);
+    expect(awardHackASprint2026ShowcaseBadge).toHaveBeenCalledWith("team-alpha");
+    expect(ensureHackASprint2026ScoreDoc).toHaveBeenCalledTimes(2);
+  });
+
+  it("falls back gracefully when getAdminDb returns null (still notifies + collects logins)", async () => {
+    mockVerify.mockReturnValue(true);
+    mockIsTargetRepository.mockReturnValue(true);
+    (fetchPullRequestChangedFilenames as jest.Mock).mockResolvedValue([
+      "content/hackathons/hack-a-sprint-2026/submissions/team-alpha.json",
+    ]);
+    (getAdminDb as jest.Mock).mockReturnValue(null);
+    const req = makeRequest({
+      method: "POST",
+      path: "/api/github/webhook",
+      body: {
+        action: "closed",
+        pull_request: {
+          number: 5,
+          title: "Showcase",
+          state: "closed",
+          merged: true,
+          merged_at: "2026-05-01",
+          user: { login: "team-alpha", avatar_url: "x" },
+          html_url: "u",
+          created_at: "2026-04-30",
+          updated_at: "2026-05-01",
+        },
+        repository: { owner: { login: "o" }, name: "r" },
+      },
+      headers: {
+        "x-hub-signature-256": "sha256=abc",
+        "x-github-event": "pull_request",
+      },
+    });
+    await POST(req);
+    expect(notifyHackASprintSubmissionMerged).toHaveBeenCalledWith(
+      expect.objectContaining({ submissionLogins: ["team-alpha"] }),
+    );
+    expect(ensureHackASprint2026ScoreDoc).not.toHaveBeenCalled();
+  });
+
+  it("calls maybeAutoAdmitOnPRMerge on every PR merge to target repo", async () => {
+    mockVerify.mockReturnValue(true);
+    mockIsTargetRepository.mockReturnValue(true);
+    (fetchPullRequestChangedFilenames as jest.Mock).mockResolvedValue([]);
+    const req = makeRequest({
+      method: "POST",
+      path: "/api/github/webhook",
+      body: {
+        action: "closed",
+        pull_request: {
+          number: 6,
+          title: "Merged",
+          state: "closed",
+          merged: true,
+          merged_at: "2026-05-01",
+          user: { login: "octocat", avatar_url: "x" },
+          html_url: "u",
+          created_at: "2026-04-30",
+          updated_at: "2026-05-01",
+        },
+        repository: { owner: { login: "o" }, name: "r" },
+      },
+      headers: {
+        "x-hub-signature-256": "sha256=abc",
+        "x-github-event": "pull_request",
+      },
+    });
+    await POST(req);
+    expect(maybeAutoAdmitOnPRMerge).toHaveBeenCalledWith({
+      authorLogin: "octocat",
+      prNumber: 6,
+    });
+  });
+
+  it("swallows processPullRequest errors and still returns 200", async () => {
+    mockVerify.mockReturnValue(true);
+    mockProcessPullRequest.mockRejectedValueOnce(new Error("firestore down"));
+    mockIsTargetRepository.mockReturnValue(false);
+    const req = makeRequest({
+      method: "POST",
+      path: "/api/github/webhook",
+      body: {
+        action: "opened",
+        pull_request: {
+          number: 7,
+          title: "PR",
+          state: "open",
+          merged: false,
+          user: { login: "u", avatar_url: "x" },
+          html_url: "u",
+          created_at: "2026-01-01",
+          updated_at: "2026-01-01",
+        },
+        repository: { owner: { login: "o" }, name: "r" },
+      },
+      headers: {
+        "x-hub-signature-256": "sha256=abc",
+        "x-github-event": "pull_request",
+      },
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+  });
+
+  it("returns 200 received for unhandled pull_request actions (e.g. labeled)", async () => {
+    mockVerify.mockReturnValue(true);
+    const req = makeRequest({
+      method: "POST",
+      path: "/api/github/webhook",
+      body: {
+        action: "labeled",
+        pull_request: {
+          number: 8,
+          title: "PR",
+          state: "open",
+          merged: false,
+          user: { login: "u" },
+          html_url: "u",
+          created_at: "2026-01-01",
+          updated_at: "2026-01-01",
+        },
+        repository: { owner: { login: "o" }, name: "r" },
+      },
+      headers: {
+        "x-hub-signature-256": "sha256=abc",
+        "x-github-event": "pull_request",
+      },
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+    expect(mockProcessPullRequest).not.toHaveBeenCalled();
   });
 });
