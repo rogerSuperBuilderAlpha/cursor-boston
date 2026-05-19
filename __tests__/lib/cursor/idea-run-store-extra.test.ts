@@ -221,3 +221,103 @@ describe("applyWorkflowRunSnapshot", () => {
     expect(next.workflowStage).toBe("plan_approval");
   });
 });
+
+describe("serializeCursorIdeaRun timestamp handling", () => {
+  it("approximates a FieldValue sentinel by stamping 'now' (object branch)", () => {
+    // Use a plain object that's NOT a Timestamp and NOT a Date — the sentinel
+    // catch-all branch (line 281). The real FieldValue sentinel value may be
+    // a class that confuses instanceof checks across module boundaries, so
+    // we approximate with a plain object that hits the same `typeof === "object"`
+    // branch.
+    const sentinel = { __ts: "sentinel" } as never;
+    const run = baseRun({
+      planApprovedAt: sentinel,
+      updatedAt: sentinel,
+    } as never);
+    const out = serializeCursorIdeaRun(run);
+    // Should not be undefined / null — should be an ISO-8601 string
+    expect(typeof out.planApprovedAt).toBe("string");
+    expect(out.planApprovedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    expect(typeof out.updatedAt).toBe("string");
+  });
+
+  it("passes through string timestamps unchanged", () => {
+    const run = baseRun({
+      planApprovedAt: "2026-04-01T12:00:00.000Z" as never,
+    } as never);
+    const out = serializeCursorIdeaRun(run);
+    expect(out.planApprovedAt).toBe("2026-04-01T12:00:00.000Z");
+  });
+
+  it("serializes a Date instance to ISO string", () => {
+    const run = baseRun({
+      planApprovedAt: new Date("2026-05-01T08:00:00.000Z") as never,
+    } as never);
+    const out = serializeCursorIdeaRun(run);
+    expect(out.planApprovedAt).toBe("2026-05-01T08:00:00.000Z");
+  });
+
+  it("preserves null timestamps as null (distinct from undefined)", () => {
+    const run = baseRun({
+      planApprovedAt: null as never,
+    } as never);
+    const out = serializeCursorIdeaRun(run);
+    expect(out.planApprovedAt).toBeNull();
+  });
+});
+
+describe("extractQuestionsFromText (via applyRunSnapshot)", () => {
+  it("ignores malformed JSON inside [...] braces (catch branch)", async () => {
+    const { db, set } = mockDb();
+    const run = baseRun({
+      workflowStage: "questions",
+      status: "running",
+      questions: [],
+    });
+    // The result text has [ ... ] but the content inside is unparseable
+    const snapshot: CursorRunSnapshot = {
+      status: "finished",
+      result: "Here are the questions: [ {not valid json },, ]",
+    } as never;
+    const next = await applyWorkflowRunSnapshot(db, run, snapshot);
+    // Should still be valid, just questions stays empty
+    expect(next.questions).toEqual([]);
+  });
+
+  it("ignores result with no array brackets at all", async () => {
+    const { db } = mockDb();
+    const run = baseRun({
+      workflowStage: "questions",
+      status: "running",
+      questions: [],
+    });
+    const snapshot: CursorRunSnapshot = {
+      status: "finished",
+      result: "I have no questions in this output.",
+    } as never;
+    const next = await applyWorkflowRunSnapshot(db, run, snapshot);
+    expect(next.questions).toEqual([]);
+  });
+
+  it("parses a valid questions array and clamps to 5 items", async () => {
+    const { db } = mockDb();
+    const run = baseRun({
+      workflowStage: "questions",
+      status: "running",
+      questions: [],
+    });
+    const questionsJson = JSON.stringify(
+      Array.from({ length: 7 }, (_, i) => ({
+        id: `q${i}`,
+        question: `Question ${i}?`,
+        suggestions: [`s${i}`],
+      })),
+    );
+    const snapshot: CursorRunSnapshot = {
+      status: "finished",
+      result: `Reasoning…\n\n${questionsJson}`,
+    } as never;
+    const next = await applyWorkflowRunSnapshot(db, run, snapshot);
+    expect(next.questions).toHaveLength(5);
+  });
+});
