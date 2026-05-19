@@ -13,6 +13,7 @@ import { getClientIdentifier } from "@/lib/rate-limit";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 import { sanitizeName, sanitizeText, sanitizeUrl } from "@/lib/sanitize";
 import { profileContract } from "@/lib/api-schemas/profile";
+import { rebuildPublicMembersSnapshot } from "@/lib/members-public-snapshot";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -164,6 +165,13 @@ export async function PATCH(request: NextRequest) {
       ...updates,
       updatedAt: FieldValue.serverTimestamp(),
     });
+
+    // Refresh public members snapshot so edited profile fields appear quickly.
+    try {
+      await rebuildPublicMembersSnapshot(db);
+    } catch (snapshotError) {
+      console.warn("[profile/update] Failed to refresh members snapshot", snapshotError);
+    }
 
     // Get updated profile
     const updatedSnap = await userRef.get();
