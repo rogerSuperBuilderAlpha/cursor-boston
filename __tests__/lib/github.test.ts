@@ -337,3 +337,88 @@ describe("processPullRequest", () => {
     ).rejects.toThrow("Firebase Admin is not configured");
   });
 });
+
+/* ------------------------------------------------------------------ */
+/*  Additional edge cases — coverage push #35                         */
+/* ------------------------------------------------------------------ */
+
+describe("verifyWebhookSignature — secret-set path", () => {
+  it("returns true for a correctly-signed payload", async () => {
+    process.env.GITHUB_WEBHOOK_SECRET = "test-secret-1";
+    jest.resetModules();
+    const { verifyWebhookSignature: verify } = await import("@/lib/github");
+    const crypto = await import("crypto");
+    const payload = '{"foo":"bar"}';
+    const sig =
+      "sha256=" +
+      crypto.createHmac("sha256", "test-secret-1").update(payload).digest("hex");
+    expect(verify(payload, sig)).toBe(true);
+  });
+
+  it("returns false for a tampered signature with the same length", async () => {
+    process.env.GITHUB_WEBHOOK_SECRET = "test-secret-2";
+    jest.resetModules();
+    const { verifyWebhookSignature: verify } = await import("@/lib/github");
+    const crypto = await import("crypto");
+    const payload = '{"foo":"bar"}';
+    const correctSig =
+      "sha256=" +
+      crypto.createHmac("sha256", "test-secret-2").update(payload).digest("hex");
+    // Flip one char while preserving length
+    const tampered = correctSig.slice(0, -1) + (correctSig.slice(-1) === "0" ? "1" : "0");
+    expect(verify(payload, tampered)).toBe(false);
+  });
+});
+
+describe("findUserByGitHubLogin — extra branches", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGet.mockReset();
+  });
+
+  it("returns null when admin db is unavailable", async () => {
+    const { getAdminDb } = require("@/lib/firebase-admin");
+    (getAdminDb as jest.Mock).mockReturnValueOnce(null);
+    expect(await findUserByGitHubLogin("alice")).toBeNull();
+  });
+
+  it("falls back to exact-case query when lowercase query is empty AND case differs", async () => {
+    // First query (lowercase) → empty
+    mockGet.mockResolvedValueOnce({ empty: true, docs: [] });
+    // Second query (exact case) → finds user
+    mockGet.mockResolvedValueOnce({ empty: false, docs: [{ id: "u-mixed" }] });
+    const result = await findUserByGitHubLogin("MixedCase");
+    expect(result).toBe("u-mixed");
+    // Should have queried lowercase then exact
+    expect(mockWhere).toHaveBeenNthCalledWith(1, "github.login", "==", "mixedcase");
+    expect(mockWhere).toHaveBeenNthCalledWith(2, "github.login", "==", "MixedCase");
+  });
+
+  it("returns null when both lowercase and exact-case queries are empty", async () => {
+    mockGet
+      .mockResolvedValueOnce({ empty: true, docs: [] })
+      .mockResolvedValueOnce({ empty: true, docs: [] });
+    expect(await findUserByGitHubLogin("MixedCase")).toBeNull();
+  });
+});
+
+describe("fetchPullRequestChangedFilenames — env-token branch", () => {
+  const originalToken = process.env.GITHUB_TOKEN;
+  afterEach(() => {
+    if (originalToken !== undefined) process.env.GITHUB_TOKEN = originalToken;
+    else delete process.env.GITHUB_TOKEN;
+  });
+
+  it("sends Authorization: Bearer when GITHUB_TOKEN is set", async () => {
+    process.env.GITHUB_TOKEN = "ghp_secret-token";
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => [{ filename: "a.ts" }],
+    });
+    await fetchPullRequestChangedFilenames("o", "r", 1);
+    const [, init] = mockFetch.mock.calls[mockFetch.mock.calls.length - 1];
+    expect((init as { headers: Record<string, string> }).headers.Authorization).toBe(
+      "Bearer ghp_secret-token",
+    );
+  });
+});
