@@ -7,9 +7,6 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import type { User } from "firebase/auth";
 import type { UserProfile } from "@/contexts/AuthContext";
 import { useProfileSettings } from "@/app/(auth)/profile/_hooks/useProfileSettings";
-import { updateDoc } from "firebase/firestore";
-
-const mockUpdateDoc = updateDoc as jest.Mock;
 
 const mockUser = {
   uid: "settings-u",
@@ -54,7 +51,6 @@ const mockProfile: UserProfile = {
 describe("useProfileSettings", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUpdateDoc.mockResolvedValue(undefined);
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
       json: async () => ({ success: true }),
@@ -72,7 +68,7 @@ describe("useProfileSettings", () => {
     });
   });
 
-  it("saves profile fields and visibility to Firestore", async () => {
+  it("saves profile and visibility via API and refreshes profile", async () => {
     const refreshUserProfile = jest.fn().mockResolvedValue(undefined);
     const { result } = renderHook(() =>
       useProfileSettings(mockUser, mockProfile, refreshUserProfile),
@@ -98,14 +94,29 @@ describe("useProfileSettings", () => {
           body: expect.stringContaining('"bio":"Updated bio"'),
         }),
       );
-      expect(mockUpdateDoc).toHaveBeenCalled();
+      expect(global.fetch).toHaveBeenCalledWith(
+        "/api/profile/visibility",
+        expect.objectContaining({
+          method: "PATCH",
+          body: expect.stringContaining('"isPublic":true'),
+        }),
+      );
       expect(refreshUserProfile).toHaveBeenCalled();
       expect(result.current.success).toBe(true);
     });
   });
 
-  it("reverts public toggle when Firestore update fails", async () => {
-    mockUpdateDoc.mockRejectedValueOnce(new Error("offline"));
+  it("reverts public toggle when visibility API update fails", async () => {
+    global.fetch = jest
+      .fn()
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: "offline" }),
+      })
+      .mockResolvedValue({
+        ok: true,
+        json: async () => ({ success: true }),
+      });
     const { result } = renderHook(() =>
       useProfileSettings(mockUser, mockProfile, jest.fn()),
     );
