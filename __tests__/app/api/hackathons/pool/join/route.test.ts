@@ -272,4 +272,34 @@ describe("POST /api/hackathons/pool/join", () => {
     const body = await res.json();
     expect(body.hackathonId).toBe("2026-03");
   });
+
+  it("returns 500 when admin db is null", async () => {
+    mockGetVerifiedUser.mockResolvedValue(testUser);
+    const fb = require("@/lib/firebase-admin");
+    fb.getAdminDb.mockReturnValueOnce(null);
+    const res = await POST(makeRequest({}));
+    expect(res.status).toBe(500);
+  });
+
+  it("returns 400 when schema rejects body (non-string hackathonId)", async () => {
+    mockGetVerifiedUser.mockResolvedValue(testUser);
+    const res = await POST(makeRequest({ hackathonId: 12345 } as never));
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 500 'Failed to join pool' on unexpected throw", async () => {
+    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    mockGetVerifiedUser.mockResolvedValue(testUser);
+    const fb = require("@/lib/firebase-admin");
+    fb.getAdminDb.mockReturnValueOnce({
+      collection: jest.fn(() => {
+        throw new Error("firestore down");
+      }),
+    });
+    const res = await POST(makeRequest({}));
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body.error).toBe("Failed to join pool");
+    consoleErrorSpy.mockRestore();
+  });
 });
