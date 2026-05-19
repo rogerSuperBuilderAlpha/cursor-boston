@@ -241,6 +241,24 @@ describe("QuestionsService", () => {
       expect(result.downCount).toBe(1);
     });
 
+    it("throws UnauthorizedError when voting on own content", async () => {
+      mockRunTransaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
+        const tx = {
+          get: jest.fn()
+            .mockResolvedValueOnce({
+              exists: true,
+              data: () => ({ authorId: "u1", upCount: 0, downCount: 0 }),
+            })
+            .mockResolvedValueOnce({ exists: false }),
+        };
+        return fn(tx);
+      });
+
+      await expect(service.vote("question", "q1", "u1", "up")).rejects.toThrow(
+        UnauthorizedError
+      );
+    });
+
     it("throws QuestionNotFoundError when target does not exist", async () => {
       mockRunTransaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
         const tx = {

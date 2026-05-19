@@ -366,6 +366,10 @@ export class QuestionsService {
       }
 
       const targetData = targetSnap.data()!;
+      if (targetData.authorId === userId) {
+        throw new UnauthorizedError("You cannot vote on your own content");
+      }
+
       const upCount = Number(targetData.upCount ?? 0);
       const downCount = Number(targetData.downCount ?? 0);
 
