@@ -423,6 +423,79 @@ describe("Cursor idea runs API", () => {
     });
   });
 
+  it("answers returns 401 when unauthenticated", async () => {
+    mockGetVerifiedUser.mockResolvedValueOnce(null);
+    const { POST } = await import("@/app/api/cursor/idea-runs/[runId]/answers/route");
+    const res = await POST(
+      request("/api/cursor/idea-runs/run-1/answers", "POST", { answers: {} }),
+      params("run-1"),
+    );
+    expect(res.status).toBe(401);
+  });
+
+  it("answers returns 500 when admin db is null", async () => {
+    const fbAdmin = require("@/lib/firebase-admin");
+    fbAdmin.getAdminDb.mockReturnValueOnce(null);
+    const { POST } = await import("@/app/api/cursor/idea-runs/[runId]/answers/route");
+    const res = await POST(
+      request("/api/cursor/idea-runs/run-1/answers", "POST", { answers: {} }),
+      params("run-1"),
+    );
+    expect(res.status).toBe(500);
+  });
+
+  it("answers returns 400 on invalid JSON body", async () => {
+    const { POST } = await import("@/app/api/cursor/idea-runs/[runId]/answers/route");
+    const req = new NextRequest("http://localhost/api/cursor/idea-runs/run-1/answers", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "not-json",
+    });
+    const res = await POST(req, params("run-1"));
+    expect(res.status).toBe(400);
+  });
+
+  it("answers returns 404 when run missing or selectedIdea absent", async () => {
+    docs.set("run-1", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "running",
+      workflowStage: "questions",
+      cursorAgentId: "bc-agent-1",
+      questions: [{ id: "q1", question: "?", suggestions: [] }],
+      prompt: "Prompt",
+      inputs: {},
+    });
+    const { POST } = await import("@/app/api/cursor/idea-runs/[runId]/answers/route");
+    const res = await POST(
+      request("/api/cursor/idea-runs/run-1/answers", "POST", { answers: { q1: "yes" } }),
+      params("run-1"),
+    );
+    expect(res.status).toBe(404);
+  });
+
+  it("answers returns 409 'agent_recovery_required' when sendCursorFollowUp throws", async () => {
+    docs.set("run-1", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "running",
+      workflowStage: "questions",
+      cursorAgentId: "bc-agent-1",
+      selectedIdea: "Refactor",
+      questions: [{ id: "q1", question: "Scope?", suggestions: ["small"] }],
+      prompt: "Prompt",
+      inputs: {},
+    });
+    mockSendCursorFollowUp.mockRejectedValueOnce(new Error("cursor api down"));
+    const { POST } = await import("@/app/api/cursor/idea-runs/[runId]/answers/route");
+    const res = await POST(
+      request("/api/cursor/idea-runs/run-1/answers", "POST", { answers: { q1: "small" } }),
+      params("run-1"),
+    );
+    expect(res.status).toBe(409);
+    expect(await res.json()).toMatchObject({ error: "agent_recovery_required" });
+  });
+
   it("questions returns 401 when unauthenticated", async () => {
     mockGetVerifiedUser.mockResolvedValueOnce(null);
     const { POST } = await import("@/app/api/cursor/idea-runs/[runId]/questions/route");
