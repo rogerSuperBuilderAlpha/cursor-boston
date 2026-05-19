@@ -101,4 +101,85 @@ describe("PUT /api/game/reactions", () => {
       heroId: undefined,
     });
   });
+
+  it("returns 429 with default 30s when retryAfter is missing", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", email: "u@test.com", name: "User" });
+    mockRateLimit.mockResolvedValue({ success: false } as never);
+    const { body } = await readJson(
+      await PUT(
+        makeAuthedRequest({ method: "PUT", path: "/api/game/reactions", body: BODY }),
+      ),
+    );
+    expect(String((body as { error?: { message?: string } }).error?.message)).toContain("30s");
+  });
+
+  it("returns 400 for non-JSON request body", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", email: "u@test.com", name: "User" });
+    const res = await PUT(
+      makeRequest({
+        method: "PUT",
+        path: "/api/game/reactions",
+        body: "not-json",
+        headers: { Authorization: "Bearer test", "content-type": "text/plain" },
+      }),
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it("translates ReactionTargetNotFoundError to 404", async () => {
+    const { ReactionTargetNotFoundError } = jest.requireActual("@/lib/game/reactions");
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", email: "u@test.com", name: "User" });
+    mockToggle.mockRejectedValue(new ReactionTargetNotFoundError("chat", "msg-missing"));
+    const { status, body } = await readJson(
+      await PUT(
+        makeAuthedRequest({ method: "PUT", path: "/api/game/reactions", body: BODY }),
+      ),
+    );
+    expect(status).toBe(404);
+    expect(typeof (body as { error: { message: string } }).error.message).toBe("string");
+  });
+
+  it.each([
+    ["ReactionInvalidScopeError"],
+    ["ReactionInvalidEmojiError"],
+    ["ReactionMissingHeroIdError"],
+  ])("translates %s to 400", async (errName) => {
+    const reactions = jest.requireActual("@/lib/game/reactions");
+    const ErrCls = reactions[errName];
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", email: "u@test.com", name: "User" });
+    // These error classes all take a single string arg.
+    mockToggle.mockRejectedValue(new ErrCls("bad"));
+    const { status } = await readJson(
+      await PUT(
+        makeAuthedRequest({ method: "PUT", path: "/api/game/reactions", body: BODY }),
+      ),
+    );
+    expect(status).toBe(400);
+  });
+
+  it("returns 500 for untyped Error", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", email: "u@test.com", name: "User" });
+    mockToggle.mockRejectedValue(new Error("kaboom"));
+    const { status, body } = await readJson(
+      await PUT(
+        makeAuthedRequest({ method: "PUT", path: "/api/game/reactions", body: BODY }),
+      ),
+    );
+    expect(status).toBe(500);
+    expect(body.error.message).toBe("kaboom");
+  });
+
+  it("returns 500 'Server error' for non-Error throws", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", email: "u@test.com", name: "User" });
+    mockToggle.mockImplementation(() => {
+      throw "string-thrown";
+    });
+    const { status, body } = await readJson(
+      await PUT(
+        makeAuthedRequest({ method: "PUT", path: "/api/game/reactions", body: BODY }),
+      ),
+    );
+    expect(status).toBe(500);
+    expect(body.error.message).toBe("Server error");
+  });
 });
