@@ -9,13 +9,17 @@ import {
   armDefenseSpell,
   attack,
   bulkDistribute,
+  castArmageddon,
   castIntelSpell,
+  castSpell,
   createPlayer,
   distributeTile,
   farExpedition,
+  flyover,
   frontierExplore,
   recruitUnits,
   setPlayerName,
+  siege,
   spendArtifact,
   type DashboardMutators,
 } from "@/app/game/_lib/dashboard-actions";
@@ -815,3 +819,115 @@ describe("createPlayer / setPlayerName / adminGrant", () => {
     expect(setError).toHaveBeenLastCalledWith("not admin");
   });
 });
+
+describe("siege", () => {
+  it("posts source + target tile ids and returns siege magnitude", async () => {
+    const fetchMock = mockFetchOnce({
+      success: true,
+      player: FAKE_PLAYER,
+      report: { summary: "Siege laid" },
+      siegeTotalMagnitude: 2,
+    });
+    const mut = makeMutators();
+    const out = await siege(
+      makeUser(),
+      { sourceTileId: "1_2", targetTileId: "3_4" },
+      mut,
+    );
+    expect(out).toEqual({ reportSummary: "Siege laid", siegeTotalMagnitude: 2 });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/game/siege",
+      expect.objectContaining({
+        body: JSON.stringify({ sourceTileId: "1_2", targetTileId: "3_4" }),
+      }),
+    );
+    expect(mut.__spies.setPlayer).toHaveBeenCalledWith(FAKE_PLAYER);
+  });
+
+  it("returns null on failure", async () => {
+    mockFetchOnce({ success: false, error: "too far" });
+    const mut = makeMutators();
+    const out = await siege(
+      makeUser(),
+      { sourceTileId: "1_2", targetTileId: "3_4" },
+      mut,
+    );
+    expect(out).toBeNull();
+    expect(mut.__spies.setError).toHaveBeenLastCalledWith("too far");
+  });
+});
+
+describe("flyover", () => {
+  it("merges source + border target tiles from response", async () => {
+    mockFetchOnce({
+      success: true,
+      attackerPlayer: FAKE_PLAYER,
+      sourceTile: FAKE_TILE,
+      targetTile: FAKE_ENEMY_TILE,
+      report: { summary: "Flyover complete" },
+    });
+    const mut = makeMutators();
+    const out = await flyover(
+      makeUser(),
+      {
+        sourceTileId: "1_2",
+        targetTileId: "3_4",
+        units: { ground: 0, siege: 0, air: 5 },
+      },
+      mut,
+    );
+    expect(out?.reportSummary).toBe("Flyover complete");
+    expect(mut.__spies.mergeOwnedTiles).toHaveBeenCalled();
+    expect(mut.__spies.mergeBorderTiles).toHaveBeenCalled();
+  });
+});
+
+describe("castSpell", () => {
+  it("returns siege/disarm/attrition payload slices", async () => {
+    mockFetchOnce({
+      success: true,
+      player: FAKE_PLAYER,
+      report: { summary: "Attrition" },
+      attrition: {
+        unitsKilled: { ground: 2, siege: 0, air: 0 },
+        targetTile: FAKE_ENEMY_TILE,
+      },
+    });
+    const mut = makeMutators();
+    const out = await castSpell(
+      makeUser(),
+      { spellId: "red-attrition", sourceTileId: "1_2", targetTileId: "3_4" },
+      mut,
+    );
+    expect(out?.attrition?.unitsKilled).toEqual({ ground: 2, siege: 0, air: 0 });
+    expect(mut.__spies.mergeBorderTiles).toHaveBeenCalled();
+  });
+});
+
+describe("castArmageddon", () => {
+  it("patches world meta when setWorldMeta is wired", async () => {
+    mockFetchOnce({
+      success: true,
+      player: FAKE_PLAYER,
+      sealBroken: true,
+      successChance: 0.25,
+      sealsBroken: 3,
+      seasonNumber: 2,
+      shouldTriggerResolve: false,
+    });
+    const mut = makeMutators();
+    const setWorldMeta = jest.fn();
+    const out = await castArmageddon(makeUser(), { ...mut, setWorldMeta });
+    expect(out).toEqual({
+      sealBroken: true,
+      successChance: 0.25,
+      sealsBroken: 3,
+      seasonNumber: 2,
+      shouldTriggerResolve: false,
+    });
+    expect(setWorldMeta).toHaveBeenCalledWith(
+      expect.objectContaining({ sealsBroken: 3, seasonNumber: 2 }),
+    );
+  });
+});
+

@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/label-has-associated-control -- legacy form markup; tracked separately */
 /**
  * Copyright (C) 2026 Cursor Boston
  * This file is part of Cursor Boston, licensed under GPL-3.0.
@@ -35,7 +36,7 @@ export default function PairProgrammingPage() {
   const [profile, setProfile] = useState<PairProfile | null>(null);
   const [matches, setMatches] = useState<MatchScore[]>([]);
   const [requests, setRequests] = useState<PairRequest[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [showProfileForm, setShowProfileForm] = useState(false);
   const [userProfiles, setUserProfiles] = useState<Record<string, PublicUser>>({});
   const [refreshKey, setRefreshKey] = useState(0);
@@ -43,10 +44,8 @@ export default function PairProgrammingPage() {
   // Fetch user's pair profile
   useEffect(() => {
     async function fetchProfile() {
-      if (!user || !db) {
-        setLoading(false);
-        return;
-      }
+      if (!user || !db) return;
+      setLoading(true);
 
       try {
         const userProfile = await getPairProfile(user.uid);
