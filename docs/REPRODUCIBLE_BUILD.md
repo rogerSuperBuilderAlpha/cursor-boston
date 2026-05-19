@@ -4,10 +4,13 @@ This document is the OpenSSF Best Practices Gold attestation for [criterion `bui
 
 ## What's enforced
 
-Two artifacts decide whether a build is reproducible at a commit:
+The reproducibility gate enforces deterministic deploy artifacts at a commit:
 
 1. **`.next/BUILD_ID`** — set by `generateBuildId` in [`next.config.js`](../next.config.js) to the short SHA of `HEAD`. Same commit → same `BUILD_ID`. The env var `NEXT_BUILD_ID` overrides this for CI tests.
-2. **`.next/server/`** and **`.next/static/`** — webpack output. Pinned to deterministic chunk/module IDs in [`next.config.js`](../next.config.js) (`webpack.optimization.moduleIds = 'deterministic'`, `webpack.optimization.chunkIds = 'deterministic'`). Next.js production builds default to this since v14; the explicit setting in this repo survives upstream changes.
+2. **`.next/static/chunks/`** — client bundle JS chunks.
+3. **`.next/server/chunks/`** — server bundle JS chunks.
+
+These chunk outputs are pinned to deterministic chunk/module IDs in [`next.config.js`](../next.config.js) (`webpack.optimization.moduleIds = 'deterministic'`, `webpack.optimization.chunkIds = 'deterministic'`). Next.js production builds default to this since v14; the explicit setting in this repo survives upstream changes.
 
 The Docker base image is pinned to `node:22.11.0-alpine3.21` (specific patch version, not a floating `node:22-alpine` tag) in [`docker/Dockerfile`](../docker/Dockerfile) so layer caches and toolchain versions are consistent.
 
@@ -21,8 +24,9 @@ The script (`scripts/verify-reproducible-build.sh`):
 
 1. Cleans `.next/`, `.next-1/`, `.next-2/`.
 2. Runs `NEXT_TELEMETRY_DISABLED=1 npm run build` twice, saving the output to `.next-1/` and `.next-2/`.
-3. Runs `diff -r` on the two trees, excluding the documented irreducibles below.
-4. Exits 0 if no differences remain, 1 otherwise.
+3. Hard-fails if `BUILD_ID`, `static/chunks`, or `server/chunks` differ.
+4. Runs a broader `diff -r` on the full `.next` trees (excluding documented irreducibles) and reports the result as warning-only telemetry.
+5. Exits 0 when deterministic deploy artifacts match, 1 otherwise.
 
 CI runs this on every PR to `develop` and `main` (see `.github/workflows/ci.yml`).
 
@@ -43,7 +47,7 @@ These artifacts contain values that legitimately vary across runs and are EXCLUD
 | `cache/` | Webpack persistent cache. The script wipes it between runs anyway. | Performance cache; not deployed. |
 | `package.json` | Next.js may rewrite `.next/package.json` with a per-run hint depending on `output: 'standalone'`. | Cosmetic. |
 
-### Category B — Next.js per-build security secrets (acknowledged, NOT excluded)
+### Category B — Next.js per-build security secrets and route manifest ordering (acknowledged, warning-only)
 
 Next.js 16 generates fresh values on every `next build` for:
 
@@ -54,11 +58,11 @@ These are baked into the bundle at build time. They are **NOT configurable via e
 
 Effects on the diff:
 
-- `server/server-reference-manifest.json` — contains generated server-action IDs (small, opaque)
-- One CSS file's content-hash filename differs (the bundle includes a critical-CSS inline that depends on a value derived from the secrets)
-- `server/pages/404.html` — references the differently-hashed chunk filenames
+- `server/server-reference-manifest.json` and `server/middleware-manifest.json` — contain generated per-build keys
+- `app-path-routes-manifest.json` / `server/app-paths-manifest.json` — key order is not stable across runs
+- Hash-named CSS output can differ, and those references cascade into many generated `.html`, `.rsc`, and `*_client-reference-manifest.js` files
 
-The structural application code (`.next/static/chunks/*.js`) is byte-identical when these are excluded. The `verify-reproducible-build.sh` script reports the per-build-secret diff as a warning and fails only if the diff exceeds the known irreducibility budget (>10 content diffs), which would indicate an upstream change introducing broader nondeterminism.
+The structural application code (`.next/static/chunks/*.js` and `.next/server/chunks/*.js`) remains byte-identical. The `verify-reproducible-build.sh` script enforces these deterministic chunk artifacts as the hard gate and reports the broader volatile diff as warning-only telemetry for human review.
 
 ### Trade-off and OpenSSF compliance
 
