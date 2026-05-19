@@ -685,4 +685,214 @@ describe("Cursor idea runs API", () => {
     expect(res.status).toBe(500);
     expect(await res.json()).toMatchObject({ error: "recovery_failed" });
   });
+
+  // -----------------------------
+  // GET / DELETE /[runId] route — coverage push #26
+  // -----------------------------
+
+  it("GET [runId] returns 401 when unauthenticated", async () => {
+    mockGetVerifiedUser.mockResolvedValueOnce(null);
+    const { GET } = await import("@/app/api/cursor/idea-runs/[runId]/route");
+    const res = await GET(request("/api/cursor/idea-runs/run-1"), params("run-1"));
+    expect(res.status).toBe(401);
+  });
+
+  it("GET [runId] returns 500 when admin db missing", async () => {
+    const fbAdmin = require("@/lib/firebase-admin");
+    fbAdmin.getAdminDb.mockReturnValueOnce(null);
+    const { GET } = await import("@/app/api/cursor/idea-runs/[runId]/route");
+    const res = await GET(request("/api/cursor/idea-runs/run-1"), params("run-1"));
+    expect(res.status).toBe(500);
+  });
+
+  it("GET [runId] returns the run without refresh when status terminal and no workflow", async () => {
+    docs.set("run-1", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "finished",
+      cursorAgentId: "bc-agent-1",
+      cursorRunId: "run-sdk-1",
+      prompt: "Prompt",
+      inputs: {},
+    });
+    const { GET } = await import("@/app/api/cursor/idea-runs/[runId]/route");
+    const res = await GET(request("/api/cursor/idea-runs/run-1"), params("run-1"));
+    expect(res.status).toBe(200);
+    // No refresh — snapshot was not called for this terminal run
+    expect(mockGetCursorRunSnapshot).not.toHaveBeenCalled();
+  });
+
+  it("GET [runId] returns refreshSkipped=cursor_not_connected when api key missing", async () => {
+    docs.set("run-1", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "running",
+      cursorAgentId: "bc-agent-1",
+      cursorRunId: "run-sdk-1",
+      prompt: "Prompt",
+      inputs: {},
+    });
+    mockGetCursorApiKeyForUser.mockRejectedValueOnce(new MissingCursorConnectionError());
+    const { GET } = await import("@/app/api/cursor/idea-runs/[runId]/route");
+    const res = await GET(request("/api/cursor/idea-runs/run-1"), params("run-1"));
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body.refreshSkipped).toBe("cursor_not_connected");
+  });
+
+  it("GET [runId] returns 500 when api key fetch fails with non-connection error", async () => {
+    docs.set("run-1", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "running",
+      cursorAgentId: "bc-agent-1",
+      cursorRunId: "run-sdk-1",
+      prompt: "Prompt",
+      inputs: {},
+    });
+    mockGetCursorApiKeyForUser.mockRejectedValueOnce(new Error("vault down"));
+    const { GET } = await import("@/app/api/cursor/idea-runs/[runId]/route");
+    const res = await GET(request("/api/cursor/idea-runs/run-1"), params("run-1"));
+    expect(res.status).toBe(500);
+    expect(await res.json()).toMatchObject({ error: "refresh_failed" });
+  });
+
+  it("GET [runId] swallows getCursorRunSnapshot error and writes cursorStatusDetail", async () => {
+    docs.set("run-1", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "running",
+      cursorAgentId: "bc-agent-1",
+      cursorRunId: "run-sdk-1",
+      prompt: "Prompt",
+      inputs: {},
+    });
+    mockGetCursorRunSnapshot.mockRejectedValueOnce(new Error("cursor 500"));
+    const { GET } = await import("@/app/api/cursor/idea-runs/[runId]/route");
+    const res = await GET(request("/api/cursor/idea-runs/run-1"), params("run-1"));
+    expect(res.status).toBe(200);
+    // Did the route persist the status detail?
+    const stored = docs.get("run-1") as Record<string, unknown>;
+    expect(String(stored.cursorStatusDetail)).toContain("Could not sync");
+  });
+
+  it("GET [runId] picks planRunId when workflowStage='planning'", async () => {
+    docs.set("run-1", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "running",
+      workflowStage: "planning",
+      cursorAgentId: "bc-agent-1",
+      planRunId: "plan-run-1",
+      // No buildPlan — refresh required
+      prompt: "Prompt",
+      inputs: {},
+    });
+    const { GET } = await import("@/app/api/cursor/idea-runs/[runId]/route");
+    await GET(request("/api/cursor/idea-runs/run-1"), params("run-1"));
+    expect(mockGetCursorRunSnapshot).toHaveBeenCalledWith("cursor-key", "bc-agent-1", "plan-run-1");
+  });
+
+  it("GET [runId] picks buildRunId when workflowStage='building'", async () => {
+    docs.set("run-1", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "running",
+      workflowStage: "building",
+      cursorAgentId: "bc-agent-1",
+      buildRunId: "build-run-1",
+      prompt: "Prompt",
+      inputs: {},
+    });
+    const { GET } = await import("@/app/api/cursor/idea-runs/[runId]/route");
+    await GET(request("/api/cursor/idea-runs/run-1"), params("run-1"));
+    expect(mockGetCursorRunSnapshot).toHaveBeenCalledWith("cursor-key", "bc-agent-1", "build-run-1");
+  });
+
+  it("GET [runId] picks prRunId when workflowStage='pr_open' and pr is opening", async () => {
+    docs.set("run-1", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "finished",
+      workflowStage: "pr_open",
+      cursorAgentId: "bc-agent-1",
+      prRunId: "pr-run-1",
+      pr: { status: "opening" },
+      prompt: "Prompt",
+      inputs: {},
+    });
+    const { GET } = await import("@/app/api/cursor/idea-runs/[runId]/route");
+    await GET(request("/api/cursor/idea-runs/run-1"), params("run-1"));
+    expect(mockGetCursorRunSnapshot).toHaveBeenCalledWith("cursor-key", "bc-agent-1", "pr-run-1");
+  });
+
+  it("DELETE [runId] returns 401 when unauthenticated", async () => {
+    mockGetVerifiedUser.mockResolvedValueOnce(null);
+    const { DELETE } = await import("@/app/api/cursor/idea-runs/[runId]/route");
+    const res = await DELETE(request("/api/cursor/idea-runs/run-1", "DELETE"), params("run-1"));
+    expect(res.status).toBe(401);
+  });
+
+  it("DELETE [runId] returns 500 when admin db missing", async () => {
+    const fbAdmin = require("@/lib/firebase-admin");
+    fbAdmin.getAdminDb.mockReturnValueOnce(null);
+    const { DELETE } = await import("@/app/api/cursor/idea-runs/[runId]/route");
+    const res = await DELETE(request("/api/cursor/idea-runs/run-1", "DELETE"), params("run-1"));
+    expect(res.status).toBe(500);
+  });
+
+  it("DELETE [runId] returns 404 when run does not exist", async () => {
+    const { DELETE } = await import("@/app/api/cursor/idea-runs/[runId]/route");
+    const res = await DELETE(request("/api/cursor/idea-runs/missing", "DELETE"), params("missing"));
+    expect(res.status).toBe(404);
+  });
+
+  it("DELETE [runId] swallows deleteCursorAgent errors and still deletes the local doc", async () => {
+    docs.set("run-1", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "finished",
+      cursorAgentId: "bc-agent-1",
+      prompt: "Prompt",
+      inputs: {},
+    });
+    mockDeleteCursorAgent.mockRejectedValueOnce(new Error("cursor api down"));
+    const { DELETE } = await import("@/app/api/cursor/idea-runs/[runId]/route");
+    const res = await DELETE(request("/api/cursor/idea-runs/run-1", "DELETE"), params("run-1"));
+    expect(res.status).toBe(200);
+    expect(docs.has("run-1")).toBe(false);
+  });
+
+  it("DELETE [runId] returns 500 when the firestore delete itself throws", async () => {
+    docs.set("run-1", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "finished",
+      // Force the delete() to throw — override the doc's collection().doc() ref
+      prompt: "Prompt",
+      inputs: {},
+    });
+    const fbAdmin = require("@/lib/firebase-admin");
+    fbAdmin.getAdminDb.mockImplementationOnce(() => {
+      // First call: getUserOwnedIdeaRun. Use the existing mockDb.
+      // Subsequent: throwing delete via a custom doc ref.
+      return mockDb;
+    });
+    // Hack: override the next collection().doc() to throw on delete by
+    // intercepting via collectionRef.doc temporarily
+    const originalDoc = collectionRef.doc;
+    collectionRef.doc = jest.fn((id?: string) => {
+      const ref = originalDoc(id);
+      ref.delete = jest.fn().mockRejectedValue(new Error("write conflict"));
+      return ref;
+    });
+    try {
+      const { DELETE } = await import("@/app/api/cursor/idea-runs/[runId]/route");
+      const res = await DELETE(request("/api/cursor/idea-runs/run-1", "DELETE"), params("run-1"));
+      expect(res.status).toBe(500);
+      expect(await res.json()).toMatchObject({ error: "delete_failed" });
+    } finally {
+      collectionRef.doc = originalDoc;
+    }
+  });
 });
