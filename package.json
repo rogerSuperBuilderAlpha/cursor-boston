@@ -35,6 +35,7 @@
   "scripts": {
     "dev": "cross-env NODE_OPTIONS=--no-deprecation next dev --webpack -H localhost",
     "build": "next build --webpack",
+    "build:verify-reproducible": "bash scripts/verify-reproducible-build.sh",
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
     "serve": "cross-env NODE_OPTIONS=--no-deprecation next start",
     "lint": "eslint .",

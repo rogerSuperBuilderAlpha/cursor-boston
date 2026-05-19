@@ -1,7 +1,24 @@
 const path = require('path')
+const { execSync } = require('child_process')
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true',
 })
+
+// Deterministic build ID. Resolution order:
+//   1. NEXT_BUILD_ID env var (override for CI / reproducibility tests)
+//   2. SOURCE_DATE_EPOCH-derived short SHA via `git rev-parse`
+//   3. fallback "dev" — only when git isn't available (sandboxed CI, no .git)
+// OpenSSF Best Practices Gold criterion `build_reproducible` requires
+// byte-identical output across builds at the same commit; see
+// docs/REPRODUCIBLE_BUILD.md.
+function reproducibleBuildId() {
+  if (process.env.NEXT_BUILD_ID) return process.env.NEXT_BUILD_ID
+  try {
+    return execSync('git rev-parse --short=12 HEAD', { encoding: 'utf8' }).trim()
+  } catch {
+    return 'dev'
+  }
+}
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -10,9 +27,22 @@ const nextConfig = {
   // `firebase/auth`. Pin the tracing / Turbopack root to this application directory.
   outputFileTracingRoot: path.join(__dirname),
 
+  // Deterministic build ID derived from git HEAD — feeds into .next/BUILD_ID and chunk hashes.
+  generateBuildId: reproducibleBuildId,
+
   // Standalone output is only for Docker builds (see docker/Dockerfile). Omit on Vercel.
   ...(process.env.DOCKER_BUILD === '1' ? { output: 'standalone' } : {}),
   serverExternalPackages: ['@cursor/sdk'],
+
+  webpack: (config) => {
+    // Deterministic chunk/module IDs are the Next.js production default since v14,
+    // but pin them here explicitly so the configuration survives upstream changes.
+    if (config.optimization) {
+      config.optimization.moduleIds = 'deterministic'
+      config.optimization.chunkIds = 'deterministic'
+    }
+    return config
+  },
 
   images: {
     remotePatterns: [
