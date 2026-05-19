@@ -5,6 +5,7 @@
  */
 
 import type { Metadata } from "next";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { QuestionsListing } from "@/components/questions/QuestionsListing";
 import { SectionHelp } from "@/components/SectionHelp";
 
@@ -50,7 +51,12 @@ export default function QuestionsPage() {
           },
         ]}
       />
-      <QuestionsListing />
+      <ErrorBoundary
+        title="Failed to load questions"
+        description="Failed to load questions. Please refresh."
+      >
+        <QuestionsListing />
+      </ErrorBoundary>
     </main>
   );
 }

@@ -7,10 +7,13 @@
 "use client";
 
 import { Component, ReactNode } from "react";
+import { logger } from "@/lib/logger";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
   fallback?: ReactNode;
+  title?: string;
+  description?: string;
 }
 
 interface ErrorBoundaryState {
@@ -28,7 +31,10 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error("ErrorBoundary caught an error:", error, errorInfo);
+    logger.logError(error, {
+      componentStack: errorInfo.componentStack,
+      boundary: "ErrorBoundary",
+    });
   }
 
   render() {
@@ -41,10 +47,11 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         <div role="alert" className="min-h-[60vh] flex items-center justify-center p-8">
           <div className="text-center max-w-md">
             <h2 className="text-xl font-semibold text-foreground mb-2">
-              Something went wrong
+              {this.props.title ?? "Something went wrong"}
             </h2>
             <p className="text-neutral-600 dark:text-neutral-400 mb-6">
-              An unexpected error occurred. You can try again or reload the page.
+              {this.props.description ??
+                "An unexpected error occurred. You can try again or reload the page."}
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button

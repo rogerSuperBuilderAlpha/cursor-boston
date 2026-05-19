@@ -1,6 +1,13 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { logger } from "@/lib/logger";
+
+jest.mock("@/lib/logger", () => ({
+  logger: {
+    logError: jest.fn(),
+  },
+}));
 
 // A component that throws on demand
 function ThrowingChild({ shouldThrow }: { shouldThrow: boolean }) {
@@ -11,6 +18,7 @@ function ThrowingChild({ shouldThrow }: { shouldThrow: boolean }) {
 // Suppress noisy console.error from React & componentDidCatch during boundary tests
 beforeEach(() => {
   jest.spyOn(console, "error").mockImplementation(() => {});
+  jest.mocked(logger.logError).mockClear();
 });
 afterEach(() => {
   jest.restoreAllMocks();
@@ -76,18 +84,33 @@ describe("ErrorBoundary", () => {
   });
 
   it("calls componentDidCatch and logs the error", () => {
-    const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
-
     render(
       <ErrorBoundary>
         <ThrowingChild shouldThrow={true} />
       </ErrorBoundary>,
     );
 
-    expect(errorSpy).toHaveBeenCalledWith(
-      "ErrorBoundary caught an error:",
+    expect(logger.logError).toHaveBeenCalledWith(
       expect.any(Error),
-      expect.objectContaining({ componentStack: expect.any(String) }),
+      expect.objectContaining({
+        boundary: "ErrorBoundary",
+        componentStack: expect.any(String),
+      }),
     );
+  });
+
+  it("renders custom title and description when provided", () => {
+    render(
+      <ErrorBoundary
+        title="Failed to load questions"
+        description="Failed to load questions. Please refresh."
+      >
+        <ThrowingChild shouldThrow={true} />
+      </ErrorBoundary>,
+    );
+    expect(screen.getByText("Failed to load questions")).toBeInTheDocument();
+    expect(
+      screen.getByText("Failed to load questions. Please refresh."),
+    ).toBeInTheDocument();
   });
 });
