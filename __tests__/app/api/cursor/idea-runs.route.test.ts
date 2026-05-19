@@ -590,6 +590,69 @@ describe("Cursor idea runs API", () => {
     });
   });
 
+  it("open-pr returns 401 when unauthenticated", async () => {
+    mockGetVerifiedUser.mockResolvedValueOnce(null);
+    const { POST } = await import("@/app/api/cursor/idea-runs/[runId]/open-pr/route");
+    const res = await POST(
+      request("/api/cursor/idea-runs/run-1/open-pr", "POST", {}),
+      params("run-1"),
+    );
+    expect(res.status).toBe(401);
+  });
+
+  it("open-pr returns 500 when admin db is null", async () => {
+    const fbAdmin = require("@/lib/firebase-admin");
+    fbAdmin.getAdminDb.mockReturnValueOnce(null);
+    const { POST } = await import("@/app/api/cursor/idea-runs/[runId]/open-pr/route");
+    const res = await POST(
+      request("/api/cursor/idea-runs/run-1/open-pr", "POST", {}),
+      params("run-1"),
+    );
+    expect(res.status).toBe(500);
+  });
+
+  it("open-pr returns 404 when run is missing or has no cursorAgentId", async () => {
+    docs.set("run-1", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "finished",
+      workflowStage: "ready_for_pr",
+      // No cursorAgentId
+      buildResult: "Built",
+      pr: { status: "not_started" },
+      prompt: "Prompt",
+      inputs: {},
+    });
+    const { POST } = await import("@/app/api/cursor/idea-runs/[runId]/open-pr/route");
+    const res = await POST(
+      request("/api/cursor/idea-runs/run-1/open-pr", "POST", {}),
+      params("run-1"),
+    );
+    expect(res.status).toBe(404);
+  });
+
+  it("open-pr returns 500 'open_pr_failed' when sendCursorFollowUp throws", async () => {
+    docs.set("run-1", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "finished",
+      workflowStage: "ready_for_pr",
+      cursorAgentId: "bc-agent-1",
+      buildResult: "Built",
+      pr: { status: "not_started" },
+      prompt: "Prompt",
+      inputs: {},
+    });
+    mockSendCursorFollowUp.mockRejectedValueOnce(new Error("cursor api down"));
+    const { POST } = await import("@/app/api/cursor/idea-runs/[runId]/open-pr/route");
+    const res = await POST(
+      request("/api/cursor/idea-runs/run-1/open-pr", "POST", {}),
+      params("run-1"),
+    );
+    expect(res.status).toBe(500);
+    expect(await res.json()).toMatchObject({ error: "open_pr_failed" });
+  });
+
   it("rejects opening a PR before the build is ready", async () => {
     docs.set("run-1", {
       userId: "user-1",
