@@ -4,7 +4,14 @@
  * See LICENSE file for details.
  */
 
-import { buildPrIdeaPrompt, normalizeRunInputs } from "@/lib/cursor/idea-runs";
+import {
+  buildIdeaPlanPrompt,
+  buildIdeaQuestionsPrompt,
+  buildPrIdeaPrompt,
+  normalizeRunInputs,
+  validateIdeaWorkflowAction,
+} from "@/lib/cursor/idea-runs";
+import type { CursorIdeaRunRecord } from "@/lib/cursor/idea-runs";
 
 describe("normalizeRunInputs", () => {
   it("never returns explicit undefined values when fields are missing", () => {
@@ -55,5 +62,77 @@ describe("Cursor idea run prompts", () => {
     expect(prompt).toContain("Make the first-run experience clearer.");
     expect(prompt).toContain("Keep it small and UI-focused.");
     expect(prompt).toContain("Return 2-4 concrete");
+  });
+
+  it("builds a questions prompt for the selected idea", () => {
+    const prompt = buildIdeaQuestionsPrompt("Add dark mode toggle");
+    expect(prompt).toContain("Add dark mode toggle");
+    expect(prompt).toContain("exactly 3");
+    expect(prompt).toContain("valid JSON");
+  });
+
+  it("includes answered questions in the plan prompt", () => {
+    const prompt = buildIdeaPlanPrompt("Ship feature X", [
+      { id: "q1", question: "Scope?", answer: "Small" },
+    ]);
+    expect(prompt).toContain("Ship feature X");
+    expect(prompt).toContain("Scope?");
+    expect(prompt).toContain("Small");
+  });
+});
+
+function workflowRun(
+  overrides: Partial<CursorIdeaRunRecord> = {},
+): CursorIdeaRunRecord {
+  return {
+    id: "run-1",
+    userId: "u1",
+    type: "pr_ideas",
+    status: "running",
+    workflowStage: "ideas",
+    cursorAgentId: "agent-1",
+    prompt: "",
+    inputs: {},
+    result: "ideas ready",
+    selectedIdea: null,
+    questions: [],
+    buildPlan: null,
+    buildResult: null,
+    pr: null,
+    ...overrides,
+  };
+}
+
+describe("validateIdeaWorkflowAction", () => {
+  it("allows questions when ideas are ready and nothing selected yet", () => {
+    expect(validateIdeaWorkflowAction(workflowRun(), "questions")).toBeNull();
+  });
+
+  it("rejects questions when agent id is missing", () => {
+    expect(
+      validateIdeaWorkflowAction(workflowRun({ cursorAgentId: undefined }), "questions"),
+    ).toBe("agent_missing");
+  });
+
+  it("rejects approve-plan when plan is already approved", () => {
+    expect(
+      validateIdeaWorkflowAction(
+        workflowRun({
+          workflowStage: "plan_approval",
+          buildPlan: "plan",
+          planApprovedAt: new Date(),
+        }),
+        "approve-plan",
+      ),
+    ).toBe("plan_already_approved");
+  });
+
+  it("rejects open-pr when build output is missing", () => {
+    expect(
+      validateIdeaWorkflowAction(
+        workflowRun({ workflowStage: "ready_for_pr", buildResult: null }),
+        "open-pr",
+      ),
+    ).toBe("build_not_ready");
   });
 });
