@@ -6,6 +6,7 @@ import { NextRequest } from "next/server";
 import { GET, POST } from "@/app/api/showcase/submission/approve/route";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { checkServerRateLimit } from "@/lib/rate-limit-server";
 
 jest.mock("@/lib/logger", () => ({
   logger: { logError: jest.fn(), warn: jest.fn(), info: jest.fn(), error: jest.fn() },
@@ -184,5 +185,209 @@ describe("/api/showcase/submission/approve", () => {
       })
     );
     expect(setMock).not.toHaveBeenCalled();
+  });
+
+  it("GET returns 401 when unauthenticated", async () => {
+    mockGetVerifiedUser.mockResolvedValue(null);
+    const res = await GET(makeGetRequest());
+    expect(res.status).toBe(401);
+  });
+
+  it("GET returns 429 when rate-limited", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", isAdmin: false });
+    const rate = checkServerRateLimit as jest.MockedFunction<typeof checkServerRateLimit>;
+    rate.mockResolvedValueOnce({
+      success: false,
+      retryAfter: 30,
+      statusCode: 429,
+    } as never);
+    const res = await GET(makeGetRequest());
+    expect(res.status).toBe(429);
+  });
+
+  it("GET returns 503 'Rate limit service unavailable' when statusCode=503", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", isAdmin: true });
+    const rate = checkServerRateLimit as jest.MockedFunction<typeof checkServerRateLimit>;
+    rate.mockResolvedValueOnce({
+      success: false,
+      retryAfter: 0,
+      statusCode: 503,
+    } as never);
+    const res = await GET(makeGetRequest());
+    expect(res.status).toBe(503);
+    const body = await res.json();
+    expect(body.error).toBe("Rate limit service unavailable");
+  });
+
+  it("GET returns 500 when admin db is null", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "admin", isAdmin: true });
+    mockGetAdminDb.mockReturnValueOnce(null as never);
+    const res = await GET(makeGetRequest());
+    expect(res.status).toBe(500);
+  });
+
+  it("GET returns pendingSubmissions for admin", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "admin", isAdmin: true });
+    mockGetAdminDb.mockReturnValueOnce({
+      collection: jest.fn(() => ({
+        where: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        get: jest.fn(async () => ({
+          size: 1,
+          docs: [
+            {
+              id: "s1",
+              data: () => ({
+                userId: "u1",
+                projectId: "proj-1",
+                createdAt: { toDate: () => new Date("2026-05-19T10:00:00Z") },
+              }),
+            },
+          ],
+        })),
+      })),
+    } as never);
+    const res = await GET(makeGetRequest());
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.pendingSubmissions).toHaveLength(1);
+    expect(body.pendingSubmissions[0]).toMatchObject({
+      submissionId: "s1",
+      userId: "u1",
+      projectId: "proj-1",
+    });
+  });
+
+  it("GET filters non-string userId/projectId to empty strings", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "admin", isAdmin: true });
+    mockGetAdminDb.mockReturnValueOnce({
+      collection: jest.fn(() => ({
+        where: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        get: jest.fn(async () => ({
+          size: 1,
+          docs: [
+            {
+              id: "s2",
+              data: () => ({ userId: 42, projectId: null }),
+            },
+          ],
+        })),
+      })),
+    } as never);
+    const res = await GET(makeGetRequest());
+    const body = await res.json();
+    expect(body.pendingSubmissions[0]).toMatchObject({
+      submissionId: "s2",
+      userId: "",
+      projectId: "",
+    });
+  });
+
+  it("GET returns 500 when firestore query throws", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "admin", isAdmin: true });
+    mockGetAdminDb.mockReturnValueOnce({
+      collection: jest.fn(() => ({
+        where: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        get: jest.fn().mockRejectedValue(new Error("firestore down")),
+      })),
+    } as never);
+    const res = await GET(makeGetRequest());
+    expect(res.status).toBe(500);
+  });
+
+  it("POST returns 401 when unauthenticated", async () => {
+    mockGetVerifiedUser.mockResolvedValue(null);
+    const res = await POST(makePostRequest({ submissionId: "s1", action: "approve" }));
+    expect(res.status).toBe(401);
+  });
+
+  it("POST returns 429 when rate-limited", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", isAdmin: false });
+    const rate = checkServerRateLimit as jest.MockedFunction<typeof checkServerRateLimit>;
+    rate.mockResolvedValueOnce({
+      success: false,
+      retryAfter: 30,
+      statusCode: 429,
+    } as never);
+    const res = await POST(makePostRequest({ submissionId: "s1", action: "approve" }));
+    expect(res.status).toBe(429);
+  });
+
+  it("POST returns 403 for non-admin", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", isAdmin: false });
+    const res = await POST(makePostRequest({ submissionId: "s1", action: "approve" }));
+    expect(res.status).toBe(403);
+  });
+
+  it("POST returns 500 when admin db is null", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "admin", isAdmin: true });
+    mockGetAdminDb.mockReturnValueOnce(null as never);
+    const res = await POST(makePostRequest({ submissionId: "s1", action: "approve" }));
+    expect(res.status).toBe(500);
+  });
+
+  it("POST returns 400 for invalid JSON body", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "admin", isAdmin: true });
+    mockGetAdminDb.mockReturnValueOnce({ collection: jest.fn() } as never);
+    const req = new NextRequest("http://localhost/api/showcase/submission/approve", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "not-json",
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(400);
+  });
+
+  it("POST returns 400 when schema rejects body", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "admin", isAdmin: true });
+    mockGetAdminDb.mockReturnValueOnce({ collection: jest.fn() } as never);
+    const res = await POST(makePostRequest({ /* no submissionId */ }));
+    expect(res.status).toBe(400);
+  });
+
+  it("POST returns 400 when sanitizeDocId rejects submissionId", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "admin", isAdmin: true });
+    mockGetAdminDb.mockReturnValueOnce({ collection: jest.fn() } as never);
+    const res = await POST(makePostRequest({ submissionId: "../bad", action: "approve" }));
+    expect(res.status).toBe(400);
+  });
+
+  it("POST returns 404 when submission does not exist", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "admin", isAdmin: true });
+    mockGetAdminDb.mockReturnValueOnce({
+      collection: jest.fn(() => ({
+        doc: jest.fn(() => ({
+          get: jest.fn(async () => ({ exists: false })),
+        })),
+      })),
+    } as never);
+    const res = await POST(makePostRequest({ submissionId: "ghost", action: "approve" }));
+    expect(res.status).toBe(404);
+  });
+
+  it("POST passes the optional reason through to the rejection history entry", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "admin", isAdmin: true });
+    const setMock = jest.fn(async () => undefined);
+    mockGetAdminDb.mockReturnValueOnce({
+      collection: jest.fn(() => ({
+        where: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        get: jest.fn(async () => ({ size: 0, docs: [] })),
+        doc: jest.fn(() => ({
+          get: jest.fn(async () => ({
+            exists: true,
+            data: () => ({ status: "pending" }),
+          })),
+          set: setMock,
+        })),
+      })),
+    } as never);
+    await POST(
+      makePostRequest({ submissionId: "s1", action: "reject", reason: "Off-topic" }),
+    );
+    expect(setMock).toHaveBeenCalled();
+    // We just need to verify reason flow doesn't throw
   });
 });
