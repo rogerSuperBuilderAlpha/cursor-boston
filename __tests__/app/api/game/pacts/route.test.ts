@@ -7,6 +7,9 @@ import { GET, POST } from "@/app/api/game/pacts/route";
 import { getAdminDb } from "@/lib/firebase-admin";
 import {
   PactSelfTargetError,
+  PactEmptyError,
+  PactTooLongError,
+  PactTargetNotFoundError,
   createPactServer,
   listPactsForPlayerServer,
 } from "@/lib/game/pacts";
@@ -159,5 +162,168 @@ describe("POST /api/game/pacts", () => {
 
     expect(status).toBe(200);
     expect(body).toMatchObject({ success: true, pact: { id: "pact-new" } });
+  });
+
+  it("returns 500 when admin db is null", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", email: "u@test.com", name: "User" });
+    mockGetAdminDb.mockReturnValueOnce(null as never);
+    const res = await POST(
+      makeAuthedRequest({
+        method: "POST",
+        path: "/api/game/pacts",
+        body: { targetId: "u2", statement: "No raids this week." },
+      }),
+    );
+    expect(res.status).toBe(500);
+  });
+
+  it("returns 400 PactEmptyError", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", email: "u@test.com", name: "User" });
+    mockCreatePact.mockRejectedValue(new PactEmptyError());
+    const res = await POST(
+      makeAuthedRequest({
+        method: "POST",
+        path: "/api/game/pacts",
+        body: { targetId: "u2", statement: "Looks ok before sanitisation." },
+      }),
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 400 PactTooLongError", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", email: "u@test.com", name: "User" });
+    mockCreatePact.mockRejectedValue(new PactTooLongError(500));
+    const res = await POST(
+      makeAuthedRequest({
+        method: "POST",
+        path: "/api/game/pacts",
+        body: { targetId: "u2", statement: "Looks fine." },
+      }),
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 404 PactTargetNotFoundError", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", email: "u@test.com", name: "User" });
+    mockCreatePact.mockRejectedValue(new PactTargetNotFoundError("ghost"));
+    const res = await POST(
+      makeAuthedRequest({
+        method: "POST",
+        path: "/api/game/pacts",
+        body: { targetId: "ghost", statement: "Hello." },
+      }),
+    );
+    expect(res.status).toBe(404);
+  });
+
+  it("returns 500 with Error message on unknown Error throw", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", email: "u@test.com", name: "User" });
+    mockCreatePact.mockRejectedValue(new Error("boom"));
+    const res = await POST(
+      makeAuthedRequest({
+        method: "POST",
+        path: "/api/game/pacts",
+        body: { targetId: "u2", statement: "Statement." },
+      }),
+    );
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body.error.message).toBe("boom");
+  });
+
+  it("returns 500 'Server error' on non-Error throw", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", email: "u@test.com", name: "User" });
+    mockCreatePact.mockRejectedValue("plain-string");
+    const res = await POST(
+      makeAuthedRequest({
+        method: "POST",
+        path: "/api/game/pacts",
+        body: { targetId: "u2", statement: "Statement." },
+      }),
+    );
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body.error.message).toBe("Server error");
+  });
+
+  it("forwards durationDays as durationMs to createPactServer", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", email: "u@test.com", name: "User" });
+    mockCreatePact.mockResolvedValue({ id: "pact-x" } as never);
+    await POST(
+      makeAuthedRequest({
+        method: "POST",
+        path: "/api/game/pacts",
+        body: { targetId: "u2", statement: "Truce.", durationDays: 7 },
+      }),
+    );
+    expect(mockCreatePact).toHaveBeenCalledWith(
+      expect.objectContaining({ durationMs: 7 * 24 * 60 * 60 * 1000 }),
+    );
+  });
+
+  it("uses 'Unknown general' fallback when no player doc exists", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", email: "u@test.com", name: "User" });
+    mockGetAdminDb.mockReturnValue({
+      collection: jest.fn(() => ({
+        doc: jest.fn(() => ({
+          get: jest.fn().mockResolvedValue({ exists: false }),
+        })),
+      })),
+    } as never);
+    mockCreatePact.mockResolvedValue({ id: "pact-y" } as never);
+    await POST(
+      makeAuthedRequest({
+        method: "POST",
+        path: "/api/game/pacts",
+        body: { targetId: "u2", statement: "Hello." },
+      }),
+    );
+    expect(mockCreatePact).toHaveBeenCalledWith(
+      expect.objectContaining({
+        author: expect.objectContaining({
+          displayName: "Unknown general",
+          caste: null,
+        }),
+      }),
+    );
+  });
+});
+
+describe("GET /api/game/pacts — extras", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("uses ?playerId= query param when provided", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", email: "u@test.com", name: "User" });
+    mockListPacts.mockResolvedValue([] as never);
+    await GET(
+      makeAuthedRequest({ path: "/api/game/pacts", searchParams: { playerId: "other-uid" } }),
+    );
+    expect(mockListPacts).toHaveBeenCalledWith("other-uid");
+  });
+
+  it("sets Cache-Control private max-age=30", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", email: "u@test.com", name: "User" });
+    mockListPacts.mockResolvedValue([] as never);
+    const res = await GET(makeAuthedRequest({ path: "/api/game/pacts" }));
+    expect(res.headers.get("Cache-Control")).toBe("private, max-age=30, must-revalidate");
+  });
+
+  it("returns 500 with Error message when listPactsForPlayerServer throws", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", email: "u@test.com", name: "User" });
+    mockListPacts.mockRejectedValueOnce(new Error("firestore down"));
+    const res = await GET(makeAuthedRequest({ path: "/api/game/pacts" }));
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body.error.message).toBe("firestore down");
+  });
+
+  it("returns 500 'Server error' on non-Error throw", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", email: "u@test.com", name: "User" });
+    mockListPacts.mockRejectedValueOnce("plain-string");
+    const res = await GET(makeAuthedRequest({ path: "/api/game/pacts" }));
+    const body = await res.json();
+    expect(body.error.message).toBe("Server error");
   });
 });
