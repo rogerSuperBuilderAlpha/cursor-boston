@@ -6,7 +6,10 @@ import {
   computeShowcaseAwards,
   hackASprint2026ZonedWallTimeToUtcMs,
   isHackASprint2026PeerAwardsRevealed,
+  showcaseAwardLabelsForRow,
+  SHOWCASE_AWARD_LABEL,
   type ShowcaseAwardInput,
+  type ShowcaseAwardKind,
 } from "@/lib/hackathon-asprint-2026-awards";
 import { HACK_A_SPRINT_2026_TIMEZONE } from "@/lib/hackathon-asprint-2026-schedule";
 
@@ -114,5 +117,185 @@ describe("computeShowcaseAwards", () => {
     expect(isHackASprint2026PeerAwardsRevealed(new Date("2026-04-17T12:01:00-04:00"))).toBe(
       true
     );
+  });
+
+  it("breaks AI ties by score then by submissionId", () => {
+    // Two rows share aiRank=1 — score then submissionId should resolve ordering
+    const rows: ShowcaseAwardInput[] = [
+      {
+        submissionId: "z-row",
+        githubLogin: "z-user",
+        aiRank: 1,
+        aiScore: 5,
+        peerAverage: null,
+      },
+      {
+        submissionId: "a-row",
+        githubLogin: "a-user",
+        aiRank: 1,
+        aiScore: 5,
+        peerAverage: null,
+      },
+      {
+        submissionId: "b-row",
+        githubLogin: "b-user",
+        aiRank: 1,
+        aiScore: 9, // higher score, wins first AI slot
+        peerAverage: null,
+      },
+    ];
+    const m = computeShowcaseAwards(rows, new Date("2026-04-17T11:00:00-04:00"));
+    // Top AI score takes the first AI slot
+    expect(m.get("b-row")).toEqual(["aiJudgedWinner"]);
+    // Then ties resolved by submissionId localeCompare: a-row before z-row
+    expect(m.get("a-row")).toEqual(["aiJudgedWinner"]);
+    expect(m.get("z-row")).toBeUndefined();
+  });
+
+  it("excludes rows with null AI rank AND null AI score from AI awards", () => {
+    const rows: ShowcaseAwardInput[] = [
+      {
+        submissionId: "missing-ai",
+        githubLogin: "missing-ai",
+        aiRank: null,
+        aiScore: null,
+        peerAverage: null,
+      },
+      {
+        submissionId: "has-ai",
+        githubLogin: "has-ai",
+        aiRank: 1,
+        aiScore: 9,
+        peerAverage: null,
+      },
+    ];
+    const m = computeShowcaseAwards(rows, new Date("2026-04-17T11:00:00-04:00"));
+    expect(m.get("has-ai")).toEqual(["aiJudgedWinner"]);
+    expect(m.get("missing-ai")).toBeUndefined();
+  });
+
+  it("breaks peer ties by submissionId localeCompare", () => {
+    const afterPeer = new Date("2026-04-17T13:00:00-04:00");
+    const rows: ShowcaseAwardInput[] = [
+      {
+        submissionId: "z-peer",
+        githubLogin: "z-peer",
+        aiRank: null,
+        aiScore: null,
+        peerAverage: 8.0,
+      },
+      {
+        submissionId: "a-peer",
+        githubLogin: "a-peer",
+        aiRank: null,
+        aiScore: null,
+        peerAverage: 8.0,
+      },
+    ];
+    const m = computeShowcaseAwards(rows, afterPeer);
+    // Ties resolved alphabetically; a-peer wins first slot
+    expect(m.get("a-peer")).toEqual(["peerReviewWinner"]);
+    expect(m.get("z-peer")).toEqual(["peerReviewWinner"]);
+  });
+
+  it("pushes rows with null peerAverage to end of peer ranking", () => {
+    const afterPeer = new Date("2026-04-17T13:00:00-04:00");
+    const rows: ShowcaseAwardInput[] = [
+      {
+        submissionId: "no-peer",
+        githubLogin: "no-peer",
+        aiRank: null,
+        aiScore: null,
+        peerAverage: null,
+      },
+      {
+        submissionId: "low-peer",
+        githubLogin: "low-peer",
+        aiRank: null,
+        aiScore: null,
+        peerAverage: 1.0,
+      },
+    ];
+    const m = computeShowcaseAwards(rows, afterPeer);
+    // low-peer wins despite low score; no-peer is excluded by `peerAverage == null` skip
+    expect(m.get("low-peer")).toEqual(["peerReviewWinner"]);
+    expect(m.get("no-peer")).toBeUndefined();
+  });
+
+  it("handles all-null peer averages by alphabetic ordering (still excluded)", () => {
+    const afterPeer = new Date("2026-04-17T13:00:00-04:00");
+    const rows: ShowcaseAwardInput[] = [
+      {
+        submissionId: "alpha",
+        githubLogin: "alpha",
+        aiRank: null,
+        aiScore: null,
+        peerAverage: null,
+      },
+      {
+        submissionId: "beta",
+        githubLogin: "beta",
+        aiRank: null,
+        aiScore: null,
+        peerAverage: null,
+      },
+    ];
+    // No peer winners since peerAverage is null for everyone (continue branch)
+    const m = computeShowcaseAwards(rows, afterPeer);
+    expect(m.size).toBe(0);
+  });
+});
+
+describe("env-var override for peer reveal", () => {
+  const originalEnv = { ...process.env };
+  afterEach(() => {
+    process.env = { ...originalEnv };
+  });
+
+  it("honours NEXT_PUBLIC_HACK_A_SPRINT_2026_PEER_AWARDS_REVEAL_AT when set", () => {
+    process.env.NEXT_PUBLIC_HACK_A_SPRINT_2026_PEER_AWARDS_REVEAL_AT =
+      "2026-04-01T00:00:00Z";
+    expect(isHackASprint2026PeerAwardsRevealed(new Date("2026-04-02T00:00:00Z"))).toBe(true);
+    expect(isHackASprint2026PeerAwardsRevealed(new Date("2026-03-31T23:00:00Z"))).toBe(false);
+  });
+
+  it("ignores invalid env-var values and falls back to compiled reveal time", () => {
+    process.env.NEXT_PUBLIC_HACK_A_SPRINT_2026_PEER_AWARDS_REVEAL_AT = "not-a-date";
+    // Falls back to compiled 2026-04-17 12:00 NY time
+    expect(isHackASprint2026PeerAwardsRevealed(new Date("2026-04-17T11:00:00-04:00"))).toBe(
+      false,
+    );
+  });
+
+  it("uses HACK_A_SPRINT_2026_PEER_AWARDS_REVEAL_AT when NEXT_PUBLIC variant absent", () => {
+    delete process.env.NEXT_PUBLIC_HACK_A_SPRINT_2026_PEER_AWARDS_REVEAL_AT;
+    process.env.HACK_A_SPRINT_2026_PEER_AWARDS_REVEAL_AT = "2026-04-01T00:00:00Z";
+    expect(isHackASprint2026PeerAwardsRevealed(new Date("2026-04-02T00:00:00Z"))).toBe(true);
+  });
+});
+
+describe("showcaseAwardLabelsForRow", () => {
+  it("returns empty array when no award for the submission", () => {
+    const awards = new Map<string, ShowcaseAwardKind[]>();
+    expect(showcaseAwardLabelsForRow(awards, "no-such-id")).toEqual([]);
+  });
+
+  it("translates award kinds to display labels", () => {
+    const awards = new Map<string, ShowcaseAwardKind[]>([
+      ["alice", ["judgesWinner", "peerReviewWinner"]],
+    ]);
+    expect(showcaseAwardLabelsForRow(awards, "alice")).toEqual([
+      SHOWCASE_AWARD_LABEL.judgesWinner,
+      SHOWCASE_AWARD_LABEL.peerReviewWinner,
+    ]);
+  });
+
+  it("normalises submissionId (trim + lowercase) before lookup", () => {
+    const awards = new Map<string, ShowcaseAwardKind[]>([
+      ["alice", ["aiJudgedWinner"]],
+    ]);
+    expect(showcaseAwardLabelsForRow(awards, "  ALICE  ")).toEqual([
+      SHOWCASE_AWARD_LABEL.aiJudgedWinner,
+    ]);
   });
 });
