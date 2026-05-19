@@ -68,7 +68,7 @@ If you're deploying Cursor Boston:
    - Test rules thoroughly before production
    - Review rules regularly for security gaps
 3. **Authentication** - Use strong authentication methods
-   - Enable 2FA for admin accounts
+   - Maintainers and committers MUST use **phishing-resistant 2FA** (hardware security keys / FIDO2 / WebAuthn / passkeys). TOTP-only (Authy, Google Authenticator) and SMS are not sufficient for maintainer accounts. The `rogerSuperBuilderAlpha` GitHub organization enforces org-level 2FA — see [`MAINTAINERS.md` § Maintainer account security](../MAINTAINERS.md#maintainer-account-security).
    - Use OAuth providers with proper redirect URIs
    - Regularly review authorized domains in Firebase
 4. **HTTPS** - Always use HTTPS in production
