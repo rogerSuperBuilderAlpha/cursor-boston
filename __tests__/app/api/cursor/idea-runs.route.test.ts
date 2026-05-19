@@ -501,4 +501,188 @@ describe("Cursor idea runs API", () => {
       status: "running",
     });
   });
+
+  it("recover-agent returns 401 when unauthenticated", async () => {
+    mockGetVerifiedUser.mockResolvedValueOnce(null);
+    const { POST } = await import("@/app/api/cursor/idea-runs/[runId]/recover-agent/route");
+    const res = await POST(
+      request("/api/cursor/idea-runs/run-1/recover-agent", "POST", {}),
+      params("run-1"),
+    );
+    expect(res.status).toBe(401);
+    expect(await res.json()).toMatchObject({ error: "unauthenticated" });
+  });
+
+  it("recover-agent returns 500 when admin db missing", async () => {
+    const fbAdmin = require("@/lib/firebase-admin");
+    fbAdmin.getAdminDb.mockReturnValueOnce(null);
+    const { POST } = await import("@/app/api/cursor/idea-runs/[runId]/recover-agent/route");
+    const res = await POST(
+      request("/api/cursor/idea-runs/run-1/recover-agent", "POST", {}),
+      params("run-1"),
+    );
+    expect(res.status).toBe(500);
+    expect(await res.json()).toMatchObject({ error: "not_configured" });
+  });
+
+  it("recover-agent returns 404 when run does not exist for user", async () => {
+    const { POST } = await import("@/app/api/cursor/idea-runs/[runId]/recover-agent/route");
+    const res = await POST(
+      request("/api/cursor/idea-runs/missing-run/recover-agent", "POST", {}),
+      params("missing-run"),
+    );
+    expect(res.status).toBe(404);
+    expect(await res.json()).toMatchObject({ error: "not_found" });
+  });
+
+  it("recover-agent returns 409 when ideas stage has no result or selectedIdea", async () => {
+    docs.set("run-1", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "finished",
+      workflowStage: "ideas",
+      cursorAgentId: "bc-agent-1",
+      prompt: "Prompt",
+      inputs: {},
+    });
+    const { POST } = await import("@/app/api/cursor/idea-runs/[runId]/recover-agent/route");
+    const res = await POST(
+      request("/api/cursor/idea-runs/run-1/recover-agent", "POST", {}),
+      params("run-1"),
+    );
+    expect(res.status).toBe(409);
+    expect(await res.json()).toMatchObject({ error: "recovery_not_available" });
+  });
+
+  it("recover-agent advances from ideas → questions when selectedIdea exists", async () => {
+    docs.set("run-1", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "finished",
+      workflowStage: "ideas",
+      cursorAgentId: "bc-agent-1",
+      selectedIdea: "Add a cache layer",
+      prompt: "Prompt",
+      inputs: {},
+    });
+    const { POST } = await import("@/app/api/cursor/idea-runs/[runId]/recover-agent/route");
+    const res = await POST(
+      request("/api/cursor/idea-runs/run-1/recover-agent", "POST", {}),
+      params("run-1"),
+    );
+    expect(res.status).toBe(202);
+    expect(mockLaunchCursorAgentRun).toHaveBeenCalledWith(
+      "cursor-key",
+      expect.any(String),
+      expect.stringContaining("run-1:questions:fresh"),
+      { name: "Cursor Boston PR questions", autoCreatePR: false },
+    );
+    expect(docs.get("run-1")).toMatchObject({
+      workflowStage: "questions",
+      questionRunId: "fresh-run-1",
+      status: "running",
+    });
+  });
+
+  it("recover-agent advances from questions → plan when selectedIdea + questions present", async () => {
+    docs.set("run-1", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "finished",
+      workflowStage: "questions",
+      cursorAgentId: "bc-agent-1",
+      selectedIdea: "Refactor X",
+      questions: [{ id: "q1", text: "Scope?" }],
+      prompt: "Prompt",
+      inputs: {},
+    });
+    const { POST } = await import("@/app/api/cursor/idea-runs/[runId]/recover-agent/route");
+    const res = await POST(
+      request("/api/cursor/idea-runs/run-1/recover-agent", "POST", {}),
+      params("run-1"),
+    );
+    expect(res.status).toBe(202);
+    expect(mockLaunchCursorAgentRun).toHaveBeenCalledWith(
+      "cursor-key",
+      expect.any(String),
+      expect.stringContaining("run-1:plan:fresh"),
+      { name: "Cursor Boston PR plan", autoCreatePR: false },
+    );
+    expect(docs.get("run-1")).toMatchObject({
+      workflowStage: "planning",
+      planRunId: "fresh-run-1",
+    });
+  });
+
+  it("recover-agent advances from ready_for_pr → pr stage with autoCreatePR=true and pr opening object", async () => {
+    docs.set("run-1", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "finished",
+      workflowStage: "ready_for_pr",
+      cursorAgentId: "bc-agent-1",
+      buildResult: "Built it",
+      pr: { previous: "value" },
+      prompt: "Prompt",
+      inputs: {},
+    });
+    const { POST } = await import("@/app/api/cursor/idea-runs/[runId]/recover-agent/route");
+    const res = await POST(
+      request("/api/cursor/idea-runs/run-1/recover-agent", "POST", {}),
+      params("run-1"),
+    );
+    expect(res.status).toBe(202);
+    expect(mockLaunchCursorAgentRun).toHaveBeenCalledWith(
+      "cursor-key",
+      expect.stringContaining("Open a pull request"),
+      expect.stringContaining("run-1:pr:fresh"),
+      { name: "Cursor Boston PR open", autoCreatePR: true },
+    );
+    expect(docs.get("run-1")).toMatchObject({
+      workflowStage: "pr_open",
+      prRunId: "fresh-run-1",
+    });
+    const stored = docs.get("run-1") as Record<string, unknown>;
+    expect(stored.pr).toMatchObject({ previous: "value", status: "opening" });
+  });
+
+  it("recover-agent returns 409 when workflowStage is not recoverable (e.g. running ideas with no buildPlan)", async () => {
+    docs.set("run-1", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "running",
+      workflowStage: "plan_approval",
+      // No buildPlan → no recovery prompt
+      cursorAgentId: "bc-agent-1",
+      prompt: "Prompt",
+      inputs: {},
+    });
+    const { POST } = await import("@/app/api/cursor/idea-runs/[runId]/recover-agent/route");
+    const res = await POST(
+      request("/api/cursor/idea-runs/run-1/recover-agent", "POST", {}),
+      params("run-1"),
+    );
+    expect(res.status).toBe(409);
+  });
+
+  it("recover-agent returns 500 when launchCursorAgentRun throws", async () => {
+    docs.set("run-1", {
+      userId: "user-1",
+      type: "pr_ideas",
+      status: "finished",
+      workflowStage: "plan_approval",
+      buildPlan: "## Plan",
+      cursorAgentId: "bc-agent-1",
+      prompt: "Prompt",
+      inputs: {},
+    });
+    mockLaunchCursorAgentRun.mockRejectedValueOnce(new Error("cursor api 503"));
+    const { POST } = await import("@/app/api/cursor/idea-runs/[runId]/recover-agent/route");
+    const res = await POST(
+      request("/api/cursor/idea-runs/run-1/recover-agent", "POST", {}),
+      params("run-1"),
+    );
+    expect(res.status).toBe(500);
+    expect(await res.json()).toMatchObject({ error: "recovery_failed" });
+  });
 });
