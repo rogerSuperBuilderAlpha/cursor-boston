@@ -206,4 +206,42 @@ describe("spawnPlayerLands", () => {
     expect(r.contiguousTileIds).toHaveLength(40);
     expect(r.exclaveTileIds).toHaveLength(10);
   });
+
+  it("throws when contiguousTarget + exclavesMin exceeds totalTiles", () => {
+    expect(() =>
+      spawnPlayerLands({
+        center: { q: 0, r: 0 },
+        claimedTileIds: new Set(),
+        rng: makeSeededRng("invalid"),
+        totalTiles: 30,
+        contiguousTarget: 25,
+        exclavesMin: 10,
+        exclavesMax: 10, // sum 35 > 30
+      }),
+    ).toThrow(/exceeds totalTiles/);
+  });
+
+  it("throws when every tile near the spawn center is already claimed", () => {
+    // Fully claim a wide hex radius around the requested center so
+    // findUnclaimedNear can't find an unclaimed seed → throw branch.
+    const center = { q: 500, r: 500 };
+    const claimed = new Set<string>();
+    for (let dq = -10; dq <= 10; dq++) {
+      for (let dr = -10; dr <= 10; dr++) {
+        claimed.add(tileIdFromAxial(center.q + dq, center.r + dr));
+      }
+    }
+    expect(() =>
+      spawnPlayerLands({
+        center,
+        claimedTileIds: claimed,
+        rng: makeSeededRng("blocked"),
+        totalTiles: 10,
+        contiguousTarget: 5,
+        exclavesMin: 1,
+        exclavesMax: 1,
+        scatterRadius: 3, // small radius → all blocked
+      }),
+    ).toThrow(/Could not find an unclaimed tile/);
+  });
 });
