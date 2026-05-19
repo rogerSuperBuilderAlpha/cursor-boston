@@ -28,14 +28,15 @@ const customJestConfig = {
     '!**/coverage/**',
   ],
   testMatch: [
-    '**/__tests__/**/*.[jt]s?(x)',
+    '**/__tests__/**/*.(test|spec).[jt]s?(x)',
     '**/?(*.)+(spec|test).[jt]s?(x)',
   ],
   // Emulator-backed; run via `npm run test:rules` (see CI).
   testPathIgnorePatterns: [
     '<rootDir>/__tests__/config/firebase/firestore.rules.test.ts',
     '<rootDir>/e2e/',
-    // next/jest testMatch includes every file under __tests__/; exclude shared fixtures.
+    // Shared fixtures under __tests__/_helpers/ (not standalone suites).
+    '<rootDir>/__tests__/_helpers/game-mutation-db.ts',
     '<rootDir>/__tests__/_helpers/firebase-admin-mock.ts',
     '<rootDir>/__tests__/_helpers/firebase-client-mock.ts',
     '<rootDir>/__tests__/_helpers/route-test-utils.ts',
@@ -59,19 +60,16 @@ const customJestConfig = {
   // allowlisted lore subcollections — chapters, epitaphs). Registry
   // additions are static data covered transitively by the existing
   // registry self-check test; cascade-test growth lags by ~1pp.
-  // Current totals (2026-05-18 CI, after coverage pushes #23-73): statements ~48.5%,
-  // branches ~33.4%, lines ~50.2%, functions ~35.8%. Pushes #71-73 added
-  // the bulk smoke-import sweeps for app/api/, app/**/_components/,
-  // components/, and app/**/page.tsx — lifted statements +5pp and lines
-  // +6pp in three PRs (branches + functions unchanged because module-init
-  // doesn't add new branches or function declarations).
-  // Floors set ~0.5pp below current → any regression fails CI.
+  // Current totals (2026-05-18, OpenSSF sprint wave 13): statements ~67.8%,
+  // branches ~51.0%, lines ~70.4%, functions ~55.4%. Added richer hackathon
+  // page state, game hooks/components, and full-suite timeout stability.
+  // Silver target: 80% statements. Floors ~0.5pp below measured.
   coverageThreshold: {
     global: {
-      branches: 33,
-      functions: 35,
-      lines: 50,
-      statements: 48,
+      branches: 50,
+      functions: 54,
+      lines: 70,
+      statements: 67,
     },
   },
   // Generate JSON summary for CI coverage checks

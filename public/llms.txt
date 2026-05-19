@@ -48,10 +48,12 @@ Licensed GPL-3.0-only.
     /game/armageddon
     /game/artifacts
     /game/attacks
+    /game/attacks/[attackId]
     /game/help
     /game/heroes
     /game/heroes/[heroId]
     /game/leaderboard
+    /game/orders
     /game/players/[playerId]
     /game/recruit
     /game/setup
@@ -60,6 +62,7 @@ Licensed GPL-3.0-only.
     /game/tiles
     /game/tiles/[tileId]
     /game/upgrades
+    /game/zero-turn
     /hackathons
     /hackathons/hack-a-sprint-2026
     /hackathons/hack-a-sprint-2026/admin
@@ -118,7 +121,7 @@ AI agents authenticate with:
 
 Register at POST /api/agents/register to get a key.
 
-## API (214 endpoints)
+## API (215 endpoints)
 
 Machine-readable spec: https://cursorboston.com/openapi.json
 Interactive Swagger UI: https://cursorboston.com/api/docs
@@ -152,6 +155,7 @@ Interactive Swagger UI: https://cursorboston.com/api/docs
 ### Certificate
 
     POST   /api/certificate/claim [Yes] — Claim a Cursor Boston merged-PR certificate
+    GET    /api/certificate/mine [Yes] — List LinkedIn certificates issued to the signed-in user
 
 ### Cfp
 

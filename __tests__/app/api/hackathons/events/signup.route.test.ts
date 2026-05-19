@@ -3,7 +3,7 @@
  */
 
 import { NextRequest } from "next/server";
-import { GET, POST, DELETE } from "@/app/api/hackathons/events/[eventId]/signup/route";
+import { GET, POST, PATCH, DELETE } from "@/app/api/hackathons/events/[eventId]/signup/route";
 import { getVerifiedUser, getOptionalVerifiedUser } from "@/lib/server-auth";
 import { getAdminDb } from "@/lib/firebase-admin";
 
@@ -370,6 +370,81 @@ describe("POST /api/hackathons/events/[eventId]/signup", () => {
         userId: "u1",
       })
     );
+  });
+});
+
+describe("PATCH /api/hackathons/events/[eventId]/signup", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it("returns 401 when not authenticated", async () => {
+    mockGetVerifiedUser.mockResolvedValue(null);
+    const req = makeRequest("PATCH", { willBeLate: true });
+    const res = await PATCH(req, makeContext(VALID_EVENT_ID));
+    expect(res.status).toBe(401);
+  });
+
+  it("returns 404 when user is not signed up", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", email: "u@test.com" });
+
+    mockGetAdminDb.mockReturnValue({
+      collection: jest.fn(() => ({
+        doc: jest.fn(() => ({
+          get: jest.fn(async () => makeMockDoc(null)),
+          update: jest.fn(),
+        })),
+      })),
+    } as never);
+
+    const req = makeRequest("PATCH", { willBeLate: true });
+    const res = await PATCH(req, makeContext(VALID_EVENT_ID));
+    expect(res.status).toBe(404);
+  });
+
+  it("returns 400 when waitlisted user tries willBeLate", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", email: "u@test.com" });
+
+    mockGetAdminDb.mockReturnValue({
+      collection: jest.fn(() => ({
+        doc: jest.fn(() => ({
+          get: jest.fn(async () => makeMockDoc({ eventId: VALID_EVENT_ID, userId: "u1" })),
+          update: jest.fn(),
+        })),
+      })),
+    } as never);
+
+    const req = makeRequest("PATCH", { willBeLate: true });
+    const res = await PATCH(req, makeContext(VALID_EVENT_ID));
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toContain("confirmed");
+  });
+
+  it("updates willBeLate for confirmed attendee", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "u1", email: "u@test.com" });
+
+    const updateMock = jest.fn().mockResolvedValue(undefined);
+
+    mockGetAdminDb.mockReturnValue({
+      collection: jest.fn(() => ({
+        doc: jest.fn(() => ({
+          get: jest.fn(async () =>
+            makeMockDoc({
+              eventId: VALID_EVENT_ID,
+              userId: "u1",
+              confirmedAt: new Date("2026-04-01"),
+            }),
+          ),
+          update: updateMock,
+        })),
+      })),
+    } as never);
+
+    const req = makeRequest("PATCH", { willBeLate: true });
+    const res = await PATCH(req, makeContext(VALID_EVENT_ID));
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.ok).toBe(true);
+    expect(updateMock).toHaveBeenCalledWith({ willBeLate: true });
   });
 });
 
