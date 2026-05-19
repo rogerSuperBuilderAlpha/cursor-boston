@@ -85,6 +85,15 @@ describe("isHeroMeditating", () => {
   it("returns false when hero is null", () => {
     expect(isHeroMeditating(null, NOW)).toBe(false);
   });
+  it("accepts a Firestore Timestamp-like object via the toMillis branch", () => {
+    const futureMillis = FUTURE.getTime();
+    const timestampLike = { toMillis: () => futureMillis } as unknown as Date;
+    expect(isHeroMeditating(hero({ meditatingUntil: timestampLike }), NOW)).toBe(true);
+  });
+  it("returns false for an unrecognised meditatingUntil shape (no Date, no toMillis)", () => {
+    const garbage = { foo: "bar" } as unknown as Date;
+    expect(isHeroMeditating(hero({ meditatingUntil: garbage }), NOW)).toBe(false);
+  });
 });
 
 describe("countMeditatingHeroes", () => {
