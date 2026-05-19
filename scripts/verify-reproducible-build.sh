@@ -87,7 +87,8 @@ if [ -n "$DIFF" ]; then
   # moduleIds/chunkIds, generateBuildId derived from git SHA) plus this
   # detection script — see docs/REPRODUCIBLE_BUILD.md for details.
   echo "::warning::Build output differs in files affected by Next.js per-build secrets (see docs/REPRODUCIBLE_BUILD.md):"
-  echo "$DIFF" | head -30
+  # Avoid SIGPIPE exit 141 under `set -o pipefail` when truncating long diff output.
+  sed -n '1,30p' <<<"$DIFF"
   DIFF_LINES=$(echo "$DIFF" | wc -l)
   if [ "$DIFF_LINES" -gt 30 ]; then
     echo "...(${DIFF_LINES} total diff lines)"
