@@ -1,0 +1,31 @@
+# REUSE compliance check — verifies every file has machine-readable licensing
+# (SPDX header or REUSE.toml coverage) per the FSFE REUSE specification.
+# https://reuse.software/spec/
+#
+# Compliance badge in README.md is served from api.reuse.software and reflects
+# the last commit on the default branch (develop).
+
+name: REUSE Compliance
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reuse:
+    name: REUSE lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: REUSE Compliance Check
+        uses: fsfe/reuse-action@676e2d560c9a403aa252096d99fcab3e1132b0f5 # v6.0.0

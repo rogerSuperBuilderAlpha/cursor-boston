@@ -21,7 +21,9 @@ const path = require("path");
 
 const ROOT_DIRS = ["app", "lib", "components", "hooks", "contexts", "types"];
 
-const SPDX_LINE = " * SPDX-License-Identifier: GPL-3.0-only";
+// Concatenated so `reuse lint` does not mis-parse the literal as a header tag
+// on this file (which has its own real header above).
+const SPDX_LINE = " * " + "SPDX-License-Identifier: GPL-3.0-only";
 const HEADER_OPEN = "/**";
 const LICENSE_MARKER = "licensed under GPL-3.0";
 
