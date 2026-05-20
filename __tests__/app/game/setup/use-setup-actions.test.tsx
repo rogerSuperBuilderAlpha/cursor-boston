@@ -1,19 +1,13 @@
 /**
+ * SPDX-License-Identifier: GPL-3.0-only
  * Copyright (C) 2026 Cursor Boston
  * This file is part of Cursor Boston, licensed under GPL-3.0.
  * See LICENSE file for details.
  *
- * SPDX-License-Identifier: GPL-3.0-only
- *
  * @jest-environment jsdom
- *
- * OpenSSF Gold coverage — `app/game/setup/_lib/use-setup-actions.ts`
- * (17% / 39 uncovered, no prior test). Covers `callApi` happy/error
- * paths and the full `runExploreBatch` batch loop including out-of-turns
- * early stop, batch-size clamping, error fallback, and signed-out no-ops.
  */
 
-import React from "react";
+import React, { useEffect } from "react";
 import { act, render } from "@testing-library/react";
 import { useSetupActions } from "@/app/game/setup/_lib/use-setup-actions";
 
@@ -29,24 +23,48 @@ function Probe({
   user,
   setError,
   refresh,
-  capture,
+  onCapture,
 }: {
   user: { getIdToken: () => Promise<string> } | null;
   setError: (m: string | null) => void;
   refresh: () => Promise<void>;
-  capture: { current: Hook | null };
+  onCapture: (hook: Hook) => void;
 }) {
   const hook = useSetupActions({ user: user as never, setError, refresh });
-  capture.current = hook;
+
+  useEffect(() => {
+    onCapture(hook);
+  }, [hook, onCapture]);
+
   return null;
 }
 
-function setupHook(user: { getIdToken: () => Promise<string> } | null = { getIdToken: async () => "tok" }) {
-  const capture: { current: Hook | null } = { current: null };
+function setupHook(
+  user: { getIdToken: () => Promise<string> } | null = {
+    getIdToken: async () => "tok",
+  }
+) {
+  let currentHook: Hook | null = null;
   const setError = jest.fn();
   const refresh = jest.fn(async () => undefined);
-  render(<Probe user={user} setError={setError} refresh={refresh} capture={capture} />);
-  return { capture, setError, refresh };
+  const onCapture = (hook: Hook) => {
+    currentHook = hook;
+  };
+
+  render(
+    <Probe
+      user={user}
+      setError={setError}
+      refresh={refresh}
+      onCapture={onCapture}
+    />
+  );
+
+  return {
+    getHook: () => currentHook,
+    setError,
+    refresh,
+  };
 }
 
 beforeEach(() => {
@@ -55,16 +73,16 @@ beforeEach(() => {
 
 describe("useSetupActions", () => {
   it("returns initial state busy=false, no batch progress, empty reveals", () => {
-    const { capture } = setupHook(null);
-    expect(capture.current?.busy).toBe(false);
-    expect(capture.current?.batchProgress).toBeNull();
-    expect(capture.current?.recentReveals).toEqual([]);
+    const { getHook } = setupHook(null);
+    expect(getHook()?.busy).toBe(false);
+    expect(getHook()?.batchProgress).toBeNull();
+    expect(getHook()?.recentReveals).toEqual([]);
   });
 
   it("callApi: no-op when user is null", async () => {
-    const { capture, refresh, setError } = setupHook(null);
+    const { getHook, refresh, setError } = setupHook(null);
     await act(async () => {
-      await capture.current?.callApi("/api/x");
+      await getHook()?.callApi("/api/x");
     });
     expect(refresh).not.toHaveBeenCalled();
     expect(setError).not.toHaveBeenCalled();
@@ -76,9 +94,9 @@ describe("useSetupActions", () => {
       status: 200,
       json: async () => ({ success: true }),
     })) as never;
-    const { capture, refresh, setError } = setupHook();
+    const { getHook, refresh, setError } = setupHook();
     await act(async () => {
-      await capture.current?.callApi("/api/x", { foo: 1 });
+      await getHook()?.callApi("/api/x", { foo: 1 });
     });
     expect(refresh).toHaveBeenCalled();
     expect(setError).toHaveBeenCalledWith(null);
@@ -89,9 +107,9 @@ describe("useSetupActions", () => {
       ok: true,
       json: async () => ({ success: false, error: { message: "rate-limited" } }),
     })) as never;
-    const { capture, setError, refresh } = setupHook();
+    const { getHook, setError, refresh } = setupHook();
     await act(async () => {
-      await capture.current?.callApi("/api/x");
+      await getHook()?.callApi("/api/x");
     });
     expect(setError).toHaveBeenCalledWith("rate-limited");
     expect(refresh).not.toHaveBeenCalled();
@@ -102,9 +120,9 @@ describe("useSetupActions", () => {
       ok: true,
       json: async () => ({ success: false, error: "bad input" }),
     })) as never;
-    const { capture, setError } = setupHook();
+    const { getHook, setError } = setupHook();
     await act(async () => {
-      await capture.current?.callApi("/api/x");
+      await getHook()?.callApi("/api/x");
     });
     expect(setError).toHaveBeenCalledWith("bad input");
   });
@@ -114,9 +132,9 @@ describe("useSetupActions", () => {
       ok: true,
       json: async () => ({ success: false }),
     })) as never;
-    const { capture, setError } = setupHook();
+    const { getHook, setError } = setupHook();
     await act(async () => {
-      await capture.current?.callApi("/api/x");
+      await getHook()?.callApi("/api/x");
     });
     expect(setError).toHaveBeenCalledWith("Action failed");
   });
@@ -125,9 +143,9 @@ describe("useSetupActions", () => {
     global.fetch = jest.fn(async () => {
       throw new Error("network down");
     }) as never;
-    const { capture, setError } = setupHook();
+    const { getHook, setError } = setupHook();
     await act(async () => {
-      await capture.current?.callApi("/api/x");
+      await getHook()?.callApi("/api/x");
     });
     expect(setError).toHaveBeenCalledWith("network down");
   });
@@ -136,17 +154,17 @@ describe("useSetupActions", () => {
     global.fetch = jest.fn(async () => {
       throw "string-error";
     }) as never;
-    const { capture, setError } = setupHook();
+    const { getHook, setError } = setupHook();
     await act(async () => {
-      await capture.current?.callApi("/api/x");
+      await getHook()?.callApi("/api/x");
     });
     expect(setError).toHaveBeenCalledWith("Action failed");
   });
 
   it("runExploreBatch: no-op when user is null", async () => {
-    const { capture, refresh } = setupHook(null);
+    const { getHook, refresh } = setupHook(null);
     await act(async () => {
-      await capture.current?.runExploreBatch(3);
+      await getHook()?.runExploreBatch(3);
     });
     expect(refresh).not.toHaveBeenCalled();
   });
@@ -164,15 +182,14 @@ describe("useSetupActions", () => {
         }),
       };
     }) as never;
-    const { capture } = setupHook();
+    const { getHook } = setupHook();
     await act(async () => {
-      await capture.current?.runExploreBatch(0);
+      await getHook()?.runExploreBatch(0);
     });
     expect(calls.length).toBe(1);
   });
 
-  it("runExploreBatch: clamps batch count above 100 to 100 (and stops on first failure)", async () => {
-    // Use a counter so we stop after a few iterations
+  it("runExploreBatch: clamps batch count above 100 (and stops on first failure)", async () => {
     let n = 0;
     global.fetch = jest.fn(async () => {
       n++;
@@ -180,21 +197,24 @@ describe("useSetupActions", () => {
         ok: true,
         json: async () =>
           n < 3
-            ? { success: true, tile: { tileId: "t" + n, type: "forest" }, report: { summary: "ok" } }
+            ? {
+                success: true,
+                tile: { tileId: "t" + n, type: "forest" },
+                report: { summary: "ok" },
+              }
             : { success: false, error: "out of turns" },
       };
     }) as never;
-    const { capture, setError } = setupHook();
+    const { getHook, setError } = setupHook();
     await act(async () => {
-      await capture.current?.runExploreBatch(200);
+      await getHook()?.runExploreBatch(200);
     });
-    // Should stop after the 3rd call returned success: false
     expect(setError).toHaveBeenCalledWith(
       expect.stringMatching(/Stopped at 2 \/ 100: out of turns/)
     );
   });
 
-  it("runExploreBatch: collects reveals in reverse order onto the front of recentReveals", async () => {
+  it("runExploreBatch: collects reveals in reverse order at the front", async () => {
     let n = 0;
     global.fetch = jest.fn(async () => {
       n++;
@@ -207,23 +227,22 @@ describe("useSetupActions", () => {
         }),
       };
     }) as never;
-    const { capture, refresh } = setupHook();
+    const { getHook, refresh } = setupHook();
     await act(async () => {
-      await capture.current?.runExploreBatch(3);
+      await getHook()?.runExploreBatch(3);
     });
     expect(refresh).toHaveBeenCalled();
-    expect(capture.current?.recentReveals?.length).toBe(3);
-    // The newest tile (tile-3) should be at the front.
-    expect(capture.current?.recentReveals?.[0]?.tileId).toBe("tile-3");
+    expect(getHook()?.recentReveals?.length).toBe(3);
+    expect(getHook()?.recentReveals?.[0]?.tileId).toBe("tile-3");
   });
 
   it("runExploreBatch: catches fetch throw and surfaces Error message", async () => {
     global.fetch = jest.fn(async () => {
       throw new Error("net err");
     }) as never;
-    const { capture, setError } = setupHook();
+    const { getHook, setError } = setupHook();
     await act(async () => {
-      await capture.current?.runExploreBatch(3);
+      await getHook()?.runExploreBatch(3);
     });
     expect(setError).toHaveBeenCalledWith("net err");
   });
@@ -232,26 +251,22 @@ describe("useSetupActions", () => {
     global.fetch = jest.fn(async () => {
       throw "boom";
     }) as never;
-    const { capture, setError } = setupHook();
+    const { getHook, setError } = setupHook();
     await act(async () => {
-      await capture.current?.runExploreBatch(3);
+      await getHook()?.runExploreBatch(3);
     });
     expect(setError).toHaveBeenCalledWith("Action failed");
   });
 
   it("runExploreBatch: skips collected reveal when response omits tile", async () => {
-    let n = 0;
-    global.fetch = jest.fn(async () => {
-      n++;
-      return {
-        ok: true,
-        json: async () => ({ success: true }), // no tile
-      };
-    }) as never;
-    const { capture } = setupHook();
+    global.fetch = jest.fn(async () => ({
+      ok: true,
+      json: async () => ({ success: true }),
+    })) as never;
+    const { getHook } = setupHook();
     await act(async () => {
-      await capture.current?.runExploreBatch(2);
+      await getHook()?.runExploreBatch(2);
     });
-    expect(capture.current?.recentReveals).toEqual([]);
+    expect(getHook()?.recentReveals).toEqual([]);
   });
 });

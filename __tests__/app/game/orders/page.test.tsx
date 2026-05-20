@@ -3,7 +3,7 @@
  */
 import "@/__tests__/app/_shared/page-test-setup";
 
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useAuth } from "@/contexts/AuthContext";
 import { makeAuthUser } from "@/__tests__/app/_shared/game-dashboard-mocks";
@@ -47,7 +47,9 @@ describe("game orders page", () => {
 
   it("renders queued orders and posts a new order", async () => {
     const Page = (await import("@/app/game/orders/page")).default;
-    render(<Page />);
+    await act(async () => {
+      render(<Page />);
+    });
 
     await waitFor(() => {
       expect(
@@ -56,8 +58,10 @@ describe("game orders page", () => {
       expect(screen.getAllByText(/recruit_on_tile/i).length).toBeGreaterThan(0);
     });
 
-    await userEvent.type(screen.getByPlaceholderText(/tileId/i), "1_0");
-    await userEvent.click(screen.getByRole("button", { name: /Enqueue/i }));
+    await act(async () => {
+      await userEvent.type(screen.getByPlaceholderText(/tileId/i), "1_0");
+      await userEvent.click(screen.getByRole("button", { name: /Enqueue/i }));
+    });
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
