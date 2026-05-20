@@ -131,7 +131,9 @@ These are the larger items that need maintainer time to design and ship. None ar
 | **Cookie consent banner** | ~4h | UX + GDPR fragility decisions. Closes P1-5. |
 | **Minors policy enforcement** | ~4h | Age gating on signup; parental consent flow if applicable. Closes P1-6. |
 | **Rate-limit audit** | ~3h | Add Upstash rate limiting to `community/reaction`, `community/delete`, mentorship endpoints, hackathon signup, game write endpoints. Closes P1-7. |
+<!-- REUSE-IgnoreStart -->
 | **REUSE.toml + SPDX headers** on `lib/` (255 files) | ~4h | Update `scripts/add-gpl-headers.js` HEADER constant to add `SPDX-License-Identifier: GPL-3.0-only`, then run a one-time bulk script. New REUSE.toml at root. Closes the SPDX gap. |
+<!-- REUSE-IgnoreEnd -->
 | **`as any` sweep** (85 sites) | ~4h | Risky type changes; needs careful review per cluster. Closes P1-13. |
 | **`CONTRIBUTING.md` link-audit + restructure pass** | ~2h | The 5-min funnel landed at the top, but the 572-line body wants a clean reorganization. Defer until Brad/Neha/Aaron have merge rights so a non-Roger reviewer can verify. |
 

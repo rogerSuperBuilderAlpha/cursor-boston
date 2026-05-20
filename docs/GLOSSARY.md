@@ -132,7 +132,9 @@ Quick definitions; canonical docs in [`docs/generals/`](generals/README.md).
 
 **SLSA** — Supply-chain Levels for Software Artifacts. Provenance-attestation framework. [slsa.dev](https://slsa.dev/).
 
+<!-- REUSE-IgnoreStart -->
 **SPDX** — Software Package Data Exchange. The license-identifier standard. We use `SPDX-License-Identifier: GPL-3.0-only` in source headers.
+<!-- REUSE-IgnoreEnd -->
 
 **REUSE** — The compliance spec for marking every file with an SPDX identifier. [reuse.software/spec-3.3](https://reuse.software/spec-3.3/). Roll-out planned in Phase 5.5.4 of [REVIEW_ACTION_PLAN.md](REVIEW_ACTION_PLAN.md).
 
