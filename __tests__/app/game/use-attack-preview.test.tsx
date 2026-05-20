@@ -15,7 +15,7 @@
  * wins), gate flip clears loading state.
  */
 
-import React from "react";
+import React, { useEffect } from "react";
 import { act, render } from "@testing-library/react";
 
 const mockUseAuth = jest.fn();
@@ -31,13 +31,15 @@ type State = ReturnType<typeof useAttackPreview>;
 
 function Probe({
   args,
-  capture,
+  capture: captureRef,
 }: {
   args: Parameters<typeof useAttackPreview>[0];
   capture: { current: State | null };
 }) {
   const s = useAttackPreview(args);
-  capture.current = s;
+  useEffect(() => {
+    captureRef.current = s;
+  }, [captureRef, s]);
   return null;
 }
 

@@ -13,7 +13,7 @@
  * error path by rendering the provider with a minimal mock graph.
  */
 
-import React from "react";
+import React, { useEffect } from "react";
 import { act, render } from "@testing-library/react";
 
 const mockUpdatePassword = jest.fn();
@@ -101,8 +101,11 @@ interface CapturedCtx {
   current: ReturnType<typeof useProfileContext> | null;
 }
 
-function Probe({ captured }: { captured: CapturedCtx }) {
-  captured.current = useProfileContext();
+function Probe({ captured: capturedRef }: { captured: CapturedCtx }) {
+  const context = useProfileContext();
+  useEffect(() => {
+    capturedRef.current = context;
+  }, [capturedRef, context]);
   return null;
 }
 
