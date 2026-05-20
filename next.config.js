@@ -32,6 +32,20 @@ const nextConfig = {
 
   // Standalone output is only for Docker builds (see docker/Dockerfile). Omit on Vercel.
   ...(process.env.DOCKER_BUILD === '1' ? { output: 'standalone' } : {}),
+
+  // Emergency local-build bypass — SKIP_TYPECHECK=1 disables both the
+  // TypeScript type-check and the ESLint check during `next build`. Use ONLY
+  // for local visual QA when pre-existing in-flight branch state has
+  // unrelated type/lint errors. NEVER set this in CI; CI is the boundary
+  // that catches real type errors. See CLAUDE.md "Local production
+  // verification — emergency typecheck bypass".
+  ...(process.env.SKIP_TYPECHECK === '1'
+    ? {
+        typescript: { ignoreBuildErrors: true },
+        eslint: { ignoreDuringBuilds: true },
+      }
+    : {}),
+
   serverExternalPackages: ['@cursor/sdk'],
 
   webpack: (config) => {
