@@ -13,8 +13,12 @@ WORKDIR /app
 # Copy package files
 COPY package.json package-lock.json ./
 
-# Install dependencies
-RUN npm ci --only=production && npm cache clean --force
+# Install dependencies. `--ignore-scripts` skips:
+#   - prepare → `husky install` (no .git in the image)
+#   - postinstall → `node scripts/maybe-install-playwright.js` (script file isn't
+#     copied into this stage and Playwright is for e2e/dev only, not production)
+# Both are dev-environment niceties, not runtime requirements.
+RUN npm ci --only=production --ignore-scripts && npm cache clean --force
 
 # Stage 2: Builder
 FROM node:22.20.0-alpine3.21 AS builder
