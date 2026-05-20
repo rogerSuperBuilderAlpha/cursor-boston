@@ -208,7 +208,7 @@ We argue, OWASP Top 10 (2021) item by item, that the corresponding weakness clas
 
 External attestations:
 
-- OpenSSF Best Practices Silver badge (awarded 2026-05-19): https://www.bestpractices.dev/projects/12883/silver
+- OpenSSF Best Practices **Gold** badge (awarded 2026-05-20): https://www.bestpractices.dev/projects/12883/2 (Silver awarded 2026-05-19)
 - OpenSSF Scorecard: https://scorecard.dev/viewer/?uri=github.com/rogerSuperBuilderAlpha/cursor-boston
 - Sigstore-signed release artifacts: see https://github.com/rogerSuperBuilderAlpha/cursor-boston/releases — every release after v0.2.2 includes `.cosign.bundle` and SLSA provenance.
 
@@ -222,7 +222,7 @@ Internal attestations:
 
 Honesty matters more than a clean score. The following gaps are tracked in [`docs/REVIEW_ACTION_PLAN.md`](REVIEW_ACTION_PLAN.md):
 
-1. **Test statement coverage** (**~80.25%** statements as of 2026-05-19 OpenSSF sprint wave 15: 27,092 / 33,762 covered; branches ~66.0%, lines ~83.2%, functions ~72.9%; 4,914 Jest tests) — meets the 80% OpenSSF Silver target (`test_statement_coverage80`). Waves 10–15 pushed `lib/game/data-server.ts` to ~95% line coverage; gap-fill waves 2–6 and deep page/hook/route tests covered summer-cohort, hackathons, mentorship/pair, game UI, and API admin routes. Jest floors are ratcheted to 79.5% statements in `config/jest.config.js`. The OpenSSF Silver badge was awarded 2026-05-19 — see [bestpractices.dev #12883/silver](https://www.bestpractices.dev/projects/12883/silver). Branch coverage (~66%) is the long-tail gap toward Gold.
+1. **Test coverage** (**90.30% statements / 80.98% branches / 93.0% lines / 86.3% functions** as of 2026-05-20 release PR #1294; 7,269 Jest tests) — clears both OpenSSF Gold targets (`test_statement_coverage90` ≥ 90% and `test_branch_coverage80` ≥ 80%) and the prior Silver target (`test_statement_coverage80`). The OpenSSF **Gold** badge was awarded 2026-05-20 — see [bestpractices.dev #12883/2](https://www.bestpractices.dev/projects/12883/2). Silver awarded 2026-05-19. Jest floors in `config/jest.config.js` should be ratcheted up close to 90/80 to lock the win in.
 2. **Production observability** — application-level error tracking (Sentry) is planned but not shipped. Platform-level logs are available in Vercel + Firebase.
 3. **Signed git tags** — release artifacts are Sigstore-signed; git tags themselves are migrating to signed tags from v0.3.0 onward.
 4. **Independent security audit** — no external auditor has reviewed the codebase. The OpenSSF Best Practices + Scorecard + the maintainer review process are the current substitute.

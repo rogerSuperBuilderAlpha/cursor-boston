@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <a href="https://www.bestpractices.dev/projects/12883/silver"><img src="https://www.bestpractices.dev/projects/12883/badge" alt="OpenSSF Best Practices Silver" height="28" /></a>
+  <a href="https://www.bestpractices.dev/projects/12883/2"><img src="https://www.bestpractices.dev/projects/12883/badge" alt="OpenSSF Best Practices Gold" height="28" /></a>
 </p>
 
 <p align="center">
