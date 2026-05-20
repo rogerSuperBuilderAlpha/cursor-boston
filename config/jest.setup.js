@@ -9,6 +9,12 @@ if (typeof globalThis.TextEncoder === 'undefined') {
   globalThis.TextDecoder = util.TextDecoder
 }
 
+// jsdom does not implement Element.prototype.scrollIntoView; pages that call it
+// inside a requestAnimationFrame throw under test (e.g. summer-cohort edit flow).
+if (typeof Element !== 'undefined' && typeof Element.prototype.scrollIntoView !== 'function') {
+  Element.prototype.scrollIntoView = function scrollIntoViewStub() {}
+}
+
 // Stub next/cache for unit tests. `unstable_cache` and `revalidateTag` need
 // Next's request-scoped incremental cache store, which Jest route-handler
 // tests don't set up. Pass-through unstable_cache (no caching — every call
