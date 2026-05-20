@@ -466,7 +466,6 @@ describe("ZeroTurnHubPage — action handlers", () => {
   it("Throw with non-Error value surfaces 'Failed' fallback", async () => {
     global.fetch = jest.fn(async (url: string, init?: RequestInit) => {
       if (url.includes("/api/game/heroes/meditate") && init?.method === "POST") {
-        // eslint-disable-next-line @typescript-eslint/no-throw-literal
         throw "string-thrown";
       }
       if (url.includes("/api/game/player")) {

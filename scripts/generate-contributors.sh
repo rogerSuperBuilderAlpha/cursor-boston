@@ -79,8 +79,11 @@ while read -r line; do
   name=$(echo "$rest" | cut -d'|' -f1)
   email=$(echo "$rest" | cut -d'|' -f2)
 
-  first_date=$(git log --no-merges --use-mailmap --author="$email" \
-    --format='%ai' --reverse 2>/dev/null | head -1 | cut -d' ' -f1)
+  # `git log ... | head -1` would SIGPIPE under `set -o pipefail` once head
+  # closes the pipe — kills the script in CI with exit 141. Wrap the log in
+  # `|| true` so its SIGPIPE death is swallowed before head sees the close.
+  first_date=$( { git log --no-merges --use-mailmap --author="$email" \
+    --format='%ai' --reverse 2>/dev/null || true; } | head -1 | cut -d' ' -f1)
 
   ghuser=$(github_user "$email")
   prs=$(pr_count_for "$ghuser")

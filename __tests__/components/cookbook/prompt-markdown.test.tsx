@@ -105,16 +105,16 @@ describe("PromptMarkdown", () => {
     // Render each non-code override to make sure they produce DOM.
     const { container } = render(
       <>
-        {React.createElement(C.p as React.ComponentType<{ children: React.ReactNode }>, { children: "para" })}
-        {React.createElement(C.ul as React.ComponentType<{ children: React.ReactNode }>, { children: <li>one</li> })}
-        {React.createElement(C.ol as React.ComponentType<{ children: React.ReactNode }>, { children: <li>two</li> })}
-        {React.createElement(C.li as React.ComponentType<{ children: React.ReactNode }>, { children: "item" })}
-        {React.createElement(C.h1 as React.ComponentType<{ children: React.ReactNode }>, { children: "h1" })}
-        {React.createElement(C.h2 as React.ComponentType<{ children: React.ReactNode }>, { children: "h2" })}
-        {React.createElement(C.h3 as React.ComponentType<{ children: React.ReactNode }>, { children: "h3" })}
-        {React.createElement(C.strong as React.ComponentType<{ children: React.ReactNode }>, { children: "b" })}
-        {React.createElement(C.blockquote as React.ComponentType<{ children: React.ReactNode }>, { children: "quote" })}
-        {React.createElement(C.pre as React.ComponentType<{ children: React.ReactNode }>, { children: "raw" })}
+        {React.createElement(C.p as React.ComponentType<{ children: React.ReactNode }>, null, "para")}
+        {React.createElement(C.ul as React.ComponentType<{ children: React.ReactNode }>, null, <li>one</li>)}
+        {React.createElement(C.ol as React.ComponentType<{ children: React.ReactNode }>, null, <li>two</li>)}
+        {React.createElement(C.li as React.ComponentType<{ children: React.ReactNode }>, null, "item")}
+        {React.createElement(C.h1 as React.ComponentType<{ children: React.ReactNode }>, null, "h1")}
+        {React.createElement(C.h2 as React.ComponentType<{ children: React.ReactNode }>, null, "h2")}
+        {React.createElement(C.h3 as React.ComponentType<{ children: React.ReactNode }>, null, "h3")}
+        {React.createElement(C.strong as React.ComponentType<{ children: React.ReactNode }>, null, "b")}
+        {React.createElement(C.blockquote as React.ComponentType<{ children: React.ReactNode }>, null, "quote")}
+        {React.createElement(C.pre as React.ComponentType<{ children: React.ReactNode }>, null, "raw")}
       </>
     );
     expect(container.textContent).toContain("para");

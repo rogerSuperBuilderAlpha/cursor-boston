@@ -221,7 +221,6 @@ describe("AdminDashboardPage (hack-a-sprint-2026)", () => {
     setAuth({ user: makeUser() });
     global.fetch = jest.fn(async () => {
       // Throw a non-Error (string) — exercises the `e instanceof Error ? ... : "Couldn't..."` branch.
-      // eslint-disable-next-line @typescript-eslint/no-throw-literal -- intentional non-Error throw to test fallback branch
       throw "boom-non-error";
     }) as never;
     render(<AdminDashboardPage />);

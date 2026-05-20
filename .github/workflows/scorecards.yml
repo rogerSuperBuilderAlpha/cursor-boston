@@ -1,5 +1,10 @@
-# OpenSSF Scorecard — supply-chain posture signal (weekly + on push to main/develop).
+# OpenSSF Scorecard — supply-chain posture signal (weekly + on push to default branch).
 # https://github.com/ossf/scorecard-action
+#
+# The scorecard action only analyzes the repository's default branch, which is
+# `develop` for this project. Triggering on push to `main` (or any non-default
+# branch) makes the action error with "Only the default branch develop is
+# supported." Keep this in sync with the GitHub default-branch setting.
 
 name: Scorecard
 
@@ -7,7 +12,7 @@ on:
   schedule:
     - cron: '25 4 * * 1'
   push:
-    branches: [main]
+    branches: [develop]
   workflow_dispatch:
 
 permissions: read-all

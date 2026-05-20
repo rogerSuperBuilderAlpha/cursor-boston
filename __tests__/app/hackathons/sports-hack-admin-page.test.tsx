@@ -16,8 +16,8 @@
  * 60s polling skipped when error is set, and StatCard highlight/warn
  * variants.
  */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
+ 
+ 
 
 import React from "react";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
@@ -352,7 +352,6 @@ describe("SportsHack2026AdminPage", () => {
     setAuth({ user: makeUser() });
     (global.fetch as unknown as jest.Mock).mockImplementationOnce(() => {
       // Throw a non-Error → falls back to the default error string.
-      // eslint-disable-next-line @typescript-eslint/no-throw-literal
       throw "boom";
     });
     render(<SportsHack2026AdminPage />);
