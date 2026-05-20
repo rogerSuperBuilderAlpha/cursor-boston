@@ -6,6 +6,7 @@ import { NextRequest } from "next/server";
 import { GET, PATCH } from "@/app/api/profile/visibility/route";
 import type { VerifiedUser } from "@/lib/server-auth";
 import { getVerifiedUser } from "@/lib/server-auth";
+import { rebuildPublicMembersSnapshot } from "@/lib/members-public-snapshot";
 
 jest.mock("@/lib/rate-limit", () => ({
   checkRateLimit: jest.fn(() => ({ success: true })),
@@ -20,6 +21,10 @@ jest.mock("@/lib/server-auth", () => ({
   getVerifiedUser: jest.fn(),
 }));
 
+jest.mock("@/lib/members-public-snapshot", () => ({
+  rebuildPublicMembersSnapshot: jest.fn(async () => []),
+}));
+
 const mockUpdate = jest.fn().mockResolvedValue(undefined);
 const mockGet = jest.fn();
 
@@ -32,6 +37,8 @@ jest.mock("@/lib/firebase-admin", () => ({
 }));
 
 const mockGetVerifiedUser = getVerifiedUser as jest.MockedFunction<typeof getVerifiedUser>;
+const mockRebuildPublicMembersSnapshot =
+  rebuildPublicMembersSnapshot as jest.MockedFunction<typeof rebuildPublicMembersSnapshot>;
 const testUser: VerifiedUser = { uid: "u1", name: "Test" };
 
 function makePatchRequest(body: Record<string, unknown>) {
@@ -82,6 +89,30 @@ describe("PATCH /api/profile/visibility", () => {
         "visibility.showEmail": false,
       })
     );
+    expect(mockRebuildPublicMembersSnapshot).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not block response on snapshot rebuild completion", async () => {
+    let resolveRebuild: (() => void) | null = null;
+    mockRebuildPublicMembersSnapshot.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveRebuild = resolve;
+        })
+    );
+    mockGet.mockResolvedValue({
+      data: () => ({ visibility: { isPublic: true } }),
+    });
+
+    const responsePromise = PATCH(makePatchRequest({ isPublic: true }));
+    const res = await Promise.race([
+      responsePromise,
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 50)),
+    ]);
+
+    expect(res).not.toBeNull();
+    expect((res as Response).status).toBe(200);
+    resolveRebuild?.();
   });
 });
 

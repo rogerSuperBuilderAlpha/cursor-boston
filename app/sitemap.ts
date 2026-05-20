@@ -10,173 +10,169 @@ import { getAllPostSlugs } from '@/lib/blog';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://cursorboston.com';
-  const sourceDateEpoch = Number.parseInt(process.env.SOURCE_DATE_EPOCH ?? '', 10);
-  const lastModified = Number.isFinite(sourceDateEpoch) && sourceDateEpoch > 0
-    ? new Date(sourceDateEpoch * 1000)
-    : new Date();
 
   // Static pages
   const staticPages: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
-      lastModified,
+      lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 1,
     },
     {
       url: `${baseUrl}/about`,
-      lastModified,
+      lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.8,
     },
     {
       url: `${baseUrl}/about-cursor`,
-      lastModified,
+      lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.7,
     },
     {
       url: `${baseUrl}/events`,
-      lastModified,
+      lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.9,
     },
     {
       url: `${baseUrl}/blog`,
-      lastModified,
+      lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.8,
     },
     {
       url: `${baseUrl}/hackathons`,
-      lastModified,
+      lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.8,
     },
     {
       url: `${baseUrl}/hackathons/hack-a-sprint-2026`,
-      lastModified,
+      lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 0.75,
     },
     {
       url: `${baseUrl}/hackathons/hack-a-sprint-2026/signup`,
-      lastModified,
+      lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 0.72,
     },
     {
       url: `${baseUrl}/talks`,
-      lastModified,
+      lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.7,
     },
     {
       url: `${baseUrl}/members`,
-      lastModified,
+      lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.6,
     },
     {
       url: `${baseUrl}/open-source`,
-      lastModified,
+      lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.6,
     },
     {
       url: `${baseUrl}/maintainers`,
-      lastModified,
+      lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.52,
     },
     {
       url: `${baseUrl}/maintainers/apply`,
-      lastModified,
+      lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.5,
     },
     {
       url: `${baseUrl}/cookbook`,
-      lastModified,
+      lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.7,
     },
     {
       url: `${baseUrl}/showcase`,
-      lastModified,
+      lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.7,
     },
     {
       url: `${baseUrl}/pair`,
-      lastModified,
+      lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.6,
     },
     {
       url: `${baseUrl}/badges`,
-      lastModified,
+      lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.6,
     },
     {
       url: `${baseUrl}/ecosystem`,
-      lastModified,
+      lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.7,
     },
     {
       url: `${baseUrl}/opportunities`,
-      lastModified,
+      lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.7,
     },
     {
       url: `${baseUrl}/analytics`,
-      lastModified,
+      lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.6,
     },
     {
       url: `${baseUrl}/questions`,
-      lastModified,
+      lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 0.7,
     },
     // Legal pages
     {
       url: `${baseUrl}/terms`,
-      lastModified,
+      lastModified: new Date(),
       changeFrequency: 'yearly',
       priority: 0.3,
     },
     {
       url: `${baseUrl}/privacy`,
-      lastModified,
+      lastModified: new Date(),
       changeFrequency: 'yearly',
       priority: 0.3,
     },
     {
       url: `${baseUrl}/cookies`,
-      lastModified,
+      lastModified: new Date(),
       changeFrequency: 'yearly',
       priority: 0.3,
     },
     {
       url: `${baseUrl}/disclaimer`,
-      lastModified,
+      lastModified: new Date(),
       changeFrequency: 'yearly',
       priority: 0.3,
     },
     {
       url: `${baseUrl}/code-of-conduct`,
-      lastModified,
+      lastModified: new Date(),
       changeFrequency: 'yearly',
       priority: 0.4,
     },
     {
       url: `${baseUrl}/accessibility`,
-      lastModified,
+      lastModified: new Date(),
       changeFrequency: 'yearly',
       priority: 0.4,
     },
@@ -186,7 +182,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const blogSlugs = getAllPostSlugs();
   const blogPages: MetadataRoute.Sitemap = blogSlugs.map((slug) => ({
     url: `${baseUrl}/blog/${slug}`,
-    lastModified,
+    lastModified: new Date(),
     changeFrequency: 'monthly' as const,
     priority: 0.7,
   }));

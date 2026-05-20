@@ -86,12 +86,11 @@ export async function PATCH(request: NextRequest) {
       updatedAt: FieldValue.serverTimestamp(),
     });
 
-    // Keep members directory visibility in sync after profile privacy changes.
-    try {
-      await rebuildPublicMembersSnapshot(db);
-    } catch (snapshotError) {
+    // Refresh members snapshot asynchronously to avoid blocking profile saves
+    // on a full directory rebuild.
+    void rebuildPublicMembersSnapshot(db).catch((snapshotError) => {
       console.warn("[profile/visibility] Failed to refresh members snapshot", snapshotError);
-    }
+    });
 
     // Get updated profile
     const updatedSnap = await userRef.get();
