@@ -210,4 +210,68 @@ describe("EditProfileModal", () => {
     fireEvent.click(screen.getByRole("button", { name: /Choose Photo/i }));
     expect(clickSpy).toHaveBeenCalled();
   });
+
+  describe("focus trap (Tab / Shift+Tab wrap)", () => {
+    function getFocusable(): HTMLElement[] {
+      const modal = document.querySelector(
+        '[aria-modal="true"] > div.relative'
+      ) as HTMLElement;
+      return Array.from(
+        modal.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        )
+      );
+    }
+
+    it("Shift+Tab on the first focusable element wraps focus to the last one", () => {
+      render(<EditProfileModal user={baseUser} onSave={jest.fn()} onClose={jest.fn()} />);
+      const focusable = getFocusable();
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      first.focus();
+      expect(document.activeElement).toBe(first);
+      const lastFocusSpy = jest.spyOn(last, "focus");
+      const dialog = screen.getByRole("dialog");
+      fireEvent.keyDown(dialog, { key: "Tab", shiftKey: true });
+      expect(lastFocusSpy).toHaveBeenCalled();
+    });
+
+    it("Tab (no shift) on the last focusable element wraps focus to the first one", () => {
+      render(<EditProfileModal user={baseUser} onSave={jest.fn()} onClose={jest.fn()} />);
+      const focusable = getFocusable();
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      last.focus();
+      expect(document.activeElement).toBe(last);
+      const firstFocusSpy = jest.spyOn(first, "focus");
+      const dialog = screen.getByRole("dialog");
+      fireEvent.keyDown(dialog, { key: "Tab" });
+      expect(firstFocusSpy).toHaveBeenCalled();
+    });
+
+    it("Tab when focus is on a middle element is a no-op (does not wrap)", () => {
+      render(<EditProfileModal user={baseUser} onSave={jest.fn()} onClose={jest.fn()} />);
+      const focusable = getFocusable();
+      // Need at least 3 focusable elements for a "middle" one to exist
+      expect(focusable.length).toBeGreaterThanOrEqual(3);
+      const middle = focusable[1];
+      middle.focus();
+      const firstSpy = jest.spyOn(focusable[0], "focus");
+      const lastSpy = jest.spyOn(focusable[focusable.length - 1], "focus");
+      const dialog = screen.getByRole("dialog");
+      fireEvent.keyDown(dialog, { key: "Tab" });
+      fireEvent.keyDown(dialog, { key: "Tab", shiftKey: true });
+      // Neither boundary should have been forced
+      expect(firstSpy).not.toHaveBeenCalled();
+      expect(lastSpy).not.toHaveBeenCalled();
+    });
+
+    it("non-Tab/Escape keys are ignored by the trap (e.g. ArrowDown)", () => {
+      const onClose = jest.fn();
+      render(<EditProfileModal user={baseUser} onSave={jest.fn()} onClose={onClose} />);
+      const dialog = screen.getByRole("dialog");
+      fireEvent.keyDown(dialog, { key: "ArrowDown" });
+      expect(onClose).not.toHaveBeenCalled();
+    });
+  });
 });
