@@ -13,7 +13,7 @@
  * early stop, batch-size clamping, error fallback, and signed-out no-ops.
  */
 
-import React from "react";
+import React, { useEffect } from "react";
 import { act, render } from "@testing-library/react";
 import { useSetupActions } from "@/app/game/setup/_lib/use-setup-actions";
 
@@ -37,7 +37,10 @@ function Probe({
   capture: { current: Hook | null };
 }) {
   const hook = useSetupActions({ user: user as never, setError, refresh });
-  capture.current = hook;
+  const captureRef = capture;
+  useEffect(() => {
+    captureRef.current = hook;
+  }, [captureRef, hook]);
   return null;
 }
 
