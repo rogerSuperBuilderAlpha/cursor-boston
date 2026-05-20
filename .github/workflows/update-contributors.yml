@@ -1,12 +1,17 @@
 name: Update Contributors
 
+# Manual-trigger only. The previous auto-trigger on push-to-main was incompatible
+# with branch protection on `main` (PR required, 2 reviews required, verified
+# commit signature required) — every run failed with `GH013: Repository rule
+# violations found`. Maintainers regenerate the list as part of each develop→main
+# release PR by running `npm run generate-contributors` locally before opening the
+# release PR. See CLAUDE.md for the release flow.
+
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   update-contributors:
@@ -21,20 +26,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: bash scripts/generate-contributors.sh
 
-      - name: Check for changes
-        id: diff
+      - name: Surface diff in the job log
         run: |
           if git diff --quiet CONTRIBUTORS.md .github/CONTRIBUTING.md; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No changes — CONTRIBUTORS.md is already current."
           else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "CONTRIBUTORS.md needs an update. Diff below:"
+            git diff --stat CONTRIBUTORS.md .github/CONTRIBUTING.md
+            echo
+            echo "::warning::Regenerated CONTRIBUTORS.md differs from the committed copy. Run 'npm run generate-contributors' locally and open a PR with the updated files."
           fi
-
-      - name: Commit and push
-        if: steps.diff.outputs.changed == 'true'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add CONTRIBUTORS.md .github/CONTRIBUTING.md
-          git commit -m "docs: update contributors list [skip ci]"
-          git push
