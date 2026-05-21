@@ -203,9 +203,10 @@ Open [http://localhost:3000](http://localhost:3000) to see the app.
 ### Finding Issues to Work On
 
 - Browse [GitHub Issues](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues) for open tasks
-- Look for issues labeled `good first issue` if you're new to the project
-- Issues labeled `help wanted` are actively seeking contributors
-- **Feature projects** (issues [#78](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/78)–[#83](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/83)) are fully scoped, isolated features ready to build — see the [Claiming an Issue](#claiming-an-issue) section below
+- Look for issues labeled [`good first issue`](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) if you're new to the project. These are small (S/M-sized) self-contained tasks with explicit file paths and acceptance criteria — typically JSDoc / README additions, light refactors (extracting magic numbers or duplicate error strings, adding return-type annotations), accessibility labels, or scoped UI additions like empty/loading states. They're chosen to be doable without needing deep knowledge of the wider system.
+- Issues labeled `help wanted` are actively seeking contributors.
+- Issues labeled `maintainer:audit` are internal maintainer review work and are **not** contributor surface — you can safely ignore that label.
+- **Feature projects** (issues [#78](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/78)–[#83](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/83)) are fully scoped, isolated features ready to build end-to-end — see the [Claiming an Issue](#claiming-an-issue) section below.
 
 ### Branch Naming
 
