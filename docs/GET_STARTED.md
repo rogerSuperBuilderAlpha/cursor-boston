@@ -1,5 +1,12 @@
 # Getting Started (No Experience Needed)
 
+> **In the wrong doc?**
+> - Know git → [CONTRIBUTING.md § Your first PR in 5 minutes](../.github/CONTRIBUTING.md#your-first-pr-in-5-minutes) (~5 min)
+> - Want a guided first-PR walkthrough with explanations → [FIRST_CONTRIBUTION.md](FIRST_CONTRIBUTION.md) (~30–45 min)
+> - Want the full contribution policy → [CONTRIBUTING.md](../.github/CONTRIBUTING.md)
+>
+> Continue below if you've never coded before.
+
 You don't need to know how to code to contribute to this project. Seriously.
 
 AI tools like **Cursor**, **Claude Code**, and **Codex** can do the heavy lifting for you. This guide walks you through everything in plain language — no jargon, no assumptions.

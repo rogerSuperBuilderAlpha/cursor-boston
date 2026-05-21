@@ -35,9 +35,12 @@
 
 Thank you for your interest in contributing to Cursor Boston! This document provides guidelines and instructions for contributing to the project.
 
-> **Never coded before?** Start with [Get Started (No Experience Needed)](../docs/GET_STARTED.md) — a plain-language guide that shows you how to use AI tools to contribute.
+> **In the wrong doc?**
+> - Never coded before → [GET_STARTED.md](../docs/GET_STARTED.md) (uses AI tools, plain language, ~30 min)
+> - Want a guided first-PR walkthrough with each step explained → [FIRST_CONTRIBUTION.md](../docs/FIRST_CONTRIBUTION.md) (~30–45 min)
+> - Full local setup, scripts, troubleshooting → [DEVELOPMENT.md](../docs/DEVELOPMENT.md)
 >
-> **New to open source?** Follow the [First Contribution Guide](../docs/FIRST_CONTRIBUTION.md) for a step-by-step walkthrough, or the [Development Guide](../docs/DEVELOPMENT.md) for full setup, scripts, and troubleshooting.
+> Continue below if you know git and want the contribution policy (5-minute path + full reference).
 
 ## Your first PR in 5 minutes
 
@@ -132,6 +135,7 @@ After the RFC ships, a corresponding ADR is added under [`docs/adr/`](../docs/ad
 - [RFCs — proposing substantial changes](#rfcs--proposing-substantial-changes)
 - [Code of Conduct](#code-of-conduct)
 - [Developer Certificate of Origin](#developer-certificate-of-origin)
+- [License: GPL-3.0](#license-gpl-30)
 - [Getting Started](#getting-started)
 - [Development Workflow](#development-workflow)
 - [Claiming an Issue](#claiming-an-issue)
@@ -155,6 +159,19 @@ git commit -s -m "Your commit message"
 ```
 
 This adds a `Signed-off-by: Your Name <your.email@example.com>` line to the commit. PRs with unsigned commits are blocked by the `dco.yml` workflow. See [DCO.md](DCO.md) for the full text of what you're certifying and how to fix a missing sign-off on past commits.
+
+## License: GPL-3.0
+
+This project is licensed under [GPL-3.0](../LICENSE). By contributing, you agree your contributions are licensed under the same terms — the DCO sign-off on each commit certifies this.
+
+Practical implications you should know up front:
+
+- **If you fork** this codebase for your own community / event platform, your fork must also be GPL-3.0. You cannot relicense it under MIT or Apache.
+- **Derivative works** that incorporate code from this project must also be GPL-3.0 — this is "strong copyleft."
+- **Network use is not distribution.** Running a private hosted instance does not trigger the copyleft. Only redistributing the code (or a binary) does. (This project uses GPL-3.0, not AGPL-3.0.)
+- **If you need a permissive license** (MIT / Apache) for proprietary use, this project is not the right starting point.
+
+Every TypeScript / TSX source file under `app/`, `lib/`, `components/`, `hooks/`, `contexts/`, and `types/` carries an `SPDX-License-Identifier: GPL-3.0-or-later` header. The CI gate refuses to land new files without one — run `node scripts/add-gpl-headers.js` if you add files in those directories. See [LICENSE](../LICENSE) for full terms and [NOTICE](../NOTICE) for third-party attributions.
 
 ## Getting Started
 

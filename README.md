@@ -137,6 +137,8 @@ Want to add a major feature to the platform? We have **6 open feature projects**
 
 Each feature is **fully isolated** — new routes, new Firestore collections, no entanglement with existing code. Pick one, comment to claim it, and ship it. See the [Contributing Guide](.github/CONTRIBUTING.md#claiming-an-issue) for how to get started.
 
+> **Looking for something smaller?** Browse [`good first issue`](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) for beginner-friendly tasks. Issues tagged **`maintainer:audit`** are internal maintainer review work — not for new contributors; you can safely ignore that label.
+
 > **Where does my PR go?** Most contributions target **`develop`** (the default base). A few — PyData notebooks, summer cohort weekly submissions, game content, maintainer applications — target dedicated long-lived branches instead. See [docs/SUBMISSION_BRANCHES.md](docs/SUBMISSION_BRANCHES.md) for the routing table.
 
 ---
@@ -151,6 +153,18 @@ Each feature is **fully isolated** — new routes, new Firestore collections, no
 ---
 
 ## 📚 Community
+
+### Which onboarding doc do I read?
+
+| If you… | Read this | Time |
+|---|---|---|
+| Have never coded before | [GET_STARTED.md](docs/GET_STARTED.md) — uses AI tools, plain language | ~30 min |
+| Know git, want the shortest path to a merged PR | [CONTRIBUTING.md § Your first PR in 5 minutes](.github/CONTRIBUTING.md#your-first-pr-in-5-minutes) | ~5 min |
+| Want a guided first-PR walkthrough with explanations | [FIRST_CONTRIBUTION.md](docs/FIRST_CONTRIBUTION.md) | ~30–45 min |
+| Want the full contribution policy (issue claiming, code style, review process) | [CONTRIBUTING.md](.github/CONTRIBUTING.md) | reference |
+
+### Full documentation index
+
 - [Documentation index](docs/README.md) - Order of docs for newcomers vs maintainers
 - [User Guide](docs/USER_GUIDE.md) - Map of every section on cursorboston.com (visitor sitemap)
 - [Get Started (No Experience Needed)](docs/GET_STARTED.md) - Plain-language guide for complete beginners

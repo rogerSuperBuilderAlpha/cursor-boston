@@ -2,6 +2,13 @@
 
 A step-by-step guide to making your first pull request. Time estimate: 30-45 minutes (including setup).
 
+> **In the wrong doc?**
+> - Never coded before → [GET_STARTED.md](GET_STARTED.md) (uses AI tools, plain language, ~30 min)
+> - Just want the shortest path to a merged PR → [CONTRIBUTING.md § Your first PR in 5 minutes](../.github/CONTRIBUTING.md#your-first-pr-in-5-minutes) (~5 min)
+> - Want the full contribution policy → [CONTRIBUTING.md](../.github/CONTRIBUTING.md)
+>
+> Continue below if you want a guided first-PR walkthrough with each step explained.
+
 > **Prerequisites:** Complete the [Development Guide](DEVELOPMENT.md) setup first and verify the [Onboarding Checklist](DEVELOPMENT.md#onboarding-checklist) passes.
 
 ---
