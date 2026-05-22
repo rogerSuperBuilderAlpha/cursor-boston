@@ -224,10 +224,13 @@ docker build -f docker/Dockerfile \
   --build-arg NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-id \
   --build-arg NEXT_PUBLIC_FIREBASE_APP_ID=your-app-id \
   --build-arg NEXT_PUBLIC_FIREBASE_DATABASE_URL=your-db-url \
+  --build-arg UNSUBSCRIBE_SECRET=build-only-placeholder-secret-32-bytes \
   -t cursor-boston .
 
-# Run the container
-docker run -p 3000:3000 cursor-boston
+# Run the container with the real runtime signing secret
+docker run -p 3000:3000 \
+  -e UNSUBSCRIBE_SECRET="$(openssl rand -hex 32)" \
+  cursor-boston
 ```
 
 The image uses Node 22 Alpine, runs as a non-root user, and includes a health check at `/api/health`.

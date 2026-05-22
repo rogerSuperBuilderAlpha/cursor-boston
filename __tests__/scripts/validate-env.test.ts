@@ -63,5 +63,76 @@ describe('Environment Variable Validation', () => {
         expect(result.valid).toBe(true);
       }
     });
+
+    it('should accept a strong unsubscribe secret', () => {
+      process.env.UNSUBSCRIBE_SECRET = 'u'.repeat(32);
+      const envVar = requiredEnvVars.find(
+        (v) => v.name === 'UNSUBSCRIBE_SECRET'
+      );
+
+      if (envVar) {
+        const result = validateEnvVar(envVar);
+        expect(result.valid).toBe(true);
+      }
+    });
+
+    it('should require unsubscribe secret outside development and test', () => {
+      Object.defineProperty(process.env, 'NODE_ENV', {
+        value: 'production',
+        configurable: true,
+      });
+      delete process.env.UNSUBSCRIBE_SECRET;
+      const envVar = requiredEnvVars.find(
+        (v) => v.name === 'UNSUBSCRIBE_SECRET'
+      );
+
+      if (envVar) {
+        const result = validateEnvVar(envVar);
+        expect(result.valid).toBe(false);
+        expect(result.error).toContain('not set');
+      }
+    });
+
+    it('should allow missing unsubscribe secret in development', () => {
+      Object.defineProperty(process.env, 'NODE_ENV', {
+        value: 'development',
+        configurable: true,
+      });
+      delete process.env.UNSUBSCRIBE_SECRET;
+      const envVar = requiredEnvVars.find(
+        (v) => v.name === 'UNSUBSCRIBE_SECRET'
+      );
+
+      if (envVar) {
+        const result = validateEnvVar(envVar);
+        expect(result.valid).toBe(true);
+      }
+    });
+
+    it('should reject the legacy public unsubscribe fallback secret', () => {
+      process.env.UNSUBSCRIBE_SECRET = 'cursor-boston-unsub';
+      const envVar = requiredEnvVars.find(
+        (v) => v.name === 'UNSUBSCRIBE_SECRET'
+      );
+
+      if (envVar) {
+        const result = validateEnvVar(envVar);
+        expect(result.valid).toBe(false);
+        expect(result.error).toContain('legacy public fallback');
+      }
+    });
+
+    it('should reject short unsubscribe secrets', () => {
+      process.env.UNSUBSCRIBE_SECRET = 'short-secret';
+      const envVar = requiredEnvVars.find(
+        (v) => v.name === 'UNSUBSCRIBE_SECRET'
+      );
+
+      if (envVar) {
+        const result = validateEnvVar(envVar);
+        expect(result.valid).toBe(false);
+        expect(result.error).toContain('32 bytes');
+      }
+    });
   });
 });

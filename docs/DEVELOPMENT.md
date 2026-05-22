@@ -74,7 +74,9 @@ Choose the approach that fits your workflow:
 
 6. **Web app config**: **Project settings → General → Your apps →** register a **Web** app. Copy **apiKey**, **authDomain**, **projectId**, **storageBucket**, **messagingSenderId**, **appId**, and the Realtime Database URL into **`.env.local`**, using [`.env.local.example`](../.env.local.example) as the template.
 
-7. **Optional but common for API routes and scripts:** add **`FIREBASE_SERVICE_ACCOUNT_JSON`** as described in [Formatting `FIREBASE_SERVICE_ACCOUNT_JSON`](#formatting-firebase_service_account_json).
+7. **Link-token signing secret:** set **`UNSUBSCRIBE_SECRET`** to a unique value of at least 32 bytes. Generate one with `openssl rand -hex 32`. This signs unsubscribe, cohort-withdraw, and PyData-withdraw links; production builds fail closed if it is missing or weak.
+
+8. **Optional but common for API routes and scripts:** add **`FIREBASE_SERVICE_ACCOUNT_JSON`** as described in [Formatting `FIREBASE_SERVICE_ACCOUNT_JSON`](#formatting-firebase_service_account_json).
 
 Restart **`npm run dev`** after editing `.env.local` so Next.js reloads env vars.
 

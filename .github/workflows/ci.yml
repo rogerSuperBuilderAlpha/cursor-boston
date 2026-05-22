@@ -217,6 +217,7 @@ jobs:
           NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "123456789"
           NEXT_PUBLIC_FIREBASE_APP_ID: "1:123456789:web:abcdef"
           NEXT_PUBLIC_FIREBASE_DATABASE_URL: "https://test-project.firebaseio.com"
+          UNSUBSCRIBE_SECRET: "ci-unsubscribe-secret-32-bytes-only"
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
@@ -257,6 +258,7 @@ jobs:
           NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "123456789"
           NEXT_PUBLIC_FIREBASE_APP_ID: "1:123456789:web:abcdef"
           NEXT_PUBLIC_FIREBASE_DATABASE_URL: "https://test-project.firebaseio.com"
+          UNSUBSCRIBE_SECRET: "ci-unsubscribe-secret-32-bytes-only"
 
       - name: Build application
         run: npm run build
@@ -269,6 +271,7 @@ jobs:
           NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "123456789"
           NEXT_PUBLIC_FIREBASE_APP_ID: "1:123456789:web:abcdef"
           NEXT_PUBLIC_FIREBASE_DATABASE_URL: "https://test-project.firebaseio.com"
+          UNSUBSCRIBE_SECRET: "ci-unsubscribe-secret-32-bytes-only"
 
       - name: Report bundle size
         run: |
@@ -318,6 +321,7 @@ jobs:
           NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "123456789"
           NEXT_PUBLIC_FIREBASE_APP_ID: "1:123456789:web:abcdef"
           NEXT_PUBLIC_FIREBASE_DATABASE_URL: "https://test-project.firebaseio.com"
+          UNSUBSCRIBE_SECRET: "ci-unsubscribe-secret-32-bytes-only"
 
   docker:
     name: Docker Build
@@ -352,6 +356,7 @@ jobs:
             NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=000000000000
             NEXT_PUBLIC_FIREBASE_APP_ID=1:000000000000:web:placeholder
             NEXT_PUBLIC_FIREBASE_DATABASE_URL=https://build-placeholder.firebaseio.com
+            UNSUBSCRIBE_SECRET=ci-docker-build-secret-32-bytes-only
 
       - name: Scan Docker image with Trivy
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # 0.36.0

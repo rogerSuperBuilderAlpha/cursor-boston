@@ -5,10 +5,40 @@
  * See LICENSE file for details.
  */
 
-import { createHmac } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 
-const SECRET =
-  process.env.UNSUBSCRIBE_SECRET || process.env.NEXTAUTH_SECRET || "cursor-boston-unsub";
+const DEV_TEST_SECRET = "cursor-boston-unsubscribe-dev-test-only";
+const MIN_SECRET_BYTES = 32;
+
+function readConfiguredSecret(): string | null {
+  const unsubscribeSecret = process.env.UNSUBSCRIBE_SECRET?.trim();
+  if (unsubscribeSecret) return unsubscribeSecret;
+
+  return null;
+}
+
+function resolveSecret(): string {
+  const configuredSecret = readConfiguredSecret();
+  if (configuredSecret) {
+    if (Buffer.byteLength(configuredSecret, "utf8") < MIN_SECRET_BYTES) {
+      throw new Error(
+        "UNSUBSCRIBE_SECRET must be at least 32 bytes; refusing to generate unsubscribe or withdraw tokens with a weak secret."
+      );
+    }
+
+    return configuredSecret;
+  }
+
+  if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test") {
+    return DEV_TEST_SECRET;
+  }
+
+  throw new Error(
+    "UNSUBSCRIBE_SECRET must be configured; refusing to generate unsubscribe or withdraw tokens with a public fallback secret."
+  );
+}
+
+const SECRET = resolveSecret();
 
 /** Generate a deterministic HMAC token for an email address. */
 export function generateUnsubscribeToken(email: string): string {
@@ -17,13 +47,23 @@ export function generateUnsubscribeToken(email: string): string {
     .digest("hex");
 }
 
+function tokenMatches(expected: string, candidate: string): boolean {
+  if (expected.length !== candidate.length) return false;
+
+  const expectedBytes = Buffer.from(expected, "hex");
+  const candidateBytes = Buffer.from(candidate, "hex");
+  if (expectedBytes.length !== candidateBytes.length) return false;
+
+  return timingSafeEqual(expectedBytes, candidateBytes);
+}
+
 /** Verify that a token matches the expected HMAC for the email. */
 export function verifyUnsubscribeToken(
   email: string,
   token: string
 ): boolean {
   const expected = generateUnsubscribeToken(email);
-  return expected === token;
+  return tokenMatches(expected, token);
 }
 
 /** Build a full unsubscribe URL for a given email. */
@@ -52,7 +92,7 @@ export function verifyWithdrawToken(
   cohortId: string,
   token: string
 ): boolean {
-  return generateWithdrawToken(email, cohortId) === token;
+  return tokenMatches(generateWithdrawToken(email, cohortId), token);
 }
 
 export function buildWithdrawUrl(email: string, cohortId: string): string {
@@ -78,7 +118,7 @@ export function generatePydataWithdrawToken(email: string): string {
 }
 
 export function verifyPydataWithdrawToken(email: string, token: string): boolean {
-  return generatePydataWithdrawToken(email) === token;
+  return tokenMatches(generatePydataWithdrawToken(email), token);
 }
 
 // Builds the confirmation PAGE URL (not the API URL). The page renders an
