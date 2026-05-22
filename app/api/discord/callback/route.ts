@@ -162,5 +162,6 @@ async function handleDiscordCallback(request: NextRequest) {
 // Apply rate limiting and logging middleware
 export const GET = withMiddleware(
   rateLimitConfigs.oauthCallback,
-  handleDiscordCallback
+  handleDiscordCallback,
+  { distributed: true, failMode: "closed" }
 );

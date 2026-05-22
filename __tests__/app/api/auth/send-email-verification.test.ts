@@ -7,6 +7,7 @@ import { POST } from "@/app/api/auth/send-email-verification/route";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { getAdminDb, getAdminAuth } from "@/lib/firebase-admin";
 import { sendEmail } from "@/lib/mailgun";
+import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 
 jest.mock("@/lib/server-auth", () => ({
   getVerifiedUser: jest.fn(),
@@ -25,10 +26,20 @@ jest.mock("@/lib/logger", () => ({
   logApiError: jest.fn(),
 }));
 
+jest.mock("@/lib/rate-limit", () => ({
+  ...jest.requireActual("@/lib/rate-limit"),
+  getClientIdentifier: jest.fn(() => "client-1"),
+}));
+
+jest.mock("@/lib/upstash-rate-limit", () => ({
+  checkUpstashRateLimit: jest.fn(),
+}));
+
 const mockGetVerifiedUser = getVerifiedUser as jest.MockedFunction<typeof getVerifiedUser>;
 const mockGetAdminDb = getAdminDb as jest.MockedFunction<typeof getAdminDb>;
 const mockGetAdminAuth = getAdminAuth as jest.MockedFunction<typeof getAdminAuth>;
 const mockSendEmail = sendEmail as jest.MockedFunction<typeof sendEmail>;
+const mockRate = checkUpstashRateLimit as jest.MockedFunction<typeof checkUpstashRateLimit>;
 
 function makeRequest(body: Record<string, unknown>) {
   return new NextRequest("http://localhost/api/auth/send-email-verification", {
@@ -82,6 +93,40 @@ describe("POST /api/auth/send-email-verification", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockSendEmail.mockResolvedValue(undefined as any);
+    mockRate.mockResolvedValue({
+      success: true,
+      remaining: 9,
+      resetTime: Date.now() + 60_000,
+    } as never);
+  });
+
+  it("returns 429 when the client rate limit denies", async () => {
+    mockRate.mockResolvedValueOnce({ success: false, retryAfter: 30 } as never);
+    const res = await POST(makeRequest({ email: "test@example.com" }));
+    expect(res.status).toBe(429);
+    const json = await res.json();
+    expect(json).toEqual({
+      error: "Too many requests",
+      retryAfterSeconds: 30,
+    });
+    expect(mockGetVerifiedUser).not.toHaveBeenCalled();
+  });
+
+  it("returns 503 when client fail-closed rate limiting is unavailable", async () => {
+    mockRate.mockResolvedValueOnce({
+      success: false,
+      retryAfter: 60,
+      reason: "rate_limit_unavailable",
+    } as never);
+    const res = await POST(makeRequest({ email: "test@example.com" }));
+    expect(res.status).toBe(503);
+    expect(res.headers.get("Retry-After")).toBe("60");
+    const json = await res.json();
+    expect(json).toEqual({
+      error: "Rate limit unavailable",
+      retryAfterSeconds: 60,
+    });
+    expect(mockGetVerifiedUser).not.toHaveBeenCalled();
   });
 
   it("returns 401 when unauthenticated", async () => {
@@ -90,6 +135,23 @@ describe("POST /api/auth/send-email-verification", () => {
     expect(res.status).toBe(401);
     const json = await res.json();
     expect(json.error).toBe("Unauthorized");
+  });
+
+  it("returns 503 when per-uid fail-closed rate limiting is unavailable", async () => {
+    mockGetVerifiedUser.mockResolvedValue({ uid: "user-1", email: "old@example.com" });
+    mockRate
+      .mockResolvedValueOnce({ success: true } as never)
+      .mockResolvedValueOnce({
+        success: false,
+        retryAfter: 45,
+        reason: "rate_limit_unavailable",
+      } as never);
+
+    const res = await POST(makeRequest({ email: "test@example.com" }));
+
+    expect(res.status).toBe(503);
+    expect(res.headers.get("Retry-After")).toBe("45");
+    expect(mockGetAdminDb).not.toHaveBeenCalled();
   });
 
   it("returns 400 for malformed JSON", async () => {

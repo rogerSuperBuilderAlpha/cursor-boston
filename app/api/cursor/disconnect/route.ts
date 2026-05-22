@@ -54,5 +54,6 @@ async function handleDisconnect(request: NextRequest): Promise<NextResponse> {
 
 export const POST = withMiddleware(
   rateLimitConfigs.oauthCallback,
-  handleDisconnect
+  handleDisconnect,
+  { distributed: true, failMode: "closed" }
 );

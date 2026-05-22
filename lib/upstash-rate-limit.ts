@@ -9,7 +9,8 @@
  * Distributed Rate Limiting Utility
  *
  * Wraps the in-memory rate limiter with an Upstash Redis-backed layer.
- * Falls back to the in-memory implementation when Redis credentials are absent.
+ * Falls back to the in-memory implementation by default, and supports
+ * per-call fail-closed behavior for sensitive surfaces.
  */
 
 import { Ratelimit } from "@upstash/ratelimit";
@@ -21,10 +22,17 @@ export interface UpstashRateLimitResult {
   remaining: number;
   resetTime: number;
   retryAfter?: number;
+  reason?: "rate_limited" | "rate_limit_unavailable";
+}
+
+export interface UpstashRateLimitPolicy {
+  failMode?: "degrade" | "closed";
+  unavailableRetryAfterSeconds?: number;
 }
 
 let redis: Redis | null = null;
 const limiterCache = new Map<string, Ratelimit>();
+const DEFAULT_UNAVAILABLE_RETRY_AFTER_SECONDS = 60;
 
 function getRedis(): Redis | null {
   if (redis) return redis;
@@ -59,12 +67,30 @@ function getLimiter(
 
 export async function checkUpstashRateLimit(
   identifier: string,
-  options: { windowMs: number; maxRequests: number }
+  options: { windowMs: number; maxRequests: number },
+  policy: UpstashRateLimitPolicy = {}
 ): Promise<UpstashRateLimitResult> {
   const { windowMs, maxRequests } = options;
+  const unavailableResult = (): UpstashRateLimitResult => {
+    const retryAfter = Math.max(
+      1,
+      policy.unavailableRetryAfterSeconds ??
+        DEFAULT_UNAVAILABLE_RETRY_AFTER_SECONDS
+    );
+    return {
+      success: false,
+      remaining: 0,
+      resetTime: Date.now() + retryAfter * 1000,
+      retryAfter,
+      reason: "rate_limit_unavailable",
+    };
+  };
 
   const client = getRedis();
   if (!client) {
+    if (policy.failMode === "closed") {
+      return unavailableResult();
+    }
     return checkRateLimit(identifier, options);
   }
 
@@ -76,10 +102,16 @@ export async function checkUpstashRateLimit(
       success,
       remaining,
       resetTime: reset,
-      retryAfter: success ? undefined : Math.ceil((reset - Date.now()) / 1000),
+      retryAfter: success
+        ? undefined
+        : Math.max(1, Math.ceil((reset - Date.now()) / 1000)),
+      reason: success ? undefined : "rate_limited",
     };
 
-  } catch (error) {
+  } catch {
+    if (policy.failMode === "closed") {
+      return unavailableResult();
+    }
     // Redis transient failure — degrade to per-instance in-memory limits
     // rather than 500ing the request.
     return checkRateLimit(identifier, options);

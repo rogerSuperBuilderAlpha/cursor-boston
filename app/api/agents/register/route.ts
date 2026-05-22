@@ -9,8 +9,31 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAgent, getVerifiedAgent } from "@/lib/agents";
 import { getClientIdentifier } from "@/lib/rate-limit";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
+import type { UpstashRateLimitResult } from "@/lib/upstash-rate-limit";
 import { parseRequestBody } from "@/lib/api-response";
 import { agentsContract } from "@/lib/api-schemas/agents";
+
+const FAIL_CLOSED_RATE_LIMIT = { failMode: "closed" } as const;
+
+function rateLimitResponse(rate: UpstashRateLimitResult): NextResponse {
+  const retryAfter = rate.retryAfter || 60;
+  const unavailable = rate.reason === "rate_limit_unavailable";
+
+  return NextResponse.json(
+    {
+      success: false,
+      error: unavailable
+        ? "Rate limit unavailable"
+        : "Too many registration attempts",
+      hint: "Please try again later",
+      retryAfterSeconds: retryAfter,
+    },
+    {
+      status: unavailable ? 503 : 429,
+      headers: { "Retry-After": String(retryAfter) },
+    }
+  );
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,21 +57,17 @@ export async function POST(request: NextRequest) {
 
     // Rate limit: 10 registrations per hour per IP
     const clientId = getClientIdentifier(request);
-    const rateLimitResult = await checkUpstashRateLimit(`agent-register:${clientId}`, {
-      windowMs: 60 * 60 * 1000, // 1 hour
-      maxRequests: 10,
-    });
+    const rateLimitResult = await checkUpstashRateLimit(
+      `agent-register:${clientId}`,
+      {
+        windowMs: 60 * 60 * 1000, // 1 hour
+        maxRequests: 10,
+      },
+      FAIL_CLOSED_RATE_LIMIT
+    );
 
     if (!rateLimitResult.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Too many registration attempts",
-          hint: "Please try again later",
-          retryAfterSeconds: rateLimitResult.retryAfter,
-        },
-        { status: 429 }
-      );
+      return rateLimitResponse(rateLimitResult);
     }
 
     // Parse request body

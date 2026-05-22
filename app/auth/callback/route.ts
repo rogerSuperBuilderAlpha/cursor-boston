@@ -261,4 +261,8 @@ async function handleLudwittCallback(request: NextRequest): Promise<NextResponse
   return response;
 }
 
-export const GET = withMiddleware(rateLimitConfigs.oauthCallback, handleLudwittCallback);
+export const GET = withMiddleware(
+  rateLimitConfigs.oauthCallback,
+  handleLudwittCallback,
+  { distributed: true, failMode: "closed" }
+);

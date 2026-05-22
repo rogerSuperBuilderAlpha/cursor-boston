@@ -14,6 +14,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit, getClientIdentifier } from "./rate-limit";
 import { logger } from "./logger";
+import { checkUpstashRateLimit } from "./upstash-rate-limit";
+import type { UpstashRateLimitResult } from "./upstash-rate-limit";
 
 // Re-export rateLimitConfigs for convenience
 export { rateLimitConfigs } from "./rate-limit";
@@ -25,6 +27,45 @@ const ALLOWED_ORIGINS = [
   "http://localhost:3000",
   "http://localhost:3001",
 ];
+
+type RateLimitResult = ReturnType<typeof checkRateLimit> | UpstashRateLimitResult;
+
+interface RateLimitBackendOptions {
+  distributed?: boolean;
+  failMode?: "degrade" | "closed";
+}
+
+function rateLimitDeniedResponse(
+  result: RateLimitResult,
+  options: { windowMs: number; maxRequests: number }
+): NextResponse {
+  const retryAfter = result.retryAfter || 60;
+  const unavailable =
+    "reason" in result && result.reason === "rate_limit_unavailable";
+
+  return NextResponse.json(
+    unavailable
+      ? {
+          error: "Rate limit unavailable",
+          message: "Rate limit temporarily unavailable. Please try again later.",
+          retryAfter,
+        }
+      : {
+          error: "Too many requests",
+          message: `Rate limit exceeded. Please try again in ${retryAfter} seconds.`,
+          retryAfter,
+        },
+    {
+      status: unavailable ? 503 : 429,
+      headers: {
+        "Retry-After": String(retryAfter),
+        "X-RateLimit-Limit": String(options.maxRequests),
+        "X-RateLimit-Remaining": String(result.remaining),
+        "X-RateLimit-Reset": String(result.resetTime),
+      },
+    }
+  );
+}
 
 /**
  * Check if the request origin is allowed (CSRF protection).
@@ -123,30 +164,20 @@ export function withRateLimitMiddleware(
     windowMs: number;
     maxRequests: number;
   },
-  handler: (request: NextRequest) => Promise<NextResponse>
+  handler: (request: NextRequest) => Promise<NextResponse>,
+  backendOptions: RateLimitBackendOptions = {}
 ) {
   return async (request: NextRequest): Promise<NextResponse> => {
     // Convert NextRequest to Request-like object for identifier extraction
     const identifier = getClientIdentifier(request as unknown as Request);
-    const result = checkRateLimit(identifier, options);
+    const result = backendOptions.distributed
+      ? await checkUpstashRateLimit(identifier, options, {
+          failMode: backendOptions.failMode,
+        })
+      : checkRateLimit(identifier, options);
 
     if (!result.success) {
-      return NextResponse.json(
-        {
-          error: "Too many requests",
-          message: `Rate limit exceeded. Please try again in ${result.retryAfter} seconds.`,
-          retryAfter: result.retryAfter,
-        },
-        {
-          status: 429,
-          headers: {
-            "Retry-After": String(result.retryAfter || 60),
-            "X-RateLimit-Limit": String(options.maxRequests),
-            "X-RateLimit-Remaining": String(result.remaining),
-            "X-RateLimit-Reset": String(result.resetTime),
-          },
-        }
-      );
+      return rateLimitDeniedResponse(result, options);
     }
 
     // Call the handler
@@ -268,11 +299,12 @@ export function withMiddleware(
     windowMs: number;
     maxRequests: number;
   },
-  handler: (request: NextRequest) => Promise<NextResponse>
+  handler: (request: NextRequest) => Promise<NextResponse>,
+  backendOptions: RateLimitBackendOptions = {}
 ) {
   return withLoggingMiddleware(
     withCsrfProtection(
-      withRateLimitMiddleware(rateLimitOptions, handler)
+      withRateLimitMiddleware(rateLimitOptions, handler, backendOptions)
     )
   );
 }

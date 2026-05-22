@@ -97,6 +97,22 @@ describe("POST /api/hackathons/showcase/hack-a-sprint-2026/credit-email", () => 
     expect(body.retryAfterSeconds).toBe(30);
   });
 
+  it("returns 503 when client fail-closed rate limiting is unavailable", async () => {
+    mockRate.mockResolvedValueOnce({
+      success: false,
+      retryAfter: 60,
+      reason: "rate_limit_unavailable",
+    } as never);
+    const res = await POST(makeReq());
+    expect(res.status).toBe(503);
+    expect(res.headers.get("Retry-After")).toBe("60");
+    const body = await res.json();
+    expect(body).toEqual({
+      error: "Rate limit unavailable",
+      retryAfterSeconds: 60,
+    });
+  });
+
   it("returns 401 when unauthenticated", async () => {
     mockUser.mockResolvedValueOnce(null);
     const res = await POST(makeReq());
@@ -124,6 +140,20 @@ describe("POST /api/hackathons/showcase/hack-a-sprint-2026/credit-email", () => 
       .mockResolvedValueOnce({ success: false, retryAfter: 10 } as never);
     const res = await POST(makeReq());
     expect(res.status).toBe(429);
+  });
+
+  it("returns 503 when per-uid fail-closed rate limiting is unavailable", async () => {
+    setupAdmins();
+    mockRate
+      .mockResolvedValueOnce({ success: true } as never)
+      .mockResolvedValueOnce({
+        success: false,
+        retryAfter: 45,
+        reason: "rate_limit_unavailable",
+      } as never);
+    const res = await POST(makeReq());
+    expect(res.status).toBe(503);
+    expect(res.headers.get("Retry-After")).toBe("45");
   });
 
   it("returns 400 with reason when resolveCredit returns ok=false", async () => {

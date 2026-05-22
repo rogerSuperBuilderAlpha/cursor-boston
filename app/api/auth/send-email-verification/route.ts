@@ -14,12 +14,52 @@ import { logApiError } from "@/lib/logger";
 import { parseRequestBody } from "@/lib/api-response";
 import { sendEmail } from "@/lib/mailgun";
 import { authContract } from "@/lib/api-schemas/auth";
+import { getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
+import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
+import type { UpstashRateLimitResult } from "@/lib/upstash-rate-limit";
+
+const RATE = rateLimitConfigs.oauthCallback;
+const FAIL_CLOSED_RATE_LIMIT = { failMode: "closed" } as const;
+
+function rateLimitResponse(rate: UpstashRateLimitResult): NextResponse {
+  const retryAfter = rate.retryAfter || 60;
+  if (rate.reason === "rate_limit_unavailable") {
+    return NextResponse.json(
+      { error: "Rate limit unavailable", retryAfterSeconds: retryAfter },
+      { status: 503, headers: { "Retry-After": String(retryAfter) } }
+    );
+  }
+
+  return NextResponse.json(
+    { error: "Too many requests", retryAfterSeconds: retryAfter },
+    { status: 429, headers: { "Retry-After": String(retryAfter) } }
+  );
+}
 
 export async function POST(request: NextRequest) {
   try {
+    const clientId = getClientIdentifier(request as unknown as Request);
+    const clientRate = await checkUpstashRateLimit(
+      `auth-send-email-verification:${clientId}`,
+      RATE,
+      FAIL_CLOSED_RATE_LIMIT
+    );
+    if (!clientRate.success) {
+      return rateLimitResponse(clientRate);
+    }
+
     const user = await getVerifiedUser(request);
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const uidRate = await checkUpstashRateLimit(
+      `auth-send-email-verification-uid:${user.uid}`,
+      RATE,
+      FAIL_CLOSED_RATE_LIMIT
+    );
+    if (!uidRate.success) {
+      return rateLimitResponse(uidRate);
     }
 
     const bodyOrError = await parseRequestBody(request);

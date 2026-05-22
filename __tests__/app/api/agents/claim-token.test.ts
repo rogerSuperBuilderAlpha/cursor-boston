@@ -74,6 +74,19 @@ describe("GET /api/agents/claim/[token]", () => {
     expect(res.headers.get("Retry-After")).toBe("60");
   });
 
+  it("returns 503 when fail-closed rate limiting is unavailable", async () => {
+    mockRateLimit.mockResolvedValue({
+      success: false,
+      retryAfter: 45,
+      reason: "rate_limit_unavailable",
+    } as any);
+    const res = await GET(claimRequest(), makeContext("abc"));
+    expect(res.status).toBe(503);
+    expect(res.headers.get("Retry-After")).toBe("45");
+    const json = await res.json();
+    expect(json.error).toBe("Rate limit unavailable");
+  });
+
   it("returns 400 when the token param is empty", async () => {
     const res = await GET(claimRequest(), makeContext(""));
     expect(res.status).toBe(400);
@@ -174,6 +187,17 @@ describe("POST /api/agents/claim/[token]", () => {
     expect(res.status).toBe(429);
   });
 
+  it("returns 503 when fail-closed rate limiting is unavailable", async () => {
+    mockRateLimit.mockResolvedValue({
+      success: false,
+      retryAfter: 45,
+      reason: "rate_limit_unavailable",
+    } as any);
+    const res = await POST(postClaimRequest(), makeContext("abc"));
+    expect(res.status).toBe(503);
+    expect(res.headers.get("Retry-After")).toBe("45");
+  });
+
   it("returns 400 when the token param is empty", async () => {
     const res = await POST(postClaimRequest(), makeContext(""));
     expect(res.status).toBe(400);
@@ -235,5 +259,10 @@ describe("POST /api/agents/claim/[token]", () => {
     expect(json.success).toBe(true);
     expect(json.agent.id).toBe("a1");
     expect(mockClaim).toHaveBeenCalledWith("abc", "u1", "a@b.com", "Alice");
+    expect(mockRateLimit).toHaveBeenCalledWith(
+      "agent-claim-post:ip:127.0.0.1",
+      { windowMs: 15 * 60 * 1000, maxRequests: 10 },
+      { failMode: "closed" }
+    );
   });
 });

@@ -104,6 +104,27 @@ describe("checkUpstashRateLimit", () => {
       // Upstash `limit` must never be invoked when there is no client
       expect(mockLimit).not.toHaveBeenCalled();
     });
+
+    it("fails closed when credentials are absent and the caller requires it", async () => {
+      delete process.env.UPSTASH_REDIS_REST_URL;
+      delete process.env.UPSTASH_REDIS_REST_TOKEN;
+
+      let fn: ((id: string, opts: typeof OPTIONS, policy: { failMode: "closed" }) => Promise<any>) | undefined;
+      jest.isolateModules(() => {
+        fn = require("@/lib/upstash-rate-limit").checkUpstashRateLimit;
+      });
+
+      const result = await fn!(IDENTIFIER, OPTIONS, { failMode: "closed" });
+
+      expect(result).toMatchObject({
+        success: false,
+        remaining: 0,
+        retryAfter: 60,
+        reason: "rate_limit_unavailable",
+      });
+      expect(mockedCheckRateLimit).not.toHaveBeenCalled();
+      expect(mockLimit).not.toHaveBeenCalled();
+    });
   });
 
   // -------------------------------------------------------------------------
@@ -143,6 +164,24 @@ describe("checkUpstashRateLimit", () => {
         await expect(
           checkUpstashRateLimit(IDENTIFIER, OPTIONS)
         ).resolves.not.toThrow();
+      });
+
+      it("fails closed instead of falling back when the caller requires it", async () => {
+        mockLimit.mockRejectedValueOnce(new Error("Redis timeout"));
+
+        const result = await checkUpstashRateLimit(IDENTIFIER, OPTIONS, {
+          failMode: "closed",
+          unavailableRetryAfterSeconds: 45,
+        });
+
+        expect(mockLimit).toHaveBeenCalledTimes(1);
+        expect(mockedCheckRateLimit).not.toHaveBeenCalled();
+        expect(result).toMatchObject({
+          success: false,
+          remaining: 0,
+          retryAfter: 45,
+          reason: "rate_limit_unavailable",
+        });
       });
     });
 

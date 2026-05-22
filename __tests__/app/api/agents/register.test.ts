@@ -4,6 +4,7 @@
 
 import { NextRequest } from "next/server";
 import { POST } from "@/app/api/agents/register/route";
+import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 
 const mockCreateAgent = jest.fn();
 const mockGetVerifiedAgent = jest.fn();
@@ -21,6 +22,8 @@ jest.mock("@/lib/rate-limit", () => ({
 jest.mock("@/lib/upstash-rate-limit", () => ({
   checkUpstashRateLimit: jest.fn(async () => ({ success: true, remaining: 9, resetTime: Date.now() + 60000 })),
 }));
+
+const mockRateLimit = checkUpstashRateLimit as jest.MockedFunction<typeof checkUpstashRateLimit>;
 
 function makeRequest(body: Record<string, unknown>) {
   return new NextRequest("http://localhost/api/agents/register", {
@@ -72,6 +75,22 @@ describe("POST /api/agents/register", () => {
     expect(res.status).toBe(400);
   });
 
+  it("returns 503 when fail-closed rate limiting is unavailable", async () => {
+    mockRateLimit.mockResolvedValueOnce({
+      success: false,
+      retryAfter: 60,
+      reason: "rate_limit_unavailable",
+    } as never);
+
+    const res = await POST(makeRequest({ name: "TestBot" }));
+
+    expect(res.status).toBe(503);
+    expect(res.headers.get("Retry-After")).toBe("60");
+    const body = await res.json();
+    expect(body.error).toBe("Rate limit unavailable");
+    expect(mockCreateAgent).not.toHaveBeenCalled();
+  });
+
   it("creates agent and returns API key on success", async () => {
     const res = await POST(makeRequest({ name: "TestBot", description: "A test bot" }));
     expect(res.status).toBe(200);
@@ -81,6 +100,11 @@ describe("POST /api/agents/register", () => {
     expect(body.agent.id).toBe("agent-1");
     expect(body.claimUrl).toContain("/agents/claim/token123");
     expect(mockCreateAgent).toHaveBeenCalledWith("TestBot", "A test bot");
+    expect(mockRateLimit).toHaveBeenCalledWith(
+      "agent-register:test-client",
+      { windowMs: 60 * 60 * 1000, maxRequests: 10 },
+      { failMode: "closed" }
+    );
   });
 
   it("returns 400 for malformed JSON", async () => {

@@ -24,4 +24,8 @@ async function handleFinalize(request: NextRequest): Promise<NextResponse> {
   return response;
 }
 
-export const POST = withMiddleware(rateLimitConfigs.standard, handleFinalize);
+export const POST = withMiddleware(
+  rateLimitConfigs.standard,
+  handleFinalize,
+  { distributed: true, failMode: "closed" }
+);

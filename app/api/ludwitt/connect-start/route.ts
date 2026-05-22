@@ -93,4 +93,8 @@ async function handleConnectStart(request: NextRequest): Promise<NextResponse> {
   return response;
 }
 
-export const POST = withMiddleware(rateLimitConfigs.standard, handleConnectStart);
+export const POST = withMiddleware(
+  rateLimitConfigs.standard,
+  handleConnectStart,
+  { distributed: true, failMode: "closed" }
+);

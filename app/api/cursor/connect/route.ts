@@ -107,4 +107,8 @@ async function handleConnect(request: NextRequest): Promise<NextResponse> {
   }
 }
 
-export const POST = withMiddleware(rateLimitConfigs.oauthCallback, handleConnect);
+export const POST = withMiddleware(
+  rateLimitConfigs.oauthCallback,
+  handleConnect,
+  { distributed: true, failMode: "closed" }
+);

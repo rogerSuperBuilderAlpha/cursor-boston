@@ -145,5 +145,6 @@ async function handleGitHubCallback(request: NextRequest) {
 // Apply rate limiting and logging middleware
 export const GET = withMiddleware(
   rateLimitConfigs.oauthCallback,
-  handleGitHubCallback
+  handleGitHubCallback,
+  { distributed: true, failMode: "closed" }
 );

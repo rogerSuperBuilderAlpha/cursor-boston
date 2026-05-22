@@ -11,6 +11,7 @@ import { getVerifiedUser } from "@/lib/server-auth";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { getClientIdentifier } from "@/lib/rate-limit";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
+import type { UpstashRateLimitResult } from "@/lib/upstash-rate-limit";
 import { logApiError } from "@/lib/logger";
 import { agentsContract } from "@/lib/api-schemas/agents";
 
@@ -23,6 +24,26 @@ const CLAIM_RATE_LIMIT = {
   windowMs: 15 * 60 * 1000, // 15 minutes
   maxRequests: 10, // 10 requests per 15 minutes per IP
 };
+const FAIL_CLOSED_RATE_LIMIT = { failMode: "closed" } as const;
+
+function claimRateLimitResponse(rate: UpstashRateLimitResult): NextResponse {
+  const retryAfter = rate.retryAfter || 60;
+  const unavailable = rate.reason === "rate_limit_unavailable";
+
+  return NextResponse.json(
+    {
+      success: false,
+      error: unavailable ? "Rate limit unavailable" : "Too many requests",
+      retryAfterSeconds: retryAfter,
+    },
+    {
+      status: unavailable ? 503 : 429,
+      headers: {
+        "Retry-After": String(retryAfter),
+      },
+    }
+  );
+}
 
 /**
  * GET /api/agents/claim/[token]
@@ -36,22 +57,14 @@ export async function GET(
   try {
     // Apply rate limiting
     const clientId = getClientIdentifier(request as unknown as Request);
-    const rateLimitResult = await checkUpstashRateLimit(`agent-claim-get:${clientId}`, CLAIM_RATE_LIMIT);
+    const rateLimitResult = await checkUpstashRateLimit(
+      `agent-claim-get:${clientId}`,
+      CLAIM_RATE_LIMIT,
+      FAIL_CLOSED_RATE_LIMIT
+    );
     
     if (!rateLimitResult.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Too many requests",
-          retryAfterSeconds: rateLimitResult.retryAfter,
-        },
-        { 
-          status: 429,
-          headers: {
-            "Retry-After": String(rateLimitResult.retryAfter || 60),
-          },
-        }
-      );
+      return claimRateLimitResponse(rateLimitResult);
     }
 
     const { token } = await context.params;
@@ -162,22 +175,14 @@ export async function POST(
   try {
     // Apply rate limiting (stricter for POST to prevent claim abuse)
     const clientId = getClientIdentifier(request as unknown as Request);
-    const rateLimitResult = await checkUpstashRateLimit(`agent-claim-post:${clientId}`, CLAIM_RATE_LIMIT);
+    const rateLimitResult = await checkUpstashRateLimit(
+      `agent-claim-post:${clientId}`,
+      CLAIM_RATE_LIMIT,
+      FAIL_CLOSED_RATE_LIMIT
+    );
     
     if (!rateLimitResult.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Too many requests",
-          retryAfterSeconds: rateLimitResult.retryAfter,
-        },
-        { 
-          status: 429,
-          headers: {
-            "Retry-After": String(rateLimitResult.retryAfter || 60),
-          },
-        }
-      );
+      return claimRateLimitResponse(rateLimitResult);
     }
 
     const { token } = await context.params;

@@ -13,6 +13,7 @@ import { resolveHackASprint2026CreditForUser } from "@/lib/hackathon-asprint-202
 import { sendEmail } from "@/lib/mailgun";
 import { getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
+import type { UpstashRateLimitResult } from "@/lib/upstash-rate-limit";
 
 // @contracts: hackathonsContract.hackASprintCreditEmail (lib/api-schemas/hackathons.ts)
 
@@ -20,16 +21,33 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const RATE = rateLimitConfigs.hackathonShowcaseCreditEmail;
+const FAIL_CLOSED_RATE_LIMIT = { failMode: "closed" } as const;
+
+function rateLimitResponse(rate: UpstashRateLimitResult): NextResponse {
+  const retryAfter = rate.retryAfter || 60;
+  if (rate.reason === "rate_limit_unavailable") {
+    return NextResponse.json(
+      { error: "Rate limit unavailable", retryAfterSeconds: retryAfter },
+      { status: 503, headers: { "Retry-After": String(retryAfter) } }
+    );
+  }
+
+  return NextResponse.json(
+    { error: "Too many requests", retryAfterSeconds: retryAfter },
+    { status: 429, headers: { "Retry-After": String(retryAfter) } }
+  );
+}
 
 export async function POST(request: NextRequest) {
   try {
     const clientId = getClientIdentifier(request as unknown as Request);
-    const rate = await checkUpstashRateLimit(`hack-asprint-credit-email:${clientId}`, RATE);
+    const rate = await checkUpstashRateLimit(
+      `hack-asprint-credit-email:${clientId}`,
+      RATE,
+      FAIL_CLOSED_RATE_LIMIT
+    );
     if (!rate.success) {
-      return NextResponse.json(
-        { error: "Too many requests", retryAfterSeconds: rate.retryAfter },
-        { status: 429 }
-      );
+      return rateLimitResponse(rate);
     }
 
     const user = await getVerifiedUser(request);
@@ -43,12 +61,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Server not configured" }, { status: 500 });
     }
 
-    const uidRate = await checkUpstashRateLimit(`hack-asprint-credit-email-uid:${user.uid}`, RATE);
+    const uidRate = await checkUpstashRateLimit(
+      `hack-asprint-credit-email-uid:${user.uid}`,
+      RATE,
+      FAIL_CLOSED_RATE_LIMIT
+    );
     if (!uidRate.success) {
-      return NextResponse.json(
-        { error: "Too many requests", retryAfterSeconds: uidRate.retryAfter },
-        { status: 429 }
-      );
+      return rateLimitResponse(uidRate);
     }
 
     const resolved = await resolveHackASprint2026CreditForUser(
