@@ -14,15 +14,37 @@ import { getVerifiedUser, getOptionalVerifiedUser } from "@/lib/server-auth";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { fetchMergedPrCountsForLogins } from "@/lib/github-merged-pr-count";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
-import { revalidateTag } from "next/cache";
+import { refreshSnapshot } from "@/lib/hackathon-leaderboard-snapshot";
 import { makeAuthedRequest, makeRequest, readJson } from "@/__tests__/_helpers/route-test-utils";
 
-jest.mock("next/cache", () => ({
-  unstable_cache: (fn: (...args: unknown[]) => unknown) => fn,
-  revalidateTag: jest.fn(),
-}));
+// The route reads/writes a persisted snapshot doc in Firestore. These tests
+// exercise route handler logic (auth, validation, status flag transitions),
+// not the snapshot lib internals (covered separately). Stub:
+//   - getSnapshotOrRefresh: GET fall-through. Live-computes via the existing
+//     Firestore mocks so GET tests continue to read entries through them.
+//   - refreshSnapshot: POST/PATCH/DELETE fall-through. Returns a static empty
+//     payload (no Firestore touch) so mutation tests only need their minimal
+//     write-path mocks. Asserted as the post-mutation cache bust.
+jest.mock("@/lib/hackathon-leaderboard-snapshot", () => {
+   
+  const actual = jest.requireActual("@/lib/hackathon-leaderboard-snapshot");
+  return {
+    ...actual,
+    getSnapshotOrRefresh: jest.fn(async (eventId: string) => {
+      const payload = await actual.buildLeaderboardPayload(eventId);
+      return { ...payload, generatedAt: new Date().toISOString() };
+    }),
+    refreshSnapshot: jest.fn(async () => ({
+      entries: [],
+      totalCount: 0,
+      websiteSignupCount: 0,
+      creditTopN: 0,
+      generatedAt: new Date().toISOString(),
+    })),
+  };
+});
 
-const mockRevalidateTag = revalidateTag as jest.MockedFunction<typeof revalidateTag>;
+const mockRefreshSnapshot = refreshSnapshot as jest.MockedFunction<typeof refreshSnapshot>;
 
 jest.mock("@/lib/server-auth", () => ({
   getVerifiedUser: jest.fn(),
@@ -651,7 +673,7 @@ describe("POST /api/hackathons/events/[eventId]/signup", () => {
       }),
     );
     expect(mockSet.mock.calls[0]?.[0]).not.toHaveProperty("confirmedAt");
-    expect(mockRevalidateTag).toHaveBeenCalledWith("hackathon-event-signup", { expire: 0 });
+    expect(mockRefreshSnapshot).toHaveBeenCalledWith(EVENT_ID);
   });
 
   it("returns 200 with alreadySignedUp when duplicate signup", async () => {
@@ -986,7 +1008,7 @@ describe("PATCH /api/hackathons/events/[eventId]/signup", () => {
     expect(status).toBe(200);
     expect(body).toMatchObject({ ok: true });
     expect(mockUpdate).toHaveBeenCalled();
-    expect(mockRevalidateTag).toHaveBeenCalledWith("hackathon-event-signup", { expire: 0 });
+    expect(mockRefreshSnapshot).toHaveBeenCalledWith(EVENT_ID);
   });
 
   it("returns 200 when confirmed user gives up spot", async () => {
@@ -1084,6 +1106,6 @@ describe("DELETE /api/hackathons/events/[eventId]/signup", () => {
 
     expect(status).toBe(200);
     expect(body).toMatchObject({ left: true });
-    expect(mockRevalidateTag).toHaveBeenCalledWith("hackathon-event-signup", { expire: 0 });
+    expect(mockRefreshSnapshot).toHaveBeenCalledWith(EVENT_ID);
   });
 });

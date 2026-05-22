@@ -35,6 +35,7 @@ import {
   isValidCohortId,
   type SummerCohortId,
 } from "@/lib/summer-cohort";
+import { SPORTS_HACK_2026_CAPACITY } from "@/lib/sports-hack-2026";
 import { ClaimSpotByPRCard } from "./_components/ClaimSpotByPRCard";
 import { CohortProgramBreakdown } from "./_components/CohortProgramBreakdown";
 import { CohortSwitcher } from "./_components/CohortSwitcher";
@@ -269,7 +270,7 @@ function NextStepsCard({
         title: `RSVP for ${SUMMER_COHORT_IMMERSION.label} on Luma`,
         body: (
           <>
-            Cohort 1 gets priority on the 80-person cap, but you still need to
+            Cohort 1 gets priority on the {SPORTS_HACK_2026_CAPACITY}-person cap, but you still need to
             grab the seat.{" "}
             <a
               href={SUMMER_COHORT_IMMERSION.lumaUrl}

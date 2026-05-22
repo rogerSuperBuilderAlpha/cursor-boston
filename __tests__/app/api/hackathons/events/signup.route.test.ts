@@ -33,6 +33,33 @@ jest.mock("@/lib/github-merged-pr-count", () => ({
   fetchMergedPrCountsForLogins: jest.fn(async () => new Map()),
 }));
 
+// The route reads/writes a persisted snapshot doc in Firestore. These tests
+// exercise the route handler logic (auth, validation, status flag transitions)
+// — not the snapshot lib internals (covered separately). Stub:
+//   - getSnapshotOrRefresh: GET fall-through. Live-computes via the existing
+//     Firestore mocks so GET tests continue to read entries through them.
+//   - refreshSnapshot: POST/PATCH/DELETE fall-through. Returns a static empty
+//     payload (no Firestore touch) so mutation tests only need their
+//     minimal write-path mocks.
+jest.mock("@/lib/hackathon-leaderboard-snapshot", () => {
+   
+  const actual = jest.requireActual("@/lib/hackathon-leaderboard-snapshot");
+  return {
+    ...actual,
+    getSnapshotOrRefresh: jest.fn(async (eventId: string) => {
+      const payload = await actual.buildLeaderboardPayload(eventId);
+      return { ...payload, generatedAt: new Date().toISOString() };
+    }),
+    refreshSnapshot: jest.fn(async () => ({
+      entries: [],
+      totalCount: 0,
+      websiteSignupCount: 0,
+      creditTopN: 0,
+      generatedAt: new Date().toISOString(),
+    })),
+  };
+});
+
 jest.mock("@/lib/github-recent-merged-prs", () => ({
   getGithubRepoPair: jest.fn(() => ({ owner: "test", repo: "repo" })),
 }));

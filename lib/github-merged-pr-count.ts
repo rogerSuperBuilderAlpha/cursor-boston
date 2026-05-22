@@ -34,7 +34,16 @@ function searchHeaders(): Record<string, string> {
   return headers;
 }
 
-async function fetchMergedPrCountByAuthorForRepoUncached(): Promise<
+/**
+ * Uncached bulk merged-PR search. Exported so node scripts (which don't run
+ * inside the Next.js request lifecycle and therefore can't use `unstable_cache`)
+ * can pre-fetch the bulk map and pass it as `preloadedBulk` to
+ * {@link fetchMergedPrCountsForLogins}.
+ *
+ * Inside the Next runtime, prefer {@link fetchMergedPrCountByAuthorForRepo}
+ * (the cached variant) — it shares the result across concurrent requests.
+ */
+export async function fetchMergedPrCountByAuthorForRepoUncached(): Promise<
   Array<[string, number]> | null
 > {
   const { owner, repo } = getGithubRepoPair();

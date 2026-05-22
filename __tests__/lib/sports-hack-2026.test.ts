@@ -24,8 +24,8 @@ describe("sports-hack-2026 constants", () => {
     expect(SPORTS_HACK_2026_EVENT_ID).toBe("sports-hack-2026");
   });
 
-  it("is capped at 80 confirmed seats (matches plan with user)", () => {
-    expect(SPORTS_HACK_2026_CAPACITY).toBe(80);
+  it("is capped at 119 confirmed seats (bumped 2026-05-22 to match available Cursor credits)", () => {
+    expect(SPORTS_HACK_2026_CAPACITY).toBe(119);
   });
 
   it("points at the correct Luma slug + embed id for Boston Tech Week Sports Hack", () => {
@@ -56,30 +56,30 @@ describe("sports-hack-2026 constants", () => {
   });
 
   describe("getSportsHack2026RankTier", () => {
-    it("tier progression walks from hot → far as rank increases, with the bubble at the 80-seat cap", () => {
+    it("tier progression walks from hot → far as rank increases, with the bubble at the 119-seat cap", () => {
       expect(getSportsHack2026RankTier(1).tone).toBe("hot");
-      expect(getSportsHack2026RankTier(10).tone).toBe("hot");
-      expect(getSportsHack2026RankTier(11).tone).toBe("good");
-      expect(getSportsHack2026RankTier(30).tone).toBe("good");
-      expect(getSportsHack2026RankTier(31).tone).toBe("solid");
-      expect(getSportsHack2026RankTier(60).tone).toBe("solid");
-      expect(getSportsHack2026RankTier(61).tone).toBe("bubble");
-      expect(getSportsHack2026RankTier(80).tone).toBe("bubble"); // exactly at the cap
-      expect(getSportsHack2026RankTier(81).tone).toBe("close");
-      expect(getSportsHack2026RankTier(100).tone).toBe("close");
-      expect(getSportsHack2026RankTier(101).tone).toBe("climb");
-      expect(getSportsHack2026RankTier(130).tone).toBe("climb");
-      expect(getSportsHack2026RankTier(131).tone).toBe("far");
+      expect(getSportsHack2026RankTier(15).tone).toBe("hot");
+      expect(getSportsHack2026RankTier(16).tone).toBe("good");
+      expect(getSportsHack2026RankTier(45).tone).toBe("good");
+      expect(getSportsHack2026RankTier(46).tone).toBe("solid");
+      expect(getSportsHack2026RankTier(90).tone).toBe("solid");
+      expect(getSportsHack2026RankTier(91).tone).toBe("bubble");
+      expect(getSportsHack2026RankTier(119).tone).toBe("bubble"); // exactly at the cap
+      expect(getSportsHack2026RankTier(120).tone).toBe("close");
+      expect(getSportsHack2026RankTier(150).tone).toBe("close");
+      expect(getSportsHack2026RankTier(151).tone).toBe("climb");
+      expect(getSportsHack2026RankTier(190).tone).toBe("climb");
+      expect(getSportsHack2026RankTier(191).tone).toBe("far");
       expect(getSportsHack2026RankTier(1000).tone).toBe("far");
     });
 
     it("bubble/close copy references the capacity so it stays in sync with SPORTS_HACK_2026_CAPACITY", () => {
-      expect(getSportsHack2026RankTier(75).detail).toContain(String(SPORTS_HACK_2026_CAPACITY));
-      expect(getSportsHack2026RankTier(90).detail).toContain(String(SPORTS_HACK_2026_CAPACITY));
+      expect(getSportsHack2026RankTier(110).detail).toContain(String(SPORTS_HACK_2026_CAPACITY));
+      expect(getSportsHack2026RankTier(130).detail).toContain(String(SPORTS_HACK_2026_CAPACITY));
     });
 
     it("every tier has a non-empty label and detail", () => {
-      for (const rank of [1, 15, 45, 70, 90, 120, 200]) {
+      for (const rank of [1, 20, 60, 100, 130, 170, 300]) {
         const t = getSportsHack2026RankTier(rank);
         expect(t.label.length).toBeGreaterThan(0);
         expect(t.detail.length).toBeGreaterThan(0);
