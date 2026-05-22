@@ -1,6 +1,7 @@
 {
   "slug": "cursor-boston-cohort1-events-dataset",
   "type": "dataset",
+  "isSample": true,
   "title": "Cursor Boston Cohort 1 — Anonymized weekly submission + voting events",
   "authors": [
     { "name": "Cursor Boston Maintainers", "url": "https://cursorboston.com/about" }

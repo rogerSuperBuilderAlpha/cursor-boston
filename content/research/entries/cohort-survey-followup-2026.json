@@ -1,6 +1,7 @@
 {
   "slug": "cohort-survey-followup-2026",
   "type": "recruiting",
+  "isSample": true,
   "title": "Diary study: 6-week cohort participation patterns",
   "authors": [
     {

@@ -42,6 +42,13 @@ const BaseSchema = z.object({
   sourceRepoUrl: z.string().url(),
   contactEmail: z.string().email().optional(),
   contactUrl: z.string().url().optional(),
+  /**
+   * Placeholder / demo entry. Sample entries are hidden from the main feed
+   * and from type-specific filters; they only appear under the dedicated
+   * "Samples" filter. Cards visibly mark them and disable external CTAs so
+   * users don't click through to fake URLs. Real entries omit this field.
+   */
+  isSample: z.boolean().optional(),
 });
 
 const RecruitingSchema = BaseSchema.extend({
@@ -208,6 +215,10 @@ export function filterVisible(
     if (entry.status === "closed") return false;
     return !shouldAutoHideRecruiting(entry, now);
   });
+}
+
+export function isSample(entry: ResearchEntry): boolean {
+  return entry.isSample === true;
 }
 
 export const RESEARCH_TYPE_LABEL: Record<ResearchType, string> = {

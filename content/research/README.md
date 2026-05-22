@@ -62,9 +62,17 @@ time; a malformed entry breaks the build, not the page.
   "summary": "Two-sentence description that appears on the card.",
   "sourceRepoUrl": "https://github.com/<you>/<your-repo>",
   "contactEmail": "you@university.edu",      // either contactEmail
-  "contactUrl": "https://forms.gle/..."      // or contactUrl (or both)
+  "contactUrl": "https://forms.gle/...",     // or contactUrl (or both)
+  "isSample": true                            // omit on real entries
 }
 ```
+
+> The `isSample` flag is for **placeholder / demo entries only**.
+> Sample entries are hidden from the main feed and from type-specific
+> filters; they only appear under the dedicated "Samples" filter, and
+> their external CTAs (study link, PDF, source repo, contact) are visually
+> disabled so visitors don&apos;t click through to fake URLs. Maintainers
+> set this on seed data; real submissions should not include it.
 
 ### `type: "recruiting"` — add
 

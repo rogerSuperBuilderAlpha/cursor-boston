@@ -109,13 +109,21 @@ export function ResearchCard({ entry }: ResearchCardProps) {
   const detailHref = `/research/${entry.slug}`;
   const isExpired = isRecruiting(entry) && isRecruitingPastDeadline(entry);
   const isClosed = isRecruiting(entry) && entry.status === "closed";
+  const sample = entry.isSample === true;
 
   return (
     <article
-      className={`group flex h-full flex-col rounded-xl border border-neutral-200 bg-white p-5 shadow-sm transition-colors hover:border-neutral-300 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-neutral-700 ${
-        isExpired || isClosed ? "opacity-75" : ""
-      }`}
+      className={`group relative flex h-full flex-col overflow-hidden rounded-xl border bg-white p-5 shadow-sm transition-colors dark:bg-neutral-900 ${
+        sample
+          ? "border-amber-300 dark:border-amber-900"
+          : "border-neutral-200 hover:border-neutral-300 dark:border-neutral-800 dark:hover:border-neutral-700"
+      } ${isExpired || isClosed ? "opacity-75" : ""}`}
     >
+      {sample ? (
+        <div className="-mx-5 -mt-5 mb-3 bg-amber-100 px-5 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-amber-900 dark:bg-amber-950/50 dark:text-amber-200">
+          Sample · placeholder entry
+        </div>
+      ) : null}
       <header className="mb-2 flex items-start justify-between gap-3">
         <TypeBadge entry={entry} />
         <span className="text-xs text-neutral-500 dark:text-neutral-500">
@@ -175,14 +183,20 @@ export function ResearchCard({ entry }: ResearchCardProps) {
               {entry.peerReviewStatus.replace(/-/g, " ")}
             </span>
           ) : null}
-          <a
-            href={entry.pdfUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-emerald-700 hover:underline dark:text-emerald-400"
-          >
-            <FileText className="h-3.5 w-3.5" /> PDF
-          </a>
+          {sample ? (
+            <span className="inline-flex items-center gap-1 text-neutral-400 dark:text-neutral-600">
+              <FileText className="h-3.5 w-3.5" /> PDF
+            </span>
+          ) : (
+            <a
+              href={entry.pdfUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-emerald-700 hover:underline dark:text-emerald-400"
+            >
+              <FileText className="h-3.5 w-3.5" /> PDF
+            </a>
+          )}
         </MetadataRow>
       ) : null}
 
@@ -225,14 +239,20 @@ export function ResearchCard({ entry }: ResearchCardProps) {
         >
           Details →
         </Link>
-        <a
-          href={entry.sourceRepoUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
-        >
-          <ExternalLink className="h-3 w-3" /> Source repo
-        </a>
+        {sample ? (
+          <span className="inline-flex items-center gap-1 text-neutral-400 dark:text-neutral-600">
+            <ExternalLink className="h-3 w-3" /> Source repo (sample)
+          </span>
+        ) : (
+          <a
+            href={entry.sourceRepoUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+          >
+            <ExternalLink className="h-3 w-3" /> Source repo
+          </a>
+        )}
       </div>
     </article>
   );

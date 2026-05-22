@@ -1,6 +1,7 @@
 {
   "slug": "ai-pr-review-traces-dataset",
   "type": "dataset",
+  "isSample": true,
   "title": "AI PR Review Traces — 200 sampled review threads with annotations",
   "authors": [
     { "name": "Example Author One", "affiliation": "Example University" }

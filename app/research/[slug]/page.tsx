@@ -121,6 +121,7 @@ export default async function ResearchEntryPage({ params }: PageProps) {
   const fileUrl = repoFileUrlForSlug(entry.slug);
   const isExpired = isRecruiting(entry) && isRecruitingPastDeadline(entry);
   const isClosed = isRecruiting(entry) && entry.status === "closed";
+  const sample = entry.isSample === true;
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
@@ -130,6 +131,17 @@ export default async function ResearchEntryPage({ params }: PageProps) {
       >
         <ArrowLeft className="h-4 w-4" /> Back to Research
       </Link>
+
+      {sample ? (
+        <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+          <strong>Sample entry.</strong> This is a placeholder that shows
+          how a real submission renders. The authors, links, deadlines,
+          and IRB numbers are fictional — please don&apos;t contact, sign
+          up, or download. Sample entries are hidden from the main feed
+          and only appear under the &quot;Samples&quot; filter; they will
+          be removed once real research lands.
+        </div>
+      ) : null}
 
       <header className="mt-4 mb-6">
         <div className="flex flex-wrap items-center gap-2">
@@ -232,7 +244,7 @@ export default async function ResearchEntryPage({ params }: PageProps) {
                 : []),
             ]}
           />
-          {entry.studyUrl && !isExpired && !isClosed ? (
+          {entry.studyUrl && !isExpired && !isClosed && !sample ? (
             <a
               href={entry.studyUrl}
               target="_blank"
@@ -241,6 +253,10 @@ export default async function ResearchEntryPage({ params }: PageProps) {
             >
               <Globe className="h-4 w-4" /> Go to study
             </a>
+          ) : sample && entry.studyUrl ? (
+            <span className="mt-4 inline-flex cursor-not-allowed items-center gap-2 rounded-lg border border-dashed border-amber-300 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+              <Globe className="h-4 w-4" /> Go to study (disabled on sample)
+            </span>
           ) : null}
         </section>
       ) : null}
@@ -265,14 +281,20 @@ export default async function ResearchEntryPage({ params }: PageProps) {
                 : []),
             ]}
           />
-          <a
-            href={entry.pdfUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-500"
-          >
-            <FileText className="h-4 w-4" /> Read PDF
-          </a>
+          {sample ? (
+            <span className="mt-4 inline-flex cursor-not-allowed items-center gap-2 rounded-lg border border-dashed border-amber-300 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+              <FileText className="h-4 w-4" /> Read PDF (disabled on sample)
+            </span>
+          ) : (
+            <a
+              href={entry.pdfUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-500"
+            >
+              <FileText className="h-4 w-4" /> Read PDF
+            </a>
+          )}
         </section>
       ) : null}
 
@@ -312,15 +334,24 @@ export default async function ResearchEntryPage({ params }: PageProps) {
           Cursor Boston hosts the metadata — the actual files, materials,
           and documentation live in the researcher&apos;s own GitHub repo.
         </p>
-        <a
-          href={entry.sourceRepoUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-800 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800"
-        >
-          <GitBranch className="h-4 w-4" /> {entry.sourceRepoUrl.replace(/^https?:\/\//, "")}
-          <ExternalLink className="h-3.5 w-3.5 opacity-60" />
-        </a>
+        {sample ? (
+          <span className="inline-flex cursor-not-allowed items-center gap-2 rounded-lg border border-dashed border-amber-300 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+            <GitBranch className="h-4 w-4" />{" "}
+            {entry.sourceRepoUrl.replace(/^https?:\/\//, "")}{" "}
+            <span className="opacity-70">(sample · disabled)</span>
+          </span>
+        ) : (
+          <a
+            href={entry.sourceRepoUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-800 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800"
+          >
+            <GitBranch className="h-4 w-4" />{" "}
+            {entry.sourceRepoUrl.replace(/^https?:\/\//, "")}
+            <ExternalLink className="h-3.5 w-3.5 opacity-60" />
+          </a>
+        )}
       </section>
 
       <section className="mb-6">
@@ -329,22 +360,34 @@ export default async function ResearchEntryPage({ params }: PageProps) {
         </h2>
         <div className="flex flex-wrap gap-3">
           {entry.contactEmail ? (
-            <a
-              href={`mailto:${entry.contactEmail}`}
-              className="inline-flex items-center gap-2 rounded-lg border border-neutral-300 bg-white px-3.5 py-2 text-sm font-medium text-neutral-800 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800"
-            >
-              <Mail className="h-4 w-4" /> {entry.contactEmail}
-            </a>
+            sample ? (
+              <span className="inline-flex cursor-not-allowed items-center gap-2 rounded-lg border border-dashed border-amber-300 bg-amber-50 px-3.5 py-2 text-sm font-medium text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+                <Mail className="h-4 w-4" /> {entry.contactEmail} (sample)
+              </span>
+            ) : (
+              <a
+                href={`mailto:${entry.contactEmail}`}
+                className="inline-flex items-center gap-2 rounded-lg border border-neutral-300 bg-white px-3.5 py-2 text-sm font-medium text-neutral-800 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800"
+              >
+                <Mail className="h-4 w-4" /> {entry.contactEmail}
+              </a>
+            )
           ) : null}
           {entry.contactUrl ? (
-            <a
-              href={entry.contactUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-lg border border-neutral-300 bg-white px-3.5 py-2 text-sm font-medium text-neutral-800 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800"
-            >
-              <Globe className="h-4 w-4" /> Contact link
-            </a>
+            sample ? (
+              <span className="inline-flex cursor-not-allowed items-center gap-2 rounded-lg border border-dashed border-amber-300 bg-amber-50 px-3.5 py-2 text-sm font-medium text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+                <Globe className="h-4 w-4" /> Contact link (sample)
+              </span>
+            ) : (
+              <a
+                href={entry.contactUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-lg border border-neutral-300 bg-white px-3.5 py-2 text-sm font-medium text-neutral-800 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800"
+              >
+                <Globe className="h-4 w-4" /> Contact link
+              </a>
+            )
           ) : null}
           <a
             href={fileUrl}

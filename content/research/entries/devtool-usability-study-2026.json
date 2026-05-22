@@ -1,6 +1,7 @@
 {
   "slug": "devtool-usability-study-2026",
   "type": "recruiting",
+  "isSample": true,
   "title": "Usability study: AI pair-programming workflows in Cursor",
   "authors": [
     {
