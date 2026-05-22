@@ -21,13 +21,24 @@ import type { UpstashRateLimitResult } from "./upstash-rate-limit";
 // Re-export rateLimitConfigs for convenience
 export { rateLimitConfigs } from "./rate-limit";
 
-// Allowed origins for CSRF protection
-const ALLOWED_ORIGINS = [
+// Allowed origins for CSRF protection in every environment.
+const PRODUCTION_ALLOWED_ORIGINS = [
   "https://cursorboston.com",
   "https://www.cursorboston.com",
+];
+
+// Local development origins are valid only while running the dev server.
+const DEVELOPMENT_ALLOWED_ORIGINS = [
   "http://localhost:3000",
   "http://localhost:3001",
 ];
+
+function getAllowedOrigins(): string[] {
+  if (process.env.NODE_ENV === "development") {
+    return [...PRODUCTION_ALLOWED_ORIGINS, ...DEVELOPMENT_ALLOWED_ORIGINS];
+  }
+  return PRODUCTION_ALLOWED_ORIGINS;
+}
 
 type RateLimitResult = ReturnType<typeof checkRateLimit> | UpstashRateLimitResult;
 
@@ -95,7 +106,7 @@ export function isOriginAllowed(request: NextRequest): boolean {
     if (origin === new URL(request.url).origin) {
       return true;
     }
-    if (ALLOWED_ORIGINS.includes(origin)) {
+    if (getAllowedOrigins().includes(origin)) {
       return true;
     }
     // Allow if origin matches the app URL from environment
@@ -113,7 +124,7 @@ export function isOriginAllowed(request: NextRequest): boolean {
       if (refererOrigin === new URL(request.url).origin) {
         return true;
       }
-      if (ALLOWED_ORIGINS.includes(refererOrigin)) {
+      if (getAllowedOrigins().includes(refererOrigin)) {
         return true;
       }
       const appUrl = process.env.NEXT_PUBLIC_APP_URL;
