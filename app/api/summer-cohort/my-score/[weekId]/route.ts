@@ -15,6 +15,7 @@ import { isValidCohortId, type SummerCohortId } from "@/lib/summer-cohort";
 import { getOptionalVerifiedUser } from "@/lib/server-auth";
 import { logger } from "@/lib/logger";
 import { summerCohortContract } from "@/lib/api-schemas/summer-cohort";
+import { fetchWithTimeout } from "@/lib/http-fetch";
 
 interface ScoreFile {
   score: number;
@@ -23,6 +24,8 @@ interface ScoreFile {
   scoredAt?: string;
   scorerVersion?: number;
 }
+
+const GITHUB_FETCH_TIMEOUT_MS = 8_000;
 
 function scoresDirFromSubmissionPath(submissionPath: string): string | null {
   // submissionPath looks like:
@@ -134,12 +137,16 @@ export async function GET(
 
   let res: Response;
   try {
-    res = await fetch(url, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      // Match the submissions feed's revalidate window — scores update rarely
-      // and the same content addresses cache nicely.
-      next: { revalidate: 60 },
-    });
+    res = await fetchWithTimeout(
+      url,
+      {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        // Match the submissions feed's revalidate window — scores update rarely
+        // and the same content addresses cache nicely.
+        next: { revalidate: 60 },
+      },
+      GITHUB_FETCH_TIMEOUT_MS
+    );
   } catch (error) {
     logger.warn("my-score: raw fetch failed", {
       weekId,
