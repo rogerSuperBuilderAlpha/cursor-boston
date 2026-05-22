@@ -11,7 +11,7 @@
  * otherwise has no dedicated tests.
  */
 import { existsSync, readdirSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 
 // Mock all of Firebase + client SDK calls so nothing dies at import time.
 jest.mock("firebase/auth", () => ({
@@ -95,13 +95,14 @@ function walk(dir: string, out: string[] = []): string[] {
   for (const entry of readdirSync(dir)) {
     const full = join(dir, entry);
     const s = statSync(full);
+    const normalized = full.replace(/\\/g, "/");
     if (s.isDirectory()) walk(full, out);
     else if (
       (entry.endsWith(".tsx") || entry.endsWith(".ts")) &&
       // Only target _components / _hooks / _lib helper directories
-      (full.includes("/_components/") ||
-        full.includes("/_hooks/") ||
-        full.includes("/_lib/"))
+      (normalized.includes("/_components/") ||
+        normalized.includes("/_hooks/") ||
+        normalized.includes("/_lib/"))
     ) {
       out.push(full);
     }
@@ -112,7 +113,7 @@ function walk(dir: string, out: string[] = []): string[] {
 const FILES = walk(APP_DIR);
 
 function moduleIdFor(absPath: string): string {
-  const rel = absPath.replace(process.cwd() + "/", "");
+  const rel = relative(process.cwd(), absPath).replace(/\\/g, "/");
   return (
     "@/" +
     rel
@@ -137,7 +138,7 @@ describe("app/**/_components smoke imports", () => {
         });
       } catch (e) {
         failures.push({
-          path: file.replace(process.cwd() + "/", ""),
+          path: relative(process.cwd(), file).replace(/\\/g, "/"),
           err: e instanceof Error ? e.message.split("\n")[0] : String(e),
         });
       }

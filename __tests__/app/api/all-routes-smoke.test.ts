@@ -13,7 +13,7 @@
  * follow-up.
  */
 import { existsSync, readdirSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 
 // Heavyweight dependencies that many routes pull in. Mock them up-front
 // so a route's module init can succeed without real Firebase / cron / etc.
@@ -79,7 +79,7 @@ const ROUTE_FILES = walk(APP_API);
 
 // Convert an absolute path to the `@/...` module-id form Jest resolves.
 function moduleIdFor(absPath: string): string {
-  const rel = absPath.replace(process.cwd() + "/", "");
+  const rel = relative(process.cwd(), absPath).replace(/\\/g, "/");
   return "@/" + rel.replace(/\.ts$/, "");
 }
 
@@ -102,7 +102,7 @@ describe("app/api smoke imports", () => {
         });
       } catch (e) {
         failures.push({
-          path: file.replace(process.cwd() + "/", ""),
+          path: relative(process.cwd(), file).replace(/\\/g, "/"),
           err: e instanceof Error ? e.message.split("\n")[0] : String(e),
         });
       }

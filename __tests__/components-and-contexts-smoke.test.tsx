@@ -19,7 +19,7 @@
  * this alone moves statement and line coverage off zero.
  */
 import { existsSync, readdirSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 
 jest.mock("firebase/auth", () => ({
   onAuthStateChanged: jest.fn(() => jest.fn()),
@@ -196,7 +196,7 @@ function findAppMetaFiles(): string[] {
 const APP_META_FILES = findAppMetaFiles();
 
 function moduleIdFor(absPath: string): string {
-  const rel = absPath.replace(ROOT + "/", "");
+  const rel = relative(ROOT, absPath).replace(/\\/g, "/");
   return "@/" + rel.replace(/\.tsx$/, "").replace(/\.ts$/, "");
 }
 
@@ -215,7 +215,7 @@ describe("components/** + contexts/** smoke imports", () => {
         });
       } catch (e) {
         failures.push({
-          path: file.replace(ROOT + "/", ""),
+          path: relative(ROOT, file).replace(/\\/g, "/"),
           err: e instanceof Error ? e.message.split("\n")[0] : String(e),
         });
       }
@@ -254,7 +254,7 @@ describe("app-router meta files smoke imports", () => {
         });
       } catch (e) {
         failures.push({
-          path: file.replace(ROOT + "/", ""),
+          path: relative(ROOT, file).replace(/\\/g, "/"),
           err: e instanceof Error ? e.message.split("\n")[0] : String(e),
         });
       }

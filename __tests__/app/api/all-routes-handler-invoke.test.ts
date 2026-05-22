@@ -7,7 +7,7 @@
  * the import-only sweep in all-routes-smoke.test.ts.
  */
 import { existsSync, readdirSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { NextRequest } from "next/server";
 import { makeCronRequest } from "@/__tests__/_helpers/route-test-utils";
 
@@ -96,15 +96,15 @@ function walk(dir: string, out: string[] = []): string[] {
 const ROUTE_FILES = walk(APP_API);
 
 function moduleIdFor(absPath: string): string {
-  const rel = absPath.replace(process.cwd() + "/", "");
+  const rel = relative(process.cwd(), absPath).replace(/\\/g, "/");
   return "@/" + rel.replace(/\.ts$/, "");
 }
 
 /** Build `/api/...` path from absolute route file path. */
 function apiPathFromFile(absPath: string): string {
-  const rel = absPath.replace(join(process.cwd(), "app"), "").replace(/\\/g, "/");
+  const rel = relative(join(process.cwd(), "app"), absPath).replace(/\\/g, "/");
   const withoutRoute = rel.replace(/\/route\.ts$/, "");
-  return withoutRoute || "/api";
+  return `/${withoutRoute}` || "/api";
 }
 
 /** Next.js 15+ dynamic route context from `[param]` and `[...slug]` segments. */
