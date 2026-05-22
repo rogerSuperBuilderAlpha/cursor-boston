@@ -15,6 +15,10 @@ import { sanitizeText } from "@/lib/sanitize";
 import { getDisplayName } from "@/lib/utils";
 import { QUESTION_TAGS, type QuestionTag } from "@/types/questions";
 import { questionsContract } from "@/lib/api-schemas/questions";
+import {
+  QUESTION_BODY_RANGE_ERROR,
+  QUESTION_TITLE_RANGE_ERROR,
+} from "@/lib/error-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -57,14 +61,14 @@ export async function POST(request: NextRequest) {
 
     if (sanitizedTitle.length < 10 || sanitizedTitle.length > 200) {
       return NextResponse.json(
-        { error: "Title must be between 10 and 200 characters" },
+        { error: QUESTION_TITLE_RANGE_ERROR },
         { status: 400 }
       );
     }
 
     if (sanitizedBody.length < 20 || sanitizedBody.length > 5000) {
       return NextResponse.json(
-        { error: "Body must be between 20 and 5000 characters" },
+        { error: QUESTION_BODY_RANGE_ERROR },
         { status: 400 }
       );
     }
