@@ -18,6 +18,7 @@ You don't need to do anything to keep the branch fresh — that's a maintainer t
 |---|---|
 | Standard code, bug fix, feature work, docs | **`develop`** |
 | Submitting a PyData hackathon notebook | **`pydata-2026-submissions`** ([see README](../pydata-2026-submissions/README.md)) |
+| Submitting a Sports Hack 2026 project (May 26) | **`sports-hack-2026-submissions`** ([see README](../sports-hack-2026-submissions/README.md)) |
 | Submitting a Hack-a-Sprint showcase project | **`hack-a-sprint-2026-submissions`** ([see README](../content/hackathons/hack-a-sprint-2026/submissions/README.md)) |
 | Summer cohort 1 week N submission (PM / comms / marketing / education / startup / oss) | **`c1w1pm-submission`**, **`c1w2comms-submission`**, **`c1w3mkt-submission`**, **`c1w4edu-submission`**, **`c1w5startup-submission`**, or **`c1w6oss-submission`** |
 | Summer cohort 2 vote-format week N submission (PM / comms / marketing) | **`c2w1pm-submission`**, **`c2w2comms-submission`**, or **`c2w3mkt-submission`** |
@@ -38,6 +39,7 @@ If you're unsure, default to `develop` and a maintainer will redirect you in rev
 - `c2w2comms-submission` — summer cohort 2, week 2 (communications, vote format)
 - `c2w3mkt-submission` — summer cohort 2, week 3 (marketing, vote format)
 - `pydata-2026-submissions` — May 13, 2026 PyData × Cursor Boston hack at Moderna HQ
+- `sports-hack-2026-submissions` — May 26, 2026 Boston Tech Week Sports Hack project submissions (hard 4 PM ET AI-eligibility cutoff on event day)
 - `hack-a-sprint-2026-submissions` — Hack-a-Sprint 2026 showcase projects
 - `game-contributions` — ongoing in-game content (units, artifacts, lore)
 - `maintainer-application` — async maintainer applications

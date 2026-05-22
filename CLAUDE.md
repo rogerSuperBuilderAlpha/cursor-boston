@@ -39,6 +39,7 @@ Current core branches:
 - `c1w1pm-submission`, `c1w2comms-submission`, `c1w3mkt-submission`, `c1w4edu-submission`, `c1w5startup-submission`, `c1w6oss-submission` — summer cohort 1 weekly submissions
 - `c2w1pm-submission`, `c2w2comms-submission`, `c2w3mkt-submission` — summer cohort 2 vote-format weekly submissions (create from `origin/develop` before c2 Week 1 kickoff on Mon Jun 29; the dashboard already references these branches via `SUMMER_COHORT_C2_VOTE_WEEKS` in `lib/summer-cohort.ts`)
 - `pydata-2026-submissions` — PyData attendee notebooks. **Mirrored at root** as `pydata-2026-submissions/` directory; submissions PR into both the branch and the root directory (the scorer + the event page read from the directory; the branch is the staging surface).
+- `sports-hack-2026-submissions` — Boston Tech Week Sports Hack project submissions (`meta.json` per attendee + `score.json` from the AI judge). **Mirrored at root** as `sports-hack-2026-submissions/`; same dual-target model as pydata. Hard PR cutoff for AI-track eligibility: 2026-05-26T20:00:00Z (4 PM ET on event day).
 - `hack-a-sprint-2026-submissions` — Hack-a-Sprint showcase JSON submissions
 - `game-contributions`
 
@@ -47,7 +48,7 @@ After every `develop → main` release PR merges, fast-forward each one to `orig
 ```bash
 git fetch origin --prune --quiet
 DEV=$(git rev-parse origin/develop)
-for b in c1w1pm-submission c1w2comms-submission c1w3mkt-submission c1w4edu-submission c1w5startup-submission c1w6oss-submission c2w1pm-submission c2w2comms-submission c2w3mkt-submission game-contributions pydata-2026-submissions hack-a-sprint-2026-submissions; do
+for b in c1w1pm-submission c1w2comms-submission c1w3mkt-submission c1w4edu-submission c1w5startup-submission c1w6oss-submission c2w1pm-submission c2w2comms-submission c2w3mkt-submission game-contributions pydata-2026-submissions sports-hack-2026-submissions hack-a-sprint-2026-submissions; do
  git push origin "${DEV}:refs/heads/${b}"
 done
 ```

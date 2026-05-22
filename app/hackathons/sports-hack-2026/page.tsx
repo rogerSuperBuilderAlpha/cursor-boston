@@ -143,10 +143,11 @@ export default function SportsHack2026LandingPage() {
             </p>
 
             <div className="mt-10 rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
-              <h2 className="text-lg font-semibold">How selection works</h2>
+              <h2 className="text-lg font-semibold">How to win a Cursor credit</h2>
               <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-                Luma approves your registration. Cursor Boston then ranks registrants by
-                merged PRs to the{" "}
+                We have <strong>{SPORTS_HACK_2026_CAPACITY} Cursor credit codes</strong>{" "}
+                for participants. Luma approves your registration. Cursor Boston then
+                ranks registrants by merged PRs to the{" "}
                 <a
                   href="https://github.com/rogerSuperBuilderAlpha/cursor-boston"
                   target="_blank"
@@ -156,8 +157,40 @@ export default function SportsHack2026LandingPage() {
                   cursor-boston
                 </a>{" "}
                 community repo, with signup time as the tiebreaker. Top{" "}
-                {SPORTS_HACK_2026_CAPACITY} get a confirmed seat; the rest join the
-                waitlist. Merge a PR to move up.
+                {SPORTS_HACK_2026_CAPACITY} get a confirmed seat plus a Cursor credit
+                code; the rest join the waitlist. Merge a PR to move up.
+              </p>
+            </div>
+
+            <div className="mt-6 rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
+              <h2 className="text-lg font-semibold">How to submit your project</h2>
+              <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+                On event day, open a PR into the{" "}
+                <code className="rounded bg-neutral-200 px-1 py-0.5 text-xs font-mono dark:bg-neutral-800">
+                  sports-hack-2026-submissions
+                </code>{" "}
+                branch with a folder named after your GitHub handle containing one{" "}
+                <code className="font-mono">meta.json</code> describing the project:
+                title, description, video URL (Loom / YouTube / any explainer), GitHub
+                repo URL, and a deployed URL.
+              </p>
+              <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
+                <strong className="text-rose-600 dark:text-rose-400">
+                  Hard deadline: 4:00 PM ET on Tuesday, May 26 (event end).
+                </strong>{" "}
+                Your PR must be opened before this moment to be eligible for AI scoring.
+                One second late and your AI eval is gone — but human judges still review
+                every merged submission, so the judges track stays open.
+              </p>
+              <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
+                Winners: <strong>3 on the AI track</strong> + <strong>3 on the judges
+                track</strong> = 6 total.{" "}
+                <Link
+                  href="/events/cursor-boston-sports-hack-2026"
+                  className="text-emerald-600 underline dark:text-emerald-400"
+                >
+                  Full submission rules + public board →
+                </Link>
               </p>
             </div>
           </div>
