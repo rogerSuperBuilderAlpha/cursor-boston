@@ -6,12 +6,15 @@
 import { NextRequest } from "next/server";
 import { POST } from "@/app/api/hackathons/showcase/hack-a-sprint-2026/ai-score/route";
 import { getAdminDb } from "@/lib/firebase-admin";
-import { getVerifiedUser } from "@/lib/server-auth";
+import { getVerifiedAdminUser as getVerifiedUser } from "@/lib/server-auth";
 import { fetchShowcaseSubmissionsFromGitHub } from "@/lib/hackathon-showcase";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 
 jest.mock("@/lib/firebase-admin", () => ({ getAdminDb: jest.fn() }));
-jest.mock("@/lib/server-auth", () => ({ getVerifiedUser: jest.fn() }));
+jest.mock("@/lib/server-auth", () => ({
+  getVerifiedAdminUser: jest.fn(),
+  isRevokedIdTokenError: jest.fn(() => false),
+}));
 jest.mock("@/lib/hackathon-showcase", () => ({
   ...jest.requireActual("@/lib/hackathon-showcase"),
   fetchShowcaseSubmissionsFromGitHub: jest.fn(),

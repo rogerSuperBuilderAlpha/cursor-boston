@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
-import { getVerifiedUser } from "@/lib/server-auth";
+import { getVerifiedUserWithRevocation, isRevokedIdTokenError } from "@/lib/server-auth";
 import {
   HACK_A_SPRINT_2026_EVENT_ID,
   fetchShowcaseSubmissionsFromGitHub,
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const user = await getVerifiedUser(request);
+    const user = await getVerifiedUserWithRevocation(request);
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -103,6 +103,12 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ ok: true });
   } catch (e) {
+    if (isRevokedIdTokenError(e)) {
+      return NextResponse.json(
+        { error: "Session revoked. Please sign in again." },
+        { status: 401 }
+      );
+    }
     console.error("[hack-a-sprint judge-score]", e);
     return NextResponse.json({ error: "Failed to save judge score" }, { status: 500 });
   }

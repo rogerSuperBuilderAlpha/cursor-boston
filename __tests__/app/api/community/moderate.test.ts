@@ -9,14 +9,18 @@
 import { NextRequest } from "next/server";
 import { POST, GET } from "@/app/api/community/moderate/route";
 import type { VerifiedUser } from "@/lib/server-auth";
-import { getVerifiedUser } from "@/lib/server-auth";
+import {
+  getVerifiedAdminUser as getVerifiedUser,
+  isRevokedIdTokenError,
+} from "@/lib/server-auth";
 
 jest.mock("@/lib/logger", () => ({
   logger: { error: jest.fn(), logError: jest.fn() },
 }));
 
 jest.mock("@/lib/server-auth", () => ({
-  getVerifiedUser: jest.fn(),
+  getVerifiedAdminUser: jest.fn(),
+  isRevokedIdTokenError: jest.fn(() => false),
 }));
 
 const mockBatchUpdate = jest.fn();
@@ -55,6 +59,9 @@ jest.mock("firebase-admin/firestore", () => ({
 }));
 
 const mockGetVerifiedUser = getVerifiedUser as jest.MockedFunction<typeof getVerifiedUser>;
+const mockIsRevoked = isRevokedIdTokenError as jest.MockedFunction<
+  typeof isRevokedIdTokenError
+>;
 const adminUser: VerifiedUser = { uid: "admin1", name: "Admin", isAdmin: true };
 const regularUser: VerifiedUser = { uid: "u1", name: "Reg", isAdmin: false };
 
@@ -72,6 +79,7 @@ function makeGetRequest(query = "") {
 describe("POST /api/community/moderate (admin actions)", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockIsRevoked.mockReturnValue(false);
     mockGetVerifiedUser.mockResolvedValue(adminUser);
     mockReportGet.mockResolvedValue({
       exists: true,
@@ -83,6 +91,20 @@ describe("POST /api/community/moderate (admin actions)", () => {
     mockGetVerifiedUser.mockResolvedValue(null);
     const res = await POST(makePostRequest({ reportId: "r1", action: "dismiss" }));
     expect(res.status).toBe(401);
+  });
+
+  it("returns 401 without moderation side effects when the admin token is revoked", async () => {
+    mockGetVerifiedUser.mockRejectedValueOnce(new Error("revoked") as never);
+    mockIsRevoked.mockReturnValueOnce(true);
+
+    const res = await POST(makePostRequest({ reportId: "r1", action: "dismiss" }));
+
+    expect(res.status).toBe(401);
+    await expect(res.json()).resolves.toEqual({
+      error: "Session revoked. Please sign in again.",
+    });
+    expect(mockBatchUpdate).not.toHaveBeenCalled();
+    expect(mockBatchCommit).not.toHaveBeenCalled();
   });
 
   it("returns 403 for non-admin", async () => {
@@ -145,6 +167,7 @@ describe("POST /api/community/moderate (admin actions)", () => {
 describe("GET /api/community/moderate (admin listing)", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockIsRevoked.mockReturnValue(false);
     mockGetVerifiedUser.mockResolvedValue(adminUser);
     mockListSnap.docs = [
       {

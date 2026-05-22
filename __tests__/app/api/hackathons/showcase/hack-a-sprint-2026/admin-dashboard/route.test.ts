@@ -5,7 +5,7 @@
  */
 import { GET } from "@/app/api/hackathons/showcase/hack-a-sprint-2026/admin-dashboard/route";
 import { HACK_A_SPRINT_2026_EVENT_ID } from "@/lib/hackathon-showcase";
-import { getVerifiedUser } from "@/lib/server-auth";
+import { getVerifiedAdminUser as getVerifiedUser } from "@/lib/server-auth";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 import {
@@ -20,7 +20,8 @@ import {
 import { makeAuthedRequest, makeRequest, readJson } from "@/__tests__/_helpers/route-test-utils";
 
 jest.mock("@/lib/server-auth", () => ({
-  getVerifiedUser: jest.fn(),
+  getVerifiedAdminUser: jest.fn(),
+  isRevokedIdTokenError: jest.fn(() => false),
 }));
 
 jest.mock("@/lib/firebase-admin", () => ({

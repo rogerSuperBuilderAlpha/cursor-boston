@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getVerifiedUser } from "@/lib/server-auth";
+import { getVerifiedAdminUser, isRevokedIdTokenError } from "@/lib/server-auth";
 import { sanitizeText } from "@/lib/sanitize";
 import { createLiveSessionServer } from "@/lib/live-sessions/data-server";
 import { liveContract } from "@/lib/api-schemas/live";
@@ -40,7 +40,7 @@ function normalizeSessionTitle(value: unknown): string | null {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getVerifiedUser(request);
+    const user = await getVerifiedAdminUser(request);
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -90,6 +90,12 @@ export async function POST(request: NextRequest) {
       status: session.status,
     });
   } catch (error) {
+    if (isRevokedIdTokenError(error)) {
+      return NextResponse.json(
+        { error: "Session revoked. Please sign in again." },
+        { status: 401 }
+      );
+    }
     console.error("Error creating live session:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

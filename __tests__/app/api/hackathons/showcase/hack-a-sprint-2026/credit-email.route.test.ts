@@ -6,7 +6,10 @@
 import { NextRequest } from "next/server";
 import { POST } from "@/app/api/hackathons/showcase/hack-a-sprint-2026/credit-email/route";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
-import { getVerifiedUser } from "@/lib/server-auth";
+import {
+  getVerifiedUserWithRevocation as getVerifiedUser,
+  isRevokedIdTokenError,
+} from "@/lib/server-auth";
 import { resolveHackASprint2026CreditForUser } from "@/lib/hackathon-asprint-2026-credit-eligibility";
 import { sendEmail } from "@/lib/mailgun";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
@@ -15,7 +18,10 @@ jest.mock("@/lib/firebase-admin", () => ({
   getAdminDb: jest.fn(),
   getAdminAuth: jest.fn(),
 }));
-jest.mock("@/lib/server-auth", () => ({ getVerifiedUser: jest.fn() }));
+jest.mock("@/lib/server-auth", () => ({
+  getVerifiedUserWithRevocation: jest.fn(),
+  isRevokedIdTokenError: jest.fn(() => false),
+}));
 jest.mock("@/lib/hackathon-asprint-2026-credit-eligibility", () => ({
   resolveHackASprint2026CreditForUser: jest.fn(),
 }));
@@ -36,6 +42,9 @@ jest.mock("firebase-admin/firestore", () => ({
 const mockDb = getAdminDb as jest.MockedFunction<typeof getAdminDb>;
 const mockAuth = getAdminAuth as jest.MockedFunction<typeof getAdminAuth>;
 const mockUser = getVerifiedUser as jest.MockedFunction<typeof getVerifiedUser>;
+const mockIsRevoked = isRevokedIdTokenError as jest.MockedFunction<
+  typeof isRevokedIdTokenError
+>;
 const mockResolve = resolveHackASprint2026CreditForUser as jest.MockedFunction<
   typeof resolveHackASprint2026CreditForUser
 >;
@@ -79,6 +88,7 @@ function setupAdmins(opts: DbOpts = {}) {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockIsRevoked.mockReturnValue(false);
   mockRate.mockResolvedValue({ success: true } as never);
   mockUser.mockResolvedValue({ uid: "u1", email: "u@x" } as never);
   mockResolve.mockResolvedValue({
@@ -86,6 +96,21 @@ beforeEach(() => {
     creditUrl: "https://cursor.com/credit/xyz",
   } as never);
   mockSendEmail.mockResolvedValue(undefined as never);
+});
+
+it("returns 401 when the sensitive credit token is revoked", async () => {
+  mockUser.mockRejectedValueOnce(new Error("revoked") as never);
+  mockIsRevoked.mockReturnValueOnce(true);
+
+  const res = await POST(makeReq());
+
+  expect(res.status).toBe(401);
+  await expect(res.json()).resolves.toMatchObject({
+    error: "Session revoked. Please sign in again.",
+  });
+  expect(mockDb).not.toHaveBeenCalled();
+  expect(mockAuth).not.toHaveBeenCalled();
+  expect(mockSendEmail).not.toHaveBeenCalled();
 });
 
 describe("POST /api/hackathons/showcase/hack-a-sprint-2026/credit-email", () => {

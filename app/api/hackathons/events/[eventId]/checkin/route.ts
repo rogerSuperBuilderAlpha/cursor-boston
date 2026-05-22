@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
-import { getVerifiedUser } from "@/lib/server-auth";
+import { getVerifiedAdminUser, isRevokedIdTokenError } from "@/lib/server-auth";
 import {
   hackathonEventSignupDocId,
   isHackathonEventSignupId,
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       );
     }
 
-    const user = await getVerifiedUser(request);
+    const user = await getVerifiedAdminUser(request);
     if (!user?.isAdmin) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -121,6 +121,12 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     return NextResponse.json({ ok: true, checkedIn });
   } catch (e) {
+    if (isRevokedIdTokenError(e)) {
+      return NextResponse.json(
+        { error: "Session revoked. Please sign in again." },
+        { status: 401 }
+      );
+    }
     console.error("[hackathon event checkin]", e);
     return NextResponse.json({ error: "Failed to update check-in" }, { status: 500 });
   }

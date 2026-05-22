@@ -4,7 +4,7 @@
 
 import { NextRequest } from "next/server";
 import { POST } from "@/app/api/hackathons/events/[eventId]/checkin/route";
-import { getVerifiedUser } from "@/lib/server-auth";
+import { getVerifiedAdminUser as getVerifiedUser } from "@/lib/server-auth";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { checkRateLimit } from "@/lib/rate-limit";
 
@@ -18,7 +18,8 @@ jest.mock("@/lib/rate-limit", () => {
 });
 
 jest.mock("@/lib/server-auth", () => ({
-  getVerifiedUser: jest.fn(),
+  getVerifiedAdminUser: jest.fn(),
+  isRevokedIdTokenError: jest.fn(() => false),
 }));
 
 jest.mock("@/lib/firebase-admin", () => ({

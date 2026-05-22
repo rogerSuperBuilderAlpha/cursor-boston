@@ -5,10 +5,16 @@
 import { NextRequest } from "next/server";
 import { GET } from "@/app/api/events/pydata-2026/admin/list/route";
 import { getAdminDb } from "@/lib/firebase-admin";
-import { getVerifiedUser } from "@/lib/server-auth";
+import {
+  getVerifiedAdminUser as getVerifiedUser,
+  isRevokedIdTokenError,
+} from "@/lib/server-auth";
 
 jest.mock("@/lib/firebase-admin", () => ({ getAdminDb: jest.fn() }));
-jest.mock("@/lib/server-auth", () => ({ getVerifiedUser: jest.fn() }));
+jest.mock("@/lib/server-auth", () => ({
+  getVerifiedAdminUser: jest.fn(),
+  isRevokedIdTokenError: jest.fn(() => false),
+}));
 jest.mock("@/lib/middleware", () => ({
   withMiddleware: (_cfg: unknown, handler: any) => handler,
   rateLimitConfigs: { standard: {} },
@@ -16,6 +22,9 @@ jest.mock("@/lib/middleware", () => ({
 
 const mockAdminDb = getAdminDb as jest.MockedFunction<typeof getAdminDb>;
 const mockUser = getVerifiedUser as jest.MockedFunction<typeof getVerifiedUser>;
+const mockIsRevoked = isRevokedIdTokenError as jest.MockedFunction<
+  typeof isRevokedIdTokenError
+>;
 
 function tsLike(ms: number) {
   return { toMillis: () => ms };
@@ -42,12 +51,25 @@ function req() {
 describe("GET /api/events/pydata-2026/admin/list", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockIsRevoked.mockReturnValue(false);
   });
 
   it("returns 401 when unauthenticated", async () => {
     mockUser.mockResolvedValue(null);
     const res = await GET(req());
     expect(res.status).toBe(401);
+  });
+
+  it("returns 401 when the admin token has been revoked", async () => {
+    mockUser.mockRejectedValueOnce(new Error("revoked") as never);
+    mockIsRevoked.mockReturnValueOnce(true);
+
+    const res = await GET(req());
+    const body = await res.json();
+
+    expect(res.status).toBe(401);
+    expect(body.error).toBe("Session revoked. Please sign in again.");
+    expect(mockAdminDb).not.toHaveBeenCalled();
   });
 
   it("returns 403 when the user is not an admin", async () => {

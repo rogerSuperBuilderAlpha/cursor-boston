@@ -17,13 +17,17 @@ import {
   DELETE,
   PATCH,
 } from "@/app/api/game/heroes/[heroId]/chapter/[chapterId]/route";
-import { getVerifiedUser } from "@/lib/server-auth";
+import { getVerifiedAdminUser, getVerifiedUser } from "@/lib/server-auth";
 import {
   HeroLoreForbiddenError,
   HeroLoreNotFoundError,
 } from "@/lib/game/hero-lore";
 
-jest.mock("@/lib/server-auth", () => ({ getVerifiedUser: jest.fn() }));
+jest.mock("@/lib/server-auth", () => ({
+  getVerifiedAdminUser: jest.fn(),
+  getVerifiedUser: jest.fn(),
+  isRevokedIdTokenError: jest.fn(() => false),
+}));
 
 jest.mock("@/lib/game/hero-lore", () => {
   const actual = jest.requireActual("@/lib/game/hero-lore");
@@ -35,6 +39,9 @@ jest.mock("@/lib/game/hero-lore", () => {
 });
 
 const mockUser = getVerifiedUser as jest.MockedFunction<typeof getVerifiedUser>;
+const mockAdminUser = getVerifiedAdminUser as jest.MockedFunction<
+  typeof getVerifiedAdminUser
+>;
 
 function makeReq(method: "DELETE" | "PATCH") {
   return new NextRequest(
@@ -50,6 +57,11 @@ function withParams(heroId: string, chapterId: string) {
 beforeEach(() => {
   jest.clearAllMocks();
   mockUser.mockResolvedValue({
+    uid: "u1",
+    email: "u@x",
+    isAdmin: false,
+  } as never);
+  mockAdminUser.mockResolvedValue({
     uid: "u1",
     email: "u@x",
     isAdmin: false,
@@ -159,7 +171,7 @@ describe("DELETE /api/game/heroes/[heroId]/chapter/[chapterId]", () => {
 
 describe("PATCH /api/game/heroes/[heroId]/chapter/[chapterId]", () => {
   it("returns 401 when unauthenticated", async () => {
-    mockUser.mockResolvedValueOnce(null);
+    mockAdminUser.mockResolvedValueOnce(null);
     const res = await PATCH(makeReq("PATCH"), withParams("h1", "c1"));
     expect(res.status).toBe(401);
   });
@@ -170,19 +182,19 @@ describe("PATCH /api/game/heroes/[heroId]/chapter/[chapterId]", () => {
   });
 
   it("returns 400 when heroId is missing", async () => {
-    mockUser.mockResolvedValueOnce({ uid: "admin", isAdmin: true } as never);
+    mockAdminUser.mockResolvedValueOnce({ uid: "admin", isAdmin: true } as never);
     const res = await PATCH(makeReq("PATCH"), withParams("", "c1"));
     expect(res.status).toBe(400);
   });
 
   it("returns 400 when chapterId is missing", async () => {
-    mockUser.mockResolvedValueOnce({ uid: "admin", isAdmin: true } as never);
+    mockAdminUser.mockResolvedValueOnce({ uid: "admin", isAdmin: true } as never);
     const res = await PATCH(makeReq("PATCH"), withParams("h1", ""));
     expect(res.status).toBe(400);
   });
 
   it("returns 200 on happy path and forwards approverUserId", async () => {
-    mockUser.mockResolvedValueOnce({ uid: "admin", isAdmin: true } as never);
+    mockAdminUser.mockResolvedValueOnce({ uid: "admin", isAdmin: true } as never);
     const res = await PATCH(makeReq("PATCH"), withParams("h1", "c1"));
     expect(res.status).toBe(200);
     const { approveHeroChapterServer } = jest.requireMock(
@@ -196,7 +208,7 @@ describe("PATCH /api/game/heroes/[heroId]/chapter/[chapterId]", () => {
   });
 
   it("returns 404 on HeroLoreNotFoundError", async () => {
-    mockUser.mockResolvedValueOnce({ uid: "admin", isAdmin: true } as never);
+    mockAdminUser.mockResolvedValueOnce({ uid: "admin", isAdmin: true } as never);
     const { approveHeroChapterServer } = jest.requireMock(
       "@/lib/game/hero-lore",
     ) as { approveHeroChapterServer: jest.Mock };
@@ -208,7 +220,7 @@ describe("PATCH /api/game/heroes/[heroId]/chapter/[chapterId]", () => {
   });
 
   it("returns 500 with message on unknown Error", async () => {
-    mockUser.mockResolvedValueOnce({ uid: "admin", isAdmin: true } as never);
+    mockAdminUser.mockResolvedValueOnce({ uid: "admin", isAdmin: true } as never);
     const { approveHeroChapterServer } = jest.requireMock(
       "@/lib/game/hero-lore",
     ) as { approveHeroChapterServer: jest.Mock };
@@ -220,7 +232,7 @@ describe("PATCH /api/game/heroes/[heroId]/chapter/[chapterId]", () => {
   });
 
   it("returns 500 'Server error' on non-Error throw", async () => {
-    mockUser.mockResolvedValueOnce({ uid: "admin", isAdmin: true } as never);
+    mockAdminUser.mockResolvedValueOnce({ uid: "admin", isAdmin: true } as never);
     const { approveHeroChapterServer } = jest.requireMock(
       "@/lib/game/hero-lore",
     ) as { approveHeroChapterServer: jest.Mock };

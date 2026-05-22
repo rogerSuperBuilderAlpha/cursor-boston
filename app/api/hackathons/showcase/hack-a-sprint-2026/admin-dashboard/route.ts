@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { DocumentData } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
-import { getVerifiedUser } from "@/lib/server-auth";
+import { getVerifiedAdminUser, isRevokedIdTokenError } from "@/lib/server-auth";
 import {
   HACK_A_SPRINT_2026_EVENT_ID,
   fetchShowcaseSubmissionsFromGitHub,
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const user = await getVerifiedUser(request);
+    const user = await getVerifiedAdminUser(request);
     if (!user?.isAdmin) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -184,6 +184,12 @@ export async function GET(request: NextRequest) {
       submissions: rows,
     });
   } catch (e) {
+    if (isRevokedIdTokenError(e)) {
+      return NextResponse.json(
+        { error: "Session revoked. Please sign in again." },
+        { status: 401 }
+      );
+    }
     console.error("[admin-dashboard]", e);
     return NextResponse.json(
       { error: "Failed to load dashboard" },

@@ -6,12 +6,13 @@
 import { GET } from "@/app/api/summer-cohort/admin/intake-aggregates/route";
 import { SUMMER_COHORT_INTAKE_COLLECTION } from "@/lib/summer-cohort-intake";
 import { SUMMER_COHORT_ADMIN_EMAILS_ENV } from "@/lib/summer-cohort-admin-access";
-import { getVerifiedUser } from "@/lib/server-auth";
+import { getVerifiedUserWithRevocation as getVerifiedUser } from "@/lib/server-auth";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { makeAuthedRequest, makeRequest, readJson } from "@/__tests__/_helpers/route-test-utils";
 
 jest.mock("@/lib/server-auth", () => ({
-  getVerifiedUser: jest.fn(),
+  getVerifiedUserWithRevocation: jest.fn(),
+  isRevokedIdTokenError: jest.fn(() => false),
 }));
 
 jest.mock("@/lib/firebase-admin", () => ({

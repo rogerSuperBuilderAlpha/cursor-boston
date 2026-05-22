@@ -7,7 +7,7 @@
 
 import { type NextRequest, NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
-import { getVerifiedUser } from "@/lib/server-auth";
+import { getVerifiedUserWithRevocation, isRevokedIdTokenError } from "@/lib/server-auth";
 import { isSummerCohortAdminEmail } from "@/lib/summer-cohort-admin-access";
 import { summerCohortContract } from "@/lib/api-schemas/summer-cohort";
 import {
@@ -119,7 +119,18 @@ function yesNoCounts(values: unknown[]): { yes: number; no: number; blank: numbe
  * who need those should pull from Firestore directly.
  */
 export async function GET(request: NextRequest) {
-  const user = await getVerifiedUser(request);
+  let user;
+  try {
+    user = await getVerifiedUserWithRevocation(request);
+  } catch (error) {
+    if (isRevokedIdTokenError(error)) {
+      return NextResponse.json(
+        { error: "Session revoked. Please sign in again." },
+        { status: 401 }
+      );
+    }
+    throw error;
+  }
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

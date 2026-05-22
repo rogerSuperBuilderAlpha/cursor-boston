@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
-import { getVerifiedUser } from "@/lib/server-auth";
+import { getVerifiedUserWithRevocation, isRevokedIdTokenError } from "@/lib/server-auth";
 import { resolveHackASprint2026CreditForUser } from "@/lib/hackathon-asprint-2026-credit-eligibility";
 import { sendEmail } from "@/lib/mailgun";
 import { getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       return rateLimitResponse(rate);
     }
 
-    const user = await getVerifiedUser(request);
+    const user = await getVerifiedUserWithRevocation(request);
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -123,6 +123,12 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ ok: true, emailedTo: to });
   } catch (e) {
+    if (isRevokedIdTokenError(e)) {
+      return NextResponse.json(
+        { error: "Session revoked. Please sign in again." },
+        { status: 401 }
+      );
+    }
     console.error("[credit-email POST]", e);
     return NextResponse.json({ error: "Failed to send email" }, { status: 500 });
   }
