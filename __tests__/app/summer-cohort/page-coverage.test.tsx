@@ -804,11 +804,11 @@ describe("summer-cohort page (extra coverage)", () => {
     void user; // keep linter happy
   });
 
-  it("renders the Mon May 18 zoom banner when Date.now() is before cutoff", async () => {
+  it("renders the Fri May 22 zoom banner when Date.now() is before cutoff", async () => {
     const realNow = Date.now;
-    // Mon May 18 2026 21:00:00 UTC ≈ 5pm EST — before the May 19 04:00Z cutoff.
+    // Fri May 22 2026 21:00:00 UTC ≈ 5pm EST — before the May 23 04:00Z cutoff.
     jest.spyOn(Date, "now").mockReturnValue(
-      new Date("2026-05-18T21:00:00Z").getTime(),
+      new Date("2026-05-22T21:00:00Z").getTime(),
     );
     setupFetch(admittedReady());
     const Page = (await import("@/app/summer-cohort/page")).default;
@@ -817,7 +817,7 @@ describe("summer-cohort page (extra coverage)", () => {
 
     await screen.findByText(/Status: Admitted/i);
     expect(
-      await screen.findByText(/Tonight · Mon May 18 · 6 pm EST/i),
+      await screen.findByText(/Tonight · Fri May 22 · 6 pm EST/i),
     ).toBeInTheDocument();
     // Clicking "Open Week 2 →" switches to the Week 2 tab.
     await user.click(screen.getByRole("button", { name: /Open Week 2/i }));
