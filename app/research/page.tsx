@@ -7,7 +7,7 @@
 
 import { Metadata } from "next";
 import Link from "next/link";
-import { FlaskConical, GitPullRequest, Info } from "lucide-react";
+import { FlaskConical, GitPullRequest, Info, Megaphone, MapPin, CalendarDays } from "lucide-react";
 import {
   RESEARCH_REPO_NEW_FILE_URL,
   RESEARCH_REPO_README_URL,
@@ -115,6 +115,94 @@ export default async function ResearchPage({ searchParams }: ResearchPageProps) 
           </a>
         </div>
       </header>
+
+      <section
+        aria-labelledby="cfp-headline"
+        className="mb-8 overflow-hidden rounded-2xl border border-indigo-300 bg-gradient-to-br from-indigo-50 via-sky-50 to-white shadow-sm dark:border-indigo-900 dark:from-indigo-950/40 dark:via-sky-950/30 dark:to-neutral-900"
+      >
+        <div className="bg-indigo-600 px-5 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-indigo-50 dark:bg-indigo-700">
+          <span className="inline-flex items-center gap-2">
+            <Megaphone className="h-3.5 w-3.5" /> Open call for papers — submit via PR
+          </span>
+        </div>
+        <div className="px-5 py-5 sm:px-7 sm:py-6">
+          <h2
+            id="cfp-headline"
+            className="text-xl font-bold leading-snug text-neutral-900 dark:text-neutral-100 sm:text-2xl"
+          >
+            The First Global Algorithmacy Conference
+          </h2>
+          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
+            A new conference convening the scholars, practitioners,
+            educators, and worker advocates whose work bears on{" "}
+            <em>algorithmacy</em> — the communication competency through which
+            a worker coordinates with another human party through an
+            algorithmic third party. Convened by{" "}
+            <strong>Roger Hunt III</strong> (Bentley University), hosted by{" "}
+            <strong>GauntleTT</strong> in partnership with a Trinidad
+            institutional partner.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-neutral-700 dark:text-neutral-300">
+            <span className="inline-flex items-center gap-1.5">
+              <CalendarDays className="h-3.5 w-3.5 text-indigo-700 dark:text-indigo-300" />
+              <strong>Late Oct / early Nov 2026</strong>
+              <span className="text-neutral-500">— exact dates TBD, finalizing within the next ~2 weeks</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <MapPin className="h-3.5 w-3.5 text-indigo-700 dark:text-indigo-300" />
+              La Brea Pitch Lake, Trinidad and Tobago
+            </span>
+          </div>
+
+          <div className="mt-5 rounded-lg border border-indigo-200 bg-white/70 p-4 text-sm text-neutral-800 backdrop-blur dark:border-indigo-900 dark:bg-neutral-900/40 dark:text-neutral-200">
+            <p className="font-semibold text-indigo-900 dark:text-indigo-200">
+              Submitting now: open a pull request.
+            </p>
+            <p className="mt-1.5 leading-relaxed">
+              While the formal submission portal is being set up, the program
+              committee is already accepting <strong>proposed-talk
+              submissions through this repository</strong>. Add one
+              Markdown file at{" "}
+              <code className="rounded bg-indigo-100 px-1.5 py-0.5 text-[11px] dark:bg-indigo-950/50">
+                content/research/cfp/algorithmacy-conference/submissions/&lt;your-handle&gt;.md
+              </code>{" "}
+              including three things:
+            </p>
+            <ol className="mt-2 list-decimal space-y-0.5 pl-5 text-[13px] leading-relaxed">
+              <li>A <strong>300–500-word abstract</strong>.</li>
+              <li>A <strong>detailed outline</strong> of the proposed talk (sections, arguments, evidence).</li>
+              <li><strong>References</strong> in APA 7 format.</li>
+            </ol>
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-2.5">
+            <a
+              href="https://github.com/rogerSuperBuilderAlpha/cursor-boston/new/develop/content/research/cfp/algorithmacy-conference/submissions"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-500"
+            >
+              <GitPullRequest className="h-4 w-4" /> Start a submission PR
+            </a>
+            <a
+              href="https://github.com/rogerSuperBuilderAlpha/cursor-boston/blob/develop/content/research/cfp/algorithmacy-conference/submissions/TEMPLATE.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-lg border border-indigo-300 bg-white px-4 py-2 text-sm font-semibold text-indigo-800 transition-colors hover:bg-indigo-50 dark:border-indigo-800 dark:bg-neutral-900 dark:text-indigo-200 dark:hover:bg-indigo-950/40"
+            >
+              <Info className="h-4 w-4" /> Submission template
+            </a>
+            <a
+              href="https://github.com/rogerSuperBuilderAlpha/cursor-boston/blob/develop/content/research/cfp/algorithmacy-conference/CFP.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-700 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800"
+            >
+              Read the full CFP →
+            </a>
+          </div>
+        </div>
+      </section>
 
       <nav
         aria-label="Filter by entry type"
