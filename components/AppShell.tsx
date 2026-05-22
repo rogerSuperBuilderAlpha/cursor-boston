@@ -30,6 +30,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  FlaskConical,
   GraduationCap,
   HelpCircle,
   Info,
@@ -122,6 +123,7 @@ const NAV_GROUPS: NavGroup[] = [
 
       { href: "/opportunities", label: "Opportunities", icon: Briefcase },
       { href: "/ecosystem", label: "Ecosystem", icon: Building2 },
+      { href: "/research", label: "Research", icon: FlaskConical },
       { href: "/blog", label: "Blog", icon: BookOpen },
       { href: "/certificate", label: "Certificate", icon: Award },
     ],

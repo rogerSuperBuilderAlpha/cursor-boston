@@ -1,0 +1,26 @@
+{
+  "slug": "cohort-survey-followup-2026",
+  "type": "recruiting",
+  "title": "Diary study: 6-week cohort participation patterns",
+  "authors": [
+    {
+      "name": "Example Researcher Two",
+      "affiliation": "Example University — Learning Sciences"
+    }
+  ],
+  "postedAt": "2026-05-20T09:00:00-04:00",
+  "disciplines": ["learning-sciences", "community", "developer-tools"],
+  "summary": "Diary study following Cursor Boston cohort participants weekly for 6 weeks. We're interested in why people start, persist, or drop out of community shipping commitments.",
+  "sourceRepoUrl": "https://github.com/example-org/cohort-diary-2026",
+  "contactEmail": "researcher2@example.edu",
+  "deadline": "2026-06-15T23:59:00-04:00",
+  "compensation": "$60 total ($10/weekly entry × 6 weeks)",
+  "timeCommitment": "10 min/week × 6 weeks",
+  "location": "remote",
+  "eligibility": "Anyone enrolled in the Cursor Boston summer cohort (any week).",
+  "irb": {
+    "institution": "Example University",
+    "protocolNumber": "IRB-2026-DIARY-PLACEHOLDER"
+  },
+  "status": "open"
+}

@@ -1,0 +1,29 @@
+{
+  "slug": "devtool-usability-study-2026",
+  "type": "recruiting",
+  "title": "Usability study: AI pair-programming workflows in Cursor",
+  "authors": [
+    {
+      "name": "Example Researcher",
+      "affiliation": "Example University — HCI Lab",
+      "url": "https://example.edu/~researcher"
+    }
+  ],
+  "postedAt": "2026-05-22T14:00:00-04:00",
+  "disciplines": ["HCI", "developer-tools", "AI"],
+  "summary": "We're studying how developers structure conversations with AI assistants during real coding tasks. Looking for 30 working developers comfortable with VS Code or Cursor; 45-minute remote session, screen-recorded.",
+  "sourceRepoUrl": "https://github.com/example-org/devtool-usability-2026",
+  "contactEmail": "researcher@example.edu",
+  "deadline": "2026-06-30T23:59:00-04:00",
+  "compensation": "$25 Amazon gift card",
+  "timeCommitment": "45 minutes (single session)",
+  "location": "remote",
+  "eligibility": "Working developers with 1+ year of professional experience, comfortable thinking aloud while coding in English.",
+  "slotsRemaining": 24,
+  "irb": {
+    "institution": "Example University",
+    "protocolNumber": "IRB-2026-PLACEHOLDER"
+  },
+  "studyUrl": "https://example-university.qualtrics.com/jfe/form/SV_placeholder",
+  "status": "open"
+}

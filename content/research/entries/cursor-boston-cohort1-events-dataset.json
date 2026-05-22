@@ -1,0 +1,18 @@
+{
+  "slug": "cursor-boston-cohort1-events-dataset",
+  "type": "dataset",
+  "title": "Cursor Boston Cohort 1 — Anonymized weekly submission + voting events",
+  "authors": [
+    { "name": "Cursor Boston Maintainers", "url": "https://cursorboston.com/about" }
+  ],
+  "postedAt": "2026-05-19T18:00:00-04:00",
+  "disciplines": ["community", "developer-tools", "coordination"],
+  "summary": "Anonymized event log from Cursor Boston summer cohort 1: weekly submission timestamps, PR sizes, and voting results across six weeks. No PII; opt-in basis. For researchers studying community shipping behavior.",
+  "sourceRepoUrl": "https://github.com/example-org/cursor-boston-cohort1-events",
+  "contactEmail": "data@example.org",
+  "license": "CC-BY-4.0",
+  "size": "~5,200 rows · 1.2 MB",
+  "format": ["CSV", "Parquet"],
+  "doi": "10.5281/zenodo.placeholder",
+  "citation": "Cursor Boston Maintainers. (2026). Cursor Boston Cohort 1 — Anonymized weekly submission + voting events [Data set]. Zenodo. https://doi.org/10.5281/zenodo.placeholder"
+}

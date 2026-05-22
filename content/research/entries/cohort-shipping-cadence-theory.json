@@ -1,0 +1,22 @@
+{
+  "slug": "cohort-shipping-cadence-theory",
+  "type": "preprint",
+  "title": "Weekly shipping deadlines as a coordination mechanism in async builder cohorts",
+  "authors": [
+    {
+      "name": "Example Theory Researcher",
+      "affiliation": "Example University — Org Behavior"
+    }
+  ],
+  "postedAt": "2026-05-15T16:30:00-04:00",
+  "updatedAt": "2026-05-21T10:00:00-04:00",
+  "disciplines": ["organizational-behavior", "community", "coordination"],
+  "summary": "Theory paper proposing weekly synchronized deadlines as a coordination primitive in otherwise async distributed cohorts. Draws on coordination theory and free-rider literature.",
+  "sourceRepoUrl": "https://github.com/example-org/cohort-cadence-theory",
+  "contactUrl": "https://example.edu/contact",
+  "version": "v2",
+  "license": "CC-BY-SA-4.0",
+  "pdfUrl": "https://example-org.github.io/cohort-cadence-theory/v2.pdf",
+  "doi": "10.31234/osf.io/placeholder-v2",
+  "peerReviewStatus": "approved-with-reservations"
+}

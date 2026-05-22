@@ -1,0 +1,17 @@
+{
+  "slug": "ai-pr-review-traces-dataset",
+  "type": "dataset",
+  "title": "AI PR Review Traces — 200 sampled review threads with annotations",
+  "authors": [
+    { "name": "Example Author One", "affiliation": "Example University" }
+  ],
+  "postedAt": "2026-05-12T12:00:00-04:00",
+  "disciplines": ["software-engineering", "AI", "open-source"],
+  "summary": "Companion dataset to the AI-assisted PR review preprint. 200 anonymized review threads from public OSS repos, hand-annotated with review-action types and reviewer-trust signals.",
+  "sourceRepoUrl": "https://github.com/example-org/ai-pr-review-traces",
+  "contactEmail": "author1@example.edu",
+  "license": "CC-BY-NC-4.0",
+  "size": "200 review threads · ~3 MB",
+  "format": ["JSONL"],
+  "citation": "Example Author One. (2026). AI PR Review Traces [Data set]. https://github.com/example-org/ai-pr-review-traces"
+}

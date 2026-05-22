@@ -1,0 +1,22 @@
+{
+  "slug": "ai-assisted-prs-preprint",
+  "type": "preprint",
+  "title": "Reviewing AI-Assisted Pull Requests: A Field Study of Open-Source Maintainers",
+  "authors": [
+    {
+      "name": "Example Author One",
+      "affiliation": "Example University",
+      "url": "https://example.edu/~author1"
+    },
+    { "name": "Example Author Two", "affiliation": "Example Lab" }
+  ],
+  "postedAt": "2026-05-18T11:00:00-04:00",
+  "disciplines": ["software-engineering", "AI", "open-source"],
+  "summary": "Field interviews with 14 OSS maintainers on how AI-generated pull requests change review workload, trust calibration, and project governance. Working paper — feedback welcome before journal submission.",
+  "sourceRepoUrl": "https://github.com/example-org/ai-pr-review-preprint",
+  "contactEmail": "author1@example.edu",
+  "version": "v1",
+  "license": "CC-BY-4.0",
+  "pdfUrl": "https://example-org.github.io/ai-pr-review-preprint/v1.pdf",
+  "peerReviewStatus": "awaiting"
+}
