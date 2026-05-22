@@ -1,4 +1,11 @@
 #!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
+if [ "${HUSKY:-1}" = "0" ]; then
+  exit 0
+fi
 
-npx --no -- commitlint --edit ${1}
+husky_sh="$(dirname -- "$0")/_/husky.sh"
+if [ -f "$husky_sh" ]; then
+  . "$husky_sh"
+fi
+
+npx --no -- commitlint --edit "$1"
