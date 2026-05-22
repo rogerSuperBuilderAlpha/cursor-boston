@@ -73,7 +73,7 @@ describe("GET /api/members/public", () => {
     expect(mockRebuild).not.toHaveBeenCalled();
   });
 
-  it("rebuilds when snapshot is expired", async () => {
+  it("returns stale snapshot data when the snapshot is expired", async () => {
     setupSnapshot({
       exists: true,
       data: {
@@ -81,39 +81,44 @@ describe("GET /api/members/public", () => {
         expiresAt: new Date(Date.now() - 60_000),
       },
     });
-    mockRebuild.mockResolvedValue([{ uid: "fresh" }] as never);
 
     const res = await GET();
-    await expect(res.json()).resolves.toEqual({ members: [{ uid: "fresh" }] });
-    expect(mockRebuild).toHaveBeenCalledTimes(1);
+    await expect(res.json()).resolves.toEqual({ members: [{ uid: "stale" }] });
+    expect(res.headers.get("X-Members-Snapshot-Stale")).toBe("true");
+    expect(mockRebuild).not.toHaveBeenCalled();
   });
 
-  it("returns stale fallback when rebuild fails", async () => {
-    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+  it("returns empty snapshot data without rebuilding", async () => {
     setupSnapshot({
       exists: true,
       data: {
-        members: [{ uid: "stale-fallback" }],
-        expiresAt: new Date(Date.now() - 60_000),
+        members: [],
+        expiresAt: new Date(Date.now() + 60_000),
       },
     });
-    mockRebuild.mockRejectedValue(new Error("rebuild failed"));
 
     const res = await GET();
     await expect(res.json()).resolves.toEqual({
-      members: [{ uid: "stale-fallback" }],
+      members: [],
     });
-
-    consoleErrorSpy.mockRestore();
+    expect(mockRebuild).not.toHaveBeenCalled();
   });
 
-  it("returns empty members when snapshot load fails and rebuild fails", async () => {
-    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
-    setupSnapshot({ getThrows: true });
-    mockRebuild.mockRejectedValue(new Error("rebuild failed"));
+  it("returns empty members when the snapshot doc is missing", async () => {
+    setupSnapshot({ exists: false });
 
     const res = await GET();
     await expect(res.json()).resolves.toEqual({ members: [] });
+    expect(mockRebuild).not.toHaveBeenCalled();
+  });
+
+  it("returns empty members when snapshot load fails", async () => {
+    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    setupSnapshot({ getThrows: true });
+
+    const res = await GET();
+    await expect(res.json()).resolves.toEqual({ members: [] });
+    expect(mockRebuild).not.toHaveBeenCalled();
 
     consoleErrorSpy.mockRestore();
   });

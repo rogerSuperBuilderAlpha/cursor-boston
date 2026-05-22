@@ -7,10 +7,7 @@
 
 import { NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
-import {
-  rebuildPublicMembersSnapshot,
-  MEMBERS_SNAPSHOT_CACHE_TTL_MS,
-} from "@/lib/members-public-snapshot";
+import { MEMBERS_SNAPSHOT_CACHE_TTL_MS } from "@/lib/members-public-snapshot";
 import type { PublicMember } from "@/types/members";
 
 // @contracts: membersContract.publicList (lib/api-schemas/members.ts)
@@ -18,6 +15,9 @@ import type { PublicMember } from "@/types/members";
 export const runtime = "nodejs";
 
 const REVALIDATE_SECONDS = 300;
+const cacheHeaders = {
+  "Cache-Control": `public, max-age=60, s-maxage=${REVALIDATE_SECONDS}, stale-while-revalidate=${REVALIDATE_SECONDS * 2}`,
+};
 
 function snapshotTimeMs(value: unknown): number | null {
   if (!value) return null;
@@ -43,11 +43,14 @@ function snapshotIsFresh(data: Record<string, unknown> | undefined): boolean {
   return updatedAtMs !== null && Date.now() - updatedAtMs < MEMBERS_SNAPSHOT_CACHE_TTL_MS;
 }
 
-async function loadPublicMembersFromSnapshot(): Promise<PublicMember[]> {
-  const db = getAdminDb();
-  if (!db) return [];
+type PublicMembersSnapshotResult = {
+  members: PublicMember[];
+  isStale: boolean;
+};
 
-  let fallbackMembers: PublicMember[] = [];
+async function loadPublicMembersFromSnapshot(): Promise<PublicMembersSnapshotResult> {
+  const db = getAdminDb();
+  if (!db) return { members: [], isStale: false };
 
   try {
     const snap = await db.collection("members_snapshots").doc("latest").get();
@@ -55,35 +58,30 @@ async function loadPublicMembersFromSnapshot(): Promise<PublicMember[]> {
       const data = snap.data();
       const members = data?.members;
       if (Array.isArray(members)) {
-        fallbackMembers = members as PublicMember[];
-        if (members.length > 0 && snapshotIsFresh(data)) {
-          return fallbackMembers;
-        }
+        return {
+          members: members as PublicMember[],
+          isStale: !snapshotIsFresh(data),
+        };
       }
     }
   } catch (e) {
     console.error("[api/members/public] Failed to load members snapshot", e);
   }
 
-  try {
-    const members = await rebuildPublicMembersSnapshot(db);
-    return members;
-  } catch (e) {
-    console.error("[api/members/public] Failed to rebuild members snapshot fallback", e);
-    return fallbackMembers;
-  }
+  return { members: [], isStale: false };
 }
 
 export async function GET() {
   try {
-    const members = await loadPublicMembersFromSnapshot();
+    const { members, isStale } = await loadPublicMembersFromSnapshot();
+    const headers: Record<string, string> = { ...cacheHeaders };
+    if (isStale) {
+      headers["X-Members-Snapshot-Stale"] = "true";
+    }
+
     return NextResponse.json(
       { members },
-      {
-        headers: {
-          "Cache-Control": `public, max-age=60, s-maxage=${REVALIDATE_SECONDS}, stale-while-revalidate=${REVALIDATE_SECONDS * 2}`,
-        },
-      }
+      { headers }
     );
   } catch (e) {
     console.error("[api/members/public]", e);
