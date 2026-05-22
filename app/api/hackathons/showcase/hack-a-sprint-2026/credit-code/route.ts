@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
-import { getVerifiedUserWithRevocation, isRevokedIdTokenError } from "@/lib/server-auth";
+import { getVerifiedUser, isCurrentIdTokenRevoked } from "@/lib/server-auth";
 import { resolveHackASprint2026CreditForUser } from "@/lib/hackathon-asprint-2026-credit-eligibility";
 
 // @contracts: hackathonsContract.hackASprintCreditCode (lib/api-schemas/hackathons.ts)
@@ -27,7 +27,7 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(request: NextRequest) {
   try {
-    const user = await getVerifiedUserWithRevocation(request);
+    const user = await getVerifiedUser(request);
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -48,6 +48,12 @@ export async function GET(request: NextRequest) {
         reason: resolved.reason,
       });
     }
+    if (await isCurrentIdTokenRevoked(request)) {
+      return NextResponse.json(
+        { error: "Session revoked. Please sign in again." },
+        { status: 401 }
+      );
+    }
 
     return NextResponse.json({
       eligible: true,
@@ -55,12 +61,6 @@ export async function GET(request: NextRequest) {
       rank: resolved.rank,
     });
   } catch (e) {
-    if (isRevokedIdTokenError(e)) {
-      return NextResponse.json(
-        { error: "Session revoked. Please sign in again." },
-        { status: 401 }
-      );
-    }
     console.error("[credit-code GET]", e);
     return NextResponse.json(
       { error: "Failed to load credit code" },

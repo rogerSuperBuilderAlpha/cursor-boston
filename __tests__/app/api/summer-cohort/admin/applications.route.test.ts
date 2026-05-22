@@ -4,14 +4,14 @@
  * OpenSSF Gold coverage push #17 — summer-cohort admin applications route.
  */
 import { GET } from "@/app/api/summer-cohort/admin/applications/route";
-import { getVerifiedUserWithRevocation as getVerifiedUser } from "@/lib/server-auth";
+import { getVerifiedUser, isCurrentIdTokenRevoked } from "@/lib/server-auth";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { isSummerCohortAdminEmail } from "@/lib/summer-cohort-admin-access";
 import { makeAuthedRequest, makeRequest, readJson } from "@/__tests__/_helpers/route-test-utils";
 
 jest.mock("@/lib/server-auth", () => ({
-  getVerifiedUserWithRevocation: jest.fn(),
-  isRevokedIdTokenError: jest.fn(() => false),
+  getVerifiedUser: jest.fn(),
+  isCurrentIdTokenRevoked: jest.fn(async () => false),
 }));
 jest.mock("@/lib/firebase-admin", () => ({ getAdminDb: jest.fn() }));
 jest.mock("@/lib/summer-cohort-admin-access", () => ({
@@ -19,6 +19,9 @@ jest.mock("@/lib/summer-cohort-admin-access", () => ({
 }));
 
 const mockUser = getVerifiedUser as jest.MockedFunction<typeof getVerifiedUser>;
+const mockIsRevoked = isCurrentIdTokenRevoked as jest.MockedFunction<
+  typeof isCurrentIdTokenRevoked
+>;
 const mockDb = getAdminDb as jest.MockedFunction<typeof getAdminDb>;
 const mockIsAdmin = isSummerCohortAdminEmail as jest.MockedFunction<typeof isSummerCohortAdminEmail>;
 
@@ -43,6 +46,7 @@ function setupDb(docs: Array<{ id: string; data: Record<string, unknown> }>) {
 beforeEach(() => {
   jest.clearAllMocks();
   mockIsAdmin.mockReturnValue(true);
+  mockIsRevoked.mockResolvedValue(false);
 });
 
 describe("GET /api/summer-cohort/admin/applications", () => {

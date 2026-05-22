@@ -7,8 +7,8 @@ import { NextRequest } from "next/server";
 import { POST } from "@/app/api/hackathons/showcase/hack-a-sprint-2026/credit-email/route";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
 import {
-  getVerifiedUserWithRevocation as getVerifiedUser,
-  isRevokedIdTokenError,
+  getVerifiedUser,
+  isCurrentIdTokenRevoked,
 } from "@/lib/server-auth";
 import { resolveHackASprint2026CreditForUser } from "@/lib/hackathon-asprint-2026-credit-eligibility";
 import { sendEmail } from "@/lib/mailgun";
@@ -19,8 +19,8 @@ jest.mock("@/lib/firebase-admin", () => ({
   getAdminAuth: jest.fn(),
 }));
 jest.mock("@/lib/server-auth", () => ({
-  getVerifiedUserWithRevocation: jest.fn(),
-  isRevokedIdTokenError: jest.fn(() => false),
+  getVerifiedUser: jest.fn(),
+  isCurrentIdTokenRevoked: jest.fn(async () => false),
 }));
 jest.mock("@/lib/hackathon-asprint-2026-credit-eligibility", () => ({
   resolveHackASprint2026CreditForUser: jest.fn(),
@@ -42,8 +42,8 @@ jest.mock("firebase-admin/firestore", () => ({
 const mockDb = getAdminDb as jest.MockedFunction<typeof getAdminDb>;
 const mockAuth = getAdminAuth as jest.MockedFunction<typeof getAdminAuth>;
 const mockUser = getVerifiedUser as jest.MockedFunction<typeof getVerifiedUser>;
-const mockIsRevoked = isRevokedIdTokenError as jest.MockedFunction<
-  typeof isRevokedIdTokenError
+const mockIsRevoked = isCurrentIdTokenRevoked as jest.MockedFunction<
+  typeof isCurrentIdTokenRevoked
 >;
 const mockResolve = resolveHackASprint2026CreditForUser as jest.MockedFunction<
   typeof resolveHackASprint2026CreditForUser
@@ -88,7 +88,7 @@ function setupAdmins(opts: DbOpts = {}) {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockIsRevoked.mockReturnValue(false);
+  mockIsRevoked.mockResolvedValue(false);
   mockRate.mockResolvedValue({ success: true } as never);
   mockUser.mockResolvedValue({ uid: "u1", email: "u@x" } as never);
   mockResolve.mockResolvedValue({
@@ -99,8 +99,9 @@ beforeEach(() => {
 });
 
 it("returns 401 when the sensitive credit token is revoked", async () => {
-  mockUser.mockRejectedValueOnce(new Error("revoked") as never);
-  mockIsRevoked.mockReturnValueOnce(true);
+  setupAdmins();
+  mockUser.mockResolvedValueOnce({ uid: "u1", email: "u@x" } as never);
+  mockIsRevoked.mockResolvedValueOnce(true);
 
   const res = await POST(makeReq());
 
@@ -108,8 +109,8 @@ it("returns 401 when the sensitive credit token is revoked", async () => {
   await expect(res.json()).resolves.toMatchObject({
     error: "Session revoked. Please sign in again.",
   });
-  expect(mockDb).not.toHaveBeenCalled();
-  expect(mockAuth).not.toHaveBeenCalled();
+  expect(mockDb).toHaveBeenCalled();
+  expect(mockAuth).toHaveBeenCalled();
   expect(mockSendEmail).not.toHaveBeenCalled();
 });
 

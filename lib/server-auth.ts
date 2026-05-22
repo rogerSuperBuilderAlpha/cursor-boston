@@ -126,14 +126,29 @@ export async function getVerifiedUserWithRevocation(
   return verifyRequestUser(request, true);
 }
 
-/**
- * Verify the Firebase ID token with revocation checks before evaluating admin
- * claims. Callers still own the `isAdmin` authorization check.
- */
+export async function isCurrentIdTokenRevoked(request: NextRequest): Promise<boolean> {
+  const token = extractFirebaseIdToken(request);
+  if (!token) {
+    return false;
+  }
+
+  const adminAuth = getAdminAuth();
+  if (!adminAuth) {
+    return false;
+  }
+
+  try {
+    await adminAuth.verifyIdToken(token, true);
+    return false;
+  } catch (error) {
+    return isRevokedIdTokenError(error);
+  }
+}
+
 export async function getVerifiedAdminUser(
   request: NextRequest
 ): Promise<VerifiedUser | null> {
-  return verifyRequestUser(request, true);
+  return verifyRequestUser(request, false);
 }
 
 export function isRevokedIdTokenError(error: unknown): boolean {

@@ -27,6 +27,7 @@ export interface ServerAuthSpies {
   getVerifiedAdminUser: jest.Mock;
   getVerifiedUserWithRevocation: jest.Mock;
   getOptionalVerifiedUser: jest.Mock;
+  isCurrentIdTokenRevoked: jest.Mock;
   isRevokedIdTokenError: jest.Mock;
   /** Pre-seed `getVerifiedUser` to return the given user on the next call. */
   mockVerifiedUser: (user: Partial<VerifiedUser> & { uid: string }) => void;
@@ -43,6 +44,7 @@ export function makeServerAuthSpies(): ServerAuthSpies {
   const getVerifiedAdminUser = jest.fn().mockResolvedValue(null);
   const getVerifiedUserWithRevocation = jest.fn().mockResolvedValue(null);
   const getOptionalVerifiedUser = jest.fn().mockResolvedValue(null);
+  const isCurrentIdTokenRevoked = jest.fn().mockResolvedValue(false);
   const isRevokedIdTokenError = jest.fn().mockReturnValue(false);
 
   return {
@@ -50,6 +52,7 @@ export function makeServerAuthSpies(): ServerAuthSpies {
     getVerifiedAdminUser,
     getVerifiedUserWithRevocation,
     getOptionalVerifiedUser,
+    isCurrentIdTokenRevoked,
     isRevokedIdTokenError,
     mockVerifiedUser(user) {
       const verified = {
@@ -63,24 +66,28 @@ export function makeServerAuthSpies(): ServerAuthSpies {
       getVerifiedAdminUser.mockResolvedValueOnce(verified);
       getVerifiedUserWithRevocation.mockResolvedValueOnce(verified);
       getOptionalVerifiedUser.mockResolvedValueOnce(verified);
+      isCurrentIdTokenRevoked.mockResolvedValueOnce(false);
     },
     mockUnauthenticated() {
       getVerifiedUser.mockResolvedValueOnce(null);
       getVerifiedAdminUser.mockResolvedValueOnce(null);
       getVerifiedUserWithRevocation.mockResolvedValueOnce(null);
       getOptionalVerifiedUser.mockResolvedValueOnce(null);
+      isCurrentIdTokenRevoked.mockResolvedValueOnce(false);
     },
     mockAuthError(err = new Error("token verify failed")) {
       getVerifiedUser.mockRejectedValueOnce(err);
       getVerifiedAdminUser.mockRejectedValueOnce(err);
       getVerifiedUserWithRevocation.mockRejectedValueOnce(err);
       getOptionalVerifiedUser.mockRejectedValueOnce(err);
+      isCurrentIdTokenRevoked.mockResolvedValueOnce(false);
     },
     mockRevokedAuthError(err = new Error("The Firebase ID token has been revoked.")) {
       getVerifiedUser.mockRejectedValueOnce(err);
       getVerifiedAdminUser.mockRejectedValueOnce(err);
       getVerifiedUserWithRevocation.mockRejectedValueOnce(err);
       getOptionalVerifiedUser.mockRejectedValueOnce(err);
+      isCurrentIdTokenRevoked.mockResolvedValueOnce(true);
       isRevokedIdTokenError.mockReturnValueOnce(true);
     },
   };
@@ -95,6 +102,8 @@ export function createServerAuthModule(spies: ServerAuthSpies) {
       spies.getVerifiedUserWithRevocation(...a),
     getOptionalVerifiedUser: (...a: unknown[]) =>
       spies.getOptionalVerifiedUser(...a),
+    isCurrentIdTokenRevoked: (...a: unknown[]) =>
+      spies.isCurrentIdTokenRevoked(...a),
     isRevokedIdTokenError: spies.isRevokedIdTokenError,
   };
 }

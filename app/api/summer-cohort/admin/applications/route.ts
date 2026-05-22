@@ -7,7 +7,7 @@
 
 import { type NextRequest, NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
-import { getVerifiedUserWithRevocation, isRevokedIdTokenError } from "@/lib/server-auth";
+import { getVerifiedUser, isCurrentIdTokenRevoked } from "@/lib/server-auth";
 import { isSummerCohortAdminEmail } from "@/lib/summer-cohort-admin-access";
 import { summerCohortContract } from "@/lib/api-schemas/summer-cohort";
 import {
@@ -60,14 +60,8 @@ interface AdminApplicationRow {
 export async function GET(request: NextRequest) {
   let user;
   try {
-    user = await getVerifiedUserWithRevocation(request);
+    user = await getVerifiedUser(request);
   } catch (error) {
-    if (isRevokedIdTokenError(error)) {
-      return NextResponse.json(
-        { error: "Session revoked. Please sign in again." },
-        { status: 401 }
-      );
-    }
     throw error;
   }
   if (!user) {
@@ -75,6 +69,12 @@ export async function GET(request: NextRequest) {
   }
   if (!isSummerCohortAdminEmail(user.email)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  if (await isCurrentIdTokenRevoked(request)) {
+    return NextResponse.json(
+      { error: "Session revoked. Please sign in again." },
+      { status: 401 }
+    );
   }
 
   const db = getAdminDb();

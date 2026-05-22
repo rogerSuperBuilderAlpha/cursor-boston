@@ -5,14 +5,14 @@
 import { NextRequest } from "next/server";
 import { POST } from "@/app/api/live/session/route";
 import {
-  getVerifiedAdminUser as getVerifiedUser,
-  isRevokedIdTokenError,
+  getVerifiedUser,
+  isCurrentIdTokenRevoked,
 } from "@/lib/server-auth";
 import { createLiveSessionServer } from "@/lib/live-sessions/data-server";
 
 jest.mock("@/lib/server-auth", () => ({
-  getVerifiedAdminUser: jest.fn(),
-  isRevokedIdTokenError: jest.fn(() => false),
+  getVerifiedUser: jest.fn(),
+  isCurrentIdTokenRevoked: jest.fn(async () => false),
 }));
 
 jest.mock("@/lib/live-sessions/data-server", () => ({
@@ -20,8 +20,8 @@ jest.mock("@/lib/live-sessions/data-server", () => ({
 }));
 
 const mockGetVerifiedUser = getVerifiedUser as jest.MockedFunction<typeof getVerifiedUser>;
-const mockIsRevoked = isRevokedIdTokenError as jest.MockedFunction<
-  typeof isRevokedIdTokenError
+const mockIsRevoked = isCurrentIdTokenRevoked as jest.MockedFunction<
+  typeof isCurrentIdTokenRevoked
 >;
 const mockCreateLiveSessionServer =
   createLiveSessionServer as jest.MockedFunction<typeof createLiveSessionServer>;
@@ -45,7 +45,7 @@ function makeInvalidJsonRequest() {
 describe("POST /api/live/session", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockIsRevoked.mockReturnValue(false);
+    mockIsRevoked.mockResolvedValue(false);
   });
 
   it("requires authentication", async () => {
@@ -57,8 +57,12 @@ describe("POST /api/live/session", () => {
   });
 
   it("returns 401 when the admin token has been revoked", async () => {
-    mockGetVerifiedUser.mockRejectedValueOnce(new Error("revoked") as never);
-    mockIsRevoked.mockReturnValueOnce(true);
+    mockGetVerifiedUser.mockResolvedValueOnce({
+      uid: "admin-1",
+      email: "admin@example.com",
+      isAdmin: true,
+    });
+    mockIsRevoked.mockResolvedValueOnce(true);
 
     const res = await POST(makeRequest({ title: "Demo Night" }));
 

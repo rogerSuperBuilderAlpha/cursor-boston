@@ -12,14 +12,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { apiError, apiSuccess, parseRequestBody } from "@/lib/api-response";
 import { mapGameError } from "@/lib/game/api-error-map";
 import { adminGrantTurnsServer } from "@/lib/game/data-server";
-import { getVerifiedAdminUser, isRevokedIdTokenError } from "@/lib/server-auth";
+import { getVerifiedUser, isCurrentIdTokenRevoked } from "@/lib/server-auth";
 import { gameContract } from "@/lib/api-schemas/game";
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getVerifiedAdminUser(request);
+    const user = await getVerifiedUser(request);
     if (!user) return apiError("Authentication required", 401);
     if (!user.isAdmin) return apiError("Admin only", 403);
+    if (await isCurrentIdTokenRevoked(request)) {
+      return apiError("Session revoked. Please sign in again.", 401);
+    }
 
     const bodyOrError = await parseRequestBody(request);
     if (bodyOrError instanceof NextResponse) return bodyOrError;
@@ -39,9 +42,6 @@ export async function POST(request: NextRequest) {
     );
     return apiSuccess({ player });
   } catch (error) {
-    if (isRevokedIdTokenError(error)) {
-      return apiError("Session revoked. Please sign in again.", 401);
-    }
     return mapGameError(error);
   }
 }

@@ -5,8 +5,8 @@
 import { NextRequest } from "next/server";
 import { GET, POST } from "@/app/api/showcase/submission/approve/route";
 import {
-  getVerifiedAdminUser as getVerifiedUser,
-  isRevokedIdTokenError,
+  getVerifiedUser,
+  isCurrentIdTokenRevoked,
 } from "@/lib/server-auth";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { checkServerRateLimit } from "@/lib/rate-limit-server";
@@ -25,8 +25,8 @@ jest.mock("@/lib/rate-limit-server", () => ({
 }));
 
 jest.mock("@/lib/server-auth", () => ({
-  getVerifiedAdminUser: jest.fn(),
-  isRevokedIdTokenError: jest.fn(() => false),
+  getVerifiedUser: jest.fn(),
+  isCurrentIdTokenRevoked: jest.fn(async () => false),
 }));
 
 jest.mock("@/lib/firebase-admin", () => ({
@@ -34,8 +34,8 @@ jest.mock("@/lib/firebase-admin", () => ({
 }));
 
 const mockGetVerifiedUser = getVerifiedUser as jest.MockedFunction<typeof getVerifiedUser>;
-const mockIsRevoked = isRevokedIdTokenError as jest.MockedFunction<
-  typeof isRevokedIdTokenError
+const mockIsRevoked = isCurrentIdTokenRevoked as jest.MockedFunction<
+  typeof isCurrentIdTokenRevoked
 >;
 const mockGetAdminDb = getAdminDb as jest.MockedFunction<typeof getAdminDb>;
 
@@ -54,34 +54,42 @@ function makePostRequest(body: Record<string, unknown>) {
 describe("/api/showcase/submission/approve", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockIsRevoked.mockReturnValue(false);
+    mockIsRevoked.mockResolvedValue(false);
     process.env.ADMIN_EMAILS = "admin@example.com";
     process.env.ADMIN_EMAIL = "";
   });
 
   it("returns 401 when the GET admin token has been revoked", async () => {
-    mockGetVerifiedUser.mockRejectedValueOnce(new Error("revoked") as never);
-    mockIsRevoked.mockReturnValueOnce(true);
+    mockGetVerifiedUser.mockResolvedValueOnce({
+      uid: "admin1",
+      email: "admin@example.com",
+      isAdmin: true,
+    });
+    mockIsRevoked.mockResolvedValueOnce(true);
 
     const res = await GET(makeGetRequest());
     const body = await res.json();
 
     expect(res.status).toBe(401);
     expect(body.error).toBe("Session revoked. Please sign in again.");
-    expect(checkServerRateLimit).not.toHaveBeenCalled();
+    expect(checkServerRateLimit).toHaveBeenCalled();
     expect(mockGetAdminDb).not.toHaveBeenCalled();
   });
 
   it("returns 401 when the POST admin token has been revoked", async () => {
-    mockGetVerifiedUser.mockRejectedValueOnce(new Error("revoked") as never);
-    mockIsRevoked.mockReturnValueOnce(true);
+    mockGetVerifiedUser.mockResolvedValueOnce({
+      uid: "admin1",
+      email: "admin@example.com",
+      isAdmin: true,
+    });
+    mockIsRevoked.mockResolvedValueOnce(true);
 
     const res = await POST(makePostRequest({ submissionId: "s1", action: "approve" }));
     const body = await res.json();
 
     expect(res.status).toBe(401);
     expect(body.error).toBe("Session revoked. Please sign in again.");
-    expect(checkServerRateLimit).not.toHaveBeenCalled();
+    expect(checkServerRateLimit).toHaveBeenCalled();
     expect(mockGetAdminDb).not.toHaveBeenCalled();
   });
 

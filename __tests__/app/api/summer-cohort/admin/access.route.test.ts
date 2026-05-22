@@ -4,25 +4,25 @@
 
 import { GET } from "@/app/api/summer-cohort/admin/access/route";
 import {
-  getVerifiedUserWithRevocation,
-  isRevokedIdTokenError,
+  getVerifiedUser,
+  isCurrentIdTokenRevoked,
 } from "@/lib/server-auth";
 import { isSummerCohortAdminEmail } from "@/lib/summer-cohort-admin-access";
 import { makeAuthedRequest, makeRequest, readJson } from "@/__tests__/_helpers/route-test-utils";
 
 jest.mock("@/lib/server-auth", () => ({
-  getVerifiedUserWithRevocation: jest.fn(),
-  isRevokedIdTokenError: jest.fn(() => false),
+  getVerifiedUser: jest.fn(),
+  isCurrentIdTokenRevoked: jest.fn(async () => false),
 }));
 jest.mock("@/lib/summer-cohort-admin-access", () => ({
   isSummerCohortAdminEmail: jest.fn(),
 }));
 
-const mockUser = getVerifiedUserWithRevocation as jest.MockedFunction<
-  typeof getVerifiedUserWithRevocation
+const mockUser = getVerifiedUser as jest.MockedFunction<
+  typeof getVerifiedUser
 >;
-const mockIsRevoked = isRevokedIdTokenError as jest.MockedFunction<
-  typeof isRevokedIdTokenError
+const mockIsRevoked = isCurrentIdTokenRevoked as jest.MockedFunction<
+  typeof isCurrentIdTokenRevoked
 >;
 const mockIsAdminEmail = isSummerCohortAdminEmail as jest.MockedFunction<
   typeof isSummerCohortAdminEmail
@@ -31,7 +31,7 @@ const mockIsAdminEmail = isSummerCohortAdminEmail as jest.MockedFunction<
 describe("GET /api/summer-cohort/admin/access", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockIsRevoked.mockReturnValue(false);
+    mockIsRevoked.mockResolvedValue(false);
     mockIsAdminEmail.mockReturnValue(false);
   });
 
@@ -59,8 +59,9 @@ describe("GET /api/summer-cohort/admin/access", () => {
   });
 
   it("returns an explicit revoked-session error for revoked tokens", async () => {
-    mockUser.mockRejectedValueOnce(new Error("revoked") as never);
-    mockIsRevoked.mockReturnValueOnce(true);
+    mockUser.mockResolvedValueOnce({ uid: "u1", email: "admin@example.com" } as never);
+    mockIsAdminEmail.mockReturnValueOnce(true);
+    mockIsRevoked.mockResolvedValueOnce(true);
 
     const { status, body } = await readJson(
       await GET(makeAuthedRequest({ path: "/api/summer-cohort/admin/access" })),
@@ -71,7 +72,7 @@ describe("GET /api/summer-cohort/admin/access", () => {
       allowed: false,
       error: "Session revoked. Please sign in again.",
     });
-    expect(mockIsAdminEmail).not.toHaveBeenCalled();
+    expect(mockIsAdminEmail).toHaveBeenCalledWith("admin@example.com");
   });
 
   it("returns the admin-email gate result for authenticated users", async () => {

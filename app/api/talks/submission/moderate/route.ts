@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { FieldValue, type QuerySnapshot } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
-import { getVerifiedAdminUser, isRevokedIdTokenError } from "@/lib/server-auth";
+import { getVerifiedUser, isCurrentIdTokenRevoked } from "@/lib/server-auth";
 import { getClientIdentifier } from "@/lib/rate-limit";
 import { buildRateLimitHeaders, checkServerRateLimit } from "@/lib/rate-limit-server";
 import { sanitizeDocId } from "@/lib/sanitize";
@@ -128,7 +128,7 @@ async function logTalkPendingAgeSummary(
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await getVerifiedAdminUser(request);
+    const user = await getVerifiedUser(request);
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -161,6 +161,12 @@ export async function GET(request: NextRequest) {
 
     if (!user.isAdmin) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    if (await isCurrentIdTokenRevoked(request)) {
+      return NextResponse.json(
+        { error: "Session revoked. Please sign in again." },
+        { status: 401 }
+      );
     }
 
     const db = getAdminDb();
@@ -224,12 +230,6 @@ export async function GET(request: NextRequest) {
       hasMore: false,
     });
   } catch (error) {
-    if (isRevokedIdTokenError(error)) {
-      return NextResponse.json(
-        { error: "Session revoked. Please sign in again." },
-        { status: 401 }
-      );
-    }
     logger.logError(error, {
       endpoint: "/api/talks/submission/moderate",
       method: "GET",
@@ -240,7 +240,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getVerifiedAdminUser(request);
+    const user = await getVerifiedUser(request);
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -273,6 +273,12 @@ export async function POST(request: NextRequest) {
 
     if (!user.isAdmin) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    if (await isCurrentIdTokenRevoked(request)) {
+      return NextResponse.json(
+        { error: "Session revoked. Please sign in again." },
+        { status: 401 }
+      );
     }
 
     const db = getAdminDb();
@@ -393,12 +399,6 @@ export async function POST(request: NextRequest) {
       status: "completed",
     });
   } catch (error) {
-    if (isRevokedIdTokenError(error)) {
-      return NextResponse.json(
-        { error: "Session revoked. Please sign in again." },
-        { status: 401 }
-      );
-    }
     logger.logError(error, {
       endpoint: "/api/talks/submission/moderate",
       method: "POST",

@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
-import { getVerifiedAdminUser, isRevokedIdTokenError } from "@/lib/server-auth";
+import { getVerifiedUser, isCurrentIdTokenRevoked } from "@/lib/server-auth";
 import { withMiddleware, rateLimitConfigs } from "@/lib/middleware";
 import {
   PYDATA_2026_CAPACITY,
@@ -38,20 +38,20 @@ const VALID_STATUSES: ReadonlyArray<PydataRegistrationStatus> = [
 async function handleGet(request: NextRequest) {
   let user;
   try {
-    user = await getVerifiedAdminUser(request);
+    user = await getVerifiedUser(request);
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     if (!user.isAdmin) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
-  } catch (error) {
-    if (isRevokedIdTokenError(error)) {
+    if (await isCurrentIdTokenRevoked(request)) {
       return NextResponse.json(
         { error: "Session revoked. Please sign in again." },
         { status: 401 }
       );
     }
+  } catch (error) {
     throw error;
   }
 

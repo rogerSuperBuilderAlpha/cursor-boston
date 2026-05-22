@@ -21,7 +21,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
-import { getVerifiedAdminUser, isRevokedIdTokenError } from "@/lib/server-auth";
+import { getVerifiedUser, isCurrentIdTokenRevoked } from "@/lib/server-auth";
 import { logger } from "@/lib/logger";
 import {
   clampLimit,
@@ -42,10 +42,16 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(request: NextRequest) {
   try {
-    const user = await getVerifiedAdminUser(request);
+    const user = await getVerifiedUser(request);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     if (!user.isAdmin) {
       return NextResponse.json({ error: "Admin access required" }, { status: 403 });
+    }
+    if (await isCurrentIdTokenRevoked(request)) {
+      return NextResponse.json(
+        { error: "Session revoked. Please sign in again." },
+        { status: 401 }
+      );
     }
 
     const db = getAdminDb();
@@ -101,12 +107,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ reports: items, nextCursor, hasMore });
   } catch (err) {
-    if (isRevokedIdTokenError(err)) {
-      return NextResponse.json(
-        { error: "Session revoked. Please sign in again." },
-        { status: 401 }
-      );
-    }
     logger.logError(err, { endpoint: "/api/community/moderate", area: "community-safety", method: "GET" });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -114,10 +114,16 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getVerifiedAdminUser(request);
+    const user = await getVerifiedUser(request);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     if (!user.isAdmin) {
       return NextResponse.json({ error: "Admin access required" }, { status: 403 });
+    }
+    if (await isCurrentIdTokenRevoked(request)) {
+      return NextResponse.json(
+        { error: "Session revoked. Please sign in again." },
+        { status: 401 }
+      );
     }
 
     let body: unknown;
@@ -181,12 +187,6 @@ export async function POST(request: NextRequest) {
     await batch.commit();
     return NextResponse.json({ success: true, action, reportId });
   } catch (err) {
-    if (isRevokedIdTokenError(err)) {
-      return NextResponse.json(
-        { error: "Session revoked. Please sign in again." },
-        { status: 401 }
-      );
-    }
     logger.logError(err, { endpoint: "/api/community/moderate", area: "community-safety" });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

@@ -59,6 +59,7 @@ jest.mock("@/lib/server-auth", () => ({
   getVerifiedAdminUser: jest.fn().mockResolvedValue(AUTH_USER),
   getVerifiedUserWithRevocation: jest.fn().mockResolvedValue(AUTH_USER),
   getOptionalVerifiedUser: jest.fn().mockResolvedValue(AUTH_USER),
+  isCurrentIdTokenRevoked: jest.fn().mockResolvedValue(false),
   isRevokedIdTokenError: jest.fn(() => false),
 }));
 

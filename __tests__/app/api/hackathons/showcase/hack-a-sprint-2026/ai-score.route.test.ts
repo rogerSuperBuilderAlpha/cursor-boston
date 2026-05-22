@@ -6,14 +6,14 @@
 import { NextRequest } from "next/server";
 import { POST } from "@/app/api/hackathons/showcase/hack-a-sprint-2026/ai-score/route";
 import { getAdminDb } from "@/lib/firebase-admin";
-import { getVerifiedAdminUser as getVerifiedUser } from "@/lib/server-auth";
+import { getVerifiedUser, isCurrentIdTokenRevoked } from "@/lib/server-auth";
 import { fetchShowcaseSubmissionsFromGitHub } from "@/lib/hackathon-showcase";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 
 jest.mock("@/lib/firebase-admin", () => ({ getAdminDb: jest.fn() }));
 jest.mock("@/lib/server-auth", () => ({
-  getVerifiedAdminUser: jest.fn(),
-  isRevokedIdTokenError: jest.fn(() => false),
+  getVerifiedUser: jest.fn(),
+  isCurrentIdTokenRevoked: jest.fn(async () => false),
 }));
 jest.mock("@/lib/hackathon-showcase", () => ({
   ...jest.requireActual("@/lib/hackathon-showcase"),
@@ -31,6 +31,9 @@ jest.mock("firebase-admin/firestore", () => ({
 }));
 
 const mockUser = getVerifiedUser as jest.MockedFunction<typeof getVerifiedUser>;
+const mockIsRevoked = isCurrentIdTokenRevoked as jest.MockedFunction<
+  typeof isCurrentIdTokenRevoked
+>;
 const mockDb = getAdminDb as jest.MockedFunction<typeof getAdminDb>;
 const mockSubs = fetchShowcaseSubmissionsFromGitHub as jest.MockedFunction<
   typeof fetchShowcaseSubmissionsFromGitHub
@@ -60,6 +63,7 @@ function setupDb() {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockIsRevoked.mockResolvedValue(false);
   mockRate.mockResolvedValue({ success: true } as never);
   mockUser.mockResolvedValue({ uid: "admin", isAdmin: true } as never);
   mockSubs.mockResolvedValue([
@@ -87,10 +91,10 @@ describe("POST /api/hackathons/showcase/hack-a-sprint-2026/ai-score", () => {
     expect(res.status).toBe(403);
   });
 
-  it("returns 403 when caller is not authenticated", async () => {
+  it("returns 401 when caller is not authenticated", async () => {
     mockUser.mockResolvedValue(null);
     const res = await POST(makeReq());
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(401);
   });
 
   it("returns 400 for invalid JSON body", async () => {

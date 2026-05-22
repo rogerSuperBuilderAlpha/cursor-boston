@@ -6,13 +6,13 @@
 import { GET } from "@/app/api/summer-cohort/admin/intake-aggregates/route";
 import { SUMMER_COHORT_INTAKE_COLLECTION } from "@/lib/summer-cohort-intake";
 import { SUMMER_COHORT_ADMIN_EMAILS_ENV } from "@/lib/summer-cohort-admin-access";
-import { getVerifiedUserWithRevocation as getVerifiedUser } from "@/lib/server-auth";
+import { getVerifiedUser, isCurrentIdTokenRevoked } from "@/lib/server-auth";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { makeAuthedRequest, makeRequest, readJson } from "@/__tests__/_helpers/route-test-utils";
 
 jest.mock("@/lib/server-auth", () => ({
-  getVerifiedUserWithRevocation: jest.fn(),
-  isRevokedIdTokenError: jest.fn(() => false),
+  getVerifiedUser: jest.fn(),
+  isCurrentIdTokenRevoked: jest.fn(async () => false),
 }));
 
 jest.mock("@/lib/firebase-admin", () => ({
@@ -20,6 +20,9 @@ jest.mock("@/lib/firebase-admin", () => ({
 }));
 
 const mockGetVerifiedUser = getVerifiedUser as jest.MockedFunction<typeof getVerifiedUser>;
+const mockIsRevoked = isCurrentIdTokenRevoked as jest.MockedFunction<
+  typeof isCurrentIdTokenRevoked
+>;
 const mockGetAdminDb = getAdminDb as jest.MockedFunction<typeof getAdminDb>;
 
 const adminUser = {
@@ -64,6 +67,7 @@ describe("GET /api/summer-cohort/admin/intake-aggregates", () => {
     jest.clearAllMocks();
     process.env[SUMMER_COHORT_ADMIN_EMAILS_ENV] = "cohort-admin@example.com";
     mockGetVerifiedUser.mockResolvedValue(null);
+    mockIsRevoked.mockResolvedValue(false);
   });
 
   afterEach(() => {

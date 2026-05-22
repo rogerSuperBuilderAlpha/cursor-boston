@@ -6,14 +6,14 @@
 import { POST } from "@/app/api/game/admin/units/route";
 import { adminGrantUnitsServer } from "@/lib/game/data-server";
 import {
-  getVerifiedAdminUser as getVerifiedUser,
-  isRevokedIdTokenError,
+  getVerifiedUser,
+  isCurrentIdTokenRevoked,
 } from "@/lib/server-auth";
 import { makeAuthedRequest, makeRequest, readJson } from "@/__tests__/_helpers/route-test-utils";
 
 jest.mock("@/lib/server-auth", () => ({
-  getVerifiedAdminUser: jest.fn(),
-  isRevokedIdTokenError: jest.fn(() => false),
+  getVerifiedUser: jest.fn(),
+  isCurrentIdTokenRevoked: jest.fn(async () => false),
 }));
 
 jest.mock("@/lib/game/data-server", () => ({
@@ -21,15 +21,15 @@ jest.mock("@/lib/game/data-server", () => ({
 }));
 
 const mockGetVerifiedUser = getVerifiedUser as jest.MockedFunction<typeof getVerifiedUser>;
-const mockIsRevoked = isRevokedIdTokenError as jest.MockedFunction<
-  typeof isRevokedIdTokenError
+const mockIsRevoked = isCurrentIdTokenRevoked as jest.MockedFunction<
+  typeof isCurrentIdTokenRevoked
 >;
 const mockGrantUnits = adminGrantUnitsServer as jest.MockedFunction<typeof adminGrantUnitsServer>;
 
 describe("POST /api/game/admin/units", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockIsRevoked.mockReturnValue(false);
+    mockIsRevoked.mockResolvedValue(false);
     mockGetVerifiedUser.mockResolvedValue({
       uid: "u1",
       email: "u@test.com",
@@ -53,8 +53,13 @@ describe("POST /api/game/admin/units", () => {
   });
 
   it("returns 401 when the admin token has been revoked", async () => {
-    mockGetVerifiedUser.mockRejectedValueOnce(new Error("revoked") as never);
-    mockIsRevoked.mockReturnValueOnce(true);
+    mockGetVerifiedUser.mockResolvedValueOnce({
+      uid: "admin",
+      email: "a@test.com",
+      name: "A",
+      isAdmin: true,
+    });
+    mockIsRevoked.mockResolvedValueOnce(true);
 
     const { status, body } = await readJson(
       await POST(

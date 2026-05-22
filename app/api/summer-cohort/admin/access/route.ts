@@ -6,7 +6,7 @@
  */
 
 import { type NextRequest, NextResponse } from "next/server";
-import { getVerifiedUserWithRevocation, isRevokedIdTokenError } from "@/lib/server-auth";
+import { getVerifiedUser, isCurrentIdTokenRevoked } from "@/lib/server-auth";
 import { isSummerCohortAdminEmail } from "@/lib/summer-cohort-admin-access";
 import { summerCohortContract } from "@/lib/api-schemas/summer-cohort";
 
@@ -28,24 +28,27 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   let user;
   try {
-    user = await getVerifiedUserWithRevocation(request);
+    user = await getVerifiedUser(request);
   } catch (error) {
-    if (isRevokedIdTokenError(error)) {
-      return NextResponse.json(
-        {
-          allowed: false,
-          error: "Session revoked. Please sign in again.",
-        },
-        { status: 401 }
-      );
-    }
     return NextResponse.json({ allowed: false }, { status: 401 });
   }
 
   if (!user) {
     return NextResponse.json({ allowed: false }, { status: 401 });
   }
+  if (!isSummerCohortAdminEmail(user.email)) {
+    return NextResponse.json({ allowed: false });
+  }
+  if (await isCurrentIdTokenRevoked(request)) {
+    return NextResponse.json(
+      {
+        allowed: false,
+        error: "Session revoked. Please sign in again.",
+      },
+      { status: 401 }
+    );
+  }
   return NextResponse.json({
-    allowed: isSummerCohortAdminEmail(user.email),
+    allowed: true,
   });
 }

@@ -8,6 +8,7 @@ import {
   getVerifiedAdminUser,
   getVerifiedUser,
   getVerifiedUserWithRevocation,
+  isCurrentIdTokenRevoked,
   isRevokedIdTokenError,
 } from "@/lib/server-auth";
 import { getAdminAuth } from "@/lib/firebase-admin";
@@ -94,11 +95,11 @@ describe("getVerifiedUser admin authorization bridge", () => {
     expect(verifyFn).toHaveBeenCalledWith("test-token", false);
   });
 
-  it("uses revocation checks on the admin helper path", async () => {
+  it("keeps the admin helper on the non-revocation default path", async () => {
     const verifyFn = mockVerify({ uid: "admin", email: "admin@example.com", admin: true });
     const user = await getVerifiedAdminUser(makeRequest());
     expect(user?.isAdmin).toBe(true);
-    expect(verifyFn).toHaveBeenCalledWith("test-token", true);
+    expect(verifyFn).toHaveBeenCalledWith("test-token", false);
   });
 
   it("uses revocation checks on the sensitive user helper path", async () => {
@@ -191,6 +192,47 @@ describe("getVerifiedUser admin authorization bridge", () => {
     // so a Bearer with only whitespace doesn't match — falls through to
     // null. (The fallthrough is the documented behavior.)
     expect(user).toBeNull();
+  });
+});
+
+describe("isCurrentIdTokenRevoked", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("returns false when no token is present", async () => {
+    const req = new NextRequest("http://localhost/api/test");
+    await expect(isCurrentIdTokenRevoked(req)).resolves.toBe(false);
+    expect(mockGetAdminAuth).not.toHaveBeenCalled();
+  });
+
+  it("returns false when Firebase Admin Auth is not configured", async () => {
+    mockGetAdminAuth.mockReturnValue(null as never);
+    await expect(isCurrentIdTokenRevoked(makeRequest())).resolves.toBe(false);
+  });
+
+  it("uses revocation checks and returns false for a valid current token", async () => {
+    const verifyFn = mockVerify({ uid: "u-current", email: "x@y" });
+    await expect(isCurrentIdTokenRevoked(makeRequest())).resolves.toBe(false);
+    expect(verifyFn).toHaveBeenCalledWith("test-token", true);
+  });
+
+  it("returns true for Firebase revoked-token errors", async () => {
+    mockGetAdminAuth.mockReturnValue({
+      verifyIdToken: jest.fn(async () => {
+        throw { code: "auth/id-token-revoked" };
+      }),
+    } as never);
+    await expect(isCurrentIdTokenRevoked(makeRequest())).resolves.toBe(true);
+  });
+
+  it("returns false for unrelated verification errors", async () => {
+    mockGetAdminAuth.mockReturnValue({
+      verifyIdToken: jest.fn(async () => {
+        throw { code: "auth/id-token-expired" };
+      }),
+    } as never);
+    await expect(isCurrentIdTokenRevoked(makeRequest())).resolves.toBe(false);
   });
 });
 

@@ -10,8 +10,8 @@ import { NextRequest } from "next/server";
 import { POST, GET } from "@/app/api/community/moderate/route";
 import type { VerifiedUser } from "@/lib/server-auth";
 import {
-  getVerifiedAdminUser as getVerifiedUser,
-  isRevokedIdTokenError,
+  getVerifiedUser,
+  isCurrentIdTokenRevoked,
 } from "@/lib/server-auth";
 
 jest.mock("@/lib/logger", () => ({
@@ -19,8 +19,8 @@ jest.mock("@/lib/logger", () => ({
 }));
 
 jest.mock("@/lib/server-auth", () => ({
-  getVerifiedAdminUser: jest.fn(),
-  isRevokedIdTokenError: jest.fn(() => false),
+  getVerifiedUser: jest.fn(),
+  isCurrentIdTokenRevoked: jest.fn(async () => false),
 }));
 
 const mockBatchUpdate = jest.fn();
@@ -59,8 +59,8 @@ jest.mock("firebase-admin/firestore", () => ({
 }));
 
 const mockGetVerifiedUser = getVerifiedUser as jest.MockedFunction<typeof getVerifiedUser>;
-const mockIsRevoked = isRevokedIdTokenError as jest.MockedFunction<
-  typeof isRevokedIdTokenError
+const mockIsRevoked = isCurrentIdTokenRevoked as jest.MockedFunction<
+  typeof isCurrentIdTokenRevoked
 >;
 const adminUser: VerifiedUser = { uid: "admin1", name: "Admin", isAdmin: true };
 const regularUser: VerifiedUser = { uid: "u1", name: "Reg", isAdmin: false };
@@ -79,7 +79,7 @@ function makeGetRequest(query = "") {
 describe("POST /api/community/moderate (admin actions)", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockIsRevoked.mockReturnValue(false);
+    mockIsRevoked.mockResolvedValue(false);
     mockGetVerifiedUser.mockResolvedValue(adminUser);
     mockReportGet.mockResolvedValue({
       exists: true,
@@ -94,8 +94,8 @@ describe("POST /api/community/moderate (admin actions)", () => {
   });
 
   it("returns 401 without moderation side effects when the admin token is revoked", async () => {
-    mockGetVerifiedUser.mockRejectedValueOnce(new Error("revoked") as never);
-    mockIsRevoked.mockReturnValueOnce(true);
+    mockGetVerifiedUser.mockResolvedValueOnce(adminUser);
+    mockIsRevoked.mockResolvedValueOnce(true);
 
     const res = await POST(makePostRequest({ reportId: "r1", action: "dismiss" }));
 
@@ -167,7 +167,7 @@ describe("POST /api/community/moderate (admin actions)", () => {
 describe("GET /api/community/moderate (admin listing)", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockIsRevoked.mockReturnValue(false);
+    mockIsRevoked.mockResolvedValue(false);
     mockGetVerifiedUser.mockResolvedValue(adminUser);
     mockListSnap.docs = [
       {

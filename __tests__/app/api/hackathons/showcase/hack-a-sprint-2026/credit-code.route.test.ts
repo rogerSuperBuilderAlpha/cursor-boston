@@ -6,15 +6,15 @@ import { NextRequest } from "next/server";
 import { GET } from "@/app/api/hackathons/showcase/hack-a-sprint-2026/credit-code/route";
 import { getAdminDb } from "@/lib/firebase-admin";
 import {
-  getVerifiedUserWithRevocation as getVerifiedUser,
-  isRevokedIdTokenError,
+  getVerifiedUser,
+  isCurrentIdTokenRevoked,
 } from "@/lib/server-auth";
 import { resolveHackASprint2026CreditForUser } from "@/lib/hackathon-asprint-2026-credit-eligibility";
 
 jest.mock("@/lib/firebase-admin", () => ({ getAdminDb: jest.fn() }));
 jest.mock("@/lib/server-auth", () => ({
-  getVerifiedUserWithRevocation: jest.fn(),
-  isRevokedIdTokenError: jest.fn(() => false),
+  getVerifiedUser: jest.fn(),
+  isCurrentIdTokenRevoked: jest.fn(async () => false),
 }));
 jest.mock("@/lib/hackathon-asprint-2026-credit-eligibility", () => ({
   resolveHackASprint2026CreditForUser: jest.fn(),
@@ -22,8 +22,8 @@ jest.mock("@/lib/hackathon-asprint-2026-credit-eligibility", () => ({
 
 const mockDb = getAdminDb as jest.MockedFunction<typeof getAdminDb>;
 const mockUser = getVerifiedUser as jest.MockedFunction<typeof getVerifiedUser>;
-const mockIsRevoked = isRevokedIdTokenError as jest.MockedFunction<
-  typeof isRevokedIdTokenError
+const mockIsRevoked = isCurrentIdTokenRevoked as jest.MockedFunction<
+  typeof isCurrentIdTokenRevoked
 >;
 const mockResolve = resolveHackASprint2026CreditForUser as jest.MockedFunction<
   typeof resolveHackASprint2026CreditForUser
@@ -38,7 +38,7 @@ function makeReq() {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockIsRevoked.mockReturnValue(false);
+  mockIsRevoked.mockResolvedValue(false);
 });
 
 describe("GET /api/hackathons/showcase/hack-a-sprint-2026/credit-code", () => {
@@ -52,16 +52,23 @@ describe("GET /api/hackathons/showcase/hack-a-sprint-2026/credit-code", () => {
   });
 
   it("returns 401 when the sensitive credit token has been revoked", async () => {
-    mockUser.mockRejectedValueOnce(new Error("revoked") as never);
-    mockIsRevoked.mockReturnValueOnce(true);
+    const db = { collection: jest.fn() };
+    mockUser.mockResolvedValueOnce({ uid: "u1", email: "u@example.com" } as never);
+    mockDb.mockReturnValue(db as never);
+    mockResolve.mockResolvedValueOnce({
+      ok: true,
+      creditUrl: "https://cursor.com/credit/abc",
+      rank: 7,
+    } as never);
+    mockIsRevoked.mockResolvedValueOnce(true);
 
     const res = await GET(makeReq());
     const body = await res.json();
 
     expect(res.status).toBe(401);
     expect(body.error).toBe("Session revoked. Please sign in again.");
-    expect(mockDb).not.toHaveBeenCalled();
-    expect(mockResolve).not.toHaveBeenCalled();
+    expect(mockDb).toHaveBeenCalled();
+    expect(mockResolve).toHaveBeenCalledWith(db, "u1", "u@example.com");
   });
 
   it("returns the resolved credit URL for eligible users", async () => {
