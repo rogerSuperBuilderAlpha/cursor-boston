@@ -1,0 +1,22 @@
+{
+  "slug": "replication-ai-pr-review-partner",
+  "type": "collaboration",
+  "isSample": true,
+  "title": "Replication partner sought — AI-assisted PR review study (Python ecosystem)",
+  "authors": [
+    {
+      "name": "Example Author One",
+      "affiliation": "Example University"
+    }
+  ],
+  "postedAt": "2026-05-18T15:00:00-04:00",
+  "disciplines": ["software-engineering", "open-source", "replication"],
+  "summary": "Original study sampled 14 maintainers from JavaScript / TypeScript OSS projects. Seeking a researcher to replicate the protocol in the Python / data-science ecosystem (~12 interviews). Interview protocol + codebook provided; replication report would be co-authored.",
+  "sourceRepoUrl": "https://github.com/example-org/ai-pr-review-preprint",
+  "contactEmail": "author1@example.edu",
+  "collaborationType": "replication-partner",
+  "projectStage": "data-collection",
+  "seeking": "Qualitative researcher with experience conducting maintainer / OSS interviews. Comfortable with NVivo or Atlas.ti for coding. Native or near-native English; Python community access (PyData, scikit-learn, pandas, etc.) preferred.",
+  "timeCommitment": "~6 hr/week × 16 weeks (recruitment, interviews, coding)",
+  "status": "open"
+}

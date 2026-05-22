@@ -8,21 +8,28 @@
 import Link from "next/link";
 import {
   Calendar,
+  CalendarDays,
   Clock,
   ExternalLink,
   FileText,
+  Handshake,
   MapPin,
+  Megaphone,
   ScrollText,
   Tag,
   Users,
 } from "lucide-react";
 import {
   RESEARCH_TYPE_LABEL,
-  isRecruiting,
-  isPreprint,
+  isActiveResearch,
+  isActiveResearchPastDeadline,
+  isCfp,
+  isCfpPastDeadline,
+  isCollaboration,
   isDataset,
-  isRecruitingPastDeadline,
+  isWorkingPaper,
   type ResearchEntry,
+  type ResearchType,
 } from "@/lib/research";
 
 interface ResearchCardProps {
@@ -50,29 +57,30 @@ function relativeFromNow(iso: string, now: Date = new Date()): string {
   return formatDate(iso);
 }
 
+const TYPE_BADGE_STYLES: Record<ResearchType, string> = {
+  "active-research":
+    "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300",
+  "working-paper":
+    "bg-sky-100 text-sky-800 dark:bg-sky-950/40 dark:text-sky-300",
+  dataset:
+    "bg-purple-100 text-purple-800 dark:bg-purple-950/40 dark:text-purple-300",
+  collaboration:
+    "bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300",
+  cfp:
+    "bg-indigo-100 text-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300",
+};
+
 function TypeBadge({ entry }: { entry: ResearchEntry }) {
-  const styles: Record<typeof entry.type, string> = {
-    recruiting:
-      "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300",
-    preprint:
-      "bg-sky-100 text-sky-800 dark:bg-sky-950/40 dark:text-sky-300",
-    dataset:
-      "bg-purple-100 text-purple-800 dark:bg-purple-950/40 dark:text-purple-300",
-  };
   return (
     <span
-      className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${styles[entry.type]}`}
+      className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${TYPE_BADGE_STYLES[entry.type]}`}
     >
       {RESEARCH_TYPE_LABEL[entry.type]}
     </span>
   );
 }
 
-function MetadataRow({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function MetadataRow({ children }: { children: React.ReactNode }) {
   return (
     <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-neutral-600 dark:text-neutral-400">
       {children}
@@ -94,9 +102,7 @@ function MetaItem({
   return (
     <span
       className={`inline-flex items-center gap-1 ${
-        emphasis
-          ? "font-semibold text-neutral-900 dark:text-neutral-100"
-          : ""
+        emphasis ? "font-semibold text-neutral-900 dark:text-neutral-100" : ""
       } ${strike ? "line-through opacity-60" : ""}`}
     >
       <Icon className="h-3.5 w-3.5 shrink-0" />
@@ -105,11 +111,22 @@ function MetaItem({
   );
 }
 
+function humanizeEnum(s: string): string {
+  return s.replace(/-/g, " ");
+}
+
 export function ResearchCard({ entry }: ResearchCardProps) {
   const detailHref = `/research/${entry.slug}`;
-  const isExpired = isRecruiting(entry) && isRecruitingPastDeadline(entry);
-  const isClosed = isRecruiting(entry) && entry.status === "closed";
   const sample = entry.isSample === true;
+
+  const isExpiredActiveResearch =
+    isActiveResearch(entry) && isActiveResearchPastDeadline(entry);
+  const isExpiredCfp = isCfp(entry) && isCfpPastDeadline(entry);
+  const isExpired = isExpiredActiveResearch || isExpiredCfp;
+  const isClosed =
+    (isActiveResearch(entry) && entry.status === "closed") ||
+    (isCfp(entry) && entry.status === "closed") ||
+    (isCollaboration(entry) && entry.status === "closed");
 
   return (
     <article
@@ -143,9 +160,7 @@ export function ResearchCard({ entry }: ResearchCardProps) {
 
       <p className="mt-1.5 text-xs text-neutral-600 dark:text-neutral-400">
         {entry.authors
-          .map((a) =>
-            a.affiliation ? `${a.name} (${a.affiliation})` : a.name
-          )
+          .map((a) => (a.affiliation ? `${a.name} (${a.affiliation})` : a.name))
           .join(" · ")}
       </p>
 
@@ -153,34 +168,32 @@ export function ResearchCard({ entry }: ResearchCardProps) {
         {entry.summary}
       </p>
 
-      {isRecruiting(entry) ? (
+      {isActiveResearch(entry) ? (
         <MetadataRow>
           <MetaItem
             icon={Calendar}
-            emphasis={!isExpired}
-            strike={isExpired}
+            emphasis={!isExpiredActiveResearch}
+            strike={isExpiredActiveResearch}
           >
-            {isExpired ? "Closed " : "Deadline "}
+            {isExpiredActiveResearch ? "Closed " : "Deadline "}
             {relativeFromNow(entry.deadline)}
           </MetaItem>
           <MetaItem icon={Clock}>{entry.timeCommitment}</MetaItem>
           <MetaItem icon={MapPin}>{entry.location}</MetaItem>
           {typeof entry.slotsRemaining === "number" ? (
-            <MetaItem icon={Users}>
-              {entry.slotsRemaining} slots left
-            </MetaItem>
+            <MetaItem icon={Users}>{entry.slotsRemaining} slots left</MetaItem>
           ) : null}
         </MetadataRow>
       ) : null}
 
-      {isPreprint(entry) ? (
+      {isWorkingPaper(entry) ? (
         <MetadataRow>
           <MetaItem icon={ScrollText}>
             {entry.version} · {entry.license}
           </MetaItem>
           {entry.peerReviewStatus ? (
             <span className="inline-flex items-center rounded border border-sky-200 bg-sky-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-sky-800 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-300">
-              {entry.peerReviewStatus.replace(/-/g, " ")}
+              {humanizeEnum(entry.peerReviewStatus)}
             </span>
           ) : null}
           {sample ? (
@@ -221,6 +234,38 @@ export function ResearchCard({ entry }: ResearchCardProps) {
         </MetadataRow>
       ) : null}
 
+      {isCollaboration(entry) ? (
+        <MetadataRow>
+          <MetaItem icon={Handshake} emphasis>
+            {humanizeEnum(entry.collaborationType)}
+          </MetaItem>
+          <span className="inline-flex items-center rounded border border-rose-200 bg-rose-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-800 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300">
+            stage: {humanizeEnum(entry.projectStage)}
+          </span>
+          <MetaItem icon={Clock}>{entry.timeCommitment}</MetaItem>
+          {entry.deadline ? (
+            <MetaItem icon={Calendar}>
+              Need by {relativeFromNow(entry.deadline)}
+            </MetaItem>
+          ) : null}
+        </MetadataRow>
+      ) : null}
+
+      {isCfp(entry) ? (
+        <MetadataRow>
+          <MetaItem
+            icon={Calendar}
+            emphasis={!isExpiredCfp}
+            strike={isExpiredCfp}
+          >
+            {isExpiredCfp ? "Submission closed " : "Submit by "}
+            {relativeFromNow(entry.submissionDeadline)}
+          </MetaItem>
+          <MetaItem icon={CalendarDays}>{entry.conferenceDates}</MetaItem>
+          <MetaItem icon={MapPin}>{entry.location}</MetaItem>
+        </MetadataRow>
+      ) : null}
+
       <div className="mt-4 flex flex-wrap gap-1.5">
         {entry.disciplines.slice(0, 4).map((d) => (
           <span
@@ -239,6 +284,21 @@ export function ResearchCard({ entry }: ResearchCardProps) {
         >
           Details →
         </Link>
+        {isCfp(entry) && !sample ? (
+          <a
+            href={entry.conferenceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-indigo-700 hover:underline dark:text-indigo-300"
+          >
+            <Megaphone className="h-3 w-3" /> Conference site
+          </a>
+        ) : null}
+        {isCfp(entry) && sample ? (
+          <span className="inline-flex items-center gap-1 text-neutral-400 dark:text-neutral-600">
+            <Megaphone className="h-3 w-3" /> Conference site (sample)
+          </span>
+        ) : null}
         {sample ? (
           <span className="inline-flex items-center gap-1 text-neutral-400 dark:text-neutral-600">
             <ExternalLink className="h-3 w-3" /> Source repo (sample)

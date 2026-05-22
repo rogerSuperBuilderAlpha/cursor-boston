@@ -1,0 +1,28 @@
+{
+  "slug": "chi-2027-workshop-cfp",
+  "type": "cfp",
+  "isSample": true,
+  "title": "CHI 2027 Workshop — Designing for Triadic Human-AI-Human Coordination",
+  "authors": [
+    {
+      "name": "Example Workshop Organizer",
+      "affiliation": "Example University — HCI Lab"
+    },
+    {
+      "name": "Example Co-Organizer",
+      "affiliation": "Example Industry Lab"
+    }
+  ],
+  "postedAt": "2026-05-20T08:00:00-04:00",
+  "disciplines": ["HCI", "AI", "design"],
+  "summary": "One-day workshop at CHI 2027 on the design challenges of three-party human-AI-human coordination — interfaces where one human acts on another through an algorithmic intermediary. Position papers and design provocations welcome.",
+  "sourceRepoUrl": "https://github.com/example-org/chi-2027-triadic-workshop",
+  "contactEmail": "workshop@example.edu",
+  "conferenceDates": "April 25–29, 2027",
+  "location": "Yokohama, Japan (hybrid)",
+  "submissionDeadline": "2026-12-15T23:59:00-05:00",
+  "conferenceUrl": "https://chi2027.acm.org/workshop-triadic-example",
+  "organizingBody": "ACM SIGCHI",
+  "submissionTypes": ["Position paper (2–4 pages)", "Design provocation (1 page + figure)"],
+  "status": "open"
+}

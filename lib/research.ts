@@ -51,8 +51,13 @@ const BaseSchema = z.object({
   isSample: z.boolean().optional(),
 });
 
-const RecruitingSchema = BaseSchema.extend({
-  type: z.literal("recruiting"),
+/**
+ * Active Research — calls for study participants. Renamed from "recruiting"
+ * to communicate the surface plainly to non-academic readers: this is the
+ * research that's actively running and looking for participants.
+ */
+const ActiveResearchSchema = BaseSchema.extend({
+  type: z.literal("active-research"),
   deadline: z.string().datetime({ offset: true }),
   compensation: z.string().min(1).max(200),
   timeCommitment: z.string().min(1).max(120),
@@ -69,8 +74,12 @@ const RecruitingSchema = BaseSchema.extend({
   status: z.enum(["open", "paused", "closed"]).default("open"),
 });
 
-const PreprintSchema = BaseSchema.extend({
-  type: z.literal("preprint"),
+/**
+ * Working Paper — formerly "preprint." Same schema; renamed to a term that
+ * carries less institutional baggage and reads cleanly to practitioners.
+ */
+const WorkingPaperSchema = BaseSchema.extend({
+  type: z.literal("working-paper"),
   version: z.string().min(1).max(20),
   license: z.string().min(1).max(60),
   pdfUrl: z.string().url(),
@@ -89,17 +98,75 @@ const DatasetSchema = BaseSchema.extend({
   citation: z.string().max(800).optional(),
 });
 
+/**
+ * Collaboration — request for co-authors, co-investigators, replication
+ * partners, or other co-research arrangements. Different from active
+ * research (which seeks subjects) in that it seeks peer collaborators.
+ */
+const CollaborationSchema = BaseSchema.extend({
+  type: z.literal("collaboration"),
+  collaborationType: z.enum([
+    "co-author",
+    "co-investigator",
+    "replication-partner",
+    "data-sharing",
+    "code-collaboration",
+    "grant-partner",
+    "other",
+  ]),
+  projectStage: z.enum([
+    "idea",
+    "proposal",
+    "data-collection",
+    "analysis",
+    "writing",
+    "revising",
+  ]),
+  seeking: z.string().min(1).max(400),
+  timeCommitment: z.string().min(1).max(120),
+  /** Optional deadline (grant deadline, conference target, etc.). */
+  deadline: z.string().datetime({ offset: true }).optional(),
+  status: z.enum(["open", "paused", "closed"]).default("open"),
+});
+
+/**
+ * Call for Papers — community-posted upcoming conference, journal special
+ * issue, or workshop. For Cursor Boston's own flagship CFP, see the
+ * dedicated banner on the page; this type is for peer/external CFPs.
+ */
+const CfpSchema = BaseSchema.extend({
+  type: z.literal("cfp"),
+  conferenceDates: z.string().min(1).max(120),
+  /** "City, Country" or "Virtual" or "Hybrid — City, Country". */
+  location: z.string().min(1).max(120),
+  /** Hard deadline for paper / abstract submission. */
+  submissionDeadline: z.string().datetime({ offset: true }),
+  conferenceUrl: z.string().url(),
+  organizingBody: z.string().min(1).max(200),
+  submissionTypes: z.array(z.string().min(1).max(60)).min(1).max(8),
+  status: z.enum(["open", "paused", "closed"]).default("open"),
+});
+
 export const ResearchEntrySchema = z.discriminatedUnion("type", [
-  RecruitingSchema,
-  PreprintSchema,
+  ActiveResearchSchema,
+  WorkingPaperSchema,
   DatasetSchema,
+  CollaborationSchema,
+  CfpSchema,
 ]);
 
-export type ResearchType = "recruiting" | "preprint" | "dataset";
+export type ResearchType =
+  | "active-research"
+  | "working-paper"
+  | "dataset"
+  | "collaboration"
+  | "cfp";
 export type ResearchEntry = z.infer<typeof ResearchEntrySchema>;
-export type RecruitingEntry = z.infer<typeof RecruitingSchema>;
-export type PreprintEntry = z.infer<typeof PreprintSchema>;
+export type ActiveResearchEntry = z.infer<typeof ActiveResearchSchema>;
+export type WorkingPaperEntry = z.infer<typeof WorkingPaperSchema>;
 export type DatasetEntry = z.infer<typeof DatasetSchema>;
+export type CollaborationEntry = z.infer<typeof CollaborationSchema>;
+export type CfpEntry = z.infer<typeof CfpSchema>;
 
 export interface LoadedResearchEntry {
   entry: ResearchEntry;
@@ -108,39 +175,65 @@ export interface LoadedResearchEntry {
 }
 
 /**
- * Past-deadline recruiting entries are visually struck-through and auto-hidden
- * after this many days unless the entry's status is explicitly "paused".
- * Keeps the feed alive — every recruitment platform that didn't enforce this
- * ends up with a graveyard of dead listings.
+ * Past-deadline active-research entries are visually struck-through and
+ * auto-hidden after this many days unless explicitly paused. Keeps the
+ * feed alive — every recruitment platform that didn't enforce this ends
+ * up with a graveyard of dead listings.
  */
 export const RECRUITING_AUTO_HIDE_DAYS_PAST_DEADLINE = 14;
+/** CFP past-deadline auto-hide window — slightly longer than studies. */
+export const CFP_AUTO_HIDE_DAYS_PAST_DEADLINE = 21;
 
-export function isRecruiting(e: ResearchEntry): e is RecruitingEntry {
-  return e.type === "recruiting";
+export function isActiveResearch(e: ResearchEntry): e is ActiveResearchEntry {
+  return e.type === "active-research";
 }
-export function isPreprint(e: ResearchEntry): e is PreprintEntry {
-  return e.type === "preprint";
+export function isWorkingPaper(e: ResearchEntry): e is WorkingPaperEntry {
+  return e.type === "working-paper";
 }
 export function isDataset(e: ResearchEntry): e is DatasetEntry {
   return e.type === "dataset";
 }
+export function isCollaboration(e: ResearchEntry): e is CollaborationEntry {
+  return e.type === "collaboration";
+}
+export function isCfp(e: ResearchEntry): e is CfpEntry {
+  return e.type === "cfp";
+}
 
-export function isRecruitingPastDeadline(
-  e: RecruitingEntry,
+export function isActiveResearchPastDeadline(
+  e: ActiveResearchEntry,
   now: Date = new Date()
 ): boolean {
   return new Date(e.deadline).getTime() < now.getTime();
 }
 
-export function shouldAutoHideRecruiting(
-  e: RecruitingEntry,
+export function shouldAutoHideActiveResearch(
+  e: ActiveResearchEntry,
   now: Date = new Date()
 ): boolean {
-  if (!isRecruitingPastDeadline(e, now)) return false;
+  if (!isActiveResearchPastDeadline(e, now)) return false;
   const deadlineMs = new Date(e.deadline).getTime();
   const cutoffMs =
     deadlineMs +
     RECRUITING_AUTO_HIDE_DAYS_PAST_DEADLINE * 24 * 60 * 60 * 1000;
+  return now.getTime() > cutoffMs;
+}
+
+export function isCfpPastDeadline(
+  e: CfpEntry,
+  now: Date = new Date()
+): boolean {
+  return new Date(e.submissionDeadline).getTime() < now.getTime();
+}
+
+export function shouldAutoHideCfp(
+  e: CfpEntry,
+  now: Date = new Date()
+): boolean {
+  if (!isCfpPastDeadline(e, now)) return false;
+  const deadlineMs = new Date(e.submissionDeadline).getTime();
+  const cutoffMs =
+    deadlineMs + CFP_AUTO_HIDE_DAYS_PAST_DEADLINE * 24 * 60 * 60 * 1000;
   return now.getTime() > cutoffMs;
 }
 
@@ -205,15 +298,24 @@ export function sortByRecentlyActive(
   });
 }
 
-/** Visible feed: drops auto-hidden expired recruiting entries. */
+/** Visible feed: drops auto-hidden expired entries and explicit closures. */
 export function filterVisible(
   entries: LoadedResearchEntry[],
   now: Date = new Date()
 ): LoadedResearchEntry[] {
   return entries.filter(({ entry }) => {
-    if (entry.type !== "recruiting") return true;
-    if (entry.status === "closed") return false;
-    return !shouldAutoHideRecruiting(entry, now);
+    if (isActiveResearch(entry)) {
+      if (entry.status === "closed") return false;
+      return !shouldAutoHideActiveResearch(entry, now);
+    }
+    if (isCfp(entry)) {
+      if (entry.status === "closed") return false;
+      return !shouldAutoHideCfp(entry, now);
+    }
+    if (isCollaboration(entry)) {
+      return entry.status !== "closed";
+    }
+    return true;
   });
 }
 
@@ -222,15 +324,19 @@ export function isSample(entry: ResearchEntry): boolean {
 }
 
 export const RESEARCH_TYPE_LABEL: Record<ResearchType, string> = {
-  recruiting: "Recruiting",
-  preprint: "Preprint",
+  "active-research": "Active Research",
+  "working-paper": "Working Paper",
   dataset: "Dataset",
+  collaboration: "Collaboration",
+  cfp: "Call for Papers",
 };
 
 export const RESEARCH_TYPE_PLURAL: Record<ResearchType, string> = {
-  recruiting: "Recruiting calls",
-  preprint: "Preprints",
+  "active-research": "Active Research",
+  "working-paper": "Working Papers",
   dataset: "Datasets",
+  collaboration: "Collaboration",
+  cfp: "Calls for Papers",
 };
 
 /**

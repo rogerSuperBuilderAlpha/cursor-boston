@@ -1,0 +1,24 @@
+{
+  "slug": "asq-special-issue-platform-work-cfp",
+  "type": "cfp",
+  "isSample": true,
+  "title": "Administrative Science Quarterly — Special Issue on Platform Work and Worker Coordination",
+  "authors": [
+    {
+      "name": "Example Special-Issue Editor",
+      "affiliation": "Example University — Management"
+    }
+  ],
+  "postedAt": "2026-05-12T09:30:00-04:00",
+  "disciplines": ["organization-studies", "platform-work", "labor"],
+  "summary": "Call for full papers on platform work, algorithmic management, and worker-level coordination outcomes. Empirical and theoretical contributions welcome; mixed-methods strongly encouraged.",
+  "sourceRepoUrl": "https://github.com/example-org/asq-platform-work-special-issue",
+  "contactUrl": "https://journals.sagepub.com/example/asq-special-issue",
+  "conferenceDates": "Journal special issue — publication target Q3 2027",
+  "location": "Virtual (journal)",
+  "submissionDeadline": "2027-02-01T23:59:00-05:00",
+  "conferenceUrl": "https://journals.sagepub.com/example/asq-special-issue",
+  "organizingBody": "Administrative Science Quarterly",
+  "submissionTypes": ["Full paper (8,000–12,000 words)"],
+  "status": "open"
+}

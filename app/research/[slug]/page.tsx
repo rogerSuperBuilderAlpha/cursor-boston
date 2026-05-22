@@ -14,16 +14,21 @@ import {
   FileText,
   GitBranch,
   Globe,
+  Handshake,
   Mail,
+  Megaphone,
   MessageSquare,
 } from "lucide-react";
 import {
   RESEARCH_REPO_README_URL,
   RESEARCH_TYPE_LABEL,
+  isActiveResearch,
+  isActiveResearchPastDeadline,
+  isCfp,
+  isCfpPastDeadline,
+  isCollaboration,
   isDataset,
-  isPreprint,
-  isRecruiting,
-  isRecruitingPastDeadline,
+  isWorkingPaper,
   loadAllResearchEntries,
   repoFileUrlForSlug,
   type ResearchEntry,
@@ -76,11 +81,16 @@ function formatDateTime(iso: string): string {
 
 function TypeBadge({ type }: { type: ResearchEntry["type"] }) {
   const styles: Record<ResearchEntry["type"], string> = {
-    recruiting:
+    "active-research":
       "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300",
-    preprint: "bg-sky-100 text-sky-800 dark:bg-sky-950/40 dark:text-sky-300",
+    "working-paper":
+      "bg-sky-100 text-sky-800 dark:bg-sky-950/40 dark:text-sky-300",
     dataset:
       "bg-purple-100 text-purple-800 dark:bg-purple-950/40 dark:text-purple-300",
+    collaboration:
+      "bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300",
+    cfp:
+      "bg-indigo-100 text-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300",
   };
   return (
     <span
@@ -89,6 +99,10 @@ function TypeBadge({ type }: { type: ResearchEntry["type"] }) {
       {RESEARCH_TYPE_LABEL[type]}
     </span>
   );
+}
+
+function humanizeEnum(s: string): string {
+  return s.replace(/-/g, " ");
 }
 
 function MetaTable({
@@ -119,8 +133,18 @@ export default async function ResearchEntryPage({ params }: PageProps) {
   if (!entry) notFound();
 
   const fileUrl = repoFileUrlForSlug(entry.slug);
-  const isExpired = isRecruiting(entry) && isRecruitingPastDeadline(entry);
-  const isClosed = isRecruiting(entry) && entry.status === "closed";
+  const isExpiredActiveResearch =
+    isActiveResearch(entry) && isActiveResearchPastDeadline(entry);
+  const isExpiredCfp = isCfp(entry) && isCfpPastDeadline(entry);
+  const isExpired = isExpiredActiveResearch || isExpiredCfp;
+  const isClosed =
+    (isActiveResearch(entry) && entry.status === "closed") ||
+    (isCfp(entry) && entry.status === "closed") ||
+    (isCollaboration(entry) && entry.status === "closed");
+  const isPaused =
+    (isActiveResearch(entry) && entry.status === "paused") ||
+    (isCfp(entry) && entry.status === "paused") ||
+    (isCollaboration(entry) && entry.status === "paused");
   const sample = entry.isSample === true;
 
   return (
@@ -146,7 +170,7 @@ export default async function ResearchEntryPage({ params }: PageProps) {
       <header className="mt-4 mb-6">
         <div className="flex flex-wrap items-center gap-2">
           <TypeBadge type={entry.type} />
-          {isRecruiting(entry) && entry.status === "paused" ? (
+          {isPaused ? (
             <span className="rounded-md bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
               Paused
             </span>
@@ -161,9 +185,9 @@ export default async function ResearchEntryPage({ params }: PageProps) {
               Past deadline
             </span>
           ) : null}
-          {isPreprint(entry) && entry.peerReviewStatus ? (
+          {isWorkingPaper(entry) && entry.peerReviewStatus ? (
             <span className="rounded-md border border-sky-200 bg-sky-50 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-sky-800 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-300">
-              {entry.peerReviewStatus.replace(/-/g, " ")}
+              {humanizeEnum(entry.peerReviewStatus)}
             </span>
           ) : null}
         </div>
@@ -204,7 +228,7 @@ export default async function ResearchEntryPage({ params }: PageProps) {
         <p>{entry.summary}</p>
       </section>
 
-      {isRecruiting(entry) ? (
+      {isActiveResearch(entry) ? (
         <section className="mb-6">
           <h2 className="mb-3 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
             Study details
@@ -214,7 +238,7 @@ export default async function ResearchEntryPage({ params }: PageProps) {
               {
                 label: "Deadline",
                 value: (
-                  <span className={isExpired ? "line-through opacity-70" : ""}>
+                  <span className={isExpiredActiveResearch ? "line-through opacity-70" : ""}>
                     {formatDateTime(entry.deadline)}
                   </span>
                 ),
@@ -244,7 +268,7 @@ export default async function ResearchEntryPage({ params }: PageProps) {
                 : []),
             ]}
           />
-          {entry.studyUrl && !isExpired && !isClosed && !sample ? (
+          {entry.studyUrl && !isExpiredActiveResearch && !isClosed && !sample ? (
             <a
               href={entry.studyUrl}
               target="_blank"
@@ -261,7 +285,7 @@ export default async function ResearchEntryPage({ params }: PageProps) {
         </section>
       ) : null}
 
-      {isPreprint(entry) ? (
+      {isWorkingPaper(entry) ? (
         <section className="mb-6">
           <h2 className="mb-3 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
             Paper details
@@ -275,7 +299,7 @@ export default async function ResearchEntryPage({ params }: PageProps) {
                 ? [
                     {
                       label: "Peer review",
-                      value: entry.peerReviewStatus.replace(/-/g, " "),
+                      value: humanizeEnum(entry.peerReviewStatus),
                     },
                   ]
                 : []),
@@ -323,6 +347,93 @@ export default async function ResearchEntryPage({ params }: PageProps) {
               </p>
             </div>
           ) : null}
+        </section>
+      ) : null}
+
+      {isCollaboration(entry) ? (
+        <section className="mb-6">
+          <h2 className="mb-3 inline-flex items-center gap-2 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+            <Handshake className="h-5 w-5 text-rose-600 dark:text-rose-400" />
+            Collaboration details
+          </h2>
+          <MetaTable
+            rows={[
+              {
+                label: "Type",
+                value: (
+                  <span className="capitalize">
+                    {humanizeEnum(entry.collaborationType)}
+                  </span>
+                ),
+              },
+              {
+                label: "Project stage",
+                value: (
+                  <span className="capitalize">
+                    {humanizeEnum(entry.projectStage)}
+                  </span>
+                ),
+              },
+              { label: "Seeking", value: entry.seeking },
+              { label: "Time commitment", value: entry.timeCommitment },
+              ...(entry.deadline
+                ? [
+                    {
+                      label: "Need someone by",
+                      value: formatDateTime(entry.deadline),
+                    },
+                  ]
+                : []),
+            ]}
+          />
+        </section>
+      ) : null}
+
+      {isCfp(entry) ? (
+        <section className="mb-6">
+          <h2 className="mb-3 inline-flex items-center gap-2 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+            <Megaphone className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+            Call-for-papers details
+          </h2>
+          <MetaTable
+            rows={[
+              {
+                label: "Submission deadline",
+                value: (
+                  <span className={isExpiredCfp ? "line-through opacity-70" : ""}>
+                    {formatDateTime(entry.submissionDeadline)}
+                  </span>
+                ),
+              },
+              { label: "Conference dates", value: entry.conferenceDates },
+              { label: "Location", value: entry.location },
+              { label: "Organizing body", value: entry.organizingBody },
+              {
+                label: "Submission types",
+                value: (
+                  <ul className="list-disc pl-5">
+                    {entry.submissionTypes.map((t) => (
+                      <li key={t}>{t}</li>
+                    ))}
+                  </ul>
+                ),
+              },
+            ]}
+          />
+          {sample ? (
+            <span className="mt-4 inline-flex cursor-not-allowed items-center gap-2 rounded-lg border border-dashed border-amber-300 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+              <Megaphone className="h-4 w-4" /> Conference site (disabled on sample)
+            </span>
+          ) : (
+            <a
+              href={entry.conferenceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-500"
+            >
+              <Megaphone className="h-4 w-4" /> Conference site
+            </a>
+          )}
         </section>
       ) : null}
 

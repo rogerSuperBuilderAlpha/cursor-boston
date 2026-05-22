@@ -1,0 +1,23 @@
+{
+  "slug": "algorithmacy-scale-coauthor-search",
+  "type": "collaboration",
+  "isSample": true,
+  "title": "Seeking co-author for algorithmacy scale validation study",
+  "authors": [
+    {
+      "name": "Example Lead Researcher",
+      "affiliation": "Example University — Industrial-Organizational Psychology"
+    }
+  ],
+  "postedAt": "2026-05-22T10:00:00-04:00",
+  "disciplines": ["psychometrics", "platform-work", "scale-development"],
+  "summary": "Looking for a co-author with psychometric / SEM expertise to help validate a 24-item algorithmacy scale across rideshare and AI-engineering populations (N = ~1,200 collected). Authorship by contribution; targeting a Q1 journal.",
+  "sourceRepoUrl": "https://github.com/example-org/algorithmacy-scale-study",
+  "contactEmail": "lead@example.edu",
+  "collaborationType": "co-author",
+  "projectStage": "analysis",
+  "seeking": "PhD-level psychometrician comfortable with CFA, measurement invariance testing, and reviewer-response writing. ~10 hr/week for 8–10 weeks. Familiarity with platform-work literature a plus but not required.",
+  "timeCommitment": "~10 hr/week × 8–10 weeks",
+  "deadline": "2026-07-15T23:59:00-04:00",
+  "status": "open"
+}

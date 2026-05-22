@@ -30,18 +30,22 @@ type FilterValue = ResearchType | "all" | "samples";
 
 const FILTERS: Array<{ value: FilterValue; label: string }> = [
   { value: "all", label: "All" },
-  { value: "recruiting", label: RESEARCH_TYPE_PLURAL.recruiting },
-  { value: "preprint", label: RESEARCH_TYPE_PLURAL.preprint },
+  { value: "active-research", label: RESEARCH_TYPE_PLURAL["active-research"] },
+  { value: "working-paper", label: RESEARCH_TYPE_PLURAL["working-paper"] },
   { value: "dataset", label: RESEARCH_TYPE_PLURAL.dataset },
+  { value: "collaboration", label: RESEARCH_TYPE_PLURAL.collaboration },
+  { value: "cfp", label: RESEARCH_TYPE_PLURAL.cfp },
   { value: "samples", label: "Samples" },
 ];
 
 function parseFilter(raw: string | string[] | undefined): FilterValue {
   const v = Array.isArray(raw) ? raw[0] : raw;
   if (
-    v === "recruiting" ||
-    v === "preprint" ||
+    v === "active-research" ||
+    v === "working-paper" ||
     v === "dataset" ||
+    v === "collaboration" ||
+    v === "cfp" ||
     v === "samples"
   )
     return v;
@@ -71,9 +75,11 @@ export default async function ResearchPage({ searchParams }: ResearchPageProps) 
 
   const counts: Record<FilterValue, number> = {
     all: real.length,
-    recruiting: real.filter((l) => l.entry.type === "recruiting").length,
-    preprint: real.filter((l) => l.entry.type === "preprint").length,
+    "active-research": real.filter((l) => l.entry.type === "active-research").length,
+    "working-paper": real.filter((l) => l.entry.type === "working-paper").length,
     dataset: real.filter((l) => l.entry.type === "dataset").length,
+    collaboration: real.filter((l) => l.entry.type === "collaboration").length,
+    cfp: real.filter((l) => l.entry.type === "cfp").length,
     samples: samples.length,
   };
 

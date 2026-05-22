@@ -85,18 +85,21 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/events", label: "Events", icon: Calendar },
       { href: "/cookbook", label: "Cookbook", icon: ChefHat },
       { href: "/questions", label: "Q&A", icon: HelpCircle },
-      { 
-        href: "/pr-ideas", 
-        title: "PR Studio",
+      { href: "/pr-ideas", label: "PR Studio", icon: Bot },
+      { href: "/opportunities", label: "Opportunities", icon: Briefcase },
+      { href: "/ecosystem", label: "Ecosystem", icon: Building2 },
+      {
+        href: "/research",
+        title: "Research",
         label: (
           <span className="inline-flex items-center gap-1">
-            PR Studio
+            Research
             <span className="relative ml-1 flex h-4 w-4 items-center justify-center">
               <span
                 className="absolute inline-block h-4 w-4 animate-spin rounded-full bg-gradient-to-tr from-yellow-400 via-orange-300 to-pink-500 opacity-70"
                 style={{
                   animationDuration: "2.4s",
-                  filter: "blur(1.5px)"
+                  filter: "blur(1.5px)",
                 }}
               ></span>
               <svg
@@ -117,13 +120,9 @@ const NAV_GROUPS: NavGroup[] = [
               </svg>
             </span>
           </span>
-        ), 
-        icon: Bot 
+        ),
+        icon: FlaskConical,
       },
-
-      { href: "/opportunities", label: "Opportunities", icon: Briefcase },
-      { href: "/ecosystem", label: "Ecosystem", icon: Building2 },
-      { href: "/research", label: "Research", icon: FlaskConical },
       { href: "/blog", label: "Blog", icon: BookOpen },
       { href: "/certificate", label: "Certificate", icon: Award },
     ],

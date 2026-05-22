@@ -1,6 +1,6 @@
 {
   "slug": "ai-assisted-prs-preprint",
-  "type": "preprint",
+  "type": "working-paper",
   "isSample": true,
   "title": "Reviewing AI-Assisted Pull Requests: A Field Study of Open-Source Maintainers",
   "authors": [
