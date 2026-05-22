@@ -12,6 +12,8 @@
  * In production, consider integrating with a logging service (e.g., Sentry, LogRocket, etc.)
  */
 
+import { getClientIp } from "./client-ip";
+
 export enum LogLevel {
   DEBUG = "DEBUG",
   INFO = "INFO",
@@ -174,12 +176,8 @@ class Logger {
       duration,
     };
 
-    // Get client IP
-    const forwarded = request.headers.get("x-forwarded-for");
-    const realIp = request.headers.get("x-real-ip");
-    const cfConnectingIp = request.headers.get("cf-connecting-ip");
-    const ip = forwarded?.split(",")[0]?.trim() || realIp || cfConnectingIp;
-    if (ip) {
+    const ip = getClientIp(request);
+    if (ip !== "unknown") {
       metadata.ip = ip;
     }
 
@@ -205,7 +203,7 @@ class Logger {
       path: url.pathname,
       statusCode: response.status,
       duration,
-      ip: ip || undefined,
+      ip: ip !== "unknown" ? ip : undefined,
       userAgent: userAgent || undefined,
     };
 

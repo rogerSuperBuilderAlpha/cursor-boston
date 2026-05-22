@@ -13,6 +13,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit, getClientIdentifier } from "./rate-limit";
+import { getClientIp } from "./client-ip";
 import { logger } from "./logger";
 
 // Re-export rateLimitConfigs for convenience
@@ -193,12 +194,8 @@ export function withLoggingMiddleware(
         requestId,
       };
 
-      // Get client IP
-      const forwarded = request.headers.get("x-forwarded-for");
-      const realIp = request.headers.get("x-real-ip");
-      const cfConnectingIp = request.headers.get("cf-connecting-ip");
-      const ip = forwarded?.split(",")[0]?.trim() || realIp || cfConnectingIp;
-      if (ip) {
+      const ip = getClientIp(request as unknown as Request);
+      if (ip !== "unknown") {
         metadata.ip = ip;
       }
 

@@ -315,13 +315,13 @@ describe("withLoggingMiddleware", () => {
     expect(logger.logError).toHaveBeenCalled();
   });
 
-  it("captures the client IP from x-forwarded-for (first value)", async () => {
+  it("captures the trusted client IP from x-forwarded-for", async () => {
     const handler = okHandler();
     const wrapped = withLoggingMiddleware(handler);
     await wrapped(
       makeRequest({
         method: "GET",
-        headers: { "x-forwarded-for": "203.0.113.42, 10.0.0.1" },
+        headers: { "x-forwarded-for": "203.0.113.200, 203.0.113.42" },
       })
     );
     expect(logger.info).toHaveBeenCalledWith(
@@ -330,13 +330,16 @@ describe("withLoggingMiddleware", () => {
     );
   });
 
-  it("falls back to x-real-ip when x-forwarded-for is absent", async () => {
+  it("prefers x-vercel-forwarded-for over x-forwarded-for", async () => {
     const handler = okHandler();
     const wrapped = withLoggingMiddleware(handler);
     await wrapped(
       makeRequest({
         method: "GET",
-        headers: { "x-real-ip": "203.0.113.99" },
+        headers: {
+          "x-vercel-forwarded-for": "203.0.113.99",
+          "x-forwarded-for": "198.51.100.200, 10.0.0.1",
+        },
       })
     );
     expect(logger.info).toHaveBeenCalledWith(

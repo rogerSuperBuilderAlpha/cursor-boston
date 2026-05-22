@@ -66,21 +66,22 @@ describe('Rate Limiting', () => {
   });
 
   describe('getClientIdentifier', () => {
-    it('should extract IP from x-forwarded-for header', () => {
+    it('should extract the trusted client IP from x-forwarded-for', () => {
       const request = new Request('https://example.com', {
         headers: {
-          'x-forwarded-for': '192.168.1.1, 10.0.0.1',
+          'x-forwarded-for': '203.0.113.200, 198.51.100.10',
         },
       });
 
       const identifier = getClientIdentifier(request);
-      expect(identifier).toBe('192.168.1.1');
+      expect(identifier).toBe('198.51.100.10');
     });
 
-    it('should extract IP from x-real-ip header', () => {
+    it('should prefer x-vercel-forwarded-for over x-forwarded-for', () => {
       const request = new Request('https://example.com', {
         headers: {
-          'x-real-ip': '192.168.1.2',
+          'x-vercel-forwarded-for': '192.168.1.2',
+          'x-forwarded-for': '203.0.113.200, 10.0.0.1',
         },
       });
 
@@ -101,6 +102,17 @@ describe('Rate Limiting', () => {
 
     it('should return "unknown" if no IP header is present', () => {
       const request = new Request('https://example.com');
+      const identifier = getClientIdentifier(request);
+      expect(identifier).toBe('unknown');
+    });
+
+    it('should ignore x-real-ip because it is spoofable outside trusted proxies', () => {
+      const request = new Request('https://example.com', {
+        headers: {
+          'x-real-ip': '192.168.1.4',
+        },
+      });
+
       const identifier = getClientIdentifier(request);
       expect(identifier).toBe('unknown');
     });

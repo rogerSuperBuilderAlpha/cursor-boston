@@ -12,6 +12,8 @@
  * For production, consider using Redis or a dedicated rate limiting service.
  */
 
+import { getClientIp } from "./client-ip";
+
 interface RateLimitStore {
   [key: string]: {
     count: number;
@@ -132,7 +134,7 @@ export function checkRateLimit(
 
 /**
  * Get client identifier from request by extracting the IP address.
- * Checks proxy headers in priority order: x-forwarded-for, x-real-ip, cf-connecting-ip.
+ * Uses the shared trusted proxy parser so rate limiting and logging agree.
  * 
  * @param {Request} request - The incoming HTTP request.
  * @returns {string} The client IP address string, or "unknown" if not determinable.
@@ -144,13 +146,7 @@ export function checkRateLimit(
  * }
  */
 export function getClientIdentifier(request: Request): string {
-  // Try to get IP from various headers (for proxies/load balancers)
-  const forwarded = request.headers.get("x-forwarded-for");
-  const realIp = request.headers.get("x-real-ip");
-  const cfConnectingIp = request.headers.get("cf-connecting-ip"); // Cloudflare
-
-  const ip = forwarded?.split(",")[0]?.trim() || realIp || cfConnectingIp || "unknown";
-  return ip;
+  return getClientIp(request);
 }
 
 /**

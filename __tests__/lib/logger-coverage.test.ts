@@ -63,9 +63,9 @@ describe("lib/logger — additional coverage", () => {
       expect(console.error).toHaveBeenCalled();
     });
 
-    it("captures client IP from x-forwarded-for (first entry, trimmed)", () => {
+    it("captures trusted client IP from x-forwarded-for", () => {
       const req = mkRequest({
-        headers: { "x-forwarded-for": "203.0.113.5, 10.0.0.1" },
+        headers: { "x-forwarded-for": "203.0.113.200, 203.0.113.5" },
       });
       const res = new Response("ok", { status: 200 });
       logger.logRequest(req, res, 1);
@@ -73,8 +73,13 @@ describe("lib/logger — additional coverage", () => {
       expect(msg).toContain("203.0.113.5");
     });
 
-    it("captures IP from x-real-ip when x-forwarded-for is absent", () => {
-      const req = mkRequest({ headers: { "x-real-ip": "198.51.100.7" } });
+    it("prefers x-vercel-forwarded-for over x-forwarded-for", () => {
+      const req = mkRequest({
+        headers: {
+          "x-vercel-forwarded-for": "198.51.100.7",
+          "x-forwarded-for": "203.0.113.200, 10.0.0.1",
+        },
+      });
       logger.logRequest(req, new Response("ok"), 1);
       const msg = (console.log as jest.Mock).mock.calls[0][0] as string;
       expect(msg).toContain("198.51.100.7");
