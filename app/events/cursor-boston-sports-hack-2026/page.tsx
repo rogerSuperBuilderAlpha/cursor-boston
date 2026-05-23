@@ -10,6 +10,7 @@ import Link from "next/link";
 import eventsData from "@/content/events.json";
 import type { EventsData } from "@/types/events";
 import { SportsHack2026EventNav } from "@/components/hackathons/SportsHack2026EventNav";
+import { SportsHackSubmitPromptButton } from "@/components/events/SportsHackSubmitPromptButton";
 import {
   SPORTS_HACK_2026_CAPACITY,
   SPORTS_HACK_2026_EVENT_ID,
@@ -258,7 +259,7 @@ function HowToSubmit() {
         <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
           How to submit your project
         </h2>
-        <p className="text-neutral-600 dark:text-neutral-400 mb-8 max-w-3xl">
+        <p className="text-neutral-600 dark:text-neutral-400 mb-6 max-w-3xl">
           On event day you submit by opening a PR into the{" "}
           <code className="rounded bg-neutral-200 px-1.5 py-0.5 text-xs font-mono dark:bg-neutral-800">
             {SPORTS_HACK_2026_SUBMISSIONS_BRANCH}
@@ -268,6 +269,12 @@ function HowToSubmit() {
           project. Once a maintainer merges through to{" "}
           <code className="font-mono">main</code>, your card appears in the grid
           below.
+        </p>
+
+        <SportsHackSubmitPromptButton />
+
+        <p className="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400 mb-3">
+          Or do it by hand
         </p>
 
         <ol className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
