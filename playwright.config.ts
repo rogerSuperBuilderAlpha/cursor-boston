@@ -27,13 +27,14 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 300_000,
     env: {
-      NEXT_PUBLIC_FIREBASE_API_KEY: 'test-api-key',
+      NEXT_PUBLIC_FIREBASE_API_KEY: 'demo-playwright-api-key',
       NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: 'test-project.firebaseapp.com',
-      NEXT_PUBLIC_FIREBASE_PROJECT_ID: 'test-project-id',
+      NEXT_PUBLIC_FIREBASE_PROJECT_ID: 'demo-playwright-project',
       NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: 'test-project.appspot.com',
       NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: '123456789',
       NEXT_PUBLIC_FIREBASE_APP_ID: '1:123456789:web:abcdef',
       NEXT_PUBLIC_FIREBASE_DATABASE_URL: 'https://test-project.firebaseio.com',
+      UNSUBSCRIBE_SECRET: 'playwright-e2e-unsubscribe-secret-32-bytes',
     },
   },
 });
