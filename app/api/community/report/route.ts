@@ -22,11 +22,13 @@ import { logger } from "@/lib/logger";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 import { sanitizeDocId } from "@/lib/sanitize";
 import { communityContract } from "@/lib/api-schemas/community";
+import {
+  COMMUNITY_REPORT_NOTES_MAX_LENGTH,
+  COMMUNITY_REPORT_RATE_LIMIT,
+} from "@/lib/constants/community";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const REPORT_RATE_LIMIT = { windowMs: 60 * 60 * 1000, maxRequests: 10 };
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,7 +37,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const rl = await checkUpstashRateLimit(`community-report:${user.uid}`, REPORT_RATE_LIMIT);
+    const rl = await checkUpstashRateLimit(
+      `community-report:${user.uid}`,
+      COMMUNITY_REPORT_RATE_LIMIT
+    );
     if (!rl.success) {
       return NextResponse.json(
         { error: "Too many reports. Try again in an hour." },
@@ -64,9 +69,8 @@ export async function POST(request: NextRequest) {
     }
     // Truncate rather than reject — pre-existing behavior the test pins,
     // and abuse reports are better captured silently than dropped.
-    const MAX_NOTES_LENGTH = 500;
     const trimmedNotes = typeof notes === "string"
-      ? notes.slice(0, MAX_NOTES_LENGTH)
+      ? notes.slice(0, COMMUNITY_REPORT_NOTES_MAX_LENGTH)
       : "";
 
     const db = getAdminDb();

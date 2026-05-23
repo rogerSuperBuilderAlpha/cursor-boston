@@ -16,21 +16,35 @@ import { sanitizeText, sanitizeDocId } from "@/lib/sanitize";
 import { getDisplayName } from "@/lib/utils";
 import { communityContract } from "@/lib/api-schemas/community";
 import { COMMUNITY_CONTENT_LENGTH_ERROR } from "@/lib/error-messages";
+import {
+  COMMUNITY_CONTENT_MAX_LENGTH,
+  COMMUNITY_CONTENT_MIN_LENGTH,
+  COMMUNITY_RATE_LIMIT_RETRY_AFTER_SECONDS,
+  COMMUNITY_REPLY_RATE_LIMIT,
+} from "@/lib/constants/community";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const COMMUNITY_RATE_LIMIT = { windowMs: 60 * 1000, maxRequests: 20 };
 
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting
     const clientId = getClientIdentifier(request as unknown as Request);
-    const rateResult = await checkUpstashRateLimit(`community-reply:${clientId}`, COMMUNITY_RATE_LIMIT);
+    const rateResult = await checkUpstashRateLimit(
+      `community-reply:${clientId}`,
+      COMMUNITY_REPLY_RATE_LIMIT
+    );
     if (!rateResult.success) {
       return NextResponse.json(
         { error: "Too many requests", retryAfterSeconds: rateResult.retryAfter },
-        { status: 429, headers: { "Retry-After": String(rateResult.retryAfter || 60) } }
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(
+              rateResult.retryAfter || COMMUNITY_RATE_LIMIT_RETRY_AFTER_SECONDS
+            ),
+          },
+        }
       );
     }
 
@@ -69,7 +83,10 @@ export async function POST(request: NextRequest) {
     // Sanitize content to prevent XSS; sanitization can shorten content
     // so we re-check the length bounds against the sanitized value.
     const sanitizedContent = sanitizeText(content);
-    if (sanitizedContent.length < 100 || sanitizedContent.length > 500) {
+    if (
+      sanitizedContent.length < COMMUNITY_CONTENT_MIN_LENGTH ||
+      sanitizedContent.length > COMMUNITY_CONTENT_MAX_LENGTH
+    ) {
       return NextResponse.json(
         { error: COMMUNITY_CONTENT_LENGTH_ERROR },
         { status: 400 }

@@ -9,6 +9,12 @@ import { initContract } from "@ts-rest/core";
 import { z } from "zod";
 
 import {
+  COMMUNITY_CONTENT_MAX_LENGTH,
+  COMMUNITY_CONTENT_MIN_LENGTH,
+  COMMUNITY_MY_REACTIONS_MAX_MESSAGE_IDS,
+} from "@/lib/constants/community";
+
+import {
   ApiErrorSchema,
   PaginationFieldsSchema,
   PaginationQuerySchema,
@@ -41,8 +47,8 @@ const PostBody = z
   .object({
     content: z
       .string()
-      .min(100, COMMUNITY_CONTENT_LENGTH_ERROR)
-      .max(500, COMMUNITY_CONTENT_LENGTH_ERROR),
+      .min(COMMUNITY_CONTENT_MIN_LENGTH, COMMUNITY_CONTENT_LENGTH_ERROR)
+      .max(COMMUNITY_CONTENT_MAX_LENGTH, COMMUNITY_CONTENT_LENGTH_ERROR),
   })
   .openapi("CommunityPostBody", {
     example: {
@@ -54,14 +60,20 @@ const PostBody = z
 const ReplyBody = z
   .object({
     parentId: z.string().min(1),
-    content: z.string().min(100).max(500),
+    content: z
+      .string()
+      .min(COMMUNITY_CONTENT_MIN_LENGTH, COMMUNITY_CONTENT_LENGTH_ERROR)
+      .max(COMMUNITY_CONTENT_MAX_LENGTH, COMMUNITY_CONTENT_LENGTH_ERROR),
   })
   .openapi("CommunityReplyBody");
 
 const RepostBody = z
   .object({
     originalId: z.string().min(1),
-    content: z.string().min(100).max(500),
+    content: z
+      .string()
+      .min(COMMUNITY_CONTENT_MIN_LENGTH, COMMUNITY_CONTENT_LENGTH_ERROR)
+      .max(COMMUNITY_CONTENT_MAX_LENGTH, COMMUNITY_CONTENT_LENGTH_ERROR),
   })
   .openapi("CommunityRepostBody");
 
@@ -99,7 +111,9 @@ const MyReactionsQuery = z.object({
   messageIds: z
     .string()
     .min(1)
-    .describe("Comma-separated message ids, up to 60"),
+    .describe(
+      `Comma-separated message ids, up to ${COMMUNITY_MY_REACTIONS_MAX_MESSAGE_IDS}`
+    ),
 });
 
 const ModerateQuery = PaginationQuerySchema.extend({
