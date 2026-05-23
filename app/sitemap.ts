@@ -7,6 +7,7 @@
 
 import { MetadataRoute } from 'next';
 import { getAllPostSlugs } from '@/lib/blog';
+import { MONTHLY_CHALLENGES } from '@/lib/monthly-challenges';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://cursorboston.com';
@@ -64,6 +65,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified,
       changeFrequency: 'daily',
       priority: 0.72,
+    },
+    {
+      url: `${baseUrl}/challenges`,
+      lastModified,
+      changeFrequency: 'weekly',
+      priority: 0.7,
     },
     {
       url: `${baseUrl}/talks`,
@@ -191,5 +198,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  return [...staticPages, ...blogPages];
+  const challengePages: MetadataRoute.Sitemap = MONTHLY_CHALLENGES.map((challenge) => ({
+    url: `${baseUrl}/challenges/${challenge.id}`,
+    lastModified,
+    changeFrequency: challenge.status === 'current' ? 'weekly' : 'monthly',
+    priority: challenge.status === 'current' ? 0.68 : 0.5,
+  }));
+
+  return [...staticPages, ...blogPages, ...challengePages];
 }
