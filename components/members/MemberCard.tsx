@@ -15,6 +15,8 @@ import { getBaseBadgeEligibilityInput } from "@/lib/badges/getBadgeEligibilityIn
 import { getEarnedBadgeIds } from "@/lib/badges/utils";
 import { BadgeGrid } from "@/components/badges/BadgeGrid";
 import { SHOWCASE_AWARD_LABEL } from "@/lib/hackathon-asprint-2026-awards";
+import { CLASS_GROUPS, TAILWIND_CLASS_NAMES as TW } from "@/lib/classname-constants";
+import { cn } from "@/lib/utils";
 
 interface MemberCardProps {
   member: PublicMember;
@@ -59,7 +61,7 @@ export function MemberCard({ member }: MemberCardProps) {
   ].slice(0, 3);
 
   return (
-    <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors">
+    <div className={cn(CLASS_GROUPS.card.neutral, TW.spacing.p6, CLASS_GROUPS.card.neutralHover, TW.motion.colors)}>
       {/* Header */}
       <div className="flex items-start gap-4 mb-4">
         <div className="relative shrink-0">
@@ -87,26 +89,29 @@ export function MemberCard({ member }: MemberCardProps) {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
-            <h3 className="text-foreground font-semibold text-lg truncate">
+            <h3 className={cn(TW.text.foreground, TW.text.semibold, TW.text.lg, TW.layout.truncate)}>
               {member.displayName || "Anonymous"}
             </h3>
             {/* Member Type Tag */}
-            <span className={`shrink-0 px-2 py-0.5 text-xs rounded-full font-medium ${
-              isAgent 
-                ? "bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/30" 
-                : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
-            }`}>
+            <span
+              className={cn(
+                CLASS_GROUPS.badge.basePill,
+                isAgent
+                  ? "bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/30"
+                  : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
+              )}
+            >
               {isAgent ? "Agent" : "Human"}
             </span>
           </div>
           {!isAgent && v?.showJobTitle && member.jobTitle && (
-            <p className="text-neutral-600 dark:text-neutral-400 text-sm truncate">{member.jobTitle}</p>
+            <p className={cn(CLASS_GROUPS.text.muted, TW.layout.truncate)}>{member.jobTitle}</p>
           )}
           {!isAgent && v?.showCompany && member.company && (
-            <p className="text-neutral-600 dark:text-neutral-400 text-sm truncate">{member.company}</p>
+            <p className={cn(CLASS_GROUPS.text.muted, TW.layout.truncate)}>{member.company}</p>
           )}
           {isAgent && member.owner?.displayName && v?.showOwner && (
-            <p className="text-neutral-600 dark:text-neutral-400 text-sm truncate">
+            <p className={cn(CLASS_GROUPS.text.muted, TW.layout.truncate)}>
               Owned by {member.owner.displayName}
             </p>
           )}
@@ -115,12 +120,12 @@ export function MemberCard({ member }: MemberCardProps) {
 
       {/* Bio */}
       {v?.showBio && member.bio && (
-        <p className="text-neutral-700 dark:text-neutral-300 text-sm mb-4 line-clamp-3">{member.bio}</p>
+        <p className={cn(CLASS_GROUPS.text.body, TW.spacing.mb4, "line-clamp-3")}>{member.bio}</p>
       )}
 
       {/* Location */}
       {v?.showLocation && member.location && (
-        <div className="flex items-center gap-2 text-neutral-600 dark:text-neutral-400 text-sm mb-4">
+        <div className={cn(TW.layout.flex, TW.layout.itemsCenter, TW.spacing.gap2, CLASS_GROUPS.text.muted, TW.spacing.mb4)}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="14"
@@ -155,29 +160,29 @@ export function MemberCard({ member }: MemberCardProps) {
           </span>
         )}
         {v?.showEventsAttended && member.eventsAttended && member.eventsAttended > 0 && (
-          <span className="px-2 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs rounded-full">
+          <span className={cn(TW.spacing.px2, TW.spacing.py1, TW.surface.emeraldSoft, TW.text.accent, TW.text.tiny, TW.radius.full)}>
             {member.eventsAttended} event{member.eventsAttended !== 1 ? "s" : ""} attended
           </span>
         )}
         {v?.showTalksGiven && member.talksGiven && member.talksGiven > 0 && (
-          <span className="px-2 py-1 bg-purple-500/10 text-purple-600 dark:text-purple-400 text-xs rounded-full">
+          <span className={cn(TW.spacing.px2, TW.spacing.py1, TW.surface.purpleSoft, "text-purple-600 dark:text-purple-400", TW.text.tiny, TW.radius.full)}>
             {member.talksGiven} talk{member.talksGiven !== 1 ? "s" : ""} given
           </span>
         )}
         {member.pullRequestsCount && member.pullRequestsCount > 0 && (
-          <span className="px-2 py-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs rounded-full">
+          <span className={cn(TW.spacing.px2, TW.spacing.py1, "bg-blue-500/10 text-blue-600 dark:text-blue-400", TW.text.tiny, TW.radius.full)}>
             {member.pullRequestsCount} PR{member.pullRequestsCount !== 1 ? "s" : ""}
           </span>
         )}
         {member.hackASprint2026ShowcaseBadge && (
-          <span className="px-2 py-1 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 text-xs rounded-full">
+          <span className={cn(TW.spacing.px2, TW.spacing.py1, "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400", TW.text.tiny, TW.radius.full)}>
             Hack-a-Sprint &apos;26
           </span>
         )}
         {member.hackASprint2026ShowcaseAwards?.map((kind) => (
           <span
             key={kind}
-            className="px-2 py-1 bg-amber-500/15 text-amber-800 dark:text-amber-300 text-xs rounded-full"
+            className={cn(TW.spacing.px2, TW.spacing.py1, "bg-amber-500/15 text-amber-800 dark:text-amber-300", TW.text.tiny, TW.radius.full)}
           >
             {SHOWCASE_AWARD_LABEL[kind]}
           </span>
@@ -205,7 +210,7 @@ export function MemberCard({ member }: MemberCardProps) {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Website (opens in new tab)"
-            className="text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:focus-visible:ring-white rounded p-2 min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className={CLASS_GROUPS.button.iconLink}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -231,7 +236,7 @@ export function MemberCard({ member }: MemberCardProps) {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="LinkedIn (opens in new tab)"
-            className="text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:focus-visible:ring-white rounded p-2 min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className={CLASS_GROUPS.button.iconLink}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -251,7 +256,7 @@ export function MemberCard({ member }: MemberCardProps) {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="X/Twitter (opens in new tab)"
-            className="text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:focus-visible:ring-white rounded p-2 min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className={CLASS_GROUPS.button.iconLink}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -271,7 +276,7 @@ export function MemberCard({ member }: MemberCardProps) {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="GitHub (opens in new tab)"
-            className="text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:focus-visible:ring-white rounded p-2 min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className={CLASS_GROUPS.button.iconLink}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -291,7 +296,7 @@ export function MemberCard({ member }: MemberCardProps) {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Substack (opens in new tab)"
-            className="text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:focus-visible:ring-white rounded p-2 min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className={CLASS_GROUPS.button.iconLink}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"

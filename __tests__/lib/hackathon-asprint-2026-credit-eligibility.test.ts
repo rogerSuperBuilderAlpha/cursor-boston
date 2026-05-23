@@ -23,6 +23,10 @@ jest.mock("@/lib/hackathon-event-signup", () => ({
 }));
 
 import { resolveHackASprint2026CreditForUser } from "@/lib/hackathon-asprint-2026-credit-eligibility";
+import {
+  checkEventMembership,
+  checkPullRequestThreshold,
+} from "@/lib/eligibility-base";
 import { makeDoc, makeFakeDb } from "@/__tests__/_helpers/firebase-admin-mock";
 
 beforeEach(() => {
@@ -87,7 +91,13 @@ describe("resolveHackASprint2026CreditForUser", () => {
       user: { github: { login: "u1" } },
     });
     const out = await resolveHackASprint2026CreditForUser(db, "u1");
-    expect(out).toEqual({ ok: false, reason: "not_checked_in" });
+    const membership = checkEventMembership({
+      exists: true,
+      confirmedAt: new Date(),
+      rank: 1,
+    });
+
+    expect(out).toEqual(membership);
   });
 
   it("bypasses the check-in gate when the user is a judge-exception", async () => {
@@ -140,7 +150,13 @@ describe("resolveHackASprint2026CreditForUser", () => {
       user: { github: { login: "u1" } },
     });
     const out = await resolveHackASprint2026CreditForUser(db, "u1");
-    expect(out).toEqual({ ok: false, reason: "not_submitted" });
+    const threshold = checkPullRequestThreshold({
+      pullRequestsCount: 0,
+      target: 1,
+      reason: "not_submitted",
+    });
+
+    expect(out).toEqual({ ok: false, reason: threshold.reason });
     expect(mockHasMergedPR).toHaveBeenCalledWith("u1");
   });
 

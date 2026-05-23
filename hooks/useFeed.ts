@@ -7,13 +7,30 @@
 
 "use client";
 
-import { useEffect, useState, useCallback, useMemo, useRef } from "react";
-import { collection, query, where, getDocs, orderBy, limit, startAfter, Timestamp, QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { useEffect, useState, useCallback, useMemo } from "react";
+import { Timestamp } from "firebase/firestore";
 import { User } from "firebase/auth";
 import type { Message, ReactionType } from "@/types/feed";
 
 const PAGE_SIZE = 20;
+
+interface FeedApiMessage extends Omit<Message, "createdAt"> {
+  createdAt: string;
+}
+
+interface FeedApiResponse {
+  messages?: FeedApiMessage[];
+  nextCursor?: string | null;
+  hasMore?: boolean;
+}
+
+function toMessage(message: FeedApiMessage): Message {
+  const parsed = Date.parse(message.createdAt);
+  return {
+    ...message,
+    createdAt: Timestamp.fromDate(Number.isFinite(parsed) ? new Date(parsed) : new Date()),
+  };
+}
 
 export function useFeed(user: User | null, isActive: boolean) {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -34,80 +51,92 @@ export function useFeed(user: User | null, isActive: boolean) {
 
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const lastDocRef = useRef<QueryDocumentSnapshot<DocumentData> | null>(null);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
 
   const [error, setError] = useState<string | null>(null);
   const clearError = useCallback(() => setError(null), []);
 
-  // Fetch messages with a one-shot getDocs (avoids real-time listener fan-out
-  // that was causing 399K+ Firestore reads/day).
+  const authHeaders = useCallback(async (): Promise<HeadersInit> => {
+    if (!user) return {};
+    const token = await user.getIdToken();
+    return { Authorization: `Bearer ${token}` };
+  }, [user]);
+
+  const loadFeedPage = useCallback(
+    async (params: URLSearchParams) => {
+      const headers = await authHeaders();
+      const response = await fetch(`/api/community/feed?${params.toString()}`, { headers });
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+      const data = (await response.json()) as FeedApiResponse;
+      return {
+        messages: (data.messages ?? []).map(toMessage),
+        nextCursor: data.nextCursor ?? null,
+        hasMore: data.hasMore ?? false,
+      };
+    },
+    [authHeaders]
+  );
+
+  // Fetch messages through the server feed endpoint so moderation and block
+  // filters are applied consistently instead of relying on public Firestore reads.
   const fetchMessages = useCallback(async () => {
-    if (!db) return;
     setLoading(true);
     try {
-      const messagesRef = collection(db, "communityMessages");
-      const q = query(messagesRef, orderBy("createdAt", "desc"), limit(PAGE_SIZE));
-      const snapshot = await getDocs(q);
-      const fetchedMessages = snapshot.docs
-        .map((d) => ({
-          id: d.id,
-          ...d.data(),
-        } as Message))
-        .filter((msg) => !msg.parentId);
-      setMessages(fetchedMessages);
-      setHasMore(snapshot.docs.length === PAGE_SIZE);
-      lastDocRef.current = snapshot.docs[snapshot.docs.length - 1] ?? null;
+      const params = new URLSearchParams({ limit: String(PAGE_SIZE) });
+      const page = await loadFeedPage(params);
+      setMessages(page.messages);
+      setHasMore(page.hasMore);
+      setNextCursor(page.nextCursor);
     } catch (error) {
       console.error("Error fetching messages:", error);
       setError("Failed to load feed. Please refresh.");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [loadFeedPage]);
 
-  // Load messages on mount and poll every 30s while active (replaces onSnapshot)
+  // Load messages on mount and poll every 30s while active (server endpoint,
+  // not onSnapshot, to avoid real-time listener fan-out).
   useEffect(() => {
-    if (!isActive || !db) return;
-    fetchMessages();
+    if (!isActive) return;
+    const timeout = window.setTimeout(() => {
+      void fetchMessages();
+    }, 0);
     const interval = setInterval(fetchMessages, 30_000);
-    return () => clearInterval(interval);
+    return () => {
+      window.clearTimeout(timeout);
+      clearInterval(interval);
+    };
   }, [isActive, fetchMessages]);
 
   // Load more messages using cursor-based pagination
   const loadMore = useCallback(async () => {
-    if (!db || !lastDocRef.current || loadingMore || !hasMore) return;
+    if (!nextCursor || loadingMore || !hasMore) return;
 
     setLoadingMore(true);
     try {
-      const messagesRef = collection(db, "communityMessages");
-      const q = query(
-        messagesRef,
-        orderBy("createdAt", "desc"),
-        startAfter(lastDocRef.current),
-        limit(PAGE_SIZE)
-      );
-      const snapshot = await getDocs(q);
-      const olderMessages = snapshot.docs
-        .map((d) => ({
-          id: d.id,
-          ...d.data(),
-        } as Message))
-        .filter((msg) => !msg.parentId);
+      const params = new URLSearchParams({
+        cursor: nextCursor,
+        limit: String(PAGE_SIZE),
+      });
+      const page = await loadFeedPage(params);
 
       setMessages((prev) => {
         const existingIds = new Set(prev.map((m) => m.id));
-        const deduped = olderMessages.filter((m) => !existingIds.has(m.id));
+        const deduped = page.messages.filter((m) => !existingIds.has(m.id));
         return [...prev, ...deduped];
       });
-      setHasMore(snapshot.docs.length === PAGE_SIZE);
-      lastDocRef.current = snapshot.docs[snapshot.docs.length - 1] ?? null;
+      setHasMore(page.hasMore);
+      setNextCursor(page.nextCursor);
     } catch (error) {
       console.error("Error loading more messages:", error);
       setError("Failed to load more messages.");
     } finally {
       setLoadingMore(false);
     }
-  }, [loadingMore, hasMore]);
+  }, [loadingMore, hasMore, loadFeedPage, nextCursor]);
 
   const visibleMessageIdsKey = useMemo(
     () => [...messages.map((m) => m.id)].sort().join("\0"),
@@ -117,12 +146,15 @@ export function useFeed(user: User | null, isActive: boolean) {
   // Reactions for visible feed messages only (bounded reads vs. full user history scan).
   useEffect(() => {
     if (!isActive || !user) {
-      if (!user) setUserReactions({});
+      if (!user) {
+        const timeout = window.setTimeout(() => setUserReactions({}), 0);
+        return () => window.clearTimeout(timeout);
+      }
       return;
     }
     if (messages.length === 0) {
-      setUserReactions({});
-      return;
+      const timeout = window.setTimeout(() => setUserReactions({}), 0);
+      return () => window.clearTimeout(timeout);
     }
 
     (async () => {
@@ -140,6 +172,7 @@ export function useFeed(user: User | null, isActive: boolean) {
         console.error("Error fetching reactions:", error);
       }
     })();
+    return undefined;
     // `visibleMessageIdsKey` is derived from `messages` and limits refetches to id-set changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: deps via visibleMessageIdsKey
   }, [isActive, user, visibleMessageIdsKey]);
@@ -308,26 +341,17 @@ export function useFeed(user: User | null, isActive: boolean) {
 
   // Fetch replies for a message
   const fetchReplies = useCallback(async (parentId: string) => {
-    if (!db) return;
-    
     try {
-      const messagesRef = collection(db, "communityMessages");
-      const q = query(
-        messagesRef,
-        where("parentId", "==", parentId),
-        orderBy("createdAt", "asc"),
-        limit(100)
-      );
-      const snapshot = await getDocs(q);
-      const replies = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Message[];
-      setMessageReplies((prev) => ({ ...prev, [parentId]: replies }));
+      const params = new URLSearchParams({
+        parentId,
+        limit: "100",
+      });
+      const page = await loadFeedPage(params);
+      setMessageReplies((prev) => ({ ...prev, [parentId]: page.messages }));
     } catch (error) {
       console.error("Error fetching replies:", error);
     }
-  }, []);
+  }, [loadFeedPage]);
 
   // Toggle reply expansion
   const toggleReplies = useCallback((messageId: string) => {

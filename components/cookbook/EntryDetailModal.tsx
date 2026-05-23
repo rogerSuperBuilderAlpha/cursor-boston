@@ -7,8 +7,9 @@
 
 "use client";
 
-import { useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { useState } from "react";
 import Link from "next/link";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { CATEGORY_LABELS } from "@/lib/cookbook-labels";
 import { formatCookbookDate } from "@/lib/format-cookbook-date";
 import type { CookbookCategory, CookbookEntry } from "@/types/cookbook";
@@ -33,6 +34,9 @@ export function EntryDetailModal({
   onClose: () => void;
 }) {
   const [copied, setCopied] = useState(false);
+  const { containerRef } = useFocusTrap<HTMLDivElement>({
+    onEscape: onClose,
+  });
   const upCount = votes?.upCount || 0;
   const downCount = votes?.downCount || 0;
   const netScore = upCount - downCount;
@@ -48,39 +52,22 @@ export function EntryDetailModal({
   };
 
   return (
-    <div
-      className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="entry-modal-title"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-      onKeyDown={(e: ReactKeyboardEvent) => {
-        if (e.key === "Escape") onClose();
-        if (e.key === "Tab") {
-          const modal = e.currentTarget.querySelector("[data-modal-content]");
-          if (!modal) return;
-          const focusable = modal.querySelectorAll<HTMLElement>(
-            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-          );
-          if (focusable.length === 0) return;
-          const first = focusable[0];
-          const last = focusable[focusable.length - 1];
-          if (e.shiftKey && document.activeElement === first) {
-            e.preventDefault();
-            last.focus();
-          } else if (!e.shiftKey && document.activeElement === last) {
-            e.preventDefault();
-            first.focus();
-          }
-        }
-      }}
-    >
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 relative">
+      <button
+        type="button"
+        aria-label="Close entry details backdrop"
+        tabIndex={-1}
+        onClick={onClose}
+        className="absolute inset-0 h-full w-full cursor-default bg-transparent"
+      />
       <div
+        ref={containerRef}
         data-modal-content
-        onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-3xl max-h-[90vh] flex flex-col bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl shadow-2xl overflow-hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="entry-modal-title"
+        tabIndex={-1}
+        className="relative z-10 w-full max-w-3xl max-h-[90vh] flex flex-col bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl shadow-2xl overflow-hidden"
       >
         <div className="shrink-0 px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
