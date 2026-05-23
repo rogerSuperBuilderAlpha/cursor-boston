@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath, revalidateTag } from "next/cache";
+import { FieldValue } from "firebase-admin/firestore";
 import {
   verifyWebhookSignature,
   processPullRequest,
@@ -36,6 +37,58 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const MAX_WEBHOOK_BODY_BYTES = 1_000_000;
+const GITHUB_WEBHOOK_DELIVERIES_COLLECTION = "githubWebhookDeliveries";
+
+type DeliveryClaimResult = { duplicate: boolean };
+
+function isAlreadyExistsFirestoreError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const code = (error as { code?: unknown }).code;
+  return (
+    code === 6 ||
+    code === "already-exists" ||
+    code === "ALREADY_EXISTS"
+  );
+}
+
+async function claimGitHubWebhookDelivery(
+  deliveryId: string | null,
+  eventType: string | null
+): Promise<DeliveryClaimResult> {
+  const normalizedDeliveryId = deliveryId?.trim();
+  if (!normalizedDeliveryId) {
+    return { duplicate: false };
+  }
+
+  const db = getAdminDb();
+  if (!db) {
+    logger.warn(
+      "Skipping GitHub webhook idempotency; Firebase Admin is not configured",
+      {
+        endpoint: "/api/github/webhook",
+        eventType,
+      }
+    );
+    return { duplicate: false };
+  }
+
+  try {
+    await db
+      .collection(GITHUB_WEBHOOK_DELIVERIES_COLLECTION)
+      .doc(normalizedDeliveryId)
+      .create({
+        deliveryId: normalizedDeliveryId,
+        eventType,
+        receivedAt: FieldValue.serverTimestamp(),
+      });
+    return { duplicate: false };
+  } catch (error) {
+    if (isAlreadyExistsFirestoreError(error)) {
+      return { duplicate: true };
+    }
+    throw error;
+  }
+}
 
 async function handleWebhook(request: NextRequest) {
   try {
@@ -83,6 +136,7 @@ async function handleWebhook(request: NextRequest) {
     }
 
     const eventType = request.headers.get("x-github-event");
+    const deliveryId = request.headers.get("x-github-delivery");
 
     // Only process pull_request events
     if (eventType !== "pull_request") {
@@ -102,6 +156,14 @@ async function handleWebhook(request: NextRequest) {
         { error: "Invalid payload structure" },
         { status: 400 }
       );
+    }
+
+    const deliveryClaim = await claimGitHubWebhookDelivery(
+      deliveryId,
+      eventType
+    );
+    if (deliveryClaim.duplicate) {
+      return NextResponse.json({ received: true, action, duplicate: true });
     }
 
     // Process pull request events (opened, closed, synchronize, reopened)

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { Message } from "@/types/feed";
 import { Timestamp } from "firebase/firestore";
@@ -32,6 +32,21 @@ function defaultProps(overrides: Record<string, unknown> = {}) {
 }
 
 describe("RepostModal", () => {
+  function getModalContent(): HTMLElement {
+    return screen
+      .getByRole("dialog")
+      .querySelector("[data-modal-content]") as HTMLElement;
+  }
+
+  function getFocusableElements(): HTMLElement[] {
+    const modal = getModalContent();
+    return Array.from(
+      modal.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      ),
+    );
+  }
+
   it("renders without crashing", () => {
     render(<RepostModal {...defaultProps()} />);
     expect(screen.getByText("Repost with comment")).toBeInTheDocument();
@@ -118,5 +133,37 @@ describe("RepostModal", () => {
       />,
     );
     expect(screen.getByText("4/200 (minimum 5)")).toBeInTheDocument();
+  });
+
+  it("focuses the comment textarea on open and restores prior focus on unmount", async () => {
+    const trigger = document.createElement("button");
+    trigger.textContent = "Open repost";
+    document.body.appendChild(trigger);
+    trigger.focus();
+
+    const { unmount } = render(<RepostModal {...defaultProps()} />);
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText("Add your comment...")).toHaveFocus();
+    });
+
+    unmount();
+    expect(trigger).toHaveFocus();
+    trigger.remove();
+  });
+
+  it("wraps Tab and Shift+Tab inside the modal", () => {
+    render(<RepostModal {...defaultProps({ comment: "a".repeat(100) })} />);
+    const focusable = getFocusableElements();
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    const modal = getModalContent();
+
+    first.focus();
+    fireEvent.keyDown(modal, { key: "Tab", shiftKey: true });
+    expect(last).toHaveFocus();
+
+    fireEvent.keyDown(modal, { key: "Tab" });
+    expect(first).toHaveFocus();
   });
 });

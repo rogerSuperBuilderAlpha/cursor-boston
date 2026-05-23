@@ -257,7 +257,14 @@ export function SecurityTab({
                   <div key={agent.id} className="flex items-center gap-3 p-3 bg-neutral-800/50 rounded-lg">
                     <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center shrink-0">
                       {agent.avatarUrl ? (
-                        <Image src={agent.avatarUrl} alt={agent.name} width={32} height={32} className="rounded-full" />
+                        <Image
+                          src={agent.avatarUrl}
+                          alt={agent.name}
+                          width={32}
+                          height={32}
+                          sizes="32px"
+                          className="rounded-full"
+                        />
                       ) : (
                         <AgentIcon className="text-purple-400 w-4 h-4" />
                       )}

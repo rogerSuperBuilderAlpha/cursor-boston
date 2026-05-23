@@ -16,6 +16,7 @@ import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 import { sanitizeText } from "@/lib/sanitize";
 import { getDisplayName } from "@/lib/utils";
 import { communityContract } from "@/lib/api-schemas/community";
+import { extractCommunityMentions } from "@/lib/community-mentions";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -62,12 +63,14 @@ export async function POST(request: NextRequest) {
       );
     }
     const sanitizedContent = parsed.data.content;
+    const mentions = extractCommunityMentions(sanitizedContent);
 
     const authorName = getDisplayName(user);
 
     const messageRef = db.collection("communityMessages").doc();
     await messageRef.set({
       content: sanitizedContent,
+      mentions,
       authorId: user.uid,
       authorName,
       authorPhoto: user.picture || null,

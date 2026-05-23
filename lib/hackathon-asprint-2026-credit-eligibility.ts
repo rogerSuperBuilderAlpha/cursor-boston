@@ -14,6 +14,10 @@ import {
   hackathonEventSignupDocId,
   profileMatchesHackathonJudgeCheckinException,
 } from "@/lib/hackathon-event-signup";
+import {
+  checkEventMembership,
+  checkPullRequestThreshold,
+} from "@/lib/eligibility-base";
 
 const EVENT_ID = HACK_A_SPRINT_2026_EVENT_ID;
 
@@ -33,7 +37,8 @@ export async function resolveHackASprint2026CreditForUser(
   const signupSnap = await db.collection("hackathonEventSignups").doc(signupDocId).get();
 
   if (!signupSnap.exists) {
-    return { ok: false, reason: "not_signed_up" };
+    const membership = checkEventMembership({ exists: false });
+    if (!membership.ok) return membership;
   }
 
   const signupData = signupSnap.data()!;
@@ -41,20 +46,18 @@ export async function resolveHackASprint2026CreditForUser(
   const userSnap = await db.collection("users").doc(uid).get();
   const ud = userSnap.data();
 
-  if (!signupData.checkedInAt) {
-    if (
-      !profileMatchesHackathonJudgeCheckinException(
-        tokenEmail ?? null,
-        ud as Record<string, unknown> | undefined
-      )
-    ) {
-      return { ok: false, reason: "not_checked_in" };
-    }
-  }
+  const membership = checkEventMembership({
+    exists: true,
+    checkedInAt: signupData.checkedInAt,
+    checkInExempt: profileMatchesHackathonJudgeCheckinException(
+      tokenEmail ?? null,
+      ud as Record<string, unknown> | undefined
+    ),
+    confirmedAt: signupData.confirmedAt,
+    rank: signupData.frozenRank,
+  });
+  if (!membership.ok) return membership;
 
-  if (!signupData.frozenRank || !signupData.confirmedAt) {
-    return { ok: false, reason: "not_confirmed" };
-  }
   const githubLogin =
     ud?.github && typeof ud.github === "object"
       ? (ud.github as { login?: string }).login
@@ -65,11 +68,16 @@ export async function resolveHackASprint2026CreditForUser(
   }
 
   const hasSubmitted = await githubUserHasMergedLabeledShowcasePr(githubLogin);
-  if (!hasSubmitted) {
-    return { ok: false, reason: "not_submitted" };
+  const submitted = checkPullRequestThreshold({
+    pullRequestsCount: Number(hasSubmitted),
+    target: 1,
+    reason: "not_submitted",
+  });
+  if (!submitted.isEligible) {
+    return { ok: false, reason: submitted.reason ?? "not_submitted" };
   }
 
-  const rank = signupData.frozenRank as number;
+  const rank = membership.rank;
   const codeDoc = await db
     .collection("hackathonCreditCodes")
     .doc(`${EVENT_ID}__${rank}`)

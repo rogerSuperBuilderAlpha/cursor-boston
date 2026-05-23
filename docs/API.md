@@ -16,7 +16,7 @@
 
 All endpoints are under `/api/`. Authentication uses Firebase Auth ID tokens (Bearer) or session cookies. Spec: [`/openapi.json`](https://cursorboston.com/openapi.json) · interactive: [`/api/docs`](https://cursorboston.com/api/docs).
 
-**179 paths, 215 operations across 32 areas.**
+**180 paths, 216 operations across 32 areas.**
 
 ---
 
@@ -89,6 +89,7 @@ _Community posts, replies, reactions, moderation._
 | DELETE | `/api/community/block` | Yes | Unblock another user |
 | POST | `/api/community/block` | Yes | Block another user |
 | POST | `/api/community/delete` | Yes | Delete the current user's own community message |
+| GET | `/api/community/feed` | No | List visible community feed messages |
 | GET | `/api/community/moderate` | Yes | Admin: list community reports (paginated) |
 | POST | `/api/community/moderate` | Yes | Admin: act on a community report (dismiss / hide / suspend) |
 | GET | `/api/community/my-reactions` | Yes | Get the current user's reactions for a batch of messages |

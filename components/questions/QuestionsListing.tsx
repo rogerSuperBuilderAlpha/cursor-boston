@@ -11,6 +11,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { Search, Plus, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { QuestionCardsSkeleton } from "@/components/skeletons/QuestionsPageSkeleton";
 import type { Question, QuestionSort, VoteType } from "@/types/questions";
 import { QuestionCard } from "./QuestionCard";
 import { TagFilter } from "./TagFilter";
@@ -203,9 +204,7 @@ export function QuestionsListing() {
 
       {/* Question list */}
       {loading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 size={24} className="animate-spin text-neutral-400" />
-        </div>
+        <QuestionCardsSkeleton />
       ) : questions.length === 0 ? (
         <div className="text-center py-16 px-4 border border-neutral-200 dark:border-neutral-800 rounded-xl border-dashed">
           {search || tag ? (
