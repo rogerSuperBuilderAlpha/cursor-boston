@@ -7,6 +7,7 @@
 
 import { MetadataRoute } from 'next';
 import { getAllPostSlugs } from '@/lib/blog';
+import { PROMPT_TEMPLATES } from '@/lib/prompt-templates';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://cursorboston.com';
@@ -102,6 +103,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     },
     {
+      url: `${baseUrl}/templates`,
+      lastModified,
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    },
+    {
       url: `${baseUrl}/showcase`,
       lastModified,
       changeFrequency: 'weekly',
@@ -191,5 +198,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  return [...staticPages, ...blogPages];
+  const templatePages: MetadataRoute.Sitemap = PROMPT_TEMPLATES.map((template) => ({
+    url: `${baseUrl}/templates/${template.id}`,
+    lastModified,
+    changeFrequency: 'monthly' as const,
+    priority: 0.6,
+  }));
+
+  return [...staticPages, ...blogPages, ...templatePages];
 }
