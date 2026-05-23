@@ -202,6 +202,73 @@ describe("getTopMatches", () => {
     expect(matches.length).toBe(5);
   });
 
+  it("returns every viable match in an odd-sized candidate pool", async () => {
+    const me = makeProfile({
+      userId: "me",
+      skillsCanTeach: ["React"],
+      skillsWantToLearn: ["Go"],
+      preferredLanguages: ["TypeScript"],
+    });
+    const profiles = [
+      makeProfile({ userId: "learn-react", skillsWantToLearn: ["React"] }),
+      makeProfile({ userId: "teach-go", skillsCanTeach: ["Go"] }),
+      makeProfile({
+        userId: "shared-typescript",
+        skillsCanTeach: ["Testing"],
+        preferredLanguages: ["TypeScript"],
+      }),
+    ];
+
+    const matches = await getTopMatches(me, profiles);
+
+    expect(matches).toHaveLength(3);
+    expect(matches.map((match) => match.userId)).toEqual(
+      expect.arrayContaining(["learn-react", "teach-go", "shared-typescript"])
+    );
+  });
+
+  it("does not mutate candidate eligibility between match requests", async () => {
+    const me = makeProfile({
+      userId: "me",
+      skillsCanTeach: ["React"],
+      skillsWantToLearn: ["Go"],
+    });
+    const profiles = [
+      makeProfile({ userId: "learn-react", skillsWantToLearn: ["React"] }),
+      makeProfile({ userId: "teach-go", skillsCanTeach: ["Go"] }),
+      makeProfile({
+        userId: "shared-session",
+        skillsWantToLearn: ["React"],
+        sessionTypes: ["build-together"],
+      }),
+    ];
+
+    const firstPass = await getTopMatches(me, profiles, 3);
+    const secondPass = await getTopMatches(me, profiles, 3);
+
+    expect(secondPass.map((match) => match.userId)).toEqual(
+      firstPass.map((match) => match.userId)
+    );
+    expect(secondPass).toHaveLength(3);
+  });
+
+  it("returns no matches when no candidate is eligible or scoreable", async () => {
+    const me = makeProfile({ userId: "me", timezone: "America/New_York" });
+    const profiles = [
+      me,
+      makeProfile({
+        userId: "inactive",
+        isActive: false,
+        skillsWantToLearn: ["React"],
+      }),
+      makeProfile({ userId: "zero-score", timezone: "Asia/Tokyo" }),
+    ];
+
+    const matches = await getTopMatches(me, profiles);
+
+    expect(matches).toHaveLength(0);
+  });
+
   it("excludes zero-score matches", async () => {
     const me = makeProfile({ userId: "me", timezone: "America/New_York" });
     const other = makeProfile({ userId: "other", timezone: "Asia/Tokyo" });
