@@ -43,6 +43,7 @@ import {
   UserPlus,
   Users,
   UsersRound,
+  Video,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -134,6 +135,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/showcase", label: "Showcase", icon: LayoutGrid },
       { href: "/members", label: "Members", icon: Users },
       { href: "/pair", label: "Pair Programming", icon: UsersRound },
+      { href: "/recordings", label: "Recordings", icon: Video },
       { href: "/mentorship", label: "Mentorship", icon: GraduationCap },
       { href: "/talks", label: "Talks", icon: MessageSquare },
       { href: "/analytics", label: "Analytics", icon: BarChart2 },

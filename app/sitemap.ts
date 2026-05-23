@@ -7,6 +7,7 @@
 
 import { MetadataRoute } from 'next';
 import { getAllPostSlugs } from '@/lib/blog';
+import { getPublishedPairRecordings } from '@/lib/pair-recordings';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://cursorboston.com';
@@ -114,6 +115,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.6,
     },
     {
+      url: `${baseUrl}/recordings`,
+      lastModified,
+      changeFrequency: 'weekly',
+      priority: 0.6,
+    },
+    {
       url: `${baseUrl}/badges`,
       lastModified,
       changeFrequency: 'weekly',
@@ -191,5 +198,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  return [...staticPages, ...blogPages];
+  const recordingPages: MetadataRoute.Sitemap = getPublishedPairRecordings().map(
+    (recording) => ({
+      url: `${baseUrl}/recordings/${recording.id}`,
+      lastModified,
+      changeFrequency: 'monthly' as const,
+      priority: 0.55,
+    }),
+  );
+
+  return [...staticPages, ...blogPages, ...recordingPages];
 }
