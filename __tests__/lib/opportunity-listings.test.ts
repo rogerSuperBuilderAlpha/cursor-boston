@@ -1,6 +1,7 @@
 import {
   filterOpportunityListings,
   formatOpportunityType,
+  getOpportunityTypeBadgeClass,
   getOpportunityTypeOptions,
   type OpportunityListing,
 } from "@/lib/opportunity-listings";
@@ -44,7 +45,16 @@ describe("opportunity listing helpers", () => {
   it("formats known and unknown opportunity types", () => {
     expect(formatOpportunityType("cofounder")).toBe("Co-Founder");
     expect(formatOpportunityType("full-time")).toBe("Full-Time");
+    expect(formatOpportunityType("part-time")).toBe("Part-Time");
     expect(formatOpportunityType("advisor")).toBe("Advisor");
+  });
+
+  it("returns badge classes for known and fallback opportunity types", () => {
+    expect(getOpportunityTypeBadgeClass("cofounder")).toContain("violet");
+    expect(getOpportunityTypeBadgeClass("full-time")).toContain("emerald");
+    expect(getOpportunityTypeBadgeClass("contract")).toContain("blue");
+    expect(getOpportunityTypeBadgeClass("internship")).toContain("amber");
+    expect(getOpportunityTypeBadgeClass("advisor")).toContain("neutral");
   });
 
   it("returns sorted opportunity type options", () => {

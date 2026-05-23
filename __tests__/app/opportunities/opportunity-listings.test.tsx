@@ -17,7 +17,16 @@ const opportunities: OpportunityListing[] = [
     remote: false,
     postedDate: "2026-02-06",
     description: "Build social fantasy sports with a founding team.",
+    aboutCompany: "A sports community startup building in Boston.",
+    team: [
+      {
+        name: "Harry",
+        role: "COO",
+        bio: "Runs growth and partnerships.",
+      },
+    ],
     tags: ["Sports Tech"],
+    contactEmail: "hello@example.com",
     featured: true,
   },
   {
@@ -42,6 +51,12 @@ describe("OpportunityListings", () => {
     expect(screen.getByText("Showing 2 of 2 listings.")).toBeInTheDocument();
     expect(screen.getByText("CTO / Co-Founder")).toBeInTheDocument();
     expect(screen.getByText("AI Product Engineer")).toBeInTheDocument();
+    expect(screen.getByText("A sports community startup building in Boston.")).toBeInTheDocument();
+    expect(screen.getByText("Harry")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /contact/i })).toHaveAttribute(
+      "href",
+      "mailto:hello@example.com"
+    );
 
     fireEvent.change(screen.getByLabelText("Filter by opportunity type"), {
       target: { value: "contract" },
