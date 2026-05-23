@@ -11,6 +11,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { GitHubIcon, DiscordIcon } from "@/components/icons";
+import { SportsHack2026EventNav } from "@/components/hackathons/SportsHack2026EventNav";
 import { trackEvent } from "@/lib/analytics";
 import {
   SPORTS_HACK_2026_ATTENDANCE_LIMIT,
@@ -413,7 +414,7 @@ export default function SportsHack2026SignupPage() {
   return (
     <div className="min-h-screen bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
       <div className="mx-auto max-w-4xl px-6 py-12 md:py-16">
-        <nav className="mb-8 text-sm text-neutral-500 dark:text-neutral-400">
+        <nav className="mb-4 text-sm text-neutral-500 dark:text-neutral-400">
           <Link
             href="/hackathons"
             className="hover:text-emerald-600 dark:hover:text-emerald-400"
@@ -430,6 +431,8 @@ export default function SportsHack2026SignupPage() {
           <span className="mx-2">/</span>
           <span className="text-neutral-700 dark:text-neutral-300">Signup</span>
         </nav>
+
+        <SportsHack2026EventNav />
 
         <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
           {SPORTS_HACK_2026_SHORT_NAME} — website signup

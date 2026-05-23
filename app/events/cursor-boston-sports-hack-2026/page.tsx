@@ -9,6 +9,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import eventsData from "@/content/events.json";
 import type { EventsData } from "@/types/events";
+import { SportsHack2026EventNav } from "@/components/hackathons/SportsHack2026EventNav";
 import {
   SPORTS_HACK_2026_CAPACITY,
   SPORTS_HACK_2026_EVENT_ID,
@@ -88,6 +89,10 @@ export default function SportsHack2026HubPage() {
           </ol>
         </div>
       </nav>
+
+      <div className="px-6 pt-6 max-w-6xl mx-auto w-full">
+        <SportsHack2026EventNav />
+      </div>
 
       <Hero event={event} />
       <HowToWinCredits />

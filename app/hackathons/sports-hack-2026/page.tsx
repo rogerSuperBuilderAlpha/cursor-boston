@@ -11,6 +11,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { LumaEmbed } from "@/components/hackathons/LumaEmbed";
+import { SportsHack2026EventNav } from "@/components/hackathons/SportsHack2026EventNav";
 import {
   SPORTS_HACK_2026_ATTENDANCE_LIMIT,
   SPORTS_HACK_2026_CAPACITY,
@@ -74,7 +75,7 @@ export default function SportsHack2026LandingPage() {
   return (
     <div className="min-h-screen bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
       <div className="mx-auto max-w-5xl px-6 py-12 md:py-16">
-        <nav className="mb-8 text-sm text-neutral-500 dark:text-neutral-400">
+        <nav className="mb-4 text-sm text-neutral-500 dark:text-neutral-400">
           <Link
             href="/hackathons"
             className="hover:text-emerald-600 dark:hover:text-emerald-400"
@@ -86,6 +87,8 @@ export default function SportsHack2026LandingPage() {
             {SPORTS_HACK_2026_NAME}
           </span>
         </nav>
+
+        <SportsHack2026EventNav />
 
         <div className="grid gap-10 md:grid-cols-[1fr_minmax(320px,420px)]">
           <div>

@@ -10,6 +10,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import { SportsHack2026EventNav } from "@/components/hackathons/SportsHack2026EventNav";
 import {
   SPORTS_HACK_2026_CAPACITY,
   SPORTS_HACK_2026_EVENT_ID,
@@ -247,6 +248,7 @@ export default function SportsHack2026AdminPage() {
     <div className="flex flex-col min-h-screen">
       <section className="py-8 px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-7xl mx-auto">
+          <SportsHack2026EventNav />
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <p className="text-sm text-neutral-500 mb-1">
