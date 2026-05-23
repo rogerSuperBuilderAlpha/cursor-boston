@@ -57,6 +57,7 @@ let withContract = 0;
 for (const file of walk(API_DIR)) {
   const rel = path
     .relative(API_DIR, file)
+    .replace(/\\/g, "/")
     .replace(/[\\/]route\.tsx?$/, "");
   const src = fs.readFileSync(file, "utf8");
   const hasContract =

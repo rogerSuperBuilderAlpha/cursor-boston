@@ -63,8 +63,16 @@ describe("isOriginAllowed", () => {
   const originalEnv = process.env.NODE_ENV;
   const originalAppUrl = process.env.NEXT_PUBLIC_APP_URL;
 
+  function setNodeEnv(value: string | undefined) {
+    if (value === undefined) {
+      delete process.env.NODE_ENV;
+    } else {
+      process.env.NODE_ENV = value;
+    }
+  }
+
   afterEach(() => {
-    Object.defineProperty(process.env, "NODE_ENV", { value: originalEnv, configurable: true });
+    setNodeEnv(originalEnv);
     if (originalAppUrl === undefined) delete process.env.NEXT_PUBLIC_APP_URL;
     else process.env.NEXT_PUBLIC_APP_URL = originalAppUrl;
   });
@@ -129,12 +137,12 @@ describe("isOriginAllowed", () => {
   });
 
   it("returns false for POST with no origin/referer in production", () => {
-    Object.defineProperty(process.env, "NODE_ENV", { value: "production", configurable: true });
+    setNodeEnv("production");
     expect(isOriginAllowed(makeRequest({ method: "POST" }))).toBe(false);
   });
 
   it("returns true for POST with no origin/referer in development", () => {
-    Object.defineProperty(process.env, "NODE_ENV", { value: "development", configurable: true });
+    setNodeEnv("development");
     expect(isOriginAllowed(makeRequest({ method: "POST" }))).toBe(true);
   });
 
