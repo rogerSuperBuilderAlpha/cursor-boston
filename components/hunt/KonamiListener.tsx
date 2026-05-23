@@ -7,21 +7,13 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-
-const SEQUENCE = [
-  "ArrowUp",
-  "ArrowUp",
-  "ArrowDown",
-  "ArrowDown",
-  "ArrowLeft",
-  "ArrowRight",
-  "ArrowLeft",
-  "ArrowRight",
-  "b",
-  "a",
-];
+import {
+  KONAMI_SEQUENCE,
+  KONAMI_SEQUENCE_HEADER,
+} from "@/lib/konami-handler";
+import { useKonamiListener } from "@/hooks/use-konami-listener";
 
 export function KonamiListener() {
   const { user } = useAuth();
@@ -29,34 +21,22 @@ export function KonamiListener() {
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<null | string>(null);
 
-  useEffect(() => {
-    let index = 0;
-    function onKey(e: KeyboardEvent) {
-      const expected = SEQUENCE[index];
-      if (e.key.toLowerCase() === expected?.toLowerCase()) {
-        index += 1;
-        if (index === SEQUENCE.length) {
-          index = 0;
-          void fetch("/api/hunt/oracle/konami", {
-            headers: { "X-Konami-Sequence": "UUDDLRLRBA" },
-          })
-            .then(async (r) => {
-              if (!r.ok) {
-                setRevealed({ error: "Not today." });
-                return;
-              }
-              const j = (await r.json()) as { token?: string };
-              if (j.token) setRevealed({ token: j.token });
-            })
-            .catch(() => setRevealed({ error: "Network error." }));
+  const revealToken = useCallback(() => {
+    void fetch("/api/hunt/oracle/konami", {
+      headers: { "X-Konami-Sequence": KONAMI_SEQUENCE_HEADER },
+    })
+      .then(async (r) => {
+        if (!r.ok) {
+          setRevealed({ error: "Not today." });
+          return;
         }
-      } else {
-        index = 0;
-      }
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+        const j = (await r.json()) as { token?: string };
+        if (j.token) setRevealed({ token: j.token });
+      })
+      .catch(() => setRevealed({ error: "Network error." }));
   }, []);
+
+  useKonamiListener(KONAMI_SEQUENCE, revealToken);
 
   async function submit() {
     if (!user || !revealed?.token) return;
