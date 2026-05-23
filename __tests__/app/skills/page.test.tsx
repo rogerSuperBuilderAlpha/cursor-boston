@@ -3,7 +3,7 @@
  */
 import "@/__tests__/app/_shared/page-test-setup";
 
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import { useAuth } from "@/contexts/AuthContext";
 import { ensureUserBadgesForEligibleWithStatus } from "@/lib/badges/data";
 import { BADGE_DEFINITIONS } from "@/lib/badges/definitions";
@@ -85,6 +85,21 @@ describe("SkillsPage", () => {
     }) as typeof fetch;
   });
 
+  it("announces the initial skills passport loading state", async () => {
+    mockUseAuth.mockReturnValue({
+      loading: true,
+      user: null,
+      userProfile: null,
+    });
+
+    const Page = (await import("@/app/skills/page")).default;
+    render(<Page />);
+
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Loading your skills passport..."
+    );
+  });
+
   it("renders badge-backed skill tracks for signed-in users", async () => {
     const Page = (await import("@/app/skills/page")).default;
     render(<Page />);
@@ -97,6 +112,20 @@ describe("SkillsPage", () => {
     expect(await screen.findByText("3/9")).toBeInTheDocument();
     expect(screen.getByText("33%")).toBeInTheDocument();
     expect(screen.getAllByText("Conversation Starter").length).toBeGreaterThan(0);
+    const earnedBadge = await screen.findByLabelText("Badge: First Steps - Earned");
+    const inProgressBadge = screen.getByLabelText(
+      "Badge: Conversation Starter - In progress"
+    );
+    const buildProgress = screen.getByRole("progressbar", {
+      name: "Build and Ship progress",
+    });
+
+    expect(within(earnedBadge).getByText("Earned")).toBeInTheDocument();
+    expect(within(inProgressBadge).getByText("In progress")).toBeInTheDocument();
+    expect(buildProgress).toHaveAttribute(
+      "aria-valuetext",
+      "1 of 3 badges earned - 33%"
+    );
 
     await waitFor(() => {
       expect(mockEnsureBadges).toHaveBeenCalled();

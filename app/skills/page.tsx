@@ -179,7 +179,13 @@ export default function SkillsPage() {
   if (loading || !user) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-t-2 border-neutral-900 dark:border-white" />
+        <div role="status" aria-live="polite">
+          <div
+            className="h-8 w-8 animate-spin rounded-full border-b-2 border-t-2 border-neutral-900 dark:border-white"
+            aria-hidden="true"
+          />
+          <span className="sr-only">Loading your skills passport...</span>
+        </div>
       </div>
     );
   }
@@ -258,7 +264,11 @@ export default function SkillsPage() {
               Skill Tracks
             </h2>
             {loadingPassport && (
-              <span className="text-xs text-neutral-500 dark:text-neutral-400">
+              <span
+                role="status"
+                aria-live="polite"
+                className="text-xs text-neutral-500 dark:text-neutral-400"
+              >
                 Updating...
               </span>
             )}
@@ -282,13 +292,21 @@ export default function SkillsPage() {
                     {track.earnedCount}/{track.totalCount}
                   </span>
                 </div>
-                <ProgressBar value={track.percent} label={track.name} />
+                <ProgressBar
+                  value={track.percent}
+                  label={track.name}
+                  valueText={`${track.earnedCount} of ${track.totalCount} badges earned - ${track.percent}%`}
+                />
                 <div className="mt-4 flex flex-wrap gap-2">
                   {track.badges.map((badge) => {
                     const earned = passport.earnedBadgeIds.includes(badge.id);
+                    const badgeState = earned ? "Earned" : "In progress";
+                    const BadgeStateIcon = earned ? CheckCircle2 : CircleDashed;
+
                     return (
                       <span
                         key={badge.id}
+                        aria-label={`Badge: ${badge.name} - ${badgeState}`}
                         className={cn(
                           "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs",
                           earned
@@ -296,11 +314,8 @@ export default function SkillsPage() {
                             : "border-neutral-200 bg-neutral-50 text-neutral-600 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-400"
                         )}
                       >
-                        {earned ? (
-                          <CheckCircle2 className="h-3.5 w-3.5" />
-                        ) : (
-                          <CircleDashed className="h-3.5 w-3.5" />
-                        )}
+                        <BadgeStateIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                        <span className="font-semibold">{badgeState}</span>
                         {badge.name}
                       </span>
                     );
@@ -358,6 +373,7 @@ export default function SkillsPage() {
                     <ProgressBar
                       value={milestone.percent}
                       label={milestone.badge.name}
+                      valueText={`${milestone.current} of ${milestone.target} ${milestone.unit} completed - ${milestone.percent}%`}
                     />
                   </div>
                 ))
@@ -394,13 +410,22 @@ function SummaryStat({
   );
 }
 
-function ProgressBar({ value, label }: { value: number; label: string }) {
+function ProgressBar({
+  value,
+  label,
+  valueText,
+}: {
+  value: number;
+  label: string;
+  valueText: string;
+}) {
   return (
     <div
       aria-label={`${label} progress`}
       aria-valuemax={100}
       aria-valuemin={0}
       aria-valuenow={value}
+      aria-valuetext={valueText}
       className="h-2 overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-800"
       role="progressbar"
     >
