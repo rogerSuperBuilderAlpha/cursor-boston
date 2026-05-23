@@ -33,6 +33,7 @@ jest.mock("@/lib/sports-hack-2026", () => ({
   SPORTS_HACK_2026_LUMA_URL: "https://lu.ma/sports",
   SPORTS_HACK_2026_LUMA_EMBED_ID: "embed",
   SPORTS_HACK_2026_CAPACITY: 50,
+  SPORTS_HACK_2026_ATTENDANCE_LIMIT: 200,
 }));
 
 import SportsHack2026LandingPage from "@/app/hackathons/sports-hack-2026/page";
@@ -61,7 +62,8 @@ describe("SportsHack2026LandingPage", () => {
     setAuth();
     render(<SportsHack2026LandingPage />);
     expect(screen.getAllByText(/Sports Hack/).length).toBeGreaterThan(0);
-    expect(screen.getByText(/50 confirmed seats/)).toBeInTheDocument();
+    expect(screen.getByText(/Top 50 get Cursor credit/)).toBeInTheDocument();
+    expect(screen.getByText(/guaranteed-entry cap/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Register on the website/i })).toBeInTheDocument();
   });
 
@@ -77,12 +79,17 @@ describe("SportsHack2026LandingPage", () => {
           { rank: 3, status: "waitlisted", creditEligible: false },
         ],
         creditTopN: 50,
+        confirmedAttendeeCount: 0,
+        attendanceLimit: 200,
         me: null,
       }),
     })) as never;
     setAuth();
     render(<SportsHack2026LandingPage />);
-    await waitFor(() => expect(screen.getByText(/2\/50 confirmed · 60 registered/)).toBeInTheDocument());
+    // Credit seats locked stat shows the rank-frozen confirmed count
+    await waitFor(() => expect(screen.getByText(/2\/50 \(Cursor credit link\)/)).toBeInTheDocument());
+    // Confirmed-attending stat shows the new opt-in count
+    expect(screen.getByText(/0\/200 · 60 signed up/)).toBeInTheDocument();
   });
 
   it("falls back to creditEligible when entry.status is undefined", async () => {
@@ -95,11 +102,13 @@ describe("SportsHack2026LandingPage", () => {
           { rank: 2, creditEligible: false }, // → waitlisted via fallback
         ],
         creditTopN: 50,
+        confirmedAttendeeCount: 0,
+        attendanceLimit: 200,
       }),
     })) as never;
     setAuth();
     render(<SportsHack2026LandingPage />);
-    await waitFor(() => expect(screen.getByText(/1\/50 confirmed · 10 registered/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/1\/50 \(Cursor credit link\)/)).toBeInTheDocument());
   });
 
   it("renders signed-up CTA with rank when user is in leaderboard", async () => {
