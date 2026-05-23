@@ -23,6 +23,7 @@ import {
   BarChart2,
   BookOpen,
   Bot,
+  BrainCircuit,
   Briefcase,
   Building2,
   Calendar,
@@ -125,6 +126,7 @@ const NAV_GROUPS: NavGroup[] = [
       },
       { href: "/blog", label: "Blog", icon: BookOpen },
       { href: "/certificate", label: "Certificate", icon: Award },
+      { href: "/skills", label: "Skills Passport", icon: BrainCircuit },
     ],
   },
   {
