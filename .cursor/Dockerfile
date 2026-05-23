@@ -1,6 +1,9 @@
 # Cloud Agent base image: Ubuntu (required for Cursor Computer Use with Dockerfiles).
 # Do not COPY the project — Cursor checks out the workspace separately.
-FROM ubuntu:24.04
+# Pinned by digest for supply-chain integrity (OpenSSF Scorecard
+# Pinned-Dependencies). Refresh the digest in lockstep with the human-
+# readable tag when bumping ubuntu versions.
+FROM ubuntu:24.04@sha256:c4a8d5503dfb2a3eb8ab5f807da5bc69a85730fb49b5cfca2330194ebcc41c7b
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -63,7 +66,9 @@ RUN set -eux; \
 ########################################################
 # Firebase CLI (global)
 ########################################################
-RUN npm install -g firebase-tools
+# Pinned to match the devDependency in package.json (and the Scorecard
+# Pinned-Dependencies check). Bump in lockstep.
+RUN npm install -g firebase-tools@15.18.0
 
 ########################################################
 # ubuntu user (matches Cursor Cloud Agent Docker docs)

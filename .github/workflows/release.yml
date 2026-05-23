@@ -187,6 +187,31 @@ jobs:
       - name: Install cosign
         uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
 
+      # Generate a reproducible source archive of the tag and sign it so
+      # downstream consumers (and OpenSSF Scorecard's Signed-Releases
+      # check) have a cryptographically verifiable artifact to attach
+      # trust to. GitHub's auto-generated source-code zip/tar is not
+      # signed and Scorecard correctly flags releases that lack a
+      # signature file.
+      - name: Build signed source archive
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ github.event.inputs.version || github.ref_name }}"
+          ARCHIVE="cursor-boston-${TAG}.tar.gz"
+          # --prefix matches GitHub's default archive layout so consumers
+          # can swap our signed archive in without changing their unpack
+          # flow. Built from HEAD (= tagged commit) for byte-equivalence.
+          git archive --format=tar.gz --prefix="cursor-boston-${TAG}/" \
+            -o "$ARCHIVE" HEAD
+          cosign sign-blob --yes \
+            --bundle "${ARCHIVE}.cosign.bundle" \
+            "$ARCHIVE"
+          gh release upload "$TAG" \
+            "$ARCHIVE" \
+            "${ARCHIVE}.cosign.bundle" \
+            --repo "${{ github.repository }}"
+
       - name: Sign release SBOMs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -206,12 +231,33 @@ jobs:
             sbom.spdx.json.cosign.bundle \
             --repo "${{ github.repository }}"
 
-      - name: Attest SLSA build provenance for SBOMs
+      - name: Attest SLSA build provenance for release artifacts
+        id: attest
         uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
         with:
           subject-path: |
+            cursor-boston-${{ github.event.inputs.version || github.ref_name }}.tar.gz
             sbom.json
             sbom.spdx.json
+
+      # Attach the SLSA provenance bundle to the GitHub release so it's
+      # discoverable from the release page (and by OpenSSF Scorecard's
+      # Signed-Releases check, which scans release assets for
+      # provenance-shaped files).
+      - name: Upload SLSA provenance bundle to release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ github.event.inputs.version || github.ref_name }}"
+          BUNDLE="${{ steps.attest.outputs.bundle-path }}"
+          if [ -n "$BUNDLE" ] && [ -f "$BUNDLE" ]; then
+            cp "$BUNDLE" "cursor-boston-${TAG}.intoto.jsonl"
+            gh release upload "$TAG" \
+              "cursor-boston-${TAG}.intoto.jsonl" \
+              --repo "${{ github.repository }}"
+          else
+            echo "::warning::attest-build-provenance produced no bundle file; skipping upload"
+          fi
 
   notify:
     name: Notify Release
