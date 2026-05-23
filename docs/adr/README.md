@@ -33,6 +33,8 @@ What becomes easier or more difficult because of this decision?
 | [0004](0004-webpack-bundler.md) | Webpack over Turbopack | Accepted | 2026-04-13 |
 | [0005](0005-in-memory-rate-limiting.md) | In-memory rate limiting with Firestore fallback | Accepted | 2026-04-13 |
 | [0006](0006-develop-main-branching.md) | develop/main branching strategy | Accepted | 2026-04-13 |
+| [0007](0007-account-deletion-model.md) | Account deletion — hard-delete with 30-day soft-delete grace | Accepted | 2026-05-18 |
+| [0008](0008-community-maintainer-track.md) | Community Maintainer track + multi-maintainer onboarding model | Accepted | 2026-05-18 |
 
 ## Adding a new ADR
 
