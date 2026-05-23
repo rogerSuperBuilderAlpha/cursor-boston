@@ -171,7 +171,7 @@ Practical implications you should know up front:
 - **Network use is not distribution.** Running a private hosted instance does not trigger the copyleft. Only redistributing the code (or a binary) does. (This project uses GPL-3.0, not AGPL-3.0.)
 - **If you need a permissive license** (MIT / Apache) for proprietary use, this project is not the right starting point.
 
-Every TypeScript / TSX source file under `app/`, `lib/`, `components/`, `hooks/`, `contexts/`, and `types/` carries an `SPDX-License-Identifier: GPL-3.0-or-later` header. The CI gate refuses to land new files without one — run `node scripts/add-gpl-headers.js` if you add files in those directories. See [LICENSE](../LICENSE) for full terms and [NOTICE](../NOTICE) for third-party attributions.
+Every TypeScript / TSX source file under `app/`, `lib/`, `components/`, `hooks/`, `contexts/`, and `types/` carries a GPL-3.0-only SPDX license header. The CI gate refuses to land new files without one — run `node scripts/add-gpl-headers.js` if you add files in those directories. See [LICENSE](../LICENSE) for full terms and [NOTICE](../NOTICE) for third-party attributions.
 
 ## Getting Started
 
