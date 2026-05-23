@@ -58,9 +58,15 @@ function getAdminApp(): App | null {
 }
 
 /**
- * Get the Firebase Admin Firestore instance.
+ * Get the server-only Firebase Admin Firestore instance.
+ *
+ * Use this helper from Route Handlers, server actions, scripts, and other
+ * trusted Node.js code that needs elevated Firebase Admin privileges. Never
+ * import or expose this helper from client components because Admin SDK
+ * credentials can bypass Firestore security rules.
+ *
  * Initializes the instance on first call and reuses it on subsequent calls.
- * @returns The Firestore instance, or null if Firebase Admin could not be initialized
+ * @returns The Firestore instance, or null when no supported Admin SDK credentials are configured.
  */
 export function getAdminDb(): Firestore | null {
   if (adminDb) {
@@ -87,9 +93,14 @@ export function getAdminDb(): Firestore | null {
 }
 
 /**
- * Get the Firebase Admin Auth instance.
+ * Get the server-only Firebase Admin Auth instance.
+ *
+ * Use this helper only from trusted server-side code that verifies or manages
+ * Firebase Auth users with Admin SDK privileges. Client code should use the
+ * browser SDK `auth` export from `lib/firebase` instead.
+ *
  * Initializes the instance on first call and reuses it on subsequent calls.
- * @returns The Auth instance, or null if Firebase Admin could not be initialized
+ * @returns The Auth instance, or null when no supported Admin SDK credentials are configured.
  */
 export function getAdminAuth(): Auth | null {
   if (adminAuth) {
@@ -106,9 +117,14 @@ export function getAdminAuth(): Auth | null {
 }
 
 /**
- * Get the Firebase Admin Realtime Database instance.
+ * Get the server-only Firebase Admin Realtime Database instance.
+ *
+ * Use this helper from trusted Node.js code that needs Admin SDK access to
+ * Realtime Database. Never import it from client components; browser code
+ * should use the client `rtdb` export from `lib/firebase`.
+ *
  * Initializes the instance on first call and reuses it on subsequent calls.
- * @returns The Database instance, or null if Firebase Admin could not be initialized
+ * @returns The Database instance, or null when no supported Admin SDK credentials are configured.
  */
 export function getAdminRtdb(): Database | null {
   if (adminRtdb) {

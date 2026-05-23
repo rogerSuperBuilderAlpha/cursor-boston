@@ -6,7 +6,7 @@
  * (async RSC defaults cannot be rendered in jsdom).
  */
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import React from "react";
 import { render } from "@testing-library/react";
 
@@ -139,7 +139,7 @@ function isUseClientPage(absPath: string): boolean {
 }
 
 function moduleIdFor(absPath: string): string {
-  const rel = absPath.replace(process.cwd() + "/", "");
+  const rel = relative(process.cwd(), absPath).replace(/\\/g, "/");
   return "@/" + rel.replace(/\.tsx$/, "");
 }
 
@@ -167,7 +167,7 @@ describe("app/**/page.tsx shallow render (use client only)", () => {
         rendered++;
       } catch (e) {
         failures.push({
-          path: file.replace(process.cwd() + "/", ""),
+          path: relative(process.cwd(), file).replace(/\\/g, "/"),
           err: e instanceof Error ? e.message.split("\n")[0] : String(e),
         });
       }

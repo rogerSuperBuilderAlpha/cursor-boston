@@ -21,10 +21,14 @@ import type { UpstashRateLimitResult } from "./upstash-rate-limit";
 // Re-export rateLimitConfigs for convenience
 export { rateLimitConfigs } from "./rate-limit";
 
-// Allowed origins for CSRF protection
+// Allowed production origins for CSRF protection.
 const ALLOWED_ORIGINS = [
   "https://cursorboston.com",
   "https://www.cursorboston.com",
+];
+
+// Local development origins are never accepted in production.
+const DEVELOPMENT_ALLOWED_ORIGINS = [
   "http://localhost:3000",
   "http://localhost:3001",
 ];
@@ -34,6 +38,17 @@ type RateLimitResult = ReturnType<typeof checkRateLimit> | UpstashRateLimitResul
 interface RateLimitBackendOptions {
   distributed?: boolean;
   failMode?: "degrade" | "closed";
+}
+
+function isDevelopmentEnvironment(): boolean {
+  return process.env["NODE_ENV"] === "development";
+}
+
+function isListedOriginAllowed(origin: string): boolean {
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    return true;
+  }
+  return isDevelopmentEnvironment() && DEVELOPMENT_ALLOWED_ORIGINS.includes(origin);
 }
 
 function rateLimitDeniedResponse(
@@ -87,7 +102,7 @@ export function isOriginAllowed(request: NextRequest): boolean {
   // If no origin header, check referer (some browsers don't send origin)
   if (!origin && !referer) {
     // Allow requests without origin/referer in development only
-    return process.env.NODE_ENV === "development";
+    return isDevelopmentEnvironment();
   }
 
   // Check if origin matches allowed list
@@ -95,7 +110,7 @@ export function isOriginAllowed(request: NextRequest): boolean {
     if (origin === new URL(request.url).origin) {
       return true;
     }
-    if (ALLOWED_ORIGINS.includes(origin)) {
+    if (isListedOriginAllowed(origin)) {
       return true;
     }
     // Allow if origin matches the app URL from environment
@@ -113,7 +128,7 @@ export function isOriginAllowed(request: NextRequest): boolean {
       if (refererOrigin === new URL(request.url).origin) {
         return true;
       }
-      if (ALLOWED_ORIGINS.includes(refererOrigin)) {
+      if (isListedOriginAllowed(refererOrigin)) {
         return true;
       }
       const appUrl = process.env.NEXT_PUBLIC_APP_URL;

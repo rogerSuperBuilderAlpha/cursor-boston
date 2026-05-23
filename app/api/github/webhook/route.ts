@@ -18,6 +18,8 @@ import {
   SHOWCASE_SUBMISSIONS_CACHE_TAG,
 } from "@/lib/hackathon-showcase";
 import { MERGED_PR_COUNTS_CACHE_TAG } from "@/lib/github-merged-pr-count";
+import { HACKATHON_EVENT_SIGNUP_IDS } from "@/lib/hackathon-event-signup";
+import { refreshSnapshot } from "@/lib/hackathon-leaderboard-snapshot";
 import { ensureHackASprint2026ScoreDoc } from "@/lib/hackathon-asprint-2026-scores";
 import { awardHackASprint2026ShowcaseBadge } from "@/lib/hackathon-showcase-admin";
 import { maybeAutoAdmitOnPRMerge } from "@/lib/summer-cohort-auto-admit";
@@ -206,6 +208,24 @@ async function handleWebhook(request: NextRequest) {
         // Merged PR counts caches go stale on every merge — refresh.
         try {
           revalidateTag(MERGED_PR_COUNTS_CACHE_TAG, { expire: 0 });
+        } catch {
+          // non-fatal
+        }
+
+        // GET /api/hackathons/events/:eventId/signup serves a persisted
+        // Firestore snapshot. Refresh it after PR merges so the public
+        // leaderboard reflects newly earned merged-PR credit.
+        try {
+          const refreshResults = await Promise.allSettled(
+            HACKATHON_EVENT_SIGNUP_IDS.map((eventId) => refreshSnapshot(eventId))
+          );
+          const failed = refreshResults.filter((r) => r.status === "rejected").length;
+          if (failed > 0) {
+            logger.warn("Hackathon signup leaderboard snapshot refresh failed", {
+              failed,
+              total: refreshResults.length,
+            });
+          }
         } catch {
           // non-fatal
         }

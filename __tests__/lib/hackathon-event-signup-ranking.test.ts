@@ -17,11 +17,14 @@ import {
   SPORTS_HACK_2026_CAPACITY,
   SPORTS_HACK_2026_EVENT_ID,
 } from "@/lib/sports-hack-2026";
+import { HACK_A_SPRINT_2026_EVENT_ID } from "@/lib/hackathon-showcase";
 
 describe("hackathon-event-signup ranking + capacity", () => {
   describe("hackathonEventSignupDocId", () => {
     it("composes eventId__userId", () => {
-      expect(hackathonEventSignupDocId("ev", "u")).toBe("ev__u");
+      expect(hackathonEventSignupDocId(HACK_A_SPRINT_2026_EVENT_ID, "u")).toBe(
+        "hack-a-sprint-2026__u"
+      );
     });
   });
 

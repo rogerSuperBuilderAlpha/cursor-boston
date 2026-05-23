@@ -8,10 +8,11 @@ Read docs in this order depending on your goal:
 | 2 | [DEVELOPMENT.md](DEVELOPMENT.md) | Developers — setup, scripts, hooks, architecture |
 | 3 | [FIRST_CONTRIBUTION.md](FIRST_CONTRIBUTION.md) | Step-by-step first pull request |
 | 4 | [API.md](API.md) | API route reference |
-| 5 | [RELEASING.md](RELEASING.md) | Maintainers — versioning and GitHub Releases |
-| 6 | [SUPPLY_CHAIN.md](SUPPLY_CHAIN.md) | Security automation, dependencies, and trust signals |
-| 7 | [VERCEL.md](VERCEL.md) | Why PRs do not deploy to Vercel; production-only settings |
-| 8 | [Architecture Decision Records](adr/README.md) | Why the project is built the way it is |
+| 5 | [API_CACHING.md](API_CACHING.md) | API cache TTLs, tags, and invalidation rules |
+| 6 | [RELEASING.md](RELEASING.md) | Maintainers — versioning and GitHub Releases |
+| 7 | [SUPPLY_CHAIN.md](SUPPLY_CHAIN.md) | Security automation, dependencies, and trust signals |
+| 8 | [VERCEL.md](VERCEL.md) | Why PRs do not deploy to Vercel; production-only settings |
+| 9 | [Architecture Decision Records](adr/README.md) | Why the project is built the way it is |
 
 **Site visitor map:** [USER_GUIDE.md](USER_GUIDE.md) lists every public section on cursorboston.com with one-line descriptions — start here when you're trying to find where something lives.
 
