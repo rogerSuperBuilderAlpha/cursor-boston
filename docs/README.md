@@ -16,6 +16,8 @@ Read docs in this order depending on your goal:
 
 **Site visitor map:** [USER_GUIDE.md](USER_GUIDE.md) lists every public section on cursorboston.com with one-line descriptions — start here when you're trying to find where something lives.
 
+**Feature contracts:** [PROMPT_TEMPLATE_LIBRARY_CONTRACT.md](PROMPT_TEMPLATE_LIBRARY_CONTRACT.md) defines the proposed persistence, moderation, voting, and API surface for member-submitted prompt templates.
+
 **Generals (the strategy game at `/game`):** open contribution surface for lore, units, spells, artifacts, castes, buildings, and UI. Start at [generals/README.md](generals/README.md).
 
 **Operations / events** (not required for typical code contributions):
