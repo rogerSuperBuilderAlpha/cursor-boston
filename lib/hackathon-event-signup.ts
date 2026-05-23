@@ -6,6 +6,7 @@
  */
 
 import {
+  SPORTS_HACK_2026_ATTENDANCE_LIMIT,
   SPORTS_HACK_2026_CAPACITY,
   SPORTS_HACK_2026_DECLINED_EMAILS,
   SPORTS_HACK_2026_EVENT_ID,
@@ -69,6 +70,20 @@ export const CURSOR_CREDIT_TOP_N = 50;
 export function getConfirmedCapacityForEvent(eventId: string): number {
   if (eventId === SPORTS_HACK_2026_EVENT_ID) return SPORTS_HACK_2026_CAPACITY;
   return CURSOR_CREDIT_TOP_N;
+}
+
+/**
+ * Per-event guaranteed-attendance cap. Distinct from the credit cap above:
+ * the top SPORTS_HACK_2026_ATTENDANCE_LIMIT confirmed-attending users by
+ * leaderboard rank are guaranteed entry; the top SPORTS_HACK_2026_CAPACITY
+ * of those also get a credit link.
+ *
+ * Returns 0 for events that don't use the second-step "Confirm attendance"
+ * flow. Snapshot emits the new attendance fields only when this is > 0.
+ */
+export function getAttendanceLimitForEvent(eventId: string): number {
+  if (eventId === SPORTS_HACK_2026_EVENT_ID) return SPORTS_HACK_2026_ATTENDANCE_LIMIT;
+  return 0;
 }
 
 /**

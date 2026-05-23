@@ -20,8 +20,20 @@ export const SPORTS_HACK_2026_LUMA_URL = `https://luma.com/${SPORTS_HACK_2026_LU
 /**
  * Confirmed-seat cap for the May 26 event. Bumped from 80 → 119 on 2026-05-22
  * when an additional batch of Cursor credit codes brought the total to 119.
+ *
+ * This is the *credit-link* cap (only the top 119 confirmed attendees by
+ * leaderboard rank receive a Cursor credit link).
  */
 export const SPORTS_HACK_2026_CAPACITY = 119;
+
+/**
+ * Guaranteed-entry cap distinct from the credit-link cap above. The first
+ * 200 confirmed-attending users (ranked by the existing leaderboard order —
+ * PR count + signedUpAt) are guaranteed entry on May 26; ranks 201+ are
+ * waitlisted (may still show up but not guaranteed). Of the guaranteed 200,
+ * the top SPORTS_HACK_2026_CAPACITY also receive a Cursor credit link.
+ */
+export const SPORTS_HACK_2026_ATTENDANCE_LIMIT = 200;
 export const SPORTS_HACK_2026_TIMEZONE = "America/New_York";
 export const SPORTS_HACK_2026_EVENT_DATE = "2026-05-26";
 export const SPORTS_HACK_2026_START_HOUR_ET = 10;

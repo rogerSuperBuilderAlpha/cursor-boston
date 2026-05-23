@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { GitHubIcon, DiscordIcon } from "@/components/icons";
 import { trackEvent } from "@/lib/analytics";
 import {
+  SPORTS_HACK_2026_ATTENDANCE_LIMIT,
   SPORTS_HACK_2026_CAPACITY,
   SPORTS_HACK_2026_EVENT_ID,
   SPORTS_HACK_2026_LUMA_URL,
@@ -77,6 +78,9 @@ type LeaderboardEntry = {
   queuingForSpot?: boolean;
   lumaRegistered?: boolean;
   isCohort1?: boolean;
+  attendingConfirmed?: boolean;
+  attendingConfirmedAt?: string | null;
+  attendanceRank?: number | null;
 };
 
 type LeaderboardResponse = {
@@ -85,6 +89,8 @@ type LeaderboardResponse = {
   websiteSignupCount?: number;
   entries: LeaderboardEntry[];
   creditTopN: number;
+  confirmedAttendeeCount?: number;
+  attendanceLimit?: number;
   me: {
     signedUp: boolean;
     rank: number | null;
@@ -94,6 +100,9 @@ type LeaderboardResponse = {
     willBeLate: boolean;
     queuingForSpot: boolean;
     lumaRegistered: boolean;
+    attendingConfirmed?: boolean;
+    attendingConfirmedAt?: string | null;
+    attendanceRank?: number | null;
   } | null;
 };
 
@@ -301,6 +310,42 @@ export default function SportsHack2026SignupPage() {
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not update RSVP");
+    } finally {
+      setRsvpBusy(false);
+    }
+  };
+
+  const toggleAttendingConfirmation = async (confirming: boolean) => {
+    if (!user) return;
+    setRsvpBusy(true);
+    setError(null);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch(
+        `/api/hackathons/events/${eventId}/confirm-attendance`,
+        {
+          method: confirming ? "POST" : "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(
+          json.error ||
+            (confirming
+              ? "Could not confirm attendance"
+              : "Could not un-confirm")
+        );
+      }
+      await load();
+    } catch (e) {
+      setError(
+        e instanceof Error
+          ? e.message
+          : confirming
+            ? "Could not confirm attendance"
+            : "Could not un-confirm"
+      );
     } finally {
       setRsvpBusy(false);
     }
@@ -530,6 +575,74 @@ export default function SportsHack2026SignupPage() {
                         >
                           Leave list
                         </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Attendance confirmation card — second step beyond claim. */}
+              {(() => {
+                const meConfirmed = data.me?.attendingConfirmed === true;
+                const attendingCount = data.confirmedAttendeeCount ?? 0;
+                const attendanceLimit =
+                  data.attendanceLimit ?? SPORTS_HACK_2026_ATTENDANCE_LIMIT;
+                const myAttendanceRank = data.me?.attendanceRank ?? null;
+                const onWaitlist =
+                  meConfirmed &&
+                  attendanceLimit > 0 &&
+                  myAttendanceRank != null &&
+                  myAttendanceRank > attendanceLimit;
+                return (
+                  <div
+                    className={`mt-6 rounded-2xl border p-6 ${
+                      meConfirmed
+                        ? "border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-500/10"
+                        : "border-amber-500/40 bg-amber-500/5 dark:bg-amber-500/10"
+                    }`}
+                  >
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="text-sm">
+                        <h2 className="font-semibold text-foreground">
+                          {meConfirmed
+                            ? onWaitlist
+                              ? "Confirmed — currently on the waitlist"
+                              : "Confirmed — you're attending"
+                            : "Step 2: Confirm you'll attend"}
+                        </h2>
+                        <p className="mt-1 text-neutral-700 dark:text-neutral-300">
+                          {meConfirmed
+                            ? onWaitlist
+                              ? `Confirmed attendees beyond #${attendanceLimit} (you're #${myAttendanceRank}) can still show up but are not guaranteed entry. Climbing the leaderboard moves you above the cutoff.`
+                              : myAttendanceRank != null
+                                ? `You're confirmed attendee #${myAttendanceRank} of ${attendanceLimit} guaranteed seats.`
+                                : "Your attendance is confirmed."
+                            : "Claiming a spot reserves your rank. Click below to also confirm you'll be there May 26 — first 200 confirmed by leaderboard rank are guaranteed entry."}
+                        </p>
+                        <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
+                          {attendingCount} of {attendanceLimit} confirmed attending site-wide.
+                        </p>
+                      </div>
+                      <div className="shrink-0">
+                        {meConfirmed ? (
+                          <button
+                            type="button"
+                            disabled={rsvpBusy}
+                            onClick={() => void toggleAttendingConfirmation(false)}
+                            className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium hover:bg-neutral-100 disabled:opacity-50 dark:border-neutral-600 dark:hover:bg-neutral-800"
+                          >
+                            I can&apos;t make it
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={rsvpBusy}
+                            onClick={() => void toggleAttendingConfirmation(true)}
+                            className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-400 disabled:opacity-50"
+                          >
+                            Confirm attendance
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>

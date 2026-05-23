@@ -9,11 +9,13 @@
 import {
   CURSOR_CREDIT_TOP_N,
   compareUnifiedHackathonRanking,
+  getAttendanceLimitForEvent,
   getConfirmedCapacityForEvent,
   getHackathonEventSignupBlockReason,
   hackathonEventSignupDocId,
 } from "@/lib/hackathon-event-signup";
 import {
+  SPORTS_HACK_2026_ATTENDANCE_LIMIT,
   SPORTS_HACK_2026_CAPACITY,
   SPORTS_HACK_2026_EVENT_ID,
 } from "@/lib/sports-hack-2026";
@@ -37,6 +39,19 @@ describe("hackathon-event-signup ranking + capacity", () => {
 
     it("falls back to CURSOR_CREDIT_TOP_N for any other event", () => {
       expect(getConfirmedCapacityForEvent("any-other")).toBe(CURSOR_CREDIT_TOP_N);
+    });
+  });
+
+  describe("getAttendanceLimitForEvent", () => {
+    it("returns SPORTS_HACK_2026_ATTENDANCE_LIMIT for sports-hack-2026", () => {
+      expect(getAttendanceLimitForEvent(SPORTS_HACK_2026_EVENT_ID)).toBe(
+        SPORTS_HACK_2026_ATTENDANCE_LIMIT
+      );
+    });
+
+    it("returns 0 (feature off) for any other event", () => {
+      expect(getAttendanceLimitForEvent("hack-a-sprint-2026")).toBe(0);
+      expect(getAttendanceLimitForEvent("any-other")).toBe(0);
     });
   });
 

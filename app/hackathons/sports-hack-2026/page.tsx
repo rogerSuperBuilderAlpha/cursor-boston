@@ -12,6 +12,7 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { LumaEmbed } from "@/components/hackathons/LumaEmbed";
 import {
+  SPORTS_HACK_2026_ATTENDANCE_LIMIT,
   SPORTS_HACK_2026_CAPACITY,
   SPORTS_HACK_2026_EVENT_ID,
   SPORTS_HACK_2026_LOCATION,
@@ -31,7 +32,13 @@ type LeaderboardResponse = {
   websiteSignupCount?: number;
   entries: LeaderboardEntry[];
   creditTopN: number;
-  me?: { signedUp: boolean; rank: number | null } | null;
+  confirmedAttendeeCount?: number;
+  attendanceLimit?: number;
+  me?: {
+    signedUp: boolean;
+    rank: number | null;
+    attendingConfirmed?: boolean;
+  } | null;
 };
 
 export default function SportsHack2026LandingPage() {
@@ -99,11 +106,19 @@ export default function SportsHack2026LandingPage() {
               <FactCard label="When" value="Tue May 26 · 10 AM – 4 PM ET" />
               <FactCard label="Where" value={SPORTS_HACK_2026_LOCATION} />
               <FactCard
-                label="Capacity"
+                label="Confirmed attending"
+                value={
+                  data
+                    ? `${data.confirmedAttendeeCount ?? 0}/${data.attendanceLimit ?? SPORTS_HACK_2026_ATTENDANCE_LIMIT} · ${data.totalCount} signed up`
+                    : `${SPORTS_HACK_2026_ATTENDANCE_LIMIT} guaranteed-entry cap`
+                }
+              />
+              <FactCard
+                label="Credit seats locked"
                 value={
                   confirmedCount != null && data
-                    ? `${confirmedCount}/${SPORTS_HACK_2026_CAPACITY} confirmed · ${data.totalCount} registered`
-                    : `${SPORTS_HACK_2026_CAPACITY} confirmed seats`
+                    ? `${confirmedCount}/${SPORTS_HACK_2026_CAPACITY} (Cursor credit link)`
+                    : `Top ${SPORTS_HACK_2026_CAPACITY} get Cursor credit`
                 }
               />
               <FactCard

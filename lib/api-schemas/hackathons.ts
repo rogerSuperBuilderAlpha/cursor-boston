@@ -226,6 +226,63 @@ export const hackathonsContract = c.router(
       },
     },
 
+    eventConfirmAttendancePost: {
+      method: "POST",
+      path: "/api/hackathons/events/:eventId/confirm-attendance",
+      pathParams: EventIdParam,
+      summary: "Confirm attendance for an event the user has signed up for",
+      description:
+        "Idempotent second-step confirmation distinct from the rank-freeze 'confirmed seat' flow. Sets attendingConfirmedAt on the user's signup doc; preserved if already set. Returns the updated confirmed-attendee count and the per-event attendance limit.",
+      body: z.object({}).optional(),
+      responses: {
+        200: z.object({
+          ok: z.literal(true),
+          attendingConfirmed: z.boolean(),
+          attendingConfirmedAt: z.string().nullable(),
+          confirmedAttendeeCount: z.number(),
+          attendanceLimit: z.number(),
+        }),
+        ...writeErrors,
+        404: ApiErrorSchema,
+      },
+      metadata: {
+        errorCodes: [
+          "UNAUTHORIZED",
+          "NOT_FOUND",
+          "RATE_LIMITED",
+          "SERVER_ERROR",
+        ] as const,
+      },
+    },
+    eventConfirmAttendanceDelete: {
+      method: "DELETE",
+      path: "/api/hackathons/events/:eventId/confirm-attendance",
+      pathParams: EventIdParam,
+      summary: "Withdraw the user's attendance confirmation (keeps signup)",
+      description:
+        "Idempotent. Clears attendingConfirmedAt while preserving the underlying signup. The user remains signed up but is no longer counted in the public confirmed-attendee count.",
+      body: z.object({}).optional(),
+      responses: {
+        200: z.object({
+          ok: z.literal(true),
+          attendingConfirmed: z.boolean(),
+          attendingConfirmedAt: z.string().nullable(),
+          confirmedAttendeeCount: z.number(),
+          attendanceLimit: z.number(),
+        }),
+        ...writeErrors,
+        404: ApiErrorSchema,
+      },
+      metadata: {
+        errorCodes: [
+          "UNAUTHORIZED",
+          "NOT_FOUND",
+          "RATE_LIMITED",
+          "SERVER_ERROR",
+        ] as const,
+      },
+    },
+
     inviteAccept: {
       method: "POST",
       path: "/api/hackathons/invites/accept",

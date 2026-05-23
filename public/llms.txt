@@ -30,11 +30,14 @@ Licensed GPL-3.0-only.
     /certificate
     /certificate/verify/[certId]
     /cfp
+    /challenges
+    /challenges/[month]
     /code-of-conduct
     /cohort-ai
     /cohort-withdraw
     /contribute/game-art
     /cookbook
+    /cookbook/[slug]
     /cookies
     /disclaimer
     /ecosystem
@@ -100,13 +103,18 @@ Licensed GPL-3.0-only.
     /questions
     /questions/[questionId]
     /questions/ask
+    /recordings
+    /recordings/[sessionId]
     /research
     /research/[slug]
     /showcase
     /signup
+    /skills
     /summer-cohort
     /talks
     /talks/submit
+    /templates
+    /templates/[templateId]
     /terms
     /unsubscribe
 
@@ -124,7 +132,7 @@ AI agents authenticate with:
 
 Register at POST /api/agents/register to get a key.
 
-## API (215 endpoints)
+## API (221 endpoints)
 
 Machine-readable spec: https://cursorboston.com/openapi.json
 Interactive Swagger UI: https://cursorboston.com/api/docs
@@ -170,6 +178,7 @@ Interactive Swagger UI: https://cursorboston.com/api/docs
     DELETE /api/community/block [Yes] — Unblock another user
     POST   /api/community/block [Yes] — Block another user
     POST   /api/community/delete [Yes] — Delete the current user's own community message
+    GET    /api/community/feed — List visible community feed messages
     GET    /api/community/moderate [Yes] — Admin: list community reports (paginated)
     POST   /api/community/moderate [Yes] — Admin: act on a community report (dismiss / hide / suspend)
     GET    /api/community/my-reactions [Yes] — Get the current user's reactions for a batch of messages
@@ -264,6 +273,8 @@ Interactive Swagger UI: https://cursorboston.com/api/docs
 
     GET    /api/hackathons/eligibility [Yes] — Get current user's hackathon eligibility
     POST   /api/hackathons/events/{eventId}/checkin [Yes] — Admin-only: check a user in to an event
+    DELETE /api/hackathons/events/{eventId}/confirm-attendance [Yes] — Withdraw the user's attendance confirmation (keeps signup)
+    POST   /api/hackathons/events/{eventId}/confirm-attendance [Yes] — Confirm attendance for an event the user has signed up for
     DELETE /api/hackathons/events/{eventId}/signup [Yes] — Withdraw the current user's signup
     GET    /api/hackathons/events/{eventId}/signup [Yes] — Public event-signup leaderboard
     PATCH  /api/hackathons/events/{eventId}/signup [Yes] — Update the current user's signup state
@@ -417,11 +428,23 @@ Interactive Swagger UI: https://cursorboston.com/api/docs
     GET    /api/hiring-partners/apply [Yes] — Get the current user's hiring-partner application
     POST   /api/hiring-partners/apply [Yes] — Create or update the current user's hiring-partner application
 
+### MonthlyChallenges
+
+    POST   /api/challenges/{challengeId}/submissions [Yes] — Create a monthly challenge submission draft or submitted entry
+
 ### NotifyAdmin
 
     POST   /api/notify-admin/cfp — Email admin about a new CFP submission
     POST   /api/notify-admin/event — Email admin about a new event request
     POST   /api/notify-admin/talk — Email admin about a new talk submission
+
+### PromptTemplates
+
+    POST   /api/templates [Yes] — Create a private prompt template draft or pending-review template
+
+### Skills
+
+    GET    /api/skills/progress [Yes] — Get the current user's Skills Passport progress
 
 ### SummerCohort
 

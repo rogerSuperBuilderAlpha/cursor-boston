@@ -16,7 +16,7 @@
 
 All endpoints are under `/api/`. Authentication uses Firebase Auth ID tokens (Bearer) or session cookies. Spec: [`/openapi.json`](https://cursorboston.com/openapi.json) · interactive: [`/api/docs`](https://cursorboston.com/api/docs).
 
-**180 paths, 216 operations across 33 areas.**
+**184 paths, 221 operations across 35 areas.**
 
 ---
 
@@ -208,6 +208,8 @@ _Hackathon pool, teams, submissions, and Hack-a-Sprint showcase._
 |--------|----------|------|-------------|
 | GET | `/api/hackathons/eligibility` | Yes | Get current user's hackathon eligibility |
 | POST | `/api/hackathons/events/{eventId}/checkin` | Yes | Admin-only: check a user in to an event |
+| DELETE | `/api/hackathons/events/{eventId}/confirm-attendance` | Yes | Withdraw the user's attendance confirmation (keeps signup) |
+| POST | `/api/hackathons/events/{eventId}/confirm-attendance` | Yes | Confirm attendance for an event the user has signed up for |
 | DELETE | `/api/hackathons/events/{eventId}/signup` | Yes | Withdraw the current user's signup |
 | GET | `/api/hackathons/events/{eventId}/signup` | Yes | Public event-signup leaderboard |
 | PATCH | `/api/hackathons/events/{eventId}/signup` | Yes | Update the current user's signup state |
@@ -449,7 +451,7 @@ _Talk-submission moderation queue._
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| GET | `/api/skills/progress` | Yes | Get the current user'"'"'s Skills Passport progress |
+| GET | `/api/skills/progress` | Yes | Get the current user's Skills Passport progress |
 
 ## SummerCohort
 
