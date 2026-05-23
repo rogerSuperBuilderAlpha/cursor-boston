@@ -641,6 +641,32 @@ const WorldOk = z.object({
     .describe("Legacy mode only — present when the request omits a bbox"),
 });
 
+// Public daily 3D snapshot. Anonymous-accessible; powers the /game/world
+// flyover page. Shape is deliberately denormalized so the renderer can
+// consume it without joining against player docs.
+const World3DTileSchema = z
+  .object({
+    tileId: z.string(),
+    q: z.number(),
+    r: z.number(),
+    type: z.enum(["unrevealed", "unassigned", "military", "food", "magic"]),
+    ownerId: z.string().nullable(),
+    ownerName: z.string().nullable(),
+    caste: z.enum(["black", "red", "white", "green", "blue"]).nullable(),
+    isNpc: z.boolean(),
+    level: z.number(),
+    hasExtraForces: z.boolean(),
+    hasHero: z.boolean(),
+    ownerShielded: z.boolean(),
+  })
+  .openapi("GameWorld3DTile");
+
+const World3DOk = z.object({
+  tiles: z.array(World3DTileSchema),
+  generatedAt: z.string().nullable(),
+  tileCount: z.number(),
+});
+
 // ──────────────────── Contract router ────────────────────
 
 const baseErrorResponses = {
@@ -744,6 +770,20 @@ export const gameContract = c.router(
       metadata: {
         errorCodes: ["UNAUTHORIZED", "VALIDATION_ERROR", "SERVER_ERROR"] as const,
       },
+    },
+
+    // Public 3D flyover snapshot — anonymous-accessible, ISR-cached 24h.
+    getWorld3d: {
+      method: "GET",
+      path: "/api/game/world-3d",
+      summary: "Public 3D flyover world snapshot (daily, anonymous-accessible)",
+      description:
+        "Returns the once-per-day denormalized world snapshot used by /game/world. No auth required. Responds with `{ tiles: [], generatedAt: null, tileCount: 0 }` until the first cron writes the underlying doc.",
+      responses: {
+        200: World3DOk,
+        500: ApiErrorSchema,
+      },
+      metadata: { errorCodes: ["SERVER_ERROR"] as const },
     },
 
     // World / tile

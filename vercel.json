@@ -17,6 +17,10 @@
       "schedule": "*/5 * * * *"
     },
     {
+      "path": "/api/internal/snapshots/rebuild?only=game-world-3d",
+      "schedule": "0 9 * * *"
+    },
+    {
       "path": "/api/internal/hunt/email-retry",
       "schedule": "*/15 * * * *"
     },

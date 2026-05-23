@@ -27,7 +27,9 @@ const CleanupQuery = z.object({
 });
 
 const SnapshotsRebuildQuery = z.object({
-  only: z.enum(["analytics", "members", "all"]).optional(),
+  only: z
+    .enum(["analytics", "members", "game-world", "game-world-3d", "all"])
+    .optional(),
   force: z.enum(["true", "false"]).optional(),
 });
 

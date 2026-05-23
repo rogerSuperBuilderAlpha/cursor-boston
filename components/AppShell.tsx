@@ -131,7 +131,6 @@ const NAV_GROUPS: NavGroup[] = [
       },
       { href: "/blog", label: "Blog", icon: BookOpen },
       { href: "/certificate", label: "Certificate", icon: Award },
-      { href: "/skills", label: "Skills Passport", icon: BrainCircuit },
     ],
   },
   {
@@ -144,6 +143,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/pair", label: "Pair Programming", icon: UsersRound },
       { href: "/recordings", label: "Recordings", icon: Video },
       { href: "/mentorship", label: "Mentorship", icon: GraduationCap },
+      { href: "/skills", label: "Skills Passport", icon: BrainCircuit },
       { href: "/talks", label: "Talks", icon: MessageSquare },
       { href: "/analytics", label: "Analytics", icon: BarChart2 },
     ],

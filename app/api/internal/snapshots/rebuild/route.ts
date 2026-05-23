@@ -9,6 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { logger } from "@/lib/logger";
 import {
@@ -20,6 +21,7 @@ import {
   MEMBERS_SNAPSHOT_CACHE_TTL_MS,
 } from "@/lib/members-public-snapshot";
 import { rebuildWorldSnapshotServer } from "@/lib/game/world-snapshot";
+import { rebuildWorld3DSnapshotServer } from "@/lib/game/world-snapshot-3d";
 
 // @contracts: internalContract.snapshotsRebuildGet, internalContract.snapshotsRebuildPost (lib/api-schemas/internal.ts)
 
@@ -80,6 +82,10 @@ async function handleRebuild(request: NextRequest): Promise<NextResponse> {
   // freshness budget than the other snapshots; its dedicated cron entry
   // in vercel.json fires every 5 minutes vs analytics/members at 6h.
   let runGameWorld = only === "game-world" || only === "all";
+  // Public 3D flyover snapshot — opt-in via `only=game-world-3d` (or
+  // `all`). Daily-rebuild cadence; the page reads it through an ISR
+  // route cached 24h.
+  let runGameWorld3D = only === "game-world-3d" || only === "all";
 
   try {
     const result: {
@@ -89,6 +95,12 @@ async function handleRebuild(request: NextRequest): Promise<NextResponse> {
         ok: boolean;
         tileCount?: number;
         ownerCount?: number;
+        error?: string;
+      };
+      gameWorld3D?: {
+        ok: boolean;
+        tileCount?: number;
+        bytes?: number;
         error?: string;
       };
     } = {};
@@ -192,10 +204,35 @@ async function handleRebuild(request: NextRequest): Promise<NextResponse> {
       }
     }
 
+    if (runGameWorld3D) {
+      try {
+        const out = await rebuildWorld3DSnapshotServer();
+        // Bust the ISR caches so the next visitor gets the fresh
+        // snapshot instead of waiting for revalidate=86400 to expire.
+        // Without this, the public route/page keeps serving the stale
+        // build-time prerender for up to 24h after each daily write.
+        revalidatePath("/api/game/world-3d");
+        revalidatePath("/game/world");
+        result.gameWorld3D = {
+          ok: true,
+          tileCount: out.tileCount,
+          bytes: out.bytes,
+        };
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        logger.logError(e, {
+          endpoint: "/api/internal/snapshots/rebuild",
+          phase: "game-world-3d",
+        });
+        result.gameWorld3D = { ok: false, error: msg };
+      }
+    }
+
     const ok =
       (!runAnalytics || result.analytics?.ok) &&
       (!runMembers || result.members?.ok) &&
-      (!runGameWorld || result.gameWorld?.ok);
+      (!runGameWorld || result.gameWorld?.ok) &&
+      (!runGameWorld3D || result.gameWorld3D?.ok);
     return NextResponse.json({ ok, invocationId, ...result }, { status: ok ? 200 : 500 });
   } catch (error) {
     logger.logError(error, { endpoint: "/api/internal/snapshots/rebuild", invocationId });

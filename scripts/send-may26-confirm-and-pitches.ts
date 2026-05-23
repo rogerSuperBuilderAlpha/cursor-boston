@@ -64,8 +64,6 @@ const SIGNUP_URL =
   "https://www.cursorboston.com/hackathons/sports-hack-2026/signup";
 const EVENT_URL =
   "https://www.cursorboston.com/hackathons/sports-hack-2026";
-const SUBMISSIONS_URL =
-  "https://www.cursorboston.com/events/cursor-boston-sports-hack-2026";
 const GAME_URL = "https://www.cursorboston.com/game";
 const RESEARCH_URL = "https://www.cursorboston.com/research";
 const ALGORITHMACY_URL =

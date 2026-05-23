@@ -16,7 +16,7 @@
 
 All endpoints are under `/api/`. Authentication uses Firebase Auth ID tokens (Bearer) or session cookies. Spec: [`/openapi.json`](https://cursorboston.com/openapi.json) · interactive: [`/api/docs`](https://cursorboston.com/api/docs).
 
-**184 paths, 221 operations across 35 areas.**
+**185 paths, 222 operations across 35 areas.**
 
 ---
 
@@ -188,6 +188,7 @@ _Strategy game endpoints (leaderboard, attacks, artifacts, turns)._
 | POST | `/api/game/upgrades/apply` | Yes | Apply an upgrade to a target |
 | POST | `/api/game/upgrades/remove` | Yes | Remove an upgrade from a target |
 | GET | `/api/game/world` | Yes | Fetch tiles for the world map (full or bbox) |
+| GET | `/api/game/world-3d` | No | Public 3D flyover world snapshot (daily, anonymous-accessible) |
 
 ## Github
 
