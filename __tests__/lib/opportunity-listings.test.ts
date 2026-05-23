@@ -39,6 +39,14 @@ const opportunities: OpportunityListing[] = [
     description: "Scale Firebase and Next.js systems.",
     tags: ["Firebase", "Next.js"],
   },
+  {
+    id: "no-tags",
+    title: "Operations Advisor",
+    company: "Beacon",
+    type: "advisor",
+    location: "Boston, MA",
+    description: "Help founders structure hiring and community operations.",
+  },
 ];
 
 describe("opportunity listing helpers", () => {
@@ -59,6 +67,7 @@ describe("opportunity listing helpers", () => {
 
   it("returns sorted opportunity type options", () => {
     expect(getOpportunityTypeOptions(opportunities)).toEqual([
+      "advisor",
       "cofounder",
       "contract",
       "full-time",
@@ -81,6 +90,11 @@ describe("opportunity listing helpers", () => {
         (opportunity) => opportunity.id
       )
     ).toEqual(["cofounder"]);
+    expect(
+      filterOpportunityListings(opportunities, { query: "operations" }).map(
+        (opportunity) => opportunity.id
+      )
+    ).toEqual(["no-tags"]);
   });
 
   it("treats blank filters as the full listings set", () => {
@@ -106,6 +120,6 @@ describe("opportunity listing helpers", () => {
       filterOpportunityListings(opportunities, {
         workMode: "in-person",
       }).map((opportunity) => opportunity.id)
-    ).toEqual(["cofounder", "full-time"]);
+    ).toEqual(["cofounder", "full-time", "no-tags"]);
   });
 });
