@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
-import { getVerifiedUser } from "@/lib/server-auth";
+import { getVerifiedUser, isCurrentIdTokenRevoked } from "@/lib/server-auth";
 import { resolveHackASprint2026CreditForUser } from "@/lib/hackathon-asprint-2026-credit-eligibility";
 
 // @contracts: hackathonsContract.hackASprintCreditCode (lib/api-schemas/hackathons.ts)
@@ -47,6 +47,12 @@ export async function GET(request: NextRequest) {
         eligible: false,
         reason: resolved.reason,
       });
+    }
+    if (await isCurrentIdTokenRevoked(request)) {
+      return NextResponse.json(
+        { error: "Session revoked. Please sign in again." },
+        { status: 401 }
+      );
     }
 
     return NextResponse.json({

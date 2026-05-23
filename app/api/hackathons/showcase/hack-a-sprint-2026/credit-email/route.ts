@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";
-import { getVerifiedUser } from "@/lib/server-auth";
+import { getVerifiedUser, isCurrentIdTokenRevoked } from "@/lib/server-auth";
 import { resolveHackASprint2026CreditForUser } from "@/lib/hackathon-asprint-2026-credit-eligibility";
 import { sendEmail } from "@/lib/mailgun";
 import { getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
@@ -79,6 +79,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { ok: false, reason: resolved.reason },
         { status: 400 }
+      );
+    }
+    if (await isCurrentIdTokenRevoked(request)) {
+      return NextResponse.json(
+        { error: "Session revoked. Please sign in again." },
+        { status: 401 }
       );
     }
 

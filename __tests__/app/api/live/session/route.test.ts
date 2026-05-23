@@ -4,11 +4,15 @@
 
 import { NextRequest } from "next/server";
 import { POST } from "@/app/api/live/session/route";
-import { getVerifiedUser } from "@/lib/server-auth";
+import {
+  getVerifiedUser,
+  isCurrentIdTokenRevoked,
+} from "@/lib/server-auth";
 import { createLiveSessionServer } from "@/lib/live-sessions/data-server";
 
 jest.mock("@/lib/server-auth", () => ({
   getVerifiedUser: jest.fn(),
+  isCurrentIdTokenRevoked: jest.fn(async () => false),
 }));
 
 jest.mock("@/lib/live-sessions/data-server", () => ({
@@ -16,6 +20,9 @@ jest.mock("@/lib/live-sessions/data-server", () => ({
 }));
 
 const mockGetVerifiedUser = getVerifiedUser as jest.MockedFunction<typeof getVerifiedUser>;
+const mockIsRevoked = isCurrentIdTokenRevoked as jest.MockedFunction<
+  typeof isCurrentIdTokenRevoked
+>;
 const mockCreateLiveSessionServer =
   createLiveSessionServer as jest.MockedFunction<typeof createLiveSessionServer>;
 
@@ -38,6 +45,7 @@ function makeInvalidJsonRequest() {
 describe("POST /api/live/session", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockIsRevoked.mockResolvedValue(false);
   });
 
   it("requires authentication", async () => {
@@ -46,6 +54,22 @@ describe("POST /api/live/session", () => {
     const res = await POST(makeRequest({ title: "Demo Night" }));
 
     expect(res.status).toBe(401);
+  });
+
+  it("returns 401 when the admin token has been revoked", async () => {
+    mockGetVerifiedUser.mockResolvedValueOnce({
+      uid: "admin-1",
+      email: "admin@example.com",
+      isAdmin: true,
+    });
+    mockIsRevoked.mockResolvedValueOnce(true);
+
+    const res = await POST(makeRequest({ title: "Demo Night" }));
+
+    expect(res.status).toBe(401);
+    await expect(res.json()).resolves.toEqual({
+      error: "Session revoked. Please sign in again.",
+    });
   });
 
   it("requires admin privileges", async () => {
