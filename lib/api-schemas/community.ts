@@ -14,6 +14,7 @@ import {
   PaginationQuerySchema,
   RateLimitedErrorSchema,
 } from "./common";
+import { COMMUNITY_CONTENT_LENGTH_ERROR } from "@/lib/error-messages";
 
 const c = initContract();
 
@@ -40,8 +41,8 @@ const PostBody = z
   .object({
     content: z
       .string()
-      .min(100, "Content must be between 100 and 500 characters")
-      .max(500, "Content must be between 100 and 500 characters"),
+      .min(100, COMMUNITY_CONTENT_LENGTH_ERROR)
+      .max(500, COMMUNITY_CONTENT_LENGTH_ERROR),
   })
   .openapi("CommunityPostBody", {
     example: {
