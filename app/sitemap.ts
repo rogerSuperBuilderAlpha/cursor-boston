@@ -8,6 +8,8 @@
 import { MetadataRoute } from 'next';
 import { getAllPostSlugs } from '@/lib/blog';
 import { getPublishedPairRecordings } from '@/lib/pair-recordings';
+import { MONTHLY_CHALLENGES } from '@/lib/monthly-challenges';
+import { PROMPT_TEMPLATES } from '@/lib/prompt-templates';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://cursorboston.com';
@@ -67,6 +69,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.72,
     },
     {
+      url: `${baseUrl}/challenges`,
+      lastModified,
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    },
+    {
       url: `${baseUrl}/talks`,
       lastModified,
       changeFrequency: 'weekly',
@@ -103,6 +111,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     },
     {
+      url: `${baseUrl}/templates`,
+      lastModified,
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    },
+    {
       url: `${baseUrl}/showcase`,
       lastModified,
       changeFrequency: 'weekly',
@@ -122,6 +136,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: `${baseUrl}/badges`,
+      lastModified,
+      changeFrequency: 'weekly',
+      priority: 0.6,
+    },
+    {
+      url: `${baseUrl}/skills`,
       lastModified,
       changeFrequency: 'weekly',
       priority: 0.6,
@@ -207,5 +227,21 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }),
   );
 
-  return [...staticPages, ...blogPages, ...recordingPages];
+
+  const challengePages: MetadataRoute.Sitemap = MONTHLY_CHALLENGES.map((challenge) => ({
+    url: `${baseUrl}/challenges/${challenge.id}`,
+    lastModified,
+    changeFrequency: challenge.status === 'current' ? 'weekly' : 'monthly',
+    priority: challenge.status === 'current' ? 0.68 : 0.5,
+  }));
+
+  const templatePages: MetadataRoute.Sitemap = PROMPT_TEMPLATES.map((template) => ({
+    url: `${baseUrl}/templates/${template.id}`,
+    lastModified,
+    changeFrequency: 'monthly' as const,
+    priority: 0.6,
+  }));
+
+
+  return [...staticPages, ...blogPages, ...challengePages, ...templatePages, ...recordingPages];
 }

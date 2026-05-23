@@ -78,7 +78,7 @@ The body follows the template structure: Summary, Motivation, Detailed design, D
 
 | # | Title | Status | Opened | Merged | ADR |
 |---|---|---|---|---|---|
-| _none yet_ | _The first RFC will be RFC-0001 (Sentry adoption + structured logging contract — see [REVIEW_ACTION_PLAN.md §5.2.4](../REVIEW_ACTION_PLAN.md))._ | | | | |
+| [0001](0001-pair-recording-consent-storage.md) | Pair recording consent and storage contract | Draft | 2026-05-23 | | |
 
 ## Why RFCs in addition to ADRs?
 

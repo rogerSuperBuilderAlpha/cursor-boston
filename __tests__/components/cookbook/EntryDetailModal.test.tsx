@@ -59,6 +59,19 @@ function defaultProps(overrides: Record<string, unknown> = {}) {
 describe("EntryDetailModal", () => {
   let writeText: jest.Mock;
 
+  function getModalContent(): HTMLElement {
+    return screen.getByRole("dialog") as HTMLElement;
+  }
+
+  function getFocusableElements(): HTMLElement[] {
+    const modal = getModalContent();
+    return Array.from(
+      modal.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      ),
+    );
+  }
+
   beforeEach(() => {
     writeText = jest.fn().mockResolvedValue(undefined);
     Object.defineProperty(window.navigator, "clipboard", {
@@ -145,7 +158,7 @@ describe("EntryDetailModal", () => {
     const props = defaultProps();
     render(<EntryDetailModal {...props} />);
 
-    fireEvent.click(screen.getByRole("dialog"));
+    fireEvent.click(screen.getByRole("button", { name: "Close entry details backdrop" }));
     expect(props.onClose).toHaveBeenCalledTimes(1);
   });
 
@@ -153,7 +166,39 @@ describe("EntryDetailModal", () => {
     const props = defaultProps();
     render(<EntryDetailModal {...props} />);
 
-    fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+    fireEvent.keyDown(getModalContent(), { key: "Escape" });
     expect(props.onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("focuses the first modal control on open and restores prior focus on unmount", async () => {
+    const trigger = document.createElement("button");
+    trigger.textContent = "Open modal";
+    document.body.appendChild(trigger);
+    trigger.focus();
+
+    const { unmount } = render(<EntryDetailModal {...defaultProps()} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Close" })).toHaveFocus();
+    });
+
+    unmount();
+    expect(trigger).toHaveFocus();
+    trigger.remove();
+  });
+
+  it("wraps Tab and Shift+Tab inside the modal", () => {
+    render(<EntryDetailModal {...defaultProps()} />);
+    const focusable = getFocusableElements();
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    const modal = getModalContent();
+
+    first.focus();
+    fireEvent.keyDown(modal, { key: "Tab", shiftKey: true });
+    expect(last).toHaveFocus();
+
+    fireEvent.keyDown(modal, { key: "Tab" });
+    expect(first).toHaveFocus();
   });
 });

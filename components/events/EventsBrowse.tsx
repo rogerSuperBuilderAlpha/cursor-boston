@@ -230,6 +230,7 @@ function FeaturedEventCard({ event }: { event: Event }) {
               alt="Scan to register"
               fill
               className="object-contain"
+              sizes="(max-width: 768px) 15vw, 96px"
             />
           </div>
         </div>

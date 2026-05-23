@@ -7,8 +7,10 @@
 
 "use client";
 
+import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { Construction } from "lucide-react";
+import { trackEvent } from "@/lib/analytics";
 import { getEditOnGitHubUrl, getNewIssueUrl, getRepoUrl } from "@/lib/github-edit-link";
 
 /**
@@ -33,6 +35,21 @@ export function NeedsWorkBanner({
   });
   const roadmapUrl = "/open-source";
 
+  useEffect(() => {
+    void trackEvent("feature_banner_view", {
+      area,
+      path: pathname,
+    });
+  }, [area, pathname]);
+
+  const trackCta = (cta: string) => {
+    void trackEvent("feature_banner_cta_click", {
+      area,
+      path: pathname,
+      cta,
+    });
+  };
+
   return (
     <div
       role="note"
@@ -50,16 +67,38 @@ export function NeedsWorkBanner({
             </p>
           ) : null}
           <p className="text-sm text-amber-800 dark:text-amber-300/90 mt-2 flex flex-wrap gap-x-4 gap-y-1">
-            <a className="underline hover:no-underline" href={roadmapUrl}>
+            <a
+              className="underline hover:no-underline"
+              href={roadmapUrl}
+              onClick={() => trackCta("open_source_roadmap")}
+            >
               Open-source roadmap
             </a>
-            <a className="underline hover:no-underline" href={editUrl} target="_blank" rel="noopener noreferrer">
+            <a
+              className="underline hover:no-underline"
+              href={editUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackCta("edit_github")}
+            >
               Edit this page on GitHub
             </a>
-            <a className="underline hover:no-underline" href={issueUrl} target="_blank" rel="noopener noreferrer">
+            <a
+              className="underline hover:no-underline"
+              href={issueUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackCta("open_issue")}
+            >
               Open an issue
             </a>
-            <a className="underline hover:no-underline" href={getRepoUrl()} target="_blank" rel="noopener noreferrer">
+            <a
+              className="underline hover:no-underline"
+              href={getRepoUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackCta("browse_repo")}
+            >
               Browse the repo
             </a>
           </p>
