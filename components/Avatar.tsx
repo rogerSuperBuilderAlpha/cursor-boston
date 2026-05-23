@@ -108,6 +108,7 @@ export default function Avatar({
         alt={name || "Profile"}
         width={px}
         height={px}
+        sizes={`${px}px`}
         className={`rounded-full object-cover ${boxClass} ${className}`.trim()}
         style={boxStyle}
         onError={() => setImgError(true)}

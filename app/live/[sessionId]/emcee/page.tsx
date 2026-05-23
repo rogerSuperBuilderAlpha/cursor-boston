@@ -328,6 +328,7 @@ export default function EmceeLiveSessionPage({
                   alt="QR code for audience live queue"
                   width={224}
                   height={224}
+                  sizes="224px"
                   unoptimized
                   className="mx-auto h-56 w-56"
                 />
