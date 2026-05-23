@@ -15,6 +15,7 @@ import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 import { sanitizeText, sanitizeDocId } from "@/lib/sanitize";
 import { getDisplayName } from "@/lib/utils";
 import { communityContract } from "@/lib/api-schemas/community";
+import { COMMUNITY_CONTENT_LENGTH_ERROR } from "@/lib/error-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
     const sanitizedContent = sanitizeText(content);
     if (sanitizedContent.length < 100 || sanitizedContent.length > 500) {
       return NextResponse.json(
-        { error: "Content must be between 100 and 500 characters" },
+        { error: COMMUNITY_CONTENT_LENGTH_ERROR },
         { status: 400 }
       );
     }

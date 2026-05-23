@@ -332,5 +332,6 @@ describe("GET /api/summer-cohort/my-score/[weekId]", () => {
     await GET(makeRequest({ method: "GET" }), withParams("week-1"));
     const [, init] = (global.fetch as jest.Mock).mock.calls[0];
     expect(init.headers.Authorization).toBe("Bearer ghp_secret");
+    expect(init.signal).toBeInstanceOf(AbortSignal);
   });
 });

@@ -11,7 +11,7 @@
  * lift coverage without exercising the React render.
  */
 import { existsSync, readdirSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 
 jest.mock("firebase/auth", () => ({
   onAuthStateChanged: jest.fn(() => jest.fn()),
@@ -135,11 +135,11 @@ const COMPONENT_FILES = walk(COMPONENTS_DIR, (f) =>
   f.endsWith(".tsx") || f.endsWith(".ts")
 );
 const PAGE_FILES = walk(APP_DIR, (f) =>
-  /\/(page|layout)\.tsx$/.test(f)
+  /\/(page|layout)\.tsx$/.test(f.replace(/\\/g, "/"))
 );
 
 function moduleIdFor(absPath: string): string {
-  const rel = absPath.replace(process.cwd() + "/", "");
+  const rel = relative(process.cwd(), absPath).replace(/\\/g, "/");
   return "@/" + rel.replace(/\.tsx$/, "").replace(/\.ts$/, "");
 }
 
@@ -160,7 +160,7 @@ function runSweep(label: string, files: string[]) {
           });
         } catch (e) {
           failures.push({
-            path: file.replace(process.cwd() + "/", ""),
+            path: relative(process.cwd(), file).replace(/\\/g, "/"),
             err: e instanceof Error ? e.message.split("\n")[0] : String(e),
           });
         }

@@ -94,6 +94,7 @@ describe("fetchSummerCohortSubmissions", () => {
     const out = await fetchSummerCohortSubmissions(VOTE_WEEK, "week-1");
     expect(out.merged).toBe(0);
     expect(out.tryingToWin).toBe(0);
+    expect(out.githubFetchErrorCount).toBe(0);
     expect(out.submissions).toEqual([]);
   });
 
@@ -101,12 +102,14 @@ describe("fetchSummerCohortSubmissions", () => {
     (global.fetch as jest.Mock).mockResolvedValueOnce(mkRes({}, false, 500));
     const out = await fetchSummerCohortSubmissions(VOTE_WEEK, "week-1");
     expect(out.merged).toBe(0);
+    expect(out.githubFetchErrorCount).toBe(1);
   });
 
   it("returns the empty payload when the fetch throws", async () => {
     (global.fetch as jest.Mock).mockRejectedValueOnce(new Error("network down"));
     const out = await fetchSummerCohortSubmissions(VOTE_WEEK, "week-1");
     expect(out.merged).toBe(0);
+    expect(out.githubFetchErrorCount).toBe(1);
   });
 
   it("returns the empty payload when listJson.json() throws (malformed body)", async () => {
@@ -120,12 +123,14 @@ describe("fetchSummerCohortSubmissions", () => {
     (global.fetch as jest.Mock).mockResolvedValueOnce(malformed);
     const out = await fetchSummerCohortSubmissions(VOTE_WEEK, "week-1");
     expect(out.merged).toBe(0);
+    expect(out.githubFetchErrorCount).toBe(1);
   });
 
   it("returns the empty payload when listJson is not an array", async () => {
     (global.fetch as jest.Mock).mockResolvedValueOnce(mkRes({ message: "rate limit" }));
     const out = await fetchSummerCohortSubmissions(VOTE_WEEK, "week-1");
     expect(out.merged).toBe(0);
+    expect(out.githubFetchErrorCount).toBe(1);
   });
 
   it("happy path: walks two submissions, normalizes, sorts, returns counts", async () => {
@@ -161,6 +166,10 @@ describe("fetchSummerCohortSubmissions", () => {
     mockGetAdminDb.mockReturnValueOnce(null); // skip user enrichment
     const out = await fetchSummerCohortSubmissions(VOTE_WEEK, "week-1");
     expect(out.merged).toBe(2);
+    expect(out.githubFetchErrorCount).toBe(0);
+    for (const [, init] of (global.fetch as jest.Mock).mock.calls) {
+      expect((init as RequestInit).signal).toBeInstanceOf(AbortSignal);
+    }
     // Sorted alphabetically by handle → alice, bob
     expect(out.submissions[0]?.githubHandle).toBe("alice");
     expect(out.submissions[1]?.githubHandle).toBe("bob");
@@ -211,6 +220,7 @@ describe("fetchSummerCohortSubmissions", () => {
     );
     mockGetAdminDb.mockReturnValueOnce(null);
     const out = await fetchSummerCohortSubmissions(VOTE_WEEK, "week-1");
+    expect(out.githubFetchErrorCount).toBe(0);
     expect(out.submissions).toEqual([]);
   });
 
@@ -224,6 +234,7 @@ describe("fetchSummerCohortSubmissions", () => {
       });
     mockGetAdminDb.mockReturnValueOnce(null);
     const out = await fetchSummerCohortSubmissions(VOTE_WEEK, "week-1");
+    expect(out.githubFetchErrorCount).toBe(2);
     expect(out.submissions).toEqual([]);
   });
 
@@ -235,6 +246,7 @@ describe("fetchSummerCohortSubmissions", () => {
     const init = (global.fetch as jest.Mock).mock.calls[0][1] as RequestInit;
     const headers = init.headers as Record<string, string>;
     expect(headers["Authorization"]).toBe("Bearer gho_test");
+    expect(init.signal).toBeInstanceOf(AbortSignal);
   });
 
   it("enriches submissions with Firebase user identity (displayName + photoURL)", async () => {

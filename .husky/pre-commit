@@ -1,5 +1,12 @@
 #!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
+if [ "${HUSKY:-1}" = "0" ]; then
+  exit 0
+fi
+
+husky_sh="$(dirname -- "$0")/_/husky.sh"
+if [ -f "$husky_sh" ]; then
+  . "$husky_sh"
+fi
 
 # Scan for secrets in staged files (if gitleaks is installed)
 if command -v gitleaks > /dev/null 2>&1; then

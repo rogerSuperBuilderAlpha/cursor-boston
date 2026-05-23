@@ -17,6 +17,7 @@ import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 import { sanitizeText, sanitizeDocId } from "@/lib/sanitize";
 import { getDisplayName } from "@/lib/utils";
 import { questionsContract } from "@/lib/api-schemas/questions";
+import { QUESTION_ANSWER_RANGE_ERROR } from "@/lib/error-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
     const sanitizedBody = sanitizeText(parsed.data.body);
     if (sanitizedBody.length < 20 || sanitizedBody.length > 5000) {
       return NextResponse.json(
-        { error: "Answer must be between 20 and 5000 characters" },
+        { error: QUESTION_ANSWER_RANGE_ERROR },
         { status: 400 }
       );
     }
