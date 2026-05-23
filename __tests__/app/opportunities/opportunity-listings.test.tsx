@@ -48,7 +48,10 @@ describe("OpportunityListings", () => {
   it("filters listings and resets back to the full list", () => {
     render(<OpportunityListings opportunities={opportunities} />);
 
-    expect(screen.getByText("Showing 2 of 2 listings.")).toBeInTheDocument();
+    const status = screen.getByRole("status");
+    const searchInput = screen.getByLabelText("Search opportunities");
+
+    expect(status).toHaveTextContent("Showing 2 of 2 listings.");
     expect(screen.getByText("CTO / Co-Founder")).toBeInTheDocument();
     expect(screen.getByText("AI Product Engineer")).toBeInTheDocument();
     expect(screen.getByText("A sports community startup building in Boston.")).toBeInTheDocument();
@@ -64,18 +67,20 @@ describe("OpportunityListings", () => {
 
     expect(screen.queryByText("CTO / Co-Founder")).not.toBeInTheDocument();
     expect(screen.getByText("AI Product Engineer")).toBeInTheDocument();
-    expect(screen.getByText("Showing 1 of 2 listings.")).toBeInTheDocument();
+    expect(status).toHaveTextContent("Showing 1 of 2 listings.");
 
-    fireEvent.change(screen.getByLabelText("Search opportunities"), {
+    fireEvent.change(searchInput, {
       target: { value: "does-not-exist" },
     });
 
+    expect(status).toHaveTextContent("No opportunities match those filters.");
     expect(screen.getByText("No opportunities match those filters.")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Reset" }));
 
     expect(screen.getByText("CTO / Co-Founder")).toBeInTheDocument();
-    expect(screen.getByText("Showing 2 of 2 listings.")).toBeInTheDocument();
+    expect(status).toHaveTextContent("Showing 2 of 2 listings.");
+    expect(searchInput).toHaveFocus();
   });
 
   it("filters listings by work mode", () => {

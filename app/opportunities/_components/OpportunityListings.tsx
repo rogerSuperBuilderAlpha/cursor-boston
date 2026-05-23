@@ -17,7 +17,7 @@ import {
   Search,
   SlidersHorizontal,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   filterOpportunityListings,
   formatOpportunityType,
@@ -174,6 +174,7 @@ export function OpportunityListings({
   const [query, setQuery] = useState("");
   const [type, setType] = useState("all");
   const [workMode, setWorkMode] = useState<OpportunityWorkModeFilter>("all");
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const typeOptions = useMemo(
     () => getOpportunityTypeOptions(opportunities),
@@ -184,6 +185,15 @@ export function OpportunityListings({
     [opportunities, query, type, workMode]
   );
   const hasFilters = query.trim() !== "" || type !== "all" || workMode !== "all";
+  const hasFilteredOutAllListings =
+    opportunities.length > 0 && filteredOpportunities.length === 0;
+
+  function handleReset() {
+    setQuery("");
+    setType("all");
+    setWorkMode("all");
+    searchInputRef.current?.focus();
+  }
 
   return (
     <section className="px-6 py-16">
@@ -193,8 +203,22 @@ export function OpportunityListings({
             <h2 className="text-2xl font-bold text-foreground md:text-3xl">
               Open Opportunities
             </h2>
-            <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-              Showing {filteredOpportunities.length} of {opportunities.length} listings.
+            <p
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+              className="mt-2 text-sm text-neutral-600 dark:text-neutral-400"
+            >
+              <span aria-hidden={hasFilteredOutAllListings ? "true" : undefined}>
+                Showing {filteredOpportunities.length} of {opportunities.length}{" "}
+                listings.
+              </span>
+              {hasFilteredOutAllListings ? (
+                <span className="sr-only">
+                  No opportunities match those filters. Try a broader search or
+                  reset the filters.
+                </span>
+              ) : null}
             </p>
           </div>
 
@@ -208,6 +232,7 @@ export function OpportunityListings({
                   aria-hidden="true"
                 />
                 <input
+                  ref={searchInputRef}
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder="Search roles, companies, tags"
@@ -253,11 +278,7 @@ export function OpportunityListings({
 
               <button
                 type="button"
-                onClick={() => {
-                  setQuery("");
-                  setType("all");
-                  setWorkMode("all");
-                }}
+                onClick={handleReset}
                 disabled={!hasFilters}
                 className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800"
               >
