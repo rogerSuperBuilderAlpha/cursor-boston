@@ -6,6 +6,7 @@
  */
 
 import type { BadgeDefinition, BadgeEligibilityMap, BadgeId } from "@/lib/badges/types";
+import { TAILWIND_CLASS_NAMES as TW } from "@/lib/classname-constants";
 import { cn } from "@/lib/utils";
 import { BadgeCard } from "./BadgeCard";
 
@@ -37,8 +38,8 @@ export function BadgeGrid({
       <div
         className={cn(
           isHorizontal
-            ? "flex gap-4 overflow-x-auto pb-1 pr-2"
-            : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+            ? cn(TW.layout.flex, TW.spacing.gap4, "overflow-x-auto pb-1 pr-2")
+            : cn(TW.layout.grid, "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3", TW.spacing.gap4)
         )}
       >
         {definitions.map((definition) => {
@@ -61,7 +62,7 @@ export function BadgeGrid({
 
           if (isHorizontal) {
             return (
-              <div key={definition.id} className="min-w-[260px] shrink-0">
+              <div key={definition.id} className={cn("min-w-[260px]", TW.layout.shrink0)}>
                 {card}
               </div>
             );

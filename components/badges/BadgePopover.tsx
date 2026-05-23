@@ -7,6 +7,7 @@
 
 import { useEffect, useRef } from "react";
 import type { BadgeDefinition, BadgeEligibilityResult } from "@/lib/badges/types";
+import { CLASS_GROUPS, TAILWIND_CLASS_NAMES as TW } from "@/lib/classname-constants";
 import { cn } from "@/lib/utils";
 
 interface BadgePopoverProps {
@@ -75,7 +76,7 @@ export function BadgePopover({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className={cn("fixed z-50", TW.layout.inset0, TW.layout.flex, TW.layout.itemsCenter, TW.layout.justifyCenter, TW.spacing.p4)}
       role="dialog"
       aria-modal="true"
       aria-labelledby={headingId}
@@ -83,30 +84,28 @@ export function BadgePopover({
     >
       <button
         type="button"
-        className="absolute inset-0 bg-black/40"
+        className={cn(TW.layout.absolute, TW.layout.inset0, TW.surface.overlay)}
         aria-label="Close"
         onClick={onClose}
       />
 
       <div
         ref={dialogRef}
-        className="relative w-full max-w-sm rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xl"
+        className={cn(TW.layout.relative, TW.layout.wFull, "max-w-sm shadow-xl", CLASS_GROUPS.card.neutral)}
       >
-        <div className="flex items-start justify-between gap-3 p-4 border-b border-neutral-200 dark:border-neutral-800">
+        <div className={cn(TW.layout.flex, TW.layout.itemsStart, TW.layout.justifyBetween, TW.spacing.gap3, TW.spacing.p4, TW.border.bottomNeutral)}>
           <div className="min-w-0">
-            <h3 id={headingId} className="text-base font-semibold text-foreground truncate">
+            <h3 id={headingId} className={cn("text-base", TW.text.semibold, TW.text.foreground, TW.layout.truncate)}>
               {definition.name}
             </h3>
-            <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+            <p className={cn(TW.text.tiny, TW.text.subtle, TW.spacing.mt1)}>
               {anchorLabel || "Achievement badge"}
             </p>
           </div>
           <span
             className={cn(
-              "shrink-0 px-2 py-0.5 rounded-full text-xs font-medium",
-              isEarned
-                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                : "bg-neutral-200/80 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400"
+              CLASS_GROUPS.badge.basePill,
+              isEarned ? CLASS_GROUPS.badge.earnedPill : CLASS_GROUPS.badge.lockedPill
             )}
           >
             {isEarned ? "Earned" : "Locked"}
@@ -115,29 +114,29 @@ export function BadgePopover({
 
         <div className="p-4 space-y-3">
           <div>
-            <p className="text-xs uppercase tracking-wide text-neutral-500 dark:text-neutral-400 mb-1">
+            <p className={cn(CLASS_GROUPS.text.sectionLabel, TW.spacing.mb1)}>
               Description
             </p>
-            <p className="text-sm text-neutral-700 dark:text-neutral-300">
+            <p className={CLASS_GROUPS.text.body}>
               {definition.description}
             </p>
           </div>
 
           <div>
-            <p className="text-xs uppercase tracking-wide text-neutral-500 dark:text-neutral-400 mb-1">
+            <p className={cn(CLASS_GROUPS.text.sectionLabel, TW.spacing.mb1)}>
               How to earn
             </p>
-            <p className="text-sm text-neutral-700 dark:text-neutral-300">
+            <p className={CLASS_GROUPS.text.body}>
               {definition.howToEarn}
             </p>
           </div>
 
           {eligibility?.progress && (
             <div>
-              <p className="text-xs uppercase tracking-wide text-neutral-500 dark:text-neutral-400 mb-1">
+              <p className={cn(CLASS_GROUPS.text.sectionLabel, TW.spacing.mb1)}>
                 Progress
               </p>
-              <p className="text-sm text-neutral-700 dark:text-neutral-300 mb-2">
+              <p className={cn(CLASS_GROUPS.text.body, TW.spacing.mb2)}>
                 {eligibility.progress.current}/{eligibility.progress.target}
                 {eligibility.progress.unit ? ` ${eligibility.progress.unit}` : ""}
               </p>
@@ -160,10 +159,10 @@ export function BadgePopover({
 
           {!isEarned && eligibility?.reason && (
             <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800/40 p-3">
-              <p className="text-xs uppercase tracking-wide text-neutral-500 dark:text-neutral-400 mb-1">
+              <p className={cn(CLASS_GROUPS.text.sectionLabel, TW.spacing.mb1)}>
                 Next step
               </p>
-              <p className="text-sm text-neutral-700 dark:text-neutral-300">
+              <p className={CLASS_GROUPS.text.body}>
                 {eligibility.reason}
               </p>
             </div>
@@ -186,7 +185,7 @@ export function BadgePopover({
             ref={closeButtonRef}
             type="button"
             onClick={onClose}
-            className="w-full px-3 py-2 rounded-lg bg-neutral-100 text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+            className={cn(TW.layout.wFull, TW.spacing.px3, TW.spacing.py2, TW.radius.lg, CLASS_GROUPS.button.neutral, TW.text.sm, TW.text.medium)}
           >
             Close
           </button>

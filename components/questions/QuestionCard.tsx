@@ -9,6 +9,8 @@
 
 import Link from "next/link";
 import { ThumbsUp, ThumbsDown, MessageSquare } from "lucide-react";
+import { CLASS_GROUPS, TAILWIND_CLASS_NAMES as TW } from "@/lib/classname-constants";
+import { cn } from "@/lib/utils";
 import type { Question, VoteType } from "@/types/questions";
 
 function timeAgo(dateStr: string): string {
@@ -41,35 +43,34 @@ export function QuestionCard({
   const netScore = question.upCount - question.downCount;
 
   return (
-    <div className="border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 sm:p-5 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors">
+    <div className={cn(TW.border.neutral, TW.radius.xl, "p-4 sm:p-5", CLASS_GROUPS.card.neutralHover, TW.motion.colors)}>
       <div className="flex gap-4">
         {/* Vote column */}
-        <div className="flex flex-col items-center gap-1 min-w-[40px]">
+        <div className={CLASS_GROUPS.vote.column}>
           <button
             type="button"
             onClick={() => onVote(question.id, "up")}
             disabled={!isLoggedIn || isVoting}
             aria-label={`Upvote question: ${question.title}`}
-            className={[
-              "p-1 rounded transition-colors",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500",
+            className={cn(
+              CLASS_GROUPS.button.iconAction,
               userVote === "up"
-                ? "text-emerald-600 dark:text-emerald-400"
-                : "text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300",
-              (!isLoggedIn || isVoting) ? "opacity-50 cursor-not-allowed" : "",
-            ].join(" ")}
+                ? TW.text.accent
+                : CLASS_GROUPS.vote.inactive,
+              (!isLoggedIn || isVoting) && TW.state.disabled
+            )}
           >
             <ThumbsUp size={16} />
           </button>
           <span
-            className={[
-              "text-sm font-semibold",
+            className={cn(
+              CLASS_GROUPS.vote.score,
               netScore > 0
-                ? "text-emerald-600 dark:text-emerald-400"
+                ? CLASS_GROUPS.status.positiveScore
                 : netScore < 0
-                  ? "text-red-500"
-                  : "text-neutral-500",
-            ].join(" ")}
+                  ? CLASS_GROUPS.status.negativeScore
+                  : CLASS_GROUPS.status.neutralScore
+            )}
           >
             {netScore > 0 ? `+${netScore}` : netScore}
           </span>
@@ -78,14 +79,13 @@ export function QuestionCard({
             onClick={() => onVote(question.id, "down")}
             disabled={!isLoggedIn || isVoting}
             aria-label={`Downvote question: ${question.title}`}
-            className={[
-              "p-1 rounded transition-colors",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500",
+            className={cn(
+              CLASS_GROUPS.button.iconAction,
               userVote === "down"
-                ? "text-red-500"
-                : "text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300",
-              (!isLoggedIn || isVoting) ? "opacity-50 cursor-not-allowed" : "",
-            ].join(" ")}
+                ? CLASS_GROUPS.status.negativeScore
+                : CLASS_GROUPS.vote.inactive,
+              (!isLoggedIn || isVoting) && TW.state.disabled
+            )}
           >
             <ThumbsDown size={16} />
           </button>
@@ -100,7 +100,7 @@ export function QuestionCard({
             {question.title}
           </Link>
 
-          <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1 line-clamp-2">
+          <p className={cn(CLASS_GROUPS.text.muted, TW.spacing.mt1, "line-clamp-2")}>
             {question.body}
           </p>
 
@@ -110,18 +110,18 @@ export function QuestionCard({
                 key={tag}
                 type="button"
                 onClick={() => onTagClick?.(tag)}
-                className="px-2 py-0.5 bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 rounded text-xs hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+                className={cn(CLASS_GROUPS.tag.neutral, "hover:bg-neutral-200 dark:hover:bg-neutral-700", TW.motion.colors)}
               >
                 {tag}
               </button>
             ))}
 
-            <span className="flex items-center gap-1 text-xs text-neutral-500 ml-auto">
+            <span className={cn(TW.layout.flex, TW.layout.itemsCenter, TW.spacing.gap1, CLASS_GROUPS.text.metadata, TW.spacing.mlAuto)}>
               <MessageSquare size={14} />
               {question.answerCount} {question.answerCount === 1 ? "answer" : "answers"}
             </span>
 
-            <span className="text-xs text-neutral-500">
+            <span className={CLASS_GROUPS.text.metadata}>
               {question.authorName} &middot; {timeAgo(question.createdAt)}
             </span>
           </div>
