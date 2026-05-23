@@ -1,0 +1,57 @@
+name: ClusterFuzzLite
+
+# Coverage-guided fuzzing for the input-sanitization paths in
+# lib/sanitize.ts. Two modes:
+#  - PR builds run a short (10-minute) fuzz session on each target and
+#    fail the job if any crash is found.
+#  - The weekly batch run uses a longer budget and stores the corpus +
+#    coverage artifacts as build artifacts for follow-up review.
+#
+# The actual harnesses live under fuzz/ and the build glue under
+# .clusterfuzzlite/. See fuzz/README.md for the rationale.
+
+on:
+  pull_request:
+    paths:
+      - "lib/sanitize.ts"
+      - "fuzz/**"
+      - ".clusterfuzzlite/**"
+      - ".github/workflows/fuzz.yml"
+  schedule:
+    - cron: "27 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fuzz:
+    name: Fuzz (${{ matrix.sanitizer }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        sanitizer: [address]
+    steps:
+      - name: Build fuzzers
+        id: build
+        uses: google/clusterfuzzlite/actions/build_fuzzers@884713a6c30a92e5e8544c39945cd7cb630abcd1 # v1
+        with:
+          language: javascript
+          sanitizer: ${{ matrix.sanitizer }}
+
+      - name: Run fuzzers
+        uses: google/clusterfuzzlite/actions/run_fuzzers@884713a6c30a92e5e8544c39945cd7cb630abcd1 # v1
+        with:
+          language: javascript
+          sanitizer: ${{ matrix.sanitizer }}
+          # PR-mode: 600s of fuzzing on each target. Long enough to catch
+          # regressions, short enough to stay within the PR latency
+          # budget. The weekly batch run uses the same workflow with a
+          # longer mode.
+          fuzz-seconds: 600
+          mode: ${{ github.event_name == 'pull_request' && 'code-change' || 'batch' }}
+          output-sarif: true

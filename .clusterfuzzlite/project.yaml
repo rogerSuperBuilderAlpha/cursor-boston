@@ -1,0 +1,10 @@
+# ClusterFuzzLite project descriptor.
+# See https://google.github.io/clusterfuzzlite/build-integration/javascript-lang/
+language: javascript
+primary_contact: rhunt@bentley.edu
+auto_ccs:
+  - rhunt@bentley.edu
+sanitizers:
+  - address
+fuzzing_engines:
+  - libfuzzer
