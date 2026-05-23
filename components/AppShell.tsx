@@ -528,6 +528,23 @@ export default function AppShell({ children }: { children: ReactNode }) {
         <Footer />
       </div>
       <SportsHackConfirmAttendanceModal />
+      <WorldMapFab />
     </div>
+  );
+}
+
+// Floating "Open game world map" launcher. Lives at z-40, so the
+// /game/world page's own fixed inset-0 z-50 overlay covers it — no
+// path check needed.
+function WorldMapFab() {
+  return (
+    <Link
+      href="/game/world"
+      className="fixed bottom-6 right-6 z-40 inline-flex items-center gap-2 rounded-full bg-neutral-900/80 backdrop-blur border border-neutral-700/60 px-4 py-2.5 text-sm font-medium text-neutral-100 shadow-lg hover:bg-neutral-800 transition-colors"
+      aria-label="Open game world map"
+    >
+      <span aria-hidden>🗺️</span>
+      <span>Open game world map</span>
+    </Link>
   );
 }

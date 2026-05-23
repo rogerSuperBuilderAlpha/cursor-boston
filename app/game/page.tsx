@@ -7,28 +7,11 @@
 
 "use client";
 
-import Link from "next/link";
 import { CreatePlayerGate } from "./_components/dashboard/CreatePlayerGate";
 import { DashboardView } from "./_components/dashboard/DashboardView";
 import { NameYourGeneralGate } from "./_components/dashboard/NameYourGeneralGate";
 import { SignedOutLanding } from "./_components/dashboard/SignedOutLanding";
 import { useDashboardData } from "./_lib/use-dashboard-data";
-
-// Fixed bottom-right FAB linking into the 3D fly-around at /game/world.
-// Always rendered (signed-out landing, create-player gate, full
-// dashboard) so the world map is discoverable from every entrypoint.
-function WorldMapFab() {
-  return (
-    <Link
-      href="/game/world"
-      className="fixed bottom-6 right-6 z-40 inline-flex items-center gap-2 rounded-full bg-neutral-900/80 backdrop-blur border border-neutral-700/60 px-4 py-2.5 text-sm font-medium text-neutral-100 shadow-lg hover:bg-neutral-800 dark:bg-neutral-900/80 dark:hover:bg-neutral-800 transition-colors"
-      aria-label="Open game world map"
-    >
-      <span aria-hidden>🗺️</span>
-      <span>Open game world map</span>
-    </Link>
-  );
-}
 
 /**
  * /game — the dashboard. Composition only: every meaningful piece lives
@@ -78,12 +61,7 @@ export default function GameDashboardPage() {
     content = <DashboardView player={player} data={data} />;
   }
 
-  // The FAB rides on top of every state — even pre-auth — so the 3D
-  // fly-around is one click away from anywhere in /game.
-  return (
-    <>
-      {content}
-      {!authLoading && <WorldMapFab />}
-    </>
-  );
+  // The "Open game world map" FAB lives in AppShell now so it's on
+  // every page, not just /game.
+  return <>{content}</>;
 }
