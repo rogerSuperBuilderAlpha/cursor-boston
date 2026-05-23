@@ -6,7 +6,7 @@
  * lifts coverage on modules that have no dedicated unit tests yet.
  */
 import { existsSync, readdirSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 
 jest.mock("@/lib/firebase-admin", () => ({
   getAdminDb: () => null,
@@ -23,7 +23,11 @@ jest.mock("@/lib/firebase", () => ({
 
 jest.mock("@/lib/server-auth", () => ({
   getVerifiedUser: jest.fn().mockResolvedValue(null),
-  verifyIdTokenAdmin: jest.fn().mockResolvedValue(null),
+  getVerifiedAdminUser: jest.fn().mockResolvedValue(null),
+  getVerifiedUserWithRevocation: jest.fn().mockResolvedValue(null),
+  getOptionalVerifiedUser: jest.fn().mockResolvedValue(null),
+  isCurrentIdTokenRevoked: jest.fn().mockResolvedValue(false),
+  isRevokedIdTokenError: jest.fn(() => false),
 }));
 
 jest.mock("firebase-admin/firestore", () => ({
@@ -66,7 +70,7 @@ function walkTs(dir: string, out: string[] = []): string[] {
 const LIB_FILES = walkTs(LIB_DIR);
 
 function moduleIdFor(absPath: string): string {
-  const rel = absPath.replace(process.cwd() + "/", "");
+  const rel = relative(process.cwd(), absPath).replace(/\\/g, "/");
   return "@/" + rel.replace(/\.ts$/, "");
 }
 
@@ -85,7 +89,7 @@ describe("lib/* smoke imports", () => {
         });
       } catch (e) {
         failures.push({
-          path: file.replace(process.cwd() + "/", ""),
+          path: relative(process.cwd(), file).replace(/\\/g, "/"),
           err: e instanceof Error ? e.message.split("\n")[0] : String(e),
         });
       }

@@ -4,7 +4,7 @@
 
 import { NextRequest } from "next/server";
 import { POST } from "@/app/api/hackathons/events/[eventId]/checkin/route";
-import { getVerifiedUser } from "@/lib/server-auth";
+import { getVerifiedUser, isCurrentIdTokenRevoked } from "@/lib/server-auth";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { checkRateLimit } from "@/lib/rate-limit";
 
@@ -19,6 +19,7 @@ jest.mock("@/lib/rate-limit", () => {
 
 jest.mock("@/lib/server-auth", () => ({
   getVerifiedUser: jest.fn(),
+  isCurrentIdTokenRevoked: jest.fn(async () => false),
 }));
 
 jest.mock("@/lib/firebase-admin", () => ({
@@ -31,6 +32,9 @@ jest.mock("@/lib/logger", () => ({
 }));
 
 const mockGetVerifiedUser = getVerifiedUser as jest.MockedFunction<typeof getVerifiedUser>;
+const mockIsRevoked = isCurrentIdTokenRevoked as jest.MockedFunction<
+  typeof isCurrentIdTokenRevoked
+>;
 const mockGetAdminDb = getAdminDb as jest.MockedFunction<typeof getAdminDb>;
 
 const VALID_EVENT_ID = "hack-a-sprint-2026";
@@ -57,13 +61,16 @@ function makeMockDoc(data: Record<string, unknown> | null) {
 }
 
 describe("POST /api/hackathons/events/[eventId]/checkin", () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockIsRevoked.mockResolvedValue(false);
+  });
 
-  it("returns 403 when not authenticated", async () => {
+  it("returns 401 when not authenticated", async () => {
     mockGetVerifiedUser.mockResolvedValue(null);
     const req = makeRequest({ userId: "u1", checkedIn: true });
     const res = await POST(req, makeContext(VALID_EVENT_ID));
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(401);
   });
 
   it("returns 403 when user is not admin", async () => {

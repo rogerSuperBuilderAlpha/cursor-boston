@@ -8,20 +8,24 @@ import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import { doc, getDoc } from "firebase/firestore";
 
-jest.mock("next/navigation", () => ({
-  useRouter: () => ({
+jest.mock("next/navigation", () => {
+  const mockRouter = {
     push: jest.fn(),
     replace: jest.fn(),
     back: jest.fn(),
     refresh: jest.fn(),
     prefetch: jest.fn(),
-  }),
-  useSearchParams: () => new URLSearchParams(),
-  usePathname: () => "/",
-  useParams: () => ({ sessionId: "sess-pair-wave4" }),
-  redirect: jest.fn(),
-  notFound: jest.fn(),
-}));
+  };
+
+  return {
+    useRouter: () => mockRouter,
+    useSearchParams: () => new URLSearchParams(),
+    usePathname: () => "/",
+    useParams: () => ({ sessionId: "sess-pair-wave4" }),
+    redirect: jest.fn(),
+    notFound: jest.fn(),
+  };
+});
 
 jest.mock("@/lib/firebase", () => ({
   auth: {},

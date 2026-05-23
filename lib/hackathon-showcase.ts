@@ -8,12 +8,14 @@
 import { unstable_cache } from "next/cache";
 import { getGithubRepoPair } from "@/lib/github-recent-merged-prs";
 import { fetchWithTimeout } from "@/lib/http-fetch";
+import { HACKATHON_EVENT_IDS } from "@/types/hackathon-events";
 
-export const HACK_A_SPRINT_2026_EVENT_ID = "hack-a-sprint-2026";
+export const HACK_A_SPRINT_2026_EVENT_ID =
+  HACKATHON_EVENT_IDS.HACK_A_SPRINT_2026;
 export const SHOWCASE_SUBMISSIONS_CACHE_TAG = "showcase-submissions";
-export const HACK_A_SPRINT_2026_LABEL = "hack-a-sprint-2026";
+export const HACK_A_SPRINT_2026_LABEL = HACK_A_SPRINT_2026_EVENT_ID;
 export const HACK_A_SPRINT_2026_SUBMISSIONS_PATH =
-  "content/hackathons/hack-a-sprint-2026/submissions";
+  `content/hackathons/${HACK_A_SPRINT_2026_EVENT_ID}/submissions`;
 
 export type ShowcaseSubmissionPayload = {
   /** May be empty if omitted in JSON; hide repo link in UI when missing. */

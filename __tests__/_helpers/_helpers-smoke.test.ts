@@ -174,6 +174,8 @@ describe("__tests__/_helpers (smoke)", () => {
     it("makeServerAuthSpies → getVerifiedUser returns null by default", async () => {
       const spies = makeServerAuthSpies();
       expect(await spies.getVerifiedUser({} as never)).toBeNull();
+      expect(await spies.getVerifiedAdminUser({} as never)).toBeNull();
+      expect(await spies.getVerifiedUserWithRevocation({} as never)).toBeNull();
     });
 
     it("mockVerifiedUser one-shots a user", async () => {
@@ -182,20 +184,34 @@ describe("__tests__/_helpers (smoke)", () => {
       const u = (await spies.getVerifiedUser({} as never)) as { uid: string; email: string };
       expect(u.uid).toBe("u1");
       expect(u.email).toBe("u@x.com");
+      const admin = (await spies.getVerifiedAdminUser({} as never)) as { uid: string };
+      expect(admin.uid).toBe("u1");
+      const revoked = (await spies.getVerifiedUserWithRevocation({} as never)) as {
+        uid: string;
+      };
+      expect(revoked.uid).toBe("u1");
       // Next call falls back to null again
       expect(await spies.getVerifiedUser({} as never)).toBeNull();
+      expect(await spies.getVerifiedAdminUser({} as never)).toBeNull();
+      expect(await spies.getVerifiedUserWithRevocation({} as never)).toBeNull();
     });
 
     it("mockUnauthenticated → null", async () => {
       const spies = makeServerAuthSpies();
       spies.mockUnauthenticated();
       expect(await spies.getVerifiedUser({} as never)).toBeNull();
+      expect(await spies.getVerifiedAdminUser({} as never)).toBeNull();
+      expect(await spies.getVerifiedUserWithRevocation({} as never)).toBeNull();
     });
 
     it("mockAuthError → rejects", async () => {
       const spies = makeServerAuthSpies();
       spies.mockAuthError(new Error("expired"));
       await expect(spies.getVerifiedUser({} as never)).rejects.toThrow("expired");
+      await expect(spies.getVerifiedAdminUser({} as never)).rejects.toThrow("expired");
+      await expect(spies.getVerifiedUserWithRevocation({} as never)).rejects.toThrow(
+        "expired",
+      );
     });
 
     it("createServerAuthModule binds spies to module exports", async () => {
@@ -204,6 +220,25 @@ describe("__tests__/_helpers (smoke)", () => {
       spies.mockVerifiedUser({ uid: "u9" });
       const u = (await mod.getVerifiedUser({} as never)) as { uid: string };
       expect(u.uid).toBe("u9");
+      const admin = (await mod.getVerifiedAdminUser({} as never)) as { uid: string };
+      expect(admin.uid).toBe("u9");
+      const revoked = (await mod.getVerifiedUserWithRevocation({} as never)) as {
+        uid: string;
+      };
+      expect(revoked.uid).toBe("u9");
+      expect(mod.isRevokedIdTokenError(new Error("expired"))).toBe(false);
+    });
+
+    it("mockRevokedAuthError wires revoked-token classification", async () => {
+      const spies = makeServerAuthSpies();
+      const mod = createServerAuthModule(spies);
+      const err = new Error("The Firebase ID token has been revoked.");
+      spies.mockRevokedAuthError(err);
+
+      await expect(mod.getVerifiedAdminUser({} as never)).rejects.toThrow(
+        "revoked",
+      );
+      expect(mod.isRevokedIdTokenError(err)).toBe(true);
     });
 
     it("withCronSecret + clearCronSecret manage process.env", () => {
