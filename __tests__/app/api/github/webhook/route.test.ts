@@ -20,6 +20,7 @@ import {
   notifyHackASprintSubmissionMerged,
 } from "@/lib/discord";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { refreshSnapshot } from "@/lib/hackathon-leaderboard-snapshot";
 import { makeRequest, readJson } from "@/__tests__/_helpers/route-test-utils";
 
 // Quiet the next/cache revalidate calls in jest while preserving the rest
@@ -54,6 +55,10 @@ jest.mock("@/lib/hackathon-showcase-admin", () => ({
   awardHackASprint2026ShowcaseBadge: jest.fn(),
 }));
 
+jest.mock("@/lib/hackathon-leaderboard-snapshot", () => ({
+  refreshSnapshot: jest.fn(),
+}));
+
 jest.mock("@/lib/summer-cohort-auto-admit", () => ({
   maybeAutoAdmitOnPRMerge: jest.fn(),
 }));
@@ -82,6 +87,7 @@ const mockProcessPullRequest = processPullRequest as jest.MockedFunction<
 const mockIsTargetRepository = isTargetRepository as jest.MockedFunction<
   typeof isTargetRepository
 >;
+const mockRefreshSnapshot = refreshSnapshot as jest.MockedFunction<typeof refreshSnapshot>;
 
 describe("GET /api/github/webhook", () => {
   it("returns ok status", async () => {
@@ -95,6 +101,13 @@ describe("GET /api/github/webhook", () => {
 describe("POST /api/github/webhook", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockRefreshSnapshot.mockResolvedValue({
+      entries: [],
+      totalCount: 0,
+      websiteSignupCount: 0,
+      creditTopN: 0,
+      generatedAt: "2026-05-22T00:00:00.000Z",
+    });
   });
 
   it("returns 401 when signature is invalid", async () => {
@@ -399,6 +412,40 @@ describe("POST /api/github/webhook", () => {
       authorLogin: "octocat",
       prNumber: 6,
     });
+  });
+
+  it("refreshes persisted hackathon signup leaderboard snapshots on target repo merge", async () => {
+    mockVerify.mockReturnValue(true);
+    mockIsTargetRepository.mockReturnValue(true);
+    (fetchPullRequestChangedFilenames as jest.Mock).mockResolvedValue([]);
+    const req = makeRequest({
+      method: "POST",
+      path: "/api/github/webhook",
+      body: {
+        action: "closed",
+        pull_request: {
+          number: 66,
+          title: "Merged",
+          state: "closed",
+          merged: true,
+          merged_at: "2026-05-01",
+          user: { login: "octocat", avatar_url: "x" },
+          html_url: "u",
+          created_at: "2026-04-30",
+          updated_at: "2026-05-01",
+        },
+        repository: { owner: { login: "o" }, name: "r" },
+      },
+      headers: {
+        "x-hub-signature-256": "sha256=abc",
+        "x-github-event": "pull_request",
+      },
+    });
+
+    await POST(req);
+
+    expect(mockRefreshSnapshot).toHaveBeenCalledWith("hack-a-sprint-2026");
+    expect(mockRefreshSnapshot).toHaveBeenCalledWith("sports-hack-2026");
   });
 
   it("swallows processPullRequest errors and still returns 200", async () => {

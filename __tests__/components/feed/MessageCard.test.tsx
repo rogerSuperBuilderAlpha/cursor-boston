@@ -7,7 +7,7 @@ jest.mock("next/image", () => ({
   __esModule: true,
   default: (props: Record<string, unknown>) => {
     const { fill, ...rest } = props;
-    // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
+    // eslint-disable-next-line @next/next/no-img-element
     return <img data-fill={fill ? "true" : undefined} {...rest} />;
   },
 }));
@@ -106,7 +106,7 @@ describe("MessageCard", () => {
 
   it("shows repost button for non-repost messages", () => {
     render(<MessageCard {...defaultProps()} />);
-    expect(screen.getByLabelText("Repost")).toBeInTheDocument();
+    expect(screen.getByLabelText("Repost Alice's message")).toBeInTheDocument();
   });
 
   it("hides repost button for repost messages", () => {
@@ -119,7 +119,7 @@ describe("MessageCard", () => {
       },
     });
     render(<MessageCard {...defaultProps({ message: msg })} />);
-    expect(screen.queryByLabelText("Repost")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Repost Alice's message")).not.toBeInTheDocument();
   });
 
   it("shows repost header for reposted messages", () => {
@@ -180,18 +180,31 @@ describe("MessageCard", () => {
     const onDislike = jest.fn();
     render(<MessageCard {...defaultProps({ onLike, onDislike })} />);
 
-    await user.click(screen.getByLabelText("Like"));
+    await user.click(screen.getByLabelText("Like Alice's message"));
     expect(onLike).toHaveBeenCalledTimes(1);
 
-    await user.click(screen.getByLabelText("Dislike"));
+    await user.click(screen.getByLabelText("Dislike Alice's message"));
     expect(onDislike).toHaveBeenCalledTimes(1);
   });
 
   it("disables reaction buttons when not logged in", () => {
     render(<MessageCard {...defaultProps({ isLoggedIn: false })} />);
-    expect(screen.getByLabelText("Like")).toBeDisabled();
-    expect(screen.getByLabelText("Dislike")).toBeDisabled();
-    expect(screen.getByLabelText("Reply")).toBeDisabled();
+    expect(screen.getByLabelText("Like Alice's message")).toBeDisabled();
+    expect(screen.getByLabelText("Dislike Alice's message")).toBeDisabled();
+    expect(screen.getByLabelText("Reply to Alice's message")).toBeDisabled();
+  });
+
+  it("exposes context-specific action labels", () => {
+    render(<MessageCard {...defaultProps()} />);
+    expect(
+      screen.getByRole("button", { name: "Like Alice's message" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Dislike Alice's message" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Reply to Alice's message" }),
+    ).toBeInTheDocument();
   });
 
   it("calls onAuthorClick when author name clicked", async () => {
@@ -262,11 +275,11 @@ describe("MessageCard", () => {
 
   it("shows active like state", () => {
     render(<MessageCard {...defaultProps({ userReaction: "like" as const })} />);
-    expect(screen.getByLabelText("Remove like")).toBeInTheDocument();
+    expect(screen.getByLabelText("Remove like from Alice's message")).toBeInTheDocument();
   });
 
   it("shows active dislike state", () => {
     render(<MessageCard {...defaultProps({ userReaction: "dislike" as const })} />);
-    expect(screen.getByLabelText("Remove dislike")).toBeInTheDocument();
+    expect(screen.getByLabelText("Remove dislike from Alice's message")).toBeInTheDocument();
   });
 });

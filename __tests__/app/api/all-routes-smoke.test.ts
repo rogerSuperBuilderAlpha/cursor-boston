@@ -24,7 +24,11 @@ jest.mock("@/lib/firebase-admin", () => ({
 
 jest.mock("@/lib/server-auth", () => ({
   getVerifiedUser: jest.fn().mockResolvedValue(null),
-  verifyIdTokenAdmin: jest.fn().mockResolvedValue(null),
+  getVerifiedAdminUser: jest.fn().mockResolvedValue(null),
+  getVerifiedUserWithRevocation: jest.fn().mockResolvedValue(null),
+  getOptionalVerifiedUser: jest.fn().mockResolvedValue(null),
+  isCurrentIdTokenRevoked: jest.fn().mockResolvedValue(false),
+  isRevokedIdTokenError: jest.fn(() => false),
 }));
 
 jest.mock("firebase-admin/firestore", () => ({

@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getVerifiedUser } from "@/lib/server-auth";
+import { getVerifiedUser, isCurrentIdTokenRevoked } from "@/lib/server-auth";
 import { sanitizeText } from "@/lib/sanitize";
 import { createLiveSessionServer } from "@/lib/live-sessions/data-server";
 import { liveContract } from "@/lib/api-schemas/live";
@@ -47,6 +47,12 @@ export async function POST(request: NextRequest) {
 
     if (!user.isAdmin) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    if (await isCurrentIdTokenRevoked(request)) {
+      return NextResponse.json(
+        { error: "Session revoked. Please sign in again." },
+        { status: 401 }
+      );
     }
 
     const rawBody = await request.json().catch(() => null);

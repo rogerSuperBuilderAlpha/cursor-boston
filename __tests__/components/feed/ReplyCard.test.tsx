@@ -9,6 +9,7 @@ jest.mock("next/image", () => ({
   __esModule: true,
   default: (props: Record<string, unknown>) => {
     const { fill, priority, ...rest } = props;
+    // eslint-disable-next-line @next/next/no-img-element
     return <img data-fill={fill ? "true" : undefined} {...rest} />;
   },
 }));
@@ -69,7 +70,7 @@ describe("ReplyCard", () => {
     const user = userEvent.setup();
     const props = defaultProps();
     render(<ReplyCard {...props} />);
-    await user.click(screen.getByRole("button", { name: "Like" }));
+    await user.click(screen.getByRole("button", { name: "Like Bob's reply" }));
     expect(props.onLike).toHaveBeenCalledTimes(1);
   });
 
@@ -77,16 +78,22 @@ describe("ReplyCard", () => {
     const user = userEvent.setup();
     const props = defaultProps();
     render(<ReplyCard {...props} />);
-    await user.click(screen.getByRole("button", { name: "Dislike" }));
+    await user.click(screen.getByRole("button", { name: "Dislike Bob's reply" }));
     expect(props.onDislike).toHaveBeenCalledTimes(1);
   });
 
   it("disables reaction buttons when not logged in", () => {
     render(<ReplyCard {...defaultProps({ isLoggedIn: false })} />);
-    const likeBtn = screen.getByRole("button", { name: "Like" });
-    const dislikeBtn = screen.getByRole("button", { name: "Dislike" });
+    const likeBtn = screen.getByRole("button", { name: "Like Bob's reply" });
+    const dislikeBtn = screen.getByRole("button", { name: "Dislike Bob's reply" });
     expect(likeBtn).toBeDisabled();
     expect(dislikeBtn).toBeDisabled();
+  });
+
+  it("exposes context-specific action labels", () => {
+    render(<ReplyCard {...defaultProps()} />);
+    expect(screen.getByRole("button", { name: "Like Bob's reply" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Dislike Bob's reply" })).toBeInTheDocument();
   });
 
   it("shows delete confirm flow for owner", async () => {
@@ -116,5 +123,19 @@ describe("ReplyCard", () => {
   it("does not show delete button for non-owners", () => {
     render(<ReplyCard {...defaultProps({ isOwner: false })} />);
     expect(screen.queryByRole("button", { name: /delete reply/i })).not.toBeInTheDocument();
+  });
+
+  it("labels active reaction removal with reply context", () => {
+    const { rerender } = render(
+      <ReplyCard {...defaultProps({ userReaction: "like" as const })} />,
+    );
+    expect(
+      screen.getByRole("button", { name: "Remove like from Bob's reply" }),
+    ).toBeInTheDocument();
+
+    rerender(<ReplyCard {...defaultProps({ userReaction: "dislike" as const })} />);
+    expect(
+      screen.getByRole("button", { name: "Remove dislike from Bob's reply" }),
+    ).toBeInTheDocument();
   });
 });

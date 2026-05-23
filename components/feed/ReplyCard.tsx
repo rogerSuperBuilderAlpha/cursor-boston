@@ -88,7 +88,11 @@ export function ReplyCard({
             <button
               onClick={onLike}
               disabled={!isLoggedIn}
-              aria-label={userReaction === "like" ? "Remove like" : "Like"}
+              aria-label={
+                userReaction === "like"
+                  ? `Remove like from ${reply.authorName}'s reply`
+                  : `Like ${reply.authorName}'s reply`
+              }
               className={`flex items-center gap-1 px-2 py-1 rounded transition-colors text-xs ${
                 userReaction === "like"
                   ? "text-emerald-400"
@@ -111,7 +115,11 @@ export function ReplyCard({
             <button
               onClick={onDislike}
               disabled={!isLoggedIn}
-              aria-label={userReaction === "dislike" ? "Remove dislike" : "Dislike"}
+              aria-label={
+                userReaction === "dislike"
+                  ? `Remove dislike from ${reply.authorName}'s reply`
+                  : `Dislike ${reply.authorName}'s reply`
+              }
               className={`flex items-center gap-1 px-2 py-1 rounded transition-colors text-xs ${
                 userReaction === "dislike"
                   ? "text-red-400"

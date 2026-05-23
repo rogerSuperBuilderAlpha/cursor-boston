@@ -5,7 +5,7 @@
  */
 import { GET } from "@/app/api/hackathons/showcase/hack-a-sprint-2026/admin-dashboard/route";
 import { HACK_A_SPRINT_2026_EVENT_ID } from "@/lib/hackathon-showcase";
-import { getVerifiedUser } from "@/lib/server-auth";
+import { getVerifiedUser, isCurrentIdTokenRevoked } from "@/lib/server-auth";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 import {
@@ -21,6 +21,7 @@ import { makeAuthedRequest, makeRequest, readJson } from "@/__tests__/_helpers/r
 
 jest.mock("@/lib/server-auth", () => ({
   getVerifiedUser: jest.fn(),
+  isCurrentIdTokenRevoked: jest.fn(async () => false),
 }));
 
 jest.mock("@/lib/firebase-admin", () => ({
@@ -52,6 +53,9 @@ jest.mock("@/lib/hackathon-asprint-2026-state", () => ({
 }));
 
 const mockGetVerifiedUser = getVerifiedUser as jest.MockedFunction<typeof getVerifiedUser>;
+const mockIsRevoked = isCurrentIdTokenRevoked as jest.MockedFunction<
+  typeof isCurrentIdTokenRevoked
+>;
 const mockGetAdminDb = getAdminDb as jest.MockedFunction<typeof getAdminDb>;
 const mockCheckRateLimit = checkRateLimit as jest.MockedFunction<typeof checkRateLimit>;
 const mockFetchSubmissions = fetchShowcaseSubmissionsFromGitHub as jest.MockedFunction<
@@ -126,6 +130,7 @@ describe("GET /api/hackathons/showcase/hack-a-sprint-2026/admin-dashboard", () =
   beforeEach(() => {
     jest.clearAllMocks();
     mockGetVerifiedUser.mockResolvedValue(null);
+    mockIsRevoked.mockResolvedValue(false);
     mockCheckRateLimit.mockReturnValue({ success: true, retryAfter: 0 });
     mockGetPhase.mockReturnValue("judging");
     mockFetchSubmissions.mockResolvedValue([]);
@@ -269,14 +274,14 @@ describe("GET /api/hackathons/showcase/hack-a-sprint-2026/admin-dashboard", () =
     expect(body.error).toBe("Failed to load dashboard");
   });
 
-  it("returns 401-like 403 when caller is unauthenticated (no user)", async () => {
+  it("returns 401 when caller is unauthenticated (no user)", async () => {
     mockGetVerifiedUser.mockResolvedValue(null);
     const res = await GET(
       makeAuthedRequest({
         path: "/api/hackathons/showcase/hack-a-sprint-2026/admin-dashboard",
       }),
     );
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(401);
   });
 
   it("handles submissions with no score docs (all null fields, rawScore null)", async () => {
