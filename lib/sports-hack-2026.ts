@@ -5,7 +5,10 @@
  * See LICENSE file for details.
  */
 
-export const SPORTS_HACK_2026_EVENT_ID = "sports-hack-2026";
+import { HACKATHON_EVENT_IDS } from "@/types/hackathon-events";
+
+export const SPORTS_HACK_2026_EVENT_ID =
+  HACKATHON_EVENT_IDS.SPORTS_HACK_2026;
 
 export const SPORTS_HACK_2026_NAME = "Boston Tech Week Sports Hack";
 export const SPORTS_HACK_2026_SHORT_NAME = "Sports Hack 2026";
