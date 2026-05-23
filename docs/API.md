@@ -89,6 +89,7 @@ _Community posts, replies, reactions, moderation._
 | DELETE | `/api/community/block` | Yes | Unblock another user |
 | POST | `/api/community/block` | Yes | Block another user |
 | POST | `/api/community/delete` | Yes | Delete the current user's own community message |
+| GET | `/api/community/feed` | No | List visible community feed messages |
 | GET | `/api/community/moderate` | Yes | Admin: list community reports (paginated) |
 | POST | `/api/community/moderate` | Yes | Admin: act on a community report (dismiss / hide / suspend) |
 | GET | `/api/community/my-reactions` | Yes | Get the current user's reactions for a batch of messages |
@@ -424,6 +425,12 @@ _Talk-submission moderation queue._
 | GET | `/api/hiring-partners/apply` | Yes | Get the current user's hiring-partner application |
 | POST | `/api/hiring-partners/apply` | Yes | Create or update the current user's hiring-partner application |
 
+## MonthlyChallenges
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/challenges/{challengeId}/submissions` | Yes | Create a monthly challenge submission draft or submitted entry |
+
 ## NotifyAdmin
 
 | Method | Endpoint | Auth | Description |
@@ -432,11 +439,17 @@ _Talk-submission moderation queue._
 | POST | `/api/notify-admin/event` | No | Email admin about a new event request |
 | POST | `/api/notify-admin/talk` | No | Email admin about a new talk submission |
 
+## PromptTemplates
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/templates` | Yes | Create a private prompt template draft or pending-review template |
+
 ## Skills
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| GET | `/api/skills/progress` | Yes | Get the current user's Skills Passport progress |
+| GET | `/api/skills/progress` | Yes | Get the current user'"'"'s Skills Passport progress |
 
 ## SummerCohort
 

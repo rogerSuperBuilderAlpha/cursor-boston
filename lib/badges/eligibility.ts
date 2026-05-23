@@ -6,6 +6,11 @@
  */
 
 import type { BadgeEligibilityInput, BadgeEligibilityMap } from "./types";
+import {
+  checkCountThreshold,
+  checkPullRequestThreshold,
+  type ThresholdEligibilityResult,
+} from "@/lib/eligibility-base";
 
 type NormalizedBadgeEligibilityInput = Required<BadgeEligibilityInput>;
 
@@ -31,8 +36,19 @@ export function normalizeBadgeEligibilityInput(
   };
 }
 
-function cap(current: number, target: number): number {
-  return Math.min(current, target);
+function countBadge<Reason extends string>(
+  check: ThresholdEligibilityResult<Reason>,
+  unit: string
+) {
+  return {
+    isEligible: check.isEligible,
+    progress: {
+      current: check.current,
+      target: check.target,
+      unit,
+    },
+    reason: check.reason,
+  };
 }
 
 export function evaluateBadgeEligibility(
@@ -46,13 +62,62 @@ export function evaluateBadgeEligibility(
   const connectedCurrent = Number(n.hasDiscordConnected) + Number(n.hasGithubConnected);
   const connectedEligible = connectedCurrent >= 2;
 
-  const speakerEligible = n.talksGivenCount >= 1;
-  const hackerEligible = n.hackathonParticipationCount >= 1;
-  const showcaseStarEligible = n.showcaseSubmissionsCount >= 1;
-  const conversationStarterEligible = n.communityMessagesCount >= 5;
-  const regularEligible = n.eventsAttendedCount >= 3;
-  const mentorEligible = n.mentorMatchesCount >= 1;
-  const contributorEligible = n.pullRequestsCount >= 1;
+  const speaker = countBadge(
+    checkCountThreshold({
+      current: n.talksGivenCount,
+      target: 1,
+      reason: "Deliver at least 1 talk.",
+    }),
+    "talks"
+  );
+  const hacker = countBadge(
+    checkCountThreshold({
+      current: n.hackathonParticipationCount,
+      target: 1,
+      reason: "Participate in at least 1 hackathon.",
+    }),
+    "hackathons"
+  );
+  const showcaseStar = countBadge(
+    checkCountThreshold({
+      current: n.showcaseSubmissionsCount,
+      target: 1,
+      reason: "Submit at least 1 showcase project.",
+    }),
+    "showcases"
+  );
+  const conversationStarter = countBadge(
+    checkCountThreshold({
+      current: n.communityMessagesCount,
+      target: 5,
+      reason: "Post at least 5 community messages.",
+    }),
+    "messages"
+  );
+  const regular = countBadge(
+    checkCountThreshold({
+      current: n.eventsAttendedCount,
+      target: 3,
+      reason: "Attend at least 3 events.",
+    }),
+    "events"
+  );
+  const mentor = countBadge(
+    checkCountThreshold({
+      current: n.mentorMatchesCount,
+      target: 1,
+      reason: "Complete at least 1 mentor match.",
+    }),
+    "matches"
+  );
+  const contributor = countBadge(
+    checkPullRequestThreshold({
+      pullRequestsCount: n.pullRequestsCount,
+      target: 1,
+      reason: "Get at least 1 pull request merged to this repo.",
+    }),
+    "pull requests"
+  );
 
   return {
     "first-steps": {
@@ -79,79 +144,31 @@ export function evaluateBadgeEligibility(
     },
     speaker: {
       badgeId: "speaker",
-      isEligible: speakerEligible,
-      progress: {
-        current: cap(n.talksGivenCount, 1),
-        target: 1,
-        unit: "talks",
-      },
-      reason: speakerEligible ? undefined : "Deliver at least 1 talk.",
+      ...speaker,
     },
     hacker: {
       badgeId: "hacker",
-      isEligible: hackerEligible,
-      progress: {
-        current: cap(n.hackathonParticipationCount, 1),
-        target: 1,
-        unit: "hackathons",
-      },
-      reason: hackerEligible ? undefined : "Participate in at least 1 hackathon.",
+      ...hacker,
     },
     "showcase-star": {
       badgeId: "showcase-star",
-      isEligible: showcaseStarEligible,
-      progress: {
-        current: cap(n.showcaseSubmissionsCount, 1),
-        target: 1,
-        unit: "showcases",
-      },
-      reason: showcaseStarEligible
-        ? undefined
-        : "Submit at least 1 showcase project.",
+      ...showcaseStar,
     },
     "conversation-starter": {
       badgeId: "conversation-starter",
-      isEligible: conversationStarterEligible,
-      progress: {
-        current: cap(n.communityMessagesCount, 5),
-        target: 5,
-        unit: "messages",
-      },
-      reason: conversationStarterEligible
-        ? undefined
-        : "Post at least 5 community messages.",
+      ...conversationStarter,
     },
     regular: {
       badgeId: "regular",
-      isEligible: regularEligible,
-      progress: {
-        current: cap(n.eventsAttendedCount, 3),
-        target: 3,
-        unit: "events",
-      },
-      reason: regularEligible ? undefined : "Attend at least 3 events.",
+      ...regular,
     },
     mentor: {
       badgeId: "mentor",
-      isEligible: mentorEligible,
-      progress: {
-        current: cap(n.mentorMatchesCount, 1),
-        target: 1,
-        unit: "matches",
-      },
-      reason: mentorEligible ? undefined : "Complete at least 1 mentor match.",
+      ...mentor,
     },
     contributor: {
       badgeId: "contributor",
-      isEligible: contributorEligible,
-      progress: {
-        current: cap(n.pullRequestsCount, 1),
-        target: 1,
-        unit: "pull requests",
-      },
-      reason: contributorEligible
-        ? undefined
-        : "Get at least 1 pull request merged to this repo.",
+      ...contributor,
     },
   };
 }

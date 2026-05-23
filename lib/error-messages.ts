@@ -5,6 +5,11 @@
  * See LICENSE file for details.
  */
 
+import {
+  COMMUNITY_CONTENT_MAX_LENGTH,
+  COMMUNITY_CONTENT_MIN_LENGTH,
+} from "@/lib/constants/community";
+
 /**
  * Build the standard API validation message for fields with inclusive
  * character-count bounds.
@@ -40,8 +45,8 @@ export function lengthOrLessError(label: string, max: number): string {
 
 export const COMMUNITY_CONTENT_LENGTH_ERROR = lengthBetweenError(
   "Content",
-  100,
-  500
+  COMMUNITY_CONTENT_MIN_LENGTH,
+  COMMUNITY_CONTENT_MAX_LENGTH
 );
 
 export const QUESTION_TITLE_MIN_LENGTH_ERROR = minLengthError("Title", 10);

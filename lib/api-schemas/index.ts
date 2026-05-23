@@ -40,10 +40,12 @@ import { ludwittContract } from "./ludwitt";
 import { maintainersContract } from "./maintainers";
 import { membersContract } from "./members";
 import { mentorshipContract } from "./mentorship";
+import { monthlyChallengesContract } from "./monthly-challenges";
 import { notificationsContract } from "./notifications";
 import { notifyAdminContract } from "./notify-admin";
 import { pairContract } from "./pair";
 import { profileContract } from "./profile";
+import { promptTemplatesContract } from "./prompt-templates";
 import { questionsContract } from "./questions";
 import { showcaseContract } from "./showcase";
 import { skillsContract } from "./skills";
@@ -77,10 +79,12 @@ export const apiContract = c.router({
   maintainers: maintainersContract,
   members: membersContract,
   mentorship: mentorshipContract,
+  monthlyChallenges: monthlyChallengesContract,
   notifications: notificationsContract,
   notifyAdmin: notifyAdminContract,
   pair: pairContract,
   profile: profileContract,
+  promptTemplates: promptTemplatesContract,
   questions: questionsContract,
   showcase: showcaseContract,
   skills: skillsContract,

@@ -8,6 +8,8 @@
 "use client";
 
 import { ThumbsUp, ThumbsDown, CheckCircle2 } from "lucide-react";
+import { CLASS_GROUPS, TAILWIND_CLASS_NAMES as TW } from "@/lib/classname-constants";
+import { cn } from "@/lib/utils";
 import type { Answer, VoteType } from "@/types/questions";
 
 function timeAgo(dateStr: string): string {
@@ -43,41 +45,43 @@ export function AnswerCard({
 
   return (
     <div
-      className={[
-        "border rounded-xl p-4 sm:p-5 transition-colors",
+      className={cn(
+        TW.border.base,
+        TW.radius.xl,
+        "p-4 sm:p-5",
+        TW.motion.colors,
         answer.isAccepted
           ? "border-emerald-300 dark:border-emerald-700 bg-emerald-50/50 dark:bg-emerald-950/20"
-          : "border-neutral-200 dark:border-neutral-800",
-      ].join(" ")}
+          : "border-neutral-200 dark:border-neutral-800"
+      )}
     >
       <div className="flex gap-4">
         {/* Vote column */}
-        <div className="flex flex-col items-center gap-1 min-w-[40px]">
+        <div className={CLASS_GROUPS.vote.column}>
           <button
             type="button"
             onClick={() => onVote(answer.id, "up")}
             disabled={!isLoggedIn || isVoting}
             aria-label={`Upvote answer by ${answer.authorName}`}
-            className={[
-              "p-1 rounded transition-colors",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500",
+            className={cn(
+              CLASS_GROUPS.button.iconAction,
               userVote === "up"
-                ? "text-emerald-600 dark:text-emerald-400"
-                : "text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300",
-              (!isLoggedIn || isVoting) ? "opacity-50 cursor-not-allowed" : "",
-            ].join(" ")}
+                ? TW.text.accent
+                : CLASS_GROUPS.vote.inactive,
+              (!isLoggedIn || isVoting) && TW.state.disabled
+            )}
           >
             <ThumbsUp size={16} />
           </button>
           <span
-            className={[
-              "text-sm font-semibold",
+            className={cn(
+              CLASS_GROUPS.vote.score,
               netScore > 0
-                ? "text-emerald-600 dark:text-emerald-400"
+                ? CLASS_GROUPS.status.positiveScore
                 : netScore < 0
-                  ? "text-red-500"
-                  : "text-neutral-500",
-            ].join(" ")}
+                  ? CLASS_GROUPS.status.negativeScore
+                  : CLASS_GROUPS.status.neutralScore
+            )}
           >
             {netScore > 0 ? `+${netScore}` : netScore}
           </span>
@@ -86,14 +90,13 @@ export function AnswerCard({
             onClick={() => onVote(answer.id, "down")}
             disabled={!isLoggedIn || isVoting}
             aria-label={`Downvote answer by ${answer.authorName}`}
-            className={[
-              "p-1 rounded transition-colors",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500",
+            className={cn(
+              CLASS_GROUPS.button.iconAction,
               userVote === "down"
-                ? "text-red-500"
-                : "text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300",
-              (!isLoggedIn || isVoting) ? "opacity-50 cursor-not-allowed" : "",
-            ].join(" ")}
+                ? CLASS_GROUPS.status.negativeScore
+                : CLASS_GROUPS.vote.inactive,
+              (!isLoggedIn || isVoting) && TW.state.disabled
+            )}
           >
             <ThumbsDown size={16} />
           </button>
@@ -104,19 +107,19 @@ export function AnswerCard({
               type="button"
               onClick={() => onAccept(answer.id)}
               aria-label={answer.isAccepted ? "Unaccept this answer" : "Accept this answer"}
-              className={[
-                "p-1 rounded transition-colors mt-1",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500",
+              className={cn(
+                CLASS_GROUPS.button.iconAction,
+                TW.spacing.mt1,
                 answer.isAccepted
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-neutral-400 hover:text-emerald-600 dark:hover:text-emerald-400",
-              ].join(" ")}
+                  ? TW.text.accent
+                  : "text-neutral-400 hover:text-emerald-600 dark:hover:text-emerald-400"
+              )}
             >
               <CheckCircle2 size={18} />
             </button>
           )}
           {!isQuestionAuthor && answer.isAccepted && (
-            <span className="text-emerald-600 dark:text-emerald-400 mt-1" title="Accepted answer">
+            <span className={cn(TW.text.accent, TW.spacing.mt1)} title="Accepted answer">
               <CheckCircle2 size={18} />
             </span>
           )}
@@ -130,7 +133,7 @@ export function AnswerCard({
             </span>
           )}
           <p className="text-sm text-foreground whitespace-pre-wrap">{answer.body}</p>
-          <div className="flex items-center gap-2 mt-3 text-xs text-neutral-500">
+          <div className={cn(TW.layout.flex, TW.layout.itemsCenter, TW.spacing.gap2, TW.spacing.mt3, CLASS_GROUPS.text.metadata)}>
             <span>{answer.authorName}</span>
             <span>&middot;</span>
             <span>{timeAgo(answer.createdAt)}</span>

@@ -7,6 +7,7 @@
 
 import { useRef, useState, type KeyboardEvent, type SVGProps } from "react";
 import type { BadgeDefinition, BadgeEligibilityResult } from "@/lib/badges/types";
+import { CLASS_GROUPS, TAILWIND_CLASS_NAMES as TW } from "@/lib/classname-constants";
 import { cn } from "@/lib/utils";
 import { BadgePopover } from "./BadgePopover";
 
@@ -192,13 +193,16 @@ export function BadgeCard({
       <article
         ref={triggerRef}
         className={cn(
-          "rounded-xl border transition-colors cursor-pointer",
-          "bg-white dark:bg-neutral-900",
+          TW.radius.xl,
+          TW.border.base,
+          TW.motion.colors,
+          TW.state.cursorPointer,
+          TW.surface.card,
           isEarned
-            ? "border-emerald-300/70 dark:border-emerald-500/40"
+            ? TW.border.emerald
             : "border-neutral-200 dark:border-neutral-800",
-          !compact && "hover:border-neutral-300 dark:hover:border-neutral-700",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400",
+          !compact && CLASS_GROUPS.card.neutralHover,
+          TW.focus.emerald,
           compact ? "p-3" : "p-4",
           className
         )}
@@ -213,7 +217,12 @@ export function BadgeCard({
         <div className={cn("flex items-start", compact ? "gap-3" : "gap-4")}>
           <div
             className={cn(
-              "shrink-0 rounded-full border flex items-center justify-center",
+              TW.layout.shrink0,
+              TW.radius.full,
+              TW.border.base,
+              TW.layout.flex,
+              TW.layout.itemsCenter,
+              TW.layout.justifyCenter,
               compact ? "h-9 w-9" : "h-11 w-11",
               isEarned
                 ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
@@ -232,7 +241,9 @@ export function BadgeCard({
             <div className="flex items-center gap-2 mb-1">
               <h3
                 className={cn(
-                  "font-semibold text-foreground truncate",
+                  TW.text.semibold,
+                  TW.text.foreground,
+                  TW.layout.truncate,
                   compact ? "text-sm" : "text-base"
                 )}
               >
@@ -240,10 +251,8 @@ export function BadgeCard({
               </h3>
               <span
                 className={cn(
-                  "shrink-0 px-2 py-0.5 rounded-full text-xs font-medium",
-                  isEarned
-                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                    : "bg-neutral-200/80 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400"
+                  CLASS_GROUPS.badge.basePill,
+                  isEarned ? CLASS_GROUPS.badge.earnedPill : CLASS_GROUPS.badge.lockedPill
                 )}
               >
                 {isEarned ? "Earned" : isAuthoritative ? "Locked" : "Unverified data"}
@@ -252,7 +261,7 @@ export function BadgeCard({
 
             <p
               className={cn(
-                "text-neutral-600 dark:text-neutral-400",
+                TW.text.muted,
                 compact ? "text-xs" : "text-sm"
               )}
             >
@@ -262,7 +271,8 @@ export function BadgeCard({
             {!isEarned && (
               <p
                 className={cn(
-                  "text-neutral-500 dark:text-neutral-400 mt-1",
+                  TW.text.subtle,
+                  TW.spacing.mt1,
                   compact ? "text-xs" : "text-sm"
                 )}
               >
@@ -273,7 +283,8 @@ export function BadgeCard({
             {isEarned && earnedDateLabel && (
               <p
                 className={cn(
-                  "text-neutral-500 dark:text-neutral-400 mt-1",
+                  TW.text.subtle,
+                  TW.spacing.mt1,
                   compact ? "text-xs" : "text-sm"
                 )}
               >
@@ -283,7 +294,7 @@ export function BadgeCard({
 
             {eligibility?.progress && (
               <div className={cn("mt-2", compact ? "text-xs" : "text-sm")}>
-                <p className="text-neutral-500 dark:text-neutral-400 mb-1">
+                <p className={cn(TW.text.subtle, TW.spacing.mb1)}>
                   Progress: {eligibility.progress.current}/{eligibility.progress.target}
                   {eligibility.progress.unit ? ` ${eligibility.progress.unit}` : ""}
                 </p>
@@ -306,7 +317,8 @@ export function BadgeCard({
 
             <p
               className={cn(
-                "mt-2 text-neutral-500 dark:text-neutral-400",
+                TW.spacing.mt2,
+                TW.text.subtle,
                 compact ? "text-[11px]" : "text-xs"
               )}
             >
