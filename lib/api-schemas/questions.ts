@@ -14,6 +14,14 @@ import {
   PaginationQuerySchema,
   RateLimitedErrorSchema,
 } from "./common";
+import {
+  QUESTION_ANSWER_MAX_LENGTH_ERROR,
+  QUESTION_ANSWER_MIN_LENGTH_ERROR,
+  QUESTION_BODY_MAX_LENGTH_ERROR,
+  QUESTION_BODY_MIN_LENGTH_ERROR,
+  QUESTION_TITLE_MAX_LENGTH_ERROR,
+  QUESTION_TITLE_MIN_LENGTH_ERROR,
+} from "@/lib/error-messages";
 
 const c = initContract();
 
@@ -45,12 +53,12 @@ const PostBody = z
   .object({
     title: z
       .string()
-      .min(10, "Title must be at least 10 characters")
-      .max(200, "Title must be at most 200 characters"),
+      .min(10, QUESTION_TITLE_MIN_LENGTH_ERROR)
+      .max(200, QUESTION_TITLE_MAX_LENGTH_ERROR),
     body: z
       .string()
-      .min(20, "Body must be at least 20 characters")
-      .max(5000, "Body must be at most 5000 characters"),
+      .min(20, QUESTION_BODY_MIN_LENGTH_ERROR)
+      .max(5000, QUESTION_BODY_MAX_LENGTH_ERROR),
     tags: z.array(z.string()).max(10).optional(),
   })
   .openapi("QuestionsPostBody");
@@ -60,8 +68,8 @@ const AnswerBody = z
     questionId: z.string().min(1),
     body: z
       .string()
-      .min(20, "Answer must be at least 20 characters")
-      .max(5000, "Answer must be at most 5000 characters"),
+      .min(20, QUESTION_ANSWER_MIN_LENGTH_ERROR)
+      .max(5000, QUESTION_ANSWER_MAX_LENGTH_ERROR),
   })
   .openapi("QuestionsAnswerBody");
 
