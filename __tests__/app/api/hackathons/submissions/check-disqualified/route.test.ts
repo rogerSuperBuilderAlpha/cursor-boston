@@ -120,6 +120,10 @@ describe("GET /api/hackathons/submissions/check-disqualified", () => {
 
     const { status, body } = await readJson<{
       hackathonId: string;
+      scannedCount: number;
+      checkedCount: number;
+      skippedCount: number;
+      githubErrorCount: number;
       disqualifiedCount: number;
     }>(
       await GET(
@@ -132,7 +136,13 @@ describe("GET /api/hackathons/submissions/check-disqualified", () => {
     );
 
     expect(status).toBe(200);
+    expect(body.scannedCount).toBe(1);
+    expect(body.checkedCount).toBe(1);
+    expect(body.skippedCount).toBe(0);
+    expect(body.githubErrorCount).toBe(0);
     expect(body.disqualifiedCount).toBe(1);
+    const [, init] = (global.fetch as jest.Mock).mock.calls[0] as [string, RequestInit];
+    expect(init.signal).toBeInstanceOf(AbortSignal);
     expect(update).toHaveBeenCalledWith(
       expect.objectContaining({
         disqualified: true,
@@ -171,7 +181,13 @@ describe("GET /api/hackathons/submissions/check-disqualified", () => {
 
     (global.fetch as jest.Mock).mockRejectedValue(new Error("rate limit"));
 
-    const { status, body } = await readJson<{ disqualifiedCount: number }>(
+    const { status, body } = await readJson<{
+      scannedCount: number;
+      checkedCount: number;
+      skippedCount: number;
+      githubErrorCount: number;
+      disqualifiedCount: number;
+    }>(
       await GET(
         makeCronRequest({
           path: "/api/hackathons/submissions/check-disqualified",
@@ -182,6 +198,10 @@ describe("GET /api/hackathons/submissions/check-disqualified", () => {
     );
 
     expect(status).toBe(200);
+    expect(body.scannedCount).toBe(2);
+    expect(body.checkedCount).toBe(1);
+    expect(body.skippedCount).toBe(1);
+    expect(body.githubErrorCount).toBe(1);
     expect(body.disqualifiedCount).toBe(0);
     expect(update).not.toHaveBeenCalled();
   });

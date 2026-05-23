@@ -13,6 +13,14 @@ import { getClientIdentifier } from "@/lib/rate-limit";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 import { sanitizeName, sanitizeText, sanitizeUrl } from "@/lib/sanitize";
 import { profileContract } from "@/lib/api-schemas/profile";
+import {
+  PROFILE_BIO_MAX_LENGTH_ERROR,
+  PROFILE_COMPANY_MAX_LENGTH_ERROR,
+  PROFILE_DISPLAY_NAME_MAX_LENGTH_ERROR,
+  PROFILE_DISPLAY_NAME_MIN_LENGTH_ERROR,
+  PROFILE_JOB_TITLE_MAX_LENGTH_ERROR,
+  PROFILE_LOCATION_MAX_LENGTH_ERROR,
+} from "@/lib/error-messages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -66,13 +74,13 @@ export async function PATCH(request: NextRequest) {
       const sanitized = sanitizeName(body.displayName);
       if (sanitized.length < 2) {
         return NextResponse.json(
-          { error: "Display name must be at least 2 characters" },
+          { error: PROFILE_DISPLAY_NAME_MIN_LENGTH_ERROR },
           { status: 400 }
         );
       }
       if (sanitized.length > 50) {
         return NextResponse.json(
-          { error: "Display name must be 50 characters or less" },
+          { error: PROFILE_DISPLAY_NAME_MAX_LENGTH_ERROR },
           { status: 400 }
         );
       }
@@ -84,7 +92,7 @@ export async function PATCH(request: NextRequest) {
       const sanitized = sanitizeText(body.bio);
       if (sanitized.length > 500) {
         return NextResponse.json(
-          { error: "Bio must be 500 characters or less" },
+          { error: PROFILE_BIO_MAX_LENGTH_ERROR },
           { status: 400 }
         );
       }
@@ -96,7 +104,7 @@ export async function PATCH(request: NextRequest) {
       const sanitized = sanitizeText(body.location);
       if (sanitized.length > 100) {
         return NextResponse.json(
-          { error: "Location must be 100 characters or less" },
+          { error: PROFILE_LOCATION_MAX_LENGTH_ERROR },
           { status: 400 }
         );
       }
@@ -108,7 +116,7 @@ export async function PATCH(request: NextRequest) {
       const sanitized = sanitizeText(body.company);
       if (sanitized.length > 100) {
         return NextResponse.json(
-          { error: "Company must be 100 characters or less" },
+          { error: PROFILE_COMPANY_MAX_LENGTH_ERROR },
           { status: 400 }
         );
       }
@@ -120,7 +128,7 @@ export async function PATCH(request: NextRequest) {
       const sanitized = sanitizeText(body.jobTitle);
       if (sanitized.length > 100) {
         return NextResponse.json(
-          { error: "Job title must be 100 characters or less" },
+          { error: PROFILE_JOB_TITLE_MAX_LENGTH_ERROR },
           { status: 400 }
         );
       }

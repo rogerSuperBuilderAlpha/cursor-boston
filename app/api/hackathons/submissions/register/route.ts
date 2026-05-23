@@ -13,12 +13,14 @@ import { getCurrentVirtualHackathonId, getVirtualMonthStartEndUtc, isVirtualHack
 import { getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 import { hackathonsContract } from "@/lib/api-schemas/hackathons";
+import { fetchWithTimeout } from "@/lib/http-fetch";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const HACKATHON_RATE_LIMIT = rateLimitConfigs.hackathonMutation;
+const GITHUB_FETCH_TIMEOUT_MS = 8_000;
 
 /**
  * Parse repo URL to owner/repo (e.g. https://github.com/owner/repo -> owner/repo).
@@ -118,10 +120,19 @@ export async function POST(request: NextRequest) {
       headers.Authorization = `Bearer ${GITHUB_TOKEN}`;
     }
 
-    const ghRes = await fetch(
-      `https://api.github.com/repos/${parsed.owner}/${parsed.repo}`,
-      { headers }
-    );
+    let ghRes: Response;
+    try {
+      ghRes = await fetchWithTimeout(
+        `https://api.github.com/repos/${parsed.owner}/${parsed.repo}`,
+        { headers },
+        GITHUB_FETCH_TIMEOUT_MS
+      );
+    } catch {
+      return NextResponse.json(
+        { error: "Could not verify repo with GitHub" },
+        { status: 502 }
+      );
+    }
 
     if (ghRes.status === 404) {
       return NextResponse.json(
