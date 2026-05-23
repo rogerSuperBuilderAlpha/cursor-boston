@@ -10,6 +10,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { User } from "firebase/auth";
+import { trackEvent } from "@/lib/analytics";
 import type { LaunchFormState, CursorIdeaRun, GithubIssueOption, LoadingState } from "../_lib/types";
 import {
   formatIdeaRunsApiError,
@@ -280,6 +281,13 @@ export function useIdeaRuns({ user, cursorConnected }: UseIdeaRunsArgs) {
         setPollFailCount(0);
         setRuns((current) => [body.run!, ...current.filter((run) => run.id !== body.run!.id)]);
         setSelectedRunId(body.run.id);
+        if (ideaForm.mode === "issue" && ideaForm.issue) {
+          void trackEvent("issue_claimed", {
+            issue_number: ideaForm.issue.number,
+            label_count: ideaForm.issue.labels.length,
+            source: "pr_studio",
+          });
+        }
         return body.run;
       } catch {
         setError("Network error while launching the idea explorer.");

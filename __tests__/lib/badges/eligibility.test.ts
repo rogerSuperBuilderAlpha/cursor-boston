@@ -2,6 +2,7 @@ import {
   normalizeBadgeEligibilityInput,
   evaluateBadgeEligibility,
 } from "@/lib/badges/eligibility";
+import { checkPullRequestThreshold } from "@/lib/eligibility-base";
 
 describe("badge eligibility", () => {
   describe("normalizeBadgeEligibilityInput", () => {
@@ -111,11 +112,21 @@ describe("badge eligibility", () => {
   });
 
   describe("contributor", () => {
-    it("is eligible at 1 pull request and has no reason when eligible", () => {
+    it("is eligible at 1 pull request and matches the base PR threshold", () => {
       const result = evaluateBadgeEligibility({ pullRequestsCount: 1 });
+      const threshold = checkPullRequestThreshold({
+        pullRequestsCount: 1,
+        target: 1,
+        reason: "Get at least 1 pull request merged to this repo.",
+      });
 
       expect(result.contributor.isEligible).toBe(true);
       expect(result.contributor.reason).toBeUndefined();
+      expect(result.contributor.progress).toEqual({
+        current: threshold.current,
+        target: threshold.target,
+        unit: "pull requests",
+      });
     });
   });
 

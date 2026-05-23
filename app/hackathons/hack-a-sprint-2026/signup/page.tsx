@@ -11,6 +11,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { GitHubIcon, DiscordIcon } from "@/components/icons";
+import { trackEvent } from "@/lib/analytics";
 import {
   CURSOR_CREDIT_TOP_N,
 } from "@/lib/hackathon-event-signup";
@@ -90,6 +91,17 @@ export default function HackASprint2026SignupPage() {
 
   const eventId = HACK_A_SPRINT_2026_EVENT_ID;
   const apiUrl = `/api/hackathons/events/${eventId}/signup`;
+
+  const trackAuthCta = (cta: "sign_in" | "create_account") => {
+    void trackEvent(
+      cta === "sign_in" ? "sign_in_cta_click" : "sign_up_cta_click",
+      {
+        cta,
+        event_id: eventId,
+        surface: "hackathon_signup",
+      }
+    );
+  };
 
   // Seed from auth context as soon as userProfile arrives (instant, no API call)
   useEffect(() => {
@@ -381,12 +393,14 @@ export default function HackASprint2026SignupPage() {
                 <Link
                   href={`/login?redirect=${encodeURIComponent("/hackathons/hack-a-sprint-2026/signup")}`}
                   className="inline-flex items-center justify-center rounded-lg bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-400"
+                  onClick={() => trackAuthCta("sign_in")}
                 >
                   Sign in
                 </Link>
                 <Link
                   href={`/signup?redirect=${encodeURIComponent("/hackathons/hack-a-sprint-2026/signup")}`}
                   className="inline-flex items-center justify-center rounded-lg border border-neutral-300 px-5 py-2.5 text-sm font-semibold hover:bg-neutral-100 dark:border-neutral-600 dark:hover:bg-neutral-800"
+                  onClick={() => trackAuthCta("create_account")}
                 >
                   Create account
                 </Link>
