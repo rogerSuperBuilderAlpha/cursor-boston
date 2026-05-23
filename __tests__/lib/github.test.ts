@@ -368,6 +368,15 @@ describe("verifyWebhookSignature — secret-set path", () => {
     const tampered = correctSig.slice(0, -1) + (correctSig.slice(-1) === "0" ? "1" : "0");
     expect(verify(payload, tampered)).toBe(false);
   });
+
+  it("returns false instead of throwing for malformed signature lengths", async () => {
+    process.env.GITHUB_WEBHOOK_SECRET = "test-secret-3";
+    jest.resetModules();
+    const { verifyWebhookSignature: verify } = await import("@/lib/github");
+
+    expect(() => verify("payload", "sha256=short")).not.toThrow();
+    expect(verify("payload", "sha256=short")).toBe(false);
+  });
 });
 
 describe("findUserByGitHubLogin — extra branches", () => {

@@ -26,11 +26,14 @@ export function verifyWebhookSignature(
 
   const hmac = createHmac("sha256", GITHUB_WEBHOOK_SECRET);
   const digest = "sha256=" + hmac.update(payload).digest("hex");
+  const signatureBytes = Buffer.from(signature);
+  const digestBytes = Buffer.from(digest);
 
-  return timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(digest)
-  );
+  if (signatureBytes.length !== digestBytes.length) {
+    return false;
+  }
+
+  return timingSafeEqual(signatureBytes, digestBytes);
 }
 
 /**
