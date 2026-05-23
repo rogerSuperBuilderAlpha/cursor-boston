@@ -22,18 +22,20 @@ import { getVerifiedUser } from "@/lib/server-auth";
 import { logger } from "@/lib/logger";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 import { communityContract } from "@/lib/api-schemas/community";
+import { COMMUNITY_BLOCK_RATE_LIMIT } from "@/lib/constants/community";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const BLOCK_RATE_LIMIT = { windowMs: 60 * 1000, maxRequests: 30 };
 
 export async function POST(request: NextRequest) {
   try {
     const user = await getVerifiedUser(request);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const rl = await checkUpstashRateLimit(`community-block:${user.uid}`, BLOCK_RATE_LIMIT);
+    const rl = await checkUpstashRateLimit(
+      `community-block:${user.uid}`,
+      COMMUNITY_BLOCK_RATE_LIMIT
+    );
     if (!rl.success) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
 
     let body: unknown;

@@ -6,12 +6,11 @@
  */
 
 import type { InputHTMLAttributes, TextareaHTMLAttributes } from "react";
+import { CLASS_GROUPS, TAILWIND_CLASS_NAMES as TW } from "@/lib/classname-constants";
+import { cn } from "@/lib/utils";
 
-// Shared input styling
-const inputClass =
-  "w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent";
-
-const labelClass = "block text-sm font-medium text-neutral-300 mb-2";
+const inputClass = CLASS_GROUPS.form.inputDark;
+const labelClass = CLASS_GROUPS.form.labelDark;
 
 // ── FormInput ────────────────────────────────────────────────────────────────
 
@@ -33,7 +32,7 @@ export function FormInput({ label, id, error, ...props }: FormInputProps) {
         </label>
       )}
       <input id={id} className={inputClass} aria-describedby={errorId} {...props} />
-      {error && <p id={errorId} role="alert" className="text-red-400 text-sm mt-2">{error}</p>}
+      {error && <p id={errorId} role="alert" className={CLASS_GROUPS.form.errorText}>{error}</p>}
     </div>
   );
 }
@@ -57,12 +56,12 @@ export function FormTextarea({ label, id, error, rows = 3, ...props }: FormTexta
       )}
       <textarea
         id={id}
-        className={`${inputClass} resize-none`}
+        className={cn(inputClass, "resize-none")}
         aria-describedby={errorId}
         rows={rows}
         {...props}
       />
-      {error && <p id={errorId} role="alert" className="text-red-400 text-sm mt-2">{error}</p>}
+      {error && <p id={errorId} role="alert" className={CLASS_GROUPS.form.errorText}>{error}</p>}
     </div>
   );
 }
@@ -86,13 +85,20 @@ export function ToggleSwitch({
   label,
   disabled = false,
 }: ToggleSwitchProps) {
-  const trackClass =
+  const trackSizeClass =
     size === "md"
       ? "w-11 h-6 after:h-5 after:w-5"
       : "w-9 h-5 after:h-4 after:w-4";
 
   return (
-    <label className={`relative inline-flex items-center ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}>
+    <label
+      className={cn(
+        TW.layout.relative,
+        TW.layout.inlineFlex,
+        TW.layout.itemsCenter,
+        disabled ? TW.state.disabled : TW.state.cursorPointer
+      )}
+    >
       <input
         type="checkbox"
         checked={checked}
@@ -102,7 +108,10 @@ export function ToggleSwitch({
         aria-label={label || "Toggle"}
       />
       <div
-        className={`${trackClass} bg-neutral-700 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-400 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:transition-all peer-checked:bg-emerald-500`}
+        className={cn(
+          trackSizeClass,
+          "bg-neutral-700 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-400 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:transition-all peer-checked:bg-emerald-500"
+        )}
       />
     </label>
   );

@@ -13,15 +13,15 @@ import { logger } from "@/lib/logger";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 import { sanitizeDocId } from "@/lib/sanitize";
 import { communityContract } from "@/lib/api-schemas/community";
+import {
+  COMMUNITY_RATE_LIMIT_RETRY_AFTER_SECONDS,
+  COMMUNITY_REACTION_RATE_LIMIT,
+} from "@/lib/constants/community";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 type ReactionType = "like" | "dislike";
-
-// Per-user limit. Reactions are cheap so the cap is generous; the goal is to
-// stop tight-loop abuse from a single account, not normal use.
-const REACTION_RATE_LIMIT = { windowMs: 60 * 1000, maxRequests: 60 };
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,12 +32,19 @@ export async function POST(request: NextRequest) {
 
     const rateResult = await checkUpstashRateLimit(
       `community-reaction:${user.uid}`,
-      REACTION_RATE_LIMIT
+      COMMUNITY_REACTION_RATE_LIMIT
     );
     if (!rateResult.success) {
       return NextResponse.json(
         { error: "Too many requests", retryAfterSeconds: rateResult.retryAfter },
-        { status: 429, headers: { "Retry-After": String(rateResult.retryAfter || 60) } }
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(
+              rateResult.retryAfter || COMMUNITY_RATE_LIMIT_RETRY_AFTER_SECONDS
+            ),
+          },
+        }
       );
     }
 

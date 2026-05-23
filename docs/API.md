@@ -89,6 +89,7 @@ _Community posts, replies, reactions, moderation._
 | DELETE | `/api/community/block` | Yes | Unblock another user |
 | POST | `/api/community/block` | Yes | Block another user |
 | POST | `/api/community/delete` | Yes | Delete the current user's own community message |
+| GET | `/api/community/feed` | No | List visible community feed messages |
 | GET | `/api/community/moderate` | Yes | Admin: list community reports (paginated) |
 | POST | `/api/community/moderate` | Yes | Admin: act on a community report (dismiss / hide / suspend) |
 | GET | `/api/community/my-reactions` | Yes | Get the current user's reactions for a batch of messages |

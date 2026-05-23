@@ -83,7 +83,7 @@ export function CommunityFeed({ user, onViewMemberProfile }: CommunityFeedProps)
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500"
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-600 dark:text-neutral-400"
             aria-hidden="true"
           >
             <circle cx="11" cy="11" r="8" />
@@ -99,7 +99,7 @@ export function CommunityFeed({ user, onViewMemberProfile }: CommunityFeedProps)
           {feedSearchQuery && (
             <button
               onClick={() => setFeedSearchQuery("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-white p-1"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white p-1"
               aria-label="Clear search"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -111,7 +111,7 @@ export function CommunityFeed({ user, onViewMemberProfile }: CommunityFeedProps)
 
         {/* Search Results Count */}
         {feedSearchQuery && (
-          <p className="text-sm text-neutral-500 mb-4">
+          <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
             {filteredMessages.length} result{filteredMessages.length !== 1 ? "s" : ""} for &quot;{feedSearchQuery}&quot;
           </p>
         )}
@@ -128,10 +128,10 @@ export function CommunityFeed({ user, onViewMemberProfile }: CommunityFeedProps)
         {/* Error State */}
         {error && (
           <div className="flex items-center justify-between gap-4 p-4 mb-6 bg-red-500/10 border border-red-500/20 rounded-lg">
-            <p className="text-red-400 text-sm">{error}</p>
+            <p className="text-red-700 dark:text-red-400 text-sm">{error}</p>
             <button
               onClick={clearError}
-              className="text-sm text-red-400 hover:text-red-300 underline shrink-0"
+              className="text-sm text-red-700 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 underline shrink-0"
             >
               Dismiss
             </button>
@@ -147,14 +147,14 @@ export function CommunityFeed({ user, onViewMemberProfile }: CommunityFeedProps)
           </div>
         ) : filteredMessages.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-neutral-400 text-lg mb-2">
+            <p className="text-neutral-700 dark:text-neutral-300 text-lg mb-2">
               {feedSearchQuery ? "No messages match your search" : "No messages yet"}
             </p>
-            <p className="text-neutral-500 text-sm">
+            <p className="text-neutral-600 dark:text-neutral-400 text-sm">
               {feedSearchQuery ? (
                 <button
                   onClick={() => setFeedSearchQuery("")}
-                  className="text-emerald-400 hover:text-emerald-300"
+                  className="text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300"
                 >
                   Clear search
                 </button>

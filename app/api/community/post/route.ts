@@ -16,20 +16,33 @@ import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 import { sanitizeText } from "@/lib/sanitize";
 import { getDisplayName } from "@/lib/utils";
 import { communityContract } from "@/lib/api-schemas/community";
+import {
+  COMMUNITY_POST_RATE_LIMIT,
+  COMMUNITY_RATE_LIMIT_RETRY_AFTER_SECONDS,
+} from "@/lib/constants/community";
+import { extractCommunityMentions } from "@/lib/community-mentions";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const COMMUNITY_RATE_LIMIT = { windowMs: 60 * 1000, maxRequests: 10 };
-
 export async function POST(request: NextRequest) {
   try {
     const clientId = getClientIdentifier(request as unknown as Request);
-    const rateResult = await checkUpstashRateLimit(`community-post:${clientId}`, COMMUNITY_RATE_LIMIT);
+    const rateResult = await checkUpstashRateLimit(
+      `community-post:${clientId}`,
+      COMMUNITY_POST_RATE_LIMIT
+    );
     if (!rateResult.success) {
       return NextResponse.json(
         { error: "Too many requests", retryAfterSeconds: rateResult.retryAfter },
-        { status: 429, headers: { "Retry-After": String(rateResult.retryAfter || 60) } }
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(
+              rateResult.retryAfter || COMMUNITY_RATE_LIMIT_RETRY_AFTER_SECONDS
+            ),
+          },
+        }
       );
     }
 
@@ -62,12 +75,14 @@ export async function POST(request: NextRequest) {
       );
     }
     const sanitizedContent = parsed.data.content;
+    const mentions = extractCommunityMentions(sanitizedContent);
 
     const authorName = getDisplayName(user);
 
     const messageRef = db.collection("communityMessages").doc();
     await messageRef.set({
       content: sanitizedContent,
+      mentions,
       authorId: user.uid,
       authorName,
       authorPhoto: user.picture || null,

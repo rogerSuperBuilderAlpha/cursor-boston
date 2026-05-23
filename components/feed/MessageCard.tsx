@@ -72,7 +72,7 @@ export function MessageCard({
     <div className="bg-white dark:bg-neutral-900 rounded-xl p-4 border border-neutral-200 dark:border-neutral-800">
       {/* Repost Header */}
       {isRepost && (
-        <div className="flex items-center gap-2 text-neutral-500 text-sm mb-3 pb-3 border-b border-neutral-200 dark:border-neutral-800">
+        <div className="flex items-center gap-2 text-neutral-600 dark:text-neutral-400 text-sm mb-3 pb-3 border-b border-neutral-200 dark:border-neutral-800">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
             <path d="M17 1l4 4-4 4" />
             <path d="M3 11V9a4 4 0 0 1 4-4h14" />
@@ -82,7 +82,7 @@ export function MessageCard({
           <button
             onClick={onAuthorClick}
             aria-label={`View ${message.authorName}'s profile`}
-            className="hover:text-emerald-400 transition-colors"
+            className="hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors"
           >
             {message.authorName}
           </button>
@@ -109,11 +109,11 @@ export function MessageCard({
               <button
                 onClick={onAuthorClick}
                 aria-label={`View ${message.authorName}'s profile`}
-                className="font-medium text-neutral-900 dark:text-white truncate hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors focus-visible:outline-none focus-visible:text-emerald-500 dark:focus-visible:text-emerald-400"
+                className="font-medium text-neutral-900 dark:text-white truncate hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors focus-visible:outline-none focus-visible:text-emerald-700 dark:focus-visible:text-emerald-400"
               >
                 {message.authorName}
               </button>
-              <span className="text-neutral-500 text-sm shrink-0">
+              <span className="text-neutral-600 dark:text-neutral-400 text-sm shrink-0">
                 {formatRelativeDate(message.createdAt)}
               </span>
             </div>
@@ -126,13 +126,13 @@ export function MessageCard({
                         onDelete();
                         setShowDeleteConfirm(false);
                       }}
-                      className="px-3 py-2 text-sm text-red-400 hover:text-red-300 min-h-[44px] flex items-center"
+                      className="px-3 py-2 text-sm text-red-700 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 min-h-[44px] flex items-center"
                     >
                       Delete
                     </button>
                     <button
                       onClick={() => setShowDeleteConfirm(false)}
-                      className="px-3 py-2 text-sm text-neutral-400 hover:text-white min-h-[44px] flex items-center"
+                      className="px-3 py-2 text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white min-h-[44px] flex items-center"
                     >
                       Cancel
                     </button>
@@ -140,7 +140,7 @@ export function MessageCard({
                 ) : (
                   <button
                     onClick={() => setShowDeleteConfirm(true)}
-                    className="text-neutral-500 hover:text-neutral-300 p-2 min-w-[44px] min-h-[44px] flex items-center justify-center transition-colors"
+                    className="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-300 p-2 min-w-[44px] min-h-[44px] flex items-center justify-center transition-colors"
                     aria-label="Delete message"
                   >
                     <svg
@@ -175,7 +175,7 @@ export function MessageCard({
           {isRepost && (
             <div className="mt-3 p-3 bg-neutral-100 dark:bg-neutral-800/50 rounded-lg border-l-4 border-emerald-500/50">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-sm font-medium text-neutral-400">
+                <span className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
                   {message.repostOf!.originalAuthorName}
                 </span>
               </div>
@@ -193,8 +193,8 @@ export function MessageCard({
               disabled={!isLoggedIn}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-colors min-h-[44px] ${
                 userReaction === "like"
-                  ? "text-emerald-400 bg-emerald-500/10"
-                  : "text-neutral-500 hover:text-emerald-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                  ? "text-emerald-700 dark:text-emerald-400 bg-emerald-500/10"
+                  : "text-neutral-600 dark:text-neutral-400 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
               } ${!isLoggedIn ? "opacity-50 cursor-not-allowed" : ""}`}
               aria-label={
                 userReaction === "like"
@@ -222,8 +222,8 @@ export function MessageCard({
               disabled={!isLoggedIn}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-colors min-h-[44px] ${
                 userReaction === "dislike"
-                  ? "text-red-400 bg-red-500/10"
-                  : "text-neutral-500 hover:text-red-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                  ? "text-red-700 dark:text-red-400 bg-red-500/10"
+                  : "text-neutral-600 dark:text-neutral-400 hover:text-red-700 dark:hover:text-red-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
               } ${!isLoggedIn ? "opacity-50 cursor-not-allowed" : ""}`}
               aria-label={
                 userReaction === "dislike"
@@ -251,8 +251,8 @@ export function MessageCard({
               disabled={!isLoggedIn}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-colors min-h-[44px] ${
                 showReplyInput
-                  ? "text-emerald-400 bg-emerald-500/10"
-                  : "text-neutral-500 hover:text-emerald-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                  ? "text-emerald-700 dark:text-emerald-400 bg-emerald-500/10"
+                  : "text-neutral-600 dark:text-neutral-400 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
               } ${!isLoggedIn ? "opacity-50 cursor-not-allowed" : ""}`}
               aria-label={`Reply to ${message.authorName}'s message`}
             >
@@ -275,7 +275,7 @@ export function MessageCard({
               <button
                 onClick={onRepost}
                 disabled={!isLoggedIn}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-colors min-h-[44px] text-neutral-500 hover:text-emerald-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-colors min-h-[44px] text-neutral-600 dark:text-neutral-400 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
                   !isLoggedIn ? "opacity-50 cursor-not-allowed" : ""
                 }`}
                 aria-label={`Repost ${message.authorName}'s message`}
@@ -314,10 +314,10 @@ export function MessageCard({
               <div className="flex items-center justify-between mt-2">
                 <span className={`text-xs ${
                   replyContent.length < 100
-                    ? "text-red-400"
+                    ? "text-red-700 dark:text-red-400"
                     : replyContent.length > 500
-                    ? "text-red-400"
-                    : "text-neutral-500"
+                    ? "text-red-700 dark:text-red-400"
+                    : "text-neutral-600 dark:text-neutral-400"
                 }`}>
                   {replyContent.length}/500 (minimum 100)
                 </span>
@@ -325,14 +325,14 @@ export function MessageCard({
                   <button
                     type="button"
                     onClick={onReply}
-                    className="px-3 py-2 text-sm text-neutral-400 hover:text-white transition-colors min-h-[44px]"
+                    className="px-3 py-2 text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors min-h-[44px]"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={onSubmitReply}
                     disabled={postingReply || replyContent.trim().length < 100 || replyContent.trim().length > 500}
-                    className="px-4 py-2 bg-emerald-500 text-white rounded-lg text-sm font-medium hover:bg-emerald-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
+                    className="px-4 py-2 bg-emerald-700 text-white rounded-lg text-sm font-medium hover:bg-emerald-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
                   >
                     {postingReply ? "Replying..." : "Reply"}
                   </button>
@@ -346,7 +346,7 @@ export function MessageCard({
             <button
               onClick={onToggleReplies}
               aria-expanded={showReplies}
-              className="mt-3 text-sm text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-1"
+              className="mt-3 text-sm text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 transition-colors flex items-center gap-1"
             >
               <svg
                 width="14"
