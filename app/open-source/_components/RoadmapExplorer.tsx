@@ -20,7 +20,7 @@ import {
   Zap,
   type LucideIcon,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   buildRoadmapIssueUrl,
   countRoadmapItems,
@@ -157,6 +157,7 @@ export function RoadmapExplorer() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<CategoryFilter>("all");
   const [difficulty, setDifficulty] = useState<DifficultyFilter>("all");
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const filteredCategories = useMemo(
     () => filterRoadmapCategories({ query, category, difficulty }),
@@ -165,6 +166,13 @@ export function RoadmapExplorer() {
   const resultCount = countRoadmapItems(filteredCategories);
   const totalCount = countRoadmapItems();
   const hasFilters = query.trim() !== "" || category !== "all" || difficulty !== "all";
+
+  function handleReset() {
+    setQuery("");
+    setCategory("all");
+    setDifficulty("all");
+    searchInputRef.current?.focus();
+  }
 
   return (
     <section
@@ -193,6 +201,7 @@ export function RoadmapExplorer() {
                 aria-hidden="true"
               />
               <input
+                ref={searchInputRef}
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search by skill, title, or outcome"
@@ -243,11 +252,7 @@ export function RoadmapExplorer() {
 
             <button
               type="button"
-              onClick={() => {
-                setQuery("");
-                setCategory("all");
-                setDifficulty("all");
-              }}
+              onClick={handleReset}
               disabled={!hasFilters}
               className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800"
             >
@@ -255,8 +260,21 @@ export function RoadmapExplorer() {
               Reset
             </button>
           </div>
-          <div className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
-            Showing {resultCount} of {totalCount} roadmap ideas.
+          <div
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+            className="mt-3 text-sm text-neutral-600 dark:text-neutral-400"
+          >
+            <span aria-hidden={resultCount === 0 ? "true" : undefined}>
+              Showing {resultCount} of {totalCount} roadmap ideas.
+            </span>
+            {resultCount === 0 ? (
+              <span className="sr-only">
+                No roadmap ideas match those filters. Try a broader search or
+                propose a new contribution idea.
+              </span>
+            ) : null}
           </div>
         </div>
 
