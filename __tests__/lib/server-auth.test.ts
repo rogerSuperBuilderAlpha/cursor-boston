@@ -102,6 +102,17 @@ describe("getVerifiedUser admin authorization bridge", () => {
     expect(verifyFn).toHaveBeenCalledWith("test-token", false);
   });
 
+  it("returns null from the admin helper when the verified user lacks admin claims", async () => {
+    mockVerify({ uid: "u-non-admin", email: "regular@example.com" });
+    const user = await getVerifiedAdminUser(makeRequest());
+    expect(user).toBeNull();
+  });
+
+  it("returns null from the admin helper when no token is presented", async () => {
+    const user = await getVerifiedAdminUser(makeRequest({}));
+    expect(user).toBeNull();
+  });
+
   it("uses revocation checks on the sensitive user helper path", async () => {
     const verifyFn = mockVerify({ uid: "credit-user", email: "u@example.com" });
     const user = await getVerifiedUserWithRevocation(makeRequest());

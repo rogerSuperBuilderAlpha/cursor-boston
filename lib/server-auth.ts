@@ -145,10 +145,24 @@ export async function isCurrentIdTokenRevoked(request: NextRequest): Promise<boo
   }
 }
 
+/**
+ * Verify the Firebase ID token AND require admin status. Combines the auth
+ * + role gate that admin routes used to spell out in two steps.
+ *
+ * Returns null when the request has no token, the token is missing the admin
+ * claim, OR the resolved user is not in the admin role set. Callers should
+ * treat null as 401/403 (route returns 401 to avoid leaking admin status).
+ *
+ * Throws when Firebase Admin Auth is not configured.
+ */
 export async function getVerifiedAdminUser(
   request: NextRequest
 ): Promise<VerifiedUser | null> {
-  return verifyRequestUser(request, false);
+  const user = await verifyRequestUser(request, false);
+  if (!user || !user.isAdmin) {
+    return null;
+  }
+  return user;
 }
 
 export function isRevokedIdTokenError(error: unknown): boolean {
