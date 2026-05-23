@@ -219,6 +219,22 @@ describe("POST /api/hackathons/submissions/register", () => {
     expect(body.error).toMatch(/Could not verify repo/i);
   });
 
+  it("returns 502 when GitHub verification fetch throws or times out", async () => {
+    mockGetVerifiedUser.mockResolvedValue(testUser);
+    mockGet.mockResolvedValueOnce({
+      empty: false,
+      docs: [{ id: "team-1" }],
+    });
+    mockFetch.mockRejectedValueOnce(new DOMException("aborted", "AbortError"));
+
+    const res = await POST(makeRequest({ repoUrl: "https://github.com/a/b" }));
+    expect(res.status).toBe(502);
+    const body = await res.json();
+    expect(body.error).toMatch(/Could not verify repo/i);
+    expect(mockSet).not.toHaveBeenCalled();
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
   it("returns 400 when repo is private", async () => {
     mockGetVerifiedUser.mockResolvedValue(testUser);
     mockGet.mockResolvedValueOnce({
@@ -340,7 +356,7 @@ describe("POST /api/hackathons/submissions/register", () => {
     // The fetch call should use the parsed owner/repo (without .git)
     expect(mockFetch).toHaveBeenCalledWith(
       "https://api.github.com/repos/owner/repo",
-      expect.any(Object)
+      expect.objectContaining({ signal: expect.any(AbortSignal) })
     );
   });
 

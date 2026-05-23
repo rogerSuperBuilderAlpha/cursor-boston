@@ -5,21 +5,21 @@
  * See LICENSE file for details.
  */
 
-import { HACK_A_SPRINT_2026_EVENT_ID } from "@/lib/hackathon-showcase";
 import {
   SPORTS_HACK_2026_CAPACITY,
   SPORTS_HACK_2026_DECLINED_EMAILS,
   SPORTS_HACK_2026_EVENT_ID,
   SPORTS_HACK_2026_JUDGE_EMAILS,
 } from "@/lib/sports-hack-2026";
+import {
+  HACKATHON_EVENT_ID_LIST,
+  type HackathonEventId,
+} from "@/types/hackathon-events";
 
 /** In-person / special events with website signup (separate from Luma). */
-export const HACKATHON_EVENT_SIGNUP_IDS = [
-  HACK_A_SPRINT_2026_EVENT_ID,
-  SPORTS_HACK_2026_EVENT_ID,
-] as const;
+export const HACKATHON_EVENT_SIGNUP_IDS = HACKATHON_EVENT_ID_LIST;
 
-export type HackathonEventSignupId = (typeof HACKATHON_EVENT_SIGNUP_IDS)[number];
+export type HackathonEventSignupId = HackathonEventId;
 
 export function isHackathonEventSignupId(
   eventId: string
@@ -28,7 +28,7 @@ export function isHackathonEventSignupId(
 }
 
 export function hackathonEventSignupDocId(
-  eventId: string,
+  eventId: HackathonEventSignupId,
   userId: string
 ): string {
   return `${eventId}__${userId}`;
@@ -144,7 +144,9 @@ export function getJudgeEmailsForEvent(eventId: string): ReadonlySet<string> {
   return JUDGE_EMAILS;
 }
 
-export function getDeclinedEmailsForEvent(eventId: string): ReadonlySet<string> {
+export function getDeclinedEmailsForEvent(
+  eventId: string
+): ReadonlySet<string> {
   if (eventId === SPORTS_HACK_2026_EVENT_ID) return SPORTS_HACK_2026_DECLINED_EMAILS;
   return DECLINED_EMAILS;
 }

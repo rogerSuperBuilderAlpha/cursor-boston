@@ -314,20 +314,6 @@ export const rateLimitConfigs = {
     maxRequests: 40, // 40 requests per minute
   },
   /**
-   * Rate limiting for unlocking Hackathon Showcase voting functionality.
-   */
-  hackathonShowcaseUnlock: {
-    windowMs: 60 * 1000, // 1 minute
-    maxRequests: 20, // 20 requests per minute
-  },
-  /**
-   * Strict rate limiting for brute-force prevention on Showcase unlock attempts.
-   */
-  hackathonShowcaseUnlockAttempts: {
-    windowMs: 5 * 60 * 1000, // 5 minutes
-    maxRequests: 15, // 15 attempts per 5 minutes
-  },
-  /**
    * Rate limiting for casting votes in the Hackathon Showcase.
    */
   hackathonShowcaseVote: {

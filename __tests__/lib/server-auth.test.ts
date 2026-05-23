@@ -3,7 +3,14 @@
  */
 
 import { NextRequest } from "next/server";
-import { getVerifiedUser, getOptionalVerifiedUser } from "@/lib/server-auth";
+import {
+  getOptionalVerifiedUser,
+  getVerifiedAdminUser,
+  getVerifiedUser,
+  getVerifiedUserWithRevocation,
+  isCurrentIdTokenRevoked,
+  isRevokedIdTokenError,
+} from "@/lib/server-auth";
 import { getAdminAuth } from "@/lib/firebase-admin";
 
 jest.mock("@/lib/firebase-admin", () => ({
@@ -17,9 +24,9 @@ function makeRequest(headers: Record<string, string> = { Authorization: "Bearer 
 }
 
 function mockVerify(returnValue: Record<string, unknown>) {
-  mockGetAdminAuth.mockReturnValue({
-    verifyIdToken: jest.fn(async () => returnValue),
-  } as never);
+  const verifyIdToken = jest.fn(async () => returnValue);
+  mockGetAdminAuth.mockReturnValue({ verifyIdToken } as never);
+  return verifyIdToken;
 }
 
 describe("getVerifiedUser admin authorization bridge", () => {
@@ -80,6 +87,26 @@ describe("getVerifiedUser admin authorization bridge", () => {
       }),
     );
     expect(verifyFn).toHaveBeenCalledWith("primary-token", false);
+  });
+
+  it("uses non-revocation checks on the default verified-user path", async () => {
+    const verifyFn = mockVerify({ uid: "u-default", email: "x@y" });
+    await getVerifiedUser(makeRequest());
+    expect(verifyFn).toHaveBeenCalledWith("test-token", false);
+  });
+
+  it("keeps the admin helper on the non-revocation default path", async () => {
+    const verifyFn = mockVerify({ uid: "admin", email: "admin@example.com", admin: true });
+    const user = await getVerifiedAdminUser(makeRequest());
+    expect(user?.isAdmin).toBe(true);
+    expect(verifyFn).toHaveBeenCalledWith("test-token", false);
+  });
+
+  it("uses revocation checks on the sensitive user helper path", async () => {
+    const verifyFn = mockVerify({ uid: "credit-user", email: "u@example.com" });
+    const user = await getVerifiedUserWithRevocation(makeRequest());
+    expect(user?.uid).toBe("credit-user");
+    expect(verifyFn).toHaveBeenCalledWith("test-token", true);
   });
 
   it("throws when Firebase Admin Auth is not configured", async () => {
@@ -168,6 +195,68 @@ describe("getVerifiedUser admin authorization bridge", () => {
   });
 });
 
+describe("isCurrentIdTokenRevoked", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("returns false when no token is present", async () => {
+    const req = new NextRequest("http://localhost/api/test");
+    await expect(isCurrentIdTokenRevoked(req)).resolves.toBe(false);
+    expect(mockGetAdminAuth).not.toHaveBeenCalled();
+  });
+
+  it("returns false when Firebase Admin Auth is not configured", async () => {
+    mockGetAdminAuth.mockReturnValue(null as never);
+    await expect(isCurrentIdTokenRevoked(makeRequest())).resolves.toBe(false);
+  });
+
+  it("uses revocation checks and returns false for a valid current token", async () => {
+    const verifyFn = mockVerify({ uid: "u-current", email: "x@y" });
+    await expect(isCurrentIdTokenRevoked(makeRequest())).resolves.toBe(false);
+    expect(verifyFn).toHaveBeenCalledWith("test-token", true);
+  });
+
+  it("returns true for Firebase revoked-token errors", async () => {
+    mockGetAdminAuth.mockReturnValue({
+      verifyIdToken: jest.fn(async () => {
+        throw { code: "auth/id-token-revoked" };
+      }),
+    } as never);
+    await expect(isCurrentIdTokenRevoked(makeRequest())).resolves.toBe(true);
+  });
+
+  it("returns false for unrelated verification errors", async () => {
+    mockGetAdminAuth.mockReturnValue({
+      verifyIdToken: jest.fn(async () => {
+        throw { code: "auth/id-token-expired" };
+      }),
+    } as never);
+    await expect(isCurrentIdTokenRevoked(makeRequest())).resolves.toBe(false);
+  });
+});
+
+describe("isRevokedIdTokenError", () => {
+  it("matches Firebase revoked-token error codes", () => {
+    expect(isRevokedIdTokenError({ code: "auth/id-token-revoked" })).toBe(true);
+    expect(
+      isRevokedIdTokenError({ errorInfo: { code: "auth/id-token-revoked" } }),
+    ).toBe(true);
+  });
+
+  it("matches Firebase revoked-token messages", () => {
+    expect(
+      isRevokedIdTokenError(new Error("The Firebase ID token has been revoked.")),
+    ).toBe(true);
+  });
+
+  it("does not match unrelated auth errors", () => {
+    expect(isRevokedIdTokenError({ code: "auth/id-token-expired" })).toBe(false);
+    expect(isRevokedIdTokenError(new Error("token expired"))).toBe(false);
+    expect(isRevokedIdTokenError(null)).toBe(false);
+  });
+});
+
 describe("getOptionalVerifiedUser", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -228,4 +317,3 @@ describe("getOptionalVerifiedUser", () => {
     expect(user?.uid).toBe("opt-4");
   });
 });
-

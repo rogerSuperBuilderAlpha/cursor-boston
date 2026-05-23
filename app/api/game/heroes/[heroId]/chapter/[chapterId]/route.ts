@@ -13,7 +13,10 @@ import {
   approveHeroChapterServer,
   deleteHeroChapterServer,
 } from "@/lib/game/hero-lore";
-import { getVerifiedUser } from "@/lib/server-auth";
+import {
+  getVerifiedUser,
+  isCurrentIdTokenRevoked,
+} from "@/lib/server-auth";
 
 // DELETE /api/game/heroes/[heroId]/chapter/[chapterId]
 //
@@ -57,6 +60,9 @@ export async function PATCH(
     const user = await getVerifiedUser(request);
     if (!user) return apiError("Authentication required", 401);
     if (!user.isAdmin) return apiError("Admin only", 403);
+    if (await isCurrentIdTokenRevoked(request)) {
+      return apiError("Session revoked. Please sign in again.", 401);
+    }
     const { heroId, chapterId } = await params;
     if (!heroId || !chapterId) return apiError("Missing path params", 400);
     const chapter = await approveHeroChapterServer({

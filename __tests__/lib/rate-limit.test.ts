@@ -156,7 +156,7 @@ describe('Rate Limiting', () => {
       });
     });
 
-    it('should keep distinct showcase presets where the behavior differs', () => {
+    it('should keep distinct live showcase presets where the behavior differs', () => {
       expect(rateLimitConfigs.hackathonShowcaseAiScore).toEqual({
         windowMs: 60 * 1000,
         maxRequests: 30,
@@ -164,14 +164,6 @@ describe('Rate Limiting', () => {
       expect(rateLimitConfigs.hackathonShowcaseJudgeScore).toEqual({
         windowMs: 60 * 1000,
         maxRequests: 40,
-      });
-      expect(rateLimitConfigs.hackathonShowcaseUnlock).toEqual({
-        windowMs: 60 * 1000,
-        maxRequests: 20,
-      });
-      expect(rateLimitConfigs.hackathonShowcaseUnlockAttempts).toEqual({
-        windowMs: 5 * 60 * 1000,
-        maxRequests: 15,
       });
       expect(rateLimitConfigs.hackathonShowcaseVote).toEqual({
         windowMs: 60 * 1000,

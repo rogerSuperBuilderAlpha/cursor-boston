@@ -6,14 +6,20 @@
 import { NextRequest } from "next/server";
 import { POST } from "@/app/api/hackathons/showcase/hack-a-sprint-2026/judge-score/route";
 import { getAdminDb } from "@/lib/firebase-admin";
-import { getVerifiedUser } from "@/lib/server-auth";
+import {
+  getVerifiedUser,
+  isCurrentIdTokenRevoked,
+} from "@/lib/server-auth";
 import { fetchShowcaseSubmissionsFromGitHub } from "@/lib/hackathon-showcase";
 import { userIsHackASprint2026Judge } from "@/lib/hackathon-showcase-admin";
 import { getHackASprint2026Phase } from "@/lib/hackathon-asprint-2026-schedule";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 
 jest.mock("@/lib/firebase-admin", () => ({ getAdminDb: jest.fn() }));
-jest.mock("@/lib/server-auth", () => ({ getVerifiedUser: jest.fn() }));
+jest.mock("@/lib/server-auth", () => ({
+  getVerifiedUser: jest.fn(),
+  isCurrentIdTokenRevoked: jest.fn(async () => false),
+}));
 jest.mock("@/lib/hackathon-showcase", () => ({
   ...jest.requireActual("@/lib/hackathon-showcase"),
   fetchShowcaseSubmissionsFromGitHub: jest.fn(),
@@ -38,6 +44,9 @@ jest.mock("firebase-admin/firestore", () => ({
 
 const mockDb = getAdminDb as jest.MockedFunction<typeof getAdminDb>;
 const mockUser = getVerifiedUser as jest.MockedFunction<typeof getVerifiedUser>;
+const mockIsRevoked = isCurrentIdTokenRevoked as jest.MockedFunction<
+  typeof isCurrentIdTokenRevoked
+>;
 const mockSubs = fetchShowcaseSubmissionsFromGitHub as jest.MockedFunction<
   typeof fetchShowcaseSubmissionsFromGitHub
 >;
@@ -68,6 +77,7 @@ function setupDb() {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockIsRevoked.mockResolvedValue(false);
   mockRate.mockResolvedValue({ success: true, remaining: 9 } as never);
   mockUser.mockResolvedValue({ uid: "u1", email: "u@x" } as never);
   mockPhase.mockReturnValue("peerVotingOpen");
@@ -96,6 +106,20 @@ describe("POST /api/hackathons/showcase/hack-a-sprint-2026/judge-score", () => {
     mockUser.mockResolvedValueOnce(null);
     const res = await POST(makeReq({ submissionId: "team-alpha", score: 8 }));
     expect(res.status).toBe(401);
+  });
+
+  it("returns 401 when the judge token has been revoked", async () => {
+    mockUser.mockResolvedValueOnce({ uid: "u1", email: "u@x" } as never);
+    setupDb();
+    mockIsRevoked.mockResolvedValueOnce(true);
+
+    const res = await POST(makeReq({ submissionId: "team-alpha", score: 8 }));
+    const body = await res.json();
+
+    expect(res.status).toBe(401);
+    expect(body.error).toBe("Session revoked. Please sign in again.");
+    expect(mockDb).toHaveBeenCalled();
+    expect(mockSubs).not.toHaveBeenCalled();
   });
 
   it("returns 403 when phase is not peerVotingOpen", async () => {

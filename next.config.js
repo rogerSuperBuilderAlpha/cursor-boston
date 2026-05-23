@@ -20,6 +20,18 @@ function reproducibleBuildId() {
   }
 }
 
+function isCiEnvironment() {
+  return process.env.CI === 'true' || process.env.GITHUB_ACTIONS === 'true'
+}
+
+function shouldSkipTypecheck() {
+  if (process.env.SKIP_TYPECHECK !== '1') return false
+  if (isCiEnvironment()) {
+    throw new Error('SKIP_TYPECHECK=1 is local-only and must not be set in CI')
+  }
+  return true
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // If a package-lock.json exists above this repo (e.g. in $HOME), Next.js would pick that
@@ -39,7 +51,7 @@ const nextConfig = {
   // unrelated type/lint errors. NEVER set this in CI; CI is the boundary
   // that catches real type errors. See CLAUDE.md "Local production
   // verification — emergency typecheck bypass".
-  ...(process.env.SKIP_TYPECHECK === '1'
+  ...(shouldSkipTypecheck()
     ? {
         typescript: { ignoreBuildErrors: true },
         eslint: { ignoreDuringBuilds: true },

@@ -10,21 +10,12 @@ jest.mock("@/contexts/AuthContext", () => ({
 
 import { useAuth } from "@/contexts/AuthContext";
 import { KonamiListener } from "@/components/hunt/KonamiListener";
+import {
+  KONAMI_SEQUENCE,
+  KONAMI_SEQUENCE_HEADER,
+} from "@/lib/konami-handler";
 
 const mockedUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
-
-const KONAMI_SEQUENCE = [
-  "ArrowUp",
-  "ArrowUp",
-  "ArrowDown",
-  "ArrowDown",
-  "ArrowLeft",
-  "ArrowRight",
-  "ArrowLeft",
-  "ArrowRight",
-  "b",
-  "a",
-];
 
 function mockAuthUser(user: typeof mockUser | null) {
   mockedUseAuth.mockReturnValue({
@@ -77,7 +68,7 @@ describe("KonamiListener", () => {
     expect(screen.getByText("🎮 You found a path.")).toBeInTheDocument();
     expect(screen.getByText(/token: konami-secret-token/)).toBeInTheDocument();
     expect(mockFetchFn).toHaveBeenCalledWith("/api/hunt/oracle/konami", {
-      headers: { "X-Konami-Sequence": "UUDDLRLRBA" },
+      headers: { "X-Konami-Sequence": KONAMI_SEQUENCE_HEADER },
     });
   });
 
