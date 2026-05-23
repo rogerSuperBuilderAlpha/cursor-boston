@@ -9,44 +9,29 @@ cd "$SRC/cursor-boston"
 # Install only what the harnesses need. The full project's deps are
 # heavy (Next.js, Firebase Admin, etc.) and ClusterFuzzLite's wall-clock
 # budget is finite; the sanitize.fuzz.ts harness compiles standalone
-# against jazzer.js.
+# against jazzer.js. Versions are pinned (Scorecard Pinned-Dependencies).
 npm install --no-audit --no-fund --no-save \
   @jazzer.js/core@2.1.0 \
   typescript@5.6.3
 
-# Build each fuzz target as a self-contained Node.js script.
+# base-builder-javascript exposes `compile_javascript_fuzzer` which knows
+# how to wrap a jazzer.js harness into a libFuzzer-compatible binary at
+# $OUT/<name>. Use it per fuzz target so we get the standard
+# ClusterFuzzLite invocation contract.
 for target in fuzz/*.fuzz.ts; do
   name="$(basename "$target" .fuzz.ts)"
-  out_dir="$OUT"
-  out_name="fuzz_${name}"
-
-  # Compile the harness + the slice of lib/ it imports into a single
-  # CommonJS bundle so ClusterFuzzLite can invoke it without re-running
-  # tsc at fuzz time.
+  # Transpile the harness + sanitize.ts to CJS so jazzer.js can require
+  # it at fuzz time (jazzer is a CJS-only runtime).
   npx --no-install tsc \
     --module commonjs --target es2022 --esModuleInterop \
-    --outDir "$out_dir/build_${name}" \
+    --outDir "build_${name}" \
     --rootDir . \
     "$target" lib/sanitize.ts
 
-  # ClusterFuzzLite expects an executable wrapper at $OUT/<target>.
-  cat > "$out_dir/$out_name" <<'EOF'
-#!/usr/bin/env node
-const path = require("path");
-const { startFuzzing } = require("@jazzer.js/core");
-
-const targetFile = path.join(__dirname, "build_NAME/fuzz/NAME.fuzz.js");
-startFuzzing({
-  fuzzTarget: targetFile,
-  fuzzFunction: "fuzz",
-  sync: true,
-  fuzzerOptions: process.argv.slice(2),
-  timeout: 5000,
-}).catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
-EOF
-  sed -i "s/NAME/${name}/g" "$out_dir/$out_name"
-  chmod +x "$out_dir/$out_name"
+  compile_javascript_fuzzer cursor-boston \
+    "build_${name}/fuzz/${name}.fuzz" \
+    --sync
 done
+
+exit 0
+
