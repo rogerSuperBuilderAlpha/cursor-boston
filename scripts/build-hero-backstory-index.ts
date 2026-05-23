@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 /**
+ * SPDX-License-Identifier: GPL-3.0-only
  * Copyright (C) 2026 Cursor Boston
  * This file is part of Cursor Boston, licensed under GPL-3.0.
  * See LICENSE file for details.
@@ -35,6 +36,7 @@ function main(): void {
   const heroIds = entries.map((f) => f.replace(/\.md$/, "")).sort();
   const lines = heroIds.map((id) => `  ${JSON.stringify(id)},`).join("\n");
   const next = `/**
+ * SPDX-License-Identifier: GPL-3.0-only
  * Copyright (C) 2026 Cursor Boston
  * This file is part of Cursor Boston, licensed under GPL-3.0.
  * See LICENSE file for details.
