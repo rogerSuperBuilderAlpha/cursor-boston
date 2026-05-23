@@ -12,11 +12,13 @@ import { logger } from "@/lib/logger";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 import { sanitizeDocId } from "@/lib/sanitize";
 import { communityContract } from "@/lib/api-schemas/community";
+import {
+  COMMUNITY_DELETE_RATE_LIMIT,
+  COMMUNITY_RATE_LIMIT_RETRY_AFTER_SECONDS,
+} from "@/lib/constants/community";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const DELETE_RATE_LIMIT = { windowMs: 60 * 1000, maxRequests: 20 };
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,12 +29,19 @@ export async function POST(request: NextRequest) {
 
     const rateResult = await checkUpstashRateLimit(
       `community-delete:${user.uid}`,
-      DELETE_RATE_LIMIT
+      COMMUNITY_DELETE_RATE_LIMIT
     );
     if (!rateResult.success) {
       return NextResponse.json(
         { error: "Too many requests", retryAfterSeconds: rateResult.retryAfter },
-        { status: 429, headers: { "Retry-After": String(rateResult.retryAfter || 60) } }
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(
+              rateResult.retryAfter || COMMUNITY_RATE_LIMIT_RETRY_AFTER_SECONDS
+            ),
+          },
+        }
       );
     }
 

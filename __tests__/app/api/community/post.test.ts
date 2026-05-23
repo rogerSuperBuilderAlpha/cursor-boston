@@ -51,6 +51,13 @@ function makeRequest(body: Record<string, unknown>) {
 }
 
 const validContent = "A".repeat(150);
+const padContent = (content: string) => `${content} ${"A".repeat(120)}`;
+
+async function expectStoredPostFor(content: string) {
+  const res = await POST(makeRequest({ content }));
+  expect(res.status).toBe(200);
+  return mockSet.mock.calls[mockSet.mock.calls.length - 1]?.[0] as Record<string, unknown>;
+}
 
 describe("POST /api/community/post", () => {
   beforeEach(() => {
@@ -99,6 +106,7 @@ describe("POST /api/community/post", () => {
     expect(mockSet).toHaveBeenCalledWith(
       expect.objectContaining({
         content: validContent,
+        mentions: [],
         authorId: "u1",
         authorName: "Test User",
         likeCount: 0,
@@ -121,6 +129,53 @@ describe("POST /api/community/post", () => {
         content: htmlContent,
       })
     );
+  });
+
+  it("stores valid mentions as normalized Firestore-queryable handles", async () => {
+    const stored = await expectStoredPostFor(
+      padContent("Shipping this with @Alice and @bob_2 for review.")
+    );
+
+    expect(stored.mentions).toEqual(["alice", "bob_2"]);
+  });
+
+  it("deduplicates repeated mentions case-insensitively", async () => {
+    const stored = await expectStoredPostFor(
+      padContent("Looping in @ALICE, @alice, and @Alice again for visibility.")
+    );
+
+    expect(stored.mentions).toEqual(["alice"]);
+  });
+
+  it("ignores invalid mention syntax and email addresses", async () => {
+    const stored = await expectStoredPostFor(
+      padContent("Invalid handles: @a @bad-handle contact alice@example.com and @ok_name.")
+    );
+
+    expect(stored.mentions).toEqual(["ok_name"]);
+  });
+
+  it("does not store XSS-looking mention payloads as executable metadata", async () => {
+    const stored = await expectStoredPostFor(
+      padContent("Heads up @Alice<script>alert(1)</script> @<img src=x onerror=alert(1)>")
+    );
+
+    expect(stored.content).toContain("<script>alert(1)</script>");
+    expect(stored.mentions).toEqual(["alice"]);
+  });
+
+  it("caps stored mention metadata to keep array-contains queries bounded", async () => {
+    const handles = Array.from({ length: 30 }, (_, index) => `@user_${index}`);
+    const stored = await expectStoredPostFor(padContent(handles.join(" ")));
+
+    expect(stored.mentions).toHaveLength(25);
+    expect(stored.mentions).toEqual(handles.slice(0, 25).map((handle) => handle.slice(1)));
+  });
+
+  it("stores an empty mentions array when content has no valid handles", async () => {
+    const stored = await expectStoredPostFor(validContent);
+
+    expect(stored.mentions).toEqual([]);
   });
 
   it("returns 400 for malformed JSON", async () => {

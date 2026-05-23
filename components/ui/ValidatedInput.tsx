@@ -7,6 +7,8 @@
 
 import type { InputHTMLAttributes, ReactNode } from "react";
 import { CheckCircle2, CircleAlert } from "lucide-react";
+import { CLASS_GROUPS } from "@/lib/classname-constants";
+import { cn } from "@/lib/utils";
 
 interface ValidatedInputProps extends InputHTMLAttributes<HTMLInputElement> {
   id: string;
@@ -16,8 +18,7 @@ interface ValidatedInputProps extends InputHTMLAttributes<HTMLInputElement> {
   showStatusIcon?: boolean;
 }
 
-const baseInputClass =
-  "w-full px-4 py-3 bg-neutral-100 dark:bg-neutral-800 border border-neutral-700 rounded-lg text-foreground text-base placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-foreground/20 focus:border-transparent";
+const baseInputClass = CLASS_GROUPS.form.inputLightDark;
 
 export function ValidatedInput({
   id,
@@ -36,7 +37,7 @@ export function ValidatedInput({
 
   return (
     <div>
-      <label htmlFor={id} className="block text-sm font-medium text-neutral-300 mb-2">
+      <label htmlFor={id} className={CLASS_GROUPS.form.labelDark}>
         {label}
       </label>
       <div className="relative">
@@ -45,7 +46,7 @@ export function ValidatedInput({
           id={id}
           aria-describedby={describedBy}
           aria-invalid={error ? "true" : undefined}
-          className={`${baseInputClass}${showStatusIcon ? " pr-11" : ""}${className ? ` ${className}` : ""}`}
+          className={cn(baseInputClass, showStatusIcon && "pr-11", className)}
         />
         {showStatusIcon && error && (
           <CircleAlert
@@ -61,12 +62,12 @@ export function ValidatedInput({
         )}
       </div>
       {helperText && (
-        <p id={helperId} className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+        <p id={helperId} className={cn("mt-2", CLASS_GROUPS.text.muted)}>
           {helperText}
         </p>
       )}
       {error && (
-        <p id={errorId} role="alert" className="mt-2 text-sm text-red-400">
+        <p id={errorId} role="alert" className={CLASS_GROUPS.form.errorText}>
           {error}
         </p>
       )}

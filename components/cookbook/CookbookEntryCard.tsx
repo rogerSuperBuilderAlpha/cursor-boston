@@ -11,6 +11,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { CATEGORY_LABELS } from "@/lib/cookbook-labels";
 import { formatCookbookDate } from "@/lib/format-cookbook-date";
+import { CLASS_GROUPS, TAILWIND_CLASS_NAMES as TW } from "@/lib/classname-constants";
+import { cn } from "@/lib/utils";
 import type { CookbookCategory, CookbookEntry } from "@/types/cookbook";
 import { PromptMarkdown } from "./PromptMarkdown";
 
@@ -63,16 +65,16 @@ export function CookbookEntryCard({
   const tagsMore = tagsList.length - MAX_TAGS;
 
   return (
-    <div className="group h-full flex flex-col bg-white dark:bg-neutral-900 rounded-2xl overflow-hidden border border-neutral-200 dark:border-neutral-800 hover:border-emerald-500/30 dark:hover:border-emerald-500/30 hover:shadow-lg dark:hover:shadow-emerald-500/5 transition-all duration-200">
+    <div className={cn("group hover:border-emerald-500/30 dark:hover:border-emerald-500/30 hover:shadow-lg dark:hover:shadow-emerald-500/5", TW.layout.hFull, TW.layout.flex, TW.layout.flexCol, TW.radius.twoXl, TW.layout.overflowHidden, TW.surface.card, TW.border.neutral, TW.motion.all, TW.motion.duration200)}>
       <div className="p-6 flex flex-col flex-1 min-h-0">
         <h3 className="text-lg font-bold text-foreground mb-2">{entry.title}</h3>
-        <p className="text-neutral-600 dark:text-neutral-400 text-sm leading-relaxed mb-4 line-clamp-2">
+        <p className={cn(CLASS_GROUPS.text.muted, "leading-relaxed", TW.spacing.mb4, "line-clamp-2")}>
           {entry.description}
         </p>
 
         <div className="relative rounded-xl overflow-hidden mb-4 border border-neutral-200 dark:border-neutral-700/80 bg-neutral-50 dark:bg-neutral-950 shadow-inner">
           <div className="flex items-center justify-between px-3 py-2 bg-neutral-100 dark:bg-neutral-800/80 border-b border-neutral-200 dark:border-neutral-700/80">
-            <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+            <span className={cn(TW.text.tiny, TW.text.medium, TW.text.subtle, TW.text.uppercase, TW.text.wide)}>
               Prompt
             </span>
             <div className="flex items-center gap-2">
@@ -83,7 +85,7 @@ export function CookbookEntryCard({
                   onViewFull(entry);
                 }}
                 aria-label={`View full prompt: ${entry.title}`}
-                className="text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors"
+                className={cn(TW.text.tiny, TW.text.medium, TW.text.accent, "hover:text-emerald-500 dark:hover:text-emerald-300", TW.motion.colors)}
               >
                 View full
               </button>
@@ -94,7 +96,7 @@ export function CookbookEntryCard({
                   void handleCopy();
                 }}
                 aria-label={copied ? "Prompt copied to clipboard" : `Copy prompt: ${entry.title}`}
-                className="px-2 py-1 rounded-md bg-neutral-200 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-300 dark:hover:bg-neutral-600 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                className={cn(TW.spacing.px2, TW.spacing.py1, TW.radius.md, "bg-neutral-200 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-300 dark:hover:bg-neutral-600", TW.text.tiny, TW.text.medium, TW.motion.colors, TW.focus.emerald)}
               >
                 {copied ? "Copied!" : "Copy"}
               </button>
@@ -108,20 +110,20 @@ export function CookbookEntryCard({
 
         <div className="flex-1 flex flex-col justify-start gap-3 mb-4">
           <div>
-            <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-medium rounded-full">
+            <span className={CLASS_GROUPS.tag.successPill}>
               {CATEGORY_LABELS[entry.category as CookbookCategory] || entry.category}
             </span>
           </div>
           {worksWithList.length > 0 && (
             <div>
-              <span className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-2 uppercase tracking-wider">
+              <span className={cn(TW.layout.block, TW.text.tiny, TW.text.medium, TW.text.subtle, TW.spacing.mb2, TW.text.uppercase, TW.text.wide)}>
                 Works with
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {worksWithDisplay.map((w) => (
                   <span
                     key={w}
-                    className="px-2.5 py-1 bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 text-xs font-medium rounded-full"
+                    className={CLASS_GROUPS.tag.neutralStrongPill}
                   >
                     {w}
                   </span>
@@ -136,7 +138,7 @@ export function CookbookEntryCard({
           )}
           {tagsList.length > 0 && (
             <div>
-              <span className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-2 uppercase tracking-wider">
+              <span className={cn(TW.layout.block, TW.text.tiny, TW.text.medium, TW.text.subtle, TW.spacing.mb2, TW.text.uppercase, TW.text.wide)}>
                 Tags
               </span>
               <div className="flex flex-wrap gap-1.5">
@@ -150,14 +152,14 @@ export function CookbookEntryCard({
                         onTagClick(tag);
                       }}
                       aria-label={`Filter by tag: ${tag}`}
-                      className="px-2.5 py-1 bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700 hover:text-neutral-800 dark:hover:text-neutral-200 text-xs font-medium rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                      className={cn(CLASS_GROUPS.tag.neutralPill, "hover:bg-neutral-200 dark:hover:bg-neutral-700 hover:text-neutral-800 dark:hover:text-neutral-200", TW.motion.colors, TW.focus.emerald)}
                     >
                       {tag}
                     </button>
                   ) : (
                     <span
                       key={tag}
-                      className="px-2.5 py-1 bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 text-xs font-medium rounded-full"
+                      className={CLASS_GROUPS.tag.neutralPill}
                     >
                       {tag}
                     </span>
@@ -177,12 +179,12 @@ export function CookbookEntryCard({
           <div className="min-w-0 flex-1">
             <Link
               href={`/members?search=${encodeURIComponent(entry.authorDisplayName)}`}
-              className="text-xs text-neutral-500 hover:text-foreground transition-colors"
+              className={cn(CLASS_GROUPS.text.metadata, "hover:text-foreground", TW.motion.colors)}
             >
               by {entry.authorDisplayName}
             </Link>
             {entry.createdAt && (
-              <span className="text-xs text-neutral-500 block mt-0.5">
+              <span className={cn(CLASS_GROUPS.text.metadata, TW.layout.block, "mt-0.5")}>
                 {formatCookbookDate(entry.createdAt)}
               </span>
             )}
@@ -195,11 +197,20 @@ export function CookbookEntryCard({
               disabled={!isLoggedIn || isVoting}
               title={isLoggedIn ? "Upvote" : "Sign in to vote"}
               aria-label={`Upvote ${entry.title}, ${upCount} upvotes`}
-              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-sm transition-colors ${
+              className={cn(
+                TW.layout.flex,
+                TW.layout.itemsCenter,
+                TW.spacing.gap1,
+                TW.spacing.px2,
+                TW.spacing.py1,
+                TW.radius.lg,
+                TW.text.sm,
+                TW.motion.colors,
                 userVote === "up"
                   ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                  : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-              } disabled:opacity-40 disabled:cursor-not-allowed`}
+                  : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800",
+                TW.state.disabledSoft
+              )}
             >
               <svg
                 width="16"
@@ -218,13 +229,16 @@ export function CookbookEntryCard({
             </button>
 
             <span
-              className={`text-sm font-semibold min-w-8 text-center ${
+              className={cn(
+                TW.text.sm,
+                TW.text.semibold,
+                "min-w-8 text-center",
                 netScore > 0
-                  ? "text-emerald-600 dark:text-emerald-400"
+                  ? CLASS_GROUPS.status.positiveScore
                   : netScore < 0
-                    ? "text-red-500"
-                    : "text-neutral-500"
-              }`}
+                    ? CLASS_GROUPS.status.negativeScore
+                    : CLASS_GROUPS.status.neutralScore
+              )}
             >
               {netScore > 0 ? `+${netScore}` : netScore}
             </span>
@@ -235,11 +249,20 @@ export function CookbookEntryCard({
               disabled={!isLoggedIn || isVoting}
               title={isLoggedIn ? "Downvote" : "Sign in to vote"}
               aria-label={`Downvote ${entry.title}, ${downCount} downvotes`}
-              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-sm transition-colors ${
+              className={cn(
+                TW.layout.flex,
+                TW.layout.itemsCenter,
+                TW.spacing.gap1,
+                TW.spacing.px2,
+                TW.spacing.py1,
+                TW.radius.lg,
+                TW.text.sm,
+                TW.motion.colors,
                 userVote === "down"
                   ? "bg-red-500/10 text-red-500"
-                  : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-              } disabled:opacity-40 disabled:cursor-not-allowed`}
+                  : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800",
+                TW.state.disabledSoft
+              )}
             >
               <svg
                 width="16"

@@ -17,6 +17,7 @@ import { CookbookEntries } from "@/components/cookbook/CookbookEntries";
 import { EntryDetailModal } from "@/components/cookbook/EntryDetailModal";
 import { SubmitForm } from "@/components/cookbook/SubmitForm";
 import { SectionHelp } from "@/components/SectionHelp";
+import { CookbookEntryCardsSkeleton } from "@/components/skeletons/CookbookPageSkeleton";
 
 type CookbookSort = "newest" | "oldest" | "top";
 
@@ -419,9 +420,7 @@ export default function CookbookPage() {
             </div>
 
             {loading ? (
-              <div className="flex items-center justify-center py-20">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-500" />
-              </div>
+              <CookbookEntryCardsSkeleton count={6} />
             ) : showFilteredEmpty ? (
               <div className="text-center py-20">
                 <p className="text-neutral-600 dark:text-neutral-400 text-lg">

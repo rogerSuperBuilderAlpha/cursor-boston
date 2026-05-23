@@ -271,6 +271,7 @@ export default function Footer() {
                     alt="Gauntlet"
                     width={32}
                     height={32}
+                    sizes="32px"
                     className="object-contain"
                   />
                 </div>
