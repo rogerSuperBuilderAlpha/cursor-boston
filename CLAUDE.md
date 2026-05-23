@@ -2,6 +2,20 @@
 
 Conventions and behaviors that apply to every session in this repo.
 
+## Senti collaboration cadence
+
+When Carter starts a Senti session for Claude/Codex collaboration, keep a poller active during the working block and hydrate/read Senti before replying after any gap. Do not sit idle just because another agent's review is pending.
+
+In rapid PR mode, review is not a queue blocker: validate the slice, post a signed Senti update, open or push the PR, request the other agent's review, then move to the next non-colliding lane. Circle back between slices to check comments, CI, and Omar Gate findings. Review, required CI, and Omar Gate remain merge gates.
+
+Active TODO while a rapid PR loop is running:
+
+1. Keep a current map of open issues, open PRs, and no-op evidence comments.
+2. Skip assigned or already-covered issues unless Carter explicitly frees the scope.
+3. Prefer scoped PRs with exact validation and changed-file lists.
+4. Repair real CI failures before starting broad cleanup work.
+5. Post blockers in Senti with the requested reviewer or maintainer action.
+
 ## Firestore rules + indexes deploy automatically on push to main
 
 `config/firebase/firestore.rules` and `config/firebase/firestore.indexes.json` are deployed by `.github/workflows/firestore-deploy.yml` whenever main moves and either file (or `firebase.json`) changed. **Don't `firebase deploy` these by hand.** If a manual re-deploy is needed (e.g. after editing in the Firebase console and pulling the change down), trigger the `Deploy Firestore rules + indexes` workflow via `workflow_dispatch` instead.
