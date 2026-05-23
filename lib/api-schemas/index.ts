@@ -46,6 +46,7 @@ import { pairContract } from "./pair";
 import { profileContract } from "./profile";
 import { questionsContract } from "./questions";
 import { showcaseContract } from "./showcase";
+import { skillsContract } from "./skills";
 import { summerCohortContract } from "./summer-cohort";
 import { talksContract } from "./talks";
 
@@ -82,6 +83,7 @@ export const apiContract = c.router({
   profile: profileContract,
   questions: questionsContract,
   showcase: showcaseContract,
+  skills: skillsContract,
   summerCohort: summerCohortContract,
   talks: talksContract,
 });

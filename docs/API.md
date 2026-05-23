@@ -16,7 +16,7 @@
 
 All endpoints are under `/api/`. Authentication uses Firebase Auth ID tokens (Bearer) or session cookies. Spec: [`/openapi.json`](https://cursorboston.com/openapi.json) · interactive: [`/api/docs`](https://cursorboston.com/api/docs).
 
-**179 paths, 215 operations across 32 areas.**
+**180 paths, 216 operations across 33 areas.**
 
 ---
 
@@ -431,6 +431,12 @@ _Talk-submission moderation queue._
 | POST | `/api/notify-admin/cfp` | No | Email admin about a new CFP submission |
 | POST | `/api/notify-admin/event` | No | Email admin about a new event request |
 | POST | `/api/notify-admin/talk` | No | Email admin about a new talk submission |
+
+## Skills
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/skills/progress` | Yes | Get the current user's Skills Passport progress |
 
 ## SummerCohort
 
