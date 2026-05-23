@@ -13,6 +13,7 @@ Read docs in this order depending on your goal:
 | 7 | [SUPPLY_CHAIN.md](SUPPLY_CHAIN.md) | Security automation, dependencies, and trust signals |
 | 8 | [VERCEL.md](VERCEL.md) | Why PRs do not deploy to Vercel; production-only settings |
 | 9 | [Architecture Decision Records](adr/README.md) | Why the project is built the way it is |
+| 10 | [STYLE_GUIDE.md](STYLE_GUIDE.md) and [A11Y_PATTERNS.md](A11Y_PATTERNS.md) | Contributors writing docs or client-side UI |
 
 **Site visitor map:** [USER_GUIDE.md](USER_GUIDE.md) lists every public section on cursorboston.com with one-line descriptions — start here when you're trying to find where something lives.
 
