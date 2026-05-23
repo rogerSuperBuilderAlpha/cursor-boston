@@ -20,6 +20,7 @@ import {
   COMMUNITY_POST_RATE_LIMIT,
   COMMUNITY_RATE_LIMIT_RETRY_AFTER_SECONDS,
 } from "@/lib/constants/community";
+import { extractCommunityMentions } from "@/lib/community-mentions";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -74,12 +75,14 @@ export async function POST(request: NextRequest) {
       );
     }
     const sanitizedContent = parsed.data.content;
+    const mentions = extractCommunityMentions(sanitizedContent);
 
     const authorName = getDisplayName(user);
 
     const messageRef = db.collection("communityMessages").doc();
     await messageRef.set({
       content: sanitizedContent,
+      mentions,
       authorId: user.uid,
       authorName,
       authorPhoto: user.picture || null,

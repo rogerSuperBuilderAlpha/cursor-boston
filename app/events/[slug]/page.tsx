@@ -272,6 +272,7 @@ export default async function EventPage({
               fill
               className="object-contain"
               priority
+              sizes="(max-width: 1023px) 100vw, 50vw"
             />
             {/* QR Code */}
             <div className="absolute bottom-4 right-4 w-24 h-24 bg-white p-1 rounded-lg shadow-lg">
@@ -280,6 +281,7 @@ export default async function EventPage({
                 alt="Scan to register"
                 fill
                 className="object-contain"
+                sizes="96px"
               />
             </div>
           </div>
@@ -620,6 +622,7 @@ export default async function EventPage({
                         alt={speaker.name}
                         fill
                         className="object-cover"
+                        sizes="96px"
                       />
                     </div>
                   )}
@@ -774,6 +777,7 @@ export default async function EventPage({
                     alt={sponsor.name}
                     width={120}
                     height={60}
+                    sizes="120px"
                     className="object-contain opacity-80 hover:opacity-100 transition-opacity"
                   />
                 </a>

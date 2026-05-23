@@ -10,6 +10,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { ChevronDown, ChevronRight, Info } from "lucide-react";
+import { TAILWIND_CLASS_NAMES as TW } from "@/lib/classname-constants";
+import { cn } from "@/lib/utils";
 
 export interface SectionHelpLink {
   label: string;
@@ -49,21 +51,26 @@ export function SectionHelp({
 
   return (
     <aside
-      className={`mb-6 rounded-lg border border-blue-200 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-900/10 px-4 py-3 ${
-        className ?? ""
-      }`}
+      className={cn(
+        "mb-6 border-blue-200 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-900/10",
+        TW.radius.lg,
+        TW.border.base,
+        TW.spacing.px4,
+        TW.spacing.py3,
+        className
+      )}
       aria-label={title}
     >
-      <div className="flex items-start gap-3">
+      <div className={cn(TW.layout.flex, TW.layout.itemsStart, TW.spacing.gap3)}>
         <Info
-          className="h-4 w-4 mt-0.5 text-blue-700 dark:text-blue-300 shrink-0"
+          className={cn(TW.sizing.iconSm, "mt-0.5 text-blue-700 dark:text-blue-300", TW.layout.shrink0)}
           aria-hidden="true"
         />
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-blue-900 dark:text-blue-200">
+        <div className={cn(TW.layout.flex1, TW.layout.minW0)}>
+          <p className={cn(TW.text.sm, TW.text.semibold, "text-blue-900 dark:text-blue-200")}>
             {title}
           </p>
-          <div className="mt-1 text-sm leading-relaxed text-blue-900/90 dark:text-blue-100/90">
+          <div className={cn(TW.spacing.mt1, TW.text.sm, "leading-relaxed text-blue-900/90 dark:text-blue-100/90")}>
             {intro}
           </div>
           {hasMore && (
@@ -71,13 +78,13 @@ export function SectionHelp({
               <button
                 type="button"
                 onClick={() => setOpen((v) => !v)}
-                className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-blue-800 dark:text-blue-300 hover:underline"
+                className={cn(TW.spacing.mt2, TW.layout.inlineFlex, TW.layout.itemsCenter, TW.spacing.gap1, TW.text.tiny, TW.text.medium, "text-blue-800 dark:text-blue-300 hover:underline")}
                 aria-expanded={open}
               >
                 {open ? (
-                  <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
+                  <ChevronDown className={TW.sizing.iconXs} aria-hidden="true" />
                 ) : (
-                  <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+                  <ChevronRight className={TW.sizing.iconXs} aria-hidden="true" />
                 )}
                 {open ? "Show less" : "Learn more"}
               </button>
@@ -87,10 +94,10 @@ export function SectionHelp({
                     <dl className="space-y-2.5">
                       {faq.map((item, i) => (
                         <div key={i}>
-                          <dt className="text-sm font-medium text-blue-900 dark:text-blue-200">
+                          <dt className={cn(TW.text.sm, TW.text.medium, "text-blue-900 dark:text-blue-200")}>
                             {item.q}
                           </dt>
-                          <dd className="mt-0.5 text-sm text-blue-900/85 dark:text-blue-100/85">
+                          <dd className={cn("mt-0.5", TW.text.sm, "text-blue-900/85 dark:text-blue-100/85")}>
                             {item.a}
                           </dd>
                         </div>

@@ -114,7 +114,14 @@ export function EditProfileModal({ user, onSave, onClose }: EditProfileModalProp
           <div className="flex items-center gap-4">
             <div className="shrink-0">
               {photoPreview ? (
-                <Image src={photoPreview} alt="Preview" width={80} height={80} className="rounded-full object-cover w-20 h-20" />
+                <Image
+                  src={photoPreview}
+                  alt="Preview"
+                  width={80}
+                  height={80}
+                  sizes="80px"
+                  className="rounded-full object-cover w-20 h-20"
+                />
               ) : (
                 <Avatar src={user.photoURL} name={user.displayName} email={user.email} size="lg" />
               )}

@@ -116,6 +116,14 @@ const MyReactionsQuery = z.object({
     ),
 });
 
+const FeedQuery = PaginationQuerySchema.extend({
+  parentId: z
+    .string()
+    .min(1)
+    .optional()
+    .describe("Optional parent message id. Omit for top-level feed messages."),
+});
+
 const ModerateQuery = PaginationQuerySchema.extend({
   status: z.string().optional().describe("Filter status; default 'open', or 'all'"),
 });
@@ -154,6 +162,36 @@ const MyReactionsResponse = z.object({
   reactions: z.record(z.string(), z.enum(["like", "dislike"])),
 });
 
+const FeedMessage = z
+  .object({
+    id: z.string(),
+    content: z.string(),
+    authorId: z.string(),
+    authorName: z.string(),
+    authorPhoto: z.string().nullable(),
+    createdAt: z.string(),
+    parentId: z.string().optional(),
+    repostOf: z
+      .object({
+        originalId: z.string(),
+        originalAuthorId: z.string(),
+        originalAuthorName: z.string(),
+        originalContent: z.string(),
+      })
+      .optional(),
+    likeCount: z.number().optional(),
+    dislikeCount: z.number().optional(),
+    replyCount: z.number().optional(),
+    repostCount: z.number().optional(),
+    bookmarkCount: z.number().optional(),
+  })
+  .openapi("CommunityFeedMessage");
+
+const FeedResponse = z
+  .object({ messages: z.array(FeedMessage) })
+  .merge(PaginationFieldsSchema)
+  .openapi("CommunityFeedResponse");
+
 // ──────────────────── Contract ────────────────────
 
 export const communityContract = c.router(
@@ -175,6 +213,21 @@ export const communityContract = c.router(
           "NOT_CONFIGURED",
         ] as const,
       },
+    },
+    feed: {
+      method: "GET",
+      path: "/api/community/feed",
+      summary: "List visible community feed messages",
+      description:
+        "Returns top-level messages or replies after applying hidden-message, suspended-author, and viewer block filters.",
+      query: FeedQuery,
+      responses: {
+        200: FeedResponse,
+        400: ApiErrorSchema.openapi({ description: "Validation error" }),
+        429: RateLimitedErrorSchema,
+        500: ApiErrorSchema,
+      },
+      metadata: { errorCodes: ["VALIDATION_ERROR", "RATE_LIMITED", "SERVER_ERROR"] as const },
     },
     createReply: {
       method: "POST",
