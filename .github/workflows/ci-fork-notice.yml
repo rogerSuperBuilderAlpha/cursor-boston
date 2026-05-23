@@ -8,13 +8,14 @@ on:
     branches: [develop]
     types: [opened]
 
-permissions:
-  pull-requests: write
+permissions: read-all
 
 jobs:
   welcome:
     if: github.event.pull_request.head.repo.fork == true
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     steps:
       - name: Post contributor guidance
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8

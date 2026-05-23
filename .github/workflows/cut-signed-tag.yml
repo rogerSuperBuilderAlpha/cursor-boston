@@ -28,14 +28,15 @@ on:
         required: false
         type: string
 
-permissions:
-  contents: write          # push the tag
-  id-token: write          # mint OIDC token for gitsign
+permissions: read-all
 
 jobs:
   cut-signed-tag:
     name: Cut signed tag via gitsign
     runs-on: ubuntu-latest
+    permissions:
+      contents: write          # push the tag
+      id-token: write          # mint OIDC token for gitsign
     steps:
       - name: Validate version input
         run: |

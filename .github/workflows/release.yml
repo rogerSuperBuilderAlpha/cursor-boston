@@ -11,16 +11,17 @@ on:
         required: true
         type: string
 
-permissions:
-  contents: write
-  pull-requests: read
-  id-token: write       # Required for Sigstore keyless signing
-  attestations: write   # Required for actions/attest-build-provenance (SLSA L2)
+permissions: read-all
 
 jobs:
   release:
     name: Create Release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+      id-token: write       # Required for Sigstore keyless signing
+      attestations: write   # Required for actions/attest-build-provenance (SLSA L2)
     
     steps:
       - name: Checkout code
