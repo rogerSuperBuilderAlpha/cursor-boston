@@ -53,6 +53,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import Avatar from "@/components/Avatar";
 import Footer from "@/components/Footer";
+import { SportsHackConfirmAttendanceModal } from "@/components/hackathons/SportsHackConfirmAttendanceModal";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { SUMMER_COHORT_OPEN_EVENT } from "@/lib/summer-cohort";
 
@@ -526,6 +527,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
         </main>
         <Footer />
       </div>
+      <SportsHackConfirmAttendanceModal />
     </div>
   );
 }

@@ -29,6 +29,7 @@ import type { DocumentData, Firestore } from "firebase-admin/firestore";
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminDb } from "@/lib/firebase-admin";
 import {
+  getAttendanceLimitForEvent,
   getConfirmedCapacityForEvent,
   getDeclinedEmailsForEvent,
   getJudgeEmailsForEvent,
@@ -57,6 +58,20 @@ export interface LeaderboardEntry {
   lumaRegistered: boolean;
   /** True when the email matches a Cohort-1 application (status pending/admitted). */
   isCohort1: boolean;
+  /**
+   * True when the user has clicked "Confirm attending" (or has been checked
+   * in at the door). Distinct from `creditEligible` / `status` which reflect
+   * the offline rank-freeze. Only meaningful when payload.attendanceLimit > 0.
+   */
+  attendingConfirmed: boolean;
+  /** ISO timestamp when the user confirmed attendance, or null. */
+  attendingConfirmedAt: string | null;
+  /**
+   * Rank within the confirmed-attending subset (1-based), preserving the
+   * entry's existing `rank` order — NOT re-sorted by confirm time. Null
+   * when this entry has not confirmed or the event doesn't use this flow.
+   */
+  attendanceRank: number | null;
 }
 
 export interface LeaderboardPayload {
@@ -64,6 +79,17 @@ export interface LeaderboardPayload {
   totalCount: number;
   websiteSignupCount: number;
   creditTopN: number;
+  /**
+   * Count of entries with attendingConfirmedAt set. 0 when the event
+   * doesn't use the second-step attendance-confirmation flow.
+   */
+  confirmedAttendeeCount: number;
+  /**
+   * Per-event guaranteed-attendance cap. 0 when the event doesn't use the
+   * second-step flow (in which case the new attendance fields on entries
+   * are inert: attendingConfirmed=false, attendanceRank=null).
+   */
+  attendanceLimit: number;
 }
 
 export interface LeaderboardSnapshot extends LeaderboardPayload {
@@ -223,6 +249,7 @@ export async function buildLeaderboardPayload(
     willBeLate: boolean;
     queuingForSpot: boolean;
     lumaRegistered: boolean;
+    attendingConfirmedAt: number | null;
   }[] = [];
 
   const userIds = snap.docs.map((d) => d.data().userId as string).filter(Boolean);
@@ -285,6 +312,9 @@ export async function buildLeaderboardPayload(
       willBeLate: data.willBeLate === true,
       queuingForSpot: data.queuingForSpot === true,
       lumaRegistered: false, // flipped true below when the Luma loop finds a match
+      attendingConfirmedAt: data.attendingConfirmedAt
+        ? signedUpAtToMs(data.attendingConfirmedAt)
+        : null,
     });
   }
 
@@ -406,6 +436,7 @@ export async function buildLeaderboardPayload(
     queuingForSpot: boolean;
     lumaRegistered: boolean;
     isCohort1: boolean;
+    attendingConfirmedAt: number | null;
   };
   const unified: UnifiedRow[] = [];
 
@@ -428,6 +459,7 @@ export async function buildLeaderboardPayload(
       queuingForSpot: r.queuingForSpot,
       lumaRegistered: r.lumaRegistered,
       isCohort1: email ? cohort1Emails.has(email) : false,
+      attendingConfirmedAt: r.attendingConfirmedAt,
     });
   }
   for (const lr of lumaRows) {
@@ -447,6 +479,11 @@ export async function buildLeaderboardPayload(
       queuingForSpot: false,
       lumaRegistered: true,
       isCohort1: email ? cohort1Emails.has(email) : false,
+      // Luma-only rows have no website user account, so they cannot click
+      // "Confirm attending" on the site. They acquire attendingConfirmedAt
+      // only via admin door check-in (which writes through the website-signup
+      // path when matched by email/github).
+      attendingConfirmedAt: null,
     });
   }
 
@@ -471,11 +508,15 @@ export async function buildLeaderboardPayload(
   const sorted = [...confirmed, ...waitlisted];
 
   const websiteCount = rows.length;
-  const entries: LeaderboardEntry[] = sorted.map((u, i) => {
+  const attendanceLimit = getAttendanceLimitForEvent(eventId);
+  // First pass: build entries with attendance flags but without attendanceRank.
+  const partialEntries: LeaderboardEntry[] = sorted.map((u, i) => {
     const rank = i + 1;
     const isConfirmed = u.confirmedAt != null;
     const displayPrs =
       isConfirmed && u.frozenPrCount != null ? u.frozenPrCount : u.mergedPrCount;
+    const hasAttendanceFlow = attendanceLimit > 0;
+    const attendingConfirmed = hasAttendanceFlow && u.attendingConfirmedAt != null;
     return {
       rank,
       userId: u.userId,
@@ -490,14 +531,38 @@ export async function buildLeaderboardPayload(
       queuingForSpot: u.queuingForSpot,
       lumaRegistered: u.lumaRegistered,
       isCohort1: u.isCohort1,
+      attendingConfirmed,
+      attendingConfirmedAt:
+        hasAttendanceFlow && u.attendingConfirmedAt != null
+          ? new Date(u.attendingConfirmedAt).toISOString()
+          : null,
+      attendanceRank: null, // filled in below
     };
   });
 
+  // Second pass: re-number confirmed-attending entries 1..N in existing rank
+  // order. This deliberately does NOT re-sort by attendingConfirmedAt time —
+  // a slow-to-RSVP top contributor cannot be pushed out by a fast-clicking
+  // lower-ranked user.
+  let confirmedAttendeeCount = 0;
+  if (attendanceLimit > 0) {
+    let attendanceRank = 0;
+    for (const entry of partialEntries) {
+      if (entry.attendingConfirmed) {
+        attendanceRank += 1;
+        entry.attendanceRank = attendanceRank;
+        confirmedAttendeeCount += 1;
+      }
+    }
+  }
+
   return {
-    entries,
-    totalCount: entries.length,
+    entries: partialEntries,
+    totalCount: partialEntries.length,
     websiteSignupCount: websiteCount,
     creditTopN: getConfirmedCapacityForEvent(eventId),
+    confirmedAttendeeCount,
+    attendanceLimit,
   };
 }
 
@@ -524,18 +589,49 @@ export async function readSnapshot(
           typeof (data.generatedAt as { toDate?: () => Date }).toDate === "function"
         ? (data.generatedAt as { toDate: () => Date }).toDate().toISOString()
         : new Date(0).toISOString();
+  // Hydrate the new attendance fields for snapshots written before this
+  // feature shipped. attendingConfirmed defaults to false, attendingConfirmedAt
+  // to null, attendanceRank to null. Recomputation on the next mutation will
+  // backfill the real values.
+  const rawEntries = data.entries as Array<Record<string, unknown>>;
+  const entries: LeaderboardEntry[] = rawEntries.map((e) => ({
+    rank: typeof e.rank === "number" ? e.rank : 0,
+    userId: (e.userId as string | null) ?? null,
+    displayName: (e.displayName as string | null) ?? null,
+    githubLogin: (e.githubLogin as string | null) ?? null,
+    mergedPrCount: typeof e.mergedPrCount === "number" ? e.mergedPrCount : 0,
+    signedUpAt: typeof e.signedUpAt === "string" ? e.signedUpAt : "",
+    creditEligible: e.creditEligible === true,
+    status: e.status === "confirmed" ? "confirmed" : "waitlisted",
+    checkedIn: e.checkedIn === true,
+    willBeLate: e.willBeLate === true,
+    queuingForSpot: e.queuingForSpot === true,
+    lumaRegistered: e.lumaRegistered === true,
+    isCohort1: e.isCohort1 === true,
+    attendingConfirmed: e.attendingConfirmed === true,
+    attendingConfirmedAt:
+      typeof e.attendingConfirmedAt === "string" ? e.attendingConfirmedAt : null,
+    attendanceRank:
+      typeof e.attendanceRank === "number" ? e.attendanceRank : null,
+  }));
   return {
-    entries: data.entries as LeaderboardEntry[],
+    entries,
     totalCount:
-      typeof data.totalCount === "number"
-        ? data.totalCount
-        : (data.entries as unknown[]).length,
+      typeof data.totalCount === "number" ? data.totalCount : entries.length,
     websiteSignupCount:
       typeof data.websiteSignupCount === "number" ? data.websiteSignupCount : 0,
     creditTopN:
       typeof data.creditTopN === "number"
         ? data.creditTopN
         : getConfirmedCapacityForEvent(eventId),
+    confirmedAttendeeCount:
+      typeof data.confirmedAttendeeCount === "number"
+        ? data.confirmedAttendeeCount
+        : entries.filter((e) => e.attendingConfirmed).length,
+    attendanceLimit:
+      typeof data.attendanceLimit === "number"
+        ? data.attendanceLimit
+        : getAttendanceLimitForEvent(eventId),
     generatedAt,
   };
 }

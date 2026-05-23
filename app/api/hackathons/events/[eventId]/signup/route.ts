@@ -64,6 +64,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
       willBeLate: boolean;
       queuingForSpot: boolean;
       lumaRegistered: boolean;
+      attendingConfirmed: boolean;
+      attendingConfirmedAt: string | null;
+      attendanceRank: number | null;
     } | null = null;
 
     if (meUser) {
@@ -78,6 +81,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
             willBeLate: entry.willBeLate,
             queuingForSpot: entry.queuingForSpot,
             lumaRegistered: entry.lumaRegistered,
+            attendingConfirmed: entry.attendingConfirmed,
+            attendingConfirmedAt: entry.attendingConfirmedAt,
+            attendanceRank: entry.attendanceRank,
           }
         : {
             signedUp: false,
@@ -88,6 +94,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
             willBeLate: false,
             queuingForSpot: false,
             lumaRegistered: false,
+            attendingConfirmed: false,
+            attendingConfirmedAt: null,
+            attendanceRank: null,
           };
     }
 
@@ -97,6 +106,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
       websiteSignupCount: payload.websiteSignupCount,
       entries: payload.entries,
       creditTopN: payload.creditTopN,
+      confirmedAttendeeCount: payload.confirmedAttendeeCount,
+      attendanceLimit: payload.attendanceLimit,
       me,
     });
   } catch (e) {

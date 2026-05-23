@@ -104,11 +104,15 @@ export async function POST(request: NextRequest, context: RouteContext) {
           { status: 404 },
         );
       }
+      // Door check-in also marks the user as attending-confirmed. This catches
+      // walk-ins / late-RSVPs who never clicked Confirm on the site so they
+      // show up in the public confirmed-attendee count and attendanceRank.
       await ref.set({
         eventId,
         userId: targetUserId,
         signedUpAt: FieldValue.serverTimestamp(),
         checkedInAt: FieldValue.serverTimestamp(),
+        attendingConfirmedAt: FieldValue.serverTimestamp(),
       });
       revalidateTag(HACKATHON_SIGNUP_CACHE_TAG, { expire: 0 });
       return NextResponse.json({ ok: true, checkedIn: true, created: true });
@@ -122,7 +126,19 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
 
     if (checkedIn) {
-      await ref.update({ checkedInAt: FieldValue.serverTimestamp() });
+      // Preserve any existing attendingConfirmedAt (don't overwrite the user's
+      // earlier confirm time). Only set it when currently unset, so walk-ins
+      // who never clicked Confirm still get counted as attending. Un-check-in
+      // does NOT clear attendingConfirmedAt — un-check-in is an admin
+      // correction, not an attendance revocation.
+      const data = snap.data() ?? {};
+      const update: Record<string, unknown> = {
+        checkedInAt: FieldValue.serverTimestamp(),
+      };
+      if (!data.attendingConfirmedAt) {
+        update.attendingConfirmedAt = FieldValue.serverTimestamp();
+      }
+      await ref.update(update);
     } else {
       await ref.update({ checkedInAt: FieldValue.delete() });
     }
