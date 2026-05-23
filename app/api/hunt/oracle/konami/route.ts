@@ -6,6 +6,7 @@
  */
 
 import { NextResponse } from "next/server";
+import { KONAMI_SEQUENCE_HEADER } from "@/lib/konami-handler";
 import { getKonamiToken } from "@/lib/treasure-hunt-paths";
 
 // @contracts: huntContract.oracleKonami (lib/api-schemas/hunt.ts)
@@ -20,7 +21,7 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(request: Request) {
   const sequence = request.headers.get("x-konami-sequence") || "";
-  if (sequence !== "UUDDLRLRBA") {
+  if (sequence !== KONAMI_SEQUENCE_HEADER) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
   return NextResponse.json({ token: getKonamiToken() });

@@ -4,7 +4,10 @@
  * OpenSSF Silver coverage — talk submission moderation route GET/POST guards.
  */
 import { GET, POST } from "@/app/api/talks/submission/moderate/route";
-import { getVerifiedUser } from "@/lib/server-auth";
+import {
+  getVerifiedUser,
+  isCurrentIdTokenRevoked,
+} from "@/lib/server-auth";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { checkServerRateLimit } from "@/lib/rate-limit-server";
 import { paginateFirestoreQuery } from "@/lib/firestore-pagination";
@@ -30,6 +33,7 @@ jest.mock("@/lib/firestore-pagination", () => ({
 
 jest.mock("@/lib/server-auth", () => ({
   getVerifiedUser: jest.fn(),
+  isCurrentIdTokenRevoked: jest.fn(async () => false),
 }));
 
 jest.mock("@/lib/firebase-admin", () => ({
@@ -37,6 +41,9 @@ jest.mock("@/lib/firebase-admin", () => ({
 }));
 
 const mockGetVerifiedUser = getVerifiedUser as jest.MockedFunction<typeof getVerifiedUser>;
+const mockIsRevoked = isCurrentIdTokenRevoked as jest.MockedFunction<
+  typeof isCurrentIdTokenRevoked
+>;
 const mockGetAdminDb = getAdminDb as jest.MockedFunction<typeof getAdminDb>;
 const mockCheckServerRateLimit = checkServerRateLimit as jest.MockedFunction<
   typeof checkServerRateLimit
@@ -79,8 +86,22 @@ function makeStatusDocs(status: string, count = 1) {
 describe("GET /api/talks/submission/moderate", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockIsRevoked.mockResolvedValue(false);
     mockGetVerifiedUser.mockResolvedValue(null);
     mockCheckServerRateLimit.mockResolvedValue({ success: true, retryAfter: 0 });
+  });
+
+  it("returns 401 when the GET admin token has been revoked", async () => {
+    mockGetVerifiedUser.mockResolvedValueOnce(adminUser);
+    mockIsRevoked.mockResolvedValueOnce(true);
+
+    const res = await GET(makeAuthedRequest({ path: "/api/talks/submission/moderate" }));
+    const body = await res.json();
+
+    expect(res.status).toBe(401);
+    expect(body.error).toBe("Session revoked. Please sign in again.");
+    expect(mockCheckServerRateLimit).toHaveBeenCalled();
+    expect(mockGetAdminDb).not.toHaveBeenCalled();
   });
 
   it("returns 401 when unauthenticated", async () => {
@@ -247,6 +268,7 @@ describe("GET /api/talks/submission/moderate", () => {
 describe("POST /api/talks/submission/moderate", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockIsRevoked.mockResolvedValue(false);
     mockGetVerifiedUser.mockResolvedValue(null);
     mockCheckServerRateLimit.mockResolvedValue({ success: true, retryAfter: 0 });
   });
@@ -260,6 +282,25 @@ describe("POST /api/talks/submission/moderate", () => {
       }),
     );
     expect(res.status).toBe(401);
+  });
+
+  it("returns 401 when the POST admin token has been revoked", async () => {
+    mockGetVerifiedUser.mockResolvedValueOnce(adminUser);
+    mockIsRevoked.mockResolvedValueOnce(true);
+
+    const res = await POST(
+      makeAuthedRequest({
+        method: "POST",
+        path: "/api/talks/submission/moderate",
+        body: { submissionId: "t1", action: "approve" },
+      }),
+    );
+    const body = await res.json();
+
+    expect(res.status).toBe(401);
+    expect(body.error).toBe("Session revoked. Please sign in again.");
+    expect(mockCheckServerRateLimit).toHaveBeenCalled();
+    expect(mockGetAdminDb).not.toHaveBeenCalled();
   });
 
   it("returns 403 when the caller is not an admin", async () => {

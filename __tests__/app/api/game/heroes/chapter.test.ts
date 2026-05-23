@@ -17,13 +17,16 @@ import {
   DELETE,
   PATCH,
 } from "@/app/api/game/heroes/[heroId]/chapter/[chapterId]/route";
-import { getVerifiedUser } from "@/lib/server-auth";
+import { getVerifiedUser, isCurrentIdTokenRevoked } from "@/lib/server-auth";
 import {
   HeroLoreForbiddenError,
   HeroLoreNotFoundError,
 } from "@/lib/game/hero-lore";
 
-jest.mock("@/lib/server-auth", () => ({ getVerifiedUser: jest.fn() }));
+jest.mock("@/lib/server-auth", () => ({
+  getVerifiedUser: jest.fn(),
+  isCurrentIdTokenRevoked: jest.fn(async () => false),
+}));
 
 jest.mock("@/lib/game/hero-lore", () => {
   const actual = jest.requireActual("@/lib/game/hero-lore");
@@ -35,6 +38,9 @@ jest.mock("@/lib/game/hero-lore", () => {
 });
 
 const mockUser = getVerifiedUser as jest.MockedFunction<typeof getVerifiedUser>;
+const mockIsRevoked = isCurrentIdTokenRevoked as jest.MockedFunction<
+  typeof isCurrentIdTokenRevoked
+>;
 
 function makeReq(method: "DELETE" | "PATCH") {
   return new NextRequest(
@@ -54,6 +60,7 @@ beforeEach(() => {
     email: "u@x",
     isAdmin: false,
   } as never);
+  mockIsRevoked.mockResolvedValue(false);
   const { deleteHeroChapterServer, approveHeroChapterServer } = jest.requireMock(
     "@/lib/game/hero-lore",
   ) as {

@@ -5,9 +5,8 @@
 import { createHash } from "crypto";
 import { GET as getOracle } from "@/app/api/hunt/oracle/route";
 import { GET as getKonami } from "@/app/api/hunt/oracle/konami/route";
+import { KONAMI_SEQUENCE_HEADER } from "@/lib/konami-handler";
 import { getKonamiToken, getOracleAnswer } from "@/lib/treasure-hunt-paths";
-
-const KONAMI_SEQUENCE = "UUDDLRLRBA";
 
 function konamiRequest(sequence?: string) {
   const headers: Record<string, string> = {};
@@ -69,7 +68,7 @@ describe("GET /api/hunt/oracle/konami", () => {
   });
 
   it("returns the daily token when sequence is correct", async () => {
-    const res = await getKonami(konamiRequest(KONAMI_SEQUENCE));
+    const res = await getKonami(konamiRequest(KONAMI_SEQUENCE_HEADER));
     const body = await res.json();
 
     expect(res.status).toBe(200);
@@ -78,7 +77,7 @@ describe("GET /api/hunt/oracle/konami", () => {
   });
 
   it("is case-sensitive for the Konami sequence header", async () => {
-    const res = await getKonami(konamiRequest(KONAMI_SEQUENCE.toLowerCase()));
+    const res = await getKonami(konamiRequest(KONAMI_SEQUENCE_HEADER.toLowerCase()));
     expect(res.status).toBe(404);
   });
 });

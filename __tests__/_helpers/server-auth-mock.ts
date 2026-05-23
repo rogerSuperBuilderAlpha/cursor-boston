@@ -24,45 +24,71 @@ import type { VerifiedUser } from "@/lib/server-auth";
 
 export interface ServerAuthSpies {
   getVerifiedUser: jest.Mock;
+  getVerifiedAdminUser: jest.Mock;
+  getVerifiedUserWithRevocation: jest.Mock;
   getOptionalVerifiedUser: jest.Mock;
+  isCurrentIdTokenRevoked: jest.Mock;
+  isRevokedIdTokenError: jest.Mock;
   /** Pre-seed `getVerifiedUser` to return the given user on the next call. */
   mockVerifiedUser: (user: Partial<VerifiedUser> & { uid: string }) => void;
   /** Pre-seed `getVerifiedUser` to return null (unauth) on the next call. */
   mockUnauthenticated: () => void;
   /** Pre-seed `getVerifiedUser` to throw on the next call (token verify fail). */
   mockAuthError: (err?: Error) => void;
+  /** Pre-seed all auth helpers to throw a revoked-token error. */
+  mockRevokedAuthError: (err?: Error) => void;
 }
 
 export function makeServerAuthSpies(): ServerAuthSpies {
   const getVerifiedUser = jest.fn().mockResolvedValue(null);
+  const getVerifiedAdminUser = jest.fn().mockResolvedValue(null);
+  const getVerifiedUserWithRevocation = jest.fn().mockResolvedValue(null);
   const getOptionalVerifiedUser = jest.fn().mockResolvedValue(null);
+  const isCurrentIdTokenRevoked = jest.fn().mockResolvedValue(false);
+  const isRevokedIdTokenError = jest.fn().mockReturnValue(false);
 
   return {
     getVerifiedUser,
+    getVerifiedAdminUser,
+    getVerifiedUserWithRevocation,
     getOptionalVerifiedUser,
+    isCurrentIdTokenRevoked,
+    isRevokedIdTokenError,
     mockVerifiedUser(user) {
-      getVerifiedUser.mockResolvedValueOnce({
+      const verified = {
         email: undefined,
         name: undefined,
         picture: undefined,
         isAdmin: false,
         ...user,
-      });
-      getOptionalVerifiedUser.mockResolvedValueOnce({
-        email: undefined,
-        name: undefined,
-        picture: undefined,
-        isAdmin: false,
-        ...user,
-      });
+      };
+      getVerifiedUser.mockResolvedValueOnce(verified);
+      getVerifiedAdminUser.mockResolvedValueOnce(verified);
+      getVerifiedUserWithRevocation.mockResolvedValueOnce(verified);
+      getOptionalVerifiedUser.mockResolvedValueOnce(verified);
+      isCurrentIdTokenRevoked.mockResolvedValueOnce(false);
     },
     mockUnauthenticated() {
       getVerifiedUser.mockResolvedValueOnce(null);
+      getVerifiedAdminUser.mockResolvedValueOnce(null);
+      getVerifiedUserWithRevocation.mockResolvedValueOnce(null);
       getOptionalVerifiedUser.mockResolvedValueOnce(null);
+      isCurrentIdTokenRevoked.mockResolvedValueOnce(false);
     },
     mockAuthError(err = new Error("token verify failed")) {
       getVerifiedUser.mockRejectedValueOnce(err);
+      getVerifiedAdminUser.mockRejectedValueOnce(err);
+      getVerifiedUserWithRevocation.mockRejectedValueOnce(err);
       getOptionalVerifiedUser.mockRejectedValueOnce(err);
+      isCurrentIdTokenRevoked.mockResolvedValueOnce(false);
+    },
+    mockRevokedAuthError(err = new Error("The Firebase ID token has been revoked.")) {
+      getVerifiedUser.mockRejectedValueOnce(err);
+      getVerifiedAdminUser.mockRejectedValueOnce(err);
+      getVerifiedUserWithRevocation.mockRejectedValueOnce(err);
+      getOptionalVerifiedUser.mockRejectedValueOnce(err);
+      isCurrentIdTokenRevoked.mockResolvedValueOnce(true);
+      isRevokedIdTokenError.mockReturnValueOnce(true);
     },
   };
 }
@@ -70,8 +96,15 @@ export function makeServerAuthSpies(): ServerAuthSpies {
 export function createServerAuthModule(spies: ServerAuthSpies) {
   return {
     getVerifiedUser: (...a: unknown[]) => spies.getVerifiedUser(...a),
+    getVerifiedAdminUser: (...a: unknown[]) =>
+      spies.getVerifiedAdminUser(...a),
+    getVerifiedUserWithRevocation: (...a: unknown[]) =>
+      spies.getVerifiedUserWithRevocation(...a),
     getOptionalVerifiedUser: (...a: unknown[]) =>
       spies.getOptionalVerifiedUser(...a),
+    isCurrentIdTokenRevoked: (...a: unknown[]) =>
+      spies.isCurrentIdTokenRevoked(...a),
+    isRevokedIdTokenError: spies.isRevokedIdTokenError,
   };
 }
 

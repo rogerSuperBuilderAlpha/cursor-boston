@@ -196,7 +196,11 @@ export function MessageCard({
                   ? "text-emerald-400 bg-emerald-500/10"
                   : "text-neutral-500 hover:text-emerald-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
               } ${!isLoggedIn ? "opacity-50 cursor-not-allowed" : ""}`}
-              aria-label={userReaction === "like" ? "Remove like" : "Like"}
+              aria-label={
+                userReaction === "like"
+                  ? `Remove like from ${message.authorName}'s message`
+                  : `Like ${message.authorName}'s message`
+              }
             >
               <svg
                 width="18"
@@ -221,7 +225,11 @@ export function MessageCard({
                   ? "text-red-400 bg-red-500/10"
                   : "text-neutral-500 hover:text-red-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
               } ${!isLoggedIn ? "opacity-50 cursor-not-allowed" : ""}`}
-              aria-label={userReaction === "dislike" ? "Remove dislike" : "Dislike"}
+              aria-label={
+                userReaction === "dislike"
+                  ? `Remove dislike from ${message.authorName}'s message`
+                  : `Dislike ${message.authorName}'s message`
+              }
             >
               <svg
                 width="18"
@@ -246,7 +254,7 @@ export function MessageCard({
                   ? "text-emerald-400 bg-emerald-500/10"
                   : "text-neutral-500 hover:text-emerald-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
               } ${!isLoggedIn ? "opacity-50 cursor-not-allowed" : ""}`}
-              aria-label="Reply"
+              aria-label={`Reply to ${message.authorName}'s message`}
             >
               <svg
                 width="18"
@@ -270,7 +278,7 @@ export function MessageCard({
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-colors min-h-[44px] text-neutral-500 hover:text-emerald-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
                   !isLoggedIn ? "opacity-50 cursor-not-allowed" : ""
                 }`}
-                aria-label="Repost"
+                aria-label={`Repost ${message.authorName}'s message`}
               >
                 <svg
                   width="18"
