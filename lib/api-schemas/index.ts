@@ -44,6 +44,7 @@ import { notificationsContract } from "./notifications";
 import { notifyAdminContract } from "./notify-admin";
 import { pairContract } from "./pair";
 import { profileContract } from "./profile";
+import { promptTemplatesContract } from "./prompt-templates";
 import { questionsContract } from "./questions";
 import { showcaseContract } from "./showcase";
 import { summerCohortContract } from "./summer-cohort";
@@ -80,6 +81,7 @@ export const apiContract = c.router({
   notifyAdmin: notifyAdminContract,
   pair: pairContract,
   profile: profileContract,
+  promptTemplates: promptTemplatesContract,
   questions: questionsContract,
   showcase: showcaseContract,
   summerCohort: summerCohortContract,
