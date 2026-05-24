@@ -122,7 +122,7 @@ describe('Rate Limiting', () => {
     it('should have oauthCallback configuration', () => {
       expect(rateLimitConfigs.oauthCallback).toBeDefined();
       expect(rateLimitConfigs.oauthCallback.windowMs).toBe(15 * 60 * 1000);
-      expect(rateLimitConfigs.oauthCallback.maxRequests).toBe(10);
+      expect(rateLimitConfigs.oauthCallback.maxRequests).toBe(100);
     });
 
     it('should have webhook configuration', () => {
