@@ -159,16 +159,25 @@ describe("useDiscordConnection", () => {
   });
 
   describe("handleOAuthError", () => {
+    // Copy lives in lib/oauth-errors.ts now; tests assert on stable
+    // sub-strings so wording tweaks don't churn the suite.
     it("sets specific message for not_member", () => {
       const { result } = renderHook(() => useDiscordConnection(USER));
       act(() => result.current.handleOAuthError("not_member"));
-      expect(result.current.error).toContain("Cursor Boston Discord");
+      expect(result.current.error).toContain("cursor-boston Discord");
     });
 
     it("falls back to generic message", () => {
       const { result } = renderHook(() => useDiscordConnection(USER));
       act(() => result.current.handleOAuthError("anything_else"));
-      expect(result.current.error).toContain("Failed to connect Discord");
+      // Unknown codes route through describeOAuthError's `unknown` entry.
+      expect(result.current.error).toMatch(/connecting Discord|the repo/i);
+    });
+
+    it("uses rate-limit copy when the callback redirected with rate_limited", () => {
+      const { result } = renderHook(() => useDiscordConnection(USER));
+      act(() => result.current.handleOAuthError("rate_limited"));
+      expect(result.current.error).toMatch(/rate limit|too many/i);
     });
   });
 });

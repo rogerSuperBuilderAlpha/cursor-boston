@@ -160,10 +160,17 @@ describe("useGithubConnection", () => {
   });
 
   describe("handleOAuthError", () => {
+    // Copy lives in lib/oauth-errors.ts now.
     it("falls back to generic message", () => {
       const { result } = renderHook(() => useGithubConnection(USER));
       act(() => result.current.handleOAuthError("anything"));
-      expect(result.current.error).toContain("Failed to connect GitHub");
+      expect(result.current.error).toMatch(/connecting GitHub|the repo/i);
+    });
+
+    it("uses rate-limit copy when the callback redirected with rate_limited", () => {
+      const { result } = renderHook(() => useGithubConnection(USER));
+      act(() => result.current.handleOAuthError("rate_limited"));
+      expect(result.current.error).toMatch(/rate limit|too many/i);
     });
   });
 
