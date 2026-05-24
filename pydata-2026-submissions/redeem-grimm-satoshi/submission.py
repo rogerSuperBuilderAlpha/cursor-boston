@@ -38,41 +38,187 @@ def _():
 def _(mo):
     mo.md(
         """
-        <div style="position:relative; background:linear-gradient(135deg,#7f1d1d 0%,#1e3a8a 55%,#0f172a 100%);
-                    padding:1.4rem 1.8rem; border-radius:14px; color:white;
-                    overflow:hidden; box-shadow:0 10px 32px rgba(15,23,42,0.22);
-                    margin-bottom:1.2rem;">
-          <svg xmlns="http://www.w3.org/2000/svg"
-               style="position:absolute; right:-12px; top:-8px; width:140px; height:140px;
-                      opacity:0.16; transform:rotate(8deg);"
+        <style>
+          @keyframes wcSpinBall {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+          }
+          @keyframes wcDriftBall {
+            0%   { transform: translate(0,0) rotate(0deg); }
+            50%  { transform: translate(-6px,8px) rotate(180deg); }
+            100% { transform: translate(0,0) rotate(360deg); }
+          }
+          @keyframes wcFlagScroll {
+            from { transform: translateX(0); }
+            to   { transform: translateX(-50%); }
+          }
+          @keyframes wcLivePulse {
+            0%, 100% { box-shadow: 0 0 0 3px rgba(220,38,38,0.35); }
+            50%      { box-shadow: 0 0 0 7px rgba(220,38,38,0.0); }
+          }
+          @keyframes wcGradientShift {
+            0%   { background-position: 0% 50%; }
+            50%  { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
+          .wc-hero {
+            background: linear-gradient(135deg,
+              #7f1d1d 0%, #be123c 22%, #1e3a8a 55%, #0f172a 100%);
+            background-size: 200% 200%;
+            animation: wcGradientShift 18s ease-in-out infinite;
+          }
+          .wc-ball-big {
+            animation: wcDriftBall 22s ease-in-out infinite;
+            transform-origin: 100px 100px;
+          }
+          .wc-ball-small {
+            animation: wcSpinBall 14s linear infinite;
+            transform-origin: 30px 30px;
+          }
+          .wc-flag-row {
+            animation: wcFlagScroll 70s linear infinite;
+          }
+          .wc-live-dot { animation: wcLivePulse 2.2s ease-in-out infinite; }
+        </style>
+
+        <div class="wc-hero" style="position:relative; padding:2.6rem 2.4rem 0 2.4rem;
+                    border-radius:18px; color:white; overflow:hidden;
+                    box-shadow:0 20px 56px rgba(15,23,42,0.32);
+                    margin-bottom:1.4rem;">
+
+          <svg xmlns="http://www.w3.org/2000/svg" class="wc-ball-big"
+               style="position:absolute; right:-50px; top:-30px;
+                      width:280px; height:280px; opacity:0.13;"
                viewBox="0 0 200 200">
-            <circle cx="100" cy="100" r="68" fill="none" stroke="white" stroke-width="2.5"/>
-            <polygon points="100,42 124,60 114,90 86,90 76,60"
-                     fill="none" stroke="white" stroke-width="1.8"/>
-            <polygon points="124,60 154,80 146,112 114,90"
-                     fill="none" stroke="white" stroke-width="1.8"/>
-            <polygon points="76,60 46,80 54,112 86,90"
-                     fill="none" stroke="white" stroke-width="1.8"/>
-            <polygon points="114,90 146,112 130,148 100,138 86,138 70,148 54,112 86,90"
-                     fill="none" stroke="white" stroke-width="1.8"/>
+            <circle cx="100" cy="100" r="82" fill="none" stroke="white" stroke-width="2.6"/>
+            <polygon points="100,28 134,52 121,90 79,90 66,52"
+                     fill="none" stroke="white" stroke-width="2"/>
+            <polygon points="134,52 166,78 156,122 121,90"
+                     fill="none" stroke="white" stroke-width="2"/>
+            <polygon points="66,52 34,78 44,122 79,90"
+                     fill="none" stroke="white" stroke-width="2"/>
+            <polygon points="121,90 156,122 140,160 100,148 79,90"
+                     fill="none" stroke="white" stroke-width="2"/>
+            <polygon points="79,90 44,122 60,160 100,148"
+                     fill="none" stroke="white" stroke-width="2"/>
           </svg>
-          <div style="position:relative; z-index:2;">
-            <div style="display:inline-flex; align-items:center; gap:8px;
-                        background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.18);
-                        padding:4px 11px; border-radius:999px;
-                        font-size:0.65rem; font-weight:700; letter-spacing:2px;">
-              <span style="width:6px; height:6px; background:#dc2626;
-                           border-radius:50%; box-shadow:0 0 0 3px rgba(220,38,38,0.35);"></span>
-              FIFA WORLD CUP 26 · BOSTON HOST CITY
+
+          <svg xmlns="http://www.w3.org/2000/svg" class="wc-ball-small"
+               style="position:absolute; left:-12px; bottom:80px;
+                      width:60px; height:60px; opacity:0.18;"
+               viewBox="0 0 60 60">
+            <circle cx="30" cy="30" r="24" fill="none" stroke="white" stroke-width="1.8"/>
+            <polygon points="30,10 40,17 36,28 24,28 20,17"
+                     fill="white" opacity="0.4"/>
+          </svg>
+
+          <div style="position:relative; z-index:2; max-width:720px;">
+            <div style="display:inline-flex; align-items:center; gap:9px;
+                        background:rgba(255,255,255,0.13);
+                        border:1px solid rgba(255,255,255,0.22);
+                        backdrop-filter: blur(6px);
+                        padding:5px 13px; border-radius:999px;
+                        font-size:0.7rem; font-weight:700; letter-spacing:2.4px;">
+              <span class="wc-live-dot" style="width:7px; height:7px; background:#dc2626;
+                           border-radius:50%;"></span>
+              FIFA WORLD CUP 26 &nbsp;·&nbsp; BOSTON HOST CITY &nbsp;·&nbsp;
+              GILLETTE STADIUM
             </div>
-            <h1 style="margin:0.5rem 0 0.3rem 0; font-size:1.7rem; color:white;
-                       font-weight:800; letter-spacing:-0.4px; line-height:1.1;">
-              Your Boston World Cup match-day planner
+
+            <h1 style="margin:1rem 0 0.6rem 0; font-size:2.4rem; color:white;
+                       font-weight:900; letter-spacing:-0.7px; line-height:1.05;
+                       text-shadow:0 2px 14px rgba(0,0,0,0.3);">
+              Boston Stadium Isn't in Boston
             </h1>
-            <div style="font-size:0.94rem; color:rgba(255,255,255,0.88); line-height:1.5;
-                        max-width:660px;">
-              Pick your match below. Everything else — weather, transit timings,
-              hotels, restrooms, crime, and traffic safety — adapts to that match.
+
+            <div style="font-size:1.02rem; color:rgba(255,255,255,0.95);
+                        line-height:1.55; font-weight:400;">
+              An <b>intelligent match-day planner</b> for the 48 nations
+              and millions of fans arriving for FIFA World Cup 2026.
+              Gillette Stadium sits 30 miles south of downtown Boston —
+              this guide combines <b>live MBTA transit</b>,
+              <b>weather forecasts</b>, <b>OpenStreetMap</b> hotels and
+              restaurants (filtered to your home cuisine), and
+              <b>FBI public-safety data</b> into a single door-to-stadium
+              itinerary built around the match <i>you</i> picked and the
+              hotel <i>you</i> entered.
+            </div>
+
+            <div style="display:flex; gap:18px; flex-wrap:wrap;
+                        margin:1.2rem 0 0.4rem 0;">
+              <div style="display:flex; align-items:center; gap:7px;">
+                <span style="width:6px; height:6px; background:#16a34a;
+                             border-radius:50%; display:inline-block;"></span>
+                <span style="font-size:0.78rem; opacity:0.88;
+                             letter-spacing:0.4px;">7 Boston matches</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:7px;">
+                <span style="width:6px; height:6px; background:#fbbf24;
+                             border-radius:50%; display:inline-block;"></span>
+                <span style="font-size:0.78rem; opacity:0.88;
+                             letter-spacing:0.4px;">8 live data sources</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:7px;">
+                <span style="width:6px; height:6px; background:#06b6d4;
+                             border-radius:50%; display:inline-block;"></span>
+                <span style="font-size:0.78rem; opacity:0.88;
+                             letter-spacing:0.4px;">120+ Commuter Rail stations</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:7px;">
+                <span style="width:6px; height:6px; background:#a855f7;
+                             border-radius:50%; display:inline-block;"></span>
+                <span style="font-size:0.78rem; opacity:0.88;
+                             letter-spacing:0.4px;">24 home cuisines</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="position:relative; z-index:2; margin:1.6rem -2.4rem 0 -2.4rem;
+                      padding:0.85rem 0 0.95rem 0;
+                      background:rgba(0,0,0,0.22);
+                      border-top:1px solid rgba(255,255,255,0.12);">
+            <div style="font-size:0.6rem; opacity:0.7; letter-spacing:2.6px;
+                        font-weight:700; text-align:center; margin-bottom:8px;">
+              QUALIFIED &amp; CONTENDING NATIONS · FIFA WORLD CUP 26™
+            </div>
+            <div style="overflow:hidden;
+                        mask-image:linear-gradient(90deg, transparent, black 4%, black 96%, transparent);
+                        -webkit-mask-image:linear-gradient(90deg, transparent, black 4%, black 96%, transparent);">
+              <div class="wc-flag-row"
+                   style="display:inline-flex; gap:18px; font-size:1.7rem;
+                          white-space:nowrap; padding-left:18px;">
+                <span>🇺🇸</span><span>🇨🇦</span><span>🇲🇽</span>
+                <span>🇧🇷</span><span>🇦🇷</span><span>🇺🇾</span><span>🇨🇴</span>
+                <span>🇨🇱</span><span>🇪🇨</span><span>🇵🇾</span><span>🇵🇪</span>
+                <span>🇫🇷</span><span>🇩🇪</span><span>🇪🇸</span><span>🇮🇹</span>
+                <span>🇵🇹</span><span>🇬🇧</span><span>🇳🇱</span><span>🇧🇪</span>
+                <span>🇭🇷</span><span>🇨🇭</span><span>🇵🇱</span><span>🇩🇰</span>
+                <span>🇦🇹</span><span>🇹🇷</span><span>🇷🇸</span><span>🇸🇪</span>
+                <span>🇲🇦</span><span>🇪🇬</span><span>🇳🇬</span><span>🇸🇳</span>
+                <span>🇨🇲</span><span>🇨🇮</span><span>🇬🇭</span><span>🇹🇳</span>
+                <span>🇩🇿</span><span>🇿🇦</span>
+                <span>🇯🇵</span><span>🇰🇷</span><span>🇸🇦</span><span>🇮🇷</span>
+                <span>🇶🇦</span><span>🇦🇺</span><span>🇨🇳</span><span>🇮🇶</span>
+                <span>🇺🇿</span><span>🇯🇴</span>
+                <span>🇨🇷</span><span>🇵🇦</span><span>🇭🇳</span><span>🇸🇻</span>
+                <span>🇯🇲</span><span>🇳🇿</span>
+                <!-- duplicate for seamless looping -->
+                <span>🇺🇸</span><span>🇨🇦</span><span>🇲🇽</span>
+                <span>🇧🇷</span><span>🇦🇷</span><span>🇺🇾</span><span>🇨🇴</span>
+                <span>🇨🇱</span><span>🇪🇨</span><span>🇵🇾</span><span>🇵🇪</span>
+                <span>🇫🇷</span><span>🇩🇪</span><span>🇪🇸</span><span>🇮🇹</span>
+                <span>🇵🇹</span><span>🇬🇧</span><span>🇳🇱</span><span>🇧🇪</span>
+                <span>🇭🇷</span><span>🇨🇭</span><span>🇵🇱</span><span>🇩🇰</span>
+                <span>🇦🇹</span><span>🇹🇷</span><span>🇷🇸</span><span>🇸🇪</span>
+                <span>🇲🇦</span><span>🇪🇬</span><span>🇳🇬</span><span>🇸🇳</span>
+                <span>🇨🇲</span><span>🇨🇮</span><span>🇬🇭</span><span>🇹🇳</span>
+                <span>🇩🇿</span><span>🇿🇦</span>
+                <span>🇯🇵</span><span>🇰🇷</span><span>🇸🇦</span><span>🇮🇷</span>
+                <span>🇶🇦</span><span>🇦🇺</span><span>🇨🇳</span><span>🇮🇶</span>
+                <span>🇺🇿</span><span>🇯🇴</span>
+                <span>🇨🇷</span><span>🇵🇦</span><span>🇭🇳</span><span>🇸🇻</span>
+                <span>🇯🇲</span><span>🇳🇿</span>
+              </div>
             </div>
           </div>
         </div>
@@ -210,38 +356,6 @@ def _(mo):
         label="Distance units",
     )
 
-    home_country = mo.ui.dropdown(
-        options=[
-            "Any cuisine",
-            "Argentina (Argentinian)",
-            "Brazil (Brazilian)",
-            "China (Chinese)",
-            "Ethiopia (Ethiopian)",
-            "France (French)",
-            "Germany (German)",
-            "Greece (Greek)",
-            "India (Indian)",
-            "Ireland (Irish)",
-            "Italy (Italian)",
-            "Japan (Japanese)",
-            "Korea (Korean)",
-            "Lebanon (Lebanese)",
-            "Mexico (Mexican)",
-            "Morocco (Moroccan)",
-            "Nigeria (Nigerian)",
-            "Peru (Peruvian)",
-            "Portugal (Portuguese)",
-            "Spain (Spanish)",
-            "Thailand (Thai)",
-            "Turkey (Turkish)",
-            "United Kingdom (British)",
-            "United States (American)",
-            "Vietnam (Vietnamese)",
-        ],
-        value="Any cuisine",
-        label="Home country (for cuisine matching)",
-    )
-
     _heading = mo.md(
         """
         <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
@@ -259,25 +373,19 @@ def _(mo):
         <div style="color:#64748b; font-size:0.88rem; margin:0 0 8px 36px;">
           Enter your hotel, neighborhood, or address. We'll find your closest
           Commuter Rail station, calculate walking and driving times, and
-          build your full door-to-stadium-to-door itinerary. Optionally pick
-          your home country to surface restaurants serving your traditional
-          cuisine on the Places map.
+          build your full door-to-stadium-to-door itinerary.
         </div>
         """
     )
 
     mo.callout(
         mo.vstack(
-            [
-                _heading,
-                location_input,
-                mo.hstack([unit_toggle, home_country], justify="start", gap=1.5),
-            ],
+            [_heading, location_input, unit_toggle],
             gap=0.4,
         ),
         kind="neutral",
     )
-    return home_country, location_input, unit_toggle
+    return location_input, unit_toggle
 
 
 @app.cell(hide_code=True)
@@ -495,6 +603,8 @@ def _(mo, requests, selected_match, starting_point, unit_toggle):
                 "lat": _lat,
                 "lon": _lon,
                 "id": _key,
+                "address": _attrs.get("address") or "",
+                "municipality": _attrs.get("municipality") or "",
             })
     except Exception:
         pass
@@ -502,9 +612,15 @@ def _(mo, requests, selected_match, starting_point, unit_toggle):
     # Fallback to the Foxboro Line if MBTA API is unreachable.
     if not _all_cr_stations:
         _all_cr_stations = [
-            {"name": "South Station",  "lat": 42.3522, "lon": -71.0552, "id": "place-sstat"},
-            {"name": "Back Bay",       "lat": 42.3479, "lon": -71.0760, "id": "place-bbsta"},
-            {"name": "Foxboro",        "lat": 42.0664, "lon": -71.2540, "id": "place-fbsta"},
+            {"name": "South Station",  "lat": 42.3522, "lon": -71.0552,
+             "id": "place-sstat", "address": "700 Atlantic Ave, Boston, MA 02110",
+             "municipality": "Boston"},
+            {"name": "Back Bay",       "lat": 42.3479, "lon": -71.0760,
+             "id": "place-bbsta", "address": "145 Dartmouth St, Boston, MA 02116",
+             "municipality": "Boston"},
+            {"name": "Foxboro",        "lat": 42.0664, "lon": -71.2540,
+             "id": "place-fbsta", "address": "1 Patriot Place, Foxborough, MA 02035",
+             "municipality": "Foxborough"},
         ]
 
     # Closest CR station to the user, any line.
@@ -518,6 +634,105 @@ def _(mo, requests, selected_match, starting_point, unit_toggle):
         key=lambda x: x[0],
     )
     _dist_km, _closest = _scored[0]
+
+    # MBTA's API leaves `address` blank for most stops. We curate the major
+    # match-day-relevant stations with real principal-entrance addresses,
+    # and fall back to a Nominatim reverse-geocode for anything else.
+    _STATION_ADDRESSES = {
+        "South Station":       "700 Atlantic Ave, Boston, MA 02110",
+        "Back Bay":            "145 Dartmouth St, Boston, MA 02116",
+        "North Station":       "100 Legends Way, Boston, MA 02114",
+        "Ruggles":             "1090 Tremont St, Boston, MA 02120",
+        "Forest Hills":        "3850 Washington St, Boston, MA 02130",
+        "Hyde Park":           "1234 Hyde Park Ave, Boston, MA 02136",
+        "Readville":           "1700 Hyde Park Ave, Boston, MA 02136",
+        "Endicott":            "6 Endicott St, Dedham, MA 02026",
+        "Dedham Corp Center":  "130 Eastern Ave, Dedham, MA 02026",
+        "Norwood Depot":       "16 Broadway, Norwood, MA 02062",
+        "Norwood Central":     "188 Broadway, Norwood, MA 02062",
+        "Walpole":             "1 East St, Walpole, MA 02081",
+        "Norfolk":             "161 Main St, Norfolk, MA 02056",
+        "Franklin":            "60 Depot St, Franklin, MA 02038",
+        "Forge Park/495":      "7 Forge Park East, Franklin, MA 02038",
+        "Foxboro":             "1 Patriot Place, Foxborough, MA 02035",
+        "Brockton":            "7 Commercial St, Brockton, MA 02302",
+        "Campello":            "600 Main St, Brockton, MA 02301",
+        "Bridgewater":         "187 Broad St, Bridgewater, MA 02324",
+        "Stoughton":           "2 Wyman St, Stoughton, MA 02072",
+        "Sharon":              "60 Depot St, Sharon, MA 02067",
+        "Mansfield":           "6 Crocker St, Mansfield, MA 02048",
+        "Attleboro":           "12 South Main St, Attleboro, MA 02703",
+        "Quincy Center":       "1245 Hancock St, Quincy, MA 02169",
+        "Braintree":           "197 Ivory St, Braintree, MA 02184",
+        "Worcester":           "2 Washington Sq, Worcester, MA 01604",
+        "Framingham":          "417 Waverly St, Framingham, MA 01702",
+        "Natick Center":       "1 Washington St, Natick, MA 01760",
+        "Wellesley Square":    "20 Washington St, Wellesley, MA 02482",
+        "Lowell":              "101 Thorndike St, Lowell, MA 01852",
+        "Salem":               "252 Bridge St, Salem, MA 01970",
+        "Lynn":                "Market & Carroll Pl, Lynn, MA 01901",
+        "Anderson/Woburn":     "100 Atlantic Ave, Woburn, MA 01801",
+        "Porter":              "1 Porter Sq, Cambridge, MA 02140",
+        "Beverly":             "10 Park St, Beverly, MA 01915",
+    }
+
+    # Resolve a display address: curated → MBTA-supplied → Nominatim reverse.
+    _resolved_address = _STATION_ADDRESSES.get(_closest["name"]) or _closest.get("address")
+    if not _resolved_address:
+        try:
+            _rev = requests.get(
+                "https://nominatim.openstreetmap.org/reverse",
+                params={
+                    "lat": _closest["lat"], "lon": _closest["lon"],
+                    "format": "json", "addressdetails": 1, "zoom": 18,
+                },
+                headers={
+                    "User-Agent": (
+                        "pydata-2026-boston-safety-guide/1.0 "
+                        "(educational; marimo notebook)"
+                    )
+                },
+                timeout=8,
+            )
+            if _rev.ok:
+                _ra = (_rev.json().get("address") or {})
+                _street_parts = []
+                if _ra.get("house_number"):
+                    _street_parts.append(_ra["house_number"])
+                if _ra.get("road"):
+                    _street_parts.append(_ra["road"])
+                _street = " ".join(_street_parts)
+                _city = (
+                    _ra.get("city")
+                    or _ra.get("town")
+                    or _ra.get("village")
+                    or _ra.get("suburb")
+                    or _closest.get("municipality") or ""
+                )
+                _postcode = _ra.get("postcode", "")
+                _bits = [b for b in [
+                    _street,
+                    f"{_city}, MA{(' ' + _postcode) if _postcode else ''}".strip(", "),
+                ] if b]
+                _resolved_address = ", ".join(_bits) or None
+        except Exception:
+            pass
+
+    if not _resolved_address:
+        _resolved_address = (
+            f"{_closest.get('municipality', '')}, MA"
+            if _closest.get("municipality") else "Massachusetts"
+        )
+
+    # Append " Station" if the name doesn't already include a transit suffix.
+    _name = _closest["name"]
+    _full_station_name = (
+        _name if any(
+            kw in _name for kw in ("Station", "Junction", "Center", "Sq")
+        ) else f"{_name} Station"
+    )
+    _closest["display_name"] = _full_station_name
+    _closest["display_address"] = _resolved_address
 
     # What routes (CR + bus) serve the closest station?
     _cr_at_closest = []
@@ -712,7 +927,7 @@ def _(mo, requests, selected_match, starting_point, unit_toggle):
                     padding:0.9rem 1.1rem;">
           <div style="font-size:0.65rem; font-weight:700; letter-spacing:1.3px;
                       color:#64748b; text-transform:uppercase; margin-bottom:6px;">
-            MBTA buses serving {_closest["name"]}
+            MBTA buses serving {_closest["display_name"]}
           </div>
           <div>{_bus_chips}</div>
         </div>
@@ -735,7 +950,7 @@ def _(mo, requests, selected_match, starting_point, unit_toggle):
             Check <b>{_ag_short}</b> ({_ag_long}) at
             <a href="https://{_ag_url}" target="_blank"
                style="color:#92400e; font-weight:600;">{_ag_url}</a>
-            for local routes that connect you to {_closest["name"]}.
+            for local routes that connect you to {_closest["display_name"]}.
           </div>
         </div>
         """
@@ -795,9 +1010,14 @@ def _(mo, requests, selected_match, starting_point, unit_toggle):
           </div>
           <div style="font-size:1.05rem; color:#0f172a; font-weight:700;
                       margin-top:4px;">
-            {_closest["name"]}
+            {_closest["display_name"]}
           </div>
-          <div style="font-size:0.78rem; color:#64748b; margin-top:2px;">
+          <div style="font-size:0.78rem; color:#475569; margin-top:3px;
+                      line-height:1.35;">
+            {_closest["display_address"]}
+          </div>
+          <div style="font-size:0.78rem; color:#0891b2; font-weight:600;
+                      margin-top:4px;">
             {_fmt_dist(_dist_km)} away
           </div>
         </div>
@@ -881,7 +1101,7 @@ def _(mo, requests, selected_match, starting_point, unit_toggle):
             <div>
               <div style="font-size:0.65rem; opacity:0.75;
                           text-transform:uppercase; letter-spacing:1px;">
-                Arrive {_closest["name"]}
+                Arrive {_closest["display_name"]}
               </div>
               <div style="font-size:1.18rem; font-weight:700; margin-top:3px;">
                 {_fmt_t(_arrive_station_dt)}
@@ -919,7 +1139,7 @@ def _(mo, requests, selected_match, starting_point, unit_toggle):
                            margin-right:8px;">Return cutoff</span>
               <span style="font-size:1.05rem; font-weight:700;">{_fmt_t(_return_cutoff_dt)}</span>
               <span style="font-size:0.75rem; opacity:0.75; margin-left:6px;">
-                last train back to {_closest["name"]}
+                last train back to {_closest["display_name"]}
               </span>
             </div>
             <div style="font-size:0.74rem; opacity:0.7;">
@@ -1558,74 +1778,10 @@ def _(city, df, fallback_note, mo, selected_match, used_year):
 
 
 @app.cell(hide_code=True)
-def _(mo, selected_match):
-    mo.stop(selected_match is None)
-    mo.md(
-        """
-        <div style="border-left:4px solid #DA291C; padding:2px 0 2px 14px;
-                    margin:2rem 0 0.6rem 0;">
-          <div style="font-size:1.35rem; font-weight:700; color:#0f172a;
-                      letter-spacing:-0.2px;">Where crashes cluster</div>
-          <div style="font-size:0.92rem; color:#64748b; margin-top:2px;">
-            Red = high crash density. Markers show serious and fatal crashes.
-          </div>
-        </div>
-        """
-    )
-    return
-
-
-@app.cell(hide_code=True)
-def _(HeatMap, MarkerCluster, df, folium, mo, selected_match):
-    mo.stop(selected_match is None)
-    mo.stop(df.empty)
-
-    center = [df["lat"].mean(), df["lon"].mean()]
-    m = folium.Map(location=center, zoom_start=13, tiles="CartoDB positron")
-
-    HeatMap(
-        df[["lat", "lon"]].values.tolist(),
-        radius=12,
-        blur=18,
-        min_opacity=0.35,
-        name="Crash density (heatmap)",
-    ).add_to(m)
-
-    serious_mask = df["CRASH_SEVERITY_DESCR"].isin(
-        ["Fatal injury", "Non-fatal injury - Suspected serious injury"]
-    )
-    serious = df[serious_mask]
-
-    if not serious.empty:
-        cluster = MarkerCluster(name="Serious & fatal crashes").add_to(m)
-        for _, row in serious.iterrows():
-            color = (
-                "red"
-                if row["CRASH_SEVERITY_DESCR"] == "Fatal injury"
-                else "orange"
-            )
-            popup_html = (
-                f"<b>{row.get('CRASH_SEVERITY_DESCR','')}</b><br>"
-                f"{row.get('CRASH_DATETIME','')}<br>"
-                f"Vehicles: {row.get('NUMB_VEHC','?')}<br>"
-                f"Crash #: {row.get('CRASH_NUMB','')}"
-            )
-            folium.CircleMarker(
-                location=[row["lat"], row["lon"]],
-                radius=5,
-                color=color,
-                fill=True,
-                fill_opacity=0.85,
-                popup=folium.Popup(popup_html, max_width=260),
-            ).add_to(cluster)
-
-    folium.LayerControl(collapsed=False).add_to(m)
-    m
-    return (m,)
-
-
-@app.cell(hide_code=True)
 def _(df, mo, selected_match):
+    # Compute-only cell: derives top_roads for the conclusion's
+    # "Where the risk concentrates" callout but renders no visible UI
+    # (the crash data section was slimmed to a single stats card).
     mo.stop(selected_match is None)
     mo.stop(df.empty)
 
@@ -1635,85 +1791,11 @@ def _(df, mo, selected_match):
         if c in df.columns
     ]
     if not street_cols:
-        out = mo.md(
-            "_(No street/roadway field in this year's schema — skipping the "
-            "top-roads table.)_"
-        )
         top_roads = []
     else:
         col = street_cols[0]
-        top_roads_series = df[col].dropna().value_counts().head(10)
-        top_roads = top_roads_series.index.tolist()
-        top_roads_df = (
-            top_roads_series.rename_axis("Roadway / corridor")
-            .reset_index(name="Crash count")
-        )
-        out = mo.vstack(
-            [
-                mo.md(
-                    f"""
-                    <div style="border-left:4px solid #ED8B00; padding:2px 0 2px 14px;
-                                margin:2rem 0 0.6rem 0;">
-                      <div style="font-size:1.35rem; font-weight:700; color:#0f172a;
-                                  letter-spacing:-0.2px;">Top 10 roads by crash count</div>
-                      <div style="font-size:0.88rem; color:#64748b; margin-top:2px;">
-                        These corridors generate the most crashes in this area —
-                        if your hotel, rental, or planned route sits on one of them,
-                        consider an alternative.
-                        <span style="opacity:0.6;">(field: <code>{col}</code>)</span>
-                      </div>
-                    </div>
-                    """
-                ),
-                top_roads_df,
-            ],
-            gap=0.4,
-        )
-    out
+        top_roads = df[col].dropna().value_counts().head(10).index.tolist()
     return (top_roads,)
-
-
-@app.cell(hide_code=True)
-def _(alt, df, mo, selected_match):
-    mo.stop(selected_match is None)
-    mo.stop(df.empty or "CRASH_DATETIME" not in df.columns)
-    mo.stop(not df["CRASH_DATETIME"].notna().any())
-
-    hourly = (
-        df.assign(hour=df["CRASH_DATETIME"].dt.hour)
-        .groupby("hour")
-        .size()
-        .reset_index(name="crashes")
-    )
-    bar = (
-        alt.Chart(hourly)
-        .mark_bar(color="#1e3a8a")
-        .encode(
-            x=alt.X("hour:O", title="Hour of day (0–23)"),
-            y=alt.Y("crashes:Q", title="Crashes"),
-            tooltip=["hour", "crashes"],
-        )
-        .properties(height=240, title="When during the day do crashes happen?")
-    )
-    mo.vstack(
-        [
-            mo.md(
-                """
-                <div style="border-left:4px solid #ED8B00; padding:2px 0 2px 14px;
-                            margin:2rem 0 0.6rem 0;">
-                  <div style="font-size:1.35rem; font-weight:700; color:#0f172a;
-                              letter-spacing:-0.2px;">When crashes happen</div>
-                  <div style="font-size:0.92rem; color:#64748b; margin-top:2px;">
-                    Hourly distribution of crashes — use this to plan travel times.
-                  </div>
-                </div>
-                """
-            ),
-            mo.ui.altair_chart(bar),
-        ],
-        gap=0.4,
-    )
-    return (hourly,)
 
 
 @app.cell(hide_code=True)
@@ -2303,9 +2385,12 @@ def _(mo, selected_match):
             restrooms</b> that put you a train ride from the stadium. Each
             marker shows a price tier (<b>$</b> cheap → <b>$$$$</b> luxury,
             <b>Free</b> for parks and restrooms) <i>estimated</i> from the
-            OpenStreetMap category and star rating — OSM doesn't ship real
-            nightly rates, so check the website link in each popup for
-            actual prices.
+            OpenStreetMap category and star rating.
+            <br/><br/>
+            Visiting from abroad? Pick your home country in the
+            <b>"Home cuisine"</b> dropdown below and the restaurant markers
+            will filter to places serving your traditional dishes — useful
+            for the many diverse fans coming to Boston.
           </div>
         </div>
         """
@@ -2349,9 +2434,47 @@ def _(mo, selected_match):
         label="Area",
     )
 
-    _controls = mo.hstack([poi_area, poi_categories], justify="start", gap=1.0)
+    home_country = mo.ui.dropdown(
+        options=[
+            "Any cuisine",
+            "Argentina (Argentinian)",
+            "Brazil (Brazilian)",
+            "China (Chinese)",
+            "Ethiopia (Ethiopian)",
+            "France (French)",
+            "Germany (German)",
+            "Greece (Greek)",
+            "India (Indian)",
+            "Ireland (Irish)",
+            "Italy (Italian)",
+            "Japan (Japanese)",
+            "Korea (Korean)",
+            "Lebanon (Lebanese)",
+            "Mexico (Mexican)",
+            "Morocco (Moroccan)",
+            "Nigeria (Nigerian)",
+            "Peru (Peruvian)",
+            "Portugal (Portuguese)",
+            "Spain (Spanish)",
+            "Thailand (Thai)",
+            "Turkey (Turkish)",
+            "United Kingdom (British)",
+            "United States (American)",
+            "Vietnam (Vietnamese)",
+        ],
+        value="Any cuisine",
+        label="Home cuisine (filters restaurants)",
+    )
+
+    _controls = mo.vstack(
+        [
+            mo.hstack([poi_area, poi_categories], justify="start", gap=1.0),
+            home_country,
+        ],
+        gap=0.4,
+    )
     mo.callout(_controls, kind="neutral")
-    return poi_area, poi_categories
+    return home_country, poi_area, poi_categories
 
 
 @app.cell(hide_code=True)
@@ -2368,6 +2491,34 @@ def _(folium, home_country, mo, poi_area, poi_categories, requests, selected_mat
     # Map the user's home country selection to an OSM cuisine substring.
     # Overpass regex match `~` matches partial strings so values like
     # "mexican;tex-mex" still hit on "mexican".
+    _COUNTRY_TO_FLAG = {
+        "Argentina (Argentinian)":   "🇦🇷",
+        "Brazil (Brazilian)":        "🇧🇷",
+        "China (Chinese)":           "🇨🇳",
+        "Ethiopia (Ethiopian)":      "🇪🇹",
+        "France (French)":           "🇫🇷",
+        "Germany (German)":          "🇩🇪",
+        "Greece (Greek)":            "🇬🇷",
+        "India (Indian)":            "🇮🇳",
+        "Ireland (Irish)":           "🇮🇪",
+        "Italy (Italian)":           "🇮🇹",
+        "Japan (Japanese)":          "🇯🇵",
+        "Korea (Korean)":            "🇰🇷",
+        "Lebanon (Lebanese)":        "🇱🇧",
+        "Mexico (Mexican)":          "🇲🇽",
+        "Morocco (Moroccan)":        "🇲🇦",
+        "Nigeria (Nigerian)":        "🇳🇬",
+        "Peru (Peruvian)":           "🇵🇪",
+        "Portugal (Portuguese)":     "🇵🇹",
+        "Spain (Spanish)":           "🇪🇸",
+        "Thailand (Thai)":           "🇹🇭",
+        "Turkey (Turkish)":          "🇹🇷",
+        "United Kingdom (British)":  "🇬🇧",
+        "United States (American)":  "🇺🇸",
+        "Vietnam (Vietnamese)":      "🇻🇳",
+    }
+    _cuisine_flag = _COUNTRY_TO_FLAG.get(home_country.value, "")
+
     _COUNTRY_TO_CUISINE = {
         "Argentina (Argentinian)": "argentin",
         "Brazil (Brazilian)":      "brazilian",
@@ -2470,25 +2621,15 @@ def _(folium, home_country, mo, poi_area, poi_categories, requests, selected_mat
     _bbox = _area_cfg["bbox"]
     _bbox_str = f"({_bbox[0]},{_bbox[1]},{_bbox[2]},{_bbox[3]})"
 
+    # Always fetch the full category (no cuisine restriction in the query).
+    # Cuisine-matching restaurants are flagged in-place via the country flag
+    # marker, while non-matching restaurants stay as normal dots — visitors
+    # see EVERYTHING but their home-cuisine spots stand out instantly.
     _parts = []
     for _cat in poi_categories.value:
         for _key, _vals in _CAT_TAGS.get(_cat, {}).items():
             for _v in _vals:
-                # If the user picked a home country, filter ONLY the
-                # restaurant / fast_food / cafe queries by cuisine.
-                # Hotels, bars, parks, restrooms always pass through.
-                if (
-                    _cuisine_regex
-                    and _cat == "Restaurants & food"
-                    and _key == "amenity"
-                    and _v in ("restaurant", "fast_food", "cafe")
-                ):
-                    _parts.append(
-                        f'nwr["{_key}"="{_v}"]'
-                        f'["cuisine"~"{_cuisine_regex}",i]{_bbox_str};'
-                    )
-                else:
-                    _parts.append(f'nwr["{_key}"="{_v}"]{_bbox_str};')
+                _parts.append(f'nwr["{_key}"="{_v}"]{_bbox_str};')
 
     _query = (
         "[out:json][timeout:30];\n"
@@ -2706,10 +2847,26 @@ def _(folium, home_country, mo, poi_area, poi_categories, requests, selected_mat
     # Limit total markers so labeled pills don't overwhelm the map.
     _MAX_PER_CAT = 25
 
+    # Sort elements so restaurants matching the user's home cuisine
+    # bubble to the front — guarantees they make the per-category cap
+    # even in dense areas with hundreds of restaurants.
+    def _matches_cuisine(el):
+        if not _cuisine_regex:
+            return False
+        cuisine = (el.get("tags", {}).get("cuisine") or "").lower()
+        if not cuisine:
+            return False
+        return any(t.strip() in cuisine for t in _cuisine_regex.split("|"))
+
+    _elements_sorted = sorted(
+        _data.get("elements", []),
+        key=lambda el: 0 if _matches_cuisine(el) else 1,
+    )
+
     # POI markers from Overpass — labeled pills (dot + price + name).
     _count_by_cat = {}
     _count_by_price = {}
-    for _el in _data.get("elements", []):
+    for _el in _elements_sorted:
         _tags = _el.get("tags", {}) or {}
         _name = _tags.get("name")
         _lat = _el.get("lat") or (_el.get("center") or {}).get("lat")
@@ -2791,6 +2948,39 @@ def _(folium, home_country, mo, poi_area, poi_categories, requests, selected_mat
         _popup.append('</div></div>')
 
         # Labeled pill marker: dot + price badge + name.
+        # Restaurant markers get a country flag when their `cuisine` tag
+        # matches the user's home cuisine — non-matching restaurants stay
+        # as normal dots, so the map shows EVERYTHING and matching spots
+        # stand out instantly.
+        _restaurant_cuisine = (_tags.get("cuisine") or "").lower()
+        _matches_home_cuisine = bool(
+            _cuisine_regex
+            and _restaurant_cuisine
+            and any(
+                _term.strip() in _restaurant_cuisine
+                for _term in _cuisine_regex.split("|")
+            )
+        )
+        _show_flag = (
+            _cat == "Restaurants & food"
+            and _cuisine_flag
+            and _matches_home_cuisine
+        )
+        if _show_flag:
+            _leader = (
+                f'<span style="font-size:15px; line-height:1; '
+                'flex-shrink:0;">'
+                f'{_cuisine_flag}'
+                "</span>"
+            )
+        else:
+            _leader = (
+                f'<span style="display:inline-block; width:9px; height:9px;'
+                f' background:{_color}; border-radius:50%;'
+                ' border:1.5px solid white; box-shadow:0 0 0 1px '
+                f'{_color}; flex-shrink:0;"></span>'
+            )
+
         _label_html = (
             '<div style="display:inline-flex; align-items:center; gap:5px;'
             ' background:rgba(255,255,255,0.97); padding:2px 8px 2px 4px;'
@@ -2798,10 +2988,7 @@ def _(folium, home_country, mo, poi_area, poi_categories, requests, selected_mat
             ' box-shadow:0 2px 5px rgba(15,23,42,0.12);'
             ' font-family:sans-serif; font-size:11px; white-space:nowrap;'
             ' cursor:pointer;">'
-            f'<span style="display:inline-block; width:9px; height:9px;'
-            f' background:{_color}; border-radius:50%;'
-            ' border:1.5px solid white; box-shadow:0 0 0 1px '
-            f'{_color}; flex-shrink:0;"></span>'
+            f'{_leader}'
             f'<span style="background:{_price_color}; color:white;'
             f' padding:1px 6px; border-radius:999px; font-weight:700;'
             f' font-size:10px; letter-spacing:0.2px;">{_price}</span>'
@@ -2874,12 +3061,35 @@ def _(folium, home_country, mo, poi_area, poi_categories, requests, selected_mat
         for _t in ["$", "$$", "$$$", "$$$$", "Free", "—"]
     )
 
+    # Cuisine filter row in legend — only shows when user picked a country.
+    # The country flag emoji visually marks restaurant markers across the map.
+    if home_country.value and home_country.value != "Any cuisine":
+        _cuisine_section = f"""
+        <div style="font-weight:700; font-size:10px; color:#64748b;
+                    letter-spacing:1.2px; text-transform:uppercase;
+                    margin:10px 0 4px 0;">Cuisine filter</div>
+        <div style="display:flex; align-items:center; margin:3px 0;">
+          <span style="font-size:16px; line-height:1; margin-right:8px;">
+            {_cuisine_flag}
+          </span>
+          <span style="font-size:11.5px; color:#1f2937;">
+            {home_country.value}
+          </span>
+        </div>
+        <div style="font-size:10px; color:#94a3b8;
+                    margin:2px 0 0 24px; line-height:1.35;">
+          Flag pins replace dots on matching restaurants.
+        </div>
+        """
+    else:
+        _cuisine_section = ""
+
     _legend_html = f"""
     <div style="position:absolute; bottom:18px; right:18px; z-index:9999;
                 background:rgba(255,255,255,0.98); padding:10px 14px;
                 border-radius:10px; border:1px solid #e5e7eb;
                 box-shadow:0 4px 14px rgba(15,23,42,0.12);
-                font-family:sans-serif; max-width:230px;">
+                font-family:sans-serif; max-width:240px;">
       <div style="font-weight:700; font-size:10px; color:#64748b;
                   letter-spacing:1.2px; text-transform:uppercase;
                   margin-bottom:4px;">Category</div>
@@ -2888,6 +3098,7 @@ def _(folium, home_country, mo, poi_area, poi_categories, requests, selected_mat
                   letter-spacing:1.2px; text-transform:uppercase;
                   margin:10px 0 4px 0;">Estimated price</div>
       {_legend_prices}
+      {_cuisine_section}
       <div style="font-weight:700; font-size:10px; color:#64748b;
                   letter-spacing:1.2px; text-transform:uppercase;
                   margin:10px 0 4px 0;">Reference</div>
