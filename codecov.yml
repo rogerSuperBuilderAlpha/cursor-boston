@@ -1,0 +1,82 @@
+# Codecov configuration for cursor-boston.
+#
+# Two things this file does:
+#
+# 1. Sets explicit project + patch coverage targets so every PR gets
+#    a meaningful Codecov status check. Without this file Codecov
+#    runs with the defaults ("auto" target, 1% threshold), which
+#    silently allows large regressions.
+#
+# 2. Tells Codecov where the report lives + what to ignore so the
+#    PR comment is clean (no test files, no generated artifacts).
+#
+# Reference numbers (2026-05-23 develop tip):
+#   - Project coverage: ~83% (Codecov strict hits/lines)
+#   - Jest internal:    ~90% stmts / ~81% branches (counts partials as hits)
+
+coverage:
+  status:
+    project:
+      default:
+        # Target is "auto" — we ratchet against the parent commit
+        # rather than a hard number so the floor moves with us.
+        target: auto
+        # Allow tiny regressions (0.2%) so noise from rounding /
+        # smoke-import order doesn't fail every PR.
+        threshold: 0.2%
+        # Don't fail before Codecov has processed both the PR and
+        # base commit; flaky uploads otherwise red-X the check.
+        if_ci_failed: error
+        only_pulls: false
+    patch:
+      default:
+        # New / changed lines must be at least 80% covered.
+        # Matches the spirit of the OpenSSF Gold attestation (90/80
+        # statements/branches) while staying achievable for small
+        # config-only PRs.
+        target: 80%
+        threshold: 0%
+        if_ci_failed: error
+
+# PR comment: only attach if coverage changed or a check failed.
+# Keeps the noise down on docs-only / .md PRs.
+comment:
+  layout: "header, diff, flags, components, files"
+  behavior: default
+  require_changes: true
+  require_base: false
+  require_head: true
+
+# Files Codecov shouldn't blame coverage on.
+ignore:
+  - "**/__tests__/**"
+  - "**/__mocks__/**"
+  - "**/*.test.ts"
+  - "**/*.test.tsx"
+  - "**/*.d.ts"
+  - "**/node_modules/**"
+  - "coverage/**"
+  - ".next/**"
+  - "scripts/**"      # one-off operational scripts; not product code
+  - "e2e/**"          # Playwright tests; not unit-tested code paths
+  - "fuzz/**"         # jazzer.js harnesses; coverage is reported separately
+
+# Component groupings show up in the PR comment so big regressions in
+# one area are obvious.
+component_management:
+  default_rules:
+    statuses:
+      - type: project
+        target: auto
+        threshold: 0.5%
+  individual_components:
+    - component_id: app
+      paths: [app/**]
+    - component_id: api
+      paths: [app/api/**]
+    - component_id: components
+      paths: [components/**]
+    - component_id: lib
+      paths: [lib/**]
+    - component_id: game
+      paths: [app/game/**, lib/game/**]
