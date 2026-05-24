@@ -26,28 +26,27 @@ permissions:
 
 jobs:
   fuzz:
-    name: Fuzz (${{ matrix.sanitizer }})
+    name: Fuzz
     runs-on: ubuntu-latest
     permissions:
       contents: read
       security-events: write
-    strategy:
-      fail-fast: false
-      matrix:
-        sanitizer: [address]
     steps:
+      # ClusterFuzzLite refuses sanitizers for JavaScript projects
+      # ("JavaScript projects cannot be fuzzed with sanitizers"). The
+      # build_fuzzers/run_fuzzers actions accept the parameter without
+      # complaining if it's the default "none". We omit it entirely so
+      # the action picks its own default.
       - name: Build fuzzers
         id: build
         uses: google/clusterfuzzlite/actions/build_fuzzers@884713a6c30a92e5e8544c39945cd7cb630abcd1 # v1
         with:
           language: javascript
-          sanitizer: ${{ matrix.sanitizer }}
 
       - name: Run fuzzers
         uses: google/clusterfuzzlite/actions/run_fuzzers@884713a6c30a92e5e8544c39945cd7cb630abcd1 # v1
         with:
           language: javascript
-          sanitizer: ${{ matrix.sanitizer }}
           # PR-mode: 600s of fuzzing on each target. Long enough to catch
           # regressions, short enough to stay within the PR latency
           # budget. The weekly batch run uses the same workflow with a
