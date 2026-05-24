@@ -112,12 +112,22 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// Noop fallback so consumers (and especially the renderHook-style unit
+// tests in __tests__/app/(auth)/profile/_hooks/) don't need to wrap
+// every renderHook call in <ToastProvider> just to satisfy a context
+// dependency. Production paths always render under the provider in
+// app/layout.tsx; the fallback only fires in tests + Storybook-like
+// shallow renders.
+const NOOP_TOAST: ToastContextValue = {
+  toast: () => undefined,
+  error: () => undefined,
+  success: () => undefined,
+  dismiss: () => undefined,
+};
+
 export function useToast(): ToastContextValue {
   const ctx = useContext(ToastContext);
-  if (!ctx) {
-    throw new Error("useToast must be used inside <ToastProvider>");
-  }
-  return ctx;
+  return ctx ?? NOOP_TOAST;
 }
 
 interface ToasterProps {
