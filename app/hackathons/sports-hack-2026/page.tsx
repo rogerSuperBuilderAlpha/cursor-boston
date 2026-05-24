@@ -26,6 +26,11 @@ type LeaderboardEntry = {
   rank: number;
   status?: "confirmed" | "waitlisted";
   creditEligible: boolean;
+  /** Three-tier ranking model fields (sports-hack-2026). Optional for back-compat. */
+  tier?: "A" | "B" | "C" | null;
+  inAttendanceBand?: boolean;
+  inCreditBand?: boolean;
+  hasSubmission?: boolean;
 };
 
 type LeaderboardResponse = {
@@ -67,8 +72,13 @@ export default function SportsHack2026LandingPage() {
     void load();
   }, [load]);
 
-  const confirmedCount = data
-    ? data.entries.filter((e) => (e.status ?? (e.creditEligible ? "confirmed" : "waitlisted")) === "confirmed").length
+  // "Credit seats locked" — under the three-tier model this is the count of
+  // entries inside the top-119 credit band that ALSO have an open submission PR.
+  // creditEligible already encodes `inCreditBand && hasSubmission` on the
+  // server side, so use it directly. Pre-event this is zero (nobody has
+  // opened a submission PR yet) and ramps as PRs land on event day.
+  const creditLockedCount = data
+    ? data.entries.filter((e) => e.creditEligible).length
     : null;
   const isAdmin = Boolean((userProfile as { isAdmin?: boolean } | null)?.isAdmin);
 
@@ -119,8 +129,8 @@ export default function SportsHack2026LandingPage() {
               <FactCard
                 label="Credit seats locked"
                 value={
-                  confirmedCount != null && data
-                    ? `${confirmedCount}/${SPORTS_HACK_2026_CAPACITY} (Cursor credit link)`
+                  creditLockedCount != null && data
+                    ? `${creditLockedCount}/${SPORTS_HACK_2026_CAPACITY} (in band + submission opened)`
                     : `Top ${SPORTS_HACK_2026_CAPACITY} get Cursor credit`
                 }
               />

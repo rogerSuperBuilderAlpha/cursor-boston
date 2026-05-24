@@ -29,6 +29,12 @@ jest.mock("@/lib/github-recent-merged-prs", () => ({
   getGithubRepoPair: jest.fn(() => ({ owner: "test", repo: "repo" })),
 }));
 
+jest.mock("@/lib/sports-hack-2026-submission-prs", () => ({
+  fetchSportsHack2026SubmissionAuthors: jest.fn(async () => new Set<string>()),
+  SPORTS_HACK_2026_SUBMISSION_AUTHORS_CACHE_TAG:
+    "sports-hack-2026-submission-authors",
+}));
+
 jest.mock("@/lib/summer-cohort", () => ({
   SUMMER_COHORT_COLLECTION: "summer_cohort_applications",
 }));
@@ -377,6 +383,55 @@ describe("buildLeaderboardPayload — three-tier ranking (sports-hack-2026)", ()
     // set) for downstream consumers that want to know "did this person get
     // confirmed somehow" without caring about tier.
     expect(a.attendingConfirmed).toBe(true);
+  });
+
+  it("sets hasSubmission for github logins in the submission-authors set", async () => {
+    const subsMod = jest.requireMock("@/lib/sports-hack-2026-submission-prs");
+    subsMod.fetchSportsHack2026SubmissionAuthors = jest.fn(
+      async () => new Set<string>(["submitter"])
+    );
+    installDbMock({
+      signups: [
+        makeSignupDoc("submitter", {
+          attendingConfirmedAt: new Date("2026-05-20"),
+          attendingConfirmedBy: "user",
+        }),
+        makeSignupDoc("non-submitter", {
+          attendingConfirmedAt: new Date("2026-05-21"),
+          attendingConfirmedBy: "user",
+        }),
+      ],
+      users: [
+        {
+          exists: true,
+          id: "submitter",
+          data: () => ({
+            displayName: "submitter",
+            email: "submitter@test.com",
+            github: { login: "submitter" },
+          }),
+        },
+        {
+          exists: true,
+          id: "non-submitter",
+          data: () => ({
+            displayName: "non-submitter",
+            email: "non-submitter@test.com",
+            github: { login: "non-submitter" },
+          }),
+        },
+      ],
+    });
+
+    const payload = await buildLeaderboardPayload(SPORTS);
+    const s = payload.entries.find((e) => e.userId === "submitter")!;
+    const n = payload.entries.find((e) => e.userId === "non-submitter")!;
+    expect(s.hasSubmission).toBe(true);
+    expect(n.hasSubmission).toBe(false);
+    // Credit eligibility = inCreditBand && hasSubmission. Both are Tier A and
+    // inside the cap at small N, so only the submitter is credit-eligible.
+    expect(s.creditEligible).toBe(true);
+    expect(n.creditEligible).toBe(false);
   });
 
   it("freeze-model events ignore the three-tier fields", async () => {

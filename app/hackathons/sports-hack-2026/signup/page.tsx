@@ -86,6 +86,12 @@ type LeaderboardEntry = {
   attendingConfirmed?: boolean;
   attendingConfirmedAt?: string | null;
   attendanceRank?: number | null;
+  // Three-tier ranking model fields (sports-hack-2026). Optional for
+  // back-compat with old snapshots and freeze-model events.
+  tier?: "A" | "B" | "C" | null;
+  inAttendanceBand?: boolean;
+  inCreditBand?: boolean;
+  hasSubmission?: boolean;
 };
 
 type LeaderboardResponse = {
@@ -108,6 +114,10 @@ type LeaderboardResponse = {
     attendingConfirmed?: boolean;
     attendingConfirmedAt?: string | null;
     attendanceRank?: number | null;
+    tier?: "A" | "B" | "C" | null;
+    inAttendanceBand?: boolean;
+    inCreditBand?: boolean;
+    hasSubmission?: boolean;
   } | null;
 };
 

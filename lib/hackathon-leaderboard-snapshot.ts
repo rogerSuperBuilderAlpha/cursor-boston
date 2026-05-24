@@ -37,6 +37,7 @@ import {
 } from "@/lib/hackathon-event-signup";
 import { fetchMergedPrCountsForLogins } from "@/lib/github-merged-pr-count";
 import { getGithubRepoPair } from "@/lib/github-recent-merged-prs";
+import { fetchSportsHack2026SubmissionAuthors } from "@/lib/sports-hack-2026-submission-prs";
 import { SUMMER_COHORT_COLLECTION } from "@/lib/summer-cohort";
 
 export const HACKATHON_LEADERBOARD_SNAPSHOTS_COLLECTION =
@@ -298,12 +299,21 @@ export async function buildLeaderboardPayload(
     }
   }
 
-  const [githubMergedByLogin, firestoreMergedCounts] = await Promise.all([
-    fetchMergedPrCountsForLogins(githubLogins, preloadedBulkPrCounts),
-    userIdsWithoutGithub.length > 0
-      ? countMergedCommunityPrsByUserIds(db, userIdsWithoutGithub)
-      : Promise.resolve(new Map<string, number>()),
-  ]);
+  // For three-tier events, fetch the submission-PR author set in parallel
+  // with the PR-count fetches. Returns an empty set for any non-three-tier
+  // event so the rest of the pipeline stays uniform.
+  const wantsSubmissionLookup = getRankingModelForEvent(eventId) === "three-tier";
+
+  const [githubMergedByLogin, firestoreMergedCounts, submissionAuthors] =
+    await Promise.all([
+      fetchMergedPrCountsForLogins(githubLogins, preloadedBulkPrCounts),
+      userIdsWithoutGithub.length > 0
+        ? countMergedCommunityPrsByUserIds(db, userIdsWithoutGithub)
+        : Promise.resolve(new Map<string, number>()),
+      wantsSubmissionLookup
+        ? fetchSportsHack2026SubmissionAuthors()
+        : Promise.resolve(new Set<string>()),
+    ]);
 
   for (const doc of snap.docs) {
     const data = doc.data();
@@ -607,9 +617,9 @@ export async function buildLeaderboardPayload(
       const tier = u._tier;
       const inCreditBand = rank <= creditCap;
       const inAttendanceBand = rank <= attendanceLimit;
-      // hasSubmission is wired in PR 2; default false so the field is present
-      // on every entry from PR 1 onward.
-      const hasSubmission = false;
+      const hasSubmission =
+        u.githubLogin != null &&
+        submissionAuthors.has(u.githubLogin.toLowerCase());
       const attendingConfirmed = u.attendingConfirmedAt != null;
       return {
         rank,

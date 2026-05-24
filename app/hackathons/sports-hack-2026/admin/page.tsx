@@ -30,6 +30,13 @@ type SignupEntry = {
   willBeLate?: boolean;
   queuingForSpot?: boolean;
   lumaRegistered?: boolean;
+  // Three-tier ranking model fields (sports-hack-2026). Optional for
+  // back-compat — populated by buildLeaderboardPayload when the event uses
+  // the three-tier model.
+  tier?: "A" | "B" | "C" | null;
+  inAttendanceBand?: boolean;
+  inCreditBand?: boolean;
+  hasSubmission?: boolean;
 };
 
 type SignupData = {
