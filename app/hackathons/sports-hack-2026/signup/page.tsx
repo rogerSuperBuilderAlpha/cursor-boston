@@ -47,23 +47,31 @@ const TONE_BANNER_CLASS: Record<SportsHack2026RankTone, string> = {
   far: "border-rose-500/40 bg-rose-500/5 dark:bg-rose-500/10",
 };
 
+// External-RSVP indicators. As of 2026-05-24 the website signup is the
+// source of truth — Luma + Partiful RSVPs are informational only. So both
+// pills are rendered only when present; the absence of a pill carries no
+// negative implication (vs the previous behavior of warning "Not on Luma
+// yet" which is no longer accurate).
 function LumaPill({ registered }: { registered: boolean | undefined }) {
-  if (registered) {
-    return (
-      <span
-        className="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400"
-        title="Matched to a registration in the latest Luma export"
-      >
-        ✓ On Luma
-      </span>
-    );
-  }
+  if (!registered) return null;
   return (
     <span
-      className="inline-flex items-center rounded-full border border-rose-500/30 bg-rose-500/10 px-2 py-0.5 text-xs font-semibold text-rose-700 dark:text-rose-400"
-      title="No matching Luma registration found (by email or GitHub login)"
+      className="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400"
+      title="Matched to a registration in the latest Luma export"
     >
-      ⚠ Not on Luma yet
+      ✓ On Luma
+    </span>
+  );
+}
+
+function PartifulPill({ registered }: { registered: boolean | undefined }) {
+  if (!registered) return null;
+  return (
+    <span
+      className="inline-flex items-center rounded-full border border-violet-500/30 bg-violet-500/10 px-2 py-0.5 text-xs font-semibold text-violet-700 dark:text-violet-400"
+      title="Matched to a Going RSVP in the latest Partiful export"
+    >
+      ✓ On Partiful
     </span>
   );
 }
@@ -82,6 +90,7 @@ type LeaderboardEntry = {
   willBeLate?: boolean;
   queuingForSpot?: boolean;
   lumaRegistered?: boolean;
+  partifulRegistered?: boolean;
   isCohort1?: boolean;
   attendingConfirmed?: boolean;
   attendingConfirmedAt?: string | null;
@@ -111,6 +120,7 @@ type LeaderboardResponse = {
     willBeLate: boolean;
     queuingForSpot: boolean;
     lumaRegistered: boolean;
+    partifulRegistered?: boolean;
     attendingConfirmed?: boolean;
     attendingConfirmedAt?: string | null;
     attendanceRank?: number | null;
@@ -574,6 +584,7 @@ function SportsHack2026SignupPageInner() {
                             </span>
                           ) : null}
                           <LumaPill registered={data.me?.lumaRegistered} />
+                          <PartifulPill registered={data.me?.partifulRegistered} />
                         </div>
                         {myRank != null && (
                           <p className="mt-1 text-neutral-700 dark:text-neutral-300">
@@ -592,21 +603,15 @@ function SportsHack2026SignupPageInner() {
                             {tier.detail}
                           </p>
                         ) : null}
-                        {data.me && !data.me.lumaRegistered ? (
-                          <p className="mt-3 rounded-lg border border-rose-500/30 bg-rose-500/5 px-3 py-2 text-xs text-rose-700 dark:text-rose-300">
-                            <strong>You&apos;re not on the Luma list yet.</strong>{" "}
-                            Website signup alone won&apos;t get you through the door —{" "}
-                            <a
-                              href={SPORTS_HACK_2026_LUMA_URL}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="underline font-medium"
-                            >
-                              RSVP on Luma now
-                            </a>
-                            .
-                          </p>
-                        ) : null}
+                        {/*
+                          Previously rendered a rose-colored "You're not on the
+                          Luma list yet" warning here. Dropped 2026-05-24 along
+                          with the rest of the Luma-prominence: the website
+                          signup is now the source of truth, so being absent
+                          from Luma is informational, not a problem. Luma /
+                          Partiful pills above still surface presence when it
+                          exists.
+                        */}
                       </div>
                       <div className="flex gap-3 shrink-0">
                         <button
@@ -1339,6 +1344,7 @@ function SportsHack2026SignupPageInner() {
                                   </span>
                                 ) : null}
                                 <LumaPill registered={row.lumaRegistered} />
+                                <PartifulPill registered={row.partifulRegistered} />
                               </div>
                             </td>
                           </tr>

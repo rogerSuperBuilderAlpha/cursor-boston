@@ -1098,7 +1098,7 @@ describe("Sports Hack 2026 signup page", () => {
     });
   });
 
-  it("shows lumaRegistered warning when the user is signed up but not on Luma", async () => {
+  it("does NOT show a Luma warning when the user is signed up but not on Luma (website-first as of 2026-05-24)", async () => {
     const noLumaPayload = {
       ...leaderboardPayload,
       me: { ...leaderboardPayload.me, lumaRegistered: false },
@@ -1117,10 +1117,15 @@ describe("Sports Hack 2026 signup page", () => {
       .default;
     render(<Page />);
 
+    // Wait for the signup card to render so the assertion runs after the page settled.
+    await screen.findByText(/You are signed up/i);
+    // The previous rose "You're not on the Luma list yet / RSVP on Luma now"
+    // warning was removed when the website became the source of truth.
+    // Luma/Partiful presence is now informational only.
+    expect(screen.queryByText(/You're not on the Luma list yet/i)).toBeNull();
     expect(
-      await screen.findByText(/You're not on the Luma list yet/i),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /RSVP on Luma now/i })).toBeInTheDocument();
+      screen.queryByRole("link", { name: /RSVP on Luma now/i }),
+    ).toBeNull();
   });
 
   it("renders the rank tier label for a top-10 user (pre-freeze)", async () => {

@@ -10,14 +10,12 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
-import { LumaEmbed } from "@/components/hackathons/LumaEmbed";
 import { SportsHack2026EventNav } from "@/components/hackathons/SportsHack2026EventNav";
 import {
   SPORTS_HACK_2026_ATTENDANCE_LIMIT,
   SPORTS_HACK_2026_CAPACITY,
   SPORTS_HACK_2026_EVENT_ID,
   SPORTS_HACK_2026_LOCATION,
-  SPORTS_HACK_2026_LUMA_EMBED_ID,
   SPORTS_HACK_2026_LUMA_URL,
   SPORTS_HACK_2026_NAME,
 } from "@/lib/sports-hack-2026";
@@ -149,14 +147,6 @@ export default function SportsHack2026LandingPage() {
                   ? `You're signed up${data.me.rank != null ? ` — rank #${data.me.rank}` : ""} · Manage`
                   : "Register on the website"}
               </Link>
-              <a
-                href={SPORTS_HACK_2026_LUMA_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center rounded-lg border border-neutral-300 px-6 py-3 text-sm font-semibold hover:bg-neutral-100 dark:border-neutral-600 dark:hover:bg-neutral-800"
-              >
-                RSVP on Luma →
-              </a>
               {isAdmin ? (
                 <Link
                   href={`/hackathons/${SPORTS_HACK_2026_EVENT_ID}/admin`}
@@ -166,16 +156,23 @@ export default function SportsHack2026LandingPage() {
                 </Link>
               ) : null}
             </div>
-            <p className="mt-3 text-sm text-amber-600 dark:text-amber-400 font-medium">
-              You must register on <strong>both</strong>: Luma (for door entry) <strong>and</strong> the website (for hackathon ranking &amp; prizes). One without the other won&apos;t get you in.
+            <p className="mt-3 text-sm text-emerald-700 dark:text-emerald-400 font-medium">
+              The website is the source of truth — sign up, claim a spot, and confirm
+              attendance here to be on the door list and in the credit-band ranking.
+              {" "}
+              <span className="text-neutral-600 dark:text-neutral-400 font-normal">
+                A Luma or Partiful RSVP shows up next to your name as an interest
+                signal, but only the website list decides who gets in.
+              </span>
             </p>
 
             <div className="mt-10 rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
               <h2 className="text-lg font-semibold">How to win a Cursor credit</h2>
               <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
                 We have <strong>{SPORTS_HACK_2026_CAPACITY} Cursor credit codes</strong>{" "}
-                for participants. Luma approves your registration. Cursor Boston then
-                ranks registrants by merged PRs to the{" "}
+                for participants. The ranking is computed off the website signup list:
+                claim a spot, confirm attendance, and the top{" "}
+                {SPORTS_HACK_2026_CAPACITY} by merged PRs to the{" "}
                 <a
                   href="https://github.com/rogerSuperBuilderAlpha/cursor-boston"
                   target="_blank"
@@ -184,9 +181,9 @@ export default function SportsHack2026LandingPage() {
                 >
                   cursor-boston
                 </a>{" "}
-                community repo, with signup time as the tiebreaker. Top{" "}
-                {SPORTS_HACK_2026_CAPACITY} get a confirmed seat plus a Cursor credit
-                code; the rest join the waitlist. Merge a PR to move up.
+                community repo (signup time as the tiebreaker) land in the credit
+                band. Merge a PR to move up; open a submission PR on event day to
+                unlock the code itself.
               </p>
             </div>
 
@@ -224,22 +221,42 @@ export default function SportsHack2026LandingPage() {
           </div>
 
           <aside className="md:sticky md:top-24 md:self-start">
-            <LumaEmbed
-              embedId={SPORTS_HACK_2026_LUMA_EMBED_ID}
-              title={`${SPORTS_HACK_2026_NAME} — Luma registration`}
-              aspect="square"
-            />
-            <p className="mt-3 text-center text-xs text-neutral-500 dark:text-neutral-400">
-              Powered by{" "}
-              <a
-                href={SPORTS_HACK_2026_LUMA_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline hover:text-emerald-600 dark:hover:text-emerald-400"
+            <div className="rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+                Get on the list
+              </h3>
+              <p className="mt-3 text-sm text-neutral-700 dark:text-neutral-300">
+                <strong>Sign up on the website.</strong> That&apos;s the only thing
+                that puts you on the door list and inside the credit-band ranking.
+              </p>
+              <Link
+                href={`/hackathons/${SPORTS_HACK_2026_EVENT_ID}/signup`}
+                className="mt-4 inline-flex w-full items-center justify-center rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-400"
               >
-                Luma
-              </a>
-            </p>
+                {data?.me?.signedUp ? "Manage your signup" : "Sign up on the website"}
+              </Link>
+
+              <div className="mt-5 border-t border-neutral-200 pt-4 dark:border-neutral-800">
+                <h4 className="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+                  External RSVPs (optional)
+                </h4>
+                <p className="mt-2 text-xs text-neutral-600 dark:text-neutral-400">
+                  Already RSVP&apos;d on Luma or Partiful? It shows up next to your
+                  name as an interest indicator — but it does not reserve a spot.
+                  Still need to sign up here.
+                </p>
+                <p className="mt-3 text-xs">
+                  <a
+                    href={SPORTS_HACK_2026_LUMA_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-neutral-500 underline hover:text-emerald-600 dark:text-neutral-400 dark:hover:text-emerald-400"
+                  >
+                    Luma event page →
+                  </a>
+                </p>
+              </div>
+            </div>
           </aside>
         </div>
       </div>

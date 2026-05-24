@@ -64,6 +64,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       willBeLate: boolean;
       queuingForSpot: boolean;
       lumaRegistered: boolean;
+      partifulRegistered: boolean;
       attendingConfirmed: boolean;
       attendingConfirmedAt: string | null;
       attendanceRank: number | null;
@@ -85,6 +86,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
             willBeLate: entry.willBeLate,
             queuingForSpot: entry.queuingForSpot,
             lumaRegistered: entry.lumaRegistered,
+            partifulRegistered: entry.partifulRegistered,
             attendingConfirmed: entry.attendingConfirmed,
             attendingConfirmedAt: entry.attendingConfirmedAt,
             attendanceRank: entry.attendanceRank,
@@ -102,6 +104,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
             willBeLate: false,
             queuingForSpot: false,
             lumaRegistered: false,
+            partifulRegistered: false,
             attendingConfirmed: false,
             attendingConfirmedAt: null,
             attendanceRank: null,

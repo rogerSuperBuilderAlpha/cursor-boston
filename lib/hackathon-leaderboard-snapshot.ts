@@ -68,7 +68,16 @@ export interface LeaderboardEntry {
   checkedIn: boolean;
   willBeLate: boolean;
   queuingForSpot: boolean;
+  /**
+   * External-RSVP indicators. Sourced from each `hackathonLumaRegistrants`
+   * doc's `rsvpSource` field (written by `sync-may26-partiful-and-luma.ts`
+   * as `"partiful" | "luma" | "partiful+luma"`). Both flags can be true at
+   * the same time when an attendee RSVP'd on both external lists. Per the
+   * 2026-05-24 product call, the public page treats these as interest
+   * signals only — the website signup is the source of truth.
+   */
   lumaRegistered: boolean;
+  partifulRegistered: boolean;
   /** True when the email matches a Cohort-1 application (status pending/admitted). */
   isCohort1: boolean;
   /**
@@ -277,6 +286,7 @@ export async function buildLeaderboardPayload(
     willBeLate: boolean;
     queuingForSpot: boolean;
     lumaRegistered: boolean;
+    partifulRegistered: boolean;
     attendingConfirmedAt: number | null;
     attendingConfirmedBy: "user" | "admin" | null;
   }[] = [];
@@ -350,6 +360,7 @@ export async function buildLeaderboardPayload(
       willBeLate: data.willBeLate === true,
       queuingForSpot: data.queuingForSpot === true,
       lumaRegistered: false, // flipped true below when the Luma loop finds a match
+      partifulRegistered: false, // same — flipped true based on rsvpSource on the matched Luma doc
       attendingConfirmedAt: data.attendingConfirmedAt
         ? signedUpAtToMs(data.attendingConfirmedAt)
         : null,
@@ -406,8 +417,30 @@ export async function buildLeaderboardPayload(
     confirmedAt: number | null;
     frozenRank: number | null;
     frozenPrCount: number | null;
+    lumaRegistered: boolean;
+    partifulRegistered: boolean;
   };
   const lumaRows: LumaRow[] = [];
+
+  // The collection is named `hackathonLumaRegistrants` for historical reasons,
+  // but as of 2026-05-24 it also holds Partiful "Going" rows merged in by
+  // sync-may26-partiful-and-luma.ts. Each doc carries `rsvpSource: "partiful"
+  // | "luma" | "partiful+luma"`. Map that into a pair of booleans so the
+  // signup page can show "On Luma" / "On Partiful" / both as separate
+  // indicators next to each attendee.
+  function readExternalSources(rsvpSource: unknown): {
+    luma: boolean;
+    partiful: boolean;
+  } {
+    if (typeof rsvpSource !== "string") {
+      // Pre-sync-script docs may lack rsvpSource; treat as Luma since that
+      // was the only source historically. Backfilled correctly on the next
+      // sync run.
+      return { luma: true, partiful: false };
+    }
+    const parts = new Set(rsvpSource.split("+").map((s) => s.trim().toLowerCase()));
+    return { luma: parts.has("luma"), partiful: parts.has("partiful") };
+  }
 
   for (const doc of lumaSnap.docs) {
     const d = doc.data();
@@ -415,13 +448,19 @@ export async function buildLeaderboardPayload(
     const ghLogin = typeof d.githubLogin === "string" ? d.githubLogin : null;
     if (judgeEmails.has(email) || declinedEmails.has(email)) continue;
 
+    const sources = readExternalSources(d.rsvpSource);
+
     const matchIdx = websiteEmails.has(email)
       ? emailToRowIdx.get(email)
       : (ghLogin && websiteGithubLogins.has(ghLogin.toLowerCase()))
         ? ghLoginToRowIdx.get(ghLogin.toLowerCase())
         : undefined;
     if (matchIdx !== undefined) {
-      rows[matchIdx].lumaRegistered = true;
+      // OR-merge — a website user can be on both lists, and each gets
+      // sticky once seen. A second pass with a single-source doc won't
+      // clear a flag set by an earlier pass.
+      if (sources.luma) rows[matchIdx].lumaRegistered = true;
+      if (sources.partiful) rows[matchIdx].partifulRegistered = true;
       if (rows[matchIdx].confirmedAt == null && d.confirmedAt) {
         rows[matchIdx].confirmedAt = signedUpAtToMs(d.confirmedAt);
       }
@@ -447,6 +486,8 @@ export async function buildLeaderboardPayload(
       confirmedAt: d.confirmedAt ? signedUpAtToMs(d.confirmedAt) : null,
       frozenRank: typeof d.frozenRank === "number" ? d.frozenRank : null,
       frozenPrCount: typeof d.frozenPrCount === "number" ? d.frozenPrCount : null,
+      lumaRegistered: sources.luma,
+      partifulRegistered: sources.partiful,
     });
   }
 
@@ -477,6 +518,7 @@ export async function buildLeaderboardPayload(
     willBeLate: boolean;
     queuingForSpot: boolean;
     lumaRegistered: boolean;
+    partifulRegistered: boolean;
     isCohort1: boolean;
     attendingConfirmedAt: number | null;
     attendingConfirmedBy: "user" | "admin" | null;
@@ -501,6 +543,7 @@ export async function buildLeaderboardPayload(
       willBeLate: r.willBeLate,
       queuingForSpot: r.queuingForSpot,
       lumaRegistered: r.lumaRegistered,
+      partifulRegistered: r.partifulRegistered,
       isCohort1: email ? cohort1Emails.has(email) : false,
       attendingConfirmedAt: r.attendingConfirmedAt,
       attendingConfirmedBy: r.attendingConfirmedBy,
@@ -521,7 +564,8 @@ export async function buildLeaderboardPayload(
       checkedInAt: null,
       willBeLate: false,
       queuingForSpot: false,
-      lumaRegistered: true,
+      lumaRegistered: lr.lumaRegistered,
+      partifulRegistered: lr.partifulRegistered,
       isCohort1: email ? cohort1Emails.has(email) : false,
       // Luma-only rows have no website user account, so they cannot click
       // "Confirm attending" on the site. They acquire attendingConfirmedAt
@@ -635,6 +679,7 @@ export async function buildLeaderboardPayload(
         willBeLate: u.willBeLate,
         queuingForSpot: u.queuingForSpot,
         lumaRegistered: u.lumaRegistered,
+        partifulRegistered: u.partifulRegistered,
         isCohort1: u.isCohort1,
         attendingConfirmed,
         attendingConfirmedAt:
@@ -666,6 +711,7 @@ export async function buildLeaderboardPayload(
       willBeLate: u.willBeLate,
       queuingForSpot: u.queuingForSpot,
       lumaRegistered: u.lumaRegistered,
+      partifulRegistered: u.partifulRegistered,
       isCohort1: u.isCohort1,
       attendingConfirmed,
       attendingConfirmedAt:
@@ -753,6 +799,7 @@ export async function readSnapshot(
     willBeLate: e.willBeLate === true,
     queuingForSpot: e.queuingForSpot === true,
     lumaRegistered: e.lumaRegistered === true,
+    partifulRegistered: e.partifulRegistered === true,
     isCohort1: e.isCohort1 === true,
     attendingConfirmed: e.attendingConfirmed === true,
     attendingConfirmedAt:
