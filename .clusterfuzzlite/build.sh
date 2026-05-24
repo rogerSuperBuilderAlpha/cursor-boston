@@ -22,8 +22,15 @@ for target in fuzz/*.fuzz.ts; do
   name="$(basename "$target" .fuzz.ts)"
   # Transpile the harness + sanitize.ts to CJS so jazzer.js can require
   # it at fuzz time (jazzer is a CJS-only runtime).
+  # --skipLibCheck because tsc otherwise type-checks every transitive
+  # @types/* package; @types/request references a CookieJar export that
+  # tough-cookie removed and fails the build despite being unrelated to
+  # the harness. We only care that the harness + lib/sanitize.ts compile.
+  # --isolatedModules avoids cross-file inference that drags in those
+  # same transitive types.
   npx --no-install tsc \
     --module commonjs --target es2022 --esModuleInterop \
+    --skipLibCheck --isolatedModules \
     --outDir "build_${name}" \
     --rootDir . \
     "$target" lib/sanitize.ts
