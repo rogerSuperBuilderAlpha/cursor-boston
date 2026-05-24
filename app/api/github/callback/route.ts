@@ -142,9 +142,25 @@ async function handleGitHubCallback(request: NextRequest) {
   }
 }
 
-// Apply rate limiting and logging middleware
+// Apply rate limiting and logging middleware. Rate-limit denials
+// redirect to the originating page with `?github=error&message=rate_limited`
+// instead of returning JSON 429 — see lib/oauth-errors.ts for the
+// matching client-side copy.
 export const GET = withMiddleware(
   rateLimitConfigs.oauthCallback,
   handleGitHubCallback,
-  { distributed: true, failMode: "closed" }
+  {
+    distributed: true,
+    failMode: "closed",
+    onRateLimitDenied: (request) => {
+      const returnTo = sanitizeReturnTo(
+        request.cookies.get("github_oauth_return_to")?.value
+      );
+      return buildCallbackRedirect(
+        request,
+        returnTo,
+        "github=error&message=rate_limited"
+      );
+    },
+  }
 );

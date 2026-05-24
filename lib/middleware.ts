@@ -38,6 +38,20 @@ type RateLimitResult = ReturnType<typeof checkRateLimit> | UpstashRateLimitResul
 interface RateLimitBackendOptions {
   distributed?: boolean;
   failMode?: "degrade" | "closed";
+  /**
+   * Custom response builder invoked when the rate limiter denies the
+   * request. Default behaviour is the JSON 429 in `rateLimitDeniedResponse`.
+   *
+   * OAuth callbacks override this to redirect to
+   * `?<provider>=error&message=rate_limited` so the user lands back on
+   * the originating page with a clear error instead of staring at a raw
+   * JSON 429 (which is what they saw at the May 26 immersion event
+   * before this hook existed).
+   */
+  onRateLimitDenied?: (
+    request: NextRequest,
+    result: RateLimitResult
+  ) => NextResponse;
 }
 
 function isDevelopmentEnvironment(): boolean {
@@ -193,6 +207,9 @@ export function withRateLimitMiddleware(
       : checkRateLimit(identifier, options);
 
     if (!result.success) {
+      if (backendOptions.onRateLimitDenied) {
+        return backendOptions.onRateLimitDenied(request, result);
+      }
       return rateLimitDeniedResponse(result, options);
     }
 

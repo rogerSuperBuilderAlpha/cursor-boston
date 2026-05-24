@@ -159,9 +159,25 @@ async function handleDiscordCallback(request: NextRequest) {
   }
 }
 
-// Apply rate limiting and logging middleware
+// Apply rate limiting and logging middleware. Rate-limit denials
+// redirect to the originating page with `?discord=error&message=rate_limited`
+// instead of returning JSON 429 — see lib/oauth-errors.ts for the
+// matching client-side copy.
 export const GET = withMiddleware(
   rateLimitConfigs.oauthCallback,
   handleDiscordCallback,
-  { distributed: true, failMode: "closed" }
+  {
+    distributed: true,
+    failMode: "closed",
+    onRateLimitDenied: (request) => {
+      const returnTo = sanitizeReturnTo(
+        request.cookies.get("discord_oauth_return_to")?.value
+      );
+      return buildCallbackRedirect(
+        request,
+        returnTo,
+        "discord=error&message=rate_limited"
+      );
+    },
+  }
 );

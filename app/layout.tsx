@@ -13,6 +13,7 @@ import LumaCheckoutTracker from "@/components/LumaCheckoutTracker";
 import { KonamiListener } from "@/components/hunt/KonamiListener";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { ToastProvider } from "@/components/Toast";
 
 const ORGANIZATION_SOCIAL_LINKS = [
   "https://discord.gg/Wsncg8YYqc",
@@ -123,10 +124,12 @@ export default function RootLayout({
         </a>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AuthProvider>
-            <AppShell>{children}</AppShell>
-            <SummerCohortModal />
-            <LumaCheckoutTracker />
-            <KonamiListener />
+            <ToastProvider>
+              <AppShell>{children}</AppShell>
+              <SummerCohortModal />
+              <LumaCheckoutTracker />
+              <KonamiListener />
+            </ToastProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

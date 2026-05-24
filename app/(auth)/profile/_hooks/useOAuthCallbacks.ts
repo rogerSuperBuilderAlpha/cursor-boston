@@ -63,7 +63,11 @@ export function useOAuthCallbacks({
       if (githubStatus === "success" && data) {
         github.handleOAuthSuccess(JSON.parse(decodeURIComponent(data)));
       } else if (githubStatus === "error") {
-        github.handleOAuthError();
+        // Pass through the specific failure code (parity with the Discord
+        // branch). useGithubConnection.handleOAuthError maps it via
+        // describeOAuthError so users see the actual reason instead of
+        // a generic "failed to connect" line.
+        github.handleOAuthError(searchParams.get("message"));
       }
     }
 

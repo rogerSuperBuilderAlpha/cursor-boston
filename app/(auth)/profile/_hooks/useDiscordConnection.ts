@@ -10,6 +10,8 @@ import { useRouter } from "next/navigation";
 import { doc, updateDoc, serverTimestamp, deleteField } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { User } from "firebase/auth";
+import { useToast } from "@/components/Toast";
+import { describeOAuthError } from "@/lib/oauth-errors";
 
 const DISCORD_CLIENT_ID = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
 
@@ -25,6 +27,7 @@ export function useDiscordConnection(
   returnTo?: string
 ) {
   const router = useRouter();
+  const toast = useToast();
   const [connecting, setConnecting] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -88,12 +91,18 @@ export function useDiscordConnection(
     }
   };
 
+  // Surfaces the specific OAuth failure mode (rate-limited, state
+  // mismatch, not a guild member, etc.) via the global toast with
+  // auto-appended repo-fork CTA. See lib/oauth-errors.ts for the full
+  // code→copy table. setError stays as a fallback so the inline banner
+  // on the profile page keeps working.
   const handleOAuthError = (message: string | null) => {
-    if (message === "not_member") {
-      setError("You need to join the Cursor Boston Discord server first! Join at discord.gg/Wsncg8YYqc then try again.");
-    } else {
-      setError("Failed to connect Discord. Please try again.");
-    }
+    const describe = describeOAuthError("Discord", message);
+    toast.error({
+      title: describe.title,
+      description: describe.description,
+    });
+    setError(describe.description ?? describe.title);
     router.replace(fallbackPath);
   };
 

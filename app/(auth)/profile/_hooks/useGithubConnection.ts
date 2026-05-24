@@ -10,6 +10,8 @@ import { useRouter } from "next/navigation";
 import { doc, updateDoc, serverTimestamp, deleteField } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { User } from "firebase/auth";
+import { useToast } from "@/components/Toast";
+import { describeOAuthError } from "@/lib/oauth-errors";
 
 const GITHUB_CLIENT_ID = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID;
 
@@ -29,6 +31,7 @@ export function useGithubConnection(
   returnTo?: string
 ) {
   const router = useRouter();
+  const toast = useToast();
   const [connecting, setConnecting] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -113,8 +116,20 @@ export function useGithubConnection(
     }
   };
 
-  const handleOAuthError = () => {
-    setError("Failed to connect GitHub. Please try again.");
+  // OAuth callback redirected us back with `?github=error&message=<code>`.
+  // Surface the exact code via a toast (with the auto-appended "fork the
+  // repo and send a fix" footer the ToastProvider adds for errors) so
+  // users know whether they were rate-limited, hit a state mismatch,
+  // etc. — and have a path to file the bug if it's something we don't
+  // know about yet. setError stays as a fallback so the existing inline
+  // banner on the profile page still works.
+  const handleOAuthError = (code?: string | null) => {
+    const describe = describeOAuthError("GitHub", code);
+    toast.error({
+      title: describe.title,
+      description: describe.description,
+    });
+    setError(describe.description ?? describe.title);
     router.replace(fallbackPath);
   };
 
