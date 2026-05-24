@@ -19,7 +19,6 @@ import {
   SPORTS_HACK_2026_ATTENDANCE_LIMIT,
   SPORTS_HACK_2026_CAPACITY,
   SPORTS_HACK_2026_EVENT_ID,
-  SPORTS_HACK_2026_LUMA_URL,
   SPORTS_HACK_2026_SHORT_NAME,
   getSportsHack2026RankTier,
   type SportsHack2026RankTone,
@@ -495,19 +494,12 @@ function SportsHack2026SignupPageInner() {
           {SPORTS_HACK_2026_SHORT_NAME} — website signup
         </h1>
         <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400">
-          This page is the on-site signup list for the Boston Tech Week Sports Hack.
-          It does not replace{" "}
-          <a
-            href={SPORTS_HACK_2026_LUMA_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-emerald-600 underline hover:text-emerald-500 dark:text-emerald-400"
-          >
-            Luma registration
-          </a>
-          —you still need Luma for event admission. After that, claim a spot below so we
-          can rank builders by merged PRs to cursor-boston, then by signup time, for
-          invitations and the top-{capacity} confirmed band.
+          This is the canonical signup list for the Boston Tech Week Sports Hack —
+          claim a spot and confirm attendance here to be on the door list and in
+          the credit-band ranking. Builders are ranked by merged PRs to
+          cursor-boston, then by signup time, for the top-{capacity} confirmed
+          band. A Luma or Partiful RSVP shows up as an indicator next to your
+          name but doesn&apos;t replace this signup.
         </p>
 
         <div className="mt-8 rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
@@ -530,8 +522,7 @@ function SportsHack2026SignupPageInner() {
             </li>
             <li>
               The top {capacity} on this list are in the band eligible for a{" "}
-              <strong>confirmed seat</strong> on May 26 (subject to event selection and
-              Luma rules).
+              <strong>confirmed seat</strong> on May 26 (subject to event selection).
             </li>
           </ol>
         </div>
@@ -1359,8 +1350,8 @@ function SportsHack2026SignupPageInner() {
         </div>
 
         <p className="mt-10 text-xs text-neutral-500">
-          Luma approval and capacity rules still apply. This list helps organizers
-          prioritize invites; it does not replace Luma.
+          This list is the source of truth for door entry and credit-band
+          ranking. Subject to event capacity and organizer discretion.
         </p>
       </div>
     </div>
