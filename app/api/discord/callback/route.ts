@@ -163,12 +163,20 @@ async function handleDiscordCallback(request: NextRequest) {
 // redirect to the originating page with `?discord=error&message=rate_limited`
 // instead of returning JSON 429 — see lib/oauth-errors.ts for the
 // matching client-side copy.
+//
+// `failMode: "degrade"` (was "closed" through 2026-05-24): if Upstash is
+// unreachable we fall back to the per-instance in-memory rate limiter
+// instead of denying every callback. Production tripped fail-closed all
+// afternoon when Upstash flapped — every OAuth user got
+// `?discord=error&message=rate_limited` even though no real rate limit had
+// been hit. Brute-force protection on the callback is the cookie-bound
+// `state` token; the rate limit is purely defense-in-depth.
 export const GET = withMiddleware(
   rateLimitConfigs.oauthCallback,
   handleDiscordCallback,
   {
     distributed: true,
-    failMode: "closed",
+    failMode: "degrade",
     onRateLimitDenied: (request) => {
       const returnTo = sanitizeReturnTo(
         request.cookies.get("discord_oauth_return_to")?.value
