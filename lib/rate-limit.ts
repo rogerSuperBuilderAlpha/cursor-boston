@@ -244,11 +244,22 @@ export function withRateLimit(
  */
 export const rateLimitConfigs = {
   /**
-   * Strict rate limit for OAuth callbacks to prevent abuse and brute-forcing.
+   * Rate limit for OAuth callbacks. Per-IP, used as defense-in-depth —
+   * the actual brute-force protection lives in the cookie-bound
+   * `state` token validated inside each callback handler (see
+   * app/api/discord/callback/route.ts and app/api/github/callback/route.ts).
+   *
+   * Sized for shared-NAT venues. At in-person events (Hult campus on
+   * 2026-05-26 was the trigger for the current value), every attendee
+   * connecting Discord + GitHub hits this from the same egress IP.
+   * The old 10/15min ceiling blew up after ~5 attendees and produced
+   * a wave of "I can't connect my account" reports. 100/15min absorbs
+   * a ~50-person venue with each person connecting both providers
+   * without losing the DoS guardrail.
    */
   oauthCallback: {
     windowMs: 15 * 60 * 1000, // 15 minutes
-    maxRequests: 10, // 10 requests per 15 minutes
+    maxRequests: 100, // 100 requests per 15 minutes
   },
   /**
    * Moderate rate limit for incoming webhooks.
