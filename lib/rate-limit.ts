@@ -250,16 +250,22 @@ export const rateLimitConfigs = {
    * app/api/discord/callback/route.ts and app/api/github/callback/route.ts).
    *
    * Sized for shared-NAT venues. At in-person events (Hult campus on
-   * 2026-05-26 was the trigger for the current value), every attendee
-   * connecting Discord + GitHub hits this from the same egress IP.
-   * The old 10/15min ceiling blew up after ~5 attendees and produced
-   * a wave of "I can't connect my account" reports. 100/15min absorbs
-   * a ~50-person venue with each person connecting both providers
-   * without losing the DoS guardrail.
+   * 2026-05-26 was the trigger), every attendee connecting Discord +
+   * GitHub hits this from the same egress IP.
+   *
+   * History:
+   *   - 10/15min  (original)        — blew up after ~5 attendees, #1430
+   *   - 100/15min (#1430)           — absorbed a ~50-person venue
+   *   - 1000/15min (this commit)    — re-hit on 2026-05-24 with 218+
+   *     confirmed attendees prepping connections two days before the
+   *     event; the previous ceiling saturated again. 1000/15min absorbs
+   *     a ~250-person venue with each user connecting both providers
+   *     AND a couple of retries each, without giving up the DoS
+   *     guardrail. Brute-force protection is unchanged (state cookie).
    */
   oauthCallback: {
     windowMs: 15 * 60 * 1000, // 15 minutes
-    maxRequests: 100, // 100 requests per 15 minutes
+    maxRequests: 1000, // 1000 requests per 15 minutes
   },
   /**
    * Moderate rate limit for incoming webhooks.

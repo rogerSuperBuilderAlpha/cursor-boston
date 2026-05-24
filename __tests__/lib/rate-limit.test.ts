@@ -122,7 +122,11 @@ describe('Rate Limiting', () => {
     it('should have oauthCallback configuration', () => {
       expect(rateLimitConfigs.oauthCallback).toBeDefined();
       expect(rateLimitConfigs.oauthCallback.windowMs).toBe(15 * 60 * 1000);
-      expect(rateLimitConfigs.oauthCallback.maxRequests).toBe(100);
+      // Sized for shared-NAT venues. Raised to 1000 on 2026-05-24 after the
+      // previous 100 ceiling saturated at the May 26 event prep (218+
+      // confirmed attendees connecting Discord/GitHub from the same egress).
+      // See lib/rate-limit.ts oauthCallback comment for the full history.
+      expect(rateLimitConfigs.oauthCallback.maxRequests).toBe(1000);
     });
 
     it('should have webhook configuration', () => {
