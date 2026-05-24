@@ -13,16 +13,22 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ALL_SPELLS } from "@/lib/game/content";
 import { STAMINA_CONVERSION_THRESHOLD } from "@/lib/game/content/heroes";
 import type {
+  CombatResult,
+  GameArtifact,
   GameHero,
   GamePlayer,
   GameTile,
   HeroBattleAction,
   MapTile,
+  TurnReport,
 } from "@/lib/game/types";
 import {
   EnemyTilePanel,
   OwnTilePanel,
 } from "./tile-action-panels";
+import { ThreatRow, type ThreatRowProps } from "@/app/game/threats/_components/ThreatRow";
+import { BattleReport } from "@/app/game/threats/_components/BattleReport";
+import type { ThreatEntry } from "@/app/game/threats/_lib/threats-derive";
 
 function asMapTile(t: GameTile): MapTile {
   return {
@@ -37,6 +43,31 @@ function asMapTile(t: GameTile): MapTile {
   };
 }
 
+/**
+ * Hook payload from `useDashboardData` that ThreatRow needs. Spread by the
+ * /game/tiles/page.tsx so the modal can render the SAME inline attack UI
+ * as /game/threats (parity with the threats-page card, by user request).
+ *
+ * When `threatEntry` is null the modal falls back to the simpler legacy
+ * `EnemyTilePanel`. The two paths are kept side-by-side so non-bordering
+ * tiles + tile pages opened from contexts without dashboard data still
+ * work.
+ */
+interface ThreatRowBridge {
+  threatEntry: ThreatEntry | null;
+  artifacts: ReadonlyArray<GameArtifact>;
+  myMagicLandCount: number;
+  handleAttack: ThreatRowProps["onAttack"];
+  handleCastIntelSpell: ThreatRowProps["onCastIntelSpell"];
+  handleUseArtifact: ThreatRowProps["onUseArtifact"];
+  handleRecruit: ThreatRowProps["onRecruit"];
+  handleArmDefenseSpell: ThreatRowProps["onArmDefenseSpell"];
+  handleDistributeTile: ThreatRowProps["onDistributeTile"];
+  handleSiege: ThreatRowProps["onSiege"];
+  handleFlyover: ThreatRowProps["onFlyover"];
+  handleCastSpell: ThreatRowProps["onCastSpell"];
+}
+
 interface TileActionsModalProps {
   tile: MapTile;
   player: GamePlayer;
@@ -45,6 +76,14 @@ interface TileActionsModalProps {
   onClose: () => void;
   onTileUpdate: (t: MapTile) => void;
   onPlayerUpdate: (p: GamePlayer) => void;
+  /**
+   * Optional bridge to the threats-page action surface. When present AND the
+   * clicked tile is an enemy tile bordering the player, the modal renders
+   * `ThreatRow` (the canonical attack card) inline instead of the simpler
+   * `EnemyTilePanel`. Pass null for non-bordering tiles or when the dashboard
+   * data isn't available.
+   */
+  threatRowBridge?: ThreatRowBridge;
 }
 
 /**
@@ -62,6 +101,7 @@ export function TileActionsModal({
   onClose,
   onTileUpdate,
   onPlayerUpdate,
+  threatRowBridge,
 }: TileActionsModalProps) {
   const { user } = useAuth();
   const [busy, setBusy] = useState(false);
@@ -73,6 +113,15 @@ export function TileActionsModal({
   const [heroActionOnConvertFail, setHeroActionOnConvertFail] = useState<
     "kill" | "spare"
   >("kill");
+  // Battle-report state for the ThreatRow path. Hoisted here so a successful
+  // capture (which removes the enemy tile from the map → unmounts this
+  // modal via the parent's modalTileId reset) doesn't yank the result away
+  // mid-read. Mirrors the same pattern in /game/threats/page.tsx.
+  const [battleResult, setBattleResult] = useState<{
+    combat: CombatResult;
+    report: TurnReport;
+    targetTile: GameTile;
+  } | null>(null);
 
   const callApi = useCallback(
     async (path: string, body: unknown) => {
@@ -129,6 +178,10 @@ export function TileActionsModal({
     : [];
 
   return (
+    // Keyboard accessibility lives in the Esc handler in the useEffect above
+    // — these wrappers exist only to catch outside clicks. Same pattern as
+    // /game/threats/page.tsx battle-result overlay.
+    /* eslint-disable jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-static-element-interactions */
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3"
       onClick={onClose}
@@ -199,7 +252,34 @@ export function TileActionsModal({
               })
             }
           />
+        ) : threatRowBridge && threatRowBridge.threatEntry ? (
+          // ThreatRow path: enemy tile that borders the player AND we have
+          // a live dashboard-data bridge. Renders the canonical attack
+          // card from /game/threats (army/spell/sim/dispatch) instead of
+          // the simpler legacy `EnemyTilePanel`. defaultExpanded={true} so
+          // the form is open without the user needing to click a chevron.
+          <ThreatRow
+            entry={threatRowBridge.threatEntry}
+            player={player}
+            artifacts={threatRowBridge.artifacts}
+            busy={busy}
+            defaultExpanded
+            myMagicLandCount={threatRowBridge.myMagicLandCount}
+            onAttack={threatRowBridge.handleAttack}
+            onBattleResolved={(data) => setBattleResult(data)}
+            onCastIntelSpell={threatRowBridge.handleCastIntelSpell}
+            onUseArtifact={threatRowBridge.handleUseArtifact}
+            onRecruit={threatRowBridge.handleRecruit}
+            onArmDefenseSpell={threatRowBridge.handleArmDefenseSpell}
+            onDistributeTile={threatRowBridge.handleDistributeTile}
+            onSiege={threatRowBridge.handleSiege}
+            onFlyover={threatRowBridge.handleFlyover}
+            onCastSpell={threatRowBridge.handleCastSpell}
+          />
         ) : (
+          // Legacy fallback: enemy tile but no dashboard bridge (e.g.
+          // not bordering the player, or modal opened from a surface
+          // without useDashboardData wiring).
           <>
             {tile.hero && (
               <HeroOnTileCard
@@ -255,6 +335,39 @@ export function TileActionsModal({
           </Link>
         </div>
       </div>
+      {battleResult && (
+        // Battle-report overlay layered on top of the actions modal.
+        // Same pattern as /game/threats — the report stays up until the
+        // user dismisses it, even if the captured tile drops out of the
+        // map and the parent's modalTileId resets.
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Battle result"
+          onClick={() => setBattleResult(null)}
+        >
+          <div
+            className="w-full max-w-2xl max-h-[90vh] overflow-y-auto space-y-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <BattleReport
+              combat={battleResult.combat}
+              report={battleResult.report}
+              targetTile={battleResult.targetTile}
+              onDismiss={() => setBattleResult(null)}
+            />
+            <button
+              type="button"
+              onClick={() => setBattleResult(null)}
+              autoFocus
+              className="w-full px-4 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-base shadow-lg"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

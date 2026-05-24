@@ -8,9 +8,11 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { mayRefresh, mergeTiles as mergeTilesIntoCache } from "@/lib/game/local-map-cache";
 import type { LandType, MapTile } from "@/lib/game/types";
+import { useDashboardData } from "@/app/game/_lib/use-dashboard-data";
+import { deriveThreatEntries } from "@/app/game/threats/_lib/threats-derive";
 import { AudienceFilterRow } from "./_components/AudienceFilterRow";
 import { LandTypeFilterRow } from "./_components/LandTypeFilterRow";
 import { MapCanvas } from "./_components/MapCanvas";
@@ -51,6 +53,61 @@ export default function TilesMapPage() {
   // Tile-actions modal: open when the user clicks a tile. Holds a tileId
   // (not the MapTile itself) so it stays in sync with mutations.
   const [modalTileId, setModalTileId] = useState<string | null>(null);
+
+  // Pulls in the same handler set + worldOwners + artifacts that
+  // /game/threats/page.tsx uses, so the click-to-attack path on this map
+  // can render the SAME `ThreatRow` card the threats page renders. The
+  // map-specific state (modes, cache, live connection) stays on
+  // `useTilesData` above — these two hooks intentionally manage different
+  // concerns and coexist with minor duplicate fetching at mount.
+  const dashData = useDashboardData();
+  const [actionBusy, setActionBusy] = useState(false);
+  // Wrap each handler so the modal's busy state covers any in-flight
+  // action. Mirrors the same `withBusy` pattern in /game/threats/page.tsx.
+  const withBusy = useCallback(
+    function withBusy<TArgs extends unknown[], TResult>(
+      fn: ((...args: TArgs) => Promise<TResult>) | undefined,
+    ): (...args: TArgs) => Promise<TResult> {
+      return async (...args: TArgs) => {
+        if (!fn) return Promise.resolve() as TResult;
+        setActionBusy(true);
+        try {
+          return await fn(...args);
+        } finally {
+          setActionBusy(false);
+        }
+      };
+    },
+    [],
+  );
+  void actionBusy; // currently surfaced inside ThreatRow via `busy` prop below
+
+  // Derive the per-enemy-tile ThreatEntry list ONLY when we have a
+  // signed-in player + world data. The modal looks up the entry for the
+  // clicked tile to know whether to render the ThreatRow path (border
+  // exists, candidate sources available) or fall back to the legacy panel.
+  const threatEntries = useMemo(() => {
+    if (!dashData.user || !dashData.player) return [];
+    if (dashData.tiles.length === 0 || dashData.worldTiles.length === 0) return [];
+    return deriveThreatEntries({
+      myUserId: dashData.user.uid,
+      myCaste: dashData.player.caste,
+      myTiles: dashData.tiles,
+      worldTiles: dashData.worldTiles,
+      worldOwners: dashData.worldOwners,
+    });
+  }, [
+    dashData.user,
+    dashData.player,
+    dashData.tiles,
+    dashData.worldTiles,
+    dashData.worldOwners,
+  ]);
+
+  const myMagicLandCount = useMemo(
+    () => dashData.tiles.filter((t) => t.type === "magic").length,
+    [dashData.tiles],
+  );
 
   const handleTileClick = useCallback(
     (t: MapTile) => {
@@ -225,6 +282,30 @@ export default function TilesMapPage() {
             if (next) setCachedView(next);
           }}
           onPlayerUpdate={(p) => setPlayer(p)}
+          // Threats-page parity: when the clicked tile is an enemy tile that
+          // borders the player, hand the modal the live ThreatEntry + the
+          // action handlers from `useDashboardData` so it renders the same
+          // `ThreatRow` card (army/spell/sim/dispatch + battle report)
+          // shown on /game/threats. Non-bordering enemy tiles get the
+          // legacy `EnemyTilePanel` fallback automatically when
+          // `threatEntry` is null.
+          threatRowBridge={{
+            threatEntry:
+              threatEntries.find(
+                (e) => e.enemyTile.tileId === modalTile.tileId,
+              ) ?? null,
+            artifacts: dashData.artifacts,
+            myMagicLandCount,
+            handleAttack: withBusy(dashData.handleAttack),
+            handleCastIntelSpell: withBusy(dashData.handleCastIntelSpell),
+            handleUseArtifact: withBusy(dashData.handleUseArtifact),
+            handleRecruit: withBusy(dashData.handleRecruit),
+            handleArmDefenseSpell: withBusy(dashData.handleArmDefenseSpell),
+            handleDistributeTile: withBusy(dashData.handleDistributeTile),
+            handleSiege: withBusy(dashData.handleSiege),
+            handleFlyover: withBusy(dashData.handleFlyover),
+            handleCastSpell: withBusy(dashData.handleCastSpell),
+          }}
         />
       )}
     </div>
