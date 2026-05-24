@@ -39,38 +39,12 @@ def _(mo):
     mo.md(
         """
         <div style="position:relative; background:linear-gradient(135deg,#7f1d1d 0%,#1e3a8a 55%,#0f172a 100%);
-                    padding:2.6rem 2.4rem; border-radius:18px; color:white;
-                    overflow:hidden; box-shadow:0 14px 44px rgba(15,23,42,0.28);
-                    margin-bottom:1.4rem;">
-
+                    padding:1.4rem 1.8rem; border-radius:14px; color:white;
+                    overflow:hidden; box-shadow:0 10px 32px rgba(15,23,42,0.22);
+                    margin-bottom:1.2rem;">
           <svg xmlns="http://www.w3.org/2000/svg"
-               style="position:absolute; inset:0; width:100%; height:100%; opacity:0.10;"
-               viewBox="0 0 600 240" preserveAspectRatio="xMidYMid slice">
-            <defs>
-              <pattern id="turf" x="0" y="0" width="60" height="240" patternUnits="userSpaceOnUse">
-                <rect width="30" height="240" fill="rgba(255,255,255,0.04)"/>
-                <rect x="30" width="30" height="240" fill="rgba(255,255,255,0)"/>
-              </pattern>
-            </defs>
-            <rect width="600" height="240" fill="url(#turf)"/>
-            <rect x="6" y="6" width="588" height="228" fill="none"
-                  stroke="white" stroke-width="1.4"/>
-            <line x1="300" y1="6" x2="300" y2="234" stroke="white" stroke-width="1.2"/>
-            <circle cx="300" cy="120" r="44" fill="none" stroke="white" stroke-width="1.4"/>
-            <circle cx="300" cy="120" r="2.2" fill="white"/>
-            <rect x="6" y="80" width="58" height="80" fill="none"
-                  stroke="white" stroke-width="1.4"/>
-            <rect x="536" y="80" width="58" height="80" fill="none"
-                  stroke="white" stroke-width="1.4"/>
-            <rect x="6" y="100" width="22" height="40" fill="none"
-                  stroke="white" stroke-width="1.2"/>
-            <rect x="572" y="100" width="22" height="40" fill="none"
-                  stroke="white" stroke-width="1.2"/>
-          </svg>
-
-          <svg xmlns="http://www.w3.org/2000/svg"
-               style="position:absolute; right:-18px; top:-8px; width:240px; height:240px;
-                      opacity:0.18; transform:rotate(8deg);"
+               style="position:absolute; right:-12px; top:-8px; width:140px; height:140px;
+                      opacity:0.16; transform:rotate(8deg);"
                viewBox="0 0 200 200">
             <circle cx="100" cy="100" r="68" fill="none" stroke="white" stroke-width="2.5"/>
             <polygon points="100,42 124,60 114,90 86,90 76,60"
@@ -82,29 +56,23 @@ def _(mo):
             <polygon points="114,90 146,112 130,148 100,138 86,138 70,148 54,112 86,90"
                      fill="none" stroke="white" stroke-width="1.8"/>
           </svg>
-
           <div style="position:relative; z-index:2;">
             <div style="display:inline-flex; align-items:center; gap:8px;
                         background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.18);
-                        padding:5px 12px; border-radius:999px;
-                        font-size:0.7rem; font-weight:700; letter-spacing:2.2px;">
-              <span style="width:7px; height:7px; background:#dc2626;
+                        padding:4px 11px; border-radius:999px;
+                        font-size:0.65rem; font-weight:700; letter-spacing:2px;">
+              <span style="width:6px; height:6px; background:#dc2626;
                            border-radius:50%; box-shadow:0 0 0 3px rgba(220,38,38,0.35);"></span>
-              FIFA WORLD CUP 26 &nbsp;·&nbsp; BOSTON HOST CITY
+              FIFA WORLD CUP 26 · BOSTON HOST CITY
             </div>
-            <h1 style="margin:1rem 0 0.5rem 0; font-size:2.55rem; color:white;
-                       font-weight:800; letter-spacing:-0.6px; line-height:1.05;
-                       text-shadow:0 2px 12px rgba(0,0,0,0.25);">
-              Boston Stadium Isn't in Boston
+            <h1 style="margin:0.5rem 0 0.3rem 0; font-size:1.7rem; color:white;
+                       font-weight:800; letter-spacing:-0.4px; line-height:1.1;">
+              Your Boston World Cup match-day planner
             </h1>
-            <div style="font-size:1.06rem; color:rgba(255,255,255,0.92); line-height:1.55;
-                        max-width:760px; font-weight:400;">
-              A data map for surviving World Cup 2026. Gillette Stadium sits
-              30 miles south in Foxborough, MA — and Route 1 there ranks
-              among the deadliest corridors in the Commonwealth. This guide
-              pairs live MassDOT crash records with a real-time MBTA map so
-              visitors can see exactly where to drive, where to take the
-              train, and when to just walk.
+            <div style="font-size:0.94rem; color:rgba(255,255,255,0.88); line-height:1.5;
+                        max-width:660px;">
+              Pick your match below. Everything else — weather, transit timings,
+              hotels, restrooms, crime, and traffic safety — adapts to that match.
             </div>
           </div>
         </div>
@@ -115,25 +83,1276 @@ def _(mo):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
+    # FIFA World Cup 2026 — Gillette Stadium (Boston/Foxborough) hosts
+    # 7 matches per FIFA's published match schedule (announced Feb 2024).
+    # Team identities become known only after the Dec 2025 draw plus the
+    # qualifying playoffs, so we identify matches by stage + slot.
+    WC_MATCHES = [
+        {
+            "id": "M1",
+            "name": "Boston Opener",
+            "date": "2026-06-13", "weekday": "Saturday",
+            "kickoff_local": "15:00", "kickoff_pretty": "3:00 PM",
+            "stage": "Group Stage", "match_no": "Match 8",
+            "teams": "Group I · Match 1 vs Match 2 (set after Dec 2025 draw)",
+        },
+        {
+            "id": "M2",
+            "name": "Group Stage · Friday under the lights",
+            "date": "2026-06-19", "weekday": "Friday",
+            "kickoff_local": "15:00", "kickoff_pretty": "3:00 PM",
+            "stage": "Group Stage", "match_no": "Match 25",
+            "teams": "Group D · second matchday",
+        },
+        {
+            "id": "M3",
+            "name": "Group Stage · Mid-week clash",
+            "date": "2026-06-23", "weekday": "Tuesday",
+            "kickoff_local": "15:00", "kickoff_pretty": "3:00 PM",
+            "stage": "Group Stage", "match_no": "Match 39",
+            "teams": "Group H · second matchday",
+        },
+        {
+            "id": "M4",
+            "name": "Group Stage · Saturday noon finale",
+            "date": "2026-06-27", "weekday": "Saturday",
+            "kickoff_local": "12:00", "kickoff_pretty": "12:00 PM",
+            "stage": "Group Stage", "match_no": "Match 57",
+            "teams": "Group L · third matchday",
+        },
+        {
+            "id": "M5",
+            "name": "Round of 32 · Knockouts begin",
+            "date": "2026-06-30", "weekday": "Tuesday",
+            "kickoff_local": "15:00", "kickoff_pretty": "3:00 PM",
+            "stage": "Round of 32", "match_no": "Match 71",
+            "teams": "Winners — Round of 32",
+        },
+        {
+            "id": "M6",
+            "name": "Round of 16 · Independence Day match",
+            "date": "2026-07-04", "weekday": "Saturday",
+            "kickoff_local": "15:00", "kickoff_pretty": "3:00 PM",
+            "stage": "Round of 16", "match_no": "Match 90",
+            "teams": "Winners advance from Round of 32",
+        },
+        {
+            "id": "M7",
+            "name": "Quarter-final · Boston's biggest night",
+            "date": "2026-07-09", "weekday": "Thursday",
+            "kickoff_local": "15:00", "kickoff_pretty": "3:00 PM",
+            "stage": "Quarter-final", "match_no": "Match 102",
+            "teams": "Winners advance from Round of 16",
+        },
+    ]
+
+    _MONTH_NAMES = [
+        "", "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December",
+    ]
+
+    # marimo's mo.ui.dropdown with a dict treats KEYS as display labels and
+    # VALUES as what .value returns. So we map "formatted label" -> match id.
+    _options = {"— Pick your match to begin —": ""}
+    for _m in WC_MATCHES:
+        _mon = _MONTH_NAMES[int(_m["date"][5:7])]
+        _day = int(_m["date"][8:10])
+        _label = (
+            f"{_m['name']}  ·  {_m['weekday']} {_mon} {_day}, "
+            f"{_m['kickoff_pretty']}  ·  {_m['match_no']}"
+        )
+        _options[_label] = _m["id"]
+
+    match_picker = mo.ui.dropdown(
+        options=_options,
+        value="— Pick your match to begin —",
+        label="",
+        full_width=True,
+    )
+
+    _heading = mo.md(
         """
-        <div style="border-left:4px solid #DA291C; padding:2px 0 2px 14px;
-                    margin:2rem 0 0.8rem 0;">
-          <div style="font-size:1.35rem; font-weight:700; color:#0f172a;
-                      letter-spacing:-0.2px;">Explore the data</div>
-          <div style="font-size:0.92rem; color:#64748b; margin-top:2px;">
-            Pick a year and a host-area city. The map, stats, and the
-            routing advice at the bottom all refresh live from
-            MassDOT's open crash database.
-          </div>
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+          <span style="background:#dc2626; color:white; width:26px; height:26px;
+                       border-radius:50%; display:inline-flex; align-items:center;
+                       justify-content:center; font-weight:800; font-size:13px;">1</span>
+          <span style="font-size:1.08rem; font-weight:700; color:#0f172a;
+                       letter-spacing:-0.2px;">
+            Which match are you going to?
+          </span>
+        </div>
+        <div style="color:#64748b; font-size:0.88rem; margin:0 0 6px 36px;">
+          Gillette Stadium hosts 7 World Cup matches. Pick one — the
+          rest of this page configures itself around your match-day plan.
         </div>
         """
     )
-    return
+
+    mo.callout(
+        mo.vstack([_heading, match_picker], gap=0.3),
+        kind="neutral",
+    )
+    return WC_MATCHES, match_picker
 
 
 @app.cell(hide_code=True)
 def _(mo):
+    location_input = mo.ui.text(
+        placeholder="e.g. Boston Park Plaza · Cambridge MA · 123 Main St Quincy",
+        label="",
+        full_width=True,
+    )
+
+    unit_toggle = mo.ui.radio(
+        options=["km", "miles"],
+        value="km",
+        inline=True,
+        label="Distance units",
+    )
+
+    home_country = mo.ui.dropdown(
+        options=[
+            "Any cuisine",
+            "Argentina (Argentinian)",
+            "Brazil (Brazilian)",
+            "China (Chinese)",
+            "Ethiopia (Ethiopian)",
+            "France (French)",
+            "Germany (German)",
+            "Greece (Greek)",
+            "India (Indian)",
+            "Ireland (Irish)",
+            "Italy (Italian)",
+            "Japan (Japanese)",
+            "Korea (Korean)",
+            "Lebanon (Lebanese)",
+            "Mexico (Mexican)",
+            "Morocco (Moroccan)",
+            "Nigeria (Nigerian)",
+            "Peru (Peruvian)",
+            "Portugal (Portuguese)",
+            "Spain (Spanish)",
+            "Thailand (Thai)",
+            "Turkey (Turkish)",
+            "United Kingdom (British)",
+            "United States (American)",
+            "Vietnam (Vietnamese)",
+        ],
+        value="Any cuisine",
+        label="Home country (for cuisine matching)",
+    )
+
+    _heading = mo.md(
+        """
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+          <span style="background:#0891b2; color:white; width:26px; height:26px;
+                       border-radius:50%; display:inline-flex; align-items:center;
+                       justify-content:center; font-weight:800; font-size:13px;">2</span>
+          <span style="font-size:1.08rem; font-weight:700; color:#0f172a;
+                       letter-spacing:-0.2px;">
+            Where are you starting from?
+            <span style="color:#94a3b8; font-weight:500; font-size:0.9rem;">
+              (optional)
+            </span>
+          </span>
+        </div>
+        <div style="color:#64748b; font-size:0.88rem; margin:0 0 8px 36px;">
+          Enter your hotel, neighborhood, or address. We'll find your closest
+          Commuter Rail station, calculate walking and driving times, and
+          build your full door-to-stadium-to-door itinerary. Optionally pick
+          your home country to surface restaurants serving your traditional
+          cuisine on the Places map.
+        </div>
+        """
+    )
+
+    mo.callout(
+        mo.vstack(
+            [
+                _heading,
+                location_input,
+                mo.hstack([unit_toggle, home_country], justify="start", gap=1.5),
+            ],
+            gap=0.4,
+        ),
+        kind="neutral",
+    )
+    return home_country, location_input, unit_toggle
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    # Sticky Start button: stays True after the first click for the rest of
+    # the session, so changing the match or location later re-renders without
+    # re-clicking.
+    start = mo.ui.button(
+        label="Plan my match-day →",
+        value=False,
+        on_click=lambda _: True,
+        kind="success",
+    )
+
+    _heading = mo.md(
+        """
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+          <span style="background:#16a34a; color:white; width:26px; height:26px;
+                       border-radius:50%; display:inline-flex; align-items:center;
+                       justify-content:center; font-weight:800; font-size:13px;">3</span>
+          <span style="font-size:1.08rem; font-weight:700; color:#0f172a;
+                       letter-spacing:-0.2px;">
+            Ready? Click Start.
+          </span>
+        </div>
+        <div style="color:#64748b; font-size:0.88rem; margin:0 0 6px 36px;">
+          We'll fetch your personalized itinerary, weather forecast, transit
+          timings, hotels, restrooms, live MBTA positions, and crime overlay
+          for the match (and address) you entered above.
+        </div>
+        """
+    )
+
+    mo.callout(
+        mo.vstack([_heading, start], gap=0.4),
+        kind="neutral",
+    )
+    return (start,)
+
+
+@app.cell(hide_code=True)
+def _(WC_MATCHES, match_picker, start):
+    # Resolve the chosen match. We only expose it to downstream cells once
+    # the user has clicked Start — so picking alone doesn't kick off all
+    # the fetches; the click does.
+    _raw = next(
+        (_m for _m in WC_MATCHES if _m["id"] == match_picker.value),
+        None,
+    )
+    selected_match = _raw if (_raw is not None and start.value) else None
+    return (selected_match,)
+
+
+@app.cell(hide_code=True)
+def _(location_input, requests, start):
+    # Geocode the user's starting location via Nominatim (free, no key,
+    # User-Agent required). Only attempts once Start has been clicked AND
+    # the user has entered something.
+    starting_point = None
+    if start.value and location_input.value and location_input.value.strip():
+        try:
+            _r = requests.get(
+                "https://nominatim.openstreetmap.org/search",
+                params={
+                    "q": location_input.value.strip() + ", Massachusetts, USA",
+                    "format": "json",
+                    "limit": 1,
+                    "addressdetails": 1,
+                },
+                headers={
+                    "User-Agent": (
+                        "pydata-2026-boston-safety-guide/1.0 "
+                        "(educational; marimo notebook)"
+                    )
+                },
+                timeout=12,
+            )
+            _r.raise_for_status()
+            _data = _r.json()
+            if _data:
+                _addr = _data[0].get("address", {}) or {}
+                _city = (
+                    _addr.get("city")
+                    or _addr.get("town")
+                    or _addr.get("village")
+                    or _addr.get("suburb")
+                    or _addr.get("municipality")
+                    or ""
+                )
+                # Optional: pull a hero image + intro from Wikipedia for the
+                # user's city so the planner opens with a recognizable visual.
+                _hero_image = None
+                _wiki_extract = None
+                if _city:
+                    try:
+                        _wiki = requests.get(
+                            "https://en.wikipedia.org/api/rest_v1/page/summary/"
+                            + _city.replace(" ", "_"),
+                            headers={
+                                "User-Agent": (
+                                    "pydata-2026-boston-safety-guide/1.0 "
+                                    "(educational; marimo notebook)"
+                                )
+                            },
+                            timeout=8,
+                        )
+                        if _wiki.ok:
+                            _wj = _wiki.json()
+                            _img = (_wj.get("originalimage") or {}).get("source")
+                            _img_thumb = (_wj.get("thumbnail") or {}).get("source")
+                            _hero_image = _img or _img_thumb
+                            _wiki_extract = _wj.get("extract")
+                    except Exception:
+                        pass
+                starting_point = {
+                    "lat": float(_data[0]["lat"]),
+                    "lon": float(_data[0]["lon"]),
+                    "display_name": _data[0]["display_name"],
+                    "raw_input": location_input.value.strip(),
+                    "city": _city,
+                    "hero_image": _hero_image,
+                    "wiki_extract": _wiki_extract,
+                }
+        except Exception:
+            starting_point = None
+    return (starting_point,)
+
+
+@app.cell(hide_code=True)
+def _(mo, requests, selected_match, starting_point, unit_toggle):
+    mo.stop(selected_match is None)
+    mo.stop(starting_point is None)
+
+    import math as _math
+    from datetime import datetime as _dt, timedelta as _td
+
+    # Distance display unit (1 km == 0.621371 miles).
+    _unit = unit_toggle.value
+    _km_to_disp = 1.0 if _unit == "km" else 0.621371
+    _unit_label = "km" if _unit == "km" else "mi"
+
+    def _fmt_dist(km):
+        return f"{km * _km_to_disp:.1f} {_unit_label}"
+
+    # Direct service to Gillette (no transfer needed)
+    _DIRECT_ROUTES = {"CR-Foxboro", "CR-Franklin"}
+    # Terminate at South Station — transfer there to Foxboro Line
+    _SOUTH_SIDE_ROUTES = {
+        "CR-Fairmount", "CR-Greenbush", "CR-Kingston", "CR-Middleborough",
+        "CR-Needham", "CR-NewBedford", "CR-Providence", "CR-Worcester",
+    }
+    # Terminate at North Station — require North→South Station transfer
+    _NORTH_SIDE_ROUTES = {
+        "CR-Fitchburg", "CR-Haverhill", "CR-Lowell", "CR-Newburyport",
+    }
+
+    # Non-MBTA regional transit agencies that serve cities MBTA doesn't —
+    # useful when the user is in a city without MBTA bus coverage.
+    _REGIONAL_TRANSIT = {
+        "brockton": ("BAT", "Brockton Area Transit", "ridebat.com"),
+        "bridgewater": ("BAT", "Brockton Area Transit", "ridebat.com"),
+        "easton": ("BAT", "Brockton Area Transit", "ridebat.com"),
+        "stoughton": ("BAT", "Brockton Area Transit", "ridebat.com"),
+        "plymouth": ("GATRA", "Greater Attleboro Taunton Regional Transit", "gatra.org"),
+        "taunton": ("GATRA", "Greater Attleboro Taunton Regional Transit", "gatra.org"),
+        "attleboro": ("GATRA", "Greater Attleboro Taunton Regional Transit", "gatra.org"),
+        "worcester": ("WRTA", "Worcester Regional Transit Authority", "therta.com"),
+        "lowell": ("LRTA", "Lowell Regional Transit Authority", "lrta.com"),
+        "new bedford": ("SRTA", "Southeastern Regional Transit Authority", "srtabus.com"),
+        "fall river": ("SRTA", "Southeastern Regional Transit Authority", "srtabus.com"),
+        "springfield": ("PVTA", "Pioneer Valley Transit Authority", "pvta.com"),
+        "fitchburg": ("MART", "Montachusett Regional Transit Authority", "mrta.us"),
+        "framingham": ("MWRTA", "MetroWest Regional Transit Authority", "mwrta.com"),
+        "natick": ("MWRTA", "MetroWest Regional Transit Authority", "mwrta.com"),
+    }
+
+    def _haversine_km(lat1, lon1, lat2, lon2):
+        _R = 6371.0
+        _p1, _p2 = _math.radians(lat1), _math.radians(lat2)
+        _dp = _math.radians(lat2 - lat1)
+        _dl = _math.radians(lon2 - lon1)
+        _a = (
+            _math.sin(_dp / 2) ** 2
+            + _math.cos(_p1) * _math.cos(_p2) * _math.sin(_dl / 2) ** 2
+        )
+        return _R * 2 * _math.atan2(_math.sqrt(_a), _math.sqrt(1 - _a))
+
+    # Fetch ALL Commuter Rail stations from MBTA (route_type 2). Dedupes to
+    # one entry per parent station.
+    _all_cr_stations = []
+    try:
+        _r = requests.get(
+            "https://api-v3.mbta.com/stops",
+            params={"filter[route_type]": 2},
+            timeout=15,
+        )
+        _r.raise_for_status()
+        _seen_parents = set()
+        for _s in _r.json().get("data", []):
+            _attrs = _s.get("attributes", {})
+            _parent = (
+                _s.get("relationships", {})
+                .get("parent_station", {})
+                .get("data")
+            )
+            _key = _parent["id"] if _parent else _s["id"]
+            if _key in _seen_parents:
+                continue
+            _seen_parents.add(_key)
+            _lat, _lon = _attrs.get("latitude"), _attrs.get("longitude")
+            if _lat is None or _lon is None:
+                continue
+            _all_cr_stations.append({
+                "name": _attrs.get("name", ""),
+                "lat": _lat,
+                "lon": _lon,
+                "id": _key,
+            })
+    except Exception:
+        pass
+
+    # Fallback to the Foxboro Line if MBTA API is unreachable.
+    if not _all_cr_stations:
+        _all_cr_stations = [
+            {"name": "South Station",  "lat": 42.3522, "lon": -71.0552, "id": "place-sstat"},
+            {"name": "Back Bay",       "lat": 42.3479, "lon": -71.0760, "id": "place-bbsta"},
+            {"name": "Foxboro",        "lat": 42.0664, "lon": -71.2540, "id": "place-fbsta"},
+        ]
+
+    # Closest CR station to the user, any line.
+    _scored = sorted(
+        (
+            (_haversine_km(starting_point["lat"], starting_point["lon"],
+                           _s["lat"], _s["lon"]),
+             _s)
+            for _s in _all_cr_stations
+        ),
+        key=lambda x: x[0],
+    )
+    _dist_km, _closest = _scored[0]
+
+    # What routes (CR + bus) serve the closest station?
+    _cr_at_closest = []
+    _buses_at_closest = []
+    try:
+        _r2 = requests.get(
+            "https://api-v3.mbta.com/routes",
+            params={"filter[stop]": _closest["id"]},
+            timeout=10,
+        )
+        _r2.raise_for_status()
+        for _rt in _r2.json().get("data", []):
+            _rt_id = _rt["id"]
+            _rt_attrs = _rt.get("attributes", {})
+            if _rt_id.startswith("CR-"):
+                _cr_at_closest.append({
+                    "id": _rt_id,
+                    "name": _rt_attrs.get("long_name", _rt_id),
+                })
+            elif _rt_attrs.get("type") == 3:  # bus
+                _buses_at_closest.append({
+                    "id": _rt_id,
+                    "short_name": _rt_attrs.get("short_name", "") or _rt_id,
+                    "long_name": _rt_attrs.get("long_name", ""),
+                })
+    except Exception:
+        pass
+
+    # Determine the routing path to Gillette.
+    _cr_route_ids = {_r["id"] for _r in _cr_at_closest}
+    if _cr_route_ids & _DIRECT_ROUTES:
+        _routing = "direct"
+        _routing_color = "#16a34a"
+        _routing_label = "Direct service to Gillette"
+        _routing_detail = (
+            "Match-day Foxboro Line trains run direct from this station "
+            "to Gillette Stadium. No transfers needed."
+        )
+        _transfer_min = 0
+        _connecting_station = None
+    elif _cr_route_ids & _SOUTH_SIDE_ROUTES:
+        _routing = "south_transfer"
+        _routing_color = "#ea580c"
+        _routing_label = "One transfer at South Station"
+        _routing_detail = (
+            f"Ride your home line into South Station, then transfer to "
+            f"the match-day Foxboro Line for the leg to Gillette."
+        )
+        _transfer_min = 15
+        _connecting_station = "South Station"
+    elif _cr_route_ids & _NORTH_SIDE_ROUTES:
+        _routing = "north_transfer"
+        _routing_color = "#dc2626"
+        _routing_label = "Multi-leg transfer via North → South Station"
+        _routing_detail = (
+            "Your home line goes into North Station. Take the Orange Line "
+            "to State, then the Red Line to South Station, then the "
+            "Foxboro Line. Allow 30+ extra minutes."
+        )
+        _transfer_min = 35
+        _connecting_station = "South Station (via Orange + Red)"
+    else:
+        _routing = "unknown"
+        _routing_color = "#64748b"
+        _routing_label = "Plan transfer in MBTA app"
+        _routing_detail = (
+            "We couldn't auto-classify this station's line — "
+            "check the MBTA app for the best routing to the Foxboro Line."
+        )
+        _transfer_min = 20
+        _connecting_station = "South Station (likely)"
+
+    # Walking estimate: haversine × 1.3 street factor × 12 min/km (5 km/h pace).
+    _walk_min = max(1, int(round(_dist_km * 1.3 * 12)))
+
+    # Driving via OSRM public demo (driving profile).
+    def _osrm_drive_min(lat1, lon1, lat2, lon2):
+        try:
+            _url = (
+                "http://router.project-osrm.org/route/v1/driving/"
+                f"{lon1},{lat1};{lon2},{lat2}"
+            )
+            _r = requests.get(_url, params={"overview": "false"}, timeout=10)
+            _r.raise_for_status()
+            _d = _r.json()
+            if _d.get("code") == "Ok" and _d.get("routes"):
+                return max(1, int(round(_d["routes"][0]["duration"] / 60)))
+        except Exception:
+            pass
+        return None
+
+    _drive_min = _osrm_drive_min(
+        starting_point["lat"], starting_point["lon"],
+        _closest["lat"], _closest["lon"],
+    )
+    if _drive_min is None:
+        _drive_min = max(1, int(round(_dist_km * 1.2 * 2)))
+        _drive_source = "estimated"
+    else:
+        _drive_source = "OSRM"
+
+    # Train ride: from closest station to Gillette via Foxboro Line.
+    # If transfer needed, leg1 = closest → connecting, leg2 = connecting → Foxboro.
+    _GILLETTE_LL = (42.0664, -71.2540)
+    _SS_LL = (42.3522, -71.0552)  # South Station
+    if _routing == "direct":
+        _train_dist_km = _haversine_km(
+            _closest["lat"], _closest["lon"],
+            _GILLETTE_LL[0], _GILLETTE_LL[1],
+        )
+        _train_min = max(20, int(round(_train_dist_km / 70 * 60 + 15)))
+    else:
+        # leg 1: closest → South Station (or via)
+        _leg1_dist = _haversine_km(
+            _closest["lat"], _closest["lon"],
+            _SS_LL[0], _SS_LL[1],
+        )
+        _leg1_min = max(15, int(round(_leg1_dist / 70 * 60 + 10)))
+        # leg 2: South Station → Gillette
+        _leg2_dist = _haversine_km(_SS_LL[0], _SS_LL[1], _GILLETTE_LL[0], _GILLETTE_LL[1])
+        _leg2_min = max(40, int(round(_leg2_dist / 70 * 60 + 15)))
+        _train_min = _leg1_min + _transfer_min + _leg2_min
+
+    # Timing chain — work backward from kickoff.
+    _kickoff_dt = _dt.fromisoformat(
+        selected_match["date"] + "T" + selected_match["kickoff_local"]
+    )
+    # Stadium walk-in + event-day crowd buffer = 1h 50min before kickoff.
+    _arrive_foxboro_dt = _kickoff_dt - _td(hours=1, minutes=50)
+    _train_departs_dt = _arrive_foxboro_dt - _td(minutes=_train_min)
+    # Be at the station 15 min before departure (for special-event service).
+    _arrive_station_dt = _train_departs_dt - _td(minutes=15)
+    _leave_walking_dt = _arrive_station_dt - _td(minutes=_walk_min)
+    _leave_driving_dt = _arrive_station_dt - _td(minutes=_drive_min)
+    _return_cutoff_dt = _kickoff_dt + _td(hours=4, minutes=30)
+
+    def _fmt_t(dt):
+        return dt.strftime("%I:%M %p").lstrip("0")
+
+    # Display name: trim Nominatim's full chain.
+    _display = starting_point.get("display_name", "")
+    _short = ", ".join(_display.split(",")[:3]) if _display else starting_point["raw_input"]
+
+    # Hero city image + Wikipedia intro (both optional).
+    _hero_url = starting_point.get("hero_image")
+    if _hero_url:
+        _hero_block = (
+            f'<div style="flex-shrink:0; width:110px; height:110px;'
+            f' border-radius:10px; overflow:hidden; border:1px solid #e5e7eb;'
+            f' box-shadow:0 2px 6px rgba(15,23,42,0.08);">'
+            f'<img src="{_hero_url}" alt="{starting_point.get("city","")}" '
+            'style="width:100%; height:100%; object-fit:cover; display:block;"/>'
+            "</div>"
+        )
+    else:
+        _hero_block = ""
+
+    _wiki_extract = starting_point.get("wiki_extract")
+    if _wiki_extract:
+        _trimmed = _wiki_extract[:220].rsplit(" ", 1)[0]
+        if len(_wiki_extract) > 220:
+            _trimmed += "…"
+        _wiki_block = (
+            f'<div style="margin-top:8px; padding:8px 10px; background:#f8fafc;'
+            f' border-left:3px solid #0891b2; border-radius:6px;'
+            f' font-size:0.82rem; color:#475569; line-height:1.5;">'
+            f'<i>{_trimmed}</i>'
+            f' <span style="color:#94a3b8; font-size:10px; margin-left:4px;">'
+            f'— Wikipedia</span></div>'
+        )
+    else:
+        _wiki_block = ""
+
+    # Regional transit agency (for cities outside MBTA bus coverage).
+    _starting_city_lower = (starting_point.get("city") or "").lower().strip()
+    _regional_agency = _REGIONAL_TRANSIT.get(_starting_city_lower)
+
+    # Bus chips at the closest CR station.
+    if _buses_at_closest:
+        _bus_chips = "".join(
+            '<span style="display:inline-block; background:white; '
+            'border:1px solid #cbd5e1; padding:4px 10px; border-radius:999px; '
+            'font-size:11.5px; font-weight:600; color:#0f172a; '
+            f'margin:3px 5px 3px 0;" title="{_b["long_name"]}">'
+            f'Bus {_b["short_name"]}'
+            "</span>"
+            for _b in _buses_at_closest[:10]
+        )
+        _bus_section = f"""
+        <div style="background:#f8fafc; border:1px solid #e5e7eb;
+                    border-left:3px solid #0891b2; border-radius:10px;
+                    padding:0.9rem 1.1rem;">
+          <div style="font-size:0.65rem; font-weight:700; letter-spacing:1.3px;
+                      color:#64748b; text-transform:uppercase; margin-bottom:6px;">
+            MBTA buses serving {_closest["name"]}
+          </div>
+          <div>{_bus_chips}</div>
+        </div>
+        """
+    else:
+        _bus_section = ""
+
+    if _regional_agency:
+        _ag_short, _ag_long, _ag_url = _regional_agency
+        _agency_section = f"""
+        <div style="background:#fef3c7; border:1px solid #fde68a;
+                    border-left:3px solid #d97706; border-radius:10px;
+                    padding:0.9rem 1.1rem;">
+          <div style="font-size:0.65rem; font-weight:700; letter-spacing:1.3px;
+                      color:#92400e; text-transform:uppercase; margin-bottom:4px;">
+            Local bus alternative
+          </div>
+          <div style="font-size:0.9rem; color:#451a03; line-height:1.45;">
+            MBTA buses don't fully cover {starting_point.get("city") or "your area"}.
+            Check <b>{_ag_short}</b> ({_ag_long}) at
+            <a href="https://{_ag_url}" target="_blank"
+               style="color:#92400e; font-weight:600;">{_ag_url}</a>
+            for local routes that connect you to {_closest["name"]}.
+          </div>
+        </div>
+        """
+    else:
+        _agency_section = ""
+
+    # Transfer annotation for the timing rail.
+    if _routing != "direct" and _connecting_station:
+        _train_subtext = (
+            f"~{_train_min} min total · transfer at {_connecting_station}"
+        )
+    else:
+        _train_subtext = f"~{_train_min} min ride"
+
+    _itinerary_html = f"""
+    <div style="background:white; border:1px solid #e5e7eb; border-radius:14px;
+                padding:1.7rem 1.9rem;
+                box-shadow:0 6px 22px rgba(15,23,42,0.08);
+                margin-bottom:1.4rem;">
+
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+        <span style="background:#0891b2; color:white; width:26px; height:26px;
+                     border-radius:50%; display:inline-flex; align-items:center;
+                     justify-content:center; font-weight:800; font-size:13px;">★</span>
+        <span style="font-size:1.08rem; font-weight:700; color:#0f172a;
+                     letter-spacing:-0.2px;">
+          Your personalized itinerary
+        </span>
+      </div>
+
+      <div style="margin-left:36px; display:flex; gap:14px; align-items:flex-start;">
+        {_hero_block}
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:0.7rem; font-weight:700; letter-spacing:1.5px;
+                      color:#0891b2; text-transform:uppercase; margin-bottom:4px;">
+            Starting point
+          </div>
+          <div style="font-size:1.08rem; color:#0f172a; font-weight:700;">
+            {_short}
+          </div>
+          <div style="font-size:0.82rem; color:#64748b; margin-top:2px;
+                      line-height:1.4;">
+            {_display}
+          </div>
+          {_wiki_block}
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.9rem;
+                  margin:1.2rem 0 0 36px;">
+        <div style="background:#f8fafc; border:1px solid #e5e7eb;
+                    border-left:3px solid #0891b2; border-radius:10px;
+                    padding:0.9rem 1rem;">
+          <div style="font-size:0.65rem; font-weight:700; letter-spacing:1.3px;
+                      color:#64748b; text-transform:uppercase;">
+            Closest CR station
+          </div>
+          <div style="font-size:1.05rem; color:#0f172a; font-weight:700;
+                      margin-top:4px;">
+            {_closest["name"]}
+          </div>
+          <div style="font-size:0.78rem; color:#64748b; margin-top:2px;">
+            {_fmt_dist(_dist_km)} away
+          </div>
+        </div>
+        <div style="background:#f8fafc; border:1px solid #e5e7eb;
+                    border-left:3px solid #16a34a; border-radius:10px;
+                    padding:0.9rem 1rem;">
+          <div style="font-size:0.65rem; font-weight:700; letter-spacing:1.3px;
+                      color:#64748b; text-transform:uppercase;">
+            Walk to station
+          </div>
+          <div style="font-size:1.05rem; color:#0f172a; font-weight:700;
+                      margin-top:4px;">
+            ~{_walk_min} min
+          </div>
+          <div style="font-size:0.78rem; color:#64748b; margin-top:2px;">
+            5 km/h pace, street-routed
+          </div>
+        </div>
+        <div style="background:#f8fafc; border:1px solid #e5e7eb;
+                    border-left:3px solid #ea580c; border-radius:10px;
+                    padding:0.9rem 1rem;">
+          <div style="font-size:0.65rem; font-weight:700; letter-spacing:1.3px;
+                      color:#64748b; text-transform:uppercase;">
+            Drive to station
+          </div>
+          <div style="font-size:1.05rem; color:#0f172a; font-weight:700;
+                      margin-top:4px;">
+            ~{_drive_min} min
+          </div>
+          <div style="font-size:0.78rem; color:#64748b; margin-top:2px;">
+            via {_drive_source}, no parking factor
+          </div>
+        </div>
+      </div>
+
+      <div style="margin:1rem 0 0 36px;">
+        <div style="display:flex; align-items:flex-start; gap:10px;
+                    padding:0.85rem 1.1rem; background:#f8fafc;
+                    border:1px solid #e5e7eb;
+                    border-left:3px solid {_routing_color}; border-radius:10px;">
+          <div style="background:{_routing_color}; color:white;
+                      padding:3px 9px; border-radius:999px; font-size:10px;
+                      font-weight:700; letter-spacing:0.5px;
+                      text-transform:uppercase; white-space:nowrap;
+                      margin-top:1px;">
+            {_routing_label}
+          </div>
+          <div style="font-size:0.86rem; color:#475569; line-height:1.45;">
+            {_routing_detail}
+          </div>
+        </div>
+      </div>
+
+      <div style="margin:0.8rem 0 0 36px; display:flex; flex-direction:column; gap:0.7rem;">
+        {_bus_section}
+        {_agency_section}
+      </div>
+
+      <div style="margin:1.3rem 0 0 36px; padding:1.2rem 1.4rem;
+                  background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 100%);
+                  color:white; border-radius:12px; position:relative;
+                  overflow:hidden;">
+        <div style="position:absolute; right:-30px; top:-30px; width:130px; height:130px;
+                    border:2px solid rgba(255,255,255,0.07); border-radius:50%;"></div>
+        <div style="position:relative; z-index:1;">
+          <div style="font-size:0.68rem; font-weight:700; letter-spacing:1.8px;
+                      opacity:0.85; text-transform:uppercase; margin-bottom:10px;">
+            Door-to-stadium timing · {selected_match["weekday"]} {selected_match["date"]}
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px;">
+            <div>
+              <div style="font-size:0.65rem; opacity:0.75;
+                          text-transform:uppercase; letter-spacing:1px;">
+                Leave (walk)
+              </div>
+              <div style="font-size:1.18rem; font-weight:700; margin-top:3px;">
+                {_fmt_t(_leave_walking_dt)}
+              </div>
+              <div style="font-size:0.7rem; opacity:0.7;">or drive at {_fmt_t(_leave_driving_dt)}</div>
+            </div>
+            <div>
+              <div style="font-size:0.65rem; opacity:0.75;
+                          text-transform:uppercase; letter-spacing:1px;">
+                Arrive {_closest["name"]}
+              </div>
+              <div style="font-size:1.18rem; font-weight:700; margin-top:3px;">
+                {_fmt_t(_arrive_station_dt)}
+              </div>
+              <div style="font-size:0.7rem; opacity:0.7;">15 min before train</div>
+            </div>
+            <div>
+              <div style="font-size:0.65rem; opacity:0.75;
+                          text-transform:uppercase; letter-spacing:1px;">
+                Train departs
+              </div>
+              <div style="font-size:1.18rem; font-weight:700; margin-top:3px;">
+                {_fmt_t(_train_departs_dt)}
+              </div>
+              <div style="font-size:0.7rem; opacity:0.7;">{_train_subtext}</div>
+            </div>
+            <div>
+              <div style="font-size:0.65rem; opacity:0.75;
+                          text-transform:uppercase; letter-spacing:1px;">
+                Arrive Foxboro
+              </div>
+              <div style="font-size:1.18rem; font-weight:700; margin-top:3px;">
+                {_fmt_t(_arrive_foxboro_dt)}
+              </div>
+              <div style="font-size:0.7rem; opacity:0.7;">1h 50m before kickoff</div>
+            </div>
+          </div>
+          <div style="margin-top:14px; padding-top:12px;
+                      border-top:1px solid rgba(255,255,255,0.16);
+                      display:flex; justify-content:space-between; align-items:center;
+                      flex-wrap:wrap; gap:8px;">
+            <div>
+              <span style="font-size:0.65rem; opacity:0.75;
+                           text-transform:uppercase; letter-spacing:1px;
+                           margin-right:8px;">Return cutoff</span>
+              <span style="font-size:1.05rem; font-weight:700;">{_fmt_t(_return_cutoff_dt)}</span>
+              <span style="font-size:0.75rem; opacity:0.75; margin-left:6px;">
+                last train back to {_closest["name"]}
+              </span>
+            </div>
+            <div style="font-size:0.74rem; opacity:0.7;">
+              Kickoff <b>{selected_match["kickoff_pretty"]}</b> ET · Match {selected_match["match_no"]}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    """
+
+    mo.md(_itinerary_html)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo, selected_match, starting_point):
+    mo.stop(selected_match is None)
+
+    # MBTA on-time performance snapshot, derived from publicly reported
+    # performance dashboards (mbta.com/performance). Numbers are rounded
+    # for visitor orientation — actual rates vary day-to-day.
+    _RELIABLE = [
+        ("Foxboro / Franklin Line",   "~85% on-time",
+         "Match-day shuttle to Gillette · low-incident track"),
+        ("Providence / Stoughton Line", "~85% on-time",
+         "Long suburban runs · usually punctual"),
+        ("Red Line (subway)",         "~92% on-time",
+         "Spine of the system · Cambridge ↔ South Station"),
+        ("Orange Line (subway)",      "~90% on-time",
+         "North Station ↔ Forest Hills · reliable"),
+    ]
+    _LESS_RELIABLE = [
+        ("Worcester Line",            "~70% on-time",
+         "Long line · weather-sensitive · plan extra time"),
+        ("Old Colony lines",          "~75% on-time",
+         "Kingston / Greenbush / Middleborough · single-track delays"),
+        ("Green Line (B/C/E branches)", "~78% on-time",
+         "Surface running · slower in traffic and snow"),
+        ("Haverhill Line",            "~75% on-time",
+         "Shares track with Amtrak · cascading delays"),
+    ]
+
+    def _rel_rows(rows, accent):
+        return "".join(
+            '<div style="display:flex; justify-content:space-between; '
+            'align-items:center; padding:8px 12px; background:#f8fafc; '
+            'border-radius:8px; margin-bottom:6px;">'
+            '<div>'
+            f'<div style="font-weight:700; color:#0f172a; font-size:0.92rem;">{_name}</div>'
+            f'<div style="color:#64748b; font-size:0.78rem; margin-top:1px;">{_note}</div>'
+            "</div>"
+            f'<div style="background:{accent}; color:white; padding:3px 9px; '
+            'border-radius:999px; font-size:11px; font-weight:700; '
+            f'white-space:nowrap;">{_score}</div>'
+            "</div>"
+            for _name, _score, _note in rows
+        )
+
+    _user_city = (starting_point or {}).get("city") or ""
+    _location_note = (
+        f"Tailored for travel from <b>{_user_city}</b>." if _user_city
+        else "General match-day reliability across the MBTA network."
+    )
+
+    _reliability_html = f"""
+    <div style="background:white; border:1px solid #e5e7eb; border-radius:14px;
+                padding:1.5rem 1.7rem;
+                box-shadow:0 4px 18px rgba(15,23,42,0.07);
+                margin-bottom:1.4rem;">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+        <span style="background:#003DA5; color:white; width:26px; height:26px;
+                     border-radius:50%; display:inline-flex; align-items:center;
+                     justify-content:center; font-weight:800; font-size:13px;">T</span>
+        <span style="font-size:1.08rem; font-weight:700; color:#0f172a;
+                     letter-spacing:-0.2px;">
+          MBTA reliability snapshot
+        </span>
+      </div>
+      <div style="color:#64748b; font-size:0.86rem; margin:0 0 14px 36px;">
+        {_location_note} Source: MBTA Performance dashboards
+        (mbta.com/performance, recent 30-day averages).
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;
+                  margin-left:36px;">
+        <div style="background:#f0fdf4; border:1px solid #bbf7d0;
+                    border-left:4px solid #16a34a;
+                    border-radius:10px; padding:1rem 1.1rem;">
+          <div style="font-size:0.65rem; font-weight:700; letter-spacing:1.3px;
+                      color:#166534; text-transform:uppercase; margin-bottom:8px;">
+            Most reliable
+          </div>
+          {_rel_rows(_RELIABLE, "#16a34a")}
+        </div>
+        <div style="background:#fef2f2; border:1px solid #fecaca;
+                    border-left:4px solid #dc2626;
+                    border-radius:10px; padding:1rem 1.1rem;">
+          <div style="font-size:0.65rem; font-weight:700; letter-spacing:1.3px;
+                      color:#991b1b; text-transform:uppercase; margin-bottom:8px;">
+            Plan extra time
+          </div>
+          {_rel_rows(_LESS_RELIABLE, "#dc2626")}
+        </div>
+      </div>
+    </div>
+    """
+
+    mo.md(_reliability_html)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo, requests, selected_match):
+    mo.stop(
+        selected_match is None,
+        mo.callout(
+            mo.md(
+                "**Pick a match above and click _Plan my match-day →_** "
+                "to unlock your weather forecast, transit timings, hotels, "
+                "restrooms, crime overlay, and the rest of this guide."
+            ),
+            kind="neutral",
+        ),
+    )
+
+    from datetime import datetime as _dt, timedelta as _td
+    from collections import Counter as _Counter
+
+    _GILLETTE_LAT, _GILLETTE_LON = 42.09, -71.26
+
+    def _weather_label(code):
+        if code is None:
+            return ("Unknown", "#94a3b8")
+        if code == 0:
+            return ("Clear sky", "#fbbf24")
+        if code in (1, 2):
+            return ("Mostly sunny", "#fbbf24")
+        if code == 3:
+            return ("Overcast", "#94a3b8")
+        if code in (45, 48):
+            return ("Foggy", "#94a3b8")
+        if code in (51, 53, 55, 56, 57):
+            return ("Drizzle", "#0ea5e9")
+        if code in (61, 63, 65, 66, 67):
+            return ("Rain", "#0284c7")
+        if code in (71, 73, 75, 77):
+            return ("Snow", "#e0e7ff")
+        if code in (80, 81, 82):
+            return ("Rain showers", "#0ea5e9")
+        if code in (85, 86):
+            return ("Snow showers", "#e0e7ff")
+        if code in (95, 96, 99):
+            return ("Thunderstorms", "#7c3aed")
+        return ("Variable", "#94a3b8")
+
+    def _fetch_weather(date_iso):
+        today = _dt.now().date()
+        match_date = _dt.fromisoformat(date_iso).date()
+        days_ahead = (match_date - today).days
+        try:
+            if 0 <= days_ahead <= 16:
+                _url = (
+                    "https://api.open-meteo.com/v1/forecast"
+                    f"?latitude={_GILLETTE_LAT}&longitude={_GILLETTE_LON}"
+                    "&daily=temperature_2m_max,temperature_2m_min,"
+                    "precipitation_sum,weathercode,uv_index_max,"
+                    "windspeed_10m_max,precipitation_probability_max"
+                    "&timezone=America/New_York"
+                    f"&start_date={date_iso}&end_date={date_iso}"
+                    "&temperature_unit=fahrenheit&windspeed_unit=mph"
+                )
+                r = requests.get(_url, timeout=15)
+                r.raise_for_status()
+                d = r.json().get("daily", {})
+                return {
+                    "source": "forecast",
+                    "temp_max": (d.get("temperature_2m_max") or [None])[0],
+                    "temp_min": (d.get("temperature_2m_min") or [None])[0],
+                    "precip": (d.get("precipitation_sum") or [0])[0],
+                    "precip_prob": (d.get("precipitation_probability_max") or [None])[0],
+                    "weather_code": (d.get("weathercode") or [None])[0],
+                    "uv": (d.get("uv_index_max") or [None])[0],
+                    "wind": (d.get("windspeed_10m_max") or [None])[0],
+                }
+            else:
+                end_year = today.year - 1
+                start_year = end_year - 4
+                vals = {"temp_max": [], "temp_min": [], "precip": [], "wcode": []}
+                for yr in range(start_year, end_year + 1):
+                    hist_date = f"{yr}{date_iso[4:]}"
+                    _url = (
+                        "https://archive-api.open-meteo.com/v1/archive"
+                        f"?latitude={_GILLETTE_LAT}&longitude={_GILLETTE_LON}"
+                        "&daily=temperature_2m_max,temperature_2m_min,"
+                        "precipitation_sum,weathercode"
+                        "&timezone=America/New_York"
+                        f"&start_date={hist_date}&end_date={hist_date}"
+                        "&temperature_unit=fahrenheit"
+                    )
+                    r = requests.get(_url, timeout=10)
+                    if r.ok:
+                        d = r.json().get("daily", {})
+                        if (d.get("temperature_2m_max") or [None])[0] is not None:
+                            vals["temp_max"].append(d["temperature_2m_max"][0])
+                            vals["temp_min"].append(d["temperature_2m_min"][0])
+                            vals["precip"].append(
+                                (d.get("precipitation_sum") or [0])[0] or 0
+                            )
+                            wc = (d.get("weathercode") or [0])[0] or 0
+                            vals["wcode"].append(int(wc))
+                if not vals["temp_max"]:
+                    return None
+                _avg = lambda xs: sum(xs) / len(xs)
+                modal_wcode = _Counter(vals["wcode"]).most_common(1)[0][0]
+                return {
+                    "source": "historical",
+                    "temp_max": _avg(vals["temp_max"]),
+                    "temp_min": _avg(vals["temp_min"]),
+                    "precip": _avg(vals["precip"]),
+                    "precip_prob": None,
+                    "weather_code": modal_wcode,
+                    "uv": None,
+                    "wind": None,
+                    "n_years": len(vals["temp_max"]),
+                }
+        except Exception:
+            return None
+
+    with mo.status.spinner("Fetching match-day weather…"):
+        weather = _fetch_weather(selected_match["date"])
+
+    # Match-day departure math: Foxboro CR ~55 min ride; +1 hr stadium
+    # walk-in; +50 min event-day crowd buffer. Recommend arriving at South
+    # Station 30 min before the train departs.
+    _kickoff_dt = _dt.fromisoformat(
+        selected_match["date"] + "T" + selected_match["kickoff_local"]
+    )
+    _leave_train = _kickoff_dt - _td(hours=2, minutes=45)
+    _arrive_south = _leave_train - _td(minutes=30)
+    _return_cutoff = _kickoff_dt + _td(hours=4, minutes=30)
+
+    def _fmt_t(dt):
+        s = dt.strftime("%I:%M %p")
+        return s.lstrip("0")
+
+    if weather:
+        _wlabel, _wcolor = _weather_label(weather.get("weather_code"))
+        _th = weather.get("temp_max")
+        _tl = weather.get("temp_min")
+        _temp_str = (
+            f"{int(round(_th))}°F high · {int(round(_tl))}°F low"
+            if _th is not None
+            else "—"
+        )
+        _precip = weather.get("precip")
+        _precip_prob = weather.get("precip_prob")
+        _precip_str = ""
+        if _precip is not None:
+            if _precip > 0:
+                _precip_str = f"{_precip:.1f} mm rain expected"
+                if _precip_prob is not None:
+                    _precip_str += f" · {int(_precip_prob)}% chance"
+            else:
+                _precip_str = "No precipitation expected"
+        _extras = []
+        if weather.get("wind") is not None:
+            _extras.append(f"Wind {int(round(weather['wind']))} mph")
+        if weather.get("uv") is not None:
+            _extras.append(f"UV {int(round(weather['uv']))}")
+        _extras_str = " · ".join(_extras)
+        _source_label = (
+            "Live forecast (Open-Meteo)"
+            if weather.get("source") == "forecast"
+            else f"Typical for this date ({weather.get('n_years', 5)}-yr historical average)"
+        )
+        _temp_badge_num = (
+            int(round(_th)) if _th is not None else "—"
+        )
+        weather_html = f"""
+        <div style="display:flex; align-items:center; gap:14px; padding:14px;
+                    background:#f8fafc; border-radius:10px; border:1px solid #e5e7eb;
+                    height:100%; box-sizing:border-box;">
+          <div style="width:58px; height:58px; background:{_wcolor};
+                      border-radius:50%; display:flex; align-items:center;
+                      justify-content:center; color:white; font-weight:800;
+                      font-size:16px; flex-shrink:0;
+                      box-shadow:0 2px 10px rgba(0,0,0,0.14);">
+            {_temp_badge_num}°
+          </div>
+          <div style="flex:1; min-width:0;">
+            <div style="font-size:0.98rem; font-weight:700; color:#0f172a;">{_wlabel}</div>
+            <div style="font-size:0.86rem; color:#475569; margin-top:2px;">{_temp_str}</div>
+            {f'<div style="font-size:0.82rem; color:#475569; margin-top:2px;">{_precip_str}</div>' if _precip_str else ""}
+            {f'<div style="font-size:0.78rem; color:#94a3b8; margin-top:3px;">{_extras_str}</div>' if _extras_str else ""}
+            <div style="font-size:0.72rem; color:#94a3b8; margin-top:4px;
+                        letter-spacing:0.3px;">{_source_label}</div>
+          </div>
+        </div>
+        """
+    else:
+        # Weather unavailable — render a neutral placeholder rather than an
+        # error. Common for far-future dates where forecast hasn't been
+        # released and historical archive returns no rows.
+        weather_html = """
+        <div style="padding:14px; background:#f8fafc; border-radius:10px;
+                    border:1px dashed #cbd5e1; color:#94a3b8; font-size:0.85rem;
+                    height:100%; box-sizing:border-box; display:flex;
+                    align-items:center; justify-content:center;
+                    text-align:center; line-height:1.4;">
+          Forecast and historical data for this date aren't yet available
+          for Gillette Stadium — check back closer to match day.
+        </div>
+        """
+
+    _summary_html = f"""
+    <div style="background:white; border:1px solid #e5e7eb; border-radius:14px;
+                padding:1.6rem 1.8rem;
+                box-shadow:0 6px 22px rgba(15,23,42,0.08);
+                margin-bottom:1.4rem;">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+        <span style="background:#16a34a; color:white; width:26px; height:26px;
+                     border-radius:50%; display:inline-flex; align-items:center;
+                     justify-content:center; font-weight:800; font-size:13px;">2</span>
+        <span style="font-size:1.08rem; font-weight:700; color:#0f172a;
+                     letter-spacing:-0.2px;">Your match-day plan</span>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.2rem;
+                  margin-left:36px;">
+        <div>
+          <div style="font-size:0.7rem; font-weight:700; letter-spacing:1.5px;
+                      color:#dc2626; text-transform:uppercase; margin-bottom:6px;">
+            {selected_match["stage"]} · {selected_match["match_no"]}
+          </div>
+          <div style="font-size:1.5rem; font-weight:800; color:#0f172a;
+                      letter-spacing:-0.3px;">
+            {selected_match["weekday"]}, {selected_match["date"]}
+          </div>
+          <div style="font-size:1.05rem; color:#475569; font-weight:600;
+                      margin-top:2px;">
+            Kickoff {selected_match["kickoff_pretty"]} ET
+          </div>
+          <div style="font-size:0.86rem; color:#64748b; margin-top:10px;
+                      padding-top:10px; border-top:1px solid #f1f5f9;">
+            {selected_match["teams"]}
+          </div>
+          <div style="font-size:0.8rem; color:#94a3b8; margin-top:4px;">
+            Venue: Gillette Stadium, Foxborough, MA
+          </div>
+        </div>
+        <div>{weather_html}</div>
+      </div>
+
+      <div style="margin:1.3rem 0 0 36px; padding:1.1rem 1.3rem;
+                  background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 100%);
+                  color:white; border-radius:10px; position:relative; overflow:hidden;">
+        <div style="position:absolute; right:-30px; top:-30px; width:120px; height:120px;
+                    border:2px solid rgba(255,255,255,0.08); border-radius:50%;"></div>
+        <div style="position:relative; z-index:1;">
+          <div style="font-size:0.68rem; font-weight:700; letter-spacing:1.8px;
+                      opacity:0.85; text-transform:uppercase; margin-bottom:10px;">
+            Match-day departure plan · MBTA Foxboro Line
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:14px;">
+            <div>
+              <div style="font-size:0.7rem; opacity:0.78;
+                          text-transform:uppercase; letter-spacing:1px;">
+                Arrive at South Station
+              </div>
+              <div style="font-size:1.18rem; font-weight:700; margin-top:3px;">
+                {_fmt_t(_arrive_south)}
+              </div>
+            </div>
+            <div>
+              <div style="font-size:0.7rem; opacity:0.78;
+                          text-transform:uppercase; letter-spacing:1px;">
+                Train departs by
+              </div>
+              <div style="font-size:1.18rem; font-weight:700; margin-top:3px;">
+                {_fmt_t(_leave_train)}
+              </div>
+            </div>
+            <div>
+              <div style="font-size:0.7rem; opacity:0.78;
+                          text-transform:uppercase; letter-spacing:1px;">
+                Return cutoff
+              </div>
+              <div style="font-size:1.18rem; font-weight:700; margin-top:3px;">
+                {_fmt_t(_return_cutoff)}
+              </div>
+            </div>
+          </div>
+          <div style="font-size:0.78rem; opacity:0.78; margin-top:12px;
+                      line-height:1.5;">
+            Buffers assume ~55 min train ride + 1 hr stadium walk-in + 50 min
+            event-day crowd surcharge. Confirm the exact MBTA special-event
+            schedule close to match day.
+          </div>
+        </div>
+      </div>
+    </div>
+    """
+
+    mo.md(_summary_html)
+    return (weather,)
+
+
+@app.cell(hide_code=True)
+def _(mo, selected_match, starting_point):
+    mo.stop(selected_match is None)
+
+    _CITY_OPTIONS = [
+        "BOSTON",
+        "FOXBOROUGH",
+        "CAMBRIDGE",
+        "BROOKLINE",
+        "QUINCY",
+        "SOMERVILLE",
+        "FRAMINGHAM",
+        "WORCESTER",
+        "ATTLEBORO",
+        "MANSFIELD",
+    ]
+
+    # If the user gave us a starting address, default the crash-data city
+    # to whichever option matches their geocoded city.
+    _default_city = "BOSTON"
+    if starting_point and starting_point.get("city"):
+        _normalized = starting_point["city"].upper().replace("FOXBORO", "FOXBOROUGH")
+        if _normalized in _CITY_OPTIONS:
+            _default_city = _normalized
+
     year = mo.ui.dropdown(
         options=["2026", "2025", "2024", "2023", "2022", "2021", "2020", "2019"],
         value="2026",
@@ -141,20 +1360,9 @@ def _(mo):
     )
 
     city = mo.ui.dropdown(
-        options=[
-            "BOSTON",
-            "FOXBOROUGH",
-            "CAMBRIDGE",
-            "BROOKLINE",
-            "QUINCY",
-            "SOMERVILLE",
-            "FRAMINGHAM",
-            "WORCESTER",
-            "ATTLEBORO",
-            "MANSFIELD",
-        ],
-        value="BOSTON",
-        label="Host area / city",
+        options=_CITY_OPTIONS,
+        value=_default_city,
+        label="City you're staying in",
     )
 
     severity = mo.ui.multiselect(
@@ -170,34 +1378,40 @@ def _(mo):
             "Non-fatal injury - Suspected serious injury",
             "Non-fatal injury - Suspected minor injury",
         ],
-        label="Crash severity (filter)",
+        label="Crash severity",
     )
 
-    run = mo.ui.run_button(label="Fetch crashes →", kind="success")
+    _section_header = mo.md(
+        """
+        <div style="margin-top:0.4rem; margin-bottom:0.6rem;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
+            <span style="background:#DA291C; color:white; width:24px; height:24px;
+                         border-radius:50%; display:inline-flex; align-items:center;
+                         justify-content:center; font-weight:800; font-size:12px;">3</span>
+            <span style="font-size:1.05rem; font-weight:700; color:#0f172a;
+                         letter-spacing:-0.2px;">Crash risk near you</span>
+          </div>
+          <div style="color:#64748b; font-size:0.85rem; margin-left:34px;">
+            Live MassDOT crash records for the city you're staying in. Defaults
+            to Boston, 2026 — change the dropdowns if you're basing elsewhere.
+          </div>
+        </div>
+        """
+    )
 
-    controls = mo.vstack([
+    _controls = mo.vstack([
+        _section_header,
         mo.hstack([year, city], justify="start", gap=1.0),
         severity,
-        run,
-    ], gap=0.6)
+    ], gap=0.5)
 
-    mo.callout(controls, kind="info")
-    return city, run, severity, year
+    mo.callout(_controls, kind="neutral")
+    return city, severity, year
 
 
 @app.cell(hide_code=True)
-def _(city, mo, pd, requests, run, severity, year):
-    mo.stop(
-        not run.value,
-        mo.callout(
-            mo.md(
-                "👆 **Set your filters above and click _Fetch crashes →_** "
-                "to pull the latest records from MassDOT IMPACT. "
-                "The default view (Boston 2026) is a good starting point for most visitors."
-            ),
-            kind="neutral",
-        ),
-    )
+def _(city, mo, pd, requests, selected_match, severity, year):
+    mo.stop(selected_match is None)
 
     def _layer_name(yr: str) -> str:
         # 2023 is published with a quirky "v" suffix; everything else is plain.
@@ -278,7 +1492,8 @@ def _(city, mo, pd, requests, run, severity, year):
 
 
 @app.cell(hide_code=True)
-def _(city, df, fallback_note, mo, used_year):
+def _(city, df, fallback_note, mo, selected_match, used_year):
+    mo.stop(selected_match is None)
     mo.stop(
         df.empty,
         mo.callout(
@@ -343,7 +1558,8 @@ def _(city, df, fallback_note, mo, used_year):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _(mo, selected_match):
+    mo.stop(selected_match is None)
     mo.md(
         """
         <div style="border-left:4px solid #DA291C; padding:2px 0 2px 14px;
@@ -360,7 +1576,8 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(HeatMap, MarkerCluster, df, folium, mo):
+def _(HeatMap, MarkerCluster, df, folium, mo, selected_match):
+    mo.stop(selected_match is None)
     mo.stop(df.empty)
 
     center = [df["lat"].mean(), df["lon"].mean()]
@@ -408,7 +1625,8 @@ def _(HeatMap, MarkerCluster, df, folium, mo):
 
 
 @app.cell(hide_code=True)
-def _(df, mo):
+def _(df, mo, selected_match):
+    mo.stop(selected_match is None)
     mo.stop(df.empty)
 
     street_cols = [
@@ -456,7 +1674,8 @@ def _(df, mo):
 
 
 @app.cell(hide_code=True)
-def _(alt, df, mo):
+def _(alt, df, mo, selected_match):
+    mo.stop(selected_match is None)
     mo.stop(df.empty or "CRASH_DATETIME" not in df.columns)
     mo.stop(not df["CRASH_DATETIME"].notna().any())
 
@@ -498,7 +1717,8 @@ def _(alt, df, mo):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _(mo, selected_match):
+    mo.stop(selected_match is None)
     mo.md(
         """
         <hr style="border:none; border-top:1px solid #e5e7eb; margin:2.5rem 0 1.5rem 0;"/>
@@ -522,7 +1742,8 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(folium, requests):
+def _(folium, mo, requests, selected_match):
+    mo.stop(selected_match is None)
     import os as _os
     import json as _json
 
@@ -1065,7 +2286,8 @@ def _(folium, requests):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _(mo, selected_match):
+    mo.stop(selected_match is None)
     mo.md(
         """
         <hr style="border:none; border-top:1px solid #e5e7eb; margin:2.5rem 0 1.5rem 0;"/>
@@ -1077,9 +2299,10 @@ def _(mo):
                       max-width:760px; line-height:1.5;">
             Match days fill up Boston hotel rooms fast. The Foxboro Commuter
             Rail corridor — from South Station all the way to Foxboro — is
-            dotted with budget motels, restaurants, and bars that put you a
-            train ride from the stadium. Each marker shows a price tier
-            (<b>$</b> cheap → <b>$$$$</b> luxury) <i>estimated</i> from the
+            dotted with budget motels, restaurants, bars, and <b>public
+            restrooms</b> that put you a train ride from the stadium. Each
+            marker shows a price tier (<b>$</b> cheap → <b>$$$$</b> luxury,
+            <b>Free</b> for parks and restrooms) <i>estimated</i> from the
             OpenStreetMap category and star rating — OSM doesn't ship real
             nightly rates, so check the website link in each popup for
             actual prices.
@@ -1091,7 +2314,9 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _(mo, selected_match):
+    mo.stop(selected_match is None)
+
     poi_categories = mo.ui.multiselect(
         options=[
             "Budget stays (motels, hostels)",
@@ -1099,52 +2324,39 @@ def _(mo):
             "Bars & pubs",
             "Restaurants & food",
             "Parks & recreation",
+            "Public restrooms",
         ],
         value=[
             "Budget stays (motels, hostels)",
             "Hotels",
             "Bars & pubs",
+            "Public restrooms",
         ],
         label="Show categories",
     )
 
     poi_area = mo.ui.dropdown(
         options=[
+            "Around your hotel",
             "Around Gillette Stadium",
             "Foxboro CR corridor (South Station → Foxboro)",
+            "Boston downtown / Back Bay",
+            "Cambridge",
+            "Fenway / Kenmore",
+            "South Shore (Quincy → Braintree)",
         ],
-        value="Around Gillette Stadium",
+        value="Around your hotel",
         label="Area",
     )
 
-    poi_run = mo.ui.run_button(label="Find places →", kind="success")
-
-    _controls = mo.vstack(
-        [
-            mo.hstack([poi_area, poi_categories], justify="start", gap=1.0),
-            poi_run,
-        ],
-        gap=0.5,
-    )
-    mo.callout(_controls, kind="info")
-    return poi_area, poi_categories, poi_run
+    _controls = mo.hstack([poi_area, poi_categories], justify="start", gap=1.0)
+    mo.callout(_controls, kind="neutral")
+    return poi_area, poi_categories
 
 
 @app.cell(hide_code=True)
-def _(folium, mo, poi_area, poi_categories, poi_run, requests):
-    mo.stop(
-        not poi_run.value,
-        mo.callout(
-            mo.md(
-                "Click **Find places →** to query OpenStreetMap for "
-                "accommodations and venues near Gillette Stadium and along "
-                "the Foxboro Commuter Rail. The first query takes 10–25 "
-                "seconds; subsequent queries are faster."
-            ),
-            kind="neutral",
-        ),
-    )
-
+def _(folium, home_country, mo, poi_area, poi_categories, requests, selected_match, starting_point):
+    mo.stop(selected_match is None)
     mo.stop(
         not poi_categories.value,
         mo.callout(
@@ -1152,6 +2364,37 @@ def _(folium, mo, poi_area, poi_categories, poi_run, requests):
             kind="warn",
         ),
     )
+
+    # Map the user's home country selection to an OSM cuisine substring.
+    # Overpass regex match `~` matches partial strings so values like
+    # "mexican;tex-mex" still hit on "mexican".
+    _COUNTRY_TO_CUISINE = {
+        "Argentina (Argentinian)": "argentin",
+        "Brazil (Brazilian)":      "brazilian",
+        "China (Chinese)":         "chinese",
+        "Ethiopia (Ethiopian)":    "ethiopian",
+        "France (French)":         "french",
+        "Germany (German)":        "german",
+        "Greece (Greek)":          "greek",
+        "India (Indian)":          "indian",
+        "Ireland (Irish)":         "irish",
+        "Italy (Italian)":         "italian",
+        "Japan (Japanese)":        "japanese|sushi",
+        "Korea (Korean)":          "korean",
+        "Lebanon (Lebanese)":      "lebanese",
+        "Mexico (Mexican)":        "mexican",
+        "Morocco (Moroccan)":      "moroccan",
+        "Nigeria (Nigerian)":      "nigerian|african",
+        "Peru (Peruvian)":         "peruvian",
+        "Portugal (Portuguese)":   "portuguese",
+        "Spain (Spanish)":         "spanish|tapas",
+        "Thailand (Thai)":         "thai",
+        "Turkey (Turkish)":        "turkish",
+        "United Kingdom (British)": "british|english|pub",
+        "United States (American)": "american|burger|steak",
+        "Vietnam (Vietnamese)":    "vietnamese|pho",
+    }
+    _cuisine_regex = _COUNTRY_TO_CUISINE.get(home_country.value)
 
     _CAT_TAGS = {
         "Budget stays (motels, hostels)": {
@@ -1166,6 +2409,7 @@ def _(folium, mo, poi_area, poi_categories, poi_run, requests):
             "leisure": ["park"],
             "tourism": ["attraction"],
         },
+        "Public restrooms": {"amenity": ["toilets"]},
     }
 
     _CAT_COLOR = {
@@ -1174,6 +2418,7 @@ def _(folium, mo, poi_area, poi_categories, poi_run, requests):
         "Bars & pubs": "#9333ea",
         "Restaurants & food": "#dc2626",
         "Parks & recreation": "#059669",
+        "Public restrooms": "#0d9488",  # teal
     }
 
     _AREAS = {
@@ -1187,9 +2432,41 @@ def _(folium, mo, poi_area, poi_categories, poi_run, requests):
             "center": [42.20, -71.16],
             "zoom": 10,
         },
+        "Boston downtown / Back Bay": {
+            "bbox": (42.343, -71.090, 42.370, -71.045),
+            "center": [42.356, -71.067],
+            "zoom": 14,
+        },
+        "Cambridge": {
+            "bbox": (42.355, -71.140, 42.405, -71.080),
+            "center": [42.378, -71.110],
+            "zoom": 13,
+        },
+        "Fenway / Kenmore": {
+            "bbox": (42.336, -71.110, 42.357, -71.085),
+            "center": [42.346, -71.097],
+            "zoom": 14,
+        },
+        "South Shore (Quincy → Braintree)": {
+            "bbox": (42.190, -71.060, 42.290, -70.960),
+            "center": [42.235, -71.010],
+            "zoom": 12,
+        },
     }
 
-    _area_cfg = _AREAS[poi_area.value]
+    # Dynamic "Around your hotel" — ~3 km box centered on the user's
+    # geocoded location, only available once they've entered an address.
+    if starting_point:
+        _hlat, _hlon = starting_point["lat"], starting_point["lon"]
+        _AREAS["Around your hotel"] = {
+            "bbox": (_hlat - 0.025, _hlon - 0.035, _hlat + 0.025, _hlon + 0.035),
+            "center": [_hlat, _hlon],
+            "zoom": 14,
+        }
+
+    # If the user picked "Around your hotel" but never entered one, fall
+    # back to the stadium-area view so the cell still renders something.
+    _area_cfg = _AREAS.get(poi_area.value) or _AREAS["Around Gillette Stadium"]
     _bbox = _area_cfg["bbox"]
     _bbox_str = f"({_bbox[0]},{_bbox[1]},{_bbox[2]},{_bbox[3]})"
 
@@ -1197,7 +2474,21 @@ def _(folium, mo, poi_area, poi_categories, poi_run, requests):
     for _cat in poi_categories.value:
         for _key, _vals in _CAT_TAGS.get(_cat, {}).items():
             for _v in _vals:
-                _parts.append(f'nwr["{_key}"="{_v}"]{_bbox_str};')
+                # If the user picked a home country, filter ONLY the
+                # restaurant / fast_food / cafe queries by cuisine.
+                # Hotels, bars, parks, restrooms always pass through.
+                if (
+                    _cuisine_regex
+                    and _cat == "Restaurants & food"
+                    and _key == "amenity"
+                    and _v in ("restaurant", "fast_food", "cafe")
+                ):
+                    _parts.append(
+                        f'nwr["{_key}"="{_v}"]'
+                        f'["cuisine"~"{_cuisine_regex}",i]{_bbox_str};'
+                    )
+                else:
+                    _parts.append(f'nwr["{_key}"="{_v}"]{_bbox_str};')
 
     _query = (
         "[out:json][timeout:30];\n"
@@ -1269,7 +2560,7 @@ def _(folium, mo, poi_area, poi_categories, poi_run, requests):
         except ValueError:
             stars = 0
 
-        if leisure == "park":
+        if leisure == "park" or amenity == "toilets":
             return "Free"
         if tourism == "attraction":
             fee = (tags.get("fee") or "").lower()
@@ -1421,8 +2712,6 @@ def _(folium, mo, poi_area, poi_categories, poi_run, requests):
     for _el in _data.get("elements", []):
         _tags = _el.get("tags", {}) or {}
         _name = _tags.get("name")
-        if not _name:
-            continue  # skip unnamed entries — not useful for visitors
         _lat = _el.get("lat") or (_el.get("center") or {}).get("lat")
         _lon = _el.get("lon") or (_el.get("center") or {}).get("lon")
         if _lat is None or _lon is None:
@@ -1430,6 +2719,13 @@ def _(folium, mo, poi_area, poi_categories, poi_run, requests):
         _cat = _categorize(_tags)
         if _cat is None or _cat not in poi_categories.value:
             continue
+        # Most OSM toilets entries have no name; give them a generic label
+        # so they still surface on the map. Other categories skip unnamed.
+        if not _name:
+            if _cat == "Public restrooms":
+                _name = "Public restroom"
+            else:
+                continue
         if _count_by_cat.get(_cat, 0) >= _MAX_PER_CAT:
             continue
 
@@ -1622,7 +2918,8 @@ def _(folium, mo, poi_area, poi_categories, poi_run, requests):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _(mo, selected_match):
+    mo.stop(selected_match is None)
     mo.md(
         """
         <hr style="border:none; border-top:1px solid #e5e7eb; margin:2.5rem 0 1.5rem 0;"/>
@@ -1630,19 +2927,18 @@ def _(mo):
                     margin:0 0 0.8rem 0;">
           <div style="font-size:1.35rem; font-weight:700; color:#0f172a;
                       letter-spacing:-0.2px;">
-            Cities to avoid and the safest places to base from
+            Family-friendly cities to base from
           </div>
           <div style="font-size:0.94rem; color:#475569; margin-top:4px;
                       max-width:780px; line-height:1.5;">
-            A statewide view of violent crime per 100,000 residents across
-            Massachusetts cities and towns. Red dots = highest rates (consider
-            day-trips rather than overnight stays), green dots = safest
-            municipalities (good base if you want quiet between matches).
-            Data: <b>2024 FBI Uniform Crime Reporting</b> (published Fall 2025
-            — the latest complete release), with 2025 quarterly preview notes
-            where the FBI has published partial figures for the largest
-            agencies. Full 2025 annual UCR is expected Fall 2026; 2026 data
-            won't exist until late 2027.
+            A statewide view of Massachusetts cities ranked by reported
+            violent crime per 100,000 residents. Green dots highlight quiet,
+            family-friendly municipalities (great bases between matches);
+            warmer tones indicate denser urban areas — most are perfectly
+            fine to visit, just better as day-trips than overnight stays.
+            <b>Click any city dot</b> to see its top tourist attractions
+            with website links. Data: <b>2024 FBI Uniform Crime Reporting</b>
+            (latest complete release).
           </div>
         </div>
         """
@@ -1651,7 +2947,8 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(folium, mo):
+def _(folium, mo, selected_match):
+    mo.stop(selected_match is None)
     # MA city violent-crime rates per 100k residents — latest complete
     # vintage is the 2024 FBI UCR (published Fall 2025). Numbers below
     # reflect 2024 figures adjusted from the 2023→2024 reported trends
@@ -1731,6 +3028,143 @@ def _(folium, mo):
             return "Low-moderate"
         return "Safest"
 
+    # Curated top tourist attractions per city — name + official URL,
+    # so visitors can click straight through from the city popup.
+    _ATTRACTIONS = {
+        "Boston": [
+            ("Freedom Trail",            "https://thefreedomtrail.org"),
+            ("Fenway Park (Red Sox)",    "https://www.mlb.com/redsox/ballpark"),
+            ("Boston Public Garden",     "https://www.boston.gov/parks/public-garden"),
+            ("Faneuil Hall Marketplace", "https://www.faneuilhallmarketplace.com"),
+            ("New England Aquarium",     "https://www.neaq.org"),
+            ("Isabella Stewart Gardner Museum", "https://www.gardnermuseum.org"),
+        ],
+        "Cambridge": [
+            ("Harvard University Yard",  "https://www.harvard.edu/visit"),
+            ("MIT Museum",               "https://mitmuseum.mit.edu"),
+            ("Harvard Square",           "https://www.harvardsquare.com"),
+            ("Charles River Esplanade",  "https://esplanade.org"),
+        ],
+        "Brookline": [
+            ("JFK Birthplace NHS",       "https://www.nps.gov/jofi"),
+            ("Larz Anderson Auto Museum","https://larzanderson.org"),
+            ("Coolidge Corner Theatre",  "https://coolidge.org"),
+        ],
+        "Salem": [
+            ("Salem Witch Museum",       "https://www.salemwitchmuseum.com"),
+            ("Peabody Essex Museum",     "https://www.pem.org"),
+            ("House of the Seven Gables","https://7gables.org"),
+        ],
+        "Plymouth": [
+            ("Plimoth Patuxet Museums",  "https://plimoth.org"),
+            ("Mayflower II & Plymouth Rock", "https://www.plimoth.org/visit/things-do/mayflower-ii"),
+            ("Pilgrim Hall Museum",      "https://www.pilgrimhall.org"),
+        ],
+        "Concord": [
+            ("Walden Pond State Reservation", "https://www.mass.gov/locations/walden-pond-state-reservation"),
+            ("Minute Man National Historical Park", "https://www.nps.gov/mima"),
+            ("Orchard House (Louisa May Alcott)", "https://louisamayalcott.org"),
+        ],
+        "Lexington": [
+            ("Lexington Battle Green",   "https://www.tourlexington.us/battle-green"),
+            ("Minute Man National Historical Park", "https://www.nps.gov/mima"),
+            ("Munroe Tavern",            "https://www.lexingtonhistory.org"),
+        ],
+        "Foxborough": [
+            ("Patriot Place",            "https://www.patriot-place.com"),
+            ("The Hall at Patriot Place","https://www.thehallatpatriotplace.com"),
+            ("Gillette Stadium tours",   "https://www.gillettestadium.com/visit"),
+        ],
+        "Worcester": [
+            ("Worcester Art Museum",     "https://www.worcesterart.org"),
+            ("EcoTarium",                "https://www.ecotarium.org"),
+            ("American Antiquarian Society", "https://www.americanantiquarian.org"),
+        ],
+        "Lowell": [
+            ("Lowell National Historical Park", "https://www.nps.gov/lowe"),
+            ("Boott Cotton Mills Museum","https://www.nps.gov/lowe/planyourvisit/boott-cotton-mills-museum.htm"),
+            ("New England Quilt Museum", "https://www.neqm.org"),
+        ],
+        "Fall River": [
+            ("Battleship Cove",          "https://www.battleshipcove.org"),
+            ("Lizzie Borden House",      "https://lizzie-borden.com"),
+            ("Marine Museum at Fall River", "https://marinemuseum.org"),
+        ],
+        "New Bedford": [
+            ("New Bedford Whaling Museum","https://www.whalingmuseum.org"),
+            ("New Bedford Whaling NHP",  "https://www.nps.gov/nebe"),
+            ("Buttonwood Park Zoo",      "https://www.bpzoo.org"),
+        ],
+        "Newton": [
+            ("Crystal Lake",             "https://www.newtonma.gov/government/parks-recreation"),
+            ("Charles River Reservation","https://www.mass.gov/locations/charles-river-reservation"),
+        ],
+        "Quincy": [
+            ("Adams National Historical Park", "https://www.nps.gov/adam"),
+            ("USS Salem",                "https://www.uss-salem.org"),
+            ("Wollaston Beach",          "https://www.mass.gov/locations/wollaston-beach-reservation"),
+        ],
+        "Hingham": [
+            ("World's End",              "https://thetrustees.org/place/worlds-end"),
+            ("Hingham Harbor",           "https://hingham-ma.gov"),
+        ],
+        "Wellesley": [
+            ("Davis Museum at Wellesley College", "https://www.wellesley.edu/davismuseum"),
+            ("Wellesley College Botanic Gardens", "https://www.wellesley.edu/wcbg"),
+        ],
+        "Mansfield": [
+            ("Xfinity Center (concerts)","https://www.livenation.com/venue/KovZpZA77E6A/xfinity-center-events"),
+            ("Robinson's Farm",          "https://robinsonsfarm.com"),
+        ],
+        "Sharon": [
+            ("Lake Massapoag",           "https://www.sharon-ma.gov/recreation-department"),
+            ("Borderland State Park",    "https://www.mass.gov/locations/borderland-state-park"),
+        ],
+        "Springfield": [
+            ("Naismith Memorial Basketball Hall of Fame", "https://www.hoophall.com"),
+            ("Springfield Museums (incl. Dr. Seuss)", "https://springfieldmuseums.org"),
+        ],
+        "Holyoke": [
+            ("Holyoke Heritage State Park", "https://www.mass.gov/locations/holyoke-heritage-state-park"),
+            ("Volleyball Hall of Fame",  "https://www.volleyhall.org"),
+        ],
+        "Pittsfield": [
+            ("Berkshire Museum",         "https://berkshiremuseum.org"),
+            ("Hancock Shaker Village",   "https://hancockshakervillage.org"),
+        ],
+    }
+
+    def _attractions_html(city_name):
+        attrs = _ATTRACTIONS.get(city_name)
+        if not attrs:
+            return (
+                '<div style="margin-top:10px; padding-top:8px; '
+                'border-top:1px dashed #e5e7eb; font-size:11px; '
+                'color:#94a3b8; line-height:1.4;">'
+                "Mostly residential — no major tourist attractions curated here."
+                "</div>"
+            )
+        rows = "".join(
+            '<div style="margin-top:5px;">'
+            '<span style="color:#0891b2; margin-right:6px;">●</span>'
+            f'<a href="{_url}" target="_blank" rel="noopener" '
+            'style="color:#0f172a; text-decoration:none; font-weight:600; '
+            'border-bottom:1px solid #cbd5e1;">'
+            f'{_name}</a>'
+            "</div>"
+            for _name, _url in attrs
+        )
+        return (
+            '<div style="margin-top:10px; padding-top:8px; '
+            'border-top:1px solid #e5e7eb;">'
+            '<div style="font-size:10px; font-weight:700; letter-spacing:1px; '
+            'color:#64748b; text-transform:uppercase; margin-bottom:4px;">'
+            "Things to do — click to open"
+            "</div>"
+            f"{rows}"
+            "</div>"
+        )
+
     crime_map = folium.Map(
         location=[42.25, -71.50],
         zoom_start=9,
@@ -1752,7 +3186,7 @@ def _(folium, mo):
             else ""
         )
         _popup = (
-            '<div style="font-family:sans-serif; min-width:220px;">'
+            '<div style="font-family:sans-serif; min-width:240px;">'
             f'<div style="background:{_color}; color:white; padding:7px 11px;'
             ' border-radius:6px 6px 0 0; font-weight:700; font-size:14px;">'
             f'{_c["name"]}</div>'
@@ -1766,10 +3200,10 @@ def _(folium, mo):
             f'<div style="color:#64748b; margin-top:3px;">'
             f'Population: {_c["pop"]:,}</div>'
             f'{_quarterly_html}'
+            f'{_attractions_html(_c["name"])}'
             '<div style="margin-top:8px; padding-top:6px; '
             'border-top:1px solid #e5e7eb; font-size:10.5px; color:#94a3b8;">'
-            "Vintage: 2024 FBI UCR (latest complete). "
-            "Full 2025 annual data publishes Fall 2026."
+            "Crime vintage: 2024 FBI UCR. Attractions: curated."
             "</div></div></div>"
         )
 
@@ -1782,7 +3216,7 @@ def _(folium, mo):
             fill_color=_color,
             fill_opacity=0.78,
             tooltip=f"{_c['name']} — {_c['rate']:,} per 100k ({_tier})",
-            popup=folium.Popup(_popup, max_width=260),
+            popup=folium.Popup(_popup, max_width=320),
         ).add_to(crime_map)
 
         # Label pill anchored to the marker.
@@ -1882,10 +3316,10 @@ def _(folium, mo):
                   box-shadow:0 2px 10px rgba(15,23,42,0.05);">
         <div style="font-size:0.72rem; font-weight:700; letter-spacing:1.5px;
                     color:#991b1b; text-transform:uppercase; margin-bottom:6px;">
-          Avoid · highest rates
+          Urban · day-trip preferred
         </div>
         <h3 style="margin:0 0 0.7rem 0; color:#0f172a; font-size:1.1rem;
-                   font-weight:700;">Consider day-tripping only</h3>
+                   font-weight:700;">Visit during the day, base elsewhere</h3>
         {_worst_rows}
         <div style="margin-top:8px; font-size:10.5px; color:#94a3b8;">
           Rate = violent crimes per 100k residents (2024 FBI UCR,
@@ -1898,10 +3332,10 @@ def _(folium, mo):
                   box-shadow:0 2px 10px rgba(15,23,42,0.05);">
         <div style="font-size:0.72rem; font-weight:700; letter-spacing:1.5px;
                     color:#166534; text-transform:uppercase; margin-bottom:6px;">
-          Safest · lowest rates
+          Family-friendly · quiet bases
         </div>
         <h3 style="margin:0 0 0.7rem 0; color:#0f172a; font-size:1.1rem;
-                   font-weight:700;">Good bases between matches</h3>
+                   font-weight:700;">Great base towns between matches</h3>
         {_best_rows}
         <div style="margin-top:8px; font-size:10.5px; color:#94a3b8;">
           Many of these sit on or near the Foxboro CR line.
@@ -1918,7 +3352,8 @@ def _(folium, mo):
 
 
 @app.cell(hide_code=True)
-def _(city, df, mo, pd, top_roads, used_year):
+def _(city, df, mo, pd, selected_match, starting_point, top_roads, used_year):
+    mo.stop(selected_match is None)
     mo.stop(df.empty)
 
     def _fmt_12h_concl(h):
@@ -2080,7 +3515,17 @@ def _(city, df, mo, pd, top_roads, used_year):
     </div>
     """
 
-    bottom_line = """
+    # Personalize the closing sentence using the user's starting point.
+    if starting_point and starting_point.get("city"):
+        _bl_user_city = starting_point["city"]
+        _personal_lead = (
+            f"From <b>{_bl_user_city}</b>, head to your closest Commuter Rail "
+            "station and ride the Foxboro Line to Gillette."
+        )
+    else:
+        _personal_lead = "Take the train to Gillette. Ride the T inside Boston."
+
+    bottom_line = f"""
     <div style="position:relative; text-align:left; padding:1.7rem 1.9rem;
                 background:linear-gradient(135deg,#0f172a 0%,#7f1d1d 100%);
                 color:white; border-radius:14px; margin-top:1.6rem;
@@ -2091,23 +3536,35 @@ def _(city, df, mo, pd, top_roads, used_year):
       <div style="position:relative; z-index:1;">
         <div style="opacity:0.85; letter-spacing:2.5px; font-size:0.72rem;
                     font-weight:700; text-transform:uppercase;">
-          Bottom line
+          Bottom line · your match-day safety plan
         </div>
         <div style="font-size:1.35rem; font-weight:800; margin-top:0.4rem;
                     letter-spacing:-0.3px;">
-          Take the train to Gillette. Ride the T inside Boston.
+          {_personal_lead}
         </div>
-        <div style="margin-top:0.7rem; line-height:1.6; opacity:0.95;
-                    max-width:780px; font-size:1rem;">
-          If you must drive, avoid the peak crash window above and stay
-          off the top corridors. The data is unambiguous: rail removes the
-          biggest single source of risk for visitors — Route 1 and I-95
-          traffic during event surges.
+        <div style="margin-top:0.8rem; line-height:1.6; opacity:0.95;
+                    max-width:820px; font-size:1rem;">
+          <b>1. Trains are safer than cars here.</b> Rail removes the single
+          biggest visitor-risk source: Route 1 / I-95 congestion during
+          event surges. Stick with reliable lines (Foxboro/Franklin, Red,
+          Orange); leave extra time on Worcester or Old Colony service.<br>
+          <b>2. Base in family-friendly towns.</b> The green-dot cluster
+          (Foxboro, Sharon, Hingham, Lexington, Concord) sits along or
+          near the Foxboro Line and offers quiet stays between matches.<br>
+          <b>3. Walk like a local.</b> Pedestrians have right of way at
+          crosswalks in MA. Around stadium gates and Patriot Place,
+          drivers can't see you in event-day traffic — cross at marked
+          crosswalks only.<br>
+          <b>4. If you drive: hands-free phones only,</b> no right-on-red
+          in downtown Boston, expect rotaries with right-of-way rules,
+          and the Mass Pike is all-electronic tolling (your rental gets
+          billed automatically).
         </div>
-        <div style="opacity:0.65; margin-top:1.1rem; font-size:0.82rem;
+        <div style="opacity:0.65; margin-top:1.2rem; font-size:0.82rem;
                     border-top:1px solid rgba(255,255,255,0.15); padding-top:0.8rem;">
-          Data: MassDOT IMPACT Open Data Hub and MBTA V3 API ·
-          Continuously updated from police crash reports and live transit feeds.
+          Data: MassDOT IMPACT crash records · MBTA V3 (live transit) ·
+          Open-Meteo (weather) · Nominatim + OSRM (routing) · OpenStreetMap
+          Overpass (places) · FBI UCR 2024 (city safety).
         </div>
       </div>
     </div>
