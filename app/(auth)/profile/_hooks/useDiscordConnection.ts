@@ -102,7 +102,13 @@ export function useDiscordConnection(
       title: describe.title,
       description: describe.description,
     });
-    setError(describe.description ?? describe.title);
+    // Inline banner gets the full title+description so SR users hear the
+    // same content the toast carries.
+    setError(
+      describe.description
+        ? `${describe.title}. ${describe.description}`
+        : describe.title
+    );
     router.replace(fallbackPath);
   };
 
