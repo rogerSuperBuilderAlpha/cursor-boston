@@ -673,10 +673,10 @@ function SummerCohortPageInner() {
         try {
           github.handleOAuthSuccess(JSON.parse(decodeURIComponent(data)));
         } catch {
-          github.handleOAuthError();
+          github.handleOAuthError(searchParams.get("message"));
         }
       } else if (githubStatus === "error") {
-        github.handleOAuthError();
+        github.handleOAuthError(searchParams.get("message"));
       }
     }
     const discordStatus = searchParams.get("discord");

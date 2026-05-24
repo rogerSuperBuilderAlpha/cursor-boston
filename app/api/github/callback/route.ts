@@ -57,6 +57,14 @@ async function handleGitHubCallback(request: NextRequest) {
   );
 
   if (!code || !state) {
+    // Silent path before — log so we can tell when users land here without
+    // the expected OAuth params (interrupted flow, back-nav onto the callback
+    // URL, GitHub didn't return a code, etc.).
+    logger.warn("GitHub OAuth missing params", {
+      endpoint: "/api/github/callback",
+      hasCode: Boolean(code),
+      hasState: Boolean(state),
+    });
     return buildCallbackRedirect(request, returnTo, "github=error&message=missing_params");
   }
 
@@ -152,10 +160,19 @@ export const GET = withMiddleware(
   {
     distributed: true,
     failMode: "closed",
-    onRateLimitDenied: (request) => {
+    onRateLimitDenied: (request, result) => {
       const returnTo = sanitizeReturnTo(
         request.cookies.get("github_oauth_return_to")?.value
       );
+      // Silent path before — log so we can distinguish "ceiling hit" from
+      // "Upstash unavailable" without scraping 503/307 ratios from the edge.
+      logger.warn("GitHub OAuth rate-limit denied", {
+        endpoint: "/api/github/callback",
+        reason:
+          "reason" in result && result.reason
+            ? result.reason
+            : "rate_limited",
+      });
       return buildCallbackRedirect(
         request,
         returnTo,

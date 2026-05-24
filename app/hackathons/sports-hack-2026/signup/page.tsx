@@ -9,10 +9,14 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { GitHubIcon, DiscordIcon } from "@/components/icons";
 import { SportsHack2026EventNav } from "@/components/hackathons/SportsHack2026EventNav";
 import { trackEvent } from "@/lib/analytics";
+import { useGithubConnection } from "@/app/(auth)/profile/_hooks/useGithubConnection";
+
+const SPORTS_HACK_RETURN_TO = "/hackathons/sports-hack-2026/signup";
 import {
   SPORTS_HACK_2026_ATTENDANCE_LIMIT,
   SPORTS_HACK_2026_CAPACITY,
@@ -139,7 +143,15 @@ function profileFromContext(
 }
 
 export default function SportsHack2026SignupPage() {
-  const { user, userProfile, loading: authLoading } = useAuth();
+  const { user, userProfile, loading: authLoading, refreshUserProfile } = useAuth();
+  const searchParams = useSearchParams();
+  const github = useGithubConnection(
+    user,
+    userProfile?.github,
+    userProfile?.provider,
+    refreshUserProfile,
+    SPORTS_HACK_RETURN_TO
+  );
   const [data, setData] = useState<LeaderboardResponse | null>(null);
   const [profile, setProfile] = useState<ProfileStatus | null>(
     profileFromContext(userProfile)
@@ -222,6 +234,31 @@ export default function SportsHack2026SignupPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch-on-mount, state set inside async callback
     if (user) void loadProfile();
   }, [user, loadProfile]);
+
+  // GitHub OAuth callback lands back here with ?github=success|error.
+  // Without this handler, users got bounced to /profile and never returned
+  // to the signup flow — which is why event attendees were re-clicking
+  // Connect and burning the per-IP rate-limit bucket.
+  useEffect(() => {
+    if (authLoading) return;
+    const githubStatus = searchParams.get("github");
+    if (!githubStatus) return;
+    if (githubStatus === "success") {
+      const data = searchParams.get("data");
+      if (data) {
+        try {
+          github.handleOAuthSuccess(JSON.parse(decodeURIComponent(data)));
+        } catch {
+          github.handleOAuthError(searchParams.get("message"));
+        }
+      } else {
+        github.handleOAuthError(searchParams.get("message"));
+      }
+    } else if (githubStatus === "error") {
+      github.handleOAuthError(searchParams.get("message"));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, authLoading]);
 
   const isProfileReady =
     profile?.visibility?.isPublic === true &&
@@ -897,13 +934,15 @@ export default function SportsHack2026SignupPage() {
                         <GitHubIcon size={16} />@{profile.githubUsername}
                       </span>
                     ) : (
-                      <a
-                        href="/api/github/authorize"
-                        className="inline-flex items-center gap-2 rounded-lg bg-neutral-800 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 transition-colors dark:bg-neutral-700 dark:hover:bg-neutral-600"
+                      <button
+                        type="button"
+                        onClick={github.connect}
+                        disabled={github.connecting}
+                        className="inline-flex items-center gap-2 rounded-lg bg-neutral-800 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 transition-colors disabled:opacity-60 dark:bg-neutral-700 dark:hover:bg-neutral-600"
                       >
                         <GitHubIcon size={16} />
-                        Connect GitHub
-                      </a>
+                        {github.connecting ? "Connecting…" : "Connect GitHub"}
+                      </button>
                     )}
                   </div>
 
