@@ -7,7 +7,7 @@
 
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,8 +15,6 @@ import { GitHubIcon, DiscordIcon } from "@/components/icons";
 import { SportsHack2026EventNav } from "@/components/hackathons/SportsHack2026EventNav";
 import { trackEvent } from "@/lib/analytics";
 import { useGithubConnection } from "@/app/(auth)/profile/_hooks/useGithubConnection";
-
-const SPORTS_HACK_RETURN_TO = "/hackathons/sports-hack-2026/signup";
 import {
   SPORTS_HACK_2026_ATTENDANCE_LIMIT,
   SPORTS_HACK_2026_CAPACITY,
@@ -26,6 +24,8 @@ import {
   getSportsHack2026RankTier,
   type SportsHack2026RankTone,
 } from "@/lib/sports-hack-2026";
+
+const SPORTS_HACK_RETURN_TO = "/hackathons/sports-hack-2026/signup";
 
 const TONE_PILL_CLASS: Record<SportsHack2026RankTone, string> = {
   hot: "bg-emerald-500/15 border-emerald-500/40 text-emerald-700 dark:text-emerald-300",
@@ -142,7 +142,7 @@ function profileFromContext(
   };
 }
 
-export default function SportsHack2026SignupPage() {
+function SportsHack2026SignupPageInner() {
   const { user, userProfile, loading: authLoading, refreshUserProfile } = useAuth();
   const searchParams = useSearchParams();
   const github = useGithubConnection(
@@ -1315,5 +1315,19 @@ function ShowDiscordRow({
         />
       </button>
     </div>
+  );
+}
+
+export default function SportsHack2026SignupPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto w-full max-w-3xl px-4 py-10 text-sm text-neutral-500 md:px-6 md:py-14">
+          Loading…
+        </div>
+      }
+    >
+      <SportsHack2026SignupPageInner />
+    </Suspense>
   );
 }
