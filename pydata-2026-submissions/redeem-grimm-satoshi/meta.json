@@ -2,5 +2,6 @@
   "title": "Boston Stadium Isn't in Boston: A Data Map for Surviving World Cup 2026",
   "description": "Gillette Stadium is 30 miles south of Boston — and Route 1 to Foxborough is one of MA's deadlier corridors. Interactive Marimo notebook combining live MassDOT crash data (through 2026) with a real-time MBTA map showing trains gliding along the tracks. Pick city/year/severity to see where crashes cluster, then get data-driven advice: safest driving hours, top corridors to avoid, why the Foxboro Commuter Rail beats driving on match days.",
   "displayName": "Redeem-Grimm-Satoshi",
-  "tags": ["marimo", "safety", "world-cup", "live-data"]
+  "tags": ["marimo", "safety", "world-cup", "live-data"],
+  "collaborators": ["CodingWCal", "LDER-DEV"]
 }
