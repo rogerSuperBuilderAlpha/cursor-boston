@@ -102,7 +102,13 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const data = snap.data() ?? {};
     if (!data.attendingConfirmedAt) {
-      await ref.update({ attendingConfirmedAt: FieldValue.serverTimestamp() });
+      await ref.update({
+        attendingConfirmedAt: FieldValue.serverTimestamp(),
+        // Tag the provenance so the three-tier ranking can distinguish
+        // proactive confirmations (Tier A) from admin door check-ins (Tier B).
+        // See lib/hackathon-event-signup.ts getRankingModelForEvent.
+        attendingConfirmedBy: "user",
+      });
     }
 
     const response = await buildResponse(eventId, user.uid);
@@ -155,7 +161,10 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     const data = snap.data() ?? {};
     if (data.attendingConfirmedAt) {
-      await ref.update({ attendingConfirmedAt: FieldValue.delete() });
+      await ref.update({
+        attendingConfirmedAt: FieldValue.delete(),
+        attendingConfirmedBy: FieldValue.delete(),
+      });
     }
 
     const response = await buildResponse(eventId, user.uid);

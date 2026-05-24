@@ -87,6 +87,25 @@ export function getAttendanceLimitForEvent(eventId: string): number {
 }
 
 /**
+ * Per-event ranking model selector.
+ *
+ * - `"freeze"` (default) — the historical 2-band model. Order driven by the
+ *   freeze-set `confirmedAt`, then cohort-1 boost, then PR count desc, then
+ *   signup time. Used by `hack-a-sprint-2026`.
+ * - `"three-tier"` — sports-hack-2026 model. Three tiers ordered by
+ *   pre-event engagement (claimed+user-confirmed → claimed → external-RSVP-only),
+ *   sorted within each tier by PR count desc / signup time. Cumulative cutoffs
+ *   at 119 (credit band) and 200 (attendance band) over the concatenated order.
+ *   Credit eligibility additionally requires a submission PR on event day.
+ */
+export type HackathonRankingModel = "freeze" | "three-tier";
+
+export function getRankingModelForEvent(eventId: string): HackathonRankingModel {
+  if (eventId === SPORTS_HACK_2026_EVENT_ID) return "three-tier";
+  return "freeze";
+}
+
+/**
  * Sort key for the combined website + Luma leaderboard (and freeze top-N).
  * PR count desc → website signup before Luma-only → earlier registration first.
  */

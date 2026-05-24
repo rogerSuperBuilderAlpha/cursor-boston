@@ -67,6 +67,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
       attendingConfirmed: boolean;
       attendingConfirmedAt: string | null;
       attendanceRank: number | null;
+      tier: "A" | "B" | "C" | null;
+      inAttendanceBand: boolean;
+      inCreditBand: boolean;
+      hasSubmission: boolean;
     } | null = null;
 
     if (meUser) {
@@ -84,6 +88,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
             attendingConfirmed: entry.attendingConfirmed,
             attendingConfirmedAt: entry.attendingConfirmedAt,
             attendanceRank: entry.attendanceRank,
+            tier: entry.tier,
+            inAttendanceBand: entry.inAttendanceBand,
+            inCreditBand: entry.inCreditBand,
+            hasSubmission: entry.hasSubmission,
           }
         : {
             signedUp: false,
@@ -97,6 +105,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
             attendingConfirmed: false,
             attendingConfirmedAt: null,
             attendanceRank: null,
+            tier: null,
+            inAttendanceBand: false,
+            inCreditBand: false,
+            hasSubmission: false,
           };
     }
 

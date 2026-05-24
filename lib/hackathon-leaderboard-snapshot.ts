@@ -33,6 +33,7 @@ import {
   getConfirmedCapacityForEvent,
   getDeclinedEmailsForEvent,
   getJudgeEmailsForEvent,
+  getRankingModelForEvent,
 } from "@/lib/hackathon-event-signup";
 import { fetchMergedPrCountsForLogins } from "@/lib/github-merged-pr-count";
 import { getGithubRepoPair } from "@/lib/github-recent-merged-prs";
@@ -42,6 +43,17 @@ export const HACKATHON_LEADERBOARD_SNAPSHOTS_COLLECTION =
   "hackathonLeaderboardSnapshots";
 
 export type LeaderboardEntryStatus = "confirmed" | "waitlisted";
+
+/**
+ * Engagement tier for the three-tier ranking model (sports-hack-2026).
+ *
+ * - `"A"` — claimed AND user-confirmed (`attendingConfirmedBy === "user"`)
+ * - `"B"` — claimed only (signup exists, no user-initiated confirmation)
+ * - `"C"` — external RSVP only (Luma "approved" or Partiful "Going" row in
+ *   `hackathonLumaRegistrants`, no matching website signup)
+ * - `null` — event uses the freeze model (hack-a-sprint-2026); tier is inert
+ */
+export type LeaderboardEntryTier = "A" | "B" | "C" | null;
 
 export interface LeaderboardEntry {
   rank: number;
@@ -72,6 +84,21 @@ export interface LeaderboardEntry {
    * when this entry has not confirmed or the event doesn't use this flow.
    */
   attendanceRank: number | null;
+  /**
+   * Three-tier engagement bucket for `getRankingModelForEvent === "three-tier"`
+   * events. Null for freeze-model events.
+   */
+  tier: LeaderboardEntryTier;
+  /** True for three-tier-model entries within the attendance cap (top 200). */
+  inAttendanceBand: boolean;
+  /** True for three-tier-model entries within the credit cap (top 119). */
+  inCreditBand: boolean;
+  /**
+   * True when the attendee has a PR open against the event's submissions
+   * branch. Populated by a future PR (PR 2 in the rollout). Defaults false
+   * for now so the field is present on all entries.
+   */
+  hasSubmission: boolean;
 }
 
 export interface LeaderboardPayload {
@@ -250,6 +277,7 @@ export async function buildLeaderboardPayload(
     queuingForSpot: boolean;
     lumaRegistered: boolean;
     attendingConfirmedAt: number | null;
+    attendingConfirmedBy: "user" | "admin" | null;
   }[] = [];
 
   const userIds = snap.docs.map((d) => d.data().userId as string).filter(Boolean);
@@ -315,6 +343,10 @@ export async function buildLeaderboardPayload(
       attendingConfirmedAt: data.attendingConfirmedAt
         ? signedUpAtToMs(data.attendingConfirmedAt)
         : null,
+      attendingConfirmedBy:
+        data.attendingConfirmedBy === "user" || data.attendingConfirmedBy === "admin"
+          ? data.attendingConfirmedBy
+          : null,
     });
   }
 
@@ -437,6 +469,7 @@ export async function buildLeaderboardPayload(
     lumaRegistered: boolean;
     isCohort1: boolean;
     attendingConfirmedAt: number | null;
+    attendingConfirmedBy: "user" | "admin" | null;
   };
   const unified: UnifiedRow[] = [];
 
@@ -460,6 +493,7 @@ export async function buildLeaderboardPayload(
       lumaRegistered: r.lumaRegistered,
       isCohort1: email ? cohort1Emails.has(email) : false,
       attendingConfirmedAt: r.attendingConfirmedAt,
+      attendingConfirmedBy: r.attendingConfirmedBy,
     });
   }
   for (const lr of lumaRows) {
@@ -484,38 +518,130 @@ export async function buildLeaderboardPayload(
       // only via admin door check-in (which writes through the website-signup
       // path when matched by email/github).
       attendingConfirmedAt: null,
+      attendingConfirmedBy: null,
     });
   }
 
-  const confirmed = unified.filter((u) => u.confirmedAt != null);
-  const waitlisted = unified.filter((u) => u.confirmedAt == null);
-
-  confirmed.sort((a, b) => {
-    if (a.isCohort1 !== b.isCohort1) return a.isCohort1 ? -1 : 1;
-    if (a.frozenRank != null && b.frozenRank != null) return a.frozenRank - b.frozenRank;
-    if (a.frozenRank != null) return -1;
-    if (b.frozenRank != null) return 1;
-    if (b.mergedPrCount !== a.mergedPrCount) return b.mergedPrCount - a.mergedPrCount;
-    return a.signedUpAtMs - b.signedUpAtMs;
-  });
-
-  waitlisted.sort((a, b) => {
-    if (a.isCohort1 !== b.isCohort1) return a.isCohort1 ? -1 : 1;
-    if (b.mergedPrCount !== a.mergedPrCount) return b.mergedPrCount - a.mergedPrCount;
-    return a.signedUpAtMs - b.signedUpAtMs;
-  });
-
-  const sorted = [...confirmed, ...waitlisted];
-
+  const model = getRankingModelForEvent(eventId);
   const websiteCount = rows.length;
   const attendanceLimit = getAttendanceLimitForEvent(eventId);
+  const creditCap = getConfirmedCapacityForEvent(eventId);
+
+  // ---------------------------------------------------------------------------
+  // Sort + shape — branched on the per-event ranking model.
+  //
+  // "freeze" (default) — historical 2-band model used by hack-a-sprint-2026.
+  //   Order: cohort-1 boost → frozenRank (from freeze-confirmed-top50.ts) →
+  //   PR count desc → signup time asc. Two bands split by `confirmedAt`.
+  //
+  // "three-tier" — sports-hack-2026 engagement-ladder model. Three tiers
+  //   ordered by user action (claimed+user-confirmed → claimed → external-RSVP
+  //   only). Within each tier: PR count desc → signup time asc. NO cohort-1
+  //   boost (engagement, not prior membership). Cumulative cutoffs at the
+  //   credit cap (top 119) and the attendance limit (top 200).
+  // ---------------------------------------------------------------------------
+
+  type SortedUnifiedRow = UnifiedRow & { _tier: LeaderboardEntryTier };
+  let sorted: SortedUnifiedRow[];
+
+  if (model === "three-tier") {
+    const tierA: SortedUnifiedRow[] = [];
+    const tierB: SortedUnifiedRow[] = [];
+    const tierC: SortedUnifiedRow[] = [];
+    for (const u of unified) {
+      if (u.userId == null) {
+        tierC.push({ ...u, _tier: "C" });
+      } else if (
+        u.attendingConfirmedAt != null &&
+        u.attendingConfirmedBy === "user"
+      ) {
+        tierA.push({ ...u, _tier: "A" });
+      } else {
+        // Includes admin-only check-ins (attendingConfirmedBy === "admin") —
+        // door check-in does NOT promote out of Tier B by design.
+        tierB.push({ ...u, _tier: "B" });
+      }
+    }
+    const tierSort = (a: SortedUnifiedRow, b: SortedUnifiedRow): number => {
+      if (b.mergedPrCount !== a.mergedPrCount) {
+        return b.mergedPrCount - a.mergedPrCount;
+      }
+      return a.signedUpAtMs - b.signedUpAtMs;
+    };
+    tierA.sort(tierSort);
+    tierB.sort(tierSort);
+    tierC.sort(tierSort);
+    sorted = [...tierA, ...tierB, ...tierC];
+  } else {
+    const confirmed = unified
+      .filter((u) => u.confirmedAt != null)
+      .map((u): SortedUnifiedRow => ({ ...u, _tier: null }));
+    const waitlisted = unified
+      .filter((u) => u.confirmedAt == null)
+      .map((u): SortedUnifiedRow => ({ ...u, _tier: null }));
+
+    confirmed.sort((a, b) => {
+      if (a.isCohort1 !== b.isCohort1) return a.isCohort1 ? -1 : 1;
+      if (a.frozenRank != null && b.frozenRank != null) return a.frozenRank - b.frozenRank;
+      if (a.frozenRank != null) return -1;
+      if (b.frozenRank != null) return 1;
+      if (b.mergedPrCount !== a.mergedPrCount) return b.mergedPrCount - a.mergedPrCount;
+      return a.signedUpAtMs - b.signedUpAtMs;
+    });
+
+    waitlisted.sort((a, b) => {
+      if (a.isCohort1 !== b.isCohort1) return a.isCohort1 ? -1 : 1;
+      if (b.mergedPrCount !== a.mergedPrCount) return b.mergedPrCount - a.mergedPrCount;
+      return a.signedUpAtMs - b.signedUpAtMs;
+    });
+
+    sorted = [...confirmed, ...waitlisted];
+  }
+
   // First pass: build entries with attendance flags but without attendanceRank.
   const partialEntries: LeaderboardEntry[] = sorted.map((u, i) => {
     const rank = i + 1;
+    const hasAttendanceFlow = attendanceLimit > 0;
+
+    if (model === "three-tier") {
+      const tier = u._tier;
+      const inCreditBand = rank <= creditCap;
+      const inAttendanceBand = rank <= attendanceLimit;
+      // hasSubmission is wired in PR 2; default false so the field is present
+      // on every entry from PR 1 onward.
+      const hasSubmission = false;
+      const attendingConfirmed = u.attendingConfirmedAt != null;
+      return {
+        rank,
+        userId: u.userId,
+        displayName: u.displayName,
+        githubLogin: u.githubLogin,
+        // Three-tier events don't run the freeze script — always show live PRs.
+        mergedPrCount: u.mergedPrCount,
+        signedUpAt: u.signedUpAtIso,
+        creditEligible: inCreditBand && hasSubmission,
+        status: inAttendanceBand ? "confirmed" : "waitlisted",
+        checkedIn: u.checkedInAt != null,
+        willBeLate: u.willBeLate,
+        queuingForSpot: u.queuingForSpot,
+        lumaRegistered: u.lumaRegistered,
+        isCohort1: u.isCohort1,
+        attendingConfirmed,
+        attendingConfirmedAt:
+          u.attendingConfirmedAt != null
+            ? new Date(u.attendingConfirmedAt).toISOString()
+            : null,
+        attendanceRank: null, // filled in below
+        tier,
+        inAttendanceBand,
+        inCreditBand,
+        hasSubmission,
+      };
+    }
+
     const isConfirmed = u.confirmedAt != null;
     const displayPrs =
       isConfirmed && u.frozenPrCount != null ? u.frozenPrCount : u.mergedPrCount;
-    const hasAttendanceFlow = attendanceLimit > 0;
     const attendingConfirmed = hasAttendanceFlow && u.attendingConfirmedAt != null;
     return {
       rank,
@@ -537,18 +663,28 @@ export async function buildLeaderboardPayload(
           ? new Date(u.attendingConfirmedAt).toISOString()
           : null,
       attendanceRank: null, // filled in below
+      tier: null,
+      inAttendanceBand: false,
+      inCreditBand: false,
+      hasSubmission: false,
     };
   });
 
   // Second pass: re-number confirmed-attending entries 1..N in existing rank
   // order. This deliberately does NOT re-sort by attendingConfirmedAt time —
   // a slow-to-RSVP top contributor cannot be pushed out by a fast-clicking
-  // lower-ranked user.
+  // lower-ranked user. For three-tier events, the attendance subset is Tier A
+  // (proactive confirms only) so that the public "Confirmed attending X/200"
+  // reflects the pre-event headcount goal.
   let confirmedAttendeeCount = 0;
   if (attendanceLimit > 0) {
     let attendanceRank = 0;
     for (const entry of partialEntries) {
-      if (entry.attendingConfirmed) {
+      const countsAsAttending =
+        model === "three-tier"
+          ? entry.tier === "A"
+          : entry.attendingConfirmed;
+      if (countsAsAttending) {
         attendanceRank += 1;
         entry.attendanceRank = attendanceRank;
         confirmedAttendeeCount += 1;
@@ -560,7 +696,7 @@ export async function buildLeaderboardPayload(
     entries: partialEntries,
     totalCount: partialEntries.length,
     websiteSignupCount: websiteCount,
-    creditTopN: getConfirmedCapacityForEvent(eventId),
+    creditTopN: creditCap,
     confirmedAttendeeCount,
     attendanceLimit,
   };
@@ -613,6 +749,15 @@ export async function readSnapshot(
       typeof e.attendingConfirmedAt === "string" ? e.attendingConfirmedAt : null,
     attendanceRank:
       typeof e.attendanceRank === "number" ? e.attendanceRank : null,
+    // Three-tier fields — hydrate to safe defaults for snapshots written
+    // before this feature shipped. Next mutation rebuilds with real values.
+    tier:
+      e.tier === "A" || e.tier === "B" || e.tier === "C"
+        ? (e.tier as LeaderboardEntryTier)
+        : null,
+    inAttendanceBand: e.inAttendanceBand === true,
+    inCreditBand: e.inCreditBand === true,
+    hasSubmission: e.hasSubmission === true,
   }));
   return {
     entries,

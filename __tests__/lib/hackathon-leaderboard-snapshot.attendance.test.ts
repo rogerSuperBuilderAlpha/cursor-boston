@@ -125,9 +125,18 @@ describe("buildLeaderboardPayload — attendance-confirmation fields", () => {
   it("counts only entries with attendingConfirmedAt toward confirmedAttendeeCount", async () => {
     installDbMock({
       signups: [
-        makeSignupDoc("u1", { attendingConfirmedAt: new Date("2026-05-20") }),
+        // attendingConfirmedBy="user" → Tier A under the three-tier model used
+        // by sports-hack-2026. Without it, the row is Tier B and does NOT
+        // contribute to confirmedAttendeeCount or attendanceRank.
+        makeSignupDoc("u1", {
+          attendingConfirmedAt: new Date("2026-05-20"),
+          attendingConfirmedBy: "user",
+        }),
         makeSignupDoc("u2"), // claimed, not confirmed
-        makeSignupDoc("u3", { attendingConfirmedAt: new Date("2026-05-21") }),
+        makeSignupDoc("u3", {
+          attendingConfirmedAt: new Date("2026-05-21"),
+          attendingConfirmedBy: "user",
+        }),
       ],
       users: [makeUserDoc("u1"), makeUserDoc("u2"), makeUserDoc("u3")],
     });
@@ -154,14 +163,17 @@ describe("buildLeaderboardPayload — attendance-confirmation fields", () => {
         makeSignupDoc("first", {
           signedUpAt: new Date("2026-05-10"),
           attendingConfirmedAt: new Date("2026-05-22"), // confirmed LAST
+          attendingConfirmedBy: "user",
         }),
         makeSignupDoc("second", {
           signedUpAt: new Date("2026-05-11"),
           attendingConfirmedAt: new Date("2026-05-20"), // confirmed FIRST
+          attendingConfirmedBy: "user",
         }),
         makeSignupDoc("third", {
           signedUpAt: new Date("2026-05-12"),
           attendingConfirmedAt: new Date("2026-05-21"), // confirmed MIDDLE
+          attendingConfirmedBy: "user",
         }),
       ],
       users: [
@@ -190,10 +202,12 @@ describe("buildLeaderboardPayload — attendance-confirmation fields", () => {
       signups: [
         makeSignupDoc("confirmed-1", {
           attendingConfirmedAt: new Date("2026-05-20"),
+          attendingConfirmedBy: "user",
         }),
         makeSignupDoc("not-confirmed"),
         makeSignupDoc("confirmed-2", {
           attendingConfirmedAt: new Date("2026-05-21"),
+          attendingConfirmedBy: "user",
           signedUpAt: new Date("2026-05-16"),
         }),
       ],
@@ -240,5 +254,153 @@ describe("buildLeaderboardPayload — attendance-confirmation fields", () => {
     expect(u1.attendingConfirmed).toBe(false);
     expect(u1.attendingConfirmedAt).toBeNull();
     expect(u1.attendanceRank).toBeNull();
+  });
+});
+
+describe("buildLeaderboardPayload — three-tier ranking (sports-hack-2026)", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it("orders Tier A > Tier B > Tier C even when PR counts would invert the order", async () => {
+    // tier-a-zero has 0 PRs but is user-confirmed (Tier A).
+    // tier-b-fifty has 50 PRs but only claimed (Tier B).
+    // Under the new model Tier A always outranks Tier B regardless of PR count.
+    installDbMock({
+      signups: [
+        makeSignupDoc("tier-a-zero", {
+          signedUpAt: new Date("2026-05-15"),
+          attendingConfirmedAt: new Date("2026-05-20"),
+          attendingConfirmedBy: "user",
+        }),
+        makeSignupDoc("tier-b-fifty", {
+          signedUpAt: new Date("2026-05-10"),
+        }),
+      ],
+      users: [makeUserDoc("tier-a-zero"), makeUserDoc("tier-b-fifty")],
+    });
+    // Override the PR-count mock so tier-b-fifty has 50 merged PRs.
+    const ghMod = jest.requireMock("@/lib/github-merged-pr-count");
+    ghMod.fetchMergedPrCountsForLogins = jest.fn(async () => new Map());
+    // Inject Firestore PR counts via the per-user fallback (countMergedCommunityPrsByUserIds
+    // reads from `pullRequests`). Easier to override the GitHub map directly by
+    // setting githubLogin on the users.
+    const usersWithGh = [
+      {
+        exists: true as const,
+        id: "tier-a-zero",
+        data: () => ({
+          displayName: "tier-a-zero",
+          email: "tier-a-zero@test.com",
+          github: { login: "tier-a-zero" },
+        }),
+      },
+      {
+        exists: true as const,
+        id: "tier-b-fifty",
+        data: () => ({
+          displayName: "tier-b-fifty",
+          email: "tier-b-fifty@test.com",
+          github: { login: "tier-b-fifty" },
+        }),
+      },
+    ];
+    installDbMock({
+      signups: [
+        {
+          id: `${SPORTS}__tier-a-zero`,
+          data: () => ({
+            userId: "tier-a-zero",
+            eventId: SPORTS,
+            signedUpAt: new Date("2026-05-15"),
+            attendingConfirmedAt: new Date("2026-05-20"),
+            attendingConfirmedBy: "user",
+          }),
+        },
+        {
+          id: `${SPORTS}__tier-b-fifty`,
+          data: () => ({
+            userId: "tier-b-fifty",
+            eventId: SPORTS,
+            signedUpAt: new Date("2026-05-10"),
+          }),
+        },
+      ],
+      users: usersWithGh,
+    });
+    ghMod.fetchMergedPrCountsForLogins = jest.fn(async () =>
+      new Map<string, number>([["tier-b-fifty", 50]])
+    );
+
+    const payload = await buildLeaderboardPayload(SPORTS);
+
+    const a = payload.entries.find((e) => e.userId === "tier-a-zero")!;
+    const b = payload.entries.find((e) => e.userId === "tier-b-fifty")!;
+    expect(a.tier).toBe("A");
+    expect(b.tier).toBe("B");
+    expect(a.rank).toBe(1);
+    expect(b.rank).toBe(2);
+    // Both inside the credit cap (119) and attendance cap (200) at small N.
+    expect(a.inCreditBand).toBe(true);
+    expect(a.inAttendanceBand).toBe(true);
+    expect(b.inCreditBand).toBe(true);
+    expect(b.inAttendanceBand).toBe(true);
+    // hasSubmission defaults false until PR 2 wires the GitHub lookup.
+    expect(a.hasSubmission).toBe(false);
+    expect(a.creditEligible).toBe(false); // gated on hasSubmission
+  });
+
+  it("admin-only attendingConfirmedBy keeps the row in Tier B (not Tier A)", async () => {
+    installDbMock({
+      signups: [
+        makeSignupDoc("user-confirmed", {
+          attendingConfirmedAt: new Date("2026-05-20"),
+          attendingConfirmedBy: "user",
+        }),
+        makeSignupDoc("admin-checked-in", {
+          attendingConfirmedAt: new Date("2026-05-26"),
+          attendingConfirmedBy: "admin",
+        }),
+      ],
+      users: [makeUserDoc("user-confirmed"), makeUserDoc("admin-checked-in")],
+    });
+    const payload = await buildLeaderboardPayload(SPORTS);
+
+    const u = payload.entries.find((e) => e.userId === "user-confirmed")!;
+    const a = payload.entries.find((e) => e.userId === "admin-checked-in")!;
+    expect(u.tier).toBe("A");
+    expect(a.tier).toBe("B");
+    // confirmedAttendeeCount tracks Tier A only — the public "X/200" is the
+    // pre-event headcount goal, not door check-in throughput.
+    expect(payload.confirmedAttendeeCount).toBe(1);
+    expect(u.attendanceRank).toBe(1);
+    expect(a.attendanceRank).toBeNull();
+    // But the row IS still flagged attendingConfirmed (attendingConfirmedAt is
+    // set) for downstream consumers that want to know "did this person get
+    // confirmed somehow" without caring about tier.
+    expect(a.attendingConfirmed).toBe(true);
+  });
+
+  it("freeze-model events ignore the three-tier fields", async () => {
+    installDbMock({
+      signups: [
+        {
+          id: `${OTHER}__u1`,
+          data: () => ({
+            userId: "u1",
+            eventId: OTHER,
+            signedUpAt: new Date("2026-05-10"),
+            attendingConfirmedAt: new Date("2026-05-20"),
+            attendingConfirmedBy: "user",
+          }),
+        },
+      ],
+      users: [makeUserDoc("u1")],
+    });
+    const payload = await buildLeaderboardPayload(OTHER);
+
+    const u1 = payload.entries.find((e) => e.userId === "u1")!;
+    // tier is null on freeze-model events; bands default false.
+    expect(u1.tier).toBeNull();
+    expect(u1.inAttendanceBand).toBe(false);
+    expect(u1.inCreditBand).toBe(false);
   });
 });

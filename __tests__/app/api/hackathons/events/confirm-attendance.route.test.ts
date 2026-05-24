@@ -184,7 +184,12 @@ describe("POST /api/hackathons/events/[eventId]/confirm-attendance", () => {
     expect(res.status).toBe(200);
     expect(mock.update).toHaveBeenCalledTimes(1);
     const callArg = mock.update.mock.calls[0][0] as Record<string, unknown>;
-    expect(Object.keys(callArg)).toEqual(["attendingConfirmedAt"]);
+    // Writes attendingConfirmedAt AND attendingConfirmedBy together (provenance
+    // tag distinguishes user clicks from admin door check-ins under the
+    // three-tier ranking model). DELETE mirrors with FieldValue.delete() on both.
+    expect(Object.keys(callArg).sort()).toEqual(
+      ["attendingConfirmedAt", "attendingConfirmedBy"].sort()
+    );
     expect(mockRefreshSnapshot).toHaveBeenCalledWith(VALID_EVENT_ID);
     const body = await res.json();
     expect(body).toMatchObject({
@@ -272,7 +277,12 @@ describe("DELETE /api/hackathons/events/[eventId]/confirm-attendance", () => {
     expect(res.status).toBe(200);
     expect(mock.update).toHaveBeenCalledTimes(1);
     const callArg = mock.update.mock.calls[0][0] as Record<string, unknown>;
-    expect(Object.keys(callArg)).toEqual(["attendingConfirmedAt"]);
+    // Writes attendingConfirmedAt AND attendingConfirmedBy together (provenance
+    // tag distinguishes user clicks from admin door check-ins under the
+    // three-tier ranking model). DELETE mirrors with FieldValue.delete() on both.
+    expect(Object.keys(callArg).sort()).toEqual(
+      ["attendingConfirmedAt", "attendingConfirmedBy"].sort()
+    );
     expect(mockRefreshSnapshot).toHaveBeenCalledWith(VALID_EVENT_ID);
   });
 

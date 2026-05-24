@@ -107,12 +107,16 @@ export async function POST(request: NextRequest, context: RouteContext) {
       // Door check-in also marks the user as attending-confirmed. This catches
       // walk-ins / late-RSVPs who never clicked Confirm on the site so they
       // show up in the public confirmed-attendee count and attendanceRank.
+      // The provenance is tagged `admin` so the three-tier ranking can keep
+      // door-only confirmations in Tier B (only proactive user clicks earn
+      // Tier A). See lib/hackathon-event-signup.ts getRankingModelForEvent.
       await ref.set({
         eventId,
         userId: targetUserId,
         signedUpAt: FieldValue.serverTimestamp(),
         checkedInAt: FieldValue.serverTimestamp(),
         attendingConfirmedAt: FieldValue.serverTimestamp(),
+        attendingConfirmedBy: "admin",
       });
       revalidateTag(HACKATHON_SIGNUP_CACHE_TAG, { expire: 0 });
       return NextResponse.json({ ok: true, checkedIn: true, created: true });
@@ -136,7 +140,11 @@ export async function POST(request: NextRequest, context: RouteContext) {
         checkedInAt: FieldValue.serverTimestamp(),
       };
       if (!data.attendingConfirmedAt) {
+        // First-time confirmation via admin check-in — tag the provenance so
+        // the three-tier ranking keeps this row in Tier B (only proactive
+        // user clicks earn Tier A).
         update.attendingConfirmedAt = FieldValue.serverTimestamp();
+        update.attendingConfirmedBy = "admin";
       }
       await ref.update(update);
     } else {
