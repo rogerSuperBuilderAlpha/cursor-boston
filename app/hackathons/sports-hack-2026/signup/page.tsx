@@ -497,8 +497,8 @@ function SportsHack2026SignupPageInner() {
           This is the canonical signup list for the Boston Tech Week Sports Hack —
           claim a spot and confirm attendance here to be on the door list and in
           the credit-band ranking. Builders are ranked by merged PRs to
-          cursor-boston, then by signup time, for the top-{capacity} confirmed
-          band. A Luma or Partiful RSVP shows up as an indicator next to your
+          cursor-boston, then by signup time, for the top-{capacity}
+          {" "}confirmed band. A Luma or Partiful RSVP shows up as an indicator next to your
           name but doesn&apos;t replace this signup.
         </p>
 
