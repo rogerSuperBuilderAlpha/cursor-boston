@@ -254,6 +254,34 @@ export const hackathonsContract = c.router(
         ] as const,
       },
     },
+    eventRefreshSubmissions: {
+      method: "POST",
+      path: "/api/hackathons/events/:eventId/refresh-submissions",
+      pathParams: EventIdParam,
+      summary: "Admin-only — force-refresh the three-tier submission cache",
+      description:
+        "Invalidates the 60s submission-author cache for three-tier events (sports-hack-2026) and rebuilds the leaderboard snapshot so a just-opened submission PR flips an attendee's hasSubmission / creditEligible flags immediately. Returns the post-refresh submission count and the snapshot generation timestamp. 404 for events that don't use the three-tier model.",
+      body: z.object({}).optional(),
+      responses: {
+        200: z.object({
+          ok: z.literal(true),
+          eventId: z.string(),
+          submissionAuthorCount: z.number(),
+          generatedAt: z.string(),
+        }),
+        ...teamGuardedErrors,
+      },
+      metadata: {
+        errorCodes: [
+          "UNAUTHORIZED",
+          "FORBIDDEN",
+          "NOT_FOUND",
+          "RATE_LIMITED",
+          "SERVER_ERROR",
+        ] as const,
+      },
+    },
+
     eventConfirmAttendanceDelete: {
       method: "DELETE",
       path: "/api/hackathons/events/:eventId/confirm-attendance",

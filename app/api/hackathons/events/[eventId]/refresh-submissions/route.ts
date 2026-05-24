@@ -19,6 +19,10 @@ import {
   getClientIdentifier,
   rateLimitConfigs,
 } from "@/lib/rate-limit";
+// @contracts: hackathonsContract.eventRefreshSubmissions
+import { hackathonsContract } from "@/lib/api-schemas/hackathons";
+
+void hackathonsContract;
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

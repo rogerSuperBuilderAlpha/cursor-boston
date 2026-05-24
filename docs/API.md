@@ -16,7 +16,7 @@
 
 All endpoints are under `/api/`. Authentication uses Firebase Auth ID tokens (Bearer) or session cookies. Spec: [`/openapi.json`](https://cursorboston.com/openapi.json) · interactive: [`/api/docs`](https://cursorboston.com/api/docs).
 
-**185 paths, 222 operations across 35 areas.**
+**186 paths, 223 operations across 35 areas.**
 
 ---
 
@@ -211,6 +211,7 @@ _Hackathon pool, teams, submissions, and Hack-a-Sprint showcase._
 | POST | `/api/hackathons/events/{eventId}/checkin` | Yes | Admin-only: check a user in to an event |
 | DELETE | `/api/hackathons/events/{eventId}/confirm-attendance` | Yes | Withdraw the user's attendance confirmation (keeps signup) |
 | POST | `/api/hackathons/events/{eventId}/confirm-attendance` | Yes | Confirm attendance for an event the user has signed up for |
+| POST | `/api/hackathons/events/{eventId}/refresh-submissions` | Yes | Admin-only — force-refresh the three-tier submission cache |
 | DELETE | `/api/hackathons/events/{eventId}/signup` | Yes | Withdraw the current user's signup |
 | GET | `/api/hackathons/events/{eventId}/signup` | Yes | Public event-signup leaderboard |
 | PATCH | `/api/hackathons/events/{eventId}/signup` | Yes | Update the current user's signup state |

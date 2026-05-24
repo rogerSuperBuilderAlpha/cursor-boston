@@ -86,8 +86,10 @@ describe("SportsHack2026LandingPage", () => {
     })) as never;
     setAuth();
     render(<SportsHack2026LandingPage />);
-    // Credit seats locked stat shows the rank-frozen confirmed count
-    await waitFor(() => expect(screen.getByText(/2\/50 \(Cursor credit link\)/)).toBeInTheDocument());
+    // Credit seats locked stat now counts entries with creditEligible (under the
+    // three-tier model = inCreditBand && hasSubmission). Label updated to
+    // "(in band + submission opened)" to reflect the new gate.
+    await waitFor(() => expect(screen.getByText(/2\/50 \(in band \+ submission opened\)/)).toBeInTheDocument());
     // Confirmed-attending stat shows the new opt-in count
     expect(screen.getByText(/0\/200 · 60 signed up/)).toBeInTheDocument();
   });
@@ -108,7 +110,7 @@ describe("SportsHack2026LandingPage", () => {
     })) as never;
     setAuth();
     render(<SportsHack2026LandingPage />);
-    await waitFor(() => expect(screen.getByText(/1\/50 \(Cursor credit link\)/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/1\/50 \(in band \+ submission opened\)/)).toBeInTheDocument());
   });
 
   it("renders signed-up CTA with rank when user is in leaderboard", async () => {
