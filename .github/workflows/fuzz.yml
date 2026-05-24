@@ -32,23 +32,23 @@ jobs:
       contents: read
       security-events: write
     steps:
-      # ClusterFuzzLite refuses sanitizers for JavaScript projects with
-      # "JavaScript projects cannot be fuzzed with sanitizers". Omitting
-      # the parameter makes the action use its default of "address",
-      # which still fails the same check. The documented JS-safe value
-      # is the literal "none".
+      # ClusterFuzzLite for JavaScript: address/memory/undefined trip
+      # the "cannot be fuzzed with sanitizers" guard, and "none" is
+      # rejected as invalid. "coverage" is the only value that passes
+      # both checks for JS projects (see the JS guide at
+      # https://google.github.io/clusterfuzzlite/build-integration/javascript-lang/).
       - name: Build fuzzers
         id: build
         uses: google/clusterfuzzlite/actions/build_fuzzers@884713a6c30a92e5e8544c39945cd7cb630abcd1 # v1
         with:
           language: javascript
-          sanitizer: none
+          sanitizer: coverage
 
       - name: Run fuzzers
         uses: google/clusterfuzzlite/actions/run_fuzzers@884713a6c30a92e5e8544c39945cd7cb630abcd1 # v1
         with:
           language: javascript
-          sanitizer: none
+          sanitizer: coverage
           # PR-mode: 600s of fuzzing on each target. Long enough to catch
           # regressions, short enough to stay within the PR latency
           # budget. The weekly batch run uses the same workflow with a
