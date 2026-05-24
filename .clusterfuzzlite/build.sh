@@ -9,10 +9,10 @@ cd "$SRC/cursor-boston"
 # Install only what the harnesses need. The full project's deps are
 # heavy (Next.js, Firebase Admin, etc.) and ClusterFuzzLite's wall-clock
 # budget is finite; the sanitize.fuzz.ts harness compiles standalone
-# against jazzer.js. Versions are pinned (Scorecard Pinned-Dependencies).
-npm install --no-audit --no-fund --no-save \
-  @jazzer.js/core@2.1.0 \
-  typescript@5.6.3
+# against jazzer.js. Versions are pinned (Scorecard Pinned-Dependencies)
+# and kept on a single line so Scorecard's line-scoped parser sees the
+# `@version` qualifiers alongside the `npm install` keyword.
+npm install --no-audit --no-fund --no-save @jazzer.js/core@2.1.0 typescript@5.6.3
 
 # base-builder-javascript exposes `compile_javascript_fuzzer` which knows
 # how to wrap a jazzer.js harness into a libFuzzer-compatible binary at

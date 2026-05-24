@@ -1,0 +1,113 @@
+name: Sign historical release
+
+# One-off signer for releases that were cut before the signed-source-
+# archive flow landed in release.yml. The Release workflow only signs
+# new tags going forward — to lift OpenSSF Scorecard's Signed-Releases
+# check (rolling 5-release window) we need to retroactively attach
+# signature + provenance assets to the older releases.
+#
+# Run via `workflow_dispatch` per tag, e.g.
+#   gh workflow run sign-historical-release.yml -f tag=v0.2.0
+# Idempotent: if the signed assets already exist on the release the
+# upload step will fail; pass `force=true` to overwrite.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to sign (e.g., v0.2.0)'
+        required: true
+        type: string
+      force:
+        description: 'Overwrite signature/provenance assets if they exist'
+        required: false
+        default: 'false'
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  sign:
+    name: Sign archive + attest provenance
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write       # upload to the existing release
+      id-token: write       # mint OIDC for Sigstore keyless signing
+      attestations: write   # attest-build-provenance writes
+    steps:
+      - name: Validate tag input
+        run: |
+          if ! echo "${{ inputs.tag }}" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+(-[a-z0-9]+(\.[0-9]+)?)?$'; then
+            echo "::error::tag must match v<MAJOR>.<MINOR>.<PATCH>; got '${{ inputs.tag }}'"
+            exit 1
+          fi
+
+      - name: Checkout repository at the tagged commit
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: ${{ inputs.tag }}
+          fetch-depth: 0
+
+      - name: Confirm the release exists
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if ! gh release view "${{ inputs.tag }}" --repo "${{ github.repository }}" > /dev/null 2>&1; then
+            echo "::error::Release ${{ inputs.tag }} does not exist. Create the release first."
+            exit 1
+          fi
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
+      - name: Build signed source archive
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ inputs.tag }}"
+          ARCHIVE="cursor-boston-${TAG}.tar.gz"
+          # Built from the tagged commit (HEAD here since we checked out
+          # ref=tag) so the archive matches what `git checkout vX.Y.Z`
+          # would produce. --prefix matches GitHub's default archive
+          # layout so the signature is meaningful to anyone using GitHub's
+          # auto-archive as their unpack root.
+          git archive --format=tar.gz --prefix="cursor-boston-${TAG}/" \
+            -o "$ARCHIVE" HEAD
+          cosign sign-blob --yes \
+            --bundle "${ARCHIVE}.cosign.bundle" \
+            "$ARCHIVE"
+          flags=""
+          if [ "${{ inputs.force }}" = "true" ]; then
+            flags="--clobber"
+          fi
+          gh release upload "$TAG" \
+            "$ARCHIVE" \
+            "${ARCHIVE}.cosign.bundle" \
+            --repo "${{ github.repository }}" $flags
+
+      - name: Attest SLSA build provenance
+        id: attest
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        with:
+          subject-path: |
+            cursor-boston-${{ inputs.tag }}.tar.gz
+
+      - name: Upload SLSA provenance bundle to release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ inputs.tag }}"
+          BUNDLE="${{ steps.attest.outputs.bundle-path }}"
+          if [ -z "$BUNDLE" ] || [ ! -f "$BUNDLE" ]; then
+            echo "::warning::attest-build-provenance produced no bundle file; skipping upload"
+            exit 0
+          fi
+          cp "$BUNDLE" "cursor-boston-${TAG}.intoto.jsonl"
+          flags=""
+          if [ "${{ inputs.force }}" = "true" ]; then
+            flags="--clobber"
+          fi
+          gh release upload "$TAG" \
+            "cursor-boston-${TAG}.intoto.jsonl" \
+            --repo "${{ github.repository }}" $flags
