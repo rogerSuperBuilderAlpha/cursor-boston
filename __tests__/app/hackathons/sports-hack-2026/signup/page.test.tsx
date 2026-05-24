@@ -634,7 +634,10 @@ describe("Sports Hack 2026 signup page", () => {
     render(<Page />);
 
     expect(await screen.findByText(/Day-of RSVP/i)).toBeInTheDocument();
-    expect(screen.getByText(/Waitlist starts here/i)).toBeInTheDocument();
+    // PR 3 renamed the post-freeze waitlist-start divider to a credit-cutoff
+    // banner with the explicit "Top N credit cutoff" wording. Mock has
+    // creditTopN: 80 so the divider reads "Top 80 credit cutoff".
+    expect(screen.getByText(/Top 80 credit cutoff/i)).toBeInTheDocument();
 
     fireEvent.click(
       screen.getByRole("button", { name: /I'll be late but I'm coming/i }),
