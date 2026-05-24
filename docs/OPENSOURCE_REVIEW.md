@@ -47,7 +47,7 @@ The companion [`DOCUMENTATION_REVIEW.md`](DOCUMENTATION_REVIEW.md) extends Dim 9
 | 6 | Testing, Reliability & Observability | 🔴 RED | 🔴 RED (unchanged) | **No Sentry/OpenTelemetry/Pino/Winston dependencies** (P0-5 still ❌, single highest-leverage open item). Firestore rules tests still 8 cases / 274 lines (P1-11 ❌). No `coverageThreshold` block in jest.config (P1-14 ❌). E2E still smoke-only — 6 specs in `e2e/smoke/` (P1-15 ❌). |
 | 7 | Accessibility & Inclusive UX | 🟡 YELLOW | 🟡 YELLOW (unchanged) | a11y rules still `warn` not `error` (P1-9 ❌); no `@axe-core/playwright` in package.json (P1-10 ❌). |
 | 8 | Release Engineering & Provenance | 🟡 YELLOW | 🟡 YELLOW | Still **0 git tags / 0 GitHub releases** (P1-12 ❌). CHANGELOG references v0.1.0 (2026-01-27) but the tag doesn't exist on the remote — misleading. Sigstore pipeline remains unvalidated. |
-| 9 | Documentation & Onboarding | 🟢 GREEN | 🟢 GREEN | Doc count 60 → 61; freshness sustained. `ARCHITECTURE.md` still missing (P1-16 ❌). See [DOCUMENTATION_REVIEW.md](DOCUMENTATION_REVIEW.md) for the dedicated audit. |
+| 9 | Documentation & Onboarding | 🟢 GREEN | 🟢 GREEN | Doc count 60 → 61; freshness sustained. `ARCHITECTURE.md` shipped 2026-05-18 (P1-16 ✅). See [DOCUMENTATION_REVIEW.md](DOCUMENTATION_REVIEW.md) for the dedicated audit. |
 
 ### Session 1 backlog reconciliation
 
@@ -83,7 +83,7 @@ P0/P1/P2 items from [Session 1 § Prioritized backlog](#prioritized-backlog), wi
 | P1-13 | Sweep 81 `as any` / `as unknown as` | ❌ Regressed | Count: 85 (was 81). Code shipped with new casts faster than old ones were removed. |
 | P1-14 | Raise + enforce Jest coverage thresholds | ❌ | No `coverageThreshold` block in jest config found. |
 | P1-15 | E2E happy-paths (signup, community post, mentorship request, game turn) | ❌ | `e2e/` still has only `smoke/` — 6 specs (auth-pages, hackathons, homepage, legal-pages, navigation, public-pages). No happy-path specs for the four flows. |
-| P1-16 | Write `docs/ARCHITECTURE.md` | ❌ | File does not exist. |
+| P1-16 | Write `docs/ARCHITECTURE.md` | ✅ | Shipped 2026-05-18 (`67292eb`) — 216 lines, subsystem map + data flow + deployment topology. |
 | P1-17 | MAINTAINERS.md lists humans | ✅ | 4 humans listed with roles + dates. |
 | P1-18 | Path-scoped CODEOWNERS | ✅ | `.github/CODEOWNERS` has per-area primaries (Neha → components/analytics; Brad → middleware/sanitize/rate-limit; Aaron → Footer/partners/GET_STARTED/FIRST_CONTRIBUTION; Roger → governance/game). |
 
@@ -196,9 +196,9 @@ For each dimension, the question is: *what does the gold-standard exemplar do he
 
 **What Supabase does:** single-page architectural overview — what each subsystem is, how they connect, where data flows, deployment topology, when to add a new subsystem vs extend an existing one.
 
-**Gap:** No `docs/ARCHITECTURE.md` (P1-16 unchanged). Six ADRs cover individual decisions but no synthesis. Three new substantial subsystems shipped since May (PR Studio, zero-turn gameplay, Armageddon) without ADRs.
+**Gap:** ~~No `docs/ARCHITECTURE.md`~~ ✅ resolved 2026-05-18 (`67292eb`) — 216-line synthesis now present (P1-16 ✅, DOC-P0-1 done). Six ADRs cover individual decisions; `ARCHITECTURE.md` is the synthesis. Three new substantial subsystems shipped since May (PR Studio, zero-turn gameplay, Armageddon) still without ADRs.
 
-**Action:** Write `docs/ARCHITECTURE.md` (DOC-P0-1). Backfill ADR-0007 (account-deletion model) and ADR-0008 (Community Maintainer track).
+**Action:** Backfill ADR-0007 (account-deletion model) and ADR-0008 (Community Maintainer track).
 
 #### Dim 6 — Testing, Reliability & Observability → benchmark vs [Sentry's Next.js integration](https://docs.sentry.io/platforms/javascript/guides/nextjs/) + [tRPC's e2e + coverage gates](https://github.com/trpc/trpc/blob/main/.github/workflows/main.yml)
 
@@ -230,7 +230,7 @@ For each dimension, the question is: *what does the gold-standard exemplar do he
 
 #### Dim 9 — Documentation → benchmark vs [DOCUMENTATION_REVIEW.md](DOCUMENTATION_REVIEW.md)
 
-Handed off to the dedicated companion review. Summary: doc surface is broad and fresh (61 files, ~30 touched in last 30 days), but Diátaxis isn't surfaced in folder structure, no `ARCHITECTURE.md`, no RFC process, issue templates are stale markdown rather than YAML forms, no docs style guide, no All Contributors integration. See DOCUMENTATION_REVIEW.md § Recommendations for the full doc backlog (4 P0, 10 P1, 8 P2).
+Handed off to the dedicated companion review. Summary: doc surface is broad and fresh (61 files, ~30 touched in last 30 days), but Diátaxis isn't surfaced in folder structure, no RFC process, issue templates are stale markdown rather than YAML forms, no docs style guide, no All Contributors integration. (`ARCHITECTURE.md` shipped 2026-05-18.) See DOCUMENTATION_REVIEW.md § Recommendations for the full doc backlog (4 P0, 10 P1, 8 P2).
 
 ### New findings (not in Session 1)
 
@@ -258,7 +258,7 @@ The full executable plan lives in [REVIEW_ACTION_PLAN.md § Phase 5](REVIEW_ACTI
 | Carried | P0-1 — Actual collaborator onboarding (vs paper-only); commit-concentration recovery | M |
 | Carried | P0-2 — Code-Review = 1/10 must move to ≥ 5 (10/20 changesets reviewed) | S (process) |
 | Carried | P0-5 — Sentry + structured logging (REVIEW_ACTION_PLAN.md §2.1 is the runbook) | S-M |
-| New | DOC-P0-1 — Write `docs/ARCHITECTURE.md` | S |
+| New | ~~DOC-P0-1 — Write `docs/ARCHITECTURE.md`~~ ✅ done 2026-05-18 (`67292eb`) | S |
 | New | DOC-P0-2 — Rewrite issue templates as YAML forms | S |
 | New | DOC-P0-3 — Document `API.md` provenance + regen command | S |
 | New | DOC-P0-4 — Resolve CHANGELOG v0.1.0 tag mismatch (push the tag, or amend CHANGELOG) | S |

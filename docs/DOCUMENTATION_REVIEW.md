@@ -30,7 +30,7 @@ Companion to [`OPENSOURCE_REVIEW.md`](OPENSOURCE_REVIEW.md). That review treats 
 
 ### Top 5 gaps (full list at [§ Recommendations](#recommendations))
 
-1. **No `docs/ARCHITECTURE.md`** — flagged in [OPENSOURCE_REVIEW.md P1-16](OPENSOURCE_REVIEW.md#prioritized-backlog) (2026-05-06), still missing. Exemplar: [supabase/supabase/ARCHITECTURE.md](https://github.com/supabase/supabase/blob/master/ARCHITECTURE.md). **P0.**
+1. ~~**No `docs/ARCHITECTURE.md`**~~ — ✅ **RESOLVED 2026-05-18** (commit `67292eb`). 216-line synthesis covering subsystem map, data flow, and deployment topology. Exemplar followed: [supabase/supabase/ARCHITECTURE.md](https://github.com/supabase/supabase/blob/master/ARCHITECTURE.md).
 2. **Issue templates are markdown, not YAML forms.** `bug_report.md` + `feature_request.md` last touched 2026-01-27 (>3 months stale). Compare to [vercel/next.js's YAML forms with dropdowns + required fields](https://github.com/vercel/next.js/tree/canary/.github/ISSUE_TEMPLATE). YAML forms produce more triagable reports. **P1.**
 3. **No docs style guide.** Without one, voice and tone drift as contributors land docs. Compare to [vercel/next.js/contributing/docs/writing-style-guide.md](https://github.com/vercel/next.js/blob/canary/contributing/docs/writing-style-guide.md) (bans "easy"/"just", mandates second-person, lists component vocabulary). **P1.**
 4. **`docs/` is flat — Diátaxis isn't surfaced.** 22 files in one directory; the quadrant mapping lives in `docs/README.md` text rather than folder structure. Compare to [Astro's `docs/src/content/docs/{tutorial,guides,recipes,reference}`](https://github.com/withastro/docs/tree/main/src/content/docs) or [Stripe's four-tab top nav](https://docs.stripe.com/). **P1.**
@@ -157,11 +157,11 @@ REFERENCE — exhaustive facts            EXPLANATION — concept-first prose
 ├── docs/SUPPLY_CHAIN.md (partial)      ├── docs/OPENSOURCE_REVIEW.md
 ├── docs/USER_GUIDE.md                  ├── docs/DOCUMENTATION_REVIEW.md (this file)
 ├── docs/SUBMISSION_BRANCHES.md         ├── docs/generals/LORE.md
-├── docs/BRANCH_PROTECTION.md           ├── .github/GOVERNANCE.md
-├── docs/generals/{UNITS,SPELLS,...}    └── .github/DCO.md
-├── CHANGELOG.md                        
-├── MAINTAINERS.md                      MISSING — explanation quadrant gap
-├── .github/{SECURITY,CODE_OF_CONDUCT,  └── docs/ARCHITECTURE.md
+├── docs/BRANCH_PROTECTION.md           ├── docs/ARCHITECTURE.md (added 2026-05-18)
+├── docs/generals/{UNITS,SPELLS,...}    ├── .github/GOVERNANCE.md
+├── CHANGELOG.md                        └── .github/DCO.md
+├── MAINTAINERS.md
+├── .github/{SECURITY,CODE_OF_CONDUCT,
 │   SUPPORT,TRADEMARK,ACCESSIBILITY,
 │   DESIGN}.md
 └── README.md (partial — also Tutorial)
@@ -180,7 +180,7 @@ REFERENCE — exhaustive facts            EXPLANATION — concept-first prose
 ### Quadrant-vs-quadrant gaps
 
 - **Tutorial quadrant is thin** — only 3 docs. Compare to [Astro's tutorial series](https://docs.astro.build/en/tutorial/0-introduction/) (12-part build-your-first-blog walkthrough). A platform with 9 subsystems warrants ≥1 tutorial per major subsystem (e.g., "build your first community-feature project end-to-end") not just per-role onboarding.
-- **Explanation quadrant lacks `ARCHITECTURE.md`** — 6 ADRs cover individual decisions but no synthesis. Exemplar: [supabase/supabase/ARCHITECTURE.md](https://github.com/supabase/supabase/blob/master/ARCHITECTURE.md) — single page, subsystem map, data flow, deployment topology. **P0 doc gap.**
+- ~~**Explanation quadrant lacks `ARCHITECTURE.md`**~~ — ✅ **RESOLVED 2026-05-18** (`67292eb`). `docs/ARCHITECTURE.md` now provides the synthesis the 6 ADRs lacked: single-page subsystem map, data flow, deployment topology. Modeled on the [supabase/supabase/ARCHITECTURE.md](https://github.com/supabase/supabase/blob/master/ARCHITECTURE.md) exemplar.
 - **Reference quadrant strong but uneven** — `API.md` is current and dense; `docs/generals/*` is exemplary; `DEVELOPMENT.md` mixes reference + how-to.
 
 ---
@@ -299,7 +299,7 @@ Cited in the May review as "the highest-quality contributor onboarding I've seen
 
 | Path | Why | Exemplar |
 |---|---|---|
-| `docs/ARCHITECTURE.md` | Single-page synthesis: subsystem map, data flow (auth → Firestore → API → client), deployment topology. ADRs cover individual decisions; this is the synthesis. | [supabase/supabase/ARCHITECTURE.md](https://github.com/supabase/supabase/blob/master/ARCHITECTURE.md) |
+| ~~`docs/ARCHITECTURE.md`~~ ✅ shipped 2026-05-18 | Single-page synthesis: subsystem map, data flow (auth → Firestore → API → client), deployment topology. ADRs cover individual decisions; this is the synthesis. | [supabase/supabase/ARCHITECTURE.md](https://github.com/supabase/supabase/blob/master/ARCHITECTURE.md) |
 | `ROADMAP.md` (root) | Currently buried in `.github/ACTIVE_ISSUES.md` which is excellent content but non-discoverable. Promote the same content to root `ROADMAP.md` and link it from README's roadmap line. | [TanStack/query roadmap](https://github.com/TanStack/query/discussions/categories/roadmap) |
 | `docs/rfcs/` (folder + README) | Forward-looking proposal flow for substantial changes. ADRs are post-hoc; RFCs are upstream. | [rust-lang/rfcs](https://github.com/rust-lang/rfcs), [reactjs/rfcs](https://github.com/reactjs/rfcs) |
 | `docs/STYLE_GUIDE.md` (or `.github/DOCS_STYLE_GUIDE.md`) | Bans "easy"/"just"/"simply", mandates second-person ("you/your"), defines product vocabulary (Cursor vs Cursor Boston vs the platform), code-block conventions. Without it, voice drifts. | [vercel/next.js/contributing/docs/writing-style-guide.md](https://github.com/vercel/next.js/blob/canary/contributing/docs/writing-style-guide.md) |
@@ -391,7 +391,7 @@ For each Diátaxis quadrant, the specific thing the exemplar does that we don't.
 
 **What Rust does:** the Rustonomicon is a 200-page concept-first explanation of unsafe Rust, deliberately separated from the reference and tutorial. Single purpose: explain hard concepts in narrative prose.
 
-**What we don't:** our explanation quadrant is ADRs + the security post-mortem + LORE.md. Missing: a narrative explanation of *how the platform works at the architecture level* — that's `docs/ARCHITECTURE.md`.
+**What we now have:** our explanation quadrant is ADRs + the security post-mortem + LORE.md + `docs/ARCHITECTURE.md` (added 2026-05-18) — the narrative explanation of *how the platform works at the architecture level*.
 
 ### ADRs → [adr.github.io / MADR](https://adr.github.io/madr/)
 
@@ -421,7 +421,7 @@ Effort estimates: **S** = a few hours, **M** = 1-3 days, **L** = a week+.
 
 | # | Action | File(s) | Effort | Exemplar |
 |---|---|---|---|---|
-| DOC-P0-1 | Write `docs/ARCHITECTURE.md` — single-page synthesis: subsystem map, data flow, deployment topology, cross-links to ADRs. | new `docs/ARCHITECTURE.md` | S | [supabase/supabase/ARCHITECTURE.md](https://github.com/supabase/supabase/blob/master/ARCHITECTURE.md) |
+| DOC-P0-1 | ✅ **DONE 2026-05-18** (`67292eb`). ~~Write `docs/ARCHITECTURE.md` — single-page synthesis: subsystem map, data flow, deployment topology, cross-links to ADRs.~~ | `docs/ARCHITECTURE.md` (216 lines) | S | [supabase/supabase/ARCHITECTURE.md](https://github.com/supabase/supabase/blob/master/ARCHITECTURE.md) |
 | DOC-P0-2 | Rewrite both issue templates as YAML forms with required fields + area dropdown. Re-author and remove the markdown originals. | `.github/ISSUE_TEMPLATE/{bug_report,feature_request}.{md→yml}`; add `3-game-design-proposal.yml` | S | [vercel/next.js/.github/ISSUE_TEMPLATE](https://github.com/vercel/next.js/tree/canary/.github/ISSUE_TEMPLATE) |
 | DOC-P0-3 | Document API.md provenance — add a "How this file is generated" header. If hand-maintained, decide whether to auto-generate (drift risk at 178 paths is high). | `docs/API.md` | S | [Next.js App Router reference](https://nextjs.org/docs/app/api-reference) |
 | DOC-P0-4 | Resolve CHANGELOG / `v0.1.0` tag mismatch — CHANGELOG references a tag `git tag` doesn't show. Either push the tag (see [OPENSOURCE_REVIEW.md P1-12](OPENSOURCE_REVIEW.md#prioritized-backlog)) or amend the CHANGELOG. Currently misleading. | `CHANGELOG.md` or `git tag v0.1.0` | S | [Tailwind CSS releases](https://github.com/tailwindlabs/tailwindcss/releases) |
