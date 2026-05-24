@@ -209,3 +209,4 @@ docs/*referral*/
 # Event-registration exports — contain attendee PII (email, phone). Live
 # in scripts/data/ as a working dir for one-shot exports; never commit.
 scripts/data/*-registrations-*.csv
+.env*

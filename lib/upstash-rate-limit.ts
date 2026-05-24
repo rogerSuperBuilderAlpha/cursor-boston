@@ -37,8 +37,16 @@ const DEFAULT_UNAVAILABLE_RETRY_AFTER_SECONDS = 60;
 function getRedis(): Redis | null {
   if (redis) return redis;
 
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  // The Vercel Marketplace Upstash for Redis integration injects
+  // KV_REST_API_URL / KV_REST_API_TOKEN (Vercel's KV convention).
+  // Hand-set Upstash credentials (e.g. local dev where someone created
+  // an Upstash project outside the Vercel integration) use the
+  // UPSTASH_REDIS_REST_* names. Accept both so the same code works
+  // regardless of how the Redis backend was provisioned.
+  const url =
+    process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+  const token =
+    process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
 
   if (!url || !token) return null;
 
