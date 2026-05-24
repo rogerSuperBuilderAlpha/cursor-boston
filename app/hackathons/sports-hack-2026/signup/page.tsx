@@ -657,8 +657,8 @@ function SportsHack2026SignupPageInner() {
                           {meConfirmed
                             ? onWaitlist
                               ? "Confirmed — currently on the waitlist"
-                              : "Confirmed — you're attending"
-                            : "Step 2: Confirm you'll attend"}
+                              : "Confirmed — you're attending (Tier A)"
+                            : "Step 2: Confirm you'll attend — locks in Tier A"}
                         </h2>
                         <p className="mt-1 text-neutral-700 dark:text-neutral-300">
                           {meConfirmed
@@ -667,7 +667,7 @@ function SportsHack2026SignupPageInner() {
                               : myAttendanceRank != null
                                 ? `You're confirmed attendee #${myAttendanceRank} of ${attendanceLimit} guaranteed seats.`
                                 : "Your attendance is confirmed."
-                            : "Claiming a spot reserves your rank. Click below to also confirm you'll be there May 26 — first 200 confirmed by leaderboard rank are guaranteed entry."}
+                            : "Claiming reserves a rank slot. Confirming attendance is the second step — it moves you into Tier A (above everyone who only claimed) and counts toward the pre-event headcount we share with the venue. Top 200 confirmed by rank are guaranteed entry; top 119 are credit-eligible after opening a submission PR."}
                         </p>
                         <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
                           {attendingCount} of {attendanceLimit} confirmed attending site-wide.
@@ -698,6 +698,59 @@ function SportsHack2026SignupPageInner() {
                   </div>
                 );
               })()}
+
+              {/* Tier-A + credit band + no submission = the final UX nudge.
+                  Tells the user they're in the 119-credit band but the credit
+                  itself only unlocks once they open a submission PR. Renders
+                  pre-event with "on event day" framing; same card stays useful
+                  post-event for last-minute submitters. */}
+              {data.me?.tier === "A" &&
+              data.me?.inCreditBand === true &&
+              data.me?.hasSubmission === false ? (
+                <div className="mt-6 rounded-2xl border border-emerald-500/40 bg-emerald-500/5 p-6 dark:bg-emerald-500/10">
+                  <h2 className="font-semibold text-foreground">
+                    You&apos;re in the credit band — finish your submission to unlock it
+                  </h2>
+                  <p className="mt-1 text-sm text-neutral-700 dark:text-neutral-300">
+                    Your Tier-A rank puts you inside the top {capacity} credit
+                    slots, but a Cursor credit only goes out if you also open a
+                    submission PR. On event day, push a folder named after your
+                    GitHub handle into the{" "}
+                    <code className="rounded bg-neutral-200 px-1 py-0.5 text-xs dark:bg-neutral-800">
+                      sports-hack-2026-submissions
+                    </code>{" "}
+                    branch with a <code className="rounded bg-neutral-200 px-1 py-0.5 text-xs dark:bg-neutral-800">meta.json</code>{" "}
+                    (title, description, videoUrl, repoUrl, deployedUrl).
+                  </p>
+                  <p className="mt-3 text-sm">
+                    <a
+                      href="https://github.com/rogerSuperBuilderAlpha/cursor-boston/blob/main/sports-hack-2026-submissions/README.md"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-emerald-700 underline hover:text-emerald-600 dark:text-emerald-400"
+                    >
+                      Submission template + field reference →
+                    </a>
+                  </p>
+                </div>
+              ) : null}
+
+              {/* Tier-A + credit band + submission opened — confirmation card. */}
+              {data.me?.tier === "A" &&
+              data.me?.inCreditBand === true &&
+              data.me?.hasSubmission === true ? (
+                <div className="mt-6 rounded-2xl border border-emerald-500/40 bg-emerald-500/10 p-6 dark:bg-emerald-500/15">
+                  <h2 className="font-semibold text-foreground">
+                    Credit-eligible ✓ Submission detected
+                  </h2>
+                  <p className="mt-1 text-sm text-neutral-700 dark:text-neutral-300">
+                    Tier A · in the top-{capacity} credit band · submission PR
+                    detected. You&apos;re locked in for a Cursor credit code,
+                    assuming your submission stays open through the 4 PM ET
+                    deadline.
+                  </p>
+                </div>
+              ) : null}
 
               {/* Pre-freeze info card (replaces the day-of RSVP controls until a real confirmed/waitlist split exists) */}
               {preFreeze ? (
@@ -1123,9 +1176,17 @@ function SportsHack2026SignupPageInner() {
                       // Post-freeze: divide between confirmed/waitlisted as the API reports.
                       const inTopN = row.rank <= data.creditTopN;
                       const prevInTopN = prev ? prev.rank <= data.creditTopN : false;
-                      const showWaitlistDivider = preFreeze
+                      const showCreditCutoffDivider = preFreeze
                         ? !inTopN && prevInTopN
                         : status === "waitlisted" && prevStatus === "confirmed";
+
+                      // Three-tier model dividers (sports-hack-2026). Render at
+                      // the first row of each tier transition so the visual
+                      // ladder A → B → C is unmistakable.
+                      const showTierAtoBDivider = row.tier === "B" && prev?.tier === "A";
+                      const showTierBtoCDivider = row.tier === "C" && prev?.tier === "B";
+                      const showTierAtoCDivider =
+                        row.tier === "C" && prev?.tier === "A"; // no Tier B people at all
 
                       const rowHighlight = preFreeze
                         ? inTopN
@@ -1135,22 +1196,57 @@ function SportsHack2026SignupPageInner() {
                           ? "bg-emerald-500/5 dark:bg-emerald-500/10"
                           : "";
 
-                      const tier = preFreeze ? getSportsHack2026RankTier(row.rank) : null;
+                      const rankTier = preFreeze ? getSportsHack2026RankTier(row.rank) : null;
+                      const engagementTier = row.tier ?? null;
 
                       return (
                         <React.Fragment key={row.userId ?? `luma-${row.rank}`}>
-                          {showWaitlistDivider && (
+                          {showTierAtoBDivider && (
                             <tr>
                               <td
                                 colSpan={5}
                                 className="px-4 py-3 bg-amber-500/10 dark:bg-amber-500/20 border-t-2 border-amber-500/30"
                               >
-                                <div className="flex items-center gap-2">
+                                <div className="flex flex-wrap items-center gap-2">
                                   <span className="text-sm font-bold text-amber-700 dark:text-amber-400">
-                                    {preFreeze ? `Below the top-${data.creditTopN} cut` : "Waitlist starts here"}
+                                    Tier B starts here
                                   </span>
                                   <span className="text-xs text-amber-600 dark:text-amber-500">
-                                    — merge PRs to the community repo to climb into the top {data.creditTopN}
+                                    — claimed but haven&apos;t confirmed attendance. Click &ldquo;Confirm attendance&rdquo; on your signup card to move into Tier A.
+                                  </span>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                          {(showTierBtoCDivider || showTierAtoCDivider) && (
+                            <tr>
+                              <td
+                                colSpan={5}
+                                className="px-4 py-3 bg-neutral-200/60 dark:bg-neutral-800/60 border-t-2 border-neutral-300 dark:border-neutral-700"
+                              >
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="text-sm font-bold text-neutral-700 dark:text-neutral-300">
+                                    Tier C starts here
+                                  </span>
+                                  <span className="text-xs text-neutral-600 dark:text-neutral-400">
+                                    — Luma/Partiful RSVP only, no website claim. Sign in and claim a spot to enter the active ranking.
+                                  </span>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                          {showCreditCutoffDivider && (
+                            <tr>
+                              <td
+                                colSpan={5}
+                                className="px-4 py-3 bg-rose-500/10 dark:bg-rose-500/20 border-t-2 border-rose-500/30"
+                              >
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="text-sm font-bold text-rose-700 dark:text-rose-400">
+                                    Top {data.creditTopN} credit cutoff
+                                  </span>
+                                  <span className="text-xs text-rose-600 dark:text-rose-500">
+                                    — only the top {data.creditTopN} ranked attendees are eligible for a Cursor credit (after opening a submission PR).
                                   </span>
                                 </div>
                               </td>
@@ -1189,12 +1285,33 @@ function SportsHack2026SignupPageInner() {
                             </td>
                             <td className="px-4 py-3">
                               <div className="flex flex-col gap-1 items-start">
-                                {tier ? (
+                                {engagementTier === "A" ? (
                                   <span
-                                    className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold ${TONE_PILL_CLASS[tier.tone]}`}
-                                    title={tier.detail}
+                                    className="inline-flex items-center rounded-full bg-emerald-500/15 border border-emerald-500/40 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300"
+                                    title="Tier A — claimed and user-confirmed attendance"
                                   >
-                                    {tier.label}
+                                    Tier A · confirmed
+                                  </span>
+                                ) : engagementTier === "B" ? (
+                                  <span
+                                    className="inline-flex items-center rounded-full bg-amber-500/15 border border-amber-500/40 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:text-amber-300"
+                                    title="Tier B — claimed a spot but hasn't clicked Confirm Attendance"
+                                  >
+                                    Tier B · claimed
+                                  </span>
+                                ) : engagementTier === "C" ? (
+                                  <span
+                                    className="inline-flex items-center rounded-full bg-neutral-300/40 border border-neutral-400/40 px-2 py-0.5 text-xs font-semibold text-neutral-700 dark:bg-neutral-700/40 dark:text-neutral-300"
+                                    title="Tier C — external Luma/Partiful RSVP only, no website signup"
+                                  >
+                                    Tier C · RSVP only
+                                  </span>
+                                ) : rankTier ? (
+                                  <span
+                                    className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold ${TONE_PILL_CLASS[rankTier.tone]}`}
+                                    title={rankTier.detail}
+                                  >
+                                    {rankTier.label}
                                   </span>
                                 ) : status === "confirmed" ? (
                                   <span className="inline-flex items-center rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
@@ -1205,10 +1322,18 @@ function SportsHack2026SignupPageInner() {
                                     Waitlist
                                   </span>
                                 )}
+                                {row.hasSubmission ? (
+                                  <span
+                                    className="inline-flex items-center rounded-full bg-emerald-500/15 border border-emerald-500/40 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300"
+                                    title="A submission PR has been opened on this attendee's GitHub login"
+                                  >
+                                    ✓ Submitted
+                                  </span>
+                                ) : null}
                                 {row.isCohort1 ? (
                                   <span
                                     className="inline-flex items-center rounded-full border border-violet-500/30 bg-violet-500/10 px-2 py-0.5 text-xs font-semibold text-violet-700 dark:text-violet-400"
-                                    title="Summer Cohort 1 applicant — prioritized in the May 26 immersion ranking"
+                                    title="Summer Cohort 1 applicant (informational — cohort-1 boost was removed from the May 26 ranking)"
                                   >
                                     Cohort 1
                                   </span>
