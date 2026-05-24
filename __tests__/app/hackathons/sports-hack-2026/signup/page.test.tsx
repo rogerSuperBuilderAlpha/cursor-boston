@@ -378,10 +378,12 @@ describe("Sports Hack 2026 signup page", () => {
       .default;
     render(<Page />);
 
-    expect(await screen.findByRole("link", { name: /Connect GitHub/i })).toHaveAttribute(
-      "href",
-      "/api/github/authorize",
-    );
+    // Connect GitHub is now a button that delegates to useGithubConnection.connect()
+    // (sets window.location.href with the right returnTo). The Discord button
+    // is still a plain link until it gets the same treatment.
+    expect(
+      await screen.findByRole("button", { name: /Connect GitHub/i }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Connect Discord/i })).toHaveAttribute(
       "href",
       "/api/discord/authorize",
