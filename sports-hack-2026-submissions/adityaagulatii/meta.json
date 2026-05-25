@@ -1,0 +1,10 @@
+{
+  "title": "ESMFold Athlete Recovery: AI-Powered Protein Structure Analysis for Sports Performance",
+  "description": "A machine learning pipeline using ESMFold to predict muscle recovery timelines based on protein structure analysis. Helps coaches and athletes optimize training cycles, reduce injury risk, and personalize recovery protocols using structural biology AI.",
+  "displayName": "Aditya Gulati",
+  "videoUrl": "https://www.loom.com/share/YOUR_LOOM_ID_HERE",
+  "repoUrl": "https://github.com/Adityaagulatii/Protein-Pipeline-ESMFold",
+  "deployedUrl": "",
+  "tags": ["esm", "protein-structure", "sports-science", "recovery", "ml", "python"],
+  "collaborators": []
+}
