@@ -1,0 +1,10 @@
+{
+  "title": "Sub Verdict",
+  "description": "An AI-powered tool that analyzes Premier League substitutions and delivers instant verdicts on whether a manager made the right call. Users select a match and substitution to get a Brilliant, Fine, Too Late, or Wrong Call verdict with tactical reasoning.",
+  "displayName": "Abhishek Palathoti",
+  "videoUrl": "",
+  "repoUrl": "https://github.com/Coding-Samurai110602/sub-verdict",
+  "deployedUrl": "",
+  "tags": ["premier-league", "football", "ai", "tactics", "streamlit"],
+  "collaborators": []
+}
