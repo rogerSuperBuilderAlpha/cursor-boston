@@ -125,7 +125,9 @@ function rankStatus(s: NormalizedStatus): number {
 
 function partifulStatus(raw: string): NormalizedStatus | null {
   const v = raw.replace(/ /g, " ").trim().toLowerCase();
-  if (v === "going") return "approved";
+  // Partiful re-labeled "Going" as "Approved" in newer exports
+  // (observed 2026-05-25 May 26 final pull) — same confirmed state.
+  if (v === "going" || v === "approved") return "approved";
   if (v === "invited" || v === "maybe" || v === "interested") return "invited/maybe";
   if (v === "can't go" || v === "cant go" || v === "can’t go") return "not going";
   if (v === "error") return "not going";
