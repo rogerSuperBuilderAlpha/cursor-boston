@@ -221,7 +221,7 @@ export default async function EventsPage({
             {eventTypes.map((type) => (
               <div
                 key={type.name}
-                className="flex items-start gap-4 p-4 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800"
+                className="flex items-start gap-4 p-4 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-neutral-300 dark:hover:border-neutral-700"
               >
                 <div className="text-neutral-500 dark:text-neutral-400">{type.icon}</div>
                 <div>
