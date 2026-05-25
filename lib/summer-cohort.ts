@@ -492,6 +492,32 @@ export const SUMMER_COHORT_C1_WEEK_6 = {
 /** Default tab when an admitted cohort-1 user lands on /summer-cohort. */
 export const SUMMER_COHORT_C1_DEFAULT_TAB = "week-1" as const;
 
+export type SummerCohortWeekTab =
+  | "week-1"
+  | "week-2"
+  | "week-3"
+  | "week-4"
+  | "week-5"
+  | "week-6";
+
+export interface SummerCohortWeekDateWindow {
+  readonly week: 1 | 2 | 3 | 4 | 5 | 6;
+  readonly tab: SummerCohortWeekTab;
+  /** ISO timestamp in UTC for deterministic week routing. */
+  readonly kickoffAt: string;
+  /** ISO timestamp in UTC. Inclusive boundary when present. */
+  readonly deadlineAt?: string;
+}
+
+export const SUMMER_COHORT_C1_WEEK_WINDOWS: readonly SummerCohortWeekDateWindow[] = [
+  { week: 1, tab: "week-1", kickoffAt: "2026-05-11T22:00:00.000Z", deadlineAt: "2026-05-15T21:00:00.000Z" },
+  { week: 2, tab: "week-2", kickoffAt: "2026-05-18T22:00:00.000Z", deadlineAt: "2026-05-22T21:00:00.000Z" },
+  { week: 3, tab: "week-3", kickoffAt: "2026-05-25T22:00:00.000Z", deadlineAt: "2026-05-29T21:00:00.000Z" },
+  { week: 4, tab: "week-4", kickoffAt: "2026-06-01T22:00:00.000Z", deadlineAt: "2026-06-05T21:00:00.000Z" },
+  { week: 5, tab: "week-5", kickoffAt: "2026-06-08T22:00:00.000Z", deadlineAt: "2026-06-12T22:00:00.000Z" },
+  { week: 6, tab: "week-6", kickoffAt: "2026-06-15T22:00:00.000Z", deadlineAt: "2026-06-20T03:59:59.999Z" },
+] as const;
+
 export const SUMMER_COHORT_PHILOSOPHY =
   "The cohort succeeds or fails as a cohort. Goal: every participant lands a job offer. The tools each cohort builds are how they market themselves to hiring partners and the world.";
 
@@ -585,6 +611,15 @@ export const SUMMER_COHORT_C2_WEEK_6 = {
 /** Default tab when an admitted cohort-2 user lands on /summer-cohort. */
 export const SUMMER_COHORT_C2_DEFAULT_TAB = "week-1" as const;
 
+export const SUMMER_COHORT_C2_WEEK_WINDOWS: readonly SummerCohortWeekDateWindow[] = [
+  { week: 1, tab: "week-1", kickoffAt: "2026-06-29T22:00:00.000Z", deadlineAt: "2026-07-03T21:00:00.000Z" },
+  { week: 2, tab: "week-2", kickoffAt: "2026-07-06T22:00:00.000Z", deadlineAt: "2026-07-10T21:00:00.000Z" },
+  { week: 3, tab: "week-3", kickoffAt: "2026-07-13T22:00:00.000Z", deadlineAt: "2026-07-17T21:00:00.000Z" },
+  { week: 4, tab: "week-4", kickoffAt: "2026-07-20T22:00:00.000Z", deadlineAt: "2026-07-24T21:00:00.000Z" },
+  { week: 5, tab: "week-5", kickoffAt: "2026-07-27T22:00:00.000Z", deadlineAt: "2026-07-31T22:00:00.000Z" },
+  { week: 6, tab: "week-6", kickoffAt: "2026-08-03T22:00:00.000Z", deadlineAt: "2026-08-08T03:59:59.999Z" },
+] as const;
+
 // ---------------------------------------------------------------------------
 // Cohort runtime — single accessor that the page + week panels read from so
 // the UI is the same shape for either cohort and only the dates / branches /
@@ -668,4 +703,45 @@ export function getPrimarySummerCohort(
   if (cohorts.includes("cohort-1")) return "cohort-1";
   if (cohorts.includes("cohort-2")) return "cohort-2";
   return null;
+}
+
+const SUMMER_COHORT_DEFAULT_TAB_BY_ID: Readonly<Record<SummerCohortId, SummerCohortWeekTab>> =
+  {
+    "cohort-1": SUMMER_COHORT_C1_DEFAULT_TAB,
+    "cohort-2": SUMMER_COHORT_C2_DEFAULT_TAB,
+  };
+
+const SUMMER_COHORT_WEEK_WINDOWS_BY_ID: Readonly<
+  Record<SummerCohortId, readonly SummerCohortWeekDateWindow[]>
+> = {
+  "cohort-1": SUMMER_COHORT_C1_WEEK_WINDOWS,
+  "cohort-2": SUMMER_COHORT_C2_WEEK_WINDOWS,
+};
+
+/**
+ * Maps a cohort + current time to the active week tab.
+ * Falls back to the cohort's default tab when outside all week windows.
+ */
+export function getCurrentCohortTab(
+  cohortId: SummerCohortId,
+  now: Date = new Date()
+): SummerCohortWeekTab {
+  const windows = SUMMER_COHORT_WEEK_WINDOWS_BY_ID[cohortId];
+  const nowMs = now.getTime();
+
+  for (let index = 0; index < windows.length; index += 1) {
+    const current = windows[index];
+    const startMs = Date.parse(current.kickoffAt);
+    const endMs = current.deadlineAt
+      ? Date.parse(current.deadlineAt)
+      : index < windows.length - 1
+        ? Date.parse(windows[index + 1].kickoffAt) - 1
+        : Number.POSITIVE_INFINITY;
+
+    if (nowMs >= startMs && nowMs <= endMs) {
+      return current.tab;
+    }
+  }
+
+  return SUMMER_COHORT_DEFAULT_TAB_BY_ID[cohortId];
 }

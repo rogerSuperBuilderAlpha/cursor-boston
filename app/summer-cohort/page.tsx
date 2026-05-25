@@ -26,10 +26,10 @@ import { useGithubConnection } from "@/app/(auth)/profile/_hooks/useGithubConnec
 import { useDiscordConnection } from "@/app/(auth)/profile/_hooks/useDiscordConnection";
 import {
   SUMMER_COHORTS,
-  SUMMER_COHORT_C1_DEFAULT_TAB,
   SUMMER_COHORT_GOAL_PER_COHORT,
   SUMMER_COHORT_IMMERSION,
   SUMMER_COHORT_RETURN_TO,
+  getCurrentCohortTab,
   getPrimarySummerCohort,
   getSummerCohortRuntime,
   isValidCohortId,
@@ -513,15 +513,6 @@ function SummerCohortPageInner() {
     () => Date.now() < new Date("2026-05-23T04:00:00Z").getTime()
   );
 
-  const [activeTab, setActiveTab] = useState<CohortTabId>(
-    SUMMER_COHORT_C1_DEFAULT_TAB
-  );
-  // Tracks the cohorts for which we've already auto-switched the user to the
-  // intake-survey tab on first land. Per-cohort so switching to a different
-  // cohort with its own incomplete survey nudges them once, but a user who
-  // explicitly navigates away within a cohort isn't yanked back.
-  const autoSwitchedToSurveyRef = useRef<Set<SummerCohortId>>(new Set());
-
   // Primary cohort = the user's "home" cohort if they're admitted to one
   // (or both — cohort-1 wins as the active run). Used as the default
   // selection for the top-level cohort switcher.
@@ -538,6 +529,15 @@ function SummerCohortPageInner() {
   const selectedCohort: SummerCohortId = isValidCohortId(urlCohort)
     ? urlCohort
     : primaryCohort ?? "cohort-1";
+
+  const [activeTab, setActiveTab] = useState<CohortTabId>(() =>
+    getCurrentCohortTab(selectedCohort)
+  );
+  // Tracks the cohorts for which we've already auto-switched the user to the
+  // intake-survey tab on first land. Per-cohort so switching to a different
+  // cohort with its own incomplete survey nudges them once, but a user who
+  // explicitly navigates away within a cohort isn't yanked back.
+  const autoSwitchedToSurveyRef = useRef<Set<SummerCohortId>>(new Set());
 
   const openEditDetails = useCallback(() => {
     setEditingDetails(true);
@@ -653,15 +653,21 @@ function SummerCohortPageInner() {
     setActiveTab("intake-survey");
   }, [intakeStatus, application, selectedCohort]);
 
+  // When cohort changes, start from that cohort's currently active week tab.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- cohort switch should reset default week tab
+    setActiveTab(getCurrentCohortTab(selectedCohort));
+  }, [selectedCohort]);
+
   // If the survey was the active tab and the user just submitted it (status
   // flipped to "completed" → tab disappears), snap to the default tab so we
   // don't leave them staring at an empty panel.
   useEffect(() => {
     if (intakeStatus === "completed" && activeTab === "intake-survey") {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- post-submit cleanup
-      setActiveTab(SUMMER_COHORT_C1_DEFAULT_TAB);
+      setActiveTab(getCurrentCohortTab(selectedCohort));
     }
-  }, [intakeStatus, activeTab]);
+  }, [intakeStatus, activeTab, selectedCohort]);
 
   // Handle OAuth callbacks landed on this page.
   useEffect(() => {

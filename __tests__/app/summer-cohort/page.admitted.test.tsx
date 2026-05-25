@@ -79,6 +79,10 @@ function setupSummerCohortFetch(intakeCompleted = false) {
 }
 
 describe("summer-cohort page admitted", () => {
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   beforeEach(() => {
     localStorage.clear();
     mockUseAuth.mockReturnValue({
@@ -127,5 +131,26 @@ describe("summer-cohort page admitted", () => {
       expect(screen.queryByText(/Why did you join the program/i)).not.toBeInTheDocument();
       expect(screen.getByText(/You're in! Welcome to Cohort 1/i)).toBeInTheDocument();
     });
+  });
+
+  it("defaults to the current active week tab when intake is completed", async () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date("2026-05-20T15:00:00.000Z"));
+    setupSummerCohortFetch(true);
+
+    const Page = (await import("@/app/summer-cohort/page")).default;
+    render(<Page />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Status: Admitted/i)).toBeInTheDocument();
+    });
+
+    expect(screen.getByRole("tab", { name: /week 2/i })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    );
+    expect(
+      screen.getByRole("heading", { name: /Communications Build/i })
+    ).toBeInTheDocument();
   });
 });

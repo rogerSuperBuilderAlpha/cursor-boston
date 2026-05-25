@@ -1,4 +1,5 @@
 import {
+  getCurrentCohortTab,
   SUMMER_COHORTS,
   SUMMER_COHORT_COLLECTION,
   SUMMER_COHORT_DEMO_DAY,
@@ -117,5 +118,37 @@ describe("lib/summer-cohort isValidCohortId", () => {
     expect(isValidCohortId(1)).toBe(false);
     expect(isValidCohortId({ id: "cohort-1" })).toBe(false);
     expect(isValidCohortId(["cohort-1"])).toBe(false);
+  });
+});
+
+describe("lib/summer-cohort getCurrentCohortTab", () => {
+  it("returns the active cohort-1 week during a week window", () => {
+    expect(getCurrentCohortTab("cohort-1", new Date("2026-05-20T15:00:00.000Z"))).toBe(
+      "week-2"
+    );
+  });
+
+  it("treats kickoff and deadline boundaries as inclusive", () => {
+    expect(getCurrentCohortTab("cohort-1", new Date("2026-05-25T22:00:00.000Z"))).toBe(
+      "week-3"
+    );
+    expect(getCurrentCohortTab("cohort-1", new Date("2026-05-29T21:00:00.000Z"))).toBe(
+      "week-3"
+    );
+  });
+
+  it("falls back to default tab when outside all windows", () => {
+    expect(getCurrentCohortTab("cohort-1", new Date("2026-05-31T12:00:00.000Z"))).toBe(
+      "week-1"
+    );
+    expect(getCurrentCohortTab("cohort-2", new Date("2026-06-20T12:00:00.000Z"))).toBe(
+      "week-1"
+    );
+  });
+
+  it("supports cohort-2 week routing", () => {
+    expect(getCurrentCohortTab("cohort-2", new Date("2026-07-21T12:00:00.000Z"))).toBe(
+      "week-4"
+    );
   });
 });
