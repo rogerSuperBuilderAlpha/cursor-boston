@@ -15,31 +15,62 @@ export const metadata: Metadata = {
     "Learn about Cursor Boston, our mission, and how to get involved with the community.",
 };
 
+const ecosystemCardLinkClass =
+  "block p-4 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-600 transition-colors group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+
 const universities = [
-  { name: "MIT", description: "Kendall Square innovation hub" },
-  { name: "Harvard", description: "Innovation Labs & i-lab" },
-  { name: "Hult International Business School", description: "Business & tech" },
-  { name: "Northeastern University", description: "Co-op & tech programs" },
-  { name: "Boston University", description: "Engineering & CS" },
-  { name: "Boston College", description: "STEM programs" },
+  {
+    name: "MIT",
+    description: "Kendall Square innovation hub",
+    href: "https://innovation.mit.edu/",
+  },
+  {
+    name: "Harvard",
+    description: "Innovation Labs & i-lab",
+    href: "https://innovationlabs.harvard.edu",
+  },
+  {
+    name: "Hult International Business School",
+    description: "Business & tech",
+    href: "https://www.hult.edu",
+  },
+  {
+    name: "Northeastern University",
+    description: "Co-op & tech programs",
+    href: "https://www.khoury.northeastern.edu",
+  },
+  {
+    name: "Boston University",
+    description: "Engineering & CS",
+    href: "https://www.bu.edu/eng/",
+  },
+  {
+    name: "Boston College",
+    description: "STEM programs",
+    href: "https://www.bc.edu/bc-web/schools/mcas/departments/computer-science.html",
+  },
 ];
 
 const accelerators = [
   {
     name: "MassChallenge",
     description: "Equity-free startup accelerator",
+    href: "https://masschallenge.org",
   },
   {
     name: "Techstars Boston",
     description: "Mentor-driven accelerator program",
+    href: "https://www.techstars.com/accelerators/boston",
   },
   {
     name: "The Engine",
     description: "MIT's tough tech accelerator",
+    href: "https://engine.xyz",
   },
   {
     name: "Greentown Labs",
     description: "Climate tech incubator",
+    href: "https://www.greentownlabs.com",
   },
 ];
 
@@ -131,15 +162,40 @@ export default function AboutPage() {
               </h3>
               <div className="space-y-3">
                 {universities.map((uni) => (
-                  <div
+                  <a
                     key={uni.name}
-                    className="p-4 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800"
+                    href={uni.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${uni.name} — ${uni.description} (opens in new tab)`}
+                    className={ecosystemCardLinkClass}
                   >
-                    <h4 className="text-foreground font-medium">{uni.name}</h4>
-                    <p className="text-neutral-600 dark:text-neutral-400 text-sm">
-                      {uni.description}
-                    </p>
-                  </div>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <h4 className="text-foreground font-medium">
+                          {uni.name}
+                        </h4>
+                        <p className="text-neutral-600 dark:text-neutral-400 text-sm">
+                          {uni.description}
+                        </p>
+                      </div>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="shrink-0 text-neutral-500 group-hover:text-foreground transition-colors"
+                        aria-hidden="true"
+                      >
+                        <path d="M7 17l9.2-9.2M17 17V7H7" />
+                      </svg>
+                    </div>
+                  </a>
                 ))}
               </div>
             </div>
@@ -168,15 +224,40 @@ export default function AboutPage() {
               </h3>
               <div className="space-y-3">
                 {accelerators.map((acc) => (
-                  <div
+                  <a
                     key={acc.name}
-                    className="p-4 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800"
+                    href={acc.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${acc.name} — ${acc.description} (opens in new tab)`}
+                    className={ecosystemCardLinkClass}
                   >
-                    <h4 className="text-foreground font-medium">{acc.name}</h4>
-                    <p className="text-neutral-600 dark:text-neutral-400 text-sm">
-                      {acc.description}
-                    </p>
-                  </div>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <h4 className="text-foreground font-medium">
+                          {acc.name}
+                        </h4>
+                        <p className="text-neutral-600 dark:text-neutral-400 text-sm">
+                          {acc.description}
+                        </p>
+                      </div>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="shrink-0 text-neutral-500 group-hover:text-foreground transition-colors"
+                        aria-hidden="true"
+                      >
+                        <path d="M7 17l9.2-9.2M17 17V7H7" />
+                      </svg>
+                    </div>
+                  </a>
                 ))}
               </div>
             </div>
