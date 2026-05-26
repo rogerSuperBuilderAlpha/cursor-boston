@@ -1,0 +1,9 @@
+{
+  "ai": {
+    "score": 8,
+    "rationale": "Strong, complete submission with a fun, original framing: a multi-agent courtroom (two theatrical lawyers + a warm-hearted judge) settles controversial sports calls into a shareable verdict card. Clear sports relevance, sharp narrative pitch, all three URLs present (Loom + repo + Vercel deploy), and an LLM design that goes beyond a single prompt — multi-agent persona-driven argument is a non-trivial AI pattern. Doesn't quite hit the top tier because the rubric impact and reach is more entertainment than coaching/analytics, but as a shipped, complete, imaginative one-day build it lands clearly in the strong band.",
+    "model": "claude-opus-4-7",
+    "scoredAt": "2026-05-26T19:02:00.000Z",
+    "scorerVersion": 2
+  }
+}
