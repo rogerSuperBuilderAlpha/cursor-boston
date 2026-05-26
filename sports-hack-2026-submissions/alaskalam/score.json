@@ -1,0 +1,9 @@
+{
+  "ai": {
+    "score": 6,
+    "rationale": "Novel human-centered angle — match ski buddies on whether they'd actually enjoy 12–48 hours trapped together, not just terrain fit. All three required URLs are filled in (Loom + repo + Streamlit deploy). Loses points because the description trails off mid-thought and the AI leverage isn't called out in the meta — the matching engine is presumably LLM-backed but the pitch doesn't sell it. Solid niche submission that could land higher with a sharper, complete pitch.",
+    "model": "claude-opus-4-7",
+    "scoredAt": "2026-05-26T18:56:00.000Z",
+    "scorerVersion": 2
+  }
+}
