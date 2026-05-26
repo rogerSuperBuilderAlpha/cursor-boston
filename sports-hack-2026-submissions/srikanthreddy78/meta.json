@@ -1,0 +1,16 @@
+{
+  "title": "ScoutAI — AI Sports Intelligence Agent with Live Web Search",
+  "description": "ScoutAI is a multi-mode sports intelligence platform that gives coaches and fans access to tactical analysis powered by real-time web search. It features opponent scouting, a conversational live intel chat, head-to-head player matchup comparisons, and a tactical game plan builder, all using live data.",
+  "displayName": "Srikanth reddy Gondireddy",
+  "videoUrl": "https://www.loom.com/share/7fcd0d7a34d0468e857a6a2b1d64f92d",
+  "repoUrl": "https://github.com/srikanthreddy78/scoutai",
+  "deployedUrl": "",
+  "tags": [
+    "ai-agent",
+    "sports-analytics",
+    "web-search",
+    "openai-gpt4o",
+    "real-time-data",
+    "coaching"
+  ]
+}
