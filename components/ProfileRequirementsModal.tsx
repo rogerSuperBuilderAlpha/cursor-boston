@@ -7,11 +7,12 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import Avatar from "@/components/Avatar";
 import { DiscordIcon, GitHubIcon } from "@/components/icons";
+import { Modal } from "@/components/ui/Modal";
 
 export type RequirementType =
   | "isPublic"
@@ -404,8 +405,6 @@ export default function ProfileRequirementsModal({
     }
   };
 
-  if (!isOpen) return null;
-
   // Filter to only show incomplete requirements
   const incompleteRequirements = requirements.filter(
     (req) => !getRequirementStatus(req)
@@ -415,78 +414,29 @@ export default function ProfileRequirementsModal({
   );
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="profile-requirements-title"
-      onKeyDown={(e: ReactKeyboardEvent) => {
-        if (e.key === "Escape") {
-          onClose();
-        }
-        if (e.key === "Tab") {
-          const modal = e.currentTarget.querySelector("[data-modal-content]");
-          if (!modal) return;
-          const focusable = modal.querySelectorAll<HTMLElement>(
-            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-          );
-          if (focusable.length === 0) return;
-          const first = focusable[0];
-          const last = focusable[focusable.length - 1];
-          if (e.shiftKey && document.activeElement === first) {
-            e.preventDefault();
-            last.focus();
-          } else if (!e.shiftKey && document.activeElement === last) {
-            e.preventDefault();
-            first.focus();
-          }
-        }
-      }}
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="lg"
+      titleId="profile-requirements-title"
+      padded={false}
+      panelScroll={false}
+      backdropClassName="bg-black/70 backdrop-blur-sm"
+      className="overflow-hidden"
+      closeButtonLabel="Close modal"
     >
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-        onClick={onClose}
-        aria-hidden="true"
-      />
-
-      {/* Modal */}
-      <div data-modal-content className="relative w-full max-w-lg bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="p-6 border-b border-neutral-800">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3">
-              <Avatar
-                src={profile?.photoURL}
-                name={profile?.displayName}
-                size={48}
-              />
-              <div>
-                <h2 id="profile-requirements-title" className="text-xl font-bold text-white">{title}</h2>
-                <p className="text-sm text-neutral-400">{description}</p>
-              </div>
+          <div className="flex items-center gap-3 pr-10">
+            <Avatar
+              src={profile?.photoURL}
+              name={profile?.displayName}
+              size={48}
+            />
+            <div>
+              <h2 id="profile-requirements-title" className="text-xl font-bold text-white">{title}</h2>
+              <p className="text-sm text-neutral-400">{description}</p>
             </div>
-            <button
-              onClick={onClose}
-              className="text-neutral-400 hover:text-white transition-colors p-1 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-              aria-label="Close modal"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
           </div>
         </div>
 
@@ -641,7 +591,6 @@ export default function ProfileRequirementsModal({
             )}
           </div>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

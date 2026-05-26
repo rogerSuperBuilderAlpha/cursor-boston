@@ -12,6 +12,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { DiscordIcon } from "@/components/icons";
+import { Modal } from "@/components/ui/Modal";
 import {
   SUMMER_COHORTS,
   SUMMER_COHORT_IMMERSION,
@@ -44,8 +45,6 @@ export default function SummerCohortModal() {
   const [isOpen, setIsOpen] = useState(false);
   // null = not yet known; true/false = resolved.
   const [hasApplied, setHasApplied] = useState<boolean | null>(null);
-  const modalRef = useRef<HTMLDivElement>(null);
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
   // Prevent double-resolves from racing each other.
   const appliedResolvedRef = useRef(false);
 
@@ -120,18 +119,6 @@ export default function SummerCohortModal() {
     return () => window.removeEventListener(SUMMER_COHORT_OPEN_EVENT, handleOpen);
   }, [hasApplied]);
 
-  useEffect(() => {
-    if (isOpen) {
-      closeButtonRef.current?.focus();
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
-
   const handleClose = useCallback(() => {
     try {
       localStorage.setItem(SUMMER_COHORT_LOCALSTORAGE_KEY, todayKey());
@@ -141,16 +128,6 @@ export default function SummerCohortModal() {
     setIsOpen(false);
   }, []);
 
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) {
-        handleClose();
-      }
-    };
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [isOpen, handleClose]);
-
   // Open cohorts only — what a brand new applicant can actually join.
   // Closed cohorts still render in the list (greyed) so the modal accurately
   // reflects the program shape, but the CTAs target the open cohort.
@@ -158,8 +135,6 @@ export default function SummerCohortModal() {
     () => SUMMER_COHORTS.find((c) => !c.signupsClosed) ?? null,
     []
   );
-
-  if (!isOpen) return null;
 
   // CTA strategy:
   //   - Already applied        → "View your cohort" (single primary)
@@ -175,44 +150,13 @@ export default function SummerCohortModal() {
   const headlineCohortLabel = openCohort?.label ?? "Cursor Boston Summer Cohort";
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="summer-cohort-title"
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      size="md"
+      titleId="summer-cohort-title"
+      closeButtonLabel="Close summer cohort message"
     >
-      <div
-        className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-        onClick={handleClose}
-        aria-hidden="true"
-      />
-
-      <div
-        ref={modalRef}
-        className="relative bg-neutral-900 border border-neutral-800 rounded-2xl p-6 md:p-8 max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto"
-      >
-        <button
-          ref={closeButtonRef}
-          onClick={handleClose}
-          className="absolute top-4 right-4 text-neutral-400 hover:text-white transition-colors p-1 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-          aria-label="Close summer cohort message"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M18 6L6 18M6 6l12 12" />
-          </svg>
-        </button>
-
         <div className="text-center">
           <div className="w-16 h-16 bg-emerald-500/15 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg
@@ -488,7 +432,6 @@ export default function SummerCohortModal() {
             Maybe later
           </button>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

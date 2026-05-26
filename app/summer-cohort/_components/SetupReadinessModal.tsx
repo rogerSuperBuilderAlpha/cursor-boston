@@ -13,8 +13,8 @@ import {
   CircleAlert,
   ExternalLink,
   Laptop,
-  X,
 } from "lucide-react";
+import { Modal } from "@/components/ui/Modal";
 
 const ALC_URL = "https://ludwitt.com/alc";
 
@@ -69,7 +69,6 @@ export function SetupReadinessModal({
   const [isOpen, setIsOpen] = useState(false);
   const [devEnvSubmitting, setDevEnvSubmitting] = useState(false);
   const [devEnvError, setDevEnvError] = useState<string | null>(null);
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   const handleConfirmDevEnv = useCallback(async () => {
     setDevEnvSubmitting(true);
@@ -104,51 +103,15 @@ export function SetupReadinessModal({
     setIsOpen(false);
   }, []);
 
-  useEffect(() => {
-    if (isOpen) {
-      closeButtonRef.current?.focus();
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
-
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) handleClose();
-    };
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [isOpen, handleClose]);
-
-  if (!isOpen) return null;
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="setup-readiness-title"
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      size="lg"
+      titleId="setup-readiness-title"
+      panelScroll={false}
+      closeButtonLabel="Close readiness check"
     >
-      <div
-        className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-        onClick={handleClose}
-        aria-hidden="true"
-      />
-
-      <div className="relative w-full max-w-lg rounded-2xl border border-neutral-800 bg-neutral-900 p-6 shadow-2xl md:p-8">
-        <button
-          ref={closeButtonRef}
-          onClick={handleClose}
-          className="absolute right-4 top-4 rounded-lg p-1 text-neutral-400 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-          aria-label="Close readiness check"
-        >
-          <X className="h-5 w-5" strokeWidth={2.25} aria-hidden="true" />
-        </button>
-
         <h2
           id="setup-readiness-title"
           className="pr-8 text-xl font-bold text-white md:text-2xl"
@@ -231,8 +194,7 @@ export function SetupReadinessModal({
         >
           I&apos;ll come back to this
         </button>
-      </div>
-    </div>
+    </Modal>
   );
 }
 

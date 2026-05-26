@@ -7,7 +7,7 @@
 
 "use client";
 
-import { useFocusTrap } from "@/hooks/useFocusTrap";
+import { Modal } from "@/components/ui/Modal";
 import type { Message } from "@/types/feed";
 
 interface RepostModalProps {
@@ -31,24 +31,22 @@ export function RepostModal({
   minLength = 100,
   maxLength = 500,
 }: RepostModalProps) {
-  const { containerRef } = useFocusTrap<HTMLDivElement>({
-    onEscape: onCancel,
-  });
   const trimmed = comment.trim();
   const isValid = trimmed.length >= minLength && trimmed.length <= maxLength;
 
   return (
-    <div
-      className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
-      role="dialog"
-      aria-modal="true"
+    <Modal
+      isOpen
+      onClose={onCancel}
+      size="lg"
+      ariaLabel="Repost with comment"
+      panelScroll={false}
+      padded={false}
+      defaultPanelChrome={false}
+      className="rounded-xl border border-neutral-800 bg-neutral-900 p-6"
+      backdropClassName="bg-black/70 backdrop-blur-none"
+      showCloseButton={false}
     >
-      <div
-        ref={containerRef}
-        data-modal-content
-        tabIndex={-1}
-        className="bg-neutral-900 rounded-xl p-6 border border-neutral-800 max-w-lg w-full"
-      >
         <h3 className="text-lg font-semibold text-white mb-4">Repost with comment</h3>
         <div className="bg-neutral-800 rounded-lg p-4 mb-4">
           <div className="flex items-center gap-2 mb-2">
@@ -92,7 +90,6 @@ export function RepostModal({
             {posting ? "Reposting..." : "Repost"}
           </button>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }
