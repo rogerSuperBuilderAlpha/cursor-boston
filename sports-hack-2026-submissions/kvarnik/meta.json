@@ -1,9 +1,9 @@
 {
-  "title": "Sports Hack 2026 Entry (in progress)",
-  "description": "Project details will be updated before the 4:00 PM ET submission deadline. Building during the hackathon sprint.",
+  "title": "Instant Appeal",
+  "description": "Courtroom-style settler to help parents and fans resolve controversial sports calls. Two theatrical lawyers argue both sides; a warm-hearted judge ends the debate with a shareable verdict card.",
   "displayName": "kvarnik",
-  "videoUrl": "https://www.loom.com/share/placeholder-update-before-deadline",
-  "repoUrl": "https://github.com/kvarnik/sports-hack-2026",
-  "deployedUrl": "",
-  "tags": ["sports", "hackathon"]
+  "videoUrl": "https://www.loom.com/share/13fbe78b3d1a4e7ba71db4ae576281d5",
+  "repoUrl": "https://github.com/kvarnik/instant-appeal",
+  "deployedUrl": "https://instant-appeal.vercel.app",
+  "tags": ["sports", "llm", "next.js", "courtroom"]
 }
