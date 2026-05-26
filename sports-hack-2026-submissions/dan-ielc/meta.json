@@ -1,0 +1,10 @@
+{
+  "title": "ScoutAI — International Soccer Scouting for USL & College Programs",
+  "description": "USL clubs and college programs can't afford Wyscout. ScoutAI uses a two-stage Claude pipeline with league-adjusted statistical projections to generate professional scouting reports on international players instantly.",
+  "displayName": "Daniel Chen",
+  "videoUrl": "https://www.loom.com/share/62ac7bbb00aa4a74af9d23a3cba0e592",
+  "repoUrl": "https://github.com/primordialgoat/cursorbostonhackathon",
+  "deployedUrl": "https://compel-barrier-aftermath.ngrok-free.dev",
+  "tags": ["soccer", "scouting", "ai", "claude", "sports-analytics"],
+  "collaborators": []
+}
