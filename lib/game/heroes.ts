@@ -47,6 +47,7 @@ function emergeChanceForClass(cls: HeroClass): number {
 /** Deterministic name picker. Hashes `heroId` into the per-caste pool
  *  so re-renders against the same hero produce the same name. Returns
  *  FALLBACK_HERO_NAME if the pool is empty. */
+/** @internal */
 export function pickHeroName(caste: Caste, heroId: string): string {
   const pool = HERO_NAMES_BY_CASTE[caste];
   if (!pool || pool.length === 0) return FALLBACK_HERO_NAME;
@@ -65,6 +66,7 @@ function pickSpecialty(cls: HeroClass, rng: () => number): HeroSpecialty {
   return pool[idx];
 }
 
+/** @internal */
 export interface MaybeEmergeHeroInput {
   class: HeroClass;
   tile: Pick<GameTile, "tileId" | "hero">;
@@ -83,6 +85,7 @@ export interface MaybeEmergeHeroInput {
  *  The rng is consumed twice on success — once for the emergence roll, once
  *  for the specialty draw — so seeded callers should provide a stable rng
  *  rather than re-seeding mid-flow. */
+/** @internal */
 export function maybeEmergeHero(input: MaybeEmergeHeroInput): GameHero | null {
   if (input.tile.hero) return null;
   const chance = emergeChanceForClass(input.class);
@@ -109,6 +112,7 @@ export function maybeEmergeHero(input: MaybeEmergeHeroInput): GameHero | null {
  *  `lastEngagedAtTurn`. Returns a new hero object — does not mutate.
  *  Capped at staminaMax. Use whenever a txn touches a hero before
  *  reading/writing its stamina. */
+/** @internal */
 export function applyStaminaRegen(
   hero: GameHero,
   ownerTurnsSpentTotal: number
@@ -132,6 +136,7 @@ export function applyStaminaRegen(
  *
  *  `intensity` defaults to 1; pass `SPARE_STAMINA_MULT` (2) for a spare-
  *  withdraw which wears the hero down more than a regular engagement. */
+/** @internal */
 export function applyEngagement(
   hero: GameHero,
   ownerTurnsSpentTotal: number,

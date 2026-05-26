@@ -5,6 +5,7 @@
  * See LICENSE file for details.
  */
 
+/** @internal */
 export interface PromptTemplateVariant {
   id: string;
   stack: string;
@@ -13,6 +14,7 @@ export interface PromptTemplateVariant {
   notes: string[];
 }
 
+/** @internal */
 export interface PromptTemplate {
   id: string;
   title: string;

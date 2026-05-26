@@ -13,7 +13,6 @@
  * busy state label, progress bar render, plural/singular artifact copy.
  */
 
-import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 
 import { BulkDistribute } from "@/app/game/_components/dashboard/BulkDistribute";

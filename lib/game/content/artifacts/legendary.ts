@@ -7,6 +7,7 @@
 
 import type { ArtifactDefinition } from "../../types";
 
+/** @internal */
 export const LEGENDARY_ARTIFACTS: ArtifactDefinition[] = [
   {
     id: "legendary-crown-of-the-first-general",

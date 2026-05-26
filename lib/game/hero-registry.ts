@@ -34,6 +34,7 @@ import type {
 /** Top-level Firestore collection holding persistent hero records. */
 export const HEROES_COLLECTION = "game_heroes";
 /** Subcollection name for the per-hero event log. */
+/** @internal */
 export const HERO_EVENTS_SUBCOLLECTION = "events";
 
 /** Reference helper for a hero doc. */
@@ -42,6 +43,7 @@ function heroRef(db: Firestore, heroId: string) {
 }
 
 /** Reference helper for a hero's events subcollection. */
+/** @internal */
 export function heroEventsCollection(db: Firestore, heroId: string) {
   return heroRef(db, heroId).collection(HERO_EVENTS_SUBCOLLECTION);
 }
@@ -69,6 +71,7 @@ interface UpsertHeroInTxArgs {
  * via the `setIfMissing` pattern — caller doesn't need to know whether
  * this is a first-write.
  */
+/** @internal */
 export function upsertHeroInTx(args: UpsertHeroInTxArgs): void {
   const ref = heroRef(args.db, args.hero.id);
   const payload: Partial<GameHeroDoc> & {
@@ -120,6 +123,7 @@ interface AppendHeroEventInTxArgs {
  * Returns the generated event id in case the caller wants to reference
  * it (e.g. for a turn-report payload).
  */
+/** @internal */
 export function appendHeroEventInTx(args: AppendHeroEventInTxArgs): string {
   const eventId = randomUUID();
   const createdAt = args.event.createdAt ?? args.now;
@@ -176,6 +180,7 @@ interface MarkHeroDeceasedInTxArgs {
  * (this helper does NOT log the event so callers can include attacker
  * details in the event payload).
  */
+/** @internal */
 export function markHeroDeceasedInTx(args: MarkHeroDeceasedInTxArgs): void {
   args.tx.set(
     heroRef(args.db, args.heroId),
@@ -208,6 +213,7 @@ interface TransferHeroOwnerInTxArgs {
  * Updates the persistent record when a hero defects to a new owner.
  * Caller is responsible for the `defected` event (carries from/to ids).
  */
+/** @internal */
 export function transferHeroOwnerInTx(args: TransferHeroOwnerInTxArgs): void {
   args.tx.set(
     heroRef(args.db, args.heroId),
@@ -245,6 +251,7 @@ interface ClearHeroForArmageddonInTxArgs {
  * The matching `season_ended` event is written separately by the caller
  * so resolution can batch the writes across many heroes.
  */
+/** @internal */
 export function clearHeroForArmageddonInTx(
   args: ClearHeroForArmageddonInTxArgs
 ): void {
@@ -278,6 +285,7 @@ export function clearHeroForArmageddonInTx(
 /** Builder for the kind-specific event payload — keeps call sites in
  *  data-server.ts terse. Each helper returns the partial event without
  *  the `id`/`createdAt` (filled in by `appendHeroEventInTx`). */
+/** @internal */
 export const heroEvent = {
   emerged(
     hero: Pick<GameHero, "tileId" | "ownerId">,
@@ -434,6 +442,7 @@ export const heroEvent = {
  *  the event log. Used by the visibility filter to decide whether to
  *  reveal events from past tenures. Reads the events subcollection
  *  outside any txn (visibility is a read-time concern). */
+/** @internal */
 export async function viewerWasOwner(
   db: Firestore,
   heroId: string,

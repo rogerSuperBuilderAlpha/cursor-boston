@@ -43,12 +43,14 @@ export interface ThreatOwnerInfo {
  *   the world. `Number.POSITIVE_INFINITY` if no unshielded enemy exists.
  * - `score`: composite ranking value. Higher = more likely to be attacked.
  */
+/** @internal */
 export interface TileThreat {
   hostileNeighbors: number;
   distanceToEnemy: number;
   score: number;
 }
 
+/** @internal */
 export interface ComputeTileThreatArgs {
   /** Tiles the requesting user owns (the ones we score). */
   myTiles: ReadonlyArray<MapTile>;

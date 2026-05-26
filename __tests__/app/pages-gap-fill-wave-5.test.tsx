@@ -5,7 +5,6 @@
  */
 import "@/__tests__/app/_shared/page-test-setup";
 
-import React from "react";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { doc, getDoc, addDoc, deleteDoc } from "firebase/firestore";

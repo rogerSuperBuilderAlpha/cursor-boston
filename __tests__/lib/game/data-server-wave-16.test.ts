@@ -37,9 +37,7 @@ import {
   GameInsufficientUnitsError,
   GameInvalidPhaseError,
   GameInvalidSpellError,
-  GameLastStandCooldownError,
   GameLastStandNoThreatError,
-  GameLastStandRequiresZeroTurnsError,
   GameMeditationSlotFullError,
   GameNotAdjacentError,
   GamePepTalkRequiresZeroTurnsError,
@@ -62,7 +60,6 @@ import {
 } from "@/lib/game/data-server";
 import {
   LAST_STAND_COOLDOWN_MS,
-  LAST_STAND_THREAT_WINDOW_MS,
   MEDITATION_DURATION_MS,
   REDISTRIBUTE_MAX_PER_DAY,
 } from "@/lib/game/types";

@@ -21,6 +21,7 @@ interface ServerRateLimitOptions {
   successSampleRate?: number;
 }
 
+/** @internal */
 export interface ServerRateLimitResult {
   success: boolean;
   remaining: number;

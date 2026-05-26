@@ -29,13 +29,17 @@
 
 export const ARMAGEDDON_TILE_GATE = 10_000;
 export const ARMAGEDDON_TURN_COST = 100;
+/** @internal */
 export const BASE_SUCCESS = 0.05;
+/** @internal */
 export const SUCCESS_HARD_CAP = 0.5;
 export const SEAL_COUNT = 7;
+/** @internal */
 export const WINNER_COUNT = 10;
 /** Snapshot the top-N by tilesHeld into the hall-of-fame doc, regardless of
  *  whether they won the lottery. Lets returning players see whose kingdoms
  *  were largest in past seasons. */
+/** @internal */
 export const TOP_BY_TILES_SNAPSHOT_COUNT = 50;
 
 /** Pure: returns the success probability for an Armageddon cast given a
@@ -50,6 +54,7 @@ export function computeArmageddonSuccessChanceFromMultiplier(
 }
 
 /** Weighted ticket count for a single player at lottery draw time. */
+/** @internal */
 export function computeLotteryTickets(
   tilesHeld: number,
   sealsBroken: number

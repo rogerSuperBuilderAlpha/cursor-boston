@@ -7,6 +7,7 @@
 
 import type { SpellDefinition } from "../../../types";
 
+/** @internal */
 export const BLUE_DISARM_SPELLS: SpellDefinition[] = [
   {
     id: "blue-disarm-mistwhisper",

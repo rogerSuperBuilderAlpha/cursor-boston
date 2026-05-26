@@ -3,7 +3,7 @@
  */
 import "@/__tests__/app/_shared/page-test-setup";
 
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, waitFor } from "@testing-library/react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getPairProfile } from "@/lib/pair-programming/data";
 import { makeAuthUser } from "@/__tests__/app/_shared/game-dashboard-mocks";

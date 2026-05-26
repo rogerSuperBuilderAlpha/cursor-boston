@@ -13,7 +13,6 @@
  * one PR.
  */
 
-import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 
 import { CreatePlayerGate } from "@/app/game/_components/dashboard/CreatePlayerGate";

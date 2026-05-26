@@ -38,6 +38,7 @@ const cronErrors = {
   500: ApiErrorSchema,
 } as const;
 
+/** @internal */
 export const internalContract = c.router(
   {
     weeklyHiringPartnersDigestGet: {

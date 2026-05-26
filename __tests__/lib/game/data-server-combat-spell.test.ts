@@ -31,7 +31,6 @@ import {
   GamePlayerNotFoundError,
   GameSelfAttackError,
   GameTileNotFoundError,
-  GameTileNotOwnedError,
   redistributeUnitsServer,
 } from "@/lib/game/data-server";
 import { BASE_PLAYER, BASE_TILE } from "@/__tests__/_helpers/game-mutation-db";

@@ -18,6 +18,7 @@ interface LiveQueueState {
   updatedAtMs?: number;
 }
 
+/** @internal */
 export interface UseLiveSessionResult {
   session: LiveSessionRealtimeRecord | null;
   queue: LiveQueueEntryRecord[];

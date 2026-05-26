@@ -25,6 +25,7 @@ function getBostonOffsetHours(date: Date): number {
 /**
  * Get current date in Boston time (for virtual hackathon month).
  */
+/** @internal */
 export function getNowInBoston(): Date {
   return new Date(
     new Date().toLocaleString("en-US", { timeZone: BOSTON_TZ })
@@ -45,6 +46,7 @@ export function getCurrentVirtualHackathonId(): string {
 /**
  * Get virtual hackathon ID for a given date in Boston time.
  */
+/** @internal */
 export function getVirtualHackathonIdForDate(date: Date): string {
   const inBoston = new Date(
     date.toLocaleString("en-US", { timeZone: BOSTON_TZ })
@@ -95,6 +97,7 @@ export function getVirtualMonthStartEndUtc(hackathonId: string): { start: Date; 
 /**
  * Start of current virtual hackathon month (Boston, 00:00:00).
  */
+/** @internal */
 export function getCurrentVirtualMonthStart(): Date {
   const now = getNowInBoston();
   return new Date(now.getFullYear(), now.getMonth(), 1);
@@ -103,6 +106,7 @@ export function getCurrentVirtualMonthStart(): Date {
 /**
  * End of current virtual hackathon month (Boston, last day 23:59:59.999).
  */
+/** @internal */
 export function getCurrentVirtualMonthEnd(): Date {
   const now = getNowInBoston();
   return new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);

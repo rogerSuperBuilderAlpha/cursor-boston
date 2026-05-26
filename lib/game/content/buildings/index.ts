@@ -11,4 +11,5 @@ import { BUILDING_SEEDS } from "./seeds";
 // One building per (caste, landType). Upgrades reference these by id.
 // Land type IS the building — assigning a tile to "military" / "food" /
 // "magic" places that caste's corresponding building on the tile.
+/** @internal */
 export const BUILDINGS: BuildingDefinition[] = BUILDING_SEEDS;

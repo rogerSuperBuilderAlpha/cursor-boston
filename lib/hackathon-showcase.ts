@@ -13,10 +13,12 @@ import { HACKATHON_EVENT_IDS } from "@/types/hackathon-events";
 export const HACK_A_SPRINT_2026_EVENT_ID =
   HACKATHON_EVENT_IDS.HACK_A_SPRINT_2026;
 export const SHOWCASE_SUBMISSIONS_CACHE_TAG = "showcase-submissions";
+/** @internal */
 export const HACK_A_SPRINT_2026_LABEL = HACK_A_SPRINT_2026_EVENT_ID;
 export const HACK_A_SPRINT_2026_SUBMISSIONS_PATH =
   `content/hackathons/${HACK_A_SPRINT_2026_EVENT_ID}/submissions`;
 
+/** @internal */
 export type ShowcaseSubmissionPayload = {
   /** May be empty if omitted in JSON; hide repo link in UI when missing. */
   projectRepoUrl: string;
@@ -153,6 +155,7 @@ export function getJudgeUidSet(): Set<string> {
 }
 
 /** Comma-separated list, case-insensitive (e.g. judge@org.com,judge2@org.com). */
+/** @internal */
 export function getJudgeEmailSet(): Set<string> {
   const raw = process.env.HACK_A_SPRINT_2026_JUDGE_EMAILS || "";
   return new Set(
@@ -187,6 +190,7 @@ export async function githubUserHasMergedLabeledShowcasePr(
  * Whether the GitHub user has any merged PR in the community repo within the
  * last `windowHours` hours. Uses the GitHub Search API `merged:>ISO` filter.
  */
+/** @internal */
 export async function githubUserHasRecentlyMergedPr(
   githubLogin: string,
   windowHours: number

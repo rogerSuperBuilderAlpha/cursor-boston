@@ -35,6 +35,7 @@ function chunk<T>(arr: T[], size: number): T[][] {
   return out;
 }
 
+/** @internal */
 export interface TeamDashboardSubmissionJson {
   id: string;
   hackathonId: string;
@@ -48,6 +49,7 @@ export interface TeamDashboardSubmissionJson {
   disqualifiedReason?: string;
 }
 
+/** @internal */
 export interface TeamDashboardPayload {
   myTeam: PoolDashboardTeam | null;
   memberProfiles: Record<string, PoolDashboardPublicUser>;

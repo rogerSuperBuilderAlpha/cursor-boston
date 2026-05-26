@@ -55,6 +55,7 @@ function searchHeaders(): Record<string, string> {
  * Returns `null` on hard failure so callers can leave `hasSubmission` false
  * without crashing the snapshot build.
  */
+/** @internal */
 export async function fetchSportsHack2026SubmissionAuthorsUncached(): Promise<
   string[] | null
 > {
@@ -118,6 +119,7 @@ const cachedSubmissionAuthors = unstable_cache(
  * Returns an empty Set on hard fetch failure so the snapshot still renders —
  * downstream consumers treat "not in set" as "no submission yet."
  */
+/** @internal */
 export async function fetchSportsHack2026SubmissionAuthors(): Promise<
   Set<string>
 > {

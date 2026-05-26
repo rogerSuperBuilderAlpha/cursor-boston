@@ -236,6 +236,7 @@ const AIR_INTEL_UPGRADES: UpgradeDefinition[] = UNIT_LIST.filter(
   return makeAirIntelUpgradeFor(u, entry);
 });
 
+/** @internal */
 export const UNIT_UPGRADES: UpgradeDefinition[] = [
   ...UNIT_LIST.flatMap(makeUpgradesFor),
   ...AIR_INTEL_UPGRADES,

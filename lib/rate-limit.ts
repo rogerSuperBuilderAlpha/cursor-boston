@@ -32,6 +32,7 @@ interface RateLimitOptions {
   keyGenerator?: (request: Request) => string; // Custom key generator
 }
 
+/** @internal */
 export interface RateLimitResult {
   success: boolean;
   remaining: number;
@@ -190,6 +191,7 @@ function cleanupExpiredEntries(now: number): void {
  *   return Response.json({ data: "Hello World" });
  * });
  */
+/** @internal */
 export function withRateLimit(
   options: RateLimitOptions,
   handler: (request: Request) => Promise<Response>

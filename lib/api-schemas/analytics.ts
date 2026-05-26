@@ -22,6 +22,7 @@ const PassthroughOk = z
   .passthrough()
   .describe("AnalyticsSummary — see lib/analytics-snapshot-compute.ts");
 
+/** @internal */
 export const analyticsContract = c.router(
   {
     summary: {

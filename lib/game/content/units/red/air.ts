@@ -7,6 +7,7 @@
 
 import type { UnitDefinition } from "../../../types";
 
+/** @internal */
 export const RED_AIR_UNIT: UnitDefinition = {
   id: "red-air-phoenix-talon",
   caste: "red",

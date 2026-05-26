@@ -28,6 +28,7 @@ import { ErrorCode } from "@/lib/api-response";
 extendZodWithOpenApi(z);
 
 /** All known error codes the API can emit. Mirrors lib/api-response.ts. */
+/** @internal */
 export const ErrorCodeEnum = z.enum([
   ErrorCode.UNAUTHORIZED,
   ErrorCode.FORBIDDEN,
@@ -40,6 +41,7 @@ export const ErrorCodeEnum = z.enum([
 ]);
 
 /** Standard error response envelope produced by lib/api-response.ts#apiError. */
+/** @internal */
 export const ApiErrorSchema = z.object({
   success: z.literal(false),
   error: z.object({
@@ -49,12 +51,14 @@ export const ApiErrorSchema = z.object({
 });
 
 /** 429 rate-limit response, including retryAfter hint. */
+/** @internal */
 export const RateLimitedErrorSchema = z.object({
   error: z.string(),
   retryAfterSeconds: z.number().int().nonnegative().optional(),
 });
 
 /** Cursor-based pagination query params. Mirrors lib/firestore-pagination.ts. */
+/** @internal */
 export const PaginationQuerySchema = z.object({
   limit: z
     .string()
@@ -68,6 +72,7 @@ export const PaginationQuerySchema = z.object({
 });
 
 /** Fields appended to every paginated response. */
+/** @internal */
 export const PaginationFieldsSchema = z.object({
   nextCursor: z
     .string()
@@ -83,6 +88,7 @@ export const PaginationFieldsSchema = z.object({
  * Firebase Auth ID token in `Authorization: Bearer <token>`. The `cookieAuth`
  * form is set during in-app sessions and is preferred for browser callers.
  */
+/** @internal */
 export const SECURITY_SCHEMES = {
   bearerAuth: {
     type: "http" as const,
@@ -100,4 +106,5 @@ export const SECURITY_SCHEMES = {
 };
 
 /** Convenience: the same security requirement that 105+ routes use. */
+/** @internal */
 export const REQUIRES_AUTH = [{ bearerAuth: [] }, { cookieAuth: [] }];

@@ -16,7 +16,7 @@
 
 import "@/__tests__/app/_shared/page-test-setup";
 
-import React, { useState } from "react";
+import { useState  } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 
 import { TagsField } from "@/app/pr-ideas/_components/TagsField";

@@ -18,6 +18,7 @@ import { FieldValue, Timestamp } from "firebase-admin/firestore";
 // Types
 // ============================================================================
 
+/** @internal */
 export interface CoworkingSession {
   id: string;
   eventId: string;
@@ -28,6 +29,7 @@ export interface CoworkingSession {
   currentBookings: number; // derived from registration count, not stored in Firestore
 }
 
+/** @internal */
 export interface CoworkingRegistration {
   id: string;
   eventId: string;
@@ -39,6 +41,7 @@ export interface CoworkingRegistration {
   registeredAt: Timestamp;
 }
 
+/** @internal */
 export interface CoworkingSlotStatus {
   session: CoworkingSession;
   availableSlots: number;
@@ -56,6 +59,7 @@ export interface CoworkingSlotStatus {
 // ============================================================================
 
 // Session definitions for Cafe Cursor (9am-3pm, 2-hour sessions)
+/** @internal */
 export const CAFE_CURSOR_SESSIONS: Omit<CoworkingSession, "id" | "eventId" | "currentBookings">[] = [
   {
     startTime: "09:00",
@@ -84,6 +88,7 @@ export const CAFE_CURSOR_SESSIONS: Omit<CoworkingSession, "id" | "eventId" | "cu
 /**
  * Get or create sessions for an event
  */
+/** @internal */
 export async function getOrCreateSessions(eventId: string): Promise<CoworkingSession[]> {
   const db = getAdminDb();
   if (!db) throw new Error("Firebase Admin not configured");
@@ -191,6 +196,7 @@ export async function getSessionsWithStatus(
 // Registration Management
 // ============================================================================
 
+/** @internal */
 export interface RegisterResult {
   success: boolean;
   error?: string;

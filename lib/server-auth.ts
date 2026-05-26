@@ -120,6 +120,7 @@ export async function getVerifiedUser(request: NextRequest): Promise<VerifiedUse
  * Verify the Firebase ID token with revocation checks for sensitive non-admin
  * flows such as financial benefit delivery.
  */
+/** @internal */
 export async function getVerifiedUserWithRevocation(
   request: NextRequest
 ): Promise<VerifiedUser | null> {
@@ -155,6 +156,7 @@ export async function isCurrentIdTokenRevoked(request: NextRequest): Promise<boo
  *
  * Throws when Firebase Admin Auth is not configured.
  */
+/** @internal */
 export async function getVerifiedAdminUser(
   request: NextRequest
 ): Promise<VerifiedUser | null> {
@@ -165,6 +167,7 @@ export async function getVerifiedAdminUser(
   return user;
 }
 
+/** @internal */
 export function isRevokedIdTokenError(error: unknown): boolean {
   if (!error || typeof error !== "object") {
     return false;

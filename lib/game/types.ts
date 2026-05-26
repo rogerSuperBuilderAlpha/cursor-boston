@@ -42,6 +42,7 @@ export type SpellType =
 // SpellDefinition.intelScope and ArtifactDefinition.intelDepth (the latter
 // is a strict subset). "kingdom+supply" is Green's Root Whisper exclusive
 // (returns the supply graph); "weak-face" is Red's Forge Sight exclusive.
+/** @internal */
 export type IntelSpellScope =
   | "tile"
   | "ring"
@@ -53,6 +54,7 @@ export type LandType = "unrevealed" | "unassigned" | "military" | "food" | "magi
 
 export type Phase = "explore" | "distribute" | "caste" | "play";
 
+/** @internal */
 export type AttackOutcome = "captured" | "repelled" | "stalemate";
 
 export interface UnitDefinition {
@@ -71,6 +73,7 @@ export interface UnitDefinition {
   imageUrl?: string;
 }
 
+/** @internal */
 export type SpellTier = 1 | 2 | 3 | 4 | 5;
 
 export interface SpellDefinition {
@@ -121,8 +124,10 @@ export interface BuildingDefinition {
 
 // ──── v2: Unit & building upgrades ────
 
+/** @internal */
 export type UpgradeTargetKind = "unit" | "building";
 
+/** @internal */
 export interface UpgradeEffects {
   // Flat deltas applied on top of the base unit/building.
   attackDelta?: number;
@@ -137,6 +142,7 @@ export interface UpgradeEffects {
 // One of the named air-unit "intel" passives. Only meaningful when set on an
 // air-unit upgrade with optionIndex === 4. Each value names a specific
 // caste-flavored scouting behavior, surfaced during the player's own attacks.
+/** @internal */
 export type AirIntelPassive =
   | "white-hawks-eye"
   | "blue-sky-reader"
@@ -168,6 +174,7 @@ export interface UpgradeDefinition {
   imageUrl?: string;
 }
 
+/** @internal */
 export interface CasteProfile {
   caste: Caste;
   tileCapacityMultiplier: number;
@@ -191,11 +198,13 @@ export interface UnitStack {
   air: number;
 }
 
+/** @internal */
 export interface ActiveProductionSpell {
   spellId: string;
   expiresAtTurn: number;
 }
 
+/** @internal */
 export interface PlayerStats {
   attacksWon: number;
   attacksLost: number;
@@ -302,6 +311,7 @@ export interface PlayerTitle {
  *  enforcement — if the author attacks the target during the window,
  *  the attack handler stamps `brokenAt` and posts a `pact_broken`
  *  community event. Reputation system, not a rules system. */
+/** @internal */
 export interface Pact {
   id: string;
   authorId: string;
@@ -322,6 +332,7 @@ export interface Pact {
 /** A pre-filed prediction about a specific Armageddon seal. Marked
  *  `resolvedAt` the moment that seal breaks; the breaker's identity is
  *  captured for the "Seer" title attribution. */
+/** @internal */
 export interface Prophecy {
   id: string;
   authorId: string;
@@ -411,6 +422,7 @@ export interface GameTile {
 // Stamped onto a tile by intrinsic-buff artifacts. baseUnitsTarget() folds
 // these in. The shape is forward-compat: future artifacts can introduce new
 // modifier types (e.g. defenseStatBonus) without breaking the schema.
+/** @internal */
 export interface IntrinsicTileBuff {
   artifactId: string;
   appliedAt: Timestamp | Date;
@@ -450,6 +462,7 @@ export interface IntrinsicTileBuff {
 //
 // Persistence: optional on GameTile / GamePlayer so existing docs parse
 // without backfill — same back-compat pattern as `baseUnits`, `intrinsicBuffs`.
+/** @internal */
 export type HeroClass = "military" | "farm" | "magic";
 
 // Random sub-affinity rolled at emergence. Flat union across all classes
@@ -459,6 +472,7 @@ export type HeroClass = "military" | "farm" | "magic";
 //   farm      → per-unit-type recruit bonus, summoner (special-unit roll
 //               chance), kingdom-buff (global recruit %)
 //   magic     → SpellType analogues + armageddon (seal-break boost)
+/** @internal */
 export type HeroSpecialty =
   // military
   | "ground"
@@ -534,6 +548,7 @@ export type HeroBattleAction = "kill" | "spare" | "convert";
 // the player's unsummoned pool and can be deployed to any owned tile via
 // summonSpecialUnitServer. Contributors add new variants by appending to
 // the appropriate caste file.
+/** @internal */
 export interface SpecialUnitDef {
   // e.g. "white-knight-of-the-broken-lance"
   id: string;
@@ -551,6 +566,7 @@ export interface SpecialUnitDef {
   imageUrl?: string;
 }
 
+/** @internal */
 export interface SpecialUnitInstance {
   // uuid for this specific summoned unit (an instance of SpecialUnitDef).
   instanceId: string;
@@ -610,6 +626,7 @@ export type HeroEventKind =
   // limbo (awaitingResurrection); deceased heroes just record the season.
   | "season_ended";
 
+/** @internal */
 export interface GameHeroEvent {
   // uuid. Subcollection doc id.
   id: string;
@@ -642,6 +659,7 @@ export interface GameHeroEvent {
 
 /** Canonical persistent record for a hero. Survives Armageddon wipes
  *  (see lib/game/armageddon-resolve.ts COLLECTIONS — NOT included). */
+/** @internal */
 export interface GameHeroDoc {
   // Stable uuid; matches `GameHero.id` on the inline tile snapshot.
   id: string;
@@ -884,6 +902,7 @@ export type ArtifactType =
 
 // Reveal scope for intel-type artifacts and spells. "tile" is the target only;
 // "ring" adds the 6 neighbor tiles; "kingdom" adds owner kingdom-wide stats.
+/** @internal */
 export type IntelDepth = "tile" | "ring" | "kingdom";
 
 export interface ArtifactDefinition {
@@ -936,6 +955,7 @@ export interface ArtifactDefinition {
 // "defense-disarm" — the attacker (ownerId) disarmed the target tile's
 //   armed defense spell by `magnitude` (0..1 fraction; 1 = fully nullified).
 //   Single-use: combat consumes on next attack.
+/** @internal */
 export type IntelEffectKind =
   | "alert-vs-caster"
   | "forge-sight-offense"
@@ -947,14 +967,18 @@ export type IntelEffectKind =
 // 0.30, which fully neutralizes the military standing floor (0.30) and
 // halves the magic floor (0.15) twice. Spell-cast siege adds on top up to
 // the same cap.
+/** @internal */
 export const SIEGE_DEBUFF_MAX_MAGNITUDE = 0.30;
 // Per-action siege magnitude (deterministic; spell-cast siege uses dice).
+/** @internal */
 export const SIEGE_ACTION_MAGNITUDE = 0.10;
 // Kinds that are consumed (deleted) on the next attack against the target
 // tile. Read once, deleted in-tx.
+/** @internal */
 export const SINGLE_USE_INTEL_EFFECT_KINDS: ReadonlySet<IntelEffectKind> =
   new Set<IntelEffectKind>(["pre-cast-offense-spell", "defense-disarm"]);
 
+/** @internal */
 export interface IntelEffect {
   id: string;
   kind: IntelEffectKind;
@@ -1030,6 +1054,7 @@ export interface GameArtifact {
 
 // ──── v2: Turn reports ────
 
+/** @internal */
 export type TurnAction =
   | "explore"
   | "build"
@@ -1136,6 +1161,7 @@ export interface CombatResult {
   captureBaseRetentionFactor: number;
 }
 
+/** @internal */
 export type LossCurveTag =
   | "decisive-capture"
   | "close-capture"
@@ -1162,6 +1188,7 @@ export type ReactionScope = "chat" | "feed" | "hero_event";
 /** Idempotency tracker doc stored in `game_reactions`. Doc id is
  *  `{userId}_{scope}_{docId}_{reactionIndex}` — existence means "this
  *  user has placed this reaction." Toggle off = delete. */
+/** @internal */
 export interface ReactionTracker {
   userId: string;
   scope: ReactionScope;
@@ -1172,6 +1199,7 @@ export interface ReactionTracker {
 }
 
 /** Events surfaced in the dashboard's CommunityPanel activity feed. */
+/** @internal */
 export type CommunityEventKind =
   | "player_join"
   | "caste_pick"
@@ -1298,6 +1326,7 @@ export interface SealRecord {
 }
 
 /** One ranked winner of an Armageddon lottery draw. */
+/** @internal */
 export interface ArmageddonWinner {
   rank: number;             // 1..10
   userId: string;
@@ -1365,6 +1394,7 @@ export type QueuedOrderKind =
 
 /** Per-order status. Lifecycle: queued → executing (transient) →
  *  executed | failed | cancelled. */
+/** @internal */
 export type QueuedOrderStatus =
   | "queued"
   | "executed"
@@ -1374,6 +1404,7 @@ export type QueuedOrderStatus =
 /** Per-kind params payload. Discriminated by `kind`. Each enqueued
  *  order represents ONE action; players queue multiple orders if they
  *  want a sequence. */
+/** @internal */
 export type QueuedOrderParams =
   | { kind: "recruit_on_tile"; tileId: string; unitType: UnitType }
   | { kind: "attack_adjacent"; sourceTileId: string; targetTileId: string; units: UnitStack; offenseSpellId: string | null }
@@ -1434,59 +1465,78 @@ export interface CommunityMessage {
 // __tests__/lib/game/zero-turn.test.ts.
 
 /** Defensive Stance: multiplicative defense bonus on a stance tile. */
+/** @internal */
 export const DEFENSIVE_STANCE_DEFENSE_BONUS = 0.25;
 /** Defensive Stance: minimum lockedUntil window after toggling on, before
  *  the tile can toggle off. Prevents flicker right before an inbound attack. */
+/** @internal */
 export const DEFENSIVE_STANCE_LOCK_MS = 6 * 60 * 60 * 1000;
 
 /** Last Stand: multiplicative defense bonus on the declared tile. */
+/** @internal */
 export const LAST_STAND_DEFENSE_BONUS = 0.50;
 /** Last Stand: multiplicative defense penalty on adjacent owned tiles
  *  while a last stand is queued on a neighbor (rally pulls reserves). */
+/** @internal */
 export const LAST_STAND_ADJACENT_PENALTY = 0.25;
 /** Last Stand: how long after declaring the effect remains armed. If no
  *  inbound attack lands within this window, the effect expires unused
  *  but the cooldown still counts. */
+/** @internal */
 export const LAST_STAND_WINDOW_MS = 60 * 60 * 1000;
 /** Last Stand: how long after declaring before the player can declare
  *  another. One per 24h. */
+/** @internal */
 export const LAST_STAND_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 /** Last Stand: how recent an inbound attack signal must be to make the
  *  declare button available. */
+/** @internal */
 export const LAST_STAND_THREAT_WINDOW_MS = 30 * 60 * 1000;
 
 /** Tile redistribution: multiplicative haircut applied to the moved
  *  stack. Prevents free perfect optimization. */
+/** @internal */
 export const REDISTRIBUTE_TRANSIT_LOSS = 0.08;
 /** Tile redistribution: per-day rate limit per player. */
+/** @internal */
 export const REDISTRIBUTE_MAX_PER_DAY = 3;
 
 /** Hero pep talk: stamina granted per call. */
+/** @internal */
 export const PEP_TALK_STAMINA_GAIN = 15;
 /** Hero pep talk: per-day cap across all the player's heroes. */
+/** @internal */
 export const PEP_TALK_MAX_PER_DAY = 3;
 
 /** Hero meditation: how long the hero remains on sabbatical. */
+/** @internal */
 export const MEDITATION_DURATION_MS = 24 * 60 * 60 * 1000;
 /** Hero meditation: how many slots the player can have active at once.
  *  Forces a real opportunity-cost choice — meditating heroes don't fight. */
+/** @internal */
 export const MEDITATION_MAX_ACTIVE_SLOTS = 1;
 /** Hero meditation: stamina regen multiplier while meditating. */
+/** @internal */
 export const MEDITATION_REGEN_MULTIPLIER = 2;
 
 /** Oathbreaker: multiplicative attack penalty on attacks launched while
  *  the mark is active. */
+/** @internal */
 export const OATHBREAKER_ATTACK_PENALTY = 0.10;
 /** Oathbreaker: how long the mark persists after a pact breach. */
+/** @internal */
 export const OATHBREAKER_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
 
 /** Prophecy stakes: turns added to the prophet's NEXT weekly grant when
  *  a prophecy resolves. Capped to a single application per week. */
+/** @internal */
 export const PROPHECY_BONUS_TURNS = 5;
 /** Prophecy stakes: hard ceiling on `pendingProphecyBonus`. Even if a
  *  player has multiple prophecies resolve within a single week, the
  *  weekly grant adds at most this many extra turns. */
+/** @internal */
 export const PROPHECY_BONUS_TURNS_MAX = 5;
 
 /** Queued orders: max queued (status === "queued") per player. */
+/** @internal */
 export const QUEUED_ORDERS_MAX_PER_PLAYER = 20;

@@ -13,7 +13,6 @@
  * variant (outline, inline, primary) with fail-closed status fallback.
  */
 
-import React from "react";
 import { render, waitFor } from "@testing-library/react";
 
 jest.mock("@/contexts/AuthContext", () => ({

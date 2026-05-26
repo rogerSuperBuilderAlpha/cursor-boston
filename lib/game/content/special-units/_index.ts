@@ -17,6 +17,7 @@ import { GREEN_SPECIAL_UNITS } from "./green";
 import { RED_SPECIAL_UNITS } from "./red";
 import { WHITE_SPECIAL_UNITS } from "./white";
 
+/** @internal */
 export const SPECIAL_UNITS_BY_CASTE: Record<
   Caste,
   ReadonlyArray<SpecialUnitDef>
@@ -43,6 +44,7 @@ export const SPECIAL_UNITS_BY_ID: Map<string, SpecialUnitDef> = (() => {
 
 /** Picks one special-unit def at random from the caste's pool. Returns
  *  null if the caste has no defined units (shouldn't happen in v1). */
+/** @internal */
 export function pickSpecialUnitDef(
   caste: Caste,
   rng: () => number

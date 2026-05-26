@@ -58,11 +58,13 @@ export const SPORTS_HACK_2026_WINNER_ELIGIBLE_CUTOFF_ISO =
  */
 const SUBMISSION_PR_CREATED_AT: Record<string, string> = {};
 
+/** @internal */
 export interface SportsHack2026SubmissionCollaborator {
   displayName: string;
   githubHandle: string | null;
 }
 
+/** @internal */
 export interface SportsHack2026AiScore {
   /** Numeric 1-10 score from the LLM judge; decimals are used for tie-breaks. */
   score: number;
@@ -74,6 +76,7 @@ export interface SportsHack2026AiScore {
   scoredAt: string;
 }
 
+/** @internal */
 export interface SportsHack2026JudgeScore {
   /** Average human-judge score 1-10. */
   average: number;

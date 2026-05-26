@@ -76,11 +76,13 @@ const SUBMISSION_PR_CREATED_AT: Record<string, string> = {
   "xiaolong-y": "2026-05-13T23:06:48Z",
 };
 
+/** @internal */
 export interface PyDataSubmissionCollaborator {
   displayName: string;
   githubHandle: string | null;
 }
 
+/** @internal */
 export interface PyDataSubmissionScore {
   /** Numeric 1-10 score from the LLM judge; decimals are used for tie-breaks. */
   score: number;

@@ -30,6 +30,7 @@ function sumStack(s: { ground: number; siege: number; air: number }): number {
   return s.ground + s.siege + s.air;
 }
 
+/** @internal */
 export function notifyConquest(args: {
   attack: GameAttack;
   attackerName?: string;

@@ -13,8 +13,7 @@
  * group rendering, spendArtifact happy path + error variants.
  */
 
-import React from "react";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 
 const mockUseAuth = jest.fn();
 jest.mock("@/contexts/AuthContext", () => ({

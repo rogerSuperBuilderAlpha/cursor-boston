@@ -15,7 +15,6 @@
  * error message.
  */
 
-import React from "react";
 
 jest.mock("@/lib/firebase", () => ({
   auth: null,

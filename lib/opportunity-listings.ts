@@ -7,6 +7,7 @@
 
 export type OpportunityWorkModeFilter = "all" | "remote" | "in-person";
 
+/** @internal */
 export interface OpportunityTeamMember {
   name: string;
   role: string;
@@ -32,6 +33,7 @@ export interface OpportunityListing {
   featured?: boolean;
 }
 
+/** @internal */
 export interface OpportunityFilters {
   query?: string;
   type?: string;

@@ -182,6 +182,7 @@ function pactExpiresAtMs(p: Pact): number {
  * subsequent `markPactsBrokenInTx` is responsible for the actual brokenAt
  * write inside the transaction.
  */
+/** @internal */
 export async function findActivePactsBetween(args: {
   db: Firestore;
   attackerId: string;
@@ -213,6 +214,7 @@ export async function findActivePactsBetween(args: {
  * still inside its window, sets `brokenAt` and posts a `pact_broken`
  * community event. No-op if no matching pact exists.
  */
+/** @internal */
 export async function markPactsBrokenInTx(args: {
   tx: Transaction;
   db: Firestore;

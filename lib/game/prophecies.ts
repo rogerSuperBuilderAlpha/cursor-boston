@@ -176,6 +176,7 @@ export async function deleteProphecyServer(args: {
  * must do all its other reads BEFORE calling this. We use a `getAll`
  * with the tx so we don't double-read.
  */
+/** @internal */
 export async function resolveProphesiesForSealInTx(args: {
   tx: Transaction;
   db: Firestore;

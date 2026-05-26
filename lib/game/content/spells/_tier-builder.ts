@@ -35,6 +35,7 @@ interface BuildArgs {
   tiers: [TierEntry, TierEntry, TierEntry, TierEntry, TierEntry];
 }
 
+/** @internal */
 export function buildSpellTiers(args: BuildArgs): SpellDefinition[] {
   return args.tiers.map((entry, idx) => {
     const tier = (idx + 1) as SpellTier;

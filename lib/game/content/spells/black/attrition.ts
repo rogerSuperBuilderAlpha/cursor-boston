@@ -9,6 +9,7 @@ import type { SpellDefinition } from "../../../types";
 
 // Black's attrition bonus is 1.30 — pestilence is what Black does, and it
 // shows in the realized magnitude.
+/** @internal */
 export const BLACK_ATTRITION_SPELLS: SpellDefinition[] = [
   {
     id: "black-attrition-bone-fever",

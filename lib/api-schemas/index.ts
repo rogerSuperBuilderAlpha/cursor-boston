@@ -92,6 +92,7 @@ export const apiContract = c.router({
   talks: talksContract,
 });
 
+/** @internal */
 export type ApiContract = typeof apiContract;
 
 export * from "./common";

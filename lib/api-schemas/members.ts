@@ -22,6 +22,7 @@ const PassthroughOk = z
   .passthrough()
   .describe("PublicMember[] — see types/members.ts");
 
+/** @internal */
 export const membersContract = c.router(
   {
     publicList: {

@@ -7,6 +7,7 @@
 
 import type { UnitDefinition } from "../../../types";
 
+/** @internal */
 export const GREEN_SIEGE_UNIT: UnitDefinition = {
   id: "green-siege-wood-spitter",
   caste: "green",

@@ -19,6 +19,7 @@ export { ringCoords };
 
 // ───── Public types ─────
 
+/** @internal */
 export interface FrontierSample {
   tile: AxialCoord;
   tileId: string;
@@ -38,6 +39,7 @@ export interface FrontierSample {
  * Average position of `tileIds` in axial space. Returns origin if empty.
  * Output is rounded to the nearest integer hex.
  */
+/** @internal */
 export function hexCentroid(tileIds: ReadonlyArray<string>): AxialCoord {
   if (tileIds.length === 0) return { q: 0, r: 0 };
   let sumQ = 0;
@@ -57,6 +59,7 @@ export function hexCentroid(tileIds: ReadonlyArray<string>): AxialCoord {
  * Smallest hex-distance from `target` to any tile in `ownedTileIds`.
  * Returns `Number.POSITIVE_INFINITY` if the player owns nothing.
  */
+/** @internal */
 export function distanceToNearestOwned(
   target: AxialCoord,
   ownedTileIds: ReadonlyArray<string>
@@ -77,6 +80,7 @@ export function distanceToNearestOwned(
  * Carlo phase of frontier exploration to anchor the outer-radius growth at
  * the current edge of the player's blob.
  */
+/** @internal */
 export function kingdomRadiusFromCentroid(
   center: AxialCoord,
   ownedTileIds: ReadonlyArray<string>
@@ -96,6 +100,7 @@ export function kingdomRadiusFromCentroid(
  * Probability the next frontier tile is biased toward an enemy-adjacent
  * coord. Smooth ramp from 5% at 25 tiles held to ~40% at 200, capped at 60%.
  */
+/** @internal */
 export function hostileSpawnProbability(tilesHeld: number): number {
   return Math.min(0.6, 0.05 + 0.0019 * Math.max(0, tilesHeld - 25));
 }
@@ -105,6 +110,7 @@ export function hostileSpawnProbability(tilesHeld: number): number {
  * the player's core adds linearly. Pure presentation — gameplay outcomes
  * are determined by combat resolution, not this number.
  */
+/** @internal */
 export function riskScore(args: {
   hostileNeighbors: number;
   distanceToCore: number;
@@ -117,6 +123,7 @@ export function riskScore(args: {
   return Math.round(Math.min(100, fromHostiles + fromDistance));
 }
 
+/** @internal */
 export interface SampleFrontierArgs {
   ownedTileIds: ReadonlyArray<string>;
   isClaimed: (tileId: string) => boolean;
@@ -141,6 +148,7 @@ export interface SampleFrontierArgs {
  * Returns null if no unclaimed coord is found within `maxRings`. The caller
  * should refund the turn / surface an error in that case.
  */
+/** @internal */
 export function sampleFrontierTile(
   args: SampleFrontierArgs
 ): FrontierSample | null {

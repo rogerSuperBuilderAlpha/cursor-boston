@@ -7,6 +7,7 @@
 
 import type { ArtifactDefinition } from "../../types";
 
+/** @internal */
 export const COMMON_ARTIFACTS: ArtifactDefinition[] = [
   {
     id: "common-rusted-spearhead",

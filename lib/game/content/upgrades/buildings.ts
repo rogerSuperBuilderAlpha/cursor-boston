@@ -156,6 +156,7 @@ function makeUpgradesFor(building: BuildingDefinition): UpgradeDefinition[] {
   });
 }
 
+/** @internal */
 export const BUILDING_UPGRADES: UpgradeDefinition[] = BUILDING_SEEDS.flatMap(
   makeUpgradesFor
 );

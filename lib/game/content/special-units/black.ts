@@ -8,6 +8,7 @@
 import type { SpecialUnitDef } from "../../types";
 
 /** Black caste — shroud, plague, oracle. */
+/** @internal */
 export const BLACK_SPECIAL_UNITS: ReadonlyArray<SpecialUnitDef> = [
   {
     id: "black-shroud-runner",

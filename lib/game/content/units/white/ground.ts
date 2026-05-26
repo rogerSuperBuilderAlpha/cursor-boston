@@ -7,6 +7,7 @@
 
 import type { UnitDefinition } from "../../../types";
 
+/** @internal */
 export const WHITE_GROUND_UNIT: UnitDefinition = {
   id: "white-ground-pikeman",
   caste: "white",

@@ -17,11 +17,13 @@ export function countWords(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
 
+/** @internal */
 export function isValidEduEmail(email: string): boolean {
   if (!email || typeof email !== "string") return false;
   return email.toLowerCase().trim().endsWith(".edu");
 }
 
+/** @internal */
 export interface UserProfileForEdu {
   email?: string | null;
   additionalEmails?: Array<{ email: string; verified: boolean }>;
@@ -54,6 +56,7 @@ export function getVerifiedEduEmail(
   return edu ? edu.email.toLowerCase().trim() : null;
 }
 
+/** @internal */
 export interface CfpSubmission {
   abstract: string;
   name: string;
@@ -80,6 +83,7 @@ export interface CfpSubmissionInput {
 /**
  * Validate CFP submission data
  */
+/** @internal */
 export function validateCfpSubmission(data: CfpSubmissionInput): string | null {
   const wordCount = countWords(data.abstract);
   if (wordCount < ABSTRACT_MIN_WORDS) {

@@ -34,6 +34,7 @@ interface SuppressionItem {
   created_at?: string;
 }
 
+/** @internal */
 export interface SyncResult {
   /** Lowercased addresses Mailgun has flagged (bounce or complaint). */
   allSuppressed: Set<string>;
@@ -270,6 +271,7 @@ async function doSync(db: Firestore, opts: SyncOptions): Promise<SyncResult> {
 }
 
 /** Test-only: clear the per-process memo. */
+/** @internal */
 export function __resetMailgunSuppressionsMemo(): void {
   memo = null;
 }

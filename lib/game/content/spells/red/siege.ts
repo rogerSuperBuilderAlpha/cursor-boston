@@ -8,6 +8,7 @@
 import type { SpellDefinition } from "../../../types";
 
 // Red's siege bonus is 1.30 — fire is what breaks walls, and Red owns it.
+/** @internal */
 export const RED_SIEGE_SPELLS: SpellDefinition[] = [
   {
     id: "red-siege-firebreath",

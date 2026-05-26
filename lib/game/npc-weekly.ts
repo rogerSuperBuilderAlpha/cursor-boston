@@ -48,6 +48,7 @@ const COLLECTIONS = {
 
 const ATTACK_HARD_CAP = 15;
 
+/** @internal */
 export type NpcPersonaName =
   | "builder"
   | "raider"
@@ -502,6 +503,7 @@ async function applyGrantIfDue(args: {
   return { granted: true, player: next };
 }
 
+/** @internal */
 export interface NpcWeeklyPerPlayer {
   uid: string;
   displayName: string;
@@ -516,6 +518,7 @@ export interface NpcWeeklyPerPlayer {
   errorCount: number;
 }
 
+/** @internal */
 export interface NpcWeeklySummary {
   weekStartIso: string;
   scanned: number;
@@ -533,6 +536,7 @@ export interface NpcWeeklySummary {
   perPlayer: NpcWeeklyPerPlayer[];
 }
 
+/** @internal */
 export interface RunNpcWeeklyOptions {
   weekStartIso?: string;
   dryRun?: boolean;

@@ -9,6 +9,7 @@ import { sanitizeText } from "@/lib/sanitize";
 
 export const PROMPT_TEMPLATES_COLLECTION = "promptTemplates";
 
+/** @internal */
 export const PROMPT_TEMPLATE_PLACEHOLDER_RE = /^[a-z][a-z0-9_]{1,48}$/;
 const PLACEHOLDER_TOKEN_RE = /{{\s*([^{}]+?)\s*}}/g;
 const SECRET_PATTERNS = [
@@ -19,9 +20,12 @@ const SECRET_PATTERNS = [
   /\b(?:api[_-]?key|secret|token|password)\s*[:=]\s*["']?[A-Za-z0-9_.\-]{12,}/i,
 ];
 
+/** @internal */
 export type PromptTemplateModerationStatus = "draft" | "pending_review";
+/** @internal */
 export type PromptTemplateVisibility = "private";
 
+/** @internal */
 export interface PromptTemplatePlaceholderInput {
   name: string;
   label: string;
@@ -30,6 +34,7 @@ export interface PromptTemplatePlaceholderInput {
   example: string;
 }
 
+/** @internal */
 export interface PromptTemplateSubmissionInput {
   title: string;
   summary: string;
@@ -41,6 +46,7 @@ export interface PromptTemplateSubmissionInput {
   submitForReview?: boolean;
 }
 
+/** @internal */
 export interface NormalizedPromptTemplateSubmission {
   title: string;
   summary: string;
@@ -53,6 +59,7 @@ export interface NormalizedPromptTemplateSubmission {
   visibility: PromptTemplateVisibility;
 }
 
+/** @internal */
 export interface PromptTemplateSubmissionValidation {
   data: NormalizedPromptTemplateSubmission | null;
   errors: string[];
@@ -75,6 +82,7 @@ export function slugifyPromptTemplateTitle(title: string): string {
   return slug || "prompt-template";
 }
 
+/** @internal */
 export function extractPromptPlaceholders(prompt: string): {
   names: string[];
   invalidTokens: string[];
@@ -96,6 +104,7 @@ export function extractPromptPlaceholders(prompt: string): {
   };
 }
 
+/** @internal */
 export function containsSensitivePromptText(value: string): boolean {
   return SECRET_PATTERNS.some((pattern) => pattern.test(value));
 }

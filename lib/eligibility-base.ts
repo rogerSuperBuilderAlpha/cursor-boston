@@ -5,12 +5,14 @@
  * See LICENSE file for details.
  */
 
+/** @internal */
 export interface ThresholdEligibilityOptions<Reason extends string = string> {
   current: number;
   target: number;
   reason: Reason;
 }
 
+/** @internal */
 export interface ThresholdEligibilityResult<Reason extends string = string> {
   isEligible: boolean;
   current: number;
@@ -18,6 +20,7 @@ export interface ThresholdEligibilityResult<Reason extends string = string> {
   reason?: Reason;
 }
 
+/** @internal */
 export function checkCountThreshold<Reason extends string = string>({
   current,
   target,
@@ -33,6 +36,7 @@ export function checkCountThreshold<Reason extends string = string>({
   };
 }
 
+/** @internal */
 export function checkPullRequestThreshold<Reason extends string = string>(
   options: Omit<ThresholdEligibilityOptions<Reason>, "current"> & {
     pullRequestsCount: number;
@@ -45,11 +49,13 @@ export function checkPullRequestThreshold<Reason extends string = string>(
   });
 }
 
+/** @internal */
 export type EventMembershipFailureReason =
   | "not_signed_up"
   | "not_checked_in"
   | "not_confirmed";
 
+/** @internal */
 export interface EventMembershipOptions {
   exists: boolean;
   checkedInAt?: unknown;
@@ -58,10 +64,12 @@ export interface EventMembershipOptions {
   rank?: unknown;
 }
 
+/** @internal */
 export type EventMembershipResult =
   | { ok: true; rank: number }
   | { ok: false; reason: EventMembershipFailureReason };
 
+/** @internal */
 export function checkEventMembership({
   exists,
   checkedInAt,

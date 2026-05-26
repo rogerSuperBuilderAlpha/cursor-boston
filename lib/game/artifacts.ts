@@ -10,10 +10,12 @@ import { ALL_ARTIFACTS, ARTIFACTS_BY_RARITY } from "./content/artifacts";
 
 // On every turn-spend, the player has this chance of finding an artifact.
 // Conservative starting value — tune in PR 7 once we have early data.
+/** @internal */
 export const ARTIFACT_DROP_RATE = 0.03;
 
 // Within a successful drop, what rarity is found. Heavy common skew so
 // epics/legendaries feel like genuine events.
+/** @internal */
 export const RARITY_WEIGHTS: Record<ArtifactRarity, number> = {
   common: 70,
   rare: 22,
@@ -40,6 +42,7 @@ function pickRarity(rng: () => number): ArtifactRarity {
  *
  * Returns null if no drop happened.
  */
+/** @internal */
 export function rollArtifact(rng: () => number): ArtifactDefinition | null {
   if (rng() >= ARTIFACT_DROP_RATE) return null;
   const rarity = pickRarity(rng);

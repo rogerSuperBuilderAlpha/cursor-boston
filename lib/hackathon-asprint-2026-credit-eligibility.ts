@@ -21,6 +21,7 @@ import {
 
 const EVENT_ID = HACK_A_SPRINT_2026_EVENT_ID;
 
+/** @internal */
 export type CreditEligibilityResult =
   | { ok: true; creditUrl: string; rank: number }
   | { ok: false; reason: string };

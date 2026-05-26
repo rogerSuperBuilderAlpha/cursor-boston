@@ -9,6 +9,7 @@ import type { SpellDefinition } from "../../../types";
 
 // Green sees the supply graph — uniquely Green, since Green's identity is
 // the held line. Defender alerted on cast.
+/** @internal */
 export const GREEN_INTEL_SPELLS: SpellDefinition[] = [
   {
     id: "green-intel-root-whisper-t2",

@@ -9,6 +9,7 @@ import type { SpellDefinition } from "../../../types";
 
 // Red's spy is a forge-scout: it reads a tile for its weakest face. The
 // reveal is narrow, but the caster gets a small offense bonus on follow-up.
+/** @internal */
 export const RED_INTEL_SPELLS: SpellDefinition[] = [
   {
     id: "red-intel-forge-sight-t2",

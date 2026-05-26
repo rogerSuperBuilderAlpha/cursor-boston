@@ -7,6 +7,7 @@
 
 /** Hero names for the Blue caste. Sky-reader, sea-bound, hawkish — scouts,
  *  navigators, weather-walkers. */
+/** @internal */
 export const BLUE_HERO_NAMES: ReadonlyArray<string> = [
   "Sky-Reader Aelis",
   "Navigator Tor",

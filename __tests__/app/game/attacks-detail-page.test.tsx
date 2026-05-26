@@ -16,7 +16,6 @@
  * autopsy available" copy, outcomeFlipped icon branches.
  */
 
-import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 
 jest.mock("react", () => {

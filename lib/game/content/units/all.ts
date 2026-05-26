@@ -25,6 +25,7 @@ import { WHITE_SIEGE_UNIT } from "./white/siege";
 
 // Flat list of every unit. content/index.ts re-exports as ALL_UNITS; upgrades
 // import this directly to avoid a circular dep through index.
+/** @internal */
 export const UNIT_LIST: UnitDefinition[] = [
   WHITE_GROUND_UNIT, WHITE_SIEGE_UNIT, WHITE_AIR_UNIT,
   BLUE_GROUND_UNIT, BLUE_SIEGE_UNIT, BLUE_AIR_UNIT,

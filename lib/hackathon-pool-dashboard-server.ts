@@ -12,6 +12,7 @@ function isPlaceholderMemberId(id: string): boolean {
   return id.startsWith("mock-member-") || id.startsWith("mock-");
 }
 
+/** @internal */
 export interface PoolDashboardPublicUser {
   uid: string;
   displayName: string | null;
@@ -20,12 +21,14 @@ export interface PoolDashboardPublicUser {
   github?: { login: string };
 }
 
+/** @internal */
 export interface PoolDashboardPoolEntry {
   userId: string;
   hackathonId: string;
   joinedAt: string | null;
 }
 
+/** @internal */
 export interface PoolDashboardTeam {
   id: string;
   hackathonId: string;
@@ -37,6 +40,7 @@ export interface PoolDashboardTeam {
   createdAt: string | null;
 }
 
+/** @internal */
 export interface PoolDashboardInvite {
   id: string;
   fromUserId: string;
@@ -47,6 +51,7 @@ export interface PoolDashboardInvite {
   expiresAt?: string | null;
 }
 
+/** @internal */
 export interface PoolDashboardJoinRequest {
   id: string;
   fromUserId: string;
@@ -55,6 +60,7 @@ export interface PoolDashboardJoinRequest {
   createdAt: string | null;
 }
 
+/** @internal */
 export interface PoolDashboardPayload {
   poolEntries: PoolDashboardPoolEntry[];
   inPool: boolean;

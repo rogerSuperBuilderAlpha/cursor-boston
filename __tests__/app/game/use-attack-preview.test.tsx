@@ -15,7 +15,7 @@
  * wins), gate flip clears loading state.
  */
 
-import React, { useEffect } from "react";
+import { useEffect  } from "react";
 import { act, render } from "@testing-library/react";
 
 const mockUseAuth = jest.fn();

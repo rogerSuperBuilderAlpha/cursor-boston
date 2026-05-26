@@ -74,6 +74,7 @@ function ipFromForwardedFor(value: string | null): string | null {
  * - Cloudflare's direct connecting IP remains a supported fallback.
  * - Next/local request.ip helps local development avoid one shared bucket.
  */
+/** @internal */
 export function getClientIp(request: RequestWithOptionalIp): string {
   return (
     normalizeIp(firstHeaderValue(request.headers.get("x-vercel-forwarded-for"))) ??

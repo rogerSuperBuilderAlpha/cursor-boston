@@ -23,12 +23,14 @@ export class MissingCursorConnectionError extends Error {
   }
 }
 
+/** @internal */
 export interface LaunchedCursorRun {
   cursorAgentId: string;
   cursorRunId: string;
   cursorAgentUrl: string;
 }
 
+/** @internal */
 export interface CursorRunSnapshot {
   status: CursorIdeaRunStatus;
   result?: string;
@@ -39,6 +41,7 @@ export interface CursorRunSnapshot {
   cursorStatusDetail?: string | null;
 }
 
+/** @internal */
 export interface FollowUpCursorRun {
   cursorRunId: string;
 }
@@ -242,6 +245,7 @@ export async function archiveCursorAgent(
   await Agent.archive(cursorAgentId, { apiKey });
 }
 
+/** @internal */
 export async function unarchiveCursorAgent(
   apiKey: string,
   cursorAgentId: string
@@ -258,6 +262,7 @@ export async function deleteCursorAgent(
   await Agent.delete(cursorAgentId, { apiKey });
 }
 
+/** @internal */
 export function mapRunStatus(status: RunStatus): CursorIdeaRunStatus {
   switch (status) {
     case "running":
@@ -366,6 +371,7 @@ function describeAgentInfo(agent: SDKAgentInfo | null): string | null {
   return parts.length > 0 ? parts.join(" · ") : null;
 }
 
+/** @internal */
 export function firstPrUrlFromGit(git: unknown): string | null {
   const branches = (git as RunGitInfoLike | undefined)?.branches;
   if (!Array.isArray(branches)) return null;

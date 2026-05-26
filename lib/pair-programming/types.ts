@@ -9,6 +9,7 @@ import type { Timestamp } from "firebase/firestore";
 
 export type SessionType = "teach-me" | "build-together" | "code-review" | "explore-topic";
 
+/** @internal */
 export type RequestStatus = "pending" | "accepted" | "declined" | "cancelled";
 
 export interface PairProfile {

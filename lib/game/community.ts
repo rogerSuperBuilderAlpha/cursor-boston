@@ -164,6 +164,7 @@ interface ProphecyFulfilledEvent extends BaseEventInput {
   prophecyTargetSealNumber: number;
 }
 
+/** @internal */
 export type CommunityEventInput =
   | PlayerJoinEvent
   | CastePickEvent
@@ -193,6 +194,7 @@ export type CommunityEventInput =
  * Firestore reject and bubble up; adopt try/catch if it becomes a
  * source of phantom rollbacks.)
  */
+/** @internal */
 export function logCommunityEventInTx(
   tx: Transaction,
   db: Firestore,
@@ -275,6 +277,7 @@ export function logCommunityEventInTx(
 
 /** Out-of-transaction event writer for callers that aren't running
  *  inside a Firestore txn (e.g. seed scripts, simple `set` flows). */
+/** @internal */
 export async function logCommunityEvent(
   input: CommunityEventInput,
   now: Date = new Date()

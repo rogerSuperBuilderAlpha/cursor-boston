@@ -15,6 +15,7 @@ import type { MentorshipProfile, MentorshipMatchScore } from "./types";
  * When a mentor seeks a mentee: seeker = mentor, candidate = mentee
  *   → candidate.learningGoals should overlap with seeker.expertise
  */
+/** @internal */
 export function calculateMentorshipMatchScore(
   seeker: MentorshipProfile,
   candidate: MentorshipProfile
@@ -100,11 +101,13 @@ export function calculateMentorshipMatchScore(
  * don't block matches. Exported so candidate queries (Firestore
  * `array-contains-any`) and the score function agree on representation.
  */
+/** @internal */
 export function normalizeSkill(s: string): string {
   return s.toLowerCase().trim();
 }
 
 /** Normalize an array of skills + drop empties/dupes. */
+/** @internal */
 export function normalizeSkills(skills: ReadonlyArray<string>): string[] {
   const seen = new Set<string>();
   const out: string[] = [];

@@ -1,4 +1,3 @@
-import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { BadgeCard } from "@/components/badges/BadgeCard";
 import type { BadgeDefinition, BadgeEligibilityResult } from "@/lib/badges/types";

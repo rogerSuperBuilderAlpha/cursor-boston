@@ -14,7 +14,6 @@
  * single-tile no-tag.
  */
 
-import React from "react";
 import { render, screen } from "@testing-library/react";
 
 jest.mock("@/app/game/recruit/_lib/constants", () => ({

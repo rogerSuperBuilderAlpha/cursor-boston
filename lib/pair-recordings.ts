@@ -5,29 +5,36 @@
  * See LICENSE file for details.
  */
 
+/** @internal */
 export type PairRecordingDifficulty = "beginner" | "intermediate" | "advanced";
 
+/** @internal */
 export type PairRecordingSessionType =
   | "teach-me"
   | "build-together"
   | "code-review"
   | "explore-topic";
 
+/** @internal */
 export type PairRecordingConsentStatus = "approved-for-public-library";
 
+/** @internal */
 export type PairRecordingStorageStatus = "metadata-only" | "video-ready";
 
+/** @internal */
 export interface PairRecordingChapter {
   start: string;
   title: string;
   summary: string;
 }
 
+/** @internal */
 export interface PairRecordingResource {
   label: string;
   url: string;
 }
 
+/** @internal */
 export interface PairSessionRecording {
   id: string;
   title: string;
@@ -48,6 +55,7 @@ export interface PairSessionRecording {
   resources: PairRecordingResource[];
 }
 
+/** @internal */
 export const PAIR_SESSION_RECORDINGS: PairSessionRecording[] = [
   {
     id: "react-refactor-with-cursor",

@@ -27,12 +27,15 @@ import { logger } from "@/lib/logger";
 import { isShieldActive } from "./turns";
 import type { Caste, GamePlayer, LandType, UnitStack } from "./types";
 
+/** @internal */
 export const WORLD_3D_SNAPSHOT_COLLECTION = "game_world_snapshots";
+/** @internal */
 export const WORLD_3D_SNAPSHOT_DOC = "daily-3d";
 // v2: owner-deduped storage. v1 inlined owner fields on every tile and
 // blew past Firestore's 1MB doc ceiling at ~4.5K tiles. The reader still
 // returns the denormalized public shape — only the on-disk layout
 // changed.
+/** @internal */
 export const WORLD_3D_SNAPSHOT_SCHEMA_VERSION = 2;
 
 // Bit flags packed into World3DTile.flags for on-disk storage.
@@ -60,6 +63,7 @@ export interface World3DTile {
   ownerShielded: boolean;
 }
 
+/** @internal */
 export interface World3DSnapshot {
   tiles: World3DTile[];
   generatedAt: string; // ISO
@@ -115,6 +119,7 @@ function unitsSum(u: UnitStack | undefined): number {
 // Cost is one read per tile + one read per player, same as the live
 // snapshot — the cron runs once per day, so steady-state read budget is
 // ~5K reads/day from this writer.
+/** @internal */
 export async function computeWorld3DSnapshot(
   db: Firestore,
   now: Date = new Date()

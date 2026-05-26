@@ -8,6 +8,7 @@
 import type { SpellDefinition } from "../../../types";
 import { buildSpellTiers } from "../_tier-builder";
 
+/** @internal */
 export const WHITE_DEFENSE_SPELLS: SpellDefinition[] = buildSpellTiers({
   caste: "white",
   type: "defense",

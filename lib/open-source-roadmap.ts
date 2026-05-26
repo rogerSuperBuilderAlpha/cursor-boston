@@ -36,6 +36,7 @@ export interface RoadmapCategory {
   items: RoadmapItem[];
 }
 
+/** @internal */
 export interface RoadmapFilters {
   query?: string;
   category?: RoadmapCategoryKey | "all";

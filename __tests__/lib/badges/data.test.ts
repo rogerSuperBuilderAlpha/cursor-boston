@@ -46,7 +46,7 @@ import {
   toUserBadgeDocument,
 } from "@/lib/badges/data";
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+ 
 const firebaseMod = require("@/lib/firebase") as {
   __setDb: (db: unknown) => void;
   __setAuth: (auth: unknown) => void;

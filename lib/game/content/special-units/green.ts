@@ -8,6 +8,7 @@
 import type { SpecialUnitDef } from "../../types";
 
 /** Green caste — root, glade, slow patience. */
+/** @internal */
 export const GREEN_SPECIAL_UNITS: ReadonlyArray<SpecialUnitDef> = [
   {
     id: "green-root-warden",

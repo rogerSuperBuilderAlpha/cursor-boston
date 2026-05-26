@@ -7,6 +7,7 @@
 
 import type { SpellDefinition } from "../../../types";
 
+/** @internal */
 export const BLUE_ATTRITION_SPELLS: SpellDefinition[] = [
   {
     id: "blue-attrition-cold-current",

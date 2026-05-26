@@ -9,9 +9,11 @@
  * Hack-a-Sprint April 13, 2026 — America/New_York schedule (single source for UI + API).
  */
 
+/** @internal */
 export const HACK_A_SPRINT_2026_TIMEZONE = "America/New_York";
 
 /** Start of event day in ET for sanity checks */
+/** @internal */
 export const HACK_A_SPRINT_2026_EVENT_DATE = "2026-04-13";
 
 export type HackASprint2026Phase =

@@ -17,7 +17,6 @@
  * pendingProphecyBonus, lastStandUsedAt — Date and Timestamp variants).
  */
 
-import React from "react";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 const mockUseAuth = jest.fn();

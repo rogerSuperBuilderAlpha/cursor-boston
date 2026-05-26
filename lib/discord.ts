@@ -13,6 +13,7 @@ import { logger } from "./logger";
 const DISCORD_WEBHOOK_URL_PR = process.env.DISCORD_WEBHOOK_URL_PR;
 
 // Discord embed colors
+/** @internal */
 export const DISCORD_COLORS = {
   BLUE: 0x5865f2, // New PR
   GREEN: 0x57f287, // Merged PR
@@ -20,12 +21,14 @@ export const DISCORD_COLORS = {
   YELLOW: 0xfee75c, // Warning
 } as const;
 
+/** @internal */
 export interface DiscordEmbedField {
   name: string;
   value: string;
   inline?: boolean;
 }
 
+/** @internal */
 export interface DiscordEmbed {
   title: string;
   description?: string;
@@ -55,6 +58,7 @@ interface DiscordWebhookPayload {
  * Send a notification to Discord via webhook
  * Fails gracefully - logs errors but doesn't throw
  */
+/** @internal */
 export async function sendDiscordNotification(
   embed: DiscordEmbed,
   options?: { username?: string; avatarUrl?: string; webhookUrl?: string }

@@ -18,6 +18,7 @@ import { tileIdFromAxial } from "./world-gen";
 // (bg/bs/ba) alongside the SUPER-unit fields (g/s/a). v2 omitted them; v1
 // stored the entire MapTile uncompressed. v3 readers default missing
 // baseUnits to {0,0,0}, so a v2 doc still decodes cleanly during rollout.
+/** @internal */
 export const WORLD_SNAPSHOT_SCHEMA_VERSION = 3;
 
 // Single-character codes for LandType. The on-wire form pays a per-tile

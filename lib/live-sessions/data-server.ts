@@ -28,6 +28,7 @@ const RTDB_ROOTS = {
   QUEUE: "live_queue_entries",
 } as const;
 
+/** @internal */
 export function buildLiveSessionPaths(sessionId: string) {
   return {
     audiencePath: `/live/${sessionId}`,

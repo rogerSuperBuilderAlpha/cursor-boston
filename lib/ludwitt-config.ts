@@ -12,11 +12,13 @@ export const LUDWITT_TOKEN_URL = "https://pitchrise.ludwitt.com/api/oauth/token"
 export const LUDWITT_USERINFO_URL = "https://pitchrise.ludwitt.com/api/oauth/userinfo";
 export const LUDWITT_AI_MESSAGES_URL =
   "https://pitchrise.ludwitt.com/api/v1/ai/messages";
+/** @internal */
 export const LUDWITT_BALANCE_URL = "https://pitchrise.ludwitt.com/api/v1/credits/balance";
 export const LUDWITT_TOPUP_URL = "https://pitchrise.ludwitt.com/account/credits";
 
 export const LUDWITT_SCOPES = "profile credits:read credits:spend";
 
+/** @internal */
 export const LUDWITT_TOKENS_COLLECTION = "ludwittTokens";
 export const LUDWITT_FINALIZE_COOKIE = "ludwitt_finalize_token";
 export const LUDWITT_STATE_COOKIE = "ludwitt_oauth_state";
@@ -24,6 +26,7 @@ export const LUDWITT_PKCE_COOKIE = "ludwitt_oauth_pkce_verifier";
 export const LUDWITT_RETURN_TO_COOKIE = "ludwitt_oauth_return_to";
 export const LUDWITT_LINK_UID_COOKIE = "ludwitt_oauth_link_uid";
 
+/** @internal */
 export const LUDWITT_API_TIMEOUT_MS = 15_000;
 
 export function getLudwittClientId(): string | null {

@@ -41,6 +41,7 @@ function resolveSecret(): string {
 const SECRET = resolveSecret();
 
 /** Generate a deterministic HMAC token for an email address. */
+/** @internal */
 export function generateUnsubscribeToken(email: string): string {
   return createHmac("sha256", SECRET)
     .update(email.toLowerCase().trim())
@@ -81,6 +82,7 @@ export function buildUnsubscribeUrl(email: string): string {
 // unsubscribe endpoint (or vice-versa) even though both share the same secret.
 const WITHDRAW_NS = "withdraw-cohort";
 
+/** @internal */
 export function generateWithdrawToken(email: string, cohortId: string): string {
   return createHmac("sha256", SECRET)
     .update(`${WITHDRAW_NS}:${cohortId}:${email.toLowerCase().trim()}`)
@@ -111,6 +113,7 @@ export function buildWithdrawUrl(email: string, cohortId: string): string {
 // PyData cannot be replayed against the cohort withdraw endpoint (or vice-versa).
 const PYDATA_WITHDRAW_NS = "withdraw-pydata-2026";
 
+/** @internal */
 export function generatePydataWithdrawToken(email: string): string {
   return createHmac("sha256", SECRET)
     .update(`${PYDATA_WITHDRAW_NS}:${email.toLowerCase().trim()}`)

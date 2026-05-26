@@ -24,13 +24,16 @@ import {
 /**
  * Firestore collection names
  */
+/** @internal */
 export const BADGES_COLLECTION = "badges";
+/** @internal */
 export const USER_BADGES_COLLECTION = "user_badges";
 
 /**
  * Firestore document shapes
  * (kept identical to domain types for PR 1 simplicity)
  */
+/** @internal */
 export interface BadgeDefinitionDocument {
   id: BadgeId;
   name: string;
@@ -41,6 +44,7 @@ export interface BadgeDefinitionDocument {
   iconKey?: string;
 }
 
+/** @internal */
 export interface UserBadgeDocument {
   id: string;
   userId: string;
@@ -53,10 +57,12 @@ export interface UserBadgeDocument {
 /**
  * Deterministic document ID helpers
  */
+/** @internal */
 export function getBadgeDocumentId(badgeId: BadgeId): string {
   return badgeId;
 }
 
+/** @internal */
 export function getUserBadgeDocumentId(
   userId: string,
   badgeId: BadgeId
@@ -68,6 +74,7 @@ export function getUserBadgeDocumentId(
  * Mapping helpers (domain -> storage)
  * Pure functions, no Firebase usage
  */
+/** @internal */
 export function toBadgeDefinitionDocument(
   definition: BadgeDefinition
 ): BadgeDefinitionDocument {
@@ -82,6 +89,7 @@ export function toBadgeDefinitionDocument(
   };
 }
 
+/** @internal */
 export function toUserBadgeDocument(
   userBadge: UserBadge
 ): UserBadgeDocument {
@@ -96,6 +104,7 @@ export function toUserBadgeDocument(
 }
 
 export type UserBadgeMap = Partial<Record<BadgeId, UserBadge>>;
+/** @internal */
 export type BadgeAwardPersistenceState = "complete" | "degraded" | "failed";
 
 export interface BadgeAwardPersistenceStatus {
@@ -103,6 +112,7 @@ export interface BadgeAwardPersistenceStatus {
   message?: string;
 }
 
+/** @internal */
 export interface EnsureUserBadgesResult {
   userBadgeMap: UserBadgeMap;
   status: BadgeAwardPersistenceStatus;
@@ -153,6 +163,7 @@ function toUserBadgeFromDocument(
   };
 }
 
+/** @internal */
 export async function getUserBadgeMap(userId: string): Promise<UserBadgeMap> {
   if (!db || !userId) {
     return {};
@@ -176,6 +187,7 @@ export async function getUserBadgeMap(userId: string): Promise<UserBadgeMap> {
   return badgeMap;
 }
 
+/** @internal */
 export async function ensureUserBadgesForEligible(
   userId: string,
   eligibilityMap: BadgeEligibilityMap,

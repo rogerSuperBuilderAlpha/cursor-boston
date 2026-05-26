@@ -106,7 +106,7 @@ let authedOps = 0;
 for (const pathItem of Object.values(openApiDoc.paths ?? {})) {
   if (!pathItem || typeof pathItem !== "object") continue;
   for (const method of HTTP_METHODS) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const op = (pathItem as Record<string, any>)[method];
     if (!op || typeof op !== "object") continue;
     const responses = (op.responses ?? {}) as Record<string, unknown>;

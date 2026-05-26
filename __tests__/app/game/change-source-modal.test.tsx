@@ -14,7 +14,6 @@
  * X button close, Escape close, body click no-op (event stopPropagation).
  */
 
-import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 
 jest.mock("@/app/game/_components/CatalogImage", () => ({

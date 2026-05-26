@@ -7,6 +7,7 @@
 
 import type { UnitDefinition } from "../../../types";
 
+/** @internal */
 export const BLACK_GROUND_UNIT: UnitDefinition = {
   id: "black-ground-reaver",
   caste: "black",

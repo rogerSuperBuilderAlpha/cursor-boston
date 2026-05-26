@@ -12,6 +12,7 @@ import { RARE_ARTIFACTS } from "./rare";
 import { EPIC_ARTIFACTS } from "./epic";
 import { LEGENDARY_ARTIFACTS } from "./legendary";
 
+/** @internal */
 export const ALL_ARTIFACTS: ArtifactDefinition[] = [
   ...COMMON_ARTIFACTS,
   ...RARE_ARTIFACTS,
@@ -19,10 +20,12 @@ export const ALL_ARTIFACTS: ArtifactDefinition[] = [
   ...LEGENDARY_ARTIFACTS,
 ];
 
+/** @internal */
 export const ARTIFACTS_BY_ID = new Map<string, ArtifactDefinition>(
   ALL_ARTIFACTS.map((a) => [a.id, a])
 );
 
+/** @internal */
 export const ARTIFACTS_BY_RARITY: Record<ArtifactRarity, ArtifactDefinition[]> = {
   common: COMMON_ARTIFACTS,
   rare: RARE_ARTIFACTS,

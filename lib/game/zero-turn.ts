@@ -63,6 +63,7 @@ function toMillis(value: Date | { toMillis?: () => number } | undefined): number
 /** True when the hero is currently on sabbatical (meditating). Meditating
  *  heroes don't contribute attack/defense bonuses to combat and don't
  *  engage on their tile's battles. */
+/** @internal */
 export function isHeroMeditating(hero: GameHero | null | undefined, now: Date): boolean {
   if (!hero || !hero.meditatingUntil) return false;
   const ms = toMillis(hero.meditatingUntil);
@@ -73,6 +74,7 @@ export function isHeroMeditating(hero: GameHero | null | undefined, now: Date): 
 /** Count of the player's heroes currently meditating. Drives the slot
  *  cap check in meditateHeroServer. Reads tiles owned by the player and
  *  inspects their hero snapshot. */
+/** @internal */
 export function countMeditatingHeroes(
   ownedTilesWithHero: ReadonlyArray<Pick<GameTile, "hero">>,
   now: Date
@@ -90,6 +92,7 @@ export function countMeditatingHeroes(
 
 /** Resolved attack penalty fraction for the attacker when their
  *  Oathbreaker mark is still active. Returns 0 when no mark or expired. */
+/** @internal */
 export function oathbreakerAttackPenalty(player: GamePlayer, now: Date): number {
   if (!player.oathbreakerUntil) return 0;
   const ms = toMillis(player.oathbreakerUntil);
@@ -103,12 +106,14 @@ export function oathbreakerAttackPenalty(player: GamePlayer, now: Date): number 
 
 /** Cap on tiles that can be in defensive stance simultaneously. Scales
  *  with empire size; tiny empires get 1 to keep the feature usable. */
+/** @internal */
 export function maxDefensiveStanceTiles(player: GamePlayer): number {
   const held = player.stats?.tilesHeld ?? 0;
   return Math.max(1, Math.floor(held / 100));
 }
 
 /** True when the tile's defensive-stance toggle is currently active. */
+/** @internal */
 export function isTileInDefensiveStance(
   tile: Pick<GameTile, "defensiveStance">,
   now: Date
@@ -120,6 +125,7 @@ export function isTileInDefensiveStance(
 
 /** True when the player can still toggle defensive stance OFF on this
  *  tile (the 6h lock has elapsed). */
+/** @internal */
 export function canExitDefensiveStance(
   tile: Pick<GameTile, "defensiveStance">,
   now: Date
@@ -131,6 +137,7 @@ export function canExitDefensiveStance(
 
 /** True when the tile has an armed Last Stand effect that's still within
  *  its window (and so will apply to the next inbound attack). */
+/** @internal */
 export function hasActiveLastStand(
   tile: Pick<GameTile, "activeLastStand">,
   now: Date
@@ -142,6 +149,7 @@ export function hasActiveLastStand(
 
 /** True when the player can declare another Last Stand (their cooldown
  *  has elapsed). */
+/** @internal */
 export function canDeclareLastStand(player: GamePlayer, now: Date): boolean {
   if (!player.lastStandUsedAt) return true;
   const used = toMillis(player.lastStandUsedAt);
@@ -151,6 +159,7 @@ export function canDeclareLastStand(player: GamePlayer, now: Date): boolean {
 
 /** Cooldown remaining before the player can declare another Last Stand.
  *  Returns 0 when the player can declare. */
+/** @internal */
 export function lastStandCooldownRemainingMs(
   player: GamePlayer,
   now: Date
@@ -167,6 +176,7 @@ export function lastStandCooldownRemainingMs(
  *  on the declared tile) into the single `zeroTurnDefenseBonus` channel
  *  consumed by combat.ts. Adjacency-based last-stand adjacent-penalties
  *  are passed in via `adjacentRallyPenaltyActive`. */
+/** @internal */
 export function computeZeroTurnDefenseBonus(args: {
   tile: Pick<GameTile, "defensiveStance" | "activeLastStand">;
   adjacentRallyPenaltyActive?: boolean;
@@ -192,6 +202,7 @@ export function computeZeroTurnDefenseBonus(args: {
 
 /** Applies the transit loss haircut to a moved stack. Returns the stack
  *  that actually arrives. */
+/** @internal */
 export function applyRedistributionLoss(moved: UnitStack): UnitStack {
   const factor = 1 - REDISTRIBUTE_TRANSIT_LOSS;
   return {
@@ -204,6 +215,7 @@ export function applyRedistributionLoss(moved: UnitStack): UnitStack {
 /** Prunes `recentRedistributions` to entries within the last 24h and
  *  returns how many remain. Used both for the daily-cap check and for
  *  the "X remaining today" display. */
+/** @internal */
 export function countRecentRedistributions(
   recent: ReadonlyArray<Date | { toMillis?: () => number }> | undefined,
   now: Date
@@ -218,6 +230,7 @@ export function countRecentRedistributions(
   return count;
 }
 
+/** @internal */
 export function redistributionsRemainingToday(
   recent: ReadonlyArray<Date | { toMillis?: () => number }> | undefined,
   now: Date
@@ -242,6 +255,7 @@ export function redistributionsRemainingToday(
  * have invested in: more units of a type, an additional offense spell
  * source, a different unit composition.
  */
+/** @internal */
 export interface AutopsyPerturbation {
   /** Friendly label for the UI, e.g. "+50 siege" or "+1 offense spell". */
   label: string;
@@ -265,6 +279,7 @@ export interface AutopsyOutcome {
   summary: string;
 }
 
+/** @internal */
 export interface RunAutopsyArgs {
   /** The recorded attack — must include `unitsOnTargetPreAttack`. */
   attacker: CombatAttackerInput;

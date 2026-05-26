@@ -18,7 +18,6 @@
 
 import "@/__tests__/app/_shared/page-test-setup";
 
-import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 
 import { SecurityTab } from "@/app/(auth)/profile/_components/SecurityTab";

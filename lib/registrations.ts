@@ -93,6 +93,7 @@ export async function registerForEvent(
  * @param userId - The unique ID of the user
  * @returns A promise resolving to an array of event registrations, or empty array if Firebase is not configured
  */
+/** @internal */
 export async function getUserRegistrations(
   userId: string
 ): Promise<EventRegistration[]> {
@@ -110,6 +111,7 @@ export async function getUserRegistrations(
  * @param userId - The unique ID of the user
  * @returns A promise resolving to the user's stats object with zeroed values if Firebase is not configured
  */
+/** @internal */
 export async function getUserStats(userId: string): Promise<UserStats> {
   if (!db) {
     return {
@@ -169,6 +171,7 @@ export async function getUserStats(userId: string): Promise<UserStats> {
  * @param eventId - The unique ID of the event
  * @returns A promise resolving to true if the user is registered, false otherwise
  */
+/** @internal */
 export async function isUserRegistered(
   userId: string,
   eventId: string

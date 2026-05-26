@@ -14,7 +14,6 @@
  * fallback, fetch throw fallback, signed-out no-op.
  */
 
-import React from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 
 jest.mock("@/app/game/setup/_components/CastePickCard", () => ({

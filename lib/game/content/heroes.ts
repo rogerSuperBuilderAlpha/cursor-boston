@@ -26,23 +26,29 @@ import type {
 // ── Stamina ─────────────────────────────────────────────────────────────
 
 /** Default full-stamina value for newly-emerged heroes. */
+/** @internal */
 export const STAMINA_MAX = 100;
 /** Stamina regained per owner turn elapsed since last engagement. */
+/** @internal */
 export const STAMINA_REGEN_PER_TURN = 20;
 /** Stamina lost per engagement (attack from / attack on the hero's tile,
  *  regardless of who wins). */
+/** @internal */
 export const STAMINA_DECAY_PER_ENGAGEMENT = 25;
 /** Conversion is only attempted on heroes at or below this stamina. */
 export const STAMINA_CONVERSION_THRESHOLD = 25;
 /** Conversion success ceiling — even a fully exhausted hero (stamina 0)
  *  is only 90% likely to defect, never guaranteed. */
+/** @internal */
 export const CONVERSION_SUCCESS_CEILING = 0.9;
 /** Spare-withdraw stamina decrement multiplier vs. a normal engagement.
  *  Sparing requires the attacker to win but yields no territorial gain,
  *  so the wear-down is steeper than a casual engagement. */
+/** @internal */
 export const SPARE_STAMINA_MULT = 2;
 /** Stamina a converted hero arrives at when joining the new owner. Below
  *  full so the new owner has to invest in regen before pushing with them. */
+/** @internal */
 export const POST_CONVERT_STAMINA = STAMINA_MAX / 2;
 
 // ── Emergence rates ─────────────────────────────────────────────────────
@@ -64,17 +70,22 @@ export const EMERGE_CHANCE_MAGIC = 0.035;
 
 /** Military hero: base multiplicative attack bonus when attacking FROM
  *  the hero's tile. Stamina-scaled and specialty-weighted at the call site. */
+/** @internal */
 export const HERO_ATTACK_BONUS = 0.2;
 /** Military hero: base multiplicative defense bonus when the hero's tile
  *  is attacked. Stamina-scaled and specialty-weighted at the call site. */
+/** @internal */
 export const HERO_DEFENSE_BONUS = 0.25;
 
 /** Farm hero: contribution to the kingdom-wide recruitment % per hero
  *  (stamina-scaled). Sum across all farm heroes is clamped to FARM_HERO_GLOBAL_RECRUIT_CAP. */
+/** @internal */
 export const FARM_HERO_GLOBAL_RECRUIT_BONUS = 0.1;
 /** Hard cap on the summed kingdom-wide recruitment bonus from farm heroes. */
+/** @internal */
 export const FARM_HERO_GLOBAL_RECRUIT_CAP = 0.5;
 /** Per-recruit chance to roll a special unit on a farm-hero tile. */
+/** @internal */
 export const FARM_SPECIAL_UNIT_ROLL = 0.1;
 
 /** Magic hero: bonus "virtual magic lands" each hero contributes to the
@@ -83,12 +94,14 @@ export const FARM_SPECIAL_UNIT_ROLL = 0.1;
 export const MAGIC_HERO_VIRTUAL_LANDS = 1;
 /** Magic hero: base multiplicative spell-magnitude bonus when a spell is
  *  cast FROM the hero's tile. Stamina-scaled and specialty-weighted. */
+/** @internal */
 export const MAGIC_HERO_SPELL_BOOST = 0.15;
 
 // ── Specialty registries ────────────────────────────────────────────────
 
 /** Specialty draw pool per class. `maybeEmergeHero` picks uniformly from
  *  the appropriate pool. */
+/** @internal */
 export const SPECIALTIES_BY_CLASS: Record<HeroClass, ReadonlyArray<HeroSpecialty>> = {
   military: ["ground", "siege", "air", "garrison", "raid", "supply"],
   farm: [
@@ -114,6 +127,7 @@ export const SPECIALTIES_BY_CLASS: Record<HeroClass, ReadonlyArray<HeroSpecialty
 // (which is the building name). Keep the asymmetry in one helper instead
 // of pushing it through call sites.
 
+/** @internal */
 export function heroClassForLandType(type: LandType): HeroClass | null {
   if (type === "military") return "military";
   if (type === "food") return "farm";
@@ -121,6 +135,7 @@ export function heroClassForLandType(type: LandType): HeroClass | null {
   return null;
 }
 
+/** @internal */
 export function landTypeForHeroClass(cls: HeroClass): LandType {
   if (cls === "military") return "military";
   if (cls === "farm") return "food";
@@ -140,6 +155,7 @@ export function staminaScale(hero: Pick<GameHero, "stamina" | "staminaMax">): nu
 /** Conversion success chance for an attacker attempting to defect a hero.
  *  Returns 0 when stamina is above STAMINA_CONVERSION_THRESHOLD (call
  *  sites should refuse to even attempt in that case). */
+/** @internal */
 export function conversionSuccessChance(
   hero: Pick<GameHero, "stamina" | "staminaMax">
 ): number {
@@ -151,6 +167,7 @@ export function conversionSuccessChance(
 /** Military hero: specialty-weighted attack bonus multiplier (1.0 = base).
  *  Returns 1.0 for neutral; bumps when the hero's specialty aligns with
  *  the target tile's type or the player's expected use. */
+/** @internal */
 export function specialtyAttackMult(
   hero: Pick<GameHero, "class" | "specialty">,
   targetLandType: LandType | undefined
@@ -177,6 +194,7 @@ export function specialtyAttackMult(
 /** Military hero: specialty-weighted defense bonus multiplier (1.0 = base).
  *  Accepts the attacker's source-tile land type so future specialties can
  *  vary against e.g. military sources; v1 specialties don't read it. */
+/** @internal */
 export function specialtyDefenseMult(
   hero: Pick<GameHero, "class" | "specialty">,
   _sourceLandType: LandType | undefined
@@ -199,6 +217,7 @@ export function specialtyDefenseMult(
 
 /** Magic hero: specialty-weighted spell-magnitude bonus when casting
  *  from the hero's tile. Looks at the spell type the player is casting. */
+/** @internal */
 export function specialtyCastingMult(
   hero: Pick<GameHero, "class" | "specialty">,
   spell: Pick<SpellDefinition, "type">
@@ -234,6 +253,7 @@ export function specialtyArmageddonMult(
 
 /** Farm hero: specialty-weighted multiplier for the per-recruit special-unit
  *  roll chance on the hero's tile. */
+/** @internal */
 export function specialtyRecruitMult(
   hero: Pick<GameHero, "class" | "specialty">
 ): number {
@@ -244,6 +264,7 @@ export function specialtyRecruitMult(
 
 /** Farm hero: specialty-weighted multiplier on the kingdom-wide recruit
  *  bonus contribution. Stacks before the cap. */
+/** @internal */
 export function specialtyKingdomBuffMult(
   hero: Pick<GameHero, "class" | "specialty">
 ): number {
@@ -255,6 +276,7 @@ export function specialtyKingdomBuffMult(
 /** Farm hero: per-unit-type recruit multiplier on the hero's tile.
  *  Returns 1.0 for non-aligned specialties; 1.25 when the hero's
  *  specialty matches the unit type being recruited. */
+/** @internal */
 export function specialtyTypeRecruitMult(
   hero: Pick<GameHero, "class" | "specialty">,
   unitType: "ground" | "siege" | "air"
@@ -269,17 +291,21 @@ export function specialtyTypeRecruitMult(
 // ── v2: pagination ──────────────────────────────────────────────────────
 
 /** Page size for the per-hero events subcollection query. */
+/** @internal */
 export const HERO_EVENTS_PAGE_SIZE = 50;
 /** Page size for the heroes list endpoints (mine / all / fallen). */
+/** @internal */
 export const HEROES_LIST_PAGE_SIZE = 30;
 
 /** Caste-agnostic re-export so call sites that don't want to import the
  *  Caste union directly can still iterate. */
+/** @internal */
 export const HERO_CLASSES: ReadonlyArray<HeroClass> = ["military", "farm", "magic"];
 
 /** All castes, in display order. Pulled here so the name-pool registry
  *  in lib/game/content/hero-names/_index.ts can iterate without re-importing
  *  the union from types.ts (avoids a cycle). */
+/** @internal */
 export const ALL_CASTES: ReadonlyArray<Caste> = [
   "black",
   "red",

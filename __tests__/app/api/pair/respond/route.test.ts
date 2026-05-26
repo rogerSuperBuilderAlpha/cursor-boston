@@ -8,9 +8,6 @@ import type { VerifiedUser } from "@/lib/server-auth";
 import { getVerifiedUser } from "@/lib/server-auth";
 import {
   respondToPairRequestServer,
-  PairRequestNotFoundError,
-  PairRequestUnauthorizedError,
-  PairRequestAlreadyRespondedError,
 } from "@/lib/pair-programming/data-server";
 
 jest.mock("@/lib/server-auth", () => ({

@@ -13,7 +13,9 @@ export const SPORTS_HACK_2026_EVENT_ID =
 export const SPORTS_HACK_2026_NAME = "Boston Tech Week Sports Hack";
 export const SPORTS_HACK_2026_SHORT_NAME = "Sports Hack 2026";
 
+/** @internal */
 export const SPORTS_HACK_2026_LUMA_SLUG = "t5vseeed";
+/** @internal */
 export const SPORTS_HACK_2026_LUMA_EMBED_ID = "evt-tTiu9jkwv4jVVxx";
 export const SPORTS_HACK_2026_LUMA_URL = `https://luma.com/${SPORTS_HACK_2026_LUMA_SLUG}`;
 
@@ -34,9 +36,12 @@ export const SPORTS_HACK_2026_CAPACITY = 119;
  * the top SPORTS_HACK_2026_CAPACITY also receive a Cursor credit link.
  */
 export const SPORTS_HACK_2026_ATTENDANCE_LIMIT = 200;
+/** @internal */
 export const SPORTS_HACK_2026_TIMEZONE = "America/New_York";
 export const SPORTS_HACK_2026_EVENT_DATE = "2026-05-26";
+/** @internal */
 export const SPORTS_HACK_2026_START_HOUR_ET = 10;
+/** @internal */
 export const SPORTS_HACK_2026_END_HOUR_ET = 16;
 export const SPORTS_HACK_2026_LOCATION = "Cambridge, MA";
 
@@ -46,12 +51,14 @@ export const SPORTS_HACK_2026_LOCATION = "Cambridge, MA";
  * be auto-filtered from the leaderboard or the Luma import. If/when sports
  * hack picks named judges, add them here.
  */
+/** @internal */
 export const SPORTS_HACK_2026_JUDGE_EMAILS: ReadonlySet<string> = new Set();
 
 /**
  * Luma registrants who have declined — excluded from participant list.
  * Populated as organizers confirm declines from each Luma export.
  */
+/** @internal */
 export const SPORTS_HACK_2026_DECLINED_EMAILS: ReadonlySet<string> = new Set();
 
 /**
@@ -78,6 +85,7 @@ export type SportsHack2026RankTone =
   | "climb"
   | "far";
 
+/** @internal */
 export interface SportsHack2026RankTier {
   label: string;
   detail: string;

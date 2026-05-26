@@ -7,6 +7,7 @@
 
 import type { SpellDefinition } from "../../../types";
 
+/** @internal */
 export const GREEN_DISARM_SPELLS: SpellDefinition[] = [
   {
     id: "green-disarm-grovebind",

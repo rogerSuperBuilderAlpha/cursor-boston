@@ -16,7 +16,6 @@
 
 import "@/__tests__/app/_shared/page-test-setup";
 
-import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 
 const mockFit = jest.fn(() => ({ tx: 10, ty: 20, scale: 1.5 }));

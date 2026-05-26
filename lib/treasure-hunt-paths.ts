@@ -14,11 +14,13 @@ import { createHash, timingSafeEqual } from "crypto";
  * never rendered in HTML or shipped to the client; everything lives here.
  */
 
+/** @internal */
 export type PathVerifier = (
   submittedAnswer: string,
   context: { uid: string; email: string }
 ) => boolean | Promise<boolean>;
 
+/** @internal */
 export type TreasureHuntPath = {
   id: string;
   name: string;
@@ -149,6 +151,7 @@ export const TREASURE_HUNT_PATHS: Record<string, TreasureHuntPath> = {
   },
 };
 
+/** @internal */
 export function listPaths(): TreasureHuntPath[] {
   return Object.values(TREASURE_HUNT_PATHS);
 }

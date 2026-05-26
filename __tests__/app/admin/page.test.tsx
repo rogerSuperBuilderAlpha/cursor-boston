@@ -12,7 +12,6 @@
  * when-signed-out, render-when-admin.
  */
 
-import React from "react";
 import { render, screen } from "@testing-library/react";
 
 const mockPush = jest.fn();

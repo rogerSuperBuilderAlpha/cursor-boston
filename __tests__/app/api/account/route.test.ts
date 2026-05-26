@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { DELETE } from "@/app/api/account/route";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase-admin";

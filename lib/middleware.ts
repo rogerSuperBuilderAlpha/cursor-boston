@@ -103,6 +103,7 @@ function rateLimitDeniedResponse(
  * @param request - The incoming Next.js request
  * @returns True if the origin is allowed, false otherwise
  */
+/** @internal */
 export function isOriginAllowed(request: NextRequest): boolean {
   // Skip origin check for safe methods
   const method = request.method.toUpperCase();
@@ -163,6 +164,7 @@ export function isOriginAllowed(request: NextRequest): boolean {
  * @param handler - The API route handler to wrap
  * @returns A new handler with CSRF protection applied
  */
+/** @internal */
 export function withCsrfProtection(
   handler: (request: NextRequest) => Promise<NextResponse>
 ) {
@@ -343,6 +345,7 @@ export function withMiddleware(
  * @param handler - The API route handler to wrap
  * @returns A new handler with CSRF protection and logging applied
  */
+/** @internal */
 export function withSecurityMiddleware(
   handler: (request: NextRequest) => Promise<NextResponse>
 ) {

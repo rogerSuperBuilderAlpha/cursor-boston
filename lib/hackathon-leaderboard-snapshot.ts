@@ -40,9 +40,11 @@ import { getGithubRepoPair } from "@/lib/github-recent-merged-prs";
 import { fetchSportsHack2026SubmissionAuthors } from "@/lib/sports-hack-2026-submission-prs";
 import { SUMMER_COHORT_COLLECTION } from "@/lib/summer-cohort";
 
+/** @internal */
 export const HACKATHON_LEADERBOARD_SNAPSHOTS_COLLECTION =
   "hackathonLeaderboardSnapshots";
 
+/** @internal */
 export type LeaderboardEntryStatus = "confirmed" | "waitlisted";
 
 /**
@@ -54,6 +56,7 @@ export type LeaderboardEntryStatus = "confirmed" | "waitlisted";
  *   `hackathonLumaRegistrants`, no matching website signup)
  * - `null` — event uses the freeze model (hack-a-sprint-2026); tier is inert
  */
+/** @internal */
 export type LeaderboardEntryTier = "A" | "B" | "C" | null;
 
 export interface LeaderboardEntry {
@@ -111,6 +114,7 @@ export interface LeaderboardEntry {
   hasSubmission: boolean;
 }
 
+/** @internal */
 export interface LeaderboardPayload {
   entries: LeaderboardEntry[];
   totalCount: number;
@@ -129,6 +133,7 @@ export interface LeaderboardPayload {
   attendanceLimit: number;
 }
 
+/** @internal */
 export interface LeaderboardSnapshot extends LeaderboardPayload {
   /** ISO-8601 timestamp of when the snapshot was generated. */
   generatedAt: string;
@@ -224,6 +229,7 @@ async function countMergedCommunityPrsByUserIds(
   return counts;
 }
 
+/** @internal */
 export interface BuildLeaderboardPayloadOptions {
   /**
    * Bulk merged-PR counts (lowercased login → count) to pass to
@@ -762,6 +768,7 @@ export async function buildLeaderboardPayload(
  * Read the persisted snapshot for an event. Returns null if no snapshot has
  * been written yet (callers should fall through to {@link refreshSnapshot}).
  */
+/** @internal */
 export async function readSnapshot(
   eventId: string
 ): Promise<LeaderboardSnapshot | null> {

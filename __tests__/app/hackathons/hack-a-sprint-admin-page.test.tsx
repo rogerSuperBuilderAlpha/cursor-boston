@@ -19,7 +19,7 @@
  */
 
 import React from "react";
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 const mockUseAuth = jest.fn();
 jest.mock("@/contexts/AuthContext", () => ({
@@ -398,7 +398,7 @@ describe("AdminDashboardPage (hack-a-sprint-2026)", () => {
         checkedIn: false,
       },
     ];
-    const fetchMock = jest.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+    const fetchMock = jest.fn(async (input: RequestInfo | URL, _init?: RequestInit) => {
       const url = String(input);
       if (url.includes("admin-dashboard")) {
         return { ok: true, status: 200, json: async () => buildDashboardPayload() };

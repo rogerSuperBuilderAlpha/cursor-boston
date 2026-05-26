@@ -7,6 +7,7 @@
 
 /** Hero names for the White caste. Order-faithful, almost monastic tone
  *  — knights, scholars, paladins. */
+/** @internal */
 export const WHITE_HERO_NAMES: ReadonlyArray<string> = [
   "Sir Ashvane",
   "Dame Lyric",

@@ -9,8 +9,11 @@ export const LIVE_TALK_DURATIONS = [3, 5] as const;
 
 export type LiveTalkDurationMinutes = (typeof LIVE_TALK_DURATIONS)[number];
 
+/** @internal */
 export type LiveSessionStatus = "pending" | "live" | "completed" | "cancelled";
+/** @internal */
 export type LiveTimerStatus = "idle" | "running" | "paused" | "completed";
+/** @internal */
 export type LiveQueueEntryStatus = "queued" | "live" | "completed" | "skipped" | "removed";
 export type LiveSessionControlAction =
   | "start-next"
@@ -22,6 +25,7 @@ export type LiveSessionControlAction =
   | "move-entry"
   | "end-session";
 
+/** @internal */
 export interface LiveSessionTimerState {
   status: LiveTimerStatus;
   durationSeconds: number;
@@ -31,12 +35,14 @@ export interface LiveSessionTimerState {
   warningThresholds: number[];
 }
 
+/** @internal */
 export interface LiveSessionCurrentSpeaker {
   entryId: string | null;
   speakerName: string | null;
   talkTitle: string | null;
 }
 
+/** @internal */
 export interface LiveSessionRealtimeRecord {
   id: string;
   status: LiveSessionStatus;
@@ -52,6 +58,7 @@ export interface LiveSessionRealtimeRecord {
   history: LiveSessionHistoryRecord[];
 }
 
+/** @internal */
 export interface LiveSessionArchiveRecord {
   sessionId: string;
   title: string;
@@ -67,6 +74,7 @@ export interface LiveSessionArchiveRecord {
   history: LiveSessionHistoryRecord[];
 }
 
+/** @internal */
 export interface LiveQueueEntryRecord {
   id: string;
   sessionId: string;
@@ -80,17 +88,20 @@ export interface LiveQueueEntryRecord {
   updatedAtMs: number;
 }
 
+/** @internal */
 export interface CreateLiveSessionInput {
   title: string;
   emceeUid: string;
   emceeName: string;
 }
 
+/** @internal */
 export interface CreatedLiveSession {
   sessionId: string;
   session: LiveSessionRealtimeRecord;
 }
 
+/** @internal */
 export interface EnqueueSpeakerInput {
   sessionId: string;
   userId: string;
@@ -100,6 +111,7 @@ export interface EnqueueSpeakerInput {
   durationMinutes: LiveTalkDurationMinutes;
 }
 
+/** @internal */
 export interface LiveSessionHistoryRecord {
   entryId: string;
   userId: string;
@@ -111,6 +123,7 @@ export interface LiveSessionHistoryRecord {
   finishedAtMs: number;
 }
 
+/** @internal */
 export interface ControlLiveSessionInput {
   sessionId: string;
   emceeUid: string;

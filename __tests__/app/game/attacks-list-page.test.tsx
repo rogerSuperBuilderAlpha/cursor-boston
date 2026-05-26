@@ -14,7 +14,6 @@
  * + attacker vs defender perspective.
  */
 
-import React from "react";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 const mockUseAuth = jest.fn();
@@ -160,7 +159,7 @@ describe("AttackLogPage — list", () => {
 
   it("Load more invokes fetch with cursor param", async () => {
     let callCount = 0;
-    global.fetch = jest.fn(async (url: string) => {
+    global.fetch = jest.fn(async (_url: string) => {
       callCount++;
       return {
         ok: true,

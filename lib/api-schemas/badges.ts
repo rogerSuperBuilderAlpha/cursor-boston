@@ -19,6 +19,7 @@ const c = initContract();
 
 const PassthroughOk = z.object({}).passthrough();
 
+/** @internal */
 export const badgesContract = c.router(
   {
     definitions: {

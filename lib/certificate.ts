@@ -12,9 +12,11 @@ import type { SummerCohortId } from "@/lib/summer-cohort";
 export const CERTIFICATES_COLLECTION = "certificates";
 export const CERTIFICATE_PR_THRESHOLD = 10;
 export const CERTIFICATE_NAME = "Cursor Boston Open Source Contributor";
+/** @internal */
 export const LINKEDIN_ORGANIZATION_ID = "112955918";
 
 /** LinkedIn certification titles for cohort weekly vote winners. */
+/** @internal */
 export const COHORT_WINNER_CERT_NAMES: Partial<
   Record<SummerCohortId, Partial<Record<string, string>>>
 > = {

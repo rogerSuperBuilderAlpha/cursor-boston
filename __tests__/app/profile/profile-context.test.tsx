@@ -13,7 +13,7 @@
  * error path by rendering the provider with a minimal mock graph.
  */
 
-import React, { useEffect } from "react";
+import { useEffect  } from "react";
 import { act, render } from "@testing-library/react";
 
 const mockUpdatePassword = jest.fn();

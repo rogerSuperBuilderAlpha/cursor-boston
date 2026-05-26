@@ -13,7 +13,6 @@
  * progress bar render, singular vs plural artifact copy, and the
  * non-numeric-input guard.
  */
-import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 
 import { BulkUnassign } from "@/app/game/_components/dashboard/BulkUnassign";

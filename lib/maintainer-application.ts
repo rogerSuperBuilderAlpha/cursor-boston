@@ -11,8 +11,10 @@ import { getGithubRepoWebBaseUrl } from "@/lib/github-recent-merged-prs";
 export const MAINTAINER_APPLICATION_BRANCH = "maintainer-application";
 
 /** Application JSON schema version stored in each file. */
+/** @internal */
 export const MAINTAINER_APPLICATION_SCHEMA_VERSION = 1 as const;
 
+/** @internal */
 export type MaintainerApplicationSchemaVersion =
   typeof MAINTAINER_APPLICATION_SCHEMA_VERSION;
 
@@ -20,6 +22,7 @@ export type MaintainerApplicationSchemaVersion =
  * Payload submitted as a single JSON file in a PR to {@link MAINTAINER_APPLICATION_BRANCH}.
  * `githubLogin` and `discordUsername` must match the connections on cursorboston.com.
  */
+/** @internal */
 export interface MaintainerApplicationPayload {
   schemaVersion: MaintainerApplicationSchemaVersion;
   githubLogin: string;

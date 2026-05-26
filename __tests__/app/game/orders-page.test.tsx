@@ -14,7 +14,6 @@
  * order, includeExecuted query param.
  */
 
-import React from "react";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 const mockUseAuth = jest.fn();

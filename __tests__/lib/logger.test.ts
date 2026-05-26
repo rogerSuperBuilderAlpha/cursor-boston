@@ -1,4 +1,4 @@
-import { logger, LogLevel } from '@/lib/logger';
+import { logger } from '@/lib/logger';
 
 // Mock console methods
 const originalConsole = { ...console };

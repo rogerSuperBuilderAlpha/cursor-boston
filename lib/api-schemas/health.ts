@@ -23,6 +23,7 @@ const HealthResponse = z
   })
   .openapi("HealthCheckResponse");
 
+/** @internal */
 export const healthContract = c.router(
   {
     check: {

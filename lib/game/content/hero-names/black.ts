@@ -7,6 +7,7 @@
 
 /** Hero names for the Black caste. Necromantic, shrouded, plural-personae
  *  tone — assassins, oracles, dread-knights. */
+/** @internal */
 export const BLACK_HERO_NAMES: ReadonlyArray<string> = [
   "The Hollow Drask",
   "Karven the Unseeing",

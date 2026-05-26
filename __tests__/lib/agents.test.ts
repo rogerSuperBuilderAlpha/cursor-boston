@@ -19,7 +19,7 @@ import {
   Agent,
 } from "@/lib/agents";
 import { getAdminDb } from "@/lib/firebase-admin";
-import { Timestamp, FieldValue } from "firebase-admin/firestore";
+import { Timestamp } from "firebase-admin/firestore";
 
 jest.mock("@/lib/firebase-admin", () => ({
   getAdminDb: jest.fn(),
@@ -48,31 +48,6 @@ function makeRequest(authHeader?: string): NextRequest {
   return new NextRequest("http://localhost/api/test", { headers });
 }
 
-function makeMockDb(overrides: Record<string, unknown> = {}) {
-  const defaultDb = {
-    collection: jest.fn(() => ({
-      add: jest.fn(async () => ({ id: "new-doc-id" })),
-      doc: jest.fn(() => ({
-        update: jest.fn(async () => {}),
-        get: jest.fn(async () => ({ exists: true, data: () => ({}) })),
-      })),
-      where: jest.fn(() => ({
-        get: jest.fn(async () => ({ empty: true, docs: [] })),
-        where: jest.fn(() => ({
-          get: jest.fn(async () => ({ empty: true, docs: [] })),
-          orderBy: jest.fn(() => ({
-            get: jest.fn(async () => ({ empty: true, docs: [] })),
-          })),
-        })),
-        orderBy: jest.fn(() => ({
-          get: jest.fn(async () => ({ empty: true, docs: [] })),
-        })),
-      })),
-    })),
-    ...overrides,
-  };
-  return defaultDb;
-}
 
 // ---------------------------------------------------------------------------
 // Key Generation & Hashing

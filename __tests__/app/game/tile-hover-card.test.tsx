@@ -16,7 +16,6 @@
 
 import "@/__tests__/app/_shared/page-test-setup";
 
-import React from "react";
 import { render, screen } from "@testing-library/react";
 
 import { TileHoverCard } from "@/app/game/tiles/_components/TileHoverCard";

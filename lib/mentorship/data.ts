@@ -32,6 +32,7 @@ export async function getMentorshipProfile(userId: string): Promise<MentorshipPr
   return { ...snap.data(), userId: snap.id } as MentorshipProfile;
 }
 
+/** @internal */
 export async function getAllActiveMentorshipProfiles(): Promise<MentorshipProfile[]> {
   if (!db) return [];
   const q = query(
@@ -44,6 +45,7 @@ export async function getAllActiveMentorshipProfiles(): Promise<MentorshipProfil
   return snapshot.docs.map((d) => ({ ...d.data(), userId: d.id })) as MentorshipProfile[];
 }
 
+/** @internal */
 export async function getMentorshipPairingsForUser(userId: string): Promise<MentorshipPairing[]> {
   if (!db) return [];
   // Fetch as mentor and mentee separately since Firestore doesn't support OR on different fields

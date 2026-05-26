@@ -33,24 +33,28 @@ const ORDER_QUEUE = "game_order_queue";
 
 // Errors -----------------------------------------------------------------
 
+/** @internal */
 export class QueuedOrderQueueFullError extends Error {
   constructor(public cap: number) {
     super(`Order queue full — cap is ${cap} pending orders.`);
     this.name = "QueuedOrderQueueFullError";
   }
 }
+/** @internal */
 export class QueuedOrderNotFoundError extends Error {
   constructor() {
     super("Queued order not found.");
     this.name = "QueuedOrderNotFoundError";
   }
 }
+/** @internal */
 export class QueuedOrderForbiddenError extends Error {
   constructor() {
     super("That order is not yours.");
     this.name = "QueuedOrderForbiddenError";
   }
 }
+/** @internal */
 export class QueuedOrderInvalidParamsError extends Error {
   constructor(message: string) {
     super(message);
@@ -192,6 +196,7 @@ export async function cancelOrderServer(args: {
  * Mark a queued order as `executed` or `failed` inside the caller's
  * transaction. Used by the weekly-rollover executor.
  */
+/** @internal */
 export function markOrderResultInTx(args: {
   tx: Transaction;
   db: Firestore;
@@ -220,6 +225,7 @@ export function markOrderResultInTx(args: {
  * Kept here (not inlined into the executor) so the queued-orders unit
  * tests can mock the read independently of the dispatch logic.
  */
+/** @internal */
 export async function readQueuedOrdersForPlayer(
   db: Firestore,
   playerId: string

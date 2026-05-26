@@ -11,6 +11,7 @@ import type { PairProfile, MatchScore } from "./types";
  * Calculate match score between two profiles based on complementary skills
  * Returns a score from 0-100 and reasons for the match
  */
+/** @internal */
 export function calculateMatchScore(
   profile1: PairProfile,
   profile2: PairProfile

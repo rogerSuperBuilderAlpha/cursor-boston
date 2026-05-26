@@ -1,4 +1,3 @@
-import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { AnswerCard } from "@/components/questions/AnswerCard";
 import type { Answer } from "@/types/questions";

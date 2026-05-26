@@ -4,7 +4,6 @@
  * OpenSSF Silver coverage — Hack-a-Sprint 2026 admin dashboard route.
  */
 import { GET } from "@/app/api/hackathons/showcase/hack-a-sprint-2026/admin-dashboard/route";
-import { HACK_A_SPRINT_2026_EVENT_ID } from "@/lib/hackathon-showcase";
 import { getVerifiedUser, isCurrentIdTokenRevoked } from "@/lib/server-auth";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";

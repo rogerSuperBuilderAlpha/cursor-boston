@@ -7,6 +7,7 @@
 
 import type { SpellDefinition } from "../../../types";
 
+/** @internal */
 export const GREEN_SIEGE_SPELLS: SpellDefinition[] = [
   {
     id: "green-siege-rootbreak",

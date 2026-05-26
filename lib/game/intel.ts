@@ -32,6 +32,7 @@ const RPS_COUNTERS: Record<UnitType, UnitType> = {
   air: "siege",
 };
 
+/** @internal */
 export type IntelScope =
   | IntelDepth
   | "kingdom+supply"
@@ -44,6 +45,7 @@ export type IntelScope =
  * staleness here is acceptable. The intel is a point-in-time read of public
  * server state.
  */
+/** @internal */
 export async function buildIntelReportServer(args: {
   db: Firestore;
   targetTileId: string;
@@ -159,6 +161,7 @@ export async function buildIntelReportServer(args: {
 // Exported for unit tests. The "weak face" of a defender stack is the
 // unit type their dominant slot is countered by under the standard
 // air→ground→siege→air RPS — i.e. what an attacker should lead with.
+/** @internal */
 export function pickWeakFace(units: UnitStack): UnitType | undefined {
   let max = 0;
   let dominant: UnitType | undefined;

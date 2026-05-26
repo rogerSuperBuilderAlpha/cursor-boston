@@ -22,7 +22,6 @@ import {
   makeChain,
   makeDoc,
   makeFakeDb,
-  makeQuerySnap,
 } from "@/__tests__/_helpers/firebase-admin-mock";
 import { BASE_PLAYER, BASE_TILE, buildGameMutationDb } from "@/__tests__/_helpers/game-mutation-db";
 

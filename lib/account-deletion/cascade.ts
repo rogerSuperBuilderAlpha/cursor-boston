@@ -29,6 +29,7 @@ import { logger } from "@/lib/logger";
 const BATCH_SIZE = 500;
 const PROGRESS_COLLECTION = "accountDeletions";
 
+/** @internal */
 export type DeletionStepReport = {
   collection: string;
   mode: UserOwnedCollection["mode"];
@@ -38,6 +39,7 @@ export type DeletionStepReport = {
   skipped: boolean; // true when this step was already completed in a prior pass
 };
 
+/** @internal */
 export type DeletionReport = {
   uid: string;
   startedAt: number;

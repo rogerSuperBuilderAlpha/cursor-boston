@@ -15,7 +15,6 @@
 
 import "@/__tests__/app/_shared/page-test-setup";
 
-import React from "react";
 import { render, screen } from "@testing-library/react";
 
 import { SealsPanel } from "@/app/game/_components/dashboard/SealsPanel";

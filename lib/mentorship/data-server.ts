@@ -52,6 +52,7 @@ export async function getMentorshipProfileServer(userId: string): Promise<Mentor
  * @deprecated Prefer `getMentorshipMatchCandidatesServer`. Each call costs
  * one Firestore read per active profile.
  */
+/** @internal */
 export async function getAllActiveMentorshipProfilesServer(): Promise<MentorshipProfile[]> {
   const adminDb = getAdminDb();
   if (!adminDb) return [];
@@ -272,6 +273,7 @@ export async function respondToMentorshipRequestServer(
   });
 }
 
+/** @internal */
 export async function getMentorshipPairingsForUserServer(userId: string): Promise<MentorshipPairing[]> {
   const adminDb = getAdminDb();
   if (!adminDb) return [];
@@ -290,6 +292,7 @@ export async function getMentorshipPairingsForUserServer(userId: string): Promis
   return pairings;
 }
 
+/** @internal */
 export async function addCheckInServer(
   checkIn: Omit<MentorshipCheckIn, "id" | "createdAt">
 ): Promise<string> {
@@ -302,6 +305,7 @@ export async function addCheckInServer(
   return ref.id;
 }
 
+/** @internal */
 export async function updateGoalStatusServer(
   pairingId: string,
   goalId: string,

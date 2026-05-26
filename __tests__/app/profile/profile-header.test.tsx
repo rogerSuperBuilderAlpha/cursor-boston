@@ -14,7 +14,6 @@
  * while in-flight + error display).
  */
 
-import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 
 jest.mock("@/components/Avatar", () => ({

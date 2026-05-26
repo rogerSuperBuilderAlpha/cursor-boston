@@ -18,6 +18,7 @@ export function cn(...classes: (string | undefined | null | false)[]): string {
  * Get initials from a name string.
  * Returns first letter of first and last name, or single letter if only one word.
  */
+/** @internal */
 export function getInitials(name: string | null | undefined): string {
   const trimmed = name?.trim();
   if (!trimmed) return "?";

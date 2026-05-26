@@ -17,6 +17,7 @@ import { GREEN_HERO_NAMES } from "./green";
 import { RED_HERO_NAMES } from "./red";
 import { WHITE_HERO_NAMES } from "./white";
 
+/** @internal */
 export const HERO_NAMES_BY_CASTE: Record<Caste, ReadonlyArray<string>> = {
   black: BLACK_HERO_NAMES,
   red: RED_HERO_NAMES,
@@ -27,4 +28,5 @@ export const HERO_NAMES_BY_CASTE: Record<Caste, ReadonlyArray<string>> = {
 
 /** Fallback for any caste whose pool is empty (shouldn't happen in v1
  *  but keeps `pickHeroName` total). */
+/** @internal */
 export const FALLBACK_HERO_NAME = "Nameless Hero";

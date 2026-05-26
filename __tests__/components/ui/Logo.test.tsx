@@ -1,4 +1,3 @@
-import React from "react";
 import { render, screen } from "@testing-library/react";
 import Logo from "@/components/Logo";
 
@@ -7,7 +6,7 @@ jest.mock("next/image", () => ({
   default: (props: Record<string, unknown>) => {
     const { fill, priority, ...rest } = props;
     return (
-      // eslint-disable-next-line jsx-a11y/alt-text, @next/next/no-img-element
+      // eslint-disable-next-line @next/next/no-img-element
       <img
         data-fill={fill ? "true" : undefined}
         data-priority={priority ? "true" : undefined}

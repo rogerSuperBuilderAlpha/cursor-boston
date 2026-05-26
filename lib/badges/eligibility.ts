@@ -14,6 +14,7 @@ import {
 
 type NormalizedBadgeEligibilityInput = Required<BadgeEligibilityInput>;
 
+/** @internal */
 export function normalizeBadgeEligibilityInput(
   input: BadgeEligibilityInput
 ): NormalizedBadgeEligibilityInput {

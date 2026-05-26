@@ -22,7 +22,7 @@ function parseServiceAccount() {
 
   try {
     return JSON.parse(raw);
-  } catch (error) {
+  } catch {
     throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON is not valid JSON");
   }
 }
@@ -126,6 +126,7 @@ export function getAdminAuth(): Auth | null {
  * Initializes the instance on first call and reuses it on subsequent calls.
  * @returns The Database instance, or null when no supported Admin SDK credentials are configured.
  */
+/** @internal */
 export function getAdminRtdb(): Database | null {
   if (adminRtdb) {
     return adminRtdb;

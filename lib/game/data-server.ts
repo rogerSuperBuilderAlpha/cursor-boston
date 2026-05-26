@@ -182,12 +182,16 @@ import {
   riskScore,
 } from "./exploration";
 
+/** @internal */
 export const ATTACK_TURN_COST = 1;
+/** @internal */
 export const SPELL_TURN_COST = 5;
+/** @internal */
 export const BUILD_UNITS_TURN_COST = 5;
 // Siege action: a deterministic infrastructure-degrading move. Costs 5
 // turns, applies SIEGE_ACTION_MAGNITUDE (0.10) to the target's
 // standing-defense floor, stacks up to SIEGE_DEBUFF_MAX_MAGNITUDE.
+/** @internal */
 export const SIEGE_TURN_COST = 5;
 // Recruit rate is per-land-type as of the May 2026 mechanics rework:
 // food/magic tiles now recruit at half the military rate, since training
@@ -197,7 +201,9 @@ export const SIEGE_TURN_COST = 5;
 // `BUILD_UNITS_PER_TURN` is kept exported as the military baseline so any
 // external consumer reading "the recruit rate" still sees a sensible value;
 // internal cycle math uses `unitsPerTurnForLand(landType)`.
+/** @internal */
 export const BUILD_UNITS_PER_TURN = 10;
+/** @internal */
 export const BUILD_UNITS_PER_TURN_BY_LAND: Record<LandType, number> = {
   unrevealed: 0,
   unassigned: 0,
@@ -205,6 +211,7 @@ export const BUILD_UNITS_PER_TURN_BY_LAND: Record<LandType, number> = {
   food: 5,
   magic: 5,
 };
+/** @internal */
 export function unitsPerTurnForLand(landType: LandType): number {
   return BUILD_UNITS_PER_TURN_BY_LAND[landType] ?? 0;
 }
@@ -360,102 +367,119 @@ function magicHeroSpellMultiplier(
 // -15% defense floor until the player grows neighbors around it.
 export const FAR_EXPEDITION_TURN_COST = 2;
 
+/** @internal */
 export class GamePlayerNotFoundError extends Error {
   constructor() {
     super("Game player not found");
     this.name = "GamePlayerNotFoundError";
   }
 }
+/** @internal */
 export class GamePlayerAlreadyExistsError extends Error {
   constructor() {
     super("Game player already exists");
     this.name = "GamePlayerAlreadyExistsError";
   }
 }
+/** @internal */
 export class GameTileNotFoundError extends Error {
   constructor() {
     super("Tile not found");
     this.name = "GameTileNotFoundError";
   }
 }
+/** @internal */
 export class GameTileNotOwnedError extends Error {
   constructor() {
     super("Tile not owned by player");
     this.name = "GameTileNotOwnedError";
   }
 }
+/** @internal */
 export class GameInvalidPhaseError extends Error {
   constructor(expected: string, actual: string) {
     super(`Invalid phase: expected ${expected}, got ${actual}`);
     this.name = "GameInvalidPhaseError";
   }
 }
+/** @internal */
 export class GameInsufficientTurnsError extends Error {
   constructor(required: number, have: number) {
     super(`Insufficient turns: need ${required}, have ${have}`);
     this.name = "GameInsufficientTurnsError";
   }
 }
+/** @internal */
 export class GameNoUnrevealedTilesError extends Error {
   constructor() {
     super("No unrevealed tiles remaining to explore");
     this.name = "GameNoUnrevealedTilesError";
   }
 }
+/** @internal */
 export class GameAlreadyRevealedError extends Error {
   constructor() {
     super("Tile is already revealed");
     this.name = "GameAlreadyRevealedError";
   }
 }
+/** @internal */
 export class GameTileUnrevealedError extends Error {
   constructor() {
     super("Tile must be revealed via explore before it can be distributed");
     this.name = "GameTileUnrevealedError";
   }
 }
+/** @internal */
 export class GameCasteAlreadySetError extends Error {
   constructor() {
     super("Caste already chosen and locked");
     this.name = "GameCasteAlreadySetError";
   }
 }
+/** @internal */
 export class GameCasteChangeUnavailableError extends Error {
   constructor(reason: string) {
     super(`Caste change unavailable: ${reason}`);
     this.name = "GameCasteChangeUnavailableError";
   }
 }
+/** @internal */
 export class GameInvalidLandTypeError extends Error {
   constructor(t: string) {
     super(`Invalid land type for distribute: ${t}`);
     this.name = "GameInvalidLandTypeError";
   }
 }
+/** @internal */
 export class GameInvalidCasteError extends Error {
   constructor(c: string) {
     super(`Invalid caste: ${c}`);
     this.name = "GameInvalidCasteError";
   }
 }
+/** @internal */
 export class GameShieldedError extends Error {
   constructor(side: "attacker" | "defender") {
     super(`Action blocked: ${side} is under the new-player shield wall`);
     this.name = "GameShieldedError";
   }
 }
+/** @internal */
 export class GameNotAdjacentError extends Error {
   constructor() {
     super("Source tile does not border the target tile");
     this.name = "GameNotAdjacentError";
   }
 }
+/** @internal */
 export class GameSelfAttackError extends Error {
   constructor() {
     super("Cannot attack a tile you own");
     this.name = "GameSelfAttackError";
   }
 }
+/** @internal */
 export class GameTileFullError extends Error {
   constructor(public availableSpace: number, public requested: number) {
     super(
@@ -464,18 +488,21 @@ export class GameTileFullError extends Error {
     this.name = "GameTileFullError";
   }
 }
+/** @internal */
 export class GameInsufficientUnitsError extends Error {
   constructor() {
     super("Source tile does not have the requested units");
     this.name = "GameInsufficientUnitsError";
   }
 }
+/** @internal */
 export class GameInvalidSpellError extends Error {
   constructor(reason: string) {
     super(`Invalid spell: ${reason}`);
     this.name = "GameInvalidSpellError";
   }
 }
+/** @internal */
 export class GameUnitCapExceededError extends Error {
   constructor(public cap: number, public currentTotal: number) {
     super(
@@ -484,12 +511,14 @@ export class GameUnitCapExceededError extends Error {
     this.name = "GameUnitCapExceededError";
   }
 }
+/** @internal */
 export class GameTileTypeError extends Error {
   constructor(expected: string, got: string) {
     super(`Tile must be ${expected}, got ${got}`);
     this.name = "GameTileTypeError";
   }
 }
+/** @internal */
 export class GameFrontierExhaustedError extends Error {
   constructor() {
     super(
@@ -498,42 +527,49 @@ export class GameFrontierExhaustedError extends Error {
     this.name = "GameFrontierExhaustedError";
   }
 }
+/** @internal */
 export class GameArtifactNotFoundError extends Error {
   constructor() {
     super("Artifact not found");
     this.name = "GameArtifactNotFoundError";
   }
 }
+/** @internal */
 export class GameArtifactAlreadyUsedError extends Error {
   constructor() {
     super("Artifact has already been used");
     this.name = "GameArtifactAlreadyUsedError";
   }
 }
+/** @internal */
 export class GamePlayerBioTooLongError extends Error {
   constructor() {
     super("Bio cannot exceed 500 characters");
     this.name = "GamePlayerBioTooLongError";
   }
 }
+/** @internal */
 export class GameInscriptionTooLongError extends Error {
   constructor() {
     super("Inscription cannot exceed 120 characters");
     this.name = "GameInscriptionTooLongError";
   }
 }
+/** @internal */
 export class GameInvalidNameError extends Error {
   constructor(reason: string) {
     super(`Invalid general name: ${reason}`);
     this.name = "GameInvalidNameError";
   }
 }
+/** @internal */
 export class GameNameTakenError extends Error {
   constructor() {
     super("That general name is already in use");
     this.name = "GameNameTakenError";
   }
 }
+/** @internal */
 export class GameNoEnemyKingdomsError extends Error {
   constructor() {
     super(
@@ -543,6 +579,7 @@ export class GameNoEnemyKingdomsError extends Error {
   }
 }
 
+/** @internal */
 export class GameArmageddonInProgressError extends Error {
   constructor() {
     super(
@@ -552,6 +589,7 @@ export class GameArmageddonInProgressError extends Error {
   }
 }
 
+/** @internal */
 export class GameStaleSeasonError extends Error {
   constructor(playerSeason: number, worldSeason: number) {
     super(
@@ -561,6 +599,7 @@ export class GameStaleSeasonError extends Error {
   }
 }
 
+/** @internal */
 export class GameSealsExhaustedError extends Error {
   constructor() {
     super(
@@ -572,6 +611,7 @@ export class GameSealsExhaustedError extends Error {
 
 /** Thrown when summon/unsummon references a special-unit instance the
  *  player doesn't have in their pool. */
+/** @internal */
 export class GameSpecialUnitNotFoundError extends Error {
   constructor(instanceId: string) {
     super(`Special unit instance ${instanceId} not found in your pool.`);
@@ -582,6 +622,7 @@ export class GameSpecialUnitNotFoundError extends Error {
 /** Thrown when a special-unit summon targets a tile that already has the
  *  same instance stationed (idempotency guard) or is already stationed
  *  somewhere else (caller must unsummon first). */
+/** @internal */
 export class GameSpecialUnitAlreadyStationedError extends Error {
   constructor() {
     super(
@@ -592,6 +633,7 @@ export class GameSpecialUnitAlreadyStationedError extends Error {
 }
 
 // Zero-turn gameplay errors -----------------------------------------------
+/** @internal */
 export class GameDefensiveStanceBlockedError extends Error {
   constructor() {
     super(
@@ -600,6 +642,7 @@ export class GameDefensiveStanceBlockedError extends Error {
     this.name = "GameDefensiveStanceBlockedError";
   }
 }
+/** @internal */
 export class GameDefensiveStanceLockedError extends Error {
   constructor() {
     super(
@@ -608,60 +651,70 @@ export class GameDefensiveStanceLockedError extends Error {
     this.name = "GameDefensiveStanceLockedError";
   }
 }
+/** @internal */
 export class GameDefensiveStanceCapError extends Error {
   constructor(public cap: number) {
     super(`You can have at most ${cap} tile(s) in defensive stance.`);
     this.name = "GameDefensiveStanceCapError";
   }
 }
+/** @internal */
 export class GameMeditationSlotFullError extends Error {
   constructor() {
     super("You already have a hero in meditation.");
     this.name = "GameMeditationSlotFullError";
   }
 }
+/** @internal */
 export class GameHeroAlreadyMeditatingError extends Error {
   constructor() {
     super("That hero is already meditating.");
     this.name = "GameHeroAlreadyMeditatingError";
   }
 }
+/** @internal */
 export class GameHeroNotOwnedError extends Error {
   constructor() {
     super("That hero is not yours.");
     this.name = "GameHeroNotOwnedError";
   }
 }
+/** @internal */
 export class GameHeroNotFoundError extends Error {
   constructor() {
     super("Hero not found.");
     this.name = "GameHeroNotFoundError";
   }
 }
+/** @internal */
 export class GamePepTalkRequiresZeroTurnsError extends Error {
   constructor() {
     super("Pep talks are only available when you have 0 turns remaining.");
     this.name = "GamePepTalkRequiresZeroTurnsError";
   }
 }
+/** @internal */
 export class GameRedistributeRateLimitError extends Error {
   constructor(public retryAfterMs: number) {
     super("You've used your daily redistribution allowance.");
     this.name = "GameRedistributeRateLimitError";
   }
 }
+/** @internal */
 export class GameLastStandCooldownError extends Error {
   constructor(public retryAfterMs: number) {
     super("Last Stand is still on cooldown.");
     this.name = "GameLastStandCooldownError";
   }
 }
+/** @internal */
 export class GameLastStandRequiresZeroTurnsError extends Error {
   constructor() {
     super("Last Stand is only available when you have 0 turns remaining.");
     this.name = "GameLastStandRequiresZeroTurnsError";
   }
 }
+/** @internal */
 export class GameLastStandNoThreatError extends Error {
   constructor() {
     super("No inbound attack threat detected on that tile.");
@@ -830,6 +883,7 @@ export async function getPlayerServer(
   return snap.exists ? (snap.data() as GamePlayer) : null;
 }
 
+/** @internal */
 export async function getOwnedTilesServer(userId: string): Promise<GameTile[]> {
   const db = adminDbOrThrow();
   const snap = await db
@@ -1060,6 +1114,7 @@ export async function getMapTilesInBoundsServer(bounds: {
   return out;
 }
 
+/** @internal */
 export interface OwnerSummary {
   userId: string;
   displayName: string;
@@ -1080,6 +1135,7 @@ export interface OwnerSummary {
 // border ring + 1 batched docRef.getAll() for owner summaries. For a
 // 25-tile spawn cluster: ~25 + ~30 + ~5 = ~60 reads (vs ~500 for the
 // full-world fetch). Scales with kingdom perimeter, not world size.
+/** @internal */
 export interface MyMapView {
   myTiles: MapTile[];
   borderTiles: MapTile[];
@@ -1209,6 +1265,7 @@ export async function getTileServer(tileId: string): Promise<GameTile | null> {
 // the v1 "explore" phase was reinstated as the first step of the onboarding
 // wizard. All 100 are claimed-but-unrevealed at spawn; the wizard drives the
 // player through revealing them via setupExploreServer (1 turn each).
+/** @internal */
 export const NEW_PLAYER_TILE_COUNT = 100;
 const NEW_PLAYER_CONTIGUOUS = 80;
 const NEW_PLAYER_EXCLAVES_MIN = 3;
@@ -1792,6 +1849,7 @@ export async function bulkDistributeTilesServer(
 // caste pick (chooseCasteServer) is treated as "experimental" — once the
 // player reaches this many tiles held they can switch castes once more,
 // and that second pick is permanent (casteChangesUsed flips to 1).
+/** @internal */
 export const CASTE_CHANGE_TILES_THRESHOLD = 1000;
 
 // One-time caste switch after the player has built up real territory. Same
@@ -2264,6 +2322,7 @@ export async function buildUnitsServer(
   });
 }
 
+/** @internal */
 export interface BulkBuildPlanEntry {
   tileId: string;
   unitType: UnitType;
@@ -5470,6 +5529,7 @@ export async function adminGrantUnitsServer(args: {
   });
 }
 
+/** @internal */
 export interface WeeklyRolloverSummary {
   weekStartIso: string;
   scanned: number;
@@ -5583,6 +5643,7 @@ export async function runWeeklyRolloverServer(
 
 // Case-insensitive uniqueness check. Excludes `excludeUserId` so a player
 // can re-save their own current name (no-op rename).
+/** @internal */
 export async function isGeneralNameTakenServer(
   name: string,
   excludeUserId?: string

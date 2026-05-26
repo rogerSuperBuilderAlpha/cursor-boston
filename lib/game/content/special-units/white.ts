@@ -9,6 +9,7 @@ import type { SpecialUnitDef } from "../../types";
 
 /** White caste — order-faithful named units summoned by farm heroes.
  *  Contributors: append additional `SpecialUnitDef`s here. */
+/** @internal */
 export const WHITE_SPECIAL_UNITS: ReadonlyArray<SpecialUnitDef> = [
   {
     id: "white-knight-of-the-broken-lance",

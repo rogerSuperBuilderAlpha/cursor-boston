@@ -17,7 +17,6 @@
  * disabled-button branches.
  */
 
-import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 
 // Mock the hook BEFORE importing the component so we can swap the

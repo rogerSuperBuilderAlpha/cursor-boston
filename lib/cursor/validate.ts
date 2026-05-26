@@ -5,6 +5,7 @@
  * See LICENSE file for details.
  */
 
+/** @internal */
 export interface CursorAccountInfo {
   modelsAvailable: string[];
   defaultModel?: string;

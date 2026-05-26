@@ -15,6 +15,7 @@ import {
   isWithinSummerCohortC1AutoAdmitWindow,
 } from "./summer-cohort";
 
+/** @internal */
 export type AutoAdmitOutcome =
   | { kind: "skipped"; reason: string }
   | { kind: "promoted"; userId: string; applicationId: string };

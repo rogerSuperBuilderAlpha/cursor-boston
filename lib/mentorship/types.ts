@@ -9,10 +9,13 @@ import type { Timestamp } from "firebase/firestore";
 
 export type MentorshipRole = "mentor" | "mentee" | "both";
 
+/** @internal */
 export type MentorshipRequestStatus = "pending" | "accepted" | "declined" | "cancelled";
 
+/** @internal */
 export type PairingStatus = "active" | "completed" | "cancelled";
 
+/** @internal */
 export type GoalStatus = "in-progress" | "completed" | "dropped";
 
 export interface MentorshipAvailability {
@@ -47,6 +50,7 @@ export interface MentorshipProfile {
   normalizedLearningGoals?: string[];
 }
 
+/** @internal */
 export interface MentorshipGoal {
   id: string;
   description: string;
@@ -54,6 +58,7 @@ export interface MentorshipGoal {
   completedAt?: Timestamp | Date;
 }
 
+/** @internal */
 export interface MentorshipRequest {
   id?: string;
   fromUserId: string;
@@ -66,6 +71,7 @@ export interface MentorshipRequest {
   updatedAt: Timestamp | Date;
 }
 
+/** @internal */
 export interface MentorshipPairing {
   id?: string;
   mentorId: string;
@@ -78,6 +84,7 @@ export interface MentorshipPairing {
   updatedAt: Timestamp | Date;
 }
 
+/** @internal */
 export interface MentorshipCheckIn {
   id?: string;
   pairingId: string;

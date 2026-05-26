@@ -10,6 +10,7 @@ import type { SpellDefinition } from "../../../types";
 // Black pays in blood for the deepest read — a kingdom-wide audit, but the
 // caster sacrifices an air unit at cast time. The defender feels the spy
 // (alerted, +20% defense vs caster for 5 turns) — handled in the cast server.
+/** @internal */
 export const BLACK_INTEL_SPELLS: SpellDefinition[] = [
   {
     id: "black-intel-vein-of-truth-t2",

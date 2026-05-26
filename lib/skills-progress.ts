@@ -13,10 +13,13 @@ import type {
   BadgeId,
 } from "@/lib/badges/types";
 
+/** @internal */
 export const SKILL_LEVELS = ["started", "practiced", "verified", "mentor"] as const;
 
+/** @internal */
 export type SkillLevel = (typeof SKILL_LEVELS)[number];
 
+/** @internal */
 export interface SkillCatalogItem {
   id: string;
   trackId: string;
@@ -27,6 +30,7 @@ export interface SkillCatalogItem {
   relatedBadgeIds: BadgeId[];
 }
 
+/** @internal */
 export interface SkillProgressItem {
   skillId: string;
   trackId: string;
@@ -39,6 +43,7 @@ export interface SkillProgressItem {
   evidenceRequirements: string[];
 }
 
+/** @internal */
 export interface SkillsProgressSummary {
   totalSkills: number;
   practicedSkills: number;
@@ -47,6 +52,7 @@ export interface SkillsProgressSummary {
   averageProgressPercent: number;
 }
 
+/** @internal */
 export interface SkillsProgressPayload {
   catalog: SkillCatalogItem[];
   progress: SkillProgressItem[];

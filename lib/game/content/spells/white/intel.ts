@@ -9,6 +9,7 @@ import type { SpellDefinition } from "../../../types";
 
 // White's spy is a single-target lens — pinpoint, never misses, never spreads.
 // "Long defense" lore: White watches its own walls, not its neighbors'.
+/** @internal */
 export const WHITE_INTEL_SPELLS: SpellDefinition[] = [
   {
     id: "white-intel-watchers-vigil-t2",

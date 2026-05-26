@@ -7,6 +7,7 @@
 
 import type { ArtifactDefinition } from "../../types";
 
+/** @internal */
 export const RARE_ARTIFACTS: ArtifactDefinition[] = [
   {
     id: "rare-stormglass-ward",

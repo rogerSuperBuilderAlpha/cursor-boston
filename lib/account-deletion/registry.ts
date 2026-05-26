@@ -18,6 +18,7 @@
  * file fails CI on the same PR that introduced the collection.
  */
 
+/** @internal */
 export type DeletionBehavior =
   | { type: "delete" }
   | { type: "anonymize"; scrubFields?: readonly string[] };
@@ -38,6 +39,7 @@ export type DeletionBehavior =
  *    Firestore does not cascade subcollections when the parent user doc is
  *    deleted, so these entries must be cleaned up explicitly.
  */
+/** @internal */
 export type UserOwnedCollection =
   | {
       collection: string;
@@ -74,6 +76,7 @@ export type UserOwnedCollection =
  * Collections that hold user-owned data and must be cleaned up on account
  * deletion. Order is unimportant; the cascade is idempotent and per-step.
  */
+/** @internal */
 export const userOwnedCollections: ReadonlyArray<UserOwnedCollection> = [
   // ---------------------------------------------------------------------
   // docIdIsUid — single doc per user
@@ -254,6 +257,7 @@ export const userOwnedCollections: ReadonlyArray<UserOwnedCollection> = [
  * tables, public reference data, server-only buckets, or business
  * objects keyed by something other than user identity).
  */
+/** @internal */
 export const KNOWN_NON_USER_COLLECTIONS: ReadonlySet<string> = new Set([
   // Email + auth lookups (not keyed to a single uid; PII purge handled separately)
   "emailLookup",
@@ -340,6 +344,7 @@ export const KNOWN_NON_USER_COLLECTIONS: ReadonlySet<string> = new Set([
 /**
  * Convenience: list of just the collection names that get cascaded.
  */
+/** @internal */
 export const userOwnedCollectionNames: ReadonlySet<string> = new Set(
   userOwnedCollections.map((c) => c.collection)
 );

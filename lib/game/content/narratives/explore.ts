@@ -108,6 +108,7 @@ const AI_EXPLORE_NARRATIVES: string[] = [
   "The captain's lead rider waves the column to a halt: a small herd of deer crossing in single file, taking their time.",
 ];
 
+/** @internal */
 export const EXPLORE_NARRATIVES: string[] = [
   ...HUMAN_EXPLORE_NARRATIVES,
   ...AI_EXPLORE_NARRATIVES,

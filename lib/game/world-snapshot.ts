@@ -42,13 +42,17 @@ export {
 } from "./world-snapshot-codec";
 export type { CompactTile } from "./world-snapshot-codec";
 
+/** @internal */
 export const WORLD_SNAPSHOT_COLLECTION = "game_world_snapshots";
+/** @internal */
 export const WORLD_SNAPSHOT_DOC = "latest";
 // Soft TTL — readers tolerate serving stale snapshots a bit past this
 // window (CDN cache will revalidate eventually). The cron / weekly-NPC
 // hooks rebuild well within this budget so the staleness flag is rare.
+/** @internal */
 export const WORLD_SNAPSHOT_TTL_MS = 5 * 60 * 1000;
 
+/** @internal */
 export interface WorldSnapshotOwner {
   userId: string;
   displayName: string;
@@ -60,6 +64,7 @@ export interface WorldSnapshotOwner {
   isNpc: boolean;
 }
 
+/** @internal */
 export interface WorldSnapshot {
   tiles: MapTile[];
   owners: WorldSnapshotOwner[];
@@ -90,6 +95,7 @@ interface StoredWorldSnapshot {
 // projections used by `getAllMapTilesServer` and `getAllOwnerSummariesServer`,
 // so the snapshot's payload is identical to what those functions returned
 // pre-snapshot — just delivered in one doc.
+/** @internal */
 export async function computeWorldSnapshot(
   db: Firestore,
   now: Date = new Date()

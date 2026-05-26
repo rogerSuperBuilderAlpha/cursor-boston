@@ -15,7 +15,6 @@ import {
   changeCasteServer,
   GameCasteChangeUnavailableError,
   GameHeroNotFoundError,
-  GameMeditationSlotFullError,
   GamePepTalkRequiresZeroTurnsError,
   GamePlayerNotFoundError,
   listArmageddonHistoryServer,

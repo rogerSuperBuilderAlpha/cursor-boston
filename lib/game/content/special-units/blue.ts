@@ -8,6 +8,7 @@
 import type { SpecialUnitDef } from "../../types";
 
 /** Blue caste — sky-reader, sea-bound, hawkish. */
+/** @internal */
 export const BLUE_SPECIAL_UNITS: ReadonlyArray<SpecialUnitDef> = [
   {
     id: "blue-storm-mariner",

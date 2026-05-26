@@ -7,6 +7,7 @@
 
 import { HACK_A_SPRINT_2026_EVENT_ID } from "@/lib/hackathon-showcase";
 
+/** @internal */
 export type SubmissionIdentity = {
   submissionId: string;
   githubLogin: string;

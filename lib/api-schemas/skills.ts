@@ -74,6 +74,7 @@ const SkillsProgressResponse = z
   })
   .openapi("SkillsProgressResponse");
 
+/** @internal */
 export const skillsContract = c.router(
   {
     progress: {

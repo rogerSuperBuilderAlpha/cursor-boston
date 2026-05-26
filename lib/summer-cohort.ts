@@ -66,6 +66,7 @@ export type SummerCohortStatus =
   | "waitlist"
   | "withdrawn";
 
+/** @internal */
 export interface SummerCohortApplication {
   userId: string;
   email: string;
@@ -95,6 +96,7 @@ export function isValidCohortId(value: unknown): value is SummerCohortId {
   return value === "cohort-1" || value === "cohort-2";
 }
 
+/** @internal */
 export interface SummerCohortWeek {
   week: number;
   title: string;
@@ -165,24 +167,29 @@ export const SUMMER_COHORT_DEMO_DAY = {
 } as const;
 
 // TODO: swap in the real Zoom link before 2026-05-11.
+/** @internal */
 export const SUMMER_COHORT_C1_ZOOM_URL_PLACEHOLDER =
   "https://zoom.us/j/PLACEHOLDER";
 
 // TODO: swap in the real Discord invite link before kickoff.
+/** @internal */
 export const SUMMER_COHORT_C1_DISCORD_INVITE_URL_PLACEHOLDER =
   "https://discord.gg/PLACEHOLDER";
 
 // TODO: swap in the real Zoom link before 2026-06-29.
+/** @internal */
 export const SUMMER_COHORT_C2_ZOOM_URL_PLACEHOLDER =
   "https://zoom.us/j/PLACEHOLDER-C2";
 
 // TODO: swap in the real Discord invite link / channel URL before kickoff.
+/** @internal */
 export const SUMMER_COHORT_C2_DISCORD_INVITE_URL_PLACEHOLDER =
   "https://discord.gg/PLACEHOLDER-C2";
 
 /** Hard cap on Cohort 1 admits. Auto-admit-on-PR-merge respects this.
  *  Bumped 2026-05-10 when we admitted everyone who applied to lock the roster
  *  before the May 11 kickoff. */
+/** @internal */
 export const SUMMER_COHORT_C1_CAP = 200;
 
 /** PR-merge auto-admit deadline.
@@ -225,12 +232,14 @@ export const SUMMER_COHORT_C1_WEEK_1 = {
 // shape: open a PR adding a JSON pointer file, get AI-scored, top 5 + 3
 // wildcards present on Friday for the cohort vote. Dates and Zoom links are
 // placeholders for weeks 2 and 3 — finalize closer to date.
+/** @internal */
 export interface SummerCohortInspirationPlatform {
   name: string;
   url: string;
   takeaway: string;
 }
 
+/** @internal */
 export interface SummerCohortVotingCallZoom {
   /** Zoom join URL — used by the "Join the call" CTA. */
   url: string;
@@ -461,6 +470,7 @@ export const SUMMER_COHORT_C1_VOTE_WEEKS: readonly SummerCohortVoteWeek[] = [
   },
 ] as const;
 
+/** @internal */
 export const SUMMER_COHORT_C1_WEEK_4 = {
   week: 4,
   title: "Ludwitt Education Tool",
@@ -471,6 +481,7 @@ export const SUMMER_COHORT_C1_WEEK_4 = {
   // No vote — every shipped + merged tool counts.
 } as const;
 
+/** @internal */
 export const SUMMER_COHORT_C1_WEEK_5 = {
   week: 5,
   title: "Your Own Startup",
@@ -480,6 +491,7 @@ export const SUMMER_COHORT_C1_WEEK_5 = {
   showAndTellLabel: "Fri, Jun 12 · 6pm EST",
 } as const;
 
+/** @internal */
 export const SUMMER_COHORT_C1_WEEK_6 = {
   week: 6,
   title: "Open-Source PR",
@@ -490,8 +502,10 @@ export const SUMMER_COHORT_C1_WEEK_6 = {
 } as const;
 
 /** Default tab when an admitted cohort-1 user lands on /summer-cohort. */
+/** @internal */
 export const SUMMER_COHORT_C1_DEFAULT_TAB = "week-1" as const;
 
+/** @internal */
 export type SummerCohortWeekTab =
   | "week-1"
   | "week-2"
@@ -500,6 +514,7 @@ export type SummerCohortWeekTab =
   | "week-5"
   | "week-6";
 
+/** @internal */
 export interface SummerCohortWeekDateWindow {
   readonly week: 1 | 2 | 3 | 4 | 5 | 6;
   readonly tab: SummerCohortWeekTab;
@@ -509,6 +524,7 @@ export interface SummerCohortWeekDateWindow {
   readonly deadlineAt?: string;
 }
 
+/** @internal */
 export const SUMMER_COHORT_C1_WEEK_WINDOWS: readonly SummerCohortWeekDateWindow[] = [
   { week: 1, tab: "week-1", kickoffAt: "2026-05-11T22:00:00.000Z", deadlineAt: "2026-05-15T21:00:00.000Z" },
   { week: 2, tab: "week-2", kickoffAt: "2026-05-18T22:00:00.000Z", deadlineAt: "2026-05-22T21:00:00.000Z" },
@@ -533,6 +549,7 @@ export const SUMMER_COHORT_GOAL_PER_COHORT = 100;
 // branch is missing, so the UI still works pre-kickoff.
 // ---------------------------------------------------------------------------
 
+/** @internal */
 export const SUMMER_COHORT_C2_VOTE_WEEKS: readonly SummerCohortVoteWeek[] = [
   {
     week: 1,
@@ -584,6 +601,7 @@ export const SUMMER_COHORT_C2_VOTE_WEEKS: readonly SummerCohortVoteWeek[] = [
   },
 ] as const;
 
+/** @internal */
 export const SUMMER_COHORT_C2_WEEK_4 = {
   week: 4,
   title: "Ludwitt Education Tool",
@@ -592,6 +610,7 @@ export const SUMMER_COHORT_C2_WEEK_4 = {
   deadlineLabel: "Fri, Jul 24 · 5pm EST",
 } as const;
 
+/** @internal */
 export const SUMMER_COHORT_C2_WEEK_5 = {
   week: 5,
   title: "Your Own Startup",
@@ -600,6 +619,7 @@ export const SUMMER_COHORT_C2_WEEK_5 = {
   showAndTellLabel: "Fri, Jul 31 · 6pm EST",
 } as const;
 
+/** @internal */
 export const SUMMER_COHORT_C2_WEEK_6 = {
   week: 6,
   title: "Open-Source PR",
@@ -609,8 +629,10 @@ export const SUMMER_COHORT_C2_WEEK_6 = {
 } as const;
 
 /** Default tab when an admitted cohort-2 user lands on /summer-cohort. */
+/** @internal */
 export const SUMMER_COHORT_C2_DEFAULT_TAB = "week-1" as const;
 
+/** @internal */
 export const SUMMER_COHORT_C2_WEEK_WINDOWS: readonly SummerCohortWeekDateWindow[] = [
   { week: 1, tab: "week-1", kickoffAt: "2026-06-29T22:00:00.000Z", deadlineAt: "2026-07-03T21:00:00.000Z" },
   { week: 2, tab: "week-2", kickoffAt: "2026-07-06T22:00:00.000Z", deadlineAt: "2026-07-10T21:00:00.000Z" },

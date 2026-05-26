@@ -7,6 +7,7 @@
 
 import type { SpellDefinition } from "../../../types";
 
+/** @internal */
 export const GREEN_ATTRITION_SPELLS: SpellDefinition[] = [
   {
     id: "green-attrition-thornbloom",

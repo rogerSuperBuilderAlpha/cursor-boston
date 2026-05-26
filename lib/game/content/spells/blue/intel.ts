@@ -9,6 +9,7 @@ import type { SpellDefinition } from "../../../types";
 
 // Blue's spy spreads through tide and rumor — it sees a wider ring but the
 // tide takes its time. Patient.
+/** @internal */
 export const BLUE_INTEL_SPELLS: SpellDefinition[] = [
   {
     id: "blue-intel-tide-of-whispers-t2",

@@ -99,6 +99,7 @@ function targetDocRef(
   throw new ReactionInvalidScopeError();
 }
 
+/** @internal */
 export interface ToggleReactionResult {
   /** Whether the reaction is now present (true) or removed (false). */
   active: boolean;
@@ -169,6 +170,7 @@ export async function toggleReactionServer(args: {
  * of (scope, docId, emoji) triples. Used by the renderer to pre-fill
  * "you reacted" highlights on initial load. Batched read for cheapness.
  */
+/** @internal */
 export async function listUserReactionsServer(args: {
   userId: string;
   targets: Array<{

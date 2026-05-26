@@ -19,6 +19,7 @@ interface BadgeEligibilityUserContext {
   github?: unknown;
 }
 
+/** @internal */
 export type BadgeDataSource =
   | "stats"
   | "showcaseSubmissions"
@@ -26,6 +27,7 @@ export type BadgeDataSource =
   | "pullRequests"
   | "hackathonParticipation";
 
+/** @internal */
 export type BadgeEligibilityDataState = "complete" | "partial" | "failed";
 
 export interface BadgeEligibilityDataStatus {
@@ -35,6 +37,7 @@ export interface BadgeEligibilityDataStatus {
   message?: string;
 }
 
+/** @internal */
 export interface BadgeEligibilityDataResult {
   input: BadgeEligibilityInput;
   status: BadgeEligibilityDataStatus;
@@ -62,6 +65,7 @@ export function getBaseBadgeEligibilityInput(
   };
 }
 
+/** @internal */
 export function buildBadgeDataStatus(
   sourceStates: Record<BadgeDataSource, "ok" | "error">
 ): BadgeEligibilityDataStatus {
@@ -112,6 +116,7 @@ function logBadgeDataSourceError(
   });
 }
 
+/** @internal */
 export async function getBadgeEligibilityData(user: {
   uid: string;
 } & BadgeEligibilityUserContext): Promise<BadgeEligibilityDataResult> {
@@ -237,6 +242,7 @@ export async function getBadgeEligibilityData(user: {
   };
 }
 
+/** @internal */
 export async function getBadgeEligibilityInput(user: {
   uid: string;
 } & BadgeEligibilityUserContext): Promise<BadgeEligibilityInput> {

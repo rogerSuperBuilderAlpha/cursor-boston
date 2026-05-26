@@ -83,6 +83,7 @@ const AI_DISTRIBUTE_NARRATIVES: string[] = [
   "A small dog watches the steward sign the writ; the steward gives it a piece of bread and the dog leaves.",
 ];
 
+/** @internal */
 export const DISTRIBUTE_NARRATIVES: string[] = [
   ...HUMAN_DISTRIBUTE_NARRATIVES,
   ...AI_DISTRIBUTE_NARRATIVES,

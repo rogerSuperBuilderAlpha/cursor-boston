@@ -12,6 +12,7 @@ import type { SpellDefinition } from "../../../types";
 // = baseStrength × magicMultiplier × casteSpellTypeBonus × dice. Caps at
 // SIEGE_DEBUFF_MAX_MAGNITUDE (0.30) per call. White's caste bonus is 0.85
 // — order is good at holding lines, less suited to breaking them.
+/** @internal */
 export const WHITE_SIEGE_SPELLS: SpellDefinition[] = [
   {
     id: "white-siege-judgement-light",

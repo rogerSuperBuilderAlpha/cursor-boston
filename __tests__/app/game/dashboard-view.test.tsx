@@ -22,7 +22,6 @@
  *   - onRenameCancel
  */
 
-import React from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 
 // ──────────────── Sub-component mocks (replace with prop-readouts) ────────────────

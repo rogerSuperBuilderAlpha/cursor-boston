@@ -11,6 +11,7 @@ import type { SpellDefinition } from "../../../types";
 // defense spell that gets nullified at midpoint dice (1.0). Realized
 // magnitude clamped to [0, 1]. White's caste bonus is 1.30 — purification
 // is a White specialty.
+/** @internal */
 export const WHITE_DISARM_SPELLS: SpellDefinition[] = [
   {
     id: "white-disarm-purification",

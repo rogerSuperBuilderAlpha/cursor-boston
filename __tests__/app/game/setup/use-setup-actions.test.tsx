@@ -7,7 +7,7 @@
  * @jest-environment jsdom
  */
 
-import React, { useEffect } from "react";
+import { useEffect  } from "react";
 import { act, render } from "@testing-library/react";
 import { useSetupActions } from "@/app/game/setup/_lib/use-setup-actions";
 

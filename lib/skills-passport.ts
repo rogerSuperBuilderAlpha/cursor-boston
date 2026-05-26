@@ -13,6 +13,7 @@ import type {
 } from "@/lib/badges/types";
 import { getEarnedBadgeIds } from "@/lib/badges/utils";
 
+/** @internal */
 export interface SkillTrackDefinition {
   id: string;
   name: string;
@@ -20,6 +21,7 @@ export interface SkillTrackDefinition {
   badgeIds: BadgeId[];
 }
 
+/** @internal */
 export interface SkillTrackProgress extends SkillTrackDefinition {
   earnedCount: number;
   totalCount: number;
@@ -27,6 +29,7 @@ export interface SkillTrackProgress extends SkillTrackDefinition {
   badges: BadgeDefinition[];
 }
 
+/** @internal */
 export interface NextSkillMilestone {
   badge: BadgeDefinition;
   current: number;
@@ -36,6 +39,7 @@ export interface NextSkillMilestone {
   percent: number;
 }
 
+/** @internal */
 export interface SkillsPassportSummary {
   earnedBadgeIds: BadgeId[];
   earnedCount: number;
@@ -45,6 +49,7 @@ export interface SkillsPassportSummary {
   nextMilestones: NextSkillMilestone[];
 }
 
+/** @internal */
 export const SKILL_TRACKS: SkillTrackDefinition[] = [
   {
     id: "foundation",

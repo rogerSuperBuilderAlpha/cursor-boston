@@ -8,6 +8,7 @@
 /** Standing Zoom for the weekly maintainer sync (add to your calendar). */
 export const MAINTAINER_ZOOM_JOIN_URL = "https://bentley.zoom.us/j/98208744264";
 
+/** @internal */
 export const MAINTAINER_ZOOM_MEETING_ID = "98208744264";
 
 export const MAINTAINER_ZOOM_MEETING_ID_DISPLAY = "982 0874 4264";

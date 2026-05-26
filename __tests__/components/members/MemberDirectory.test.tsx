@@ -7,7 +7,7 @@ jest.mock("next/image", () => ({
   __esModule: true,
   default: (props: Record<string, unknown>) => {
     const { fill, ...rest } = props;
-    // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
+    // eslint-disable-next-line @next/next/no-img-element
     return <img data-fill={fill ? "true" : undefined} {...rest} />;
   },
 }));
@@ -49,8 +49,6 @@ jest.mock("@/components/skeletons/MemberCardSkeleton", () => ({
   MemberCardSkeleton: () => <div data-testid="member-skeleton" />,
 }));
 
-// --- useMembers mock state ---
-type SetFilters = (fn: (f: MemberFilters) => MemberFilters) => void;
 
 const defaultFilters: MemberFilters = {
   hasDiscord: false,

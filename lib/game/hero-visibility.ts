@@ -39,6 +39,7 @@ import { neighborTileIds } from "./world-gen";
 /** A deceased hero's history + location is fully public. Past-season
  *  heroes (in limbo, awaiting resurrection) are also treated as fully
  *  public — they're between worlds, no longer strategic. */
+/** @internal */
 export function isHeroFullyPublic(hero: Pick<GameHeroDoc, "isDeceased" | "awaitingResurrection">): boolean {
   return hero.isDeceased || hero.awaitingResurrection;
 }
@@ -50,6 +51,7 @@ export function isHeroFullyPublic(hero: Pick<GameHeroDoc, "isDeceased" | "awaiti
  *
  * Returns an empty set for viewers who own no tiles (newcomers).
  */
+/** @internal */
 export async function computeViewerNeighborTileSet(
   db: Firestore,
   viewerId: string
@@ -78,6 +80,7 @@ export async function computeViewerNeighborTileSet(
  * Hides `currentTileId` and `stamina` when the viewer isn't entitled
  * to see them. Sets `hasBackstory` from the generated content index.
  */
+/** @internal */
 export function applyHeroVisibility(
   hero: GameHeroDoc,
   viewerId: string,
@@ -119,6 +122,7 @@ export function applyHeroVisibility(
  * living heroes, events belong to the tenure of `ownerIdAtTime` and are
  * only visible to that owner (covers both current and past owners).
  */
+/** @internal */
 export function applyEventVisibility(
   event: Pick<GameHeroEvent, "ownerIdAtTime">,
   viewerId: string,
@@ -131,6 +135,7 @@ export function applyEventVisibility(
 /** Reads the viewer's owned tiles directly (used by callers that want
  *  to skip the bigger neighbor query — e.g. when filtering My Heroes
  *  by `currentOwnerId == viewerId` only). */
+/** @internal */
 export async function computeViewerOwnedTileIds(
   db: Firestore,
   viewerId: string

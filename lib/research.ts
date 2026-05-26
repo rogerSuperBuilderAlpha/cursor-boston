@@ -9,8 +9,11 @@ import fs from "node:fs";
 import path from "node:path";
 import { z } from "zod";
 
+/** @internal */
 export const RESEARCH_ENTRIES_DIR = "content/research/entries";
+/** @internal */
 export const RESEARCH_README_PATH = "content/research/README.md";
+/** @internal */
 export const RESEARCH_REPO_FILE_BASE =
   "https://github.com/rogerSuperBuilderAlpha/cursor-boston/blob/develop/content/research/entries";
 export const RESEARCH_REPO_NEW_FILE_URL =
@@ -147,6 +150,7 @@ const CfpSchema = BaseSchema.extend({
   status: z.enum(["open", "paused", "closed"]).default("open"),
 });
 
+/** @internal */
 export const ResearchEntrySchema = z.discriminatedUnion("type", [
   ActiveResearchSchema,
   WorkingPaperSchema,
@@ -168,6 +172,7 @@ export type DatasetEntry = z.infer<typeof DatasetSchema>;
 export type CollaborationEntry = z.infer<typeof CollaborationSchema>;
 export type CfpEntry = z.infer<typeof CfpSchema>;
 
+/** @internal */
 export interface LoadedResearchEntry {
   entry: ResearchEntry;
   /** Relative path from repo root (e.g. content/research/entries/<slug>.json). */
@@ -180,8 +185,10 @@ export interface LoadedResearchEntry {
  * feed alive — every recruitment platform that didn't enforce this ends
  * up with a graveyard of dead listings.
  */
+/** @internal */
 export const RECRUITING_AUTO_HIDE_DAYS_PAST_DEADLINE = 14;
 /** CFP past-deadline auto-hide window — slightly longer than studies. */
+/** @internal */
 export const CFP_AUTO_HIDE_DAYS_PAST_DEADLINE = 21;
 
 export function isActiveResearch(e: ResearchEntry): e is ActiveResearchEntry {
@@ -207,6 +214,7 @@ export function isActiveResearchPastDeadline(
   return new Date(e.deadline).getTime() < now.getTime();
 }
 
+/** @internal */
 export function shouldAutoHideActiveResearch(
   e: ActiveResearchEntry,
   now: Date = new Date()
@@ -226,6 +234,7 @@ export function isCfpPastDeadline(
   return new Date(e.submissionDeadline).getTime() < now.getTime();
 }
 
+/** @internal */
 export function shouldAutoHideCfp(
   e: CfpEntry,
   now: Date = new Date()
@@ -319,6 +328,7 @@ export function filterVisible(
   });
 }
 
+/** @internal */
 export function isSample(entry: ResearchEntry): boolean {
   return entry.isSample === true;
 }

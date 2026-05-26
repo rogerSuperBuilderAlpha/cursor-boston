@@ -165,7 +165,7 @@ export function getSwappableFirebaseHandles(): {
   setAuth: (next: unknown) => void;
   setStorage: (next: unknown) => void;
 } {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
+   
   const mod = require("@/lib/firebase") as {
     __setDb: (next: unknown) => void;
     __setAuth: (next: unknown) => void;

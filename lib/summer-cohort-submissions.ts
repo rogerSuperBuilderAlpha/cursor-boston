@@ -16,6 +16,7 @@ import {
   type SummerCohortVoteWeek,
 } from "./summer-cohort";
 
+/** @internal */
 export interface SummerCohortSubmissionFile {
   githubHandle: string;
   repoUrl?: string;
@@ -25,6 +26,7 @@ export interface SummerCohortSubmissionFile {
   competeForWin?: boolean;
 }
 
+/** @internal */
 export interface SummerCohortSubmissionsSummary {
   weekId: string;
   branch: string;

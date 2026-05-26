@@ -29,6 +29,7 @@ const SEQUENCE_PROOF_KEYS: Record<string, string> = {
   a: "A",
 };
 
+/** @internal */
 export function sequenceToHeaderProof(sequence: KonamiSequence): string {
   return sequence
     .map((key) => SEQUENCE_PROOF_KEYS[key] ?? key.slice(0, 1).toUpperCase())
@@ -37,6 +38,7 @@ export function sequenceToHeaderProof(sequence: KonamiSequence): string {
 
 export const KONAMI_SEQUENCE_HEADER = sequenceToHeaderProof(KONAMI_SEQUENCE);
 
+/** @internal */
 export function keyMatchesSequenceValue(key: string, expected: string): boolean {
   return key.toLowerCase() === expected.toLowerCase();
 }

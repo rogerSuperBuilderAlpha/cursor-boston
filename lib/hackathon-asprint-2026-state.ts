@@ -18,6 +18,7 @@ import {
   type SubmissionIdentity,
 } from "@/lib/hackathon-asprint-2026-participant-scoring";
 
+/** @internal */
 export function hackASprint2026PeerVoteDocId(userId: string): string {
   return `${HACK_A_SPRINT_2026_EVENT_ID}__${userId}`;
 }
@@ -28,6 +29,7 @@ export function hackASprint2026ScoreDocId(submissionId: string): string {
 
 export { hackASprint2026ParticipantScoresDocId };
 
+/** @internal */
 export async function userHasHackASprint2026Signup(
   db: Firestore,
   uid: string
@@ -37,6 +39,7 @@ export async function userHasHackASprint2026Signup(
   return snap.exists;
 }
 
+/** @internal */
 export async function userIsCheckedInForHackASprint2026(
   db: Firestore,
   uid: string,
@@ -57,6 +60,7 @@ export async function userIsCheckedInForHackASprint2026(
 /**
  * True when the user has entered a valid 1–10 score for every other submission.
  */
+/** @internal */
 export async function userHackASprint2026PeerVoteComplete(
   db: Firestore,
   uid: string,
@@ -72,6 +76,7 @@ export async function userHackASprint2026PeerVoteComplete(
   return participantBallotComplete(scores, ownGithubLogin, allSubmissions);
 }
 
+/** @internal */
 export async function getParticipantScoresForUser(
   db: Firestore,
   uid: string
@@ -84,6 +89,7 @@ export async function getParticipantScoresForUser(
   );
 }
 
+/** @internal */
 export type HackASprintParticipantScoreDocRow = {
   userId: string;
   scores: Record<string, number>;

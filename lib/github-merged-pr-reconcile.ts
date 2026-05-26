@@ -36,6 +36,7 @@ function githubHeaders(): Record<string, string> {
   return headers;
 }
 
+/** @internal */
 export async function fetchMergedPullRequestsForAuthor(
   githubLogin: string
 ): Promise<SearchMergedPrItem[]> {

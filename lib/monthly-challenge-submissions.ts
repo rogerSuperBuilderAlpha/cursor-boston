@@ -10,7 +10,9 @@ import { sanitizeDocId, sanitizeText, sanitizeUrl } from "@/lib/sanitize";
 export const MONTHLY_CHALLENGES_COLLECTION = "monthlyChallenges";
 export const MONTHLY_CHALLENGE_SUBMISSIONS_COLLECTION = "monthlyChallengeSubmissions";
 
+/** @internal */
 export type MonthlyChallengeStatus = "draft" | "open" | "judging" | "published" | "archived";
+/** @internal */
 export type MonthlyChallengeSubmissionStatus =
   | "draft"
   | "submitted"
@@ -26,6 +28,7 @@ export interface MonthlyChallengeWindow {
   submissionCloseAt?: unknown;
 }
 
+/** @internal */
 export interface MonthlyChallengeSubmissionInput {
   title: string;
   summary: string;
@@ -36,6 +39,7 @@ export interface MonthlyChallengeSubmissionInput {
   submitNow?: boolean;
 }
 
+/** @internal */
 export interface NormalizedMonthlyChallengeSubmission {
   title: string;
   summary: string;
@@ -46,6 +50,7 @@ export interface NormalizedMonthlyChallengeSubmission {
   status: Extract<MonthlyChallengeSubmissionStatus, "draft" | "submitted">;
 }
 
+/** @internal */
 export interface MonthlyChallengeSubmissionValidation {
   data: NormalizedMonthlyChallengeSubmission | null;
   errors: string[];
@@ -113,6 +118,7 @@ export function sanitizeChallengeId(raw: string): string | null {
   return sanitizeDocId(raw);
 }
 
+/** @internal */
 export function isActiveChallengeSubmissionStatus(status: string): boolean {
   return ACTIVE_SUBMISSION_STATUSES.includes(status as MonthlyChallengeSubmissionStatus);
 }

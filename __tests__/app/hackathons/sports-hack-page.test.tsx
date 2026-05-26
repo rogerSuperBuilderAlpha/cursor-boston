@@ -14,7 +14,6 @@
  * null copy, registered-count fallback when data absent.
  */
 
-import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 
 const mockUseAuth = jest.fn();

@@ -20,6 +20,7 @@ import {
 /** In-person / special events with website signup (separate from Luma). */
 export const HACKATHON_EVENT_SIGNUP_IDS = HACKATHON_EVENT_ID_LIST;
 
+/** @internal */
 export type HackathonEventSignupId = HackathonEventId;
 
 export function isHackathonEventSignupId(
@@ -81,6 +82,7 @@ export function getConfirmedCapacityForEvent(eventId: string): number {
  * Returns 0 for events that don't use the second-step "Confirm attendance"
  * flow. Snapshot emits the new attendance fields only when this is > 0.
  */
+/** @internal */
 export function getAttendanceLimitForEvent(eventId: string): number {
   if (eventId === SPORTS_HACK_2026_EVENT_ID) return SPORTS_HACK_2026_ATTENDANCE_LIMIT;
   return 0;
@@ -98,6 +100,7 @@ export function getAttendanceLimitForEvent(eventId: string): number {
  *   at 119 (credit band) and 200 (attendance band) over the concatenated order.
  *   Credit eligibility additionally requires a submission PR on event day.
  */
+/** @internal */
 export type HackathonRankingModel = "freeze" | "three-tier";
 
 export function getRankingModelForEvent(eventId: string): HackathonRankingModel {
@@ -109,6 +112,7 @@ export function getRankingModelForEvent(eventId: string): HackathonRankingModel 
  * Sort key for the combined website + Luma leaderboard (and freeze top-N).
  * PR count desc → website signup before Luma-only → earlier registration first.
  */
+/** @internal */
 export type UnifiedHackathonRankSortFields = {
   mergedPrCount: number;
   source: "website" | "luma_only";

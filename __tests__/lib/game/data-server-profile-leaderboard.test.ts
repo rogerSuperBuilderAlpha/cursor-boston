@@ -31,7 +31,6 @@ import {
   GameInvalidNameError,
   GameNameTakenError,
   GamePlayerBioTooLongError,
-  GamePlayerNotFoundError,
   GameTileNotFoundError,
   GameTileNotOwnedError,
   getLeaderboardServer,

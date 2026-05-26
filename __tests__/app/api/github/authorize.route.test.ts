@@ -3,7 +3,6 @@
  *
  * OpenSSF Gold coverage push #14 — github authorize route.
  */
-import { GET } from "@/app/api/github/authorize/route";
 import { NextRequest } from "next/server";
 
 function makeReq(url: string) {

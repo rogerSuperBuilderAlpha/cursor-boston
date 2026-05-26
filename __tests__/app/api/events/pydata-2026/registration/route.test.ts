@@ -6,7 +6,6 @@
 import { NextRequest } from "next/server";
 import { POST, GET } from "@/app/api/events/pydata-2026/registration/route";
 import { getVerifiedUser } from "@/lib/server-auth";
-import { getAdminDb } from "@/lib/firebase-admin";
 
 jest.mock("@/lib/server-auth", () => ({
   getVerifiedUser: jest.fn(),

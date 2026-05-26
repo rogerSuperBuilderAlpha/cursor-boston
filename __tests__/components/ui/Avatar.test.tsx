@@ -1,13 +1,13 @@
-import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import Avatar from "@/components/Avatar";
 
+/* eslint-disable jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions */
 jest.mock("next/image", () => ({
   __esModule: true,
   default: (props: Record<string, unknown>) => {
-    const { fill, priority, onError, ...rest } = props;
+    const { fill, _priority, onError, ...rest } = props;
     return (
-      // eslint-disable-next-line jsx-a11y/alt-text, @next/next/no-img-element
+      // eslint-disable-next-line @next/next/no-img-element
       <img
         data-fill={fill ? "true" : undefined}
         onClick={() => {

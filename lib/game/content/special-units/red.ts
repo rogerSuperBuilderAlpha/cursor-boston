@@ -8,6 +8,7 @@
 import type { SpecialUnitDef } from "../../types";
 
 /** Red caste — forge-mountain, hammer-on-anvil. */
+/** @internal */
 export const RED_SPECIAL_UNITS: ReadonlyArray<SpecialUnitDef> = [
   {
     id: "red-forge-bound",

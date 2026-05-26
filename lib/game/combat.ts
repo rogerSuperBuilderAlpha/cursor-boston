@@ -68,6 +68,7 @@ const LAND_TYPE_CAPACITY_DELTA: Record<LandType, number> = {
 // Source-tile attack multiplier: applied to the attacker's *total* attack
 // power based on the launch tile's land type. A magic launch tile is
 // neutral on attack (×1) but receives a separate spell-power bonus.
+/** @internal */
 export const LAND_TYPE_ATTACK_MULT: Record<LandType, number> = {
   unrevealed: 1,
   unassigned: 1,
@@ -79,6 +80,7 @@ export const LAND_TYPE_ATTACK_MULT: Record<LandType, number> = {
 // Defender-tile defense multiplier: applied to the defender's total
 // defense power based on the contested tile's land type. Military and
 // magic tiles fortify themselves; food tiles do not.
+/** @internal */
 export const LAND_TYPE_DEFENSE_MULT: Record<LandType, number> = {
   unrevealed: 1,
   unassigned: 1,
@@ -91,6 +93,7 @@ export const LAND_TYPE_DEFENSE_MULT: Record<LandType, number> = {
 // added to defense even if the tile holds zero units. Lets military and
 // magic tiles "garrison themselves" — an empty military tile still
 // resists at 30% of attacker strength, an empty magic tile at 15%.
+/** @internal */
 export const STANDING_DEFENSE_FRACTION: Record<LandType, number> = {
   unrevealed: 0,
   unassigned: 0,
@@ -102,6 +105,7 @@ export const STANDING_DEFENSE_FRACTION: Record<LandType, number> = {
 // Magic-tile spell amplifier: spells cast from / armed on a magic tile
 // have their contribution multiplied by this factor. Stacks
 // multiplicatively on top of the existing magicMultiplier(magicLandCount).
+/** @internal */
 export const MAGIC_TILE_SPELL_MULT = 1.25;
 
 // ──── BASE + SUPER combat (May 2026) ─────────────────────────────────────
@@ -115,6 +119,7 @@ export const MAGIC_TILE_SPELL_MULT = 1.25;
 // favors the defender (target-land mult, supply, intel) so SUPER recruitment
 // is the offensive tipping point. See PLAN at
 // /Users/ludwitt/.claude/plans/write-up-a-plan-federated-babbage.md.
+/** @internal */
 export const LAND_TYPE_BASE: Record<LandType, UnitStack> = {
   unrevealed: { ground: 0, siege: 0, air: 0 },
   unassigned: { ground: 12, siege: 0, air: 3 },
@@ -126,6 +131,7 @@ export const LAND_TYPE_BASE: Record<LandType, UnitStack> = {
 // Caste flavor on BASE COUNTS. Per-unit STAT bonuses are handled by the
 // existing `getCasteProfile(caste).unitTypeBonuses` chain in
 // compositionPower, so we don't duplicate stat tuning here.
+/** @internal */
 export const CASTE_BASE_PROFILE: Record<Caste, Record<UnitType, number>> = {
   red:   { ground: 1.25, siege: 1.10, air: 0.90 },
   white: { ground: 1.10, siege: 1.00, air: 1.00 },
@@ -138,23 +144,27 @@ export const CASTE_BASE_PROFILE: Record<Caste, Record<UnitType, number>> = {
 // loss attribution we route incoming damage through SUPER first, then any
 // overflow into BASE divided by this multiplier. So a 10-HP BASE force tanks
 // damage like a 13-HP force from the attacker's perspective.
+/** @internal */
 export const BASE_DURABILITY_MULT = 1.30;
 
 // On capture, the new owner inherits this fraction of the prior owner's
 // BASE as a residual garrison. The rest is killed / scattered during the
 // occupation. The new owner's caste regens this back toward its own target.
+/** @internal */
 export const BASE_CAPTURE_RETENTION = 0.25;
 
 // Closeness band for stalemates. If |finalAttack/finalDefense - 1| is below
 // this, the outcome is "stalemate" — both sides take partial losses, tile
 // stays with defender. 0.08 ⇒ roughly 8% closeness window, expected to
 // produce 8–15% stalemates on the historical force-ratio distribution.
+/** @internal */
 export const STALEMATE_BAND = 0.08;
 
 // Lazy regen rate per wall-clock hour. Tile heals toward its current
 // baseUnitsTarget at this rate (split across unit types proportional to
 // where BASE is most under-target). Food / magic / unassigned regenerate
 // slowly; military tiles refill at a faster cadence.
+/** @internal */
 export const LAND_TYPE_BASE_REGEN_PER_HOUR: Record<LandType, number> = {
   unrevealed: 0,
   unassigned: 0.5,
@@ -166,7 +176,9 @@ export const LAND_TYPE_BASE_REGEN_PER_HOUR: Record<LandType, number> = {
 // Tile entrenchment ramp — long-held tiles develop fortifications, store
 // rooms, and trained militia. Capped so a month-old kingdom doesn't become
 // invulnerable.
+/** @internal */
 export const ENTRENCHMENT_WEEKLY_BONUS = 0.05;
+/** @internal */
 export const ENTRENCHMENT_MAX_BONUS = 0.25;
 
 const UNDERDOG_SIZE_RATIO = 0.5;
@@ -178,13 +190,17 @@ const RNG_RANGE = 0.2;
 // attrition-spell). A weak roll fizzles meaningfully; a strong roll lands
 // solid effects. Midpoint = 1.0 (no scaling). Surfaced from this module so
 // the sim panel can reproduce the expected midpoint.
+/** @internal */
 export const SPELL_RNG_LOWER = 0.5;
+/** @internal */
 export const SPELL_RNG_RANGE = 1.0;
+/** @internal */
 export const SPELL_RNG_MIDPOINT = SPELL_RNG_LOWER + SPELL_RNG_RANGE / 2;
 
 // Rolls a spell-effectiveness factor in [SPELL_RNG_LOWER, SPELL_RNG_LOWER+
 // SPELL_RNG_RANGE]. Caller multiplies by baseStrength × magicMultiplier
 // × casteSpellTypeBonus to get realized magnitude.
+/** @internal */
 export function rollSpellEffectiveness(rng: () => number): number {
   return SPELL_RNG_LOWER + rng() * SPELL_RNG_RANGE;
 }
@@ -220,6 +236,7 @@ export function realizedSpellMagnitude(args: {
  * Distribution method: per-type round-share with descending-remainder
  * tiebreaks, so a single big stack absorbs the bulk of losses naturally.
  */
+/** @internal */
 export function distributeUnitKills(
   units: UnitStack,
   killCount: number
@@ -268,6 +285,7 @@ export function distributeUnitKills(
 // can't lose more units than were sent). Pure transform on a CombatResult;
 // callers run resolveAttack first, then this. Lives in combat.ts so the
 // rules sit alongside the math they modify.
+/** @internal */
 export function applyFlyoverModifiers(combat: CombatResult): CombatResult {
   const cappedOutcome: AttackOutcome =
     combat.outcome === "captured" ? "repelled" : combat.outcome;
@@ -444,6 +462,7 @@ export function baseUnitsTarget(args: {
  * under-target (so a tile that has air but no ground regenerates ground
  * first). Doesn't overshoot — clamps at target.
  */
+/** @internal */
 export function applyBaseRegen(args: {
   currentBase: UnitStack;
   target: UnitStack;
@@ -529,6 +548,7 @@ export function applyBaseRegen(args: {
  * survives at BASE_CAPTURE_RETENTION (default 25%) — the new owner inherits
  * a residual garrison that regenerates back up under their caste profile.
  */
+/** @internal */
 export function attributeDefenderLosses(args: {
   superBefore: UnitStack;
   baseBefore: UnitStack;
@@ -605,6 +625,7 @@ export function attributeDefenderLosses(args: {
  * was sent from each pool, so an attack drawing 80% from SUPER and 20%
  * from BASE distributes losses similarly.
  */
+/** @internal */
 export function attributeAttackerLosses(args: {
   superSent: UnitStack;
   baseSent: UnitStack;
@@ -638,6 +659,7 @@ export function attributeAttackerLosses(args: {
 // Helper for callers that have a UnitStack and need to know whether it's
 // empty — handy because pieces of code outside combat.ts will start needing
 // to sum SUPER+BASE.
+/** @internal */
 export function addStacks(a: UnitStack, b: UnitStack): UnitStack {
   return {
     ground: a.ground + b.ground,

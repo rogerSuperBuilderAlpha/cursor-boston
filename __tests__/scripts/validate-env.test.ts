@@ -90,6 +90,7 @@ function buildCliEnv(
     ...process.env,
     ...VALID_REQUIRED_ENV,
     NODE_ENV: "production",
+    SKIP_ENV_LOAD: "true",
     ...overrides,
   };
 

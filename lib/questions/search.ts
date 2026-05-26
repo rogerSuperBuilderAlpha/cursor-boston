@@ -6,6 +6,7 @@
  */
 
 /** Returns true if any search term matches the question's title, body, or tags (case-insensitive). */
+/** @internal */
 export function matchesQuestionSearchTerms(
   title: string,
   body: string,

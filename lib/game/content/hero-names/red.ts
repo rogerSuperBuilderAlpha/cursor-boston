@@ -7,6 +7,7 @@
 
 /** Hero names for the Red caste. Forge-mountain, hammer-on-anvil — smiths,
  *  flame-priests, brawlers. */
+/** @internal */
 export const RED_HERO_NAMES: ReadonlyArray<string> = [
   "Hrolfgar Anvil-Wright",
   "Forge-Captain Brunn",

@@ -110,12 +110,14 @@ export const ALL_SPELLS: SpellDefinition[] = [
 
 export const ALL_BUILDINGS: BuildingDefinition[] = BUILDINGS;
 
+/** @internal */
 export const UNITS_BY_ID = new Map<string, UnitDefinition>(
   ALL_UNITS.map((u) => [u.id, u])
 );
 export const SPELLS_BY_ID = new Map<string, SpellDefinition>(
   ALL_SPELLS.map((s) => [s.id, s])
 );
+/** @internal */
 export const BUILDINGS_BY_ID = new Map<string, BuildingDefinition>(
   ALL_BUILDINGS.map((b) => [b.id, b])
 );
@@ -160,6 +162,7 @@ export function getSpellsForCasteAndType(
 
 // Returns the highest-tier spell of (caste, type) the player can cast given
 // their tilesHeld. Returns tier-1 if no higher tier qualifies.
+/** @internal */
 export function getHighestUnlockedSpell(
   caste: Caste,
   type: SpellType,
@@ -174,6 +177,7 @@ export function getHighestUnlockedSpell(
 }
 
 // True if a spell's territory gate is satisfied for the given player size.
+/** @internal */
 export function isSpellUnlocked(
   spell: SpellDefinition,
   tilesHeld: number
@@ -190,6 +194,7 @@ export function buildingForCasteAndLand(
   );
 }
 
+/** @internal */
 export function upgradesForTarget(targetId: string): UpgradeDefinition[] {
   return ALL_UPGRADES.filter((u) => u.targetId === targetId);
 }

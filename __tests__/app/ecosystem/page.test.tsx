@@ -12,7 +12,6 @@
  * Category value, entry detail rendering, empty-entries edge case.
  */
 
-import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 
 let mockEntries: unknown[] = [];

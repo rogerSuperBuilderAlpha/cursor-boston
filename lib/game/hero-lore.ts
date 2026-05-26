@@ -34,8 +34,10 @@ const EPITAPHS = "epitaphs";
 export const MAX_CHAPTER_LENGTH = 2000;
 export const MAX_EPITAPH_LENGTH = 280;
 
+/** @internal */
 export type ChapterStatus = "pending" | "approved";
 
+/** @internal */
 export interface HeroChapter {
   id: string;
   heroId: string;
@@ -51,6 +53,7 @@ export interface HeroChapter {
   deletedByAdmin?: boolean;
 }
 
+/** @internal */
 export interface HeroEpitaph {
   id: string;
   heroId: string;

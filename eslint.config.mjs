@@ -6,6 +6,7 @@ import jsxA11yPlugin from "eslint-plugin-jsx-a11y";
 import importPlugin from "eslint-plugin-import";
 import nextPlugin from "@next/eslint-plugin-next";
 import globals from "globals";
+import unusedImports from "eslint-plugin-unused-imports";
 
 const config = tseslint.config(
   {
@@ -16,6 +17,7 @@ const config = tseslint.config(
       import: fixupPluginRules(importPlugin),
       "jsx-a11y": fixupPluginRules(jsxA11yPlugin),
       "@next/next": nextPlugin,
+      "unused-imports": unusedImports,
     },
     languageOptions: {
       parser: tseslint.parser,
@@ -43,9 +45,22 @@ const config = tseslint.config(
       ...reactHooksPlugin.configs.recommended.rules,
       ...nextPlugin.configs.recommended.rules,
       ...nextPlugin.configs["core-web-vitals"].rules,
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+      "unused-imports/no-unused-imports": "error",
+      "unused-imports/no-unused-vars": [
+        "warn",
+        {
+          "vars": "all",
+          "varsIgnorePattern": "^_",
+          "args": "after-used",
+          "argsIgnorePattern": "^_",
+        },
+      ],
       "import/no-anonymous-default-export": "warn",
       "react/no-unknown-property": "off",
       "react/react-in-jsx-scope": "off",
+      "react/jsx-uses-react": "off",
       "react/prop-types": "off",
       // Accessibility (jsx-a11y) — promoted to `error` per OSS-review Phase 5.1.9.
       // ACCESSIBILITY.md commits the project to WCAG 2.1 AA; advisory `warn`

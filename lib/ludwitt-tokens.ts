@@ -17,6 +17,7 @@ import {
   getLudwittClientSecret,
 } from "./ludwitt-config";
 
+/** @internal */
 export interface LudwittTokens {
   accessToken: string;
   refreshToken: string;
@@ -69,6 +70,7 @@ function readDoc(snap: FirebaseFirestore.DocumentSnapshot): LudwittTokens | null
   };
 }
 
+/** @internal */
 export async function getLudwittTokens(uid: string): Promise<LudwittTokens | null> {
   const snap = await requireDb().collection(LUDWITT_TOKENS_COLLECTION).doc(uid).get();
   return readDoc(snap);
@@ -132,6 +134,7 @@ function sleep(ms: number) {
  * Refresh tokens with a soft Firestore lock. Single-flight: if another caller
  * is already refreshing, wait briefly and re-read the fresh tokens.
  */
+/** @internal */
 export async function refreshLudwittTokens(uid: string): Promise<LudwittTokens> {
   const db = requireDb();
   const ref = db.collection(LUDWITT_TOKENS_COLLECTION).doc(uid);

@@ -89,6 +89,7 @@ const AI_SPELL_PRODUCE_NARRATIVES: string[] = [
   "A scribe records the casting in three separate ledgers; she signs each one with a different pen.",
 ];
 
+/** @internal */
 export const SPELL_PRODUCE_NARRATIVES: string[] = [
   ...HUMAN_SPELL_PRODUCE_NARRATIVES,
   ...AI_SPELL_PRODUCE_NARRATIVES,

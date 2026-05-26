@@ -56,6 +56,7 @@ function attachArtifact(
  *  summon) to a report. Adds narrative lines and stamps a `heroEmerged`
  *  field on `outcome` so the dashboard's DashboardReports can render a
  *  "✨ {name} the {specialty} {class} hero emerged!" line. */
+/** @internal */
 export interface HeroReportExtras {
   heroEmerged?: GameHero | null;
   specialUnitSummoned?: {
@@ -103,6 +104,7 @@ function attachHero(report: TurnReport, extras: HeroReportExtras): TurnReport {
 
 // ───────── explore ─────────
 
+/** @internal */
 export function buildExploreReport(
   turnIndex: number,
   tile: Pick<GameTile, "tileId" | "type">,
@@ -123,6 +125,7 @@ export function buildExploreReport(
 
 // ───────── build ─────────
 
+/** @internal */
 export function buildBuildReport(args: {
   turnIndex: number;
   cost: number;
@@ -158,6 +161,7 @@ export function buildBuildReport(args: {
 
 // ───────── distribute ─────────
 
+/** @internal */
 export function buildDistributeReport(args: {
   turnIndex: number;
   tileId: string;
@@ -179,6 +183,7 @@ export function buildDistributeReport(args: {
 
 // ───────── arm defense spell ─────────
 
+/** @internal */
 export function buildArmDefenseReport(args: {
   turnIndex: number;
   cost: number;
@@ -208,6 +213,7 @@ export function buildArmDefenseReport(args: {
 
 // ───────── cast production spell ─────────
 
+/** @internal */
 export function buildProduceReport(args: {
   turnIndex: number;
   cost: number;
@@ -254,6 +260,7 @@ function pickClosing(outcome: AttackOutcome, rng: () => number): string {
   return pickLine(ATTACK_STALEMATE_CLOSERS, rng);
 }
 
+/** @internal */
 export function buildAttackReport(args: {
   turnIndex: number;
   cost: number;
@@ -372,6 +379,7 @@ const SIEGE_NARRATIVES = [
   "Catapults find their cadence. Stone after stone tests where the wall is weakest.",
 ];
 
+/** @internal */
 export function buildSiegeReport(args: {
   turnIndex: number;
   cost: number;
@@ -417,6 +425,7 @@ const CAST_ATTRITION_NARRATIVES = [
   "The spell does not announce itself. The casualties are quiet about it too.",
 ];
 
+/** @internal */
 export function buildCastSpellReport(args: {
   turnIndex: number;
   cost: number;
@@ -480,6 +489,7 @@ const FLYOVER_NARRATIVES = [
   "Your air column harasses the tile and breaks off — a bruise, not a wound.",
 ];
 
+/** @internal */
 export function buildFlyoverReport(args: {
   turnIndex: number;
   cost: number;

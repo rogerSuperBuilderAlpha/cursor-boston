@@ -12,6 +12,7 @@ import type { SpellDefinition } from "../../../types";
 // × casteSpellTypeBonus × dice; distributed across unit types proportional
 // to current composition. White's caste bonus is 0.85 — Order doesn't
 // poison wells.
+/** @internal */
 export const WHITE_ATTRITION_SPELLS: SpellDefinition[] = [
   {
     id: "white-attrition-decree-of-decimation",

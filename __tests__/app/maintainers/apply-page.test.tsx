@@ -15,7 +15,6 @@
 
 import "@/__tests__/app/_shared/page-test-setup";
 
-import React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import { useAuth } from "@/contexts/AuthContext";

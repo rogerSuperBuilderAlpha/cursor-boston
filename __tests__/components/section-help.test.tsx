@@ -12,7 +12,6 @@
  * prop, hasMore=false (no toggle), FAQ-only, links-only (internal +
  * external mix), className override, Show less label after open.
  */
-import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 
 import { SectionHelp } from "@/components/SectionHelp";

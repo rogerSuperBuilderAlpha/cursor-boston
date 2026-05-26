@@ -7,6 +7,7 @@
 
 import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
 
+/** @internal */
 export interface EncryptedKey {
   ciphertext: string;
   iv: string;
@@ -49,6 +50,7 @@ export function encryptApiKey(plaintext: string): EncryptedKey {
   };
 }
 
+/** @internal */
 export function decryptApiKey(encrypted: EncryptedKey): string {
   const decipher = createDecipheriv(
     "aes-256-gcm",

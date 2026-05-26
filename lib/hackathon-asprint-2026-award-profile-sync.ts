@@ -24,6 +24,7 @@ import { findUserByGitHubLogin } from "@/lib/github";
 /**
  * Same inputs as the public gallery awards (AI rank/score, peer averages).
  */
+/** @internal */
 export async function loadHackASprint2026ShowcaseAwardInputs(
   db: Firestore
 ): Promise<ShowcaseAwardInput[]> {

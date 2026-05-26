@@ -10,14 +10,17 @@ import { SPELLS_BY_ID, getCasteProfile } from "./content";
 import type { ActiveProductionSpell, GamePlayer, Phase } from "./types";
 import { PROPHECY_BONUS_TURNS_MAX } from "./types";
 
+/** @internal */
 export const WEEKLY_TURN_GRANT = 100;
 // Initial bucket granted at spawn. Larger than the weekly grant so a fresh
 // general can clear setup (assign 25 lands, pick a caste) and still have a
 // substantial pool for early recruiting / first attacks before the next
 // Sunday rollover tops up the bucket.
+/** @internal */
 export const STARTING_TURN_GRANT = 300;
 export const SHIELD_DURATION_WEEKS = 3;
 export const SHIELD_TURN_THRESHOLD = 300;
+/** @internal */
 export const UNDERDOG_SIZE_RATIO = 0.5;
 export const PRODUCTION_SPELL_DURATION_TURNS = 100;
 
@@ -49,6 +52,7 @@ export function weekStartIsoForRollover(now: Date): string {
 // Returns the [start, end) window — in UTC milliseconds — covering the 7 days
 // preceding the rollover at `weekStartIso`. PRs whose mergedAt falls in this
 // window unlock the grant for that rollover.
+/** @internal */
 export function priorWeekRangeUtc(weekStartIso: string): { start: Date; end: Date } {
   const end = new Date(`${weekStartIso}T05:00:00.000Z`);
   const start = new Date(end.getTime() - 7 * MS_PER_DAY);
@@ -57,6 +61,7 @@ export function priorWeekRangeUtc(weekStartIso: string): { start: Date; end: Dat
 
 // Returns the UTC instant of the NEXT rollover (Sunday 05:00 UTC = 00:00 EST)
 // strictly after `now`. Used for the dashboard countdown.
+/** @internal */
 export function nextRolloverInstant(now: Date = new Date()): Date {
   const next = new Date(now.getTime());
   // Days until next Sunday (1..7). If today is already Sunday but past 05:00 UTC,
@@ -78,6 +83,7 @@ export function nextRolloverInstant(now: Date = new Date()): Date {
 
 // Returns the window of merged PRs that would unlock the NEXT rollover —
 // i.e. the 7 days ending at the next Sunday-05:00-UTC instant.
+/** @internal */
 export function currentEligibilityWindow(
   now: Date = new Date()
 ): { start: Date; end: Date } {
@@ -86,6 +92,7 @@ export function currentEligibilityWindow(
   return { start, end };
 }
 
+/** @internal */
 export interface NewPlayerOptions {
   initialPhase?: Phase;
   tilesHeld?: number;
@@ -95,10 +102,13 @@ export interface NewPlayerOptions {
 
 // 3-32 chars; letters, digits, spaces, apostrophes, hyphens. No leading/trailing
 // whitespace. Trimmed before storage. Returns the cleaned name on success.
+/** @internal */
 export const GENERAL_NAME_MIN = 3;
+/** @internal */
 export const GENERAL_NAME_MAX = 32;
 const GENERAL_NAME_PATTERN = /^[A-Za-z0-9][A-Za-z0-9 '\-]*[A-Za-z0-9]$/;
 
+/** @internal */
 export function validateGeneralName(raw: string): string {
   if (typeof raw !== "string") {
     throw new Error("Name must be a string");
@@ -118,6 +128,7 @@ export function validateGeneralName(raw: string): string {
   return trimmed;
 }
 
+/** @internal */
 export function newPlayer(
   userId: string,
   createdAt: Date = new Date(),
@@ -148,10 +159,12 @@ export function newPlayer(
   };
 }
 
+/** @internal */
 export function canSpendTurns(player: GamePlayer, n: number): boolean {
   return n >= 0 && player.turnsRemaining >= n;
 }
 
+/** @internal */
 export function spendTurns(
   player: GamePlayer,
   n: number,
@@ -184,6 +197,7 @@ export function isShieldActive(player: GamePlayer, now: Date = new Date()): bool
   return stillInShieldPeriod && stillUnderTurnThreshold;
 }
 
+/** @internal */
 export function isUnderdog(
   attackerUnitsAlive: number,
   defenderUnitsAlive: number
@@ -192,6 +206,7 @@ export function isUnderdog(
   return defenderUnitsAlive < UNDERDOG_SIZE_RATIO * attackerUnitsAlive;
 }
 
+/** @internal */
 export function shouldGrantWeeklyTurns(
   player: GamePlayer,
   mergedThisWeek: boolean,
@@ -208,6 +223,7 @@ export function shouldGrantWeeklyTurns(
 // PROPHECY_BONUS_TURNS_MAX) so a fulfilled prophecy stakes the prophet
 // extra turns on their next grant. The pending counter is zeroed in the
 // returned player; the caller is responsible for writing this back.
+/** @internal */
 export function applyWeeklyGrant(
   player: GamePlayer,
   weekStartIso: string,
@@ -228,6 +244,7 @@ export function applyWeeklyGrant(
 // Auto-advance phase based on observable state. Caller is the one updating
 // tilesExplored / caste; this helper just decides what phase the player should
 // be in given those.
+/** @internal */
 export function nextPhase(player: GamePlayer): Phase {
   if (player.phase === "explore" && player.tilesExplored >= 100) {
     return "distribute";
@@ -240,6 +257,7 @@ export function nextPhase(player: GamePlayer): Phase {
 
 // Drops entries whose expiresAtTurn has lapsed at the given turnsSpentTotal.
 // Pure helper used at spell-cast time to keep productionSpellsActive bounded.
+/** @internal */
 export function pruneExpiredProductionSpells(
   active: ActiveProductionSpell[],
   turnsSpentTotal: number

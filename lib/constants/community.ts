@@ -5,8 +5,10 @@
  * See LICENSE file for details.
  */
 
+/** @internal */
 export const COMMUNITY_RATE_LIMIT_WINDOW_MS = 60_000;
 export const COMMUNITY_RATE_LIMIT_RETRY_AFTER_SECONDS = 60;
+/** @internal */
 export const COMMUNITY_REPORT_RATE_LIMIT_WINDOW_MS = 3_600_000;
 
 export const COMMUNITY_CONTENT_MIN_LENGTH = 100;
@@ -15,13 +17,21 @@ export const COMMUNITY_REPORT_NOTES_MAX_LENGTH = 500;
 export const COMMUNITY_MY_REACTIONS_MAX_MESSAGE_IDS = 60;
 export const COMMUNITY_REACTIONS_QUERY_CHUNK_SIZE = 10;
 
+/** @internal */
 export const COMMUNITY_POST_RATE_LIMIT_MAX_REQUESTS = 10;
+/** @internal */
 export const COMMUNITY_REPLY_RATE_LIMIT_MAX_REQUESTS = 20;
+/** @internal */
 export const COMMUNITY_REPOST_RATE_LIMIT_MAX_REQUESTS = 20;
+/** @internal */
 export const COMMUNITY_REACTION_RATE_LIMIT_MAX_REQUESTS = 60;
+/** @internal */
 export const COMMUNITY_DELETE_RATE_LIMIT_MAX_REQUESTS = 20;
+/** @internal */
 export const COMMUNITY_BLOCK_RATE_LIMIT_MAX_REQUESTS = 30;
+/** @internal */
 export const COMMUNITY_REPORT_RATE_LIMIT_MAX_REQUESTS = 10;
+/** @internal */
 export const COMMUNITY_MY_REACTIONS_RATE_LIMIT_MAX_REQUESTS = 120;
 
 export const COMMUNITY_POST_RATE_LIMIT = {

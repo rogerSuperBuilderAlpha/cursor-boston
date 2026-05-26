@@ -12,6 +12,7 @@ import { logger } from "@/lib/logger";
 const GITHUB_ACCEPT = "application/vnd.github+json";
 const GITHUB_API_VERSION = "2022-11-28";
 
+/** @internal */
 export type MaintainerPrBrief = {
   number: number;
   title: string;
@@ -227,6 +228,7 @@ async function fetchParticipationForPull(
   return { approved, commented: Boolean(commented) };
 }
 
+/** @internal */
 export type MaintainerReviewQueueResult = {
   /** Open PRs to develop (non-draft) where you are not the author and you have not approved. */
   notApproved: MaintainerPrBrief[];

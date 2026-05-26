@@ -11,6 +11,7 @@ import { after } from "next/server";
 import { sendEmail } from "@/lib/mailgun";
 import { emailAlreadyWon } from "@/lib/treasure-hunt-eligibility";
 
+/** @internal */
 export type ClaimResult =
   | { ok: true; code: string; creditUrl: string; pathId: string }
   | {

@@ -95,6 +95,7 @@ export const BADGE_IDS: BadgeId[] = BADGE_DEFINITIONS.map(
   (badge) => badge.id
 );
 
+/** @internal */
 export const BADGE_DEFINITIONS_BY_ID: Record<BadgeId, BadgeDefinition> =
   BADGE_DEFINITIONS.reduce((acc, badge) => {
     acc[badge.id] = badge;

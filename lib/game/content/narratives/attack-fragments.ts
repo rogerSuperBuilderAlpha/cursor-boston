@@ -14,6 +14,7 @@
 //  "Your forces marched out before dawn. After a brutal skirmish across the
 //   border line, the tile fell to your colors. You lost 23 ground; they lost 41."
 
+/** @internal */
 export const ATTACK_OPENINGS: string[] = [
   "Your forces marched out before dawn.",
   "Your captains gave the order at sundown.",
@@ -39,6 +40,7 @@ export const ATTACK_OPENINGS: string[] = [
   "The senior captain gave the order from horseback and the line moved without hesitation.",
 ];
 
+/** @internal */
 export const ATTACK_MIDDLES: string[] = [
   "After a brutal skirmish across the border line",
   "After exchanges of fire that lasted until the sun was high",
@@ -62,6 +64,7 @@ export const ATTACK_MIDDLES: string[] = [
   "After your archers' second volley dropped the enemy line back a pace",
 ];
 
+/** @internal */
 export const ATTACK_CAPTURED_CLOSERS: string[] = [
   "the tile fell to your colors.",
   "the defenders broke and the ground was yours.",
@@ -72,6 +75,7 @@ export const ATTACK_CAPTURED_CLOSERS: string[] = [
   "the territory was claimed and the survivors marched out under guard.",
 ];
 
+/** @internal */
 export const ATTACK_REPELLED_CLOSERS: string[] = [
   "the line held against you, and your forces fell back.",
   "the defense was deeper than your scouts had reported, and the assault was called off.",
@@ -81,6 +85,7 @@ export const ATTACK_REPELLED_CLOSERS: string[] = [
   "the enemy's reserves arrived sooner than expected, and your column was forced to break off.",
 ];
 
+/** @internal */
 export const ATTACK_STALEMATE_CLOSERS: string[] = [
   "neither side could hold the field, and at nightfall both withdrew.",
   "the contest ended without a clear victor and the survivors retreated to their lines.",

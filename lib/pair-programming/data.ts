@@ -55,6 +55,7 @@ export async function getAllActiveProfiles(): Promise<PairProfile[]> {
   })) as PairProfile[];
 }
 
+/** @internal */
 export async function getPairSessionsForUser(userId: string): Promise<PairSession[]> {
   if (!db) return [];
   const q = query(
@@ -70,6 +71,7 @@ export async function getPairSessionsForUser(userId: string): Promise<PairSessio
   })) as PairSession[];
 }
 
+/** @internal */
 export async function updatePairSession(
   sessionId: string,
   updates: Partial<PairSession>

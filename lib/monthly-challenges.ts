@@ -5,12 +5,14 @@
  * See LICENSE file for details.
  */
 
+/** @internal */
 export interface ChallengeRubricItem {
   label: string;
   points: number;
   description: string;
 }
 
+/** @internal */
 export interface MonthlyChallenge {
   id: string;
   monthLabel: string;

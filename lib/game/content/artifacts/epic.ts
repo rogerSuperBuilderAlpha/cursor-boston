@@ -7,6 +7,7 @@
 
 import type { ArtifactDefinition } from "../../types";
 
+/** @internal */
 export const EPIC_ARTIFACTS: ArtifactDefinition[] = [
   {
     id: "epic-bloodmoon-blade",

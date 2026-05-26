@@ -15,9 +15,11 @@
  */
 
 /** Logo used when a catalog entry has no `imageUrl` yet. */
+/** @internal */
 export const FALLBACK_LOGO_SRC = "/logo.svg";
 
 /** Placeholder copy used when a catalog entry has no `lore` yet. */
+/** @internal */
 export const LORE_PLACEHOLDER = "No lore yet.";
 
 interface ImageBearing {

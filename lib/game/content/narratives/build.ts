@@ -108,6 +108,7 @@ const AI_BUILD_NARRATIVES: string[] = [
   "By dawn the new company has marched once, eaten twice, and slept too little; nobody complains.",
 ];
 
+/** @internal */
 export const BUILD_NARRATIVES: string[] = [
   ...HUMAN_BUILD_NARRATIVES,
   ...AI_BUILD_NARRATIVES,

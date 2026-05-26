@@ -329,6 +329,7 @@ export function logApiError(endpoint: string, error: unknown): void {
 /**
  * Middleware to add request logging to API routes
  */
+/** @internal */
 export function withLogging(
   handler: (request: Request) => Promise<Response>
 ) {

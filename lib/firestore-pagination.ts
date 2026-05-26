@@ -55,6 +55,7 @@ export function parseCursor(raw: string | null | undefined): string | null {
   return sanitizeDocId(trimmed);
 }
 
+/** @internal */
 export interface PaginatedQueryResult<T> {
   items: T[];
   nextCursor: string | null;
@@ -99,6 +100,7 @@ export async function paginateFirestoreQuery<T>(opts: {
  * achievable — cursor here is the id of the last item on the previous
  * page, not a doc snapshot.
  */
+/** @internal */
 export function paginateInMemory<T extends { id?: string }>(
   items: T[],
   cursor: string | null,

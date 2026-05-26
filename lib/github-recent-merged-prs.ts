@@ -10,6 +10,7 @@ import { logger } from "@/lib/logger";
 const DEFAULT_OWNER = "rogerSuperBuilderAlpha";
 const DEFAULT_REPO = "cursor-boston";
 
+/** @internal */
 export type MergedPullRequestSummary = {
   number: number;
   title: string;

@@ -25,6 +25,7 @@ export interface UpstashRateLimitResult {
   reason?: "rate_limited" | "rate_limit_unavailable";
 }
 
+/** @internal */
 export interface UpstashRateLimitPolicy {
   failMode?: "degrade" | "closed";
   unavailableRetryAfterSeconds?: number;

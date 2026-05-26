@@ -8,6 +8,7 @@
 import type { Event } from "@/types/events";
 
 /** Calendar day boundary for Boston-area listings. */
+/** @internal */
 export const EVENTS_LISTING_TIMEZONE = "America/New_York";
 
 export function todayYmdInListingTz(

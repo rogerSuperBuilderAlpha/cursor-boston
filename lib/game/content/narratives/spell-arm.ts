@@ -88,6 +88,7 @@ const AI_SPELL_ARM_NARRATIVES: string[] = [
   "Two apprentices hold a length of cord taut across the doorway; the captain cuts it with a single word.",
 ];
 
+/** @internal */
 export const SPELL_ARM_NARRATIVES: string[] = [
   ...HUMAN_SPELL_ARM_NARRATIVES,
   ...AI_SPELL_ARM_NARRATIVES,

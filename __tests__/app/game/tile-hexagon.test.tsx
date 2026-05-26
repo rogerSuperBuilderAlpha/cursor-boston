@@ -17,7 +17,6 @@
 
 import "@/__tests__/app/_shared/page-test-setup";
 
-import React from "react";
 import { fireEvent, render } from "@testing-library/react";
 
 import { TileHexagon } from "@/app/game/tiles/_components/TileHexagon";

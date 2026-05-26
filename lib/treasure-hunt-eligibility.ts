@@ -8,8 +8,10 @@
 import type { Firestore } from "firebase-admin/firestore";
 import { githubUserHasRecentlyMergedPr } from "@/lib/hackathon-showcase";
 
+/** @internal */
 export const TREASURE_HUNT_PR_WINDOW_HOURS = 24;
 
+/** @internal */
 export type TreasureHuntReason =
   | "not_signed_in"
   | "no_github"
@@ -18,6 +20,7 @@ export type TreasureHuntReason =
   | "already_won"
   | "feature_disabled";
 
+/** @internal */
 export type TreasureHuntEligibility =
   | { ok: true; githubLogin: string; discordUsername: string }
   | { ok: false; reason: TreasureHuntReason };
@@ -70,6 +73,7 @@ export async function checkTreasureHuntEligibility(
  * Checks whether a given verified email has already won — used to block
  * alt-account farming where a user links different uids to the same email.
  */
+/** @internal */
 export async function emailAlreadyWon(
   db: Firestore,
   email: string

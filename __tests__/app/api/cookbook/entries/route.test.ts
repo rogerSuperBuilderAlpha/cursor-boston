@@ -6,7 +6,7 @@ import { GET, POST } from "@/app/api/cookbook/entries/route";
 import { getVerifiedUser } from "@/lib/server-auth";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { makeAuthedRequest, makeRequest, readJson } from "@/__tests__/_helpers/route-test-utils";
+import { makeAuthedRequest, makeRequest } from "@/__tests__/_helpers/route-test-utils";
 
 jest.mock("@/lib/logger", () => ({
   logger: { logError: jest.fn(), warn: jest.fn() },

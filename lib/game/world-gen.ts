@@ -5,6 +5,7 @@
  * See LICENSE file for details.
  */
 
+/** @internal */
 export interface AxialCoord {
   q: number;
   r: number;
@@ -42,6 +43,7 @@ export function neighborTileIds(q: number, r: number): string[] {
 }
 
 // Cube-distance between two axial coords. Equivalent to hex Manhattan distance.
+/** @internal */
 export function hexDistance(a: AxialCoord, b: AxialCoord): number {
   const aq = a.q;
   const ar = a.r;
@@ -55,6 +57,7 @@ export function hexDistance(a: AxialCoord, b: AxialCoord): number {
 // Coords on the hex ring at exactly distance `r` from `center`. r<=0 returns
 // just the center; r=1 returns 6 coords; r=N returns 6N. Order is stable
 // (clockwise starting from the north neighbor scaled out by r).
+/** @internal */
 export function ringCoords(center: AxialCoord, r: number): AxialCoord[] {
   if (r <= 0) return [{ ...center }];
   const out: AxialCoord[] = [];
@@ -82,6 +85,7 @@ export function spawnCenterForPlayerIndex(
   return { q: c.q * spacing, r: c.r * spacing };
 }
 
+/** @internal */
 export interface SpawnPlayerLandsRequest {
   center: AxialCoord;
   claimedTileIds: ReadonlySet<string>;
@@ -94,6 +98,7 @@ export interface SpawnPlayerLandsRequest {
   contiguousMaxIterations?: number;
 }
 
+/** @internal */
 export interface SpawnPlayerLandsResult {
   tileIds: string[];
   contiguousTileIds: string[];

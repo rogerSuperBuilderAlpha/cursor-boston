@@ -14,7 +14,6 @@
  * confirm success + error, intake-survey action also closes.
  */
 
-import React from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 
 import { SetupReadinessModal } from "@/app/summer-cohort/_components/SetupReadinessModal";

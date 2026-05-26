@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from "next/server";
 /**
  * Standard error codes for API responses.
  */
+/** @internal */
 export const ErrorCode = {
   UNAUTHORIZED: "UNAUTHORIZED",
   FORBIDDEN: "FORBIDDEN",
@@ -21,6 +22,7 @@ export const ErrorCode = {
   NOT_CONFIGURED: "NOT_CONFIGURED",
 } as const;
 
+/** @internal */
 export type ErrorCodeType = (typeof ErrorCode)[keyof typeof ErrorCode];
 
 /**

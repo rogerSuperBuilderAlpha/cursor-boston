@@ -13,8 +13,7 @@
  * (firebase_not_initialized) error, signInWithCustomToken throw.
  */
 
-import React from "react";
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 
 const mockReplace = jest.fn();
 const stableRouter = { replace: mockReplace, push: jest.fn(), back: jest.fn(), refresh: jest.fn(), prefetch: jest.fn() };

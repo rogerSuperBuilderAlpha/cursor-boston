@@ -39,6 +39,7 @@ const SEEDS: Seed[] = [
 
 // `id` convention: `${caste}-${landType}`. Stable across upgrades — upgrades
 // reference this id as their targetId.
+/** @internal */
 export const BUILDING_SEEDS: BuildingDefinition[] = SEEDS.map((s) => ({
   id: `${s.caste}-${s.landType}`,
   caste: s.caste,

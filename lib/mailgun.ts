@@ -42,6 +42,7 @@ function getMailgunClient() {
   return mailgunClient;
 }
 
+/** @internal */
 export interface SendEmailOptions {
   to: string | string[];
   subject: string;

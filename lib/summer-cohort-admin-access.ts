@@ -16,6 +16,7 @@
  */
 export const SUMMER_COHORT_ADMIN_EMAILS_ENV = "SUMMER_COHORT_ADMIN_EMAILS";
 
+/** @internal */
 export function getSummerCohortAdminEmailSet(): Set<string> {
   const csv = process.env[SUMMER_COHORT_ADMIN_EMAILS_ENV] || "";
   return new Set(

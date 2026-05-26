@@ -23,7 +23,7 @@ jest.mock("@/lib/firebase", () => {
   };
 });
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+ 
 const firebaseMod = require("@/lib/firebase") as { __setDb: (db: unknown) => void };
 const setDb = firebaseMod.__setDb;
 

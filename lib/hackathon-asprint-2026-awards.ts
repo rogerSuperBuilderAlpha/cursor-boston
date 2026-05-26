@@ -17,6 +17,7 @@ export const HACK_A_SPRINT_2026_JUDGES_PICK_GITHUB_LOGINS = [
 ] as const;
 
 /** How many additional submissions win strictly from AI rank (excluding judges' pick). */
+/** @internal */
 export const HACK_A_SPRINT_2026_AI_JUDGED_WINNER_COUNT = 2;
 
 /**
@@ -26,6 +27,7 @@ export const HACK_A_SPRINT_2026_AI_JUDGED_WINNER_COUNT = 2;
 export const HACK_A_SPRINT_2026_PEER_REVIEW_WINNER_COUNT = 2;
 
 /** Wall time in America/New_York when peer-review winner badges appear (event week Friday, 12:00). */
+/** @internal */
 export const HACK_A_SPRINT_2026_PEER_AWARDS_REVEAL_NY = {
   year: 2026,
   month: 4,
@@ -45,6 +47,7 @@ export const SHOWCASE_AWARD_LABEL: Record<ShowcaseAwardKind, string> = {
   peerReviewWinner: "Peer review winner",
 };
 
+/** @internal */
 export type ShowcaseAwardInput = {
   submissionId: string;
   githubLogin: string;
@@ -57,6 +60,7 @@ export type ShowcaseAwardInput = {
  * UTC instant for a fixed calendar date + clock time interpreted in `America/New_York`
  * (handles EST/EDT). Used for the peer-review winner reveal.
  */
+/** @internal */
 export function hackASprint2026ZonedWallTimeToUtcMs(
   timeZone: string,
   y: number,

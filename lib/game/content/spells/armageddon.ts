@@ -21,8 +21,10 @@ import {
   ARMAGEDDON_TURN_COST,
 } from "../armageddon";
 
+/** @internal */
 export const ARMAGEDDON_SPELL_ID = "armageddon";
 
+/** @internal */
 export const ARMAGEDDON_SPELL: SpellDefinition = {
   id: ARMAGEDDON_SPELL_ID,
   caste: "neutral",
@@ -45,4 +47,5 @@ export const ARMAGEDDON_SPELL: SpellDefinition = {
 };
 
 /** Convenience list to mirror the other spell-content exports' shape. */
+/** @internal */
 export const ARMAGEDDON_SPELLS: SpellDefinition[] = [ARMAGEDDON_SPELL];

@@ -16,7 +16,6 @@
  * sessionStorage intent.
  */
 
-import React from "react";
 import { act, render } from "@testing-library/react";
 
 const mockRegisterForEvent = jest.fn().mockResolvedValue(undefined);

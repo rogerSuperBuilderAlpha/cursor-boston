@@ -14,6 +14,7 @@
  * Status starts "awaiting-badge" until an organizer flips it.
  */
 
+/** @internal */
 export const PYDATA_2026_EVENT_ID = "cursor-boston-pydata-2026";
 export const PYDATA_2026_EVENT_SLUG = "cursor-boston-pydata-2026";
 export const PYDATA_2026_LUMA_URL = "https://luma.com/ggjlxdnk";
@@ -47,6 +48,7 @@ export const PYDATA_2026_LUMA_EVENT_NAME = "Cursor Boston-PyData Data Science Ha
  */
 export const PYDATA_2026_CAPACITY = 150;
 
+/** @internal */
 export const PYDATA_2026_LIMITS = {
   firstName: 80,
   lastName: 80,
@@ -75,6 +77,7 @@ export interface PydataRegistration {
   updatedAt: number;
 }
 
+/** @internal */
 export interface PydataRegistrationInput {
   firstName: string;
   lastName: string;
@@ -84,6 +87,7 @@ export interface PydataRegistrationInput {
   attendingConfirmed: true;
 }
 
+/** @internal */
 export type PydataValidationError =
   | "firstName-required"
   | "firstName-too-short"

@@ -14,6 +14,7 @@ import { Timestamp, FieldValue } from "firebase-admin/firestore";
 // Types
 // ============================================================================
 
+/** @internal */
 export interface Agent {
   id: string;
   name: string;
@@ -44,6 +45,7 @@ export interface Agent {
   };
 }
 
+/** @internal */
 export interface AgentPublicProfile {
   id: string;
   name: string;
@@ -75,6 +77,7 @@ const CLAIM_EXPIRY_DAYS = 7;
  * Generate a new API key for an agent.
  * Returns both the full key (to show once) and its hash (to store).
  */
+/** @internal */
 export function generateApiKey(): {
   apiKey: string;
   apiKeyHash: string;
@@ -94,6 +97,7 @@ export function generateApiKey(): {
 /**
  * Generate a claim token for human verification.
  */
+/** @internal */
 export function generateClaimToken(): string {
   return randomBytes(CLAIM_TOKEN_LENGTH / 2).toString("hex");
 }
@@ -101,6 +105,7 @@ export function generateClaimToken(): string {
 /**
  * Hash an API key using SHA-256.
  */
+/** @internal */
 export function hashApiKey(apiKey: string): string {
   return createHash("sha256").update(apiKey).digest("hex");
 }
@@ -108,6 +113,7 @@ export function hashApiKey(apiKey: string): string {
 /**
  * Get the claim expiry timestamp (7 days from now).
  */
+/** @internal */
 export function getClaimExpiry(): Timestamp {
   const expiryDate = new Date();
   expiryDate.setDate(expiryDate.getDate() + CLAIM_EXPIRY_DAYS);
@@ -125,6 +131,7 @@ const AGENT_CACHE_TTL_MS = 60_000; // 60 seconds
 /**
  * Extract API key from request Authorization header.
  */
+/** @internal */
 export function extractApiKey(request: NextRequest): string | null {
   const authHeader = request.headers.get("authorization") || "";
 

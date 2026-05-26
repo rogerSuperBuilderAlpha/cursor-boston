@@ -12,7 +12,9 @@
 
 // Load .env.local file (Next.js doesn't load it for standalone scripts)
 import { loadEnvConfig } from '@next/env';
-loadEnvConfig(process.cwd());
+if (process.env.SKIP_ENV_LOAD !== 'true') {
+  loadEnvConfig(process.cwd());
+}
 
 interface EnvVar {
   name: string;
@@ -292,7 +294,7 @@ try {
   if (process.argv[1]?.includes('validate-env') || process.argv[0]?.includes('tsx')) {
     main();
   }
-} catch (e) {
+} catch {
   // Silently fail if this is imported as a module
 }
 

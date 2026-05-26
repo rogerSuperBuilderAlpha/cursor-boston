@@ -11,6 +11,7 @@ import matter from "gray-matter";
 
 const blogDirectory = path.join(process.cwd(), "content/blog");
 
+/** @internal */
 export interface BlogPost {
   slug: string;
   title: string;

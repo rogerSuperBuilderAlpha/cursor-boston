@@ -7,6 +7,7 @@
 
 /** Hero names for the Green caste. Root, vine, deep-glade — druidic,
  *  ranger-flavored, slow-cooked. */
+/** @internal */
 export const GREEN_HERO_NAMES: ReadonlyArray<string> = [
   "Branwen Root-Speaker",
   "Old Halmer of the Glade",

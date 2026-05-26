@@ -9,6 +9,7 @@ import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
 
+/** @internal */
 export function requestErrorId(): string {
   return randomUUID().slice(0, 8);
 }
@@ -28,6 +29,7 @@ export function jsonWithLoggedError(
   return NextResponse.json({ ...body, errorId }, { status });
 }
 
+/** @internal */
 export function jsonWithLoggedMessage(
   status: number,
   message: string,

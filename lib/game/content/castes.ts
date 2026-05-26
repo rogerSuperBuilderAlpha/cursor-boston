@@ -24,6 +24,7 @@ import type { Caste, CasteProfile } from "../types";
 //   black  — pestilence; attrition is its bread and butter
 //   red    — fire breaks walls; siege is its specialty
 //   green  — patient growth; disarm via grove-magic; little raid potential
+/** @internal */
 export const CASTE_PROFILES: Record<Caste, CasteProfile> = {
   white: {
     caste: "white",
@@ -119,6 +120,7 @@ export const CASTE_PROFILES: Record<Caste, CasteProfile> = {
   },
 };
 
+/** @internal */
 export function getCasteProfile(caste: Caste): CasteProfile {
   return CASTE_PROFILES[caste];
 }

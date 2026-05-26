@@ -15,7 +15,6 @@
  * `progress=null` branch (no bar), and the explore click handler.
  */
 
-import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 
 import { ExploreFrontier } from "@/app/game/_components/dashboard/ExploreFrontier";

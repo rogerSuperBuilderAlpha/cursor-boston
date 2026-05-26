@@ -9,6 +9,7 @@ import type { SpellTier } from "../../types";
 
 // Territory thresholds (tiles held) at which each spell tier unlocks.
 // Tier 1 is always available; tier 5 is end-game.
+/** @internal */
 export const TIER_MIN_TILES: Record<SpellTier, number> = {
   1: 0,
   2: 500,
@@ -18,6 +19,7 @@ export const TIER_MIN_TILES: Record<SpellTier, number> = {
 };
 
 // Turn cost per tier. Higher-tier spells consume more of the weekly turn pool.
+/** @internal */
 export const TIER_TURN_COST: Record<SpellTier, number> = {
   1: 5,
   2: 8,
@@ -27,6 +29,7 @@ export const TIER_TURN_COST: Record<SpellTier, number> = {
 };
 
 // Strength multiplier vs the tier-1 baseStrength for the same caste/type.
+/** @internal */
 export const TIER_STRENGTH_MULTIPLIER: Record<SpellTier, number> = {
   1: 1,
   2: 1.8,
@@ -35,6 +38,7 @@ export const TIER_STRENGTH_MULTIPLIER: Record<SpellTier, number> = {
   5: 11,
 };
 
+/** @internal */
 export function tierOfSpellId(spellId: string): SpellTier {
   const m = /-t([1-5])$/.exec(spellId);
   if (!m) return 1;

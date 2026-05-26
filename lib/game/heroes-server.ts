@@ -49,6 +49,7 @@ import type {
 
 /** API-facing event shape — same fields as `GameHeroEvent` except the
  *  `createdAt` is serialized to an ISO string for JSON transport. */
+/** @internal */
 export interface SafeHeroEvent extends Omit<GameHeroEvent, "createdAt"> {
   createdAt: string;
 }
@@ -182,6 +183,7 @@ interface HeroDetailArgs {
   heroId: string;
 }
 
+/** @internal */
 export interface HeroDetailResult {
   hero: SafeHeroSummary;
   events: SafeHeroEvent[];
@@ -234,6 +236,7 @@ interface HeroEventsArgs {
   heroDocCache?: GameHeroDoc;
 }
 
+/** @internal */
 export interface HeroEventsResult {
   items: SafeHeroEvent[];
   nextCursor: string | null;

@@ -19,8 +19,7 @@
  
  
 
-import React from "react";
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 const mockUseAuth = jest.fn();
 jest.mock("@/contexts/AuthContext", () => ({
@@ -71,9 +70,6 @@ function entry(overrides: Partial<Record<string, unknown>> = {}) {
   };
 }
 
-function mockFetchOnce(impl: () => unknown) {
-  (global.fetch as unknown as jest.Mock).mockImplementationOnce(impl as any);
-}
 
 beforeEach(() => {
   jest.clearAllMocks();

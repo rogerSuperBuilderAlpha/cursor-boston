@@ -22,6 +22,7 @@ const COLLECTION = "game_intel_effects";
 // All currently-defined intel-spell debuffs/buffs persist for this many of
 // the caster's turns past cast time. Centralized so the spy spells stay in
 // step with combat reads.
+/** @internal */
 export const INTEL_EFFECT_DURATION_CASTER_TURNS = 5;
 
 interface RecordArgs {
@@ -40,6 +41,7 @@ interface RecordArgs {
  * Persist a new intel effect inside an active transaction. Used by
  * castIntelSpellServer at the moment of cast.
  */
+/** @internal */
 export function recordIntelEffectInTx(args: RecordArgs): IntelEffect {
   const id = randomUUID();
   const expiresAtCasterTurn =
@@ -100,6 +102,7 @@ interface AttackContextEffects {
  * `consumeEffectIds` lists the doc ids of single-use effects that the
  * attack transaction should delete via `deleteIntelEffectsInTx`.
  */
+/** @internal */
 export async function readAttackContextEffects(args: {
   db: Firestore;
   attackerId: string;
@@ -219,6 +222,7 @@ export async function readAttackContextEffects(args: {
  * by attackTileServer to consume single-use effects (pre-cast offense,
  * disarm) once they've been read into combat. No-op for an empty list.
  */
+/** @internal */
 export function deleteIntelEffectsInTx(args: {
   tx: Transaction;
   db: Firestore;
@@ -236,6 +240,7 @@ export function deleteIntelEffectsInTx(args: {
  *
  * Multiple records stack additively (read-time clamps the sum to the cap).
  */
+/** @internal */
 export function recordSiegeDebuffInTx(args: {
   tx: Transaction;
   db: Firestore;
@@ -264,6 +269,7 @@ export function recordSiegeDebuffInTx(args: {
  * is the realized power (already × magicMultiplier × caste bonus × dice).
  * Single-use: consumed by next attack against the target.
  */
+/** @internal */
 export function recordPreCastOffenseInTx(args: {
   tx: Transaction;
   db: Firestore;
@@ -291,6 +297,7 @@ export function recordPreCastOffenseInTx(args: {
  * disarm fraction in [0, 1] rolled at cast time. Single-use: consumed by
  * next attack against the target.
  */
+/** @internal */
 export function recordDefenseDisarmInTx(args: {
   tx: Transaction;
   db: Firestore;

@@ -11,7 +11,7 @@ import {
   withMiddleware,
   withSecurityMiddleware,
 } from "@/lib/middleware";
-import { checkRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { checkUpstashRateLimit } from "@/lib/upstash-rate-limit";
 import { logger } from "@/lib/logger";
 

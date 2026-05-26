@@ -32,6 +32,7 @@ import type { Caste, MapTile } from "./types";
 // on next load.
 const CACHE_VERSION = 2;
 const KEY_PREFIX = "cb-game-map-v" + CACHE_VERSION + ":";
+/** @internal */
 export const REFRESH_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 
 export interface CachedOwnerSummary {
@@ -122,6 +123,7 @@ export function saveCachedMap(
 }
 
 /** Clear the cache for `userId`. Call on sign-out or on schema changes. */
+/** @internal */
 export function clearCachedMap(userId: string): void {
   const s = storage();
   if (!s) return;
@@ -195,6 +197,7 @@ export function mergeTiles(
 /** Add or replace owner summaries (e.g. you conquered a border tile and
  *  need its previous owner's record kept around for history, or you saw a
  *  new enemy show up on your border via attack). */
+/** @internal */
 export function mergeOwners(
   userId: string,
   updates: ReadonlyArray<CachedOwnerSummary>

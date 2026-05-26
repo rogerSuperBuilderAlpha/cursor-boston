@@ -7,6 +7,7 @@
 
 import type { UnitDefinition } from "../../../types";
 
+/** @internal */
 export const BLUE_SIEGE_UNIT: UnitDefinition = {
   id: "blue-siege-skyglass-catapult",
   caste: "blue",

@@ -8,12 +8,17 @@
 import type { FieldValue, Timestamp } from "firebase-admin/firestore";
 
 export const CURSOR_IDEA_RUNS_COLLECTION = "cursorAgentRuns";
+/** @internal */
 export const CURSOR_BOSTON_REPO_URL =
   "https://github.com/rogerSuperBuilderAlpha/cursor-boston";
+/** @internal */
 export const CURSOR_BOSTON_STARTING_REF = "develop";
+/** @internal */
 export const CURSOR_BOSTON_CLOUD_AGENT_BASE_REF = "cloud-agent-dev";
 
+/** @internal */
 export type CursorIdeaRunStatus = "starting" | "running" | "finished" | "error" | "cancelled";
+/** @internal */
 export type CursorIdeaWorkflowStage =
   | "ideas"
   | "questions"
@@ -25,6 +30,7 @@ export type CursorIdeaWorkflowStage =
   | "pr_commented_on"
   | "pr_merged";
 
+/** @internal */
 export interface CursorIdeaRunInputs {
   mode?: "idea" | "issue";
   interests?: string;
@@ -39,12 +45,14 @@ export interface CursorIdeaRunInputs {
   issueLabels?: string;
 }
 
+/** @internal */
 export interface CursorIdeaRunArtifact {
   path: string;
   sizeBytes: number;
   updatedAt: string;
 }
 
+/** @internal */
 export interface CursorIdeaRunActivity {
   id: string;
   role: "user" | "assistant";
@@ -52,6 +60,7 @@ export interface CursorIdeaRunActivity {
   kind?: "message" | "thinking" | "status" | "tool" | "shell";
 }
 
+/** @internal */
 export interface CursorIdeaQuestion {
   id: string;
   question: string;
@@ -59,6 +68,7 @@ export interface CursorIdeaQuestion {
   answer?: string;
 }
 
+/** @internal */
 export interface CursorIdeaPrState {
   status: "not_started" | "opening" | "pr_open" | "pr_commented_on" | "pr_merged";
   url?: string | null;
@@ -274,6 +284,7 @@ export function normalizeRunInputs(value: unknown): CursorIdeaRunInputs {
   return result;
 }
 
+/** @internal */
 export type CursorIdeaWorkflowAction = "questions" | "answers" | "approve-plan" | "open-pr";
 
 export function validateIdeaWorkflowAction(

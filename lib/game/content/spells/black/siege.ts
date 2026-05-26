@@ -7,6 +7,7 @@
 
 import type { SpellDefinition } from "../../../types";
 
+/** @internal */
 export const BLACK_SIEGE_SPELLS: SpellDefinition[] = [
   {
     id: "black-siege-rotgnaw",

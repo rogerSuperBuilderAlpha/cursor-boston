@@ -144,6 +144,7 @@ export async function buildAdminBadgeEligibilityInput(
   };
 }
 
+/** @internal */
 export type SyncUserBadgesResult = {
   eligibleBadgeIds: BadgeId[];
   newlyAwardedBadgeIds: BadgeId[];

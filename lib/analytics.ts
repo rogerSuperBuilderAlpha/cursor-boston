@@ -5,6 +5,7 @@
  * See LICENSE file for details.
  */
 
+/** @internal */
 export type AnalyticsEventName =
   | "feature_banner_view"
   | "feature_banner_cta_click"
@@ -13,11 +14,13 @@ export type AnalyticsEventName =
   | "sign_up_cta_click";
 
 type AnalyticsPropertyValue = string | number | boolean | null | undefined;
+/** @internal */
 export type AnalyticsProperties = Record<string, AnalyticsPropertyValue>;
 
 const PII_KEY_PATTERN = /(email|phone|token|uid|user_?id|display_?name)/i;
 const MAX_STRING_PROPERTY_LENGTH = 120;
 
+/** @internal */
 export function sanitizeAnalyticsProperties(
   properties: AnalyticsProperties = {}
 ): Record<string, string | number | boolean> {

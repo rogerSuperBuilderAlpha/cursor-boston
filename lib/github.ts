@@ -39,6 +39,7 @@ export function verifyWebhookSignature(
 /**
  * Find Firebase user by GitHub login
  */
+/** @internal */
 export async function findUserByGitHubLogin(
   githubLogin: string
 ): Promise<string | null> {

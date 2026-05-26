@@ -16,6 +16,7 @@ export type BadgeId =
   | "mentor"
   | "contributor";
 
+/** @internal */
 export type BadgeCategory =
   | "onboarding"
   | "community"
@@ -33,6 +34,7 @@ export interface BadgeDefinition {
   iconKey?: string;
 }
 
+/** @internal */
 export type BadgeAwardSource = "manual" | "on-demand" | "migration" | "system";
 
 export interface UserBadge {
@@ -62,6 +64,7 @@ export interface BadgeEligibilityInput {
   mentorMatchesCount?: number;
 }
 
+/** @internal */
 export interface BadgeProgress {
   current: number;
   target: number;

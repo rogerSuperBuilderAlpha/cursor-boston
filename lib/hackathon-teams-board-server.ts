@@ -33,6 +33,7 @@ function isPlaceholderId(id: string): boolean {
   return id.startsWith("mock-member-") || id.startsWith("mock-");
 }
 
+/** @internal */
 export interface TeamsBoardTeam {
   id: string;
   hackathonId: string;
@@ -44,12 +45,14 @@ export interface TeamsBoardTeam {
   createdAt: string | null;
 }
 
+/** @internal */
 export interface TeamsBoardPublicUser {
   uid: string;
   displayName: string | null;
   photoURL: string | null;
 }
 
+/** @internal */
 export interface TeamsBoardPayload {
   teams: TeamsBoardTeam[];
   memberProfiles: Record<string, TeamsBoardPublicUser>;

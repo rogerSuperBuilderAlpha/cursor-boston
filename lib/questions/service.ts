@@ -81,6 +81,7 @@ function toAnswer(id: string, questionId: string, data: FirebaseFirestore.Docume
   };
 }
 
+/** @internal */
 export class QuestionsService {
   private db: Firestore;
 

@@ -20,6 +20,7 @@ export function getActiveUpgrades(
   return player?.activeUpgrades ?? {};
 }
 
+/** @internal */
 export interface EffectiveUnitStats {
   attack: number;
   defense: number;
@@ -28,6 +29,7 @@ export interface EffectiveUnitStats {
 
 // Unit stats with the player's active upgrade for that unit applied. If no
 // upgrade is active the base stats are returned unchanged.
+/** @internal */
 export function effectiveUnitStats(
   unit: UnitDefinition,
   active: Record<string, string>
@@ -53,6 +55,7 @@ export function effectiveUnitStats(
 
 // Sum of capacity-bonus deltas from this player's active upgrade for a given
 // building (a single building per land type per caste).
+/** @internal */
 export function buildingCapacityBonus(
   building: BuildingDefinition,
   active: Record<string, string>
@@ -69,6 +72,7 @@ export function buildingCapacityBonus(
 
 // Returns the player's bonus magic-multiplier from any active building upgrade
 // that grants one. Currently magic-tile building upgrades can carry this.
+/** @internal */
 export function magicMultiplierBonusFromUpgrades(
   active: Record<string, string>
 ): number {
@@ -82,30 +86,35 @@ export function magicMultiplierBonusFromUpgrades(
   return bonus;
 }
 
+/** @internal */
 export class UpgradeNotFoundError extends Error {
   constructor(id: string) {
     super(`Upgrade not found: ${id}`);
     this.name = "UpgradeNotFoundError";
   }
 }
+/** @internal */
 export class UpgradeWrongCasteError extends Error {
   constructor() {
     super("That upgrade is not available to your caste");
     this.name = "UpgradeWrongCasteError";
   }
 }
+/** @internal */
 export class UpgradeAlreadyActiveError extends Error {
   constructor() {
     super("Target already has an active upgrade — remove it first");
     this.name = "UpgradeAlreadyActiveError";
   }
 }
+/** @internal */
 export class UpgradeNotActiveError extends Error {
   constructor() {
     super("Target has no active upgrade to remove");
     this.name = "UpgradeNotActiveError";
   }
 }
+/** @internal */
 export class UpgradeUnknownTargetError extends Error {
   constructor(targetId: string) {
     super(`Unknown upgrade target: ${targetId}`);
@@ -116,14 +125,17 @@ export class UpgradeUnknownTargetError extends Error {
 // Cost of a single upgrade apply or remove. Mirrors land re-assignment which
 // charges 1 turn per change. Switching A→B is therefore 2 turns (remove then
 // apply), the same shape as land downgrade-then-upgrade.
+/** @internal */
 export const UPGRADE_TURN_COST = 1;
 
+/** @internal */
 export interface ValidatedUpgradeApply {
   unit?: UnitDefinition;
   building?: BuildingDefinition;
 }
 
 // Validates an apply request without mutating anything. Throws on any error.
+/** @internal */
 export function validateApplyUpgrade(args: {
   player: GamePlayer;
   upgradeId: string;
@@ -151,6 +163,7 @@ export function validateApplyUpgrade(args: {
   return { building };
 }
 
+/** @internal */
 export function validateRemoveUpgrade(args: {
   player: GamePlayer;
   targetId: string;

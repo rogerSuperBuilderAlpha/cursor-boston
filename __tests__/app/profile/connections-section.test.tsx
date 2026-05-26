@@ -17,7 +17,6 @@
 
 import "@/__tests__/app/_shared/page-test-setup";
 
-import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 
 jest.mock("@/lib/hackathon-asprint-2026-awards", () => ({
