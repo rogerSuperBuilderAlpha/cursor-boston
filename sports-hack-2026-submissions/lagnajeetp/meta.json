@@ -2,7 +2,7 @@
   "title": "Hoops AI — Basketball Injury Prevention & Performance Coach Console",
   "description": "Injury ends promising careers early and poor training optimization leaves potential unrealized. Hoops AI is a coach console that ingests player health signals, game stats, and live session metrics, then uses Claude with RAG-grounded context to flag injury risk and deliver actionable next-session recommendations — protecting careers and accelerating improvement.",
   "displayName": "Lagnajeet Panigrahi",
-  "videoUrl": "",
+  "videoUrl": "https://www.loom.com/share/cdb3c53da06944b2a599e75943848a3e",
   "repoUrl": "https://github.com/LagnajeetP/CursorBostonHackathon",
   "deployedUrl": "",
   "tags": ["basketball", "injury-prevention", "claude", "rag", "fastapi", "react"]
