@@ -1,0 +1,9 @@
+{
+  "ai": {
+    "score": 4,
+    "rationale": "Creative niche idea — AI-generated trash-talk battle cards for two DFS lineups, tied to a real-product thesis (BeatM) — and the pitch is specific enough to picture the UX. Loses heavily on completeness: both videoUrl AND deployedUrl are empty, so there's no way to verify the project actually shipped, and the brief explicitly required a live URL + explainer video. With either of those filled in this lands in the 6-7 range; with both missing it can't break into the solid tier.",
+    "model": "claude-opus-4-7",
+    "scoredAt": "2026-05-26T18:54:00.000Z",
+    "scorerVersion": 2
+  }
+}
