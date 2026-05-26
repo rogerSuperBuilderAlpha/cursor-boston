@@ -2,7 +2,7 @@
   "title": "FANCAST + StatsCast",
   "description": "Talk to a live NBA game using your voice — FANCAST uses Gemini Live native audio to answer fan questions about scores, plays, and player lines in real time. StatsCast pairs it with streaming AI analyst breakdowns and animated season stats for any player or sport.",
   "displayName": "Abishek M",
-  "videoUrl": "https://www.loom.com/share/",
+  "videoUrl": "https://youtu.be/so_uH2eHfq0",
   "repoUrl": "https://github.com/Abi5678/fancast",
   "deployedUrl": "https://shine-exorcism-dork.ngrok-free.dev",
   "tags": ["gemini-live", "nba", "voice", "real-time", "audio", "ai-analytics"],
