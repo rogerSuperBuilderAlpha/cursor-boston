@@ -1,6 +1,6 @@
 {
   "title": "SportsHire AI — MCP-native sports job marketplace",
-  "description": "Structured seeker profiles and employer-weighted scoring criteria. MCP server + REST /api/tools/* with 10 agent tools (search, rank, apply). 367 Boston-area jobs (362 scraped from WorkInSports + curated demo). AI-judge docs: AGENTS.md, docs/AI_JUDGE.md. Freemium demo on web; agents get full API access with SPORTSHIRE_AI_JUDGE=1.",
+  "description": "Structured seeker profiles and employer-weighted scoring criteria. MCP server + REST /api/tools/* with 10 agent tools (search, rank, apply). 367 Boston-area jobs (362 scraped from WorkInSports + curated demo). AI-judge docs: AGENTS.md, docs/AI_JUDGE.md. Vercel-ready Next.js deploy (docs/VERCEL.md). Freemium UI demo; agents get full API access with SPORTSHIRE_AI_JUDGE=1.",
   "displayName": "Arpan D",
   "videoUrl": "https://www.loom.com/share/f5ca7af0a83b4494ab1aacd5d4b3eeed",
   "repoUrl": "https://github.com/arpand9/sports-jobs-agent",
