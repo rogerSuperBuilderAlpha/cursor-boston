@@ -1,0 +1,9 @@
+{
+  "title": "Aesthetix Athlete Lab: AI Active Recovery & Bio-Tuner",
+  "description": "A premium sports recovery dashboard utilizing the Vercel AI SDK and Groq. Features dynamic Generative UI, including an age-Karvonen EKG heart-rate zone monitor with a native Web Audio API lub-dub beat synthesizer, interactive front/back muscle heatmaps, and real-time parent-child state syncing.",
+  "displayName": "Ankit Yadav",
+  "videoUrl": "https://www.loom.com/share/d4b4a621c4324f2b936d8d9b1c2e4f0a",
+  "repoUrl": "https://github.com/ankittejyadav/athlete-recovery",
+  "deployedUrl": "",
+  "tags": ["next.js", "vercel-ai-sdk", "tailwind-css", "web-audio-api", "ekg-simulator", "generative-ui"]
+}
