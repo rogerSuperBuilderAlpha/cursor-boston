@@ -1,0 +1,22 @@
+What was built
+Monorepo structure
+
+apps/api — NestJS backend (Modules 1–5)
+apps/web — Next.js 15 + Tailwind frontend (Module 6)
+packages/shared — Fee math, Zod schemas, constants
+packages/db — Prisma schema, migrations, seed
+packages/integrations — Adapter interfaces with mock + live clients
+Backend modules
+
+Aggregation — Worker-thread parallel fetches, TicketsData /fetch + /match, retry policy (503/504 ×2 @ 1.5s/3s), listing upsert
+Transfers — SafeTix upload block, TM cart lifecycle + cleanup jobs, NFL/NHL/MLB adapters, transfer state machine
+Payments — Stripe Connect Separate Charges & Transfers, escrow tiers, seller onboarding, dispute halt
+Compliance — MA affidavits/consent, $2 markup cap, 1099-K at $5k gross
+Security — Captcha, behavioral risk scoring, SMS 2FA, velocity limits (max 6 tickets), proxy ASN blocking
+Frontend views
+
+/ and /events — Discovery with league/team/date/price filters and all-in pricing
+/events/[id] — SVG stadium map, arbitrage highlights, listing table
+/sell — Listing portal with live net payout (P_L × 0.95) and MA compliance forms
+/checkout/[listingId] — Checkout with fee line items and refund guarantee
+/dashboard — Seller escrow/transfer/1099 status
