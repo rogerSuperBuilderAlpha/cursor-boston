@@ -80,7 +80,7 @@
     "@ts-rest/open-api": "^3.51.0",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.37.0",
-    "firebase": "^12.12.1",
+    "firebase": "^12.13.0",
     "firebase-admin": "^13.8.0",
     "form-data": "^4.0.5",
     "gray-matter": "^4.0.3",

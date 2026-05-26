@@ -1,0 +1,46 @@
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyBTk8uJTHUHOAjRzNxqze8SM7z-0EBaTPQ",
+    authDomain: "shipboard-dev.firebaseapp.com",
+    projectId: "shipboard-dev",
+    storageBucket: "shipboard-dev.firebasestorage.app",
+    messagingSenderId: "578009477134",
+    appId: "1:578009477134:web:7cb26fcc463ccc7cdb0c5f",
+    measurementId: "G-76KML9LCD5"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
+
+
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBTk8uJTHUHOAjRzNxqze8SM7z-0EBaTPQ",
+  authDomain: "shipboard-dev.firebaseapp.com",
+  projectId: "shipboard-dev",
+  storageBucket: "shipboard-dev.firebasestorage.app",
+  messagingSenderId: "578009477134",
+  appId: "1:578009477134:web:7cb26fcc463ccc7cdb0c5f",
+  measurementId: "G-76KML9LCD5"
+};
+
+project-578009477134
+
+
+Github Oauth
+www.shipboard-sb.com
+// update the github OAUth app homepage URL
+
+Ov23lihGPl6ENaruqzU8
+488a5fe45fb3f132e7512b9c83ba8125f377f0a2
+https://shipboard-dev.firebaseapp.com/__/auth/handler

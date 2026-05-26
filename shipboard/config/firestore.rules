@@ -1,0 +1,27 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Shipboard data is accessed only via Firebase Admin in API routes.
+    match /sb_workspaces/{docId} {
+      allow read, write: if false;
+      match /labels/{labelId} {
+        allow read, write: if false;
+      }
+    }
+    match /sb_boards/{boardId} {
+      allow read, write: if false;
+      match /columns/{cId} {
+        allow read, write: if false;
+      }
+      match /cards/{cardId} {
+        allow read, write: if false;
+      }
+      match /note_entries/{nId} {
+        allow read, write: if false;
+      }
+    }
+    match /sb_scratch_docs/{docId} {
+      allow read, write: if false;
+    }
+  }
+}

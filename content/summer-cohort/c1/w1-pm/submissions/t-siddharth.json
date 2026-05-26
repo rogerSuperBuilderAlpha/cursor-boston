@@ -2,9 +2,9 @@
     "githubHandle": "t-siddharth",
     "name": "Siddharth Tewari",
     "photoUrl": "https://firebasestorage.googleapis.com/v0/b/cursor-boston.firebasestorage.app/o/profile-photos%2FTUyYjFVKFZWDraSLxY1QGENQLXo1?alt=media&token=8df1d5df-8b10-40bc-a808-a87d58fb74dd",
-    "repoUrl": "https://github.com/t-siddharth/your-week-1-build",
-    "liveUrl": "https://yourthing.example.com",
-    "loomUrl": "https://www.loom.com/share/...",
-    "pitch": "One sentence on why you should win this week.",
+  "repoUrl": "https://github.com/t-siddharth/cursor-boston",
+  "liveUrl": "https://your-shipboard.vercel.app",
+  "loomUrl": "https://www.loom.com/share/...",
+  "pitch": "Shipboard (see /shipboard): Kanban plus running notes so the cohort sees who's shipping and what changed—faster than a spreadsheet, lighter than another generic PM suite.",
     "competeForWin": true
   }
