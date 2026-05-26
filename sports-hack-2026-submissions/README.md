@@ -30,6 +30,40 @@ reads this directory at build time and renders a card per merged submission.
 5. **One folder per attendee.** If you collaborated, pick one handle for the
    folder name and list collaborators inside `meta.json`.
 
+## First-time GitHub PR checklist
+
+If this is your first pull request, use this shortest path after you fork the
+repo:
+
+```bash
+git clone https://github.com/YOUR-GITHUB-HANDLE/cursor-boston.git
+cd cursor-boston
+git remote add upstream https://github.com/rogerSuperBuilderAlpha/cursor-boston.git
+git fetch upstream
+git checkout -b sports-hack/YOUR-GITHUB-HANDLE upstream/sports-hack-2026-submissions
+mkdir -p sports-hack-2026-submissions/YOUR-GITHUB-HANDLE
+```
+
+Then add `sports-hack-2026-submissions/YOUR-GITHUB-HANDLE/meta.json`, commit
+with sign-off, and push the branch:
+
+```bash
+git add sports-hack-2026-submissions/YOUR-GITHUB-HANDLE/meta.json
+git commit -s -m "docs(sports-hack): submit YOUR-GITHUB-HANDLE project"
+git push origin sports-hack/YOUR-GITHUB-HANDLE
+```
+
+On GitHub, open the pull request with:
+
+- **base repository**: `rogerSuperBuilderAlpha/cursor-boston`
+- **base branch**: `sports-hack-2026-submissions`
+- **head repository**: `YOUR-GITHUB-HANDLE/cursor-boston`
+- **compare branch**: `sports-hack/YOUR-GITHUB-HANDLE`
+
+Before submitting, double-check that the PR only adds your folder under
+`sports-hack-2026-submissions/` and that `meta.json` does not contain API keys,
+tokens, or private credentials.
+
 ---
 
 ## Deadlines + scoring
