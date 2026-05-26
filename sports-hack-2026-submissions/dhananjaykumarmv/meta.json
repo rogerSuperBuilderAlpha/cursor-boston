@@ -1,12 +1,13 @@
 {
-    "title": "Sample Title",
-    "description": "Inital meta file for sports hack submission",
+    "title": "Adertisemnet Score Card",
+    "description": "A marketing intelligence platform that generates instant brand value profiles for top athletes. Input any athlete name and get social media metrics, sponsorship history, brand fit scoring, and growth trajectory — all in one report built for brand managers, agents, and sponsors.",
     "displayName": "Dhananjaya Kumar Mittapalli",
     "videoUrl": "",
     "repoUrl": "",
     "deployedUrl": "",
-    "tags": [],
+    "tags": ["langchain", "python", "sports", "ai", "fastapi", "rag"],
     "collaborators": [
-      { "displayName": "Saiteja Reddy Gajula", "githubHandle": "Saitej0211" }
+      { "displayName": "Saiteja Reddy Gajula", "githubHandle": "Saitej0211" },
+      {"displayName": "LeoMattosMartins", "githubHandle": "LeoMattosMartins"}
     ]
   }
