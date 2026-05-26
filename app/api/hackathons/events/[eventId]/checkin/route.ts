@@ -14,6 +14,7 @@ import {
   hackathonEventSignupDocId,
   isHackathonEventSignupId,
 } from "@/lib/hackathon-event-signup";
+import { refreshSnapshot } from "@/lib/hackathon-leaderboard-snapshot";
 import { checkRateLimit, getClientIdentifier, rateLimitConfigs } from "@/lib/rate-limit";
 import { hackathonsContract } from "@/lib/api-schemas/hackathons";
 
@@ -119,6 +120,13 @@ export async function POST(request: NextRequest, context: RouteContext) {
         attendingConfirmedBy: "admin",
       });
       revalidateTag(HACKATHON_SIGNUP_CACHE_TAG, { expire: 0 });
+      // Rebuild the leaderboard snapshot so the admin UI reflects the new
+      // checked-in state on the next read. Without this, the admin sees a
+      // stale "unchecked" row and the checkbox visually flips back even
+      // though Firestore was updated.
+      await refreshSnapshot(eventId).catch((err) =>
+        console.warn("[checkin] refreshSnapshot failed", err),
+      );
       return NextResponse.json({ ok: true, checkedIn: true, created: true });
     }
 
@@ -151,6 +159,12 @@ export async function POST(request: NextRequest, context: RouteContext) {
       await ref.update({ checkedInAt: FieldValue.delete() });
     }
     revalidateTag(HACKATHON_SIGNUP_CACHE_TAG, { expire: 0 });
+    // Rebuild the leaderboard snapshot so the admin UI reflects the new
+    // checked-in state on the next read. Mirrors the post-write refresh in
+    // /confirm-attendance.
+    await refreshSnapshot(eventId).catch((err) =>
+      console.warn("[checkin] refreshSnapshot failed", err),
+    );
 
     return NextResponse.json({ ok: true, checkedIn });
   } catch (e) {
