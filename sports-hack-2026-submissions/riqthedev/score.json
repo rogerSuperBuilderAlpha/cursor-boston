@@ -1,0 +1,9 @@
+{
+  "ai": {
+    "score": 8,
+    "rationale": "Sharp basketball-specific pitch that names a real coach pain point — \"the gap between watching a game and knowing what to run at tomorrow's practice\" — and turns it into a structured workflow: team identity + game issues → root-cause analysis → practice priorities → drills → one measurable next-game target. Specific user, specific output shape, all three URLs filled (Loom + repo + Vercel deploy). Held just short of the top tier because the meta doesn't call out which AI patterns or models do the analysis — the workflow is clearly LLM-backed but the leverage signal is implicit rather than explicit.",
+    "model": "claude-opus-4-7",
+    "scoredAt": "2026-05-26T19:10:00.000Z",
+    "scorerVersion": 2
+  }
+}
