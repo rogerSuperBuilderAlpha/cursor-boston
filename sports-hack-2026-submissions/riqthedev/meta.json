@@ -1,0 +1,9 @@
+{
+  "title": "CoachLens — AI Basketball Practice Planner",
+  "description": "CoachLens turns a coach's team identity, game issues, and notes into root-cause analysis, practice priorities, drills, and one measurable next-game target. It solves the gap between watching a game and knowing what to run at tomorrow's practice.",
+  "displayName": "riqthedev",
+  "videoUrl": "https://www.loom.com/share/9691f4bc986b4649af013e86a787e22e",
+  "repoUrl": "https://github.com/riqthedev/CoachLens",
+  "deployedUrl": "",
+  "tags": ["basketball", "coaching", "next.js"]
+}
