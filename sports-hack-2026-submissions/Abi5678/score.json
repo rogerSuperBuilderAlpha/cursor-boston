@@ -1,0 +1,9 @@
+{
+  "ai": {
+    "score": 8,
+    "rationale": "Strong submission. Voice-first interface to a live NBA game via Gemini Live native audio is genuinely novel — most sports apps are visual-first, and conversational live-game Q&A pushes a real edge of what current models can do. Companion StatsCast layer (streaming analyst breakdowns + animated season stats) shows ambition without losing focus. All three URLs filled (YouTube + repo + stable Vercel deploy). Knocked just short of the top tier because the meta sells the experience but doesn't show how live-data integration is grounded, which is the hard part for this kind of product.",
+    "model": "claude-opus-4-7",
+    "scoredAt": "2026-05-26T19:06:00.000Z",
+    "scorerVersion": 2
+  }
+}
