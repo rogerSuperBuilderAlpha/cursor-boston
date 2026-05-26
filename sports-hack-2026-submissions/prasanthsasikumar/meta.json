@@ -1,0 +1,10 @@
+{
+  "title": "Sideline IQ",
+  "description": "Sideline IQ is an AI-powered sports coaching assistant that helps coaches and analysts make smarter in-game decisions. It provides real-time insights, player performance analytics, and strategic recommendations — all from the sideline.",
+  "displayName": "Prasanth",
+  "videoUrl": "https://www.loom.com/share/f3069ff50dbd425b833c50b3f0fe1323",
+  "repoUrl": "https://github.com/prasanthsasikumar/sidelineiq",
+  "deployedUrl": "https://sidelineiq-chi.vercel.app/",
+  "tags": ["sports", "ai", "coaching", "analytics", "next.js"],
+  "collaborators": []
+}
