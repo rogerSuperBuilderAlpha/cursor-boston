@@ -1,10 +1,16 @@
 {
-    "title": "Cricket IPL 2026 Stats Visualizer",
-    "description": "A web app that visualizes cricket IPL 2026 stats for a given player or team.",
-    "displayName": "Siddharth Tewari",
-    "videoUrl": "https://www.loom.com/share/...",
-    "repoUrl": "https://github.com/t-siddharth/cricket-stats-visualizer",
-    "deployedUrl": "https://cricket-stats-visualizer.vercel.app",
-    "tags": ["cricket", "stats", "visualization"],
-    "collaborators": []
-  }
+  "title": "Cricket IPL Career Progression Visualizer",
+  "description": "Static export of an IPL player career progression analysis notebook (2008–2025) with downloadable CSV datasets for batting, bowling, and player master records.",
+  "displayName": "Siddharth Tewari",
+  "videoUrl": "https://www.loom.com/share/...",
+  "repoUrl": "https://github.com/t-siddharth/cursor-boston/tree/sports-hack/t-siddharth/sports-hack-2026-submissions/t-siddharth",
+  "deployedUrl": "https://cricket-stats-visualizer.vercel.app",
+  "tags": [
+    "cricket",
+    "ipl",
+    "stats",
+    "visualization",
+    "notebook"
+  ],
+  "collaborators": []
+}
