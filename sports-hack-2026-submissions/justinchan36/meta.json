@@ -1,0 +1,9 @@
+{
+  "title": "KinetiQ — Overhead Squat Form Analysis",
+  "description": "KinetiQ is a web app where athletes upload a video of an arm overhead squat. Computer vision and Gemini analyze movement to flag issues like knee valgus, ankle inflexibility, and weak core, then generate a correction plan and suggested workouts. Not deployed live; run locally via the README.",
+  "displayName": "justinchan36",
+  "videoUrl": "https://www.loom.com/share/c83783257270400a99e647fbe37bfdcd",
+  "repoUrl": "https://github.com/justinchan36/KinetiQ",
+  "deployedUrl": "",
+  "tags": ["computer-vision", "form-analysis", "fastapi", "next.js", "gemini"]
+}
