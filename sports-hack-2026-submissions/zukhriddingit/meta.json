@@ -1,0 +1,15 @@
+{
+  "title": "CoachLens Court",
+  "description": "CoachLens Court is an AI micro-coach for tennis forehands. It crops the core swing, links pose evidence to one coaching fix, drill, and question, and adds an AI review/share flow. No deployed URL yet; the demo runs locally from the public repo.",
+  "displayName": "zukhriddingit",
+  "videoUrl": "https://youtu.be/9OXct5PSvCA",
+  "repoUrl": "https://github.com/zukhriddingit/CoachLens",
+  "deployedUrl": "",
+  "tags": ["tennis", "ai-coach", "sports-tech", "mediapipe", "react", "gemini"],
+  "collaborators": [
+    {
+      "displayName": "atharvg-BU",
+      "githubHandle": "atharvg-BU"
+    }
+  ]
+}
