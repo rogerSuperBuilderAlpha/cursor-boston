@@ -1,0 +1,16 @@
+{
+  "title": "MatchRoom: Verified AI Coaching Room for High-Stakes Team Decisions",
+  "description": "Every team drowns in data but starves for decisions it can trust. MatchRoom turns raw game data into a coach-ready brief through a staff of AI agents: a Scout proposes insights, a Skeptic attacks weak and small-sample claims, and only evidence-backed conclusions reach the coach, each linked to the proof. Baseball advance scouting is the wedge; the same evidence-gated engine scales to any high-stakes team that must decide fast and be right. No invented numbers.",
+  "displayName": "Carter Theogene",
+  "videoUrl": "https://youtu.be/663nlL205Xw",
+  "repoUrl": "https://github.com/mrrCarter/matchroom",
+  "deployedUrl": "https://webmasters-antenna-creativity-wheels.trycloudflare.com/",
+  "tags": [
+    "baseball",
+    "ai-agents",
+    "scouting",
+    "verification",
+    "decision-intelligence",
+    "next.js"
+  ]
+}
