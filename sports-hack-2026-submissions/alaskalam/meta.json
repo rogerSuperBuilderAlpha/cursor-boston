@@ -1,8 +1,9 @@
 {
   "title": "Ski Buddy Matcher",
-  "description": "This app is designed to help people find compatible ski buddy matches for ski trips! Not just compatible terrain but - Would these people actually enjoy spending twelve to forty-eight hours trapped in snow together? A ski weekend compresses roommate dynamics, travel dynamics, and activity dynamics into like forty eight hours",
+  "description": "This app is designed to help people find compatible ski buddy matches for ski trips! Not just compatible terrain but - Would these people actually enjoy spending twelve to forty-eight hours trapped in snow together? A ski weekend compresses roommate dynamics, travel dynamics, and activity dynamics into like forty eight hours"
   "displayName": "skibuddymatcher",
-  "videoUrl": "https://www.loom.com/share/765f36cfd55b4caf827df3b6b679522e",
+  "videoUrl": "https://www.loom.com/share/e219498bde26469a8eee0eb0a16d733e",
   "repoUrl": "https://github.com/alaskalam/skibuddymatcher",
   "deployedUrl": "https://skibuddy.streamlit.app/"
 }
+
