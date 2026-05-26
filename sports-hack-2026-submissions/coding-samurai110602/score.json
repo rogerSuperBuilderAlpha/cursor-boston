@@ -1,0 +1,9 @@
+{
+  "ai": {
+    "score": 6,
+    "rationale": "Sharp, narrowly-scoped pitch: rate Premier League substitutions with a structured Brilliant/Fine/Too Late/Wrong Call verdict + tactical reasoning. Clear sports fit, sensible AI use (Groq LLaMA for tactical commentary), and a deployed Streamlit demo. Knocked down because videoUrl is empty — the brief required a short explainer, and the deployed app alone can't substitute for the demo. Solid concept that would land in the 7-8 range with a video.",
+    "model": "claude-opus-4-7",
+    "scoredAt": "2026-05-26T18:52:00.000Z",
+    "scorerVersion": 2
+  }
+}
