@@ -1,0 +1,9 @@
+{
+  "ai": {
+    "score": 5,
+    "rationale": "Solid attempt with all three required URLs (Loom + repo + Vercel deploy) and a recognizable sports angle (in-game coaching assistant). Held back by a generic pitch: \"AI-powered coaching assistant with real-time insights, performance analytics, and strategic recommendations\" reads like a product brochure rather than a specific build — no named sport, no named data source, no concrete decision the system actually helps with, and no AI-leverage specifics beyond the \"ai\" tag. The PR also targets `develop` instead of the `sports-hack-2026-submissions` branch, which signals less attention to the contribution flow. Lands at the median of the pack.",
+    "model": "claude-opus-4-7",
+    "scoredAt": "2026-05-26T19:08:00.000Z",
+    "scorerVersion": 2
+  }
+}
