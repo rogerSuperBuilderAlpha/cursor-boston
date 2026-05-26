@@ -108,7 +108,9 @@ class ScrapingPipeline:
         trends_data = self.trends_scraper.scrape_trends(name)
 
         # 4. Sponsorships
-        sponsorships = self.sponsor_scraper.scrape_sponsorships(name, sport)
+        sponsorship_extraction = self.sponsor_scraper.extract_sponsorships(name, sport, local_profile=wiki_profile)
+        sponsorships = sponsorship_extraction.get("deals", [])
+        sponsorship_strength_0_100 = sponsorship_extraction.get("sponsorship_strength_0_100", 0.0)
 
         # 5. Athletic Valuation
         market_value_m = self._get_athletic_market_value(name, sport, rank)
@@ -135,6 +137,8 @@ class ScrapingPipeline:
             "social_metrics": social_data,
             "google_trends": trends_data,
             "sponsorships": sponsorships,
+            "sponsorship": sponsorship_extraction,
+            "sponsorship_strength_0_100": sponsorship_strength_0_100,
             "brand_score": score_data
         }
 

@@ -1,4 +1,5 @@
 import hashlib
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 class SponsorshipScraper:
     def __init__(self):
@@ -163,6 +164,196 @@ class SponsorshipScraper:
         if decimals == 0:
             return int(val)
         return round(val, decimals)
+
+    def _canonicalize_brand(self, brand: Any) -> Optional[str]:
+        if not isinstance(brand, str):
+            return None
+        b = " ".join(brand.split()).strip()
+        return b or None
+
+    def _canonicalize_category(self, category: Any) -> str:
+        if not isinstance(category, str):
+            return "Unknown"
+        c = " ".join(category.split()).strip()
+        return c or "Unknown"
+
+    def _canonicalize_status(self, status: Any) -> str:
+        if not isinstance(status, str):
+            return "Unknown"
+        s = " ".join(status.split()).strip().lower()
+        if s in {"current", "active", "ongoing"}:
+            return "Current"
+        if s in {"past", "former", "expired", "ended"}:
+            return "Past"
+        return "Unknown"
+
+    def _coerce_value_m(self, value: Any) -> Optional[float]:
+        if value is None:
+            return None
+        if isinstance(value, (int, float)):
+            v = float(value)
+            if v != v:  # NaN
+                return None
+            if v < 0:
+                return None
+            return v
+        if isinstance(value, str):
+            s = value.strip().lower().replace("$", "").replace(",", "")
+            if not s:
+                return None
+            # very small parser for things like "2.5m", "2.5", "2.5 million"
+            mult = 1.0
+            if s.endswith("m"):
+                mult = 1.0
+                s = s[:-1].strip()
+            elif "million" in s:
+                mult = 1.0
+                s = s.replace("million", "").strip()
+            try:
+                v = float(s) * mult
+                if v < 0:
+                    return None
+                return v
+            except Exception:
+                return None
+        return None
+
+    def normalize_deals(self, raw_deals: Any) -> List[Dict[str, Any]]:
+        """
+        Normalize sponsorship deals into a stable shape:
+          {brand, category, deal_value_estimate_m, status}
+        Accepts raw lists from local scrape output or previously cached JSON.
+        """
+        if not isinstance(raw_deals, list):
+            return []
+
+        normalized: List[Dict[str, Any]] = []
+        for item in raw_deals:
+            if not isinstance(item, dict):
+                continue
+
+            brand = self._canonicalize_brand(item.get("brand") or item.get("sponsor") or item.get("name"))
+            if not brand:
+                continue
+
+            category = self._canonicalize_category(item.get("category") or item.get("industry"))
+            status = self._canonicalize_status(item.get("status") or item.get("deal_status"))
+            value_m = self._coerce_value_m(
+                item.get("deal_value_estimate_m")
+                or item.get("value_estimate_m")
+                or item.get("deal_value_m")
+                or item.get("deal_value")
+            )
+
+            normalized.append(
+                {
+                    "brand": brand,
+                    "category": category,
+                    "deal_value_estimate_m": value_m,
+                    "status": status,
+                }
+            )
+
+        # Deduplicate (brand, category, status) keeping max value if available
+        by_key: Dict[Tuple[str, str, str], Dict[str, Any]] = {}
+        for d in normalized:
+            k = (d["brand"].lower(), d["category"].lower(), d["status"])
+            prev = by_key.get(k)
+            if not prev:
+                by_key[k] = d
+                continue
+            pv = prev.get("deal_value_estimate_m")
+            nv = d.get("deal_value_estimate_m")
+            if pv is None and nv is not None:
+                by_key[k] = d
+            elif pv is not None and nv is not None and nv > pv:
+                by_key[k] = d
+
+        return list(by_key.values())
+
+    def extract_sponsorships(self, athlete_name: str, sport: str, local_profile: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """
+        Stage-5 style extraction:
+        - Prefer sponsorship info already present in local scrape output/cached profile (allowlisted local source).
+        - Fall back to deterministic simulated portfolio generation.
+        Returns a dict with deals + a computed strength score.
+        """
+        source = "simulated"
+        raw_deals: Any = None
+        if isinstance(local_profile, dict):
+            # accept multiple possible shapes
+            raw_deals = (
+                local_profile.get("sponsorships")
+                or local_profile.get("sponsors")
+                or local_profile.get("endorsements")
+                or (local_profile.get("sponsorship", {}) or {}).get("deals")
+            )
+            if isinstance(raw_deals, list) and len(raw_deals) > 0:
+                source = "local_profile"
+
+        deals = self.normalize_deals(raw_deals) if source == "local_profile" else self.normalize_deals(self.scrape_sponsorships(athlete_name, sport))
+
+        strength = self.compute_sponsorship_strength_0_100(deals)
+        categories = sorted({d.get("category", "Unknown") for d in deals if isinstance(d.get("category"), str)})
+        unique_brands = sorted({d.get("brand") for d in deals if isinstance(d.get("brand"), str)})
+
+        confidence = "low"
+        if len(unique_brands) >= 4:
+            confidence = "high"
+        elif len(unique_brands) >= 2:
+            confidence = "medium"
+
+        return {
+            "deals": deals,
+            "sponsorship_strength_0_100": strength,
+            "unique_sponsor_count": len(unique_brands),
+            "categories": categories,
+            "source": source,
+            "confidence": confidence,
+        }
+
+    def compute_sponsorship_strength_0_100(self, deals: Iterable[Dict[str, Any]]) -> float:
+        """
+        Deterministic 0–100 score based on:
+        - quantity of current deals (signal of marketability)
+        - total estimated deal value (if available)
+        - portfolio diversity + premium-category bonus
+        """
+        deals_list = [d for d in deals if isinstance(d, dict)]
+        if not deals_list:
+            return 0.0
+
+        current = [d for d in deals_list if (d.get("status") or "Unknown") == "Current"]
+        num_deals = len(current) if current else len(deals_list)
+
+        total_value = 0.0
+        any_value = False
+        for d in deals_list:
+            v = d.get("deal_value_estimate_m")
+            if isinstance(v, (int, float)) and v == v and v >= 0:
+                total_value += float(v)
+                any_value = True
+
+        # Quantity: saturate around 6 current deals -> 40 pts
+        qty_score = min(1.0, num_deals / 6.0) * 40.0
+
+        # Value: saturate around $25M total -> 40 pts. If values are missing, don't award value points.
+        val_score = (min(1.0, total_value / 25.0) * 40.0) if any_value else 0.0
+
+        categories = {str(d.get("category") or "Unknown").strip().lower() for d in deals_list}
+        categories.discard("")
+        if not categories:
+            categories = {"unknown"}
+
+        # Diversity + premium categories: up to 20 pts
+        diversity_score = min(1.0, len(categories) / 5.0) * 10.0
+        premium_cats = {"luxury", "technology", "finance", "automotive"}
+        premium_bonus = min(10.0, 2.5 * len(categories.intersection(premium_cats)))
+        div_score = diversity_score + premium_bonus
+
+        score = qty_score + val_score + div_score
+        score = max(0.0, min(100.0, round(score, 1)))
+        return float(score)
 
     def scrape_sponsorships(self, athlete_name, sport):
         """Scrape or generate sponsorship portfolio for an athlete."""
