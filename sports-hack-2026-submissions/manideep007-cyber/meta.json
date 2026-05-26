@@ -1,0 +1,10 @@
+{
+  "title": "InjuryIQ — Athlete Recovery Risk Predictor",
+  "description": "Athletic trainers face a high-stakes daily call: should this athlete practice today? InjuryIQ takes a 5-field morning check-in (training load, sleep, soreness, days since rest, prior injuries) and returns a calibrated injury-risk score with the top 3 driving factors for that athlete today. Built on a star-schema data model with a logistic regression trained on 1,500 athlete-days.",
+  "displayName": "Manideep Mallurwar",
+  "videoUrl": "https://www.loom.com/share/55bf45d4040041a39f14b2505047ddbb",
+  "repoUrl": "https://github.com/manideep007-cyber/-injury-iq",
+  "deployedUrl": "https://injury-iq-manideep.streamlit.app",
+  "tags": ["sports-tech", "athlete-performance", "ml", "streamlit", "injury-prevention"],
+  "collaborators": []
+}
