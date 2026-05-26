@@ -1,0 +1,10 @@
+{
+    "title": "Cricket IPL 2026 Stats Visualizer",
+    "description": "A web app that visualizes cricket IPL 2026 stats for a given player or team.",
+    "displayName": "Siddharth Tewari",
+    "videoUrl": "https://www.loom.com/share/...",
+    "repoUrl": "https://github.com/t-siddharth/cricket-stats-visualizer",
+    "deployedUrl": "https://cricket-stats-visualizer.vercel.app",
+    "tags": ["cricket", "stats", "visualization"],
+    "collaborators": []
+  }
