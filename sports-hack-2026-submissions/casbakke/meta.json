@@ -1,0 +1,14 @@
+{
+  "title": "FieldBack",
+  "description": "FieldBack is a platform for sports teams that guides athletes through AI-powered injury intake across many injury types, estimates severity and urgency, and generates personalized care plans. It helps athletes and staff get structured next steps faster when someone gets hurt. No live deployment yet; run locally from the repo.",
+  "displayName": "Craig Bakke",
+  "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+  "repoUrl": "https://github.com/Cursor-Token-Burners/cursor-boston-hackathon",
+  "deployedUrl": "",
+  "collaborators": [
+    { "displayName": "Atharva Kamble", "githubHandle": "Atharva9281" },
+    { "displayName": "Justin Hong", "githubHandle": "hongnoul" },
+    { "displayName": "Matt Anderson", "githubHandle": "mattabets" },
+    { "displayName": "Michael Shehata", "githubHandle": "michaelnaeim" }
+  ]
+}
