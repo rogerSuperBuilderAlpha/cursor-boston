@@ -1,0 +1,89 @@
+{
+  "name": "Kevin Durant",
+  "sport": "Basketball",
+  "rank": 3,
+  "team": "TBD",
+  "position": "Small forward / power forward",
+  "nationality": "Global",
+  "age": 37,
+  "birth_date": "1988-09-29",
+  "bio": "Kevin Wayne Durant (born September 29, 1988), also known by his initials KD, is an American professional basketball player for the Houston Rockets of the National Basketball Association (NBA). Nicknamed \"the Slim Reaper\", he is widely regarded as one of the greatest basketball players and one of the greatest scorers of all time. Durant has won two NBA championships, an NBA Most Valuable Player Award, two NBA Finals Most Valuable Player Awards, two NBA All-Star Game Most Valuable Player Awards, four NBA scoring titles, the NBA Rookie of the Year Award, and is the only male basketball player to win four Olympic gold medals. He has been named to 12 All-NBA teams (including six First Teams) and selected 16 times as an NBA All-Star.",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/d/d3/Kevin_Durant%2C_Paris_2024_%28cropped%29.jpg",
+  "wikipedia_url": "https://en.wikipedia.org/wiki/Kevin%20Durant",
+  "market_value_m": 26.5,
+  "social_metrics": {
+    "instagram": {
+      "followers": 1429749,
+      "engagement_rate": 2.1,
+      "post_frequency_per_week": 2.3,
+      "likes_per_post": 30024,
+      "comments_per_post": 300
+    },
+    "facebook": {
+      "followers": 257354,
+      "page_reach_monthly": 198162,
+      "top_regions": "USA: 60%, China: 15%, Philippines: 10%"
+    },
+    "tiktok": {
+      "followers": 600494,
+      "avg_views_millions": 4.4,
+      "viral_frequency": 0.1,
+      "total_likes": 13210868
+    },
+    "youtube": {
+      "subscribers": 185867,
+      "avg_views_millions": 0.5,
+      "upload_frequency_per_month": 0.15
+    }
+  },
+  "google_trends": {
+    "score": 53,
+    "trajectory": "declining",
+    "interest_history": [
+      80,
+      75,
+      68,
+      64,
+      64,
+      58,
+      51,
+      45,
+      40,
+      36,
+      29,
+      28
+    ],
+    "status": "simulated"
+  },
+  "sponsorships": [
+    {
+      "brand": "Under Armour",
+      "category": "Apparel",
+      "deal_value_estimate_m": 1.4,
+      "status": "Current"
+    },
+    {
+      "brand": "Sony PlayStation",
+      "category": "Technology",
+      "deal_value_estimate_m": 2.5,
+      "status": "Current"
+    },
+    {
+      "brand": "Visa",
+      "category": "Finance",
+      "deal_value_estimate_m": 3.1,
+      "status": "Current"
+    }
+  ],
+  "brand_score": {
+    "overall_score": 45.3,
+    "tier": "Rising Talent",
+    "sub_scores": {
+      "social_reach": 43.9,
+      "engagement_quality": 50.2,
+      "search_trend": 45.0,
+      "sponsorship_strength": 44.0,
+      "athletic_market_value": 36.9
+    }
+  }
+}

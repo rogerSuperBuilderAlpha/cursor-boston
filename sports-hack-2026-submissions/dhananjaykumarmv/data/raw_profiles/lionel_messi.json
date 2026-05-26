@@ -1,0 +1,107 @@
+{
+  "name": "Lionel Messi",
+  "sport": "Soccer",
+  "rank": 2,
+  "team": "Inter Miami",
+  "position": "Forward",
+  "nationality": "Argentina",
+  "age": 38,
+  "birth_date": "1987-06-24",
+  "bio": "Lionel Andrés \"Leo\" Messi (born 24 June 1987) is an Argentine professional footballer who plays as a forward for and captains both the Major League Soccer club Inter Miami and the Argentina national team. Widely regarded as one of the greatest players in history, Messi has set numerous records for individual accolades won throughout his professional footballing career, including eight Ballon d'Ors, six European Golden Shoes, and eight times being named the world's best player by FIFA. In 2025, he was named the All Time Men's World Best Player by the IFFHS. Messi is the most decorated player in the history of professional football, having won 46 team trophies.",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/6/6b/Lionel_Messi_White_House_2026_%283x4_cropped%29.jpg",
+  "wikipedia_url": "https://en.wikipedia.org/wiki/Lionel%20Messi",
+  "market_value_m": 74.7,
+  "social_metrics": {
+    "instagram": {
+      "followers": 503000000,
+      "engagement_rate": 2.8,
+      "post_frequency_per_week": 3.1,
+      "likes_per_post": 14000000,
+      "comments_per_post": 85000
+    },
+    "facebook": {
+      "followers": 116000000,
+      "page_reach_monthly": 45000000,
+      "top_regions": "Argentina: 20%, India: 15%, USA: 12%"
+    },
+    "tiktok": {
+      "followers": 12000000,
+      "avg_views_millions": 15.5,
+      "viral_frequency": 0.35,
+      "total_likes": 98000000
+    },
+    "youtube": {
+      "subscribers": 8500000,
+      "avg_views_millions": 5.8,
+      "upload_frequency_per_month": 0.2
+    }
+  },
+  "google_trends": {
+    "score": 42,
+    "trajectory": "stable",
+    "interest_history": [
+      37,
+      43,
+      43,
+      56,
+      39,
+      41,
+      52,
+      57,
+      33,
+      32,
+      35,
+      46
+    ],
+    "status": "live"
+  },
+  "sponsorships": [
+    {
+      "brand": "Adidas",
+      "category": "Apparel",
+      "deal_value_estimate_m": 25.0,
+      "status": "Current"
+    },
+    {
+      "brand": "Pepsi",
+      "category": "Food and Beverage",
+      "deal_value_estimate_m": 6.0,
+      "status": "Current"
+    },
+    {
+      "brand": "Apple",
+      "category": "Technology",
+      "deal_value_estimate_m": 12.0,
+      "status": "Current"
+    },
+    {
+      "brand": "Mastercard",
+      "category": "Finance",
+      "deal_value_estimate_m": 4.0,
+      "status": "Current"
+    },
+    {
+      "brand": "Budweiser",
+      "category": "Food and Beverage",
+      "deal_value_estimate_m": 3.0,
+      "status": "Current"
+    },
+    {
+      "brand": "Hard Rock Cafe",
+      "category": "Luxury",
+      "deal_value_estimate_m": 2.0,
+      "status": "Current"
+    }
+  ],
+  "brand_score": {
+    "overall_score": 84.3,
+    "tier": "Elite Influencer",
+    "sub_scores": {
+      "social_reach": 100.0,
+      "engagement_quality": 100.0,
+      "search_trend": 42.0,
+      "sponsorship_strength": 100.0,
+      "athletic_market_value": 58.6
+    }
+  }
+}

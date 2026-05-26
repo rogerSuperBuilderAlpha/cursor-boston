@@ -1,0 +1,89 @@
+{
+  "name": "Coco Gauff",
+  "sport": "Tennis",
+  "rank": 9,
+  "team": "TBD",
+  "position": "Player",
+  "nationality": "Global",
+  "age": 22,
+  "birth_date": "2004-03-13",
+  "bio": "Cori Dionne \"Coco\" Gauff ( GAWF; born March 13, 2004) is an American professional tennis player. She has a career-high ranking of world No. 2 in singles and of world No. 1 in doubles by the WTA.",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/b/bb/Coco_Gauff_Miami_Open.jpg",
+  "wikipedia_url": "https://en.wikipedia.org/wiki/Coco%20Gauff",
+  "market_value_m": 13.0,
+  "social_metrics": {
+    "instagram": {
+      "followers": 3098489,
+      "engagement_rate": 1.8,
+      "post_frequency_per_week": 1.9,
+      "likes_per_post": 55772,
+      "comments_per_post": 557
+    },
+    "facebook": {
+      "followers": 1425304,
+      "page_reach_monthly": 1125990,
+      "top_regions": "Europe: 40%, USA: 30%, Australia: 10%"
+    },
+    "tiktok": {
+      "followers": 2014017,
+      "avg_views_millions": 2.8,
+      "viral_frequency": 0.22,
+      "total_likes": 20140170
+    },
+    "youtube": {
+      "subscribers": 371818,
+      "avg_views_millions": 1.1,
+      "upload_frequency_per_month": 0.28
+    }
+  },
+  "google_trends": {
+    "score": 99,
+    "trajectory": "rising",
+    "interest_history": [
+      98,
+      97,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      99
+    ],
+    "status": "simulated"
+  },
+  "sponsorships": [
+    {
+      "brand": "New Balance",
+      "category": "Apparel",
+      "deal_value_estimate_m": 2.1,
+      "status": "Current"
+    },
+    {
+      "brand": "Apple",
+      "category": "Technology",
+      "deal_value_estimate_m": 3.0,
+      "status": "Current"
+    },
+    {
+      "brand": "State Farm",
+      "category": "Finance",
+      "deal_value_estimate_m": 1.2,
+      "status": "Current"
+    }
+  ],
+  "brand_score": {
+    "overall_score": 60.9,
+    "tier": "Rising Talent",
+    "sub_scores": {
+      "social_reach": 54.7,
+      "engagement_quality": 59.0,
+      "search_trend": 100.0,
+      "sponsorship_strength": 42.6,
+      "athletic_market_value": 30.9
+    }
+  }
+}

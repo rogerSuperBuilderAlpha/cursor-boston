@@ -1,0 +1,101 @@
+{
+  "name": "Kylian Mbappé",
+  "sport": "Soccer",
+  "rank": 1,
+  "team": "Real Madrid",
+  "position": "Forward",
+  "nationality": "France",
+  "age": 27,
+  "birth_date": "1998-12-20",
+  "bio": "Kylian Mbappé Lottin (born 20 December 1998) is a French professional footballer who plays as a forward for La Liga club Real Madrid and captains the France national team. Widely regarded as one of the best players in the world, he is known for his pace, dribbling, and clinical finishing. Born in Paris and raised in nearby Bondy, Mbappé began his senior club career in 2015 with Monaco. With Monaco, he won the Ligue 1 title for the 2016–17 season.",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/6/66/Picture_with_Mbapp%C3%A9_%28cropped_and_rotated%29.jpg",
+  "wikipedia_url": "https://en.wikipedia.org/wiki/Kylian%20Mbapp%C3%A9",
+  "market_value_m": 171.2,
+  "social_metrics": {
+    "instagram": {
+      "followers": 110000000,
+      "engagement_rate": 3.2,
+      "post_frequency_per_week": 2.5,
+      "likes_per_post": 3520000,
+      "comments_per_post": 28000
+    },
+    "facebook": {
+      "followers": 28000000,
+      "page_reach_monthly": 12000000,
+      "top_regions": "France: 25%, Brazil: 12%, Morocco: 10%"
+    },
+    "tiktok": {
+      "followers": 45000000,
+      "avg_views_millions": 8.2,
+      "viral_frequency": 0.22,
+      "total_likes": 320000000
+    },
+    "youtube": {
+      "subscribers": 12000000,
+      "avg_views_millions": 4.1,
+      "upload_frequency_per_month": 0.5
+    }
+  },
+  "google_trends": {
+    "score": 33,
+    "trajectory": "rising",
+    "interest_history": [
+      34,
+      22,
+      18,
+      22,
+      40,
+      34,
+      45,
+      45,
+      41,
+      30,
+      27,
+      42
+    ],
+    "status": "live"
+  },
+  "sponsorships": [
+    {
+      "brand": "Nike",
+      "category": "Apparel",
+      "deal_value_estimate_m": 20.0,
+      "status": "Current"
+    },
+    {
+      "brand": "Hublot",
+      "category": "Luxury",
+      "deal_value_estimate_m": 5.0,
+      "status": "Current"
+    },
+    {
+      "brand": "EA Sports",
+      "category": "Gaming",
+      "deal_value_estimate_m": 3.0,
+      "status": "Current"
+    },
+    {
+      "brand": "Dior",
+      "category": "Luxury",
+      "deal_value_estimate_m": 4.0,
+      "status": "Current"
+    },
+    {
+      "brand": "Oakley",
+      "category": "Luxury",
+      "deal_value_estimate_m": 2.0,
+      "status": "Current"
+    }
+  ],
+  "brand_score": {
+    "overall_score": 85.7,
+    "tier": "Elite Influencer",
+    "sub_scores": {
+      "social_reach": 90.0,
+      "engagement_quality": 100.0,
+      "search_trend": 41.0,
+      "sponsorship_strength": 100.0,
+      "athletic_market_value": 100.0
+    }
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "name": "Giannis Antetokounmpo",
+  "sport": "Basketball",
+  "rank": 4,
+  "team": "TBD",
+  "position": "Power forward",
+  "nationality": "Greek / Nigerian",
+  "age": 31,
+  "birth_date": "1994-12-06",
+  "bio": "Giannis Sina Ougko Antetokounmpo (born Giannis Sina Ugo Adetokunbo, December 6, 1994) is a Nigerian-Greek professional basketball player for the Milwaukee Bucks of the National Basketball Association (NBA). His size, speed, and strength have earned him the nickname \"Greek Freak\". He is widely regarded as one of the greatest players and power forwards of all time. Born and raised in Athens to Nigerian parents, Antetokounmpo began playing basketball for the youth teams of Filathlitikos in Athens.",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/9/9c/Giannis_Antetokounmpo_%2851915153421%29_%28cropped%29.jpg",
+  "wikipedia_url": "https://en.wikipedia.org/wiki/Giannis%20Antetokounmpo",
+  "market_value_m": 24.3,
+  "social_metrics": {
+    "instagram": {
+      "followers": 17243347,
+      "engagement_rate": 3.2,
+      "post_frequency_per_week": 1.1,
+      "likes_per_post": 551787,
+      "comments_per_post": 5517
+    },
+    "facebook": {
+      "followers": 2241635,
+      "page_reach_monthly": 1344981,
+      "top_regions": "USA: 60%, China: 15%, Philippines: 10%"
+    },
+    "tiktok": {
+      "followers": 8966540,
+      "avg_views_millions": 4.4,
+      "viral_frequency": 0.07,
+      "total_likes": 170364260
+    },
+    "youtube": {
+      "subscribers": 689733,
+      "avg_views_millions": 1.4,
+      "upload_frequency_per_month": 0.38
+    }
+  },
+  "google_trends": {
+    "score": 51,
+    "trajectory": "stable",
+    "interest_history": [
+      52,
+      50,
+      48,
+      50,
+      49,
+      50,
+      53,
+      53,
+      54,
+      53,
+      51,
+      53
+    ],
+    "status": "simulated"
+  },
+  "sponsorships": [
+    {
+      "brand": "Under Armour",
+      "category": "Apparel",
+      "deal_value_estimate_m": 1.9,
+      "status": "Current"
+    },
+    {
+      "brand": "Coca-Cola",
+      "category": "Food and Beverage",
+      "deal_value_estimate_m": 0.7,
+      "status": "Current"
+    },
+    {
+      "brand": "Richard Mille",
+      "category": "Luxury",
+      "deal_value_estimate_m": 1.6,
+      "status": "Current"
+    }
+  ],
+  "brand_score": {
+    "overall_score": 62.5,
+    "tier": "Rising Talent",
+    "sub_scores": {
+      "social_reach": 69.9,
+      "engagement_quality": 84.8,
+      "search_trend": 51.0,
+      "sponsorship_strength": 38.4,
+      "athletic_market_value": 35.9
+    }
+  }
+}

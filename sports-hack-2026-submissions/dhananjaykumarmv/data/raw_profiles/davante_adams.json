@@ -1,0 +1,95 @@
+{
+  "name": "Davante Adams",
+  "sport": "American Football",
+  "rank": 16,
+  "team": "TBD",
+  "position": "Wide receiver",
+  "nationality": "Global",
+  "age": 33,
+  "birth_date": "1992-12-24",
+  "bio": "Davante Lavell Adams (born December 24, 1992) is an American professional football wide receiver for the Los Angeles Rams of the National Football League (NFL). He played two seasons of college football for the Fresno State Bulldogs and was named a second-team All-American in 2013 before being selected in the second round of the 2014 NFL draft by the Green Bay Packers. He is the only player in NFL history to lead the league in receiving touchdowns with three different teams. Early in his career with the Packers, Adams was low in the wide receiver depth chart behind teammates Jordy Nelson and Randall Cobb.",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/2/22/Davante_Adams_Packers_vs_WFT_OCT2021_%28cropped%29.jpg",
+  "wikipedia_url": "https://en.wikipedia.org/wiki/Davante%20Adams",
+  "market_value_m": 9.1,
+  "social_metrics": {
+    "instagram": {
+      "followers": 6158697,
+      "engagement_rate": 2.6,
+      "post_frequency_per_week": 3.4,
+      "likes_per_post": 160126,
+      "comments_per_post": 1601
+    },
+    "facebook": {
+      "followers": 3079348,
+      "page_reach_monthly": 1016184,
+      "top_regions": "USA: 92%, Canada: 5%, Germany: 2%"
+    },
+    "tiktok": {
+      "followers": 3202522,
+      "avg_views_millions": 3.4,
+      "viral_frequency": 0.21,
+      "total_likes": 67252962
+    },
+    "youtube": {
+      "subscribers": 862217,
+      "avg_views_millions": 1.0,
+      "upload_frequency_per_month": 0.41
+    }
+  },
+  "google_trends": {
+    "score": 90,
+    "trajectory": "stable",
+    "interest_history": [
+      87,
+      90,
+      93,
+      90,
+      91,
+      91,
+      94,
+      91,
+      90,
+      88,
+      90,
+      93
+    ],
+    "status": "simulated"
+  },
+  "sponsorships": [
+    {
+      "brand": "Under Armour",
+      "category": "Apparel",
+      "deal_value_estimate_m": 2.7,
+      "status": "Current"
+    },
+    {
+      "brand": "Hublot",
+      "category": "Luxury",
+      "deal_value_estimate_m": 1.0,
+      "status": "Current"
+    },
+    {
+      "brand": "Porsche",
+      "category": "Automotive",
+      "deal_value_estimate_m": 2.5,
+      "status": "Current"
+    },
+    {
+      "brand": "Mercedes-Benz",
+      "category": "Automotive",
+      "deal_value_estimate_m": 2.3,
+      "status": "Current"
+    }
+  ],
+  "brand_score": {
+    "overall_score": 65.6,
+    "tier": "Rising Talent",
+    "sub_scores": {
+      "social_reach": 61.7,
+      "engagement_quality": 69.1,
+      "search_trend": 90.0,
+      "sponsorship_strength": 57.0,
+      "athletic_market_value": 29.1
+    }
+  }
+}

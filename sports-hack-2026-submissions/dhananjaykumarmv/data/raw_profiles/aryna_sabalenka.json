@@ -1,0 +1,95 @@
+{
+  "name": "Aryna Sabalenka",
+  "sport": "Tennis",
+  "rank": 8,
+  "team": "TBD",
+  "position": "Player",
+  "nationality": "Global",
+  "age": 28,
+  "birth_date": "1998-05-05",
+  "bio": "Aryna Siarhiejeŭna Sabalenka (born 5 May 1998) is a Belarusian professional tennis player. She is the current world No. 1 in women's singles by the WTA and is a former No. 1 in doubles.",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/f/f0/Aryna_Sabalenka_%282024_DC_Open%29_06.jpg",
+  "wikipedia_url": "https://en.wikipedia.org/wiki/Aryna%20Sabalenka",
+  "market_value_m": 20.2,
+  "social_metrics": {
+    "instagram": {
+      "followers": 851097,
+      "engagement_rate": 4.2,
+      "post_frequency_per_week": 1.8,
+      "likes_per_post": 35746,
+      "comments_per_post": 357
+    },
+    "facebook": {
+      "followers": 238307,
+      "page_reach_monthly": 181113,
+      "top_regions": "Europe: 40%, USA: 30%, Australia: 10%"
+    },
+    "tiktok": {
+      "followers": 246818,
+      "avg_views_millions": 0.7,
+      "viral_frequency": 0.2,
+      "total_likes": 2468180
+    },
+    "youtube": {
+      "subscribers": 85109,
+      "avg_views_millions": 0.5,
+      "upload_frequency_per_month": 0.83
+    }
+  },
+  "google_trends": {
+    "score": 69,
+    "trajectory": "stable",
+    "interest_history": [
+      75,
+      72,
+      70,
+      69,
+      66,
+      68,
+      65,
+      68,
+      70,
+      71,
+      68,
+      69
+    ],
+    "status": "simulated"
+  },
+  "sponsorships": [
+    {
+      "brand": "Adidas",
+      "category": "Apparel",
+      "deal_value_estimate_m": 3.2,
+      "status": "Current"
+    },
+    {
+      "brand": "Chase",
+      "category": "Finance",
+      "deal_value_estimate_m": 2.3,
+      "status": "Current"
+    },
+    {
+      "brand": "Hublot",
+      "category": "Luxury",
+      "deal_value_estimate_m": 2.1,
+      "status": "Current"
+    },
+    {
+      "brand": "Richard Mille",
+      "category": "Luxury",
+      "deal_value_estimate_m": 1.8,
+      "status": "Current"
+    }
+  ],
+  "brand_score": {
+    "overall_score": 58.2,
+    "tier": "Rising Talent",
+    "sub_scores": {
+      "social_reach": 38.0,
+      "engagement_quality": 75.7,
+      "search_trend": 69.0,
+      "sponsorship_strength": 58.8,
+      "athletic_market_value": 34.1
+    }
+  }
+}

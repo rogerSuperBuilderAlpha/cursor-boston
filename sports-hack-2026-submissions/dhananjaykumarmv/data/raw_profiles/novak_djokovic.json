@@ -1,0 +1,101 @@
+{
+  "name": "Novak Djokovic",
+  "sport": "Tennis",
+  "rank": 1,
+  "team": "TBD",
+  "position": "Player",
+  "nationality": "Global",
+  "age": 39,
+  "birth_date": "1987-05-22",
+  "bio": "Novak Djokovic (born 22 May 1987) is a Serbian professional tennis player. Djokovic has been ranked as the world No. 1 in men's singles by the Association of Tennis Professionals (ATP) for a record 428 weeks, finished as the year-end No. 1 a record eight times, and has been ranked No.",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/d/d7/Novak_Djokovic_2024_Paris_Olympics.jpg",
+  "wikipedia_url": "https://en.wikipedia.org/wiki/Novak%20Djokovic",
+  "market_value_m": 9.6,
+  "social_metrics": {
+    "instagram": {
+      "followers": 14500000,
+      "engagement_rate": 3.1,
+      "post_frequency_per_week": 1.7,
+      "likes_per_post": 450000,
+      "comments_per_post": 3100
+    },
+    "facebook": {
+      "followers": 10000000,
+      "page_reach_monthly": 2800000,
+      "top_regions": "Serbia: 30%, Italy: 12%, France: 8%"
+    },
+    "tiktok": {
+      "followers": 800000,
+      "avg_views_millions": 1.8,
+      "viral_frequency": 0.14,
+      "total_likes": 4500000
+    },
+    "youtube": {
+      "subscribers": 190000,
+      "avg_views_millions": 0.4,
+      "upload_frequency_per_month": 0.1
+    }
+  },
+  "google_trends": {
+    "score": 87,
+    "trajectory": "stable",
+    "interest_history": [
+      87,
+      88,
+      88,
+      89,
+      91,
+      89,
+      87,
+      85,
+      87,
+      87,
+      87,
+      90
+    ],
+    "status": "simulated"
+  },
+  "sponsorships": [
+    {
+      "brand": "Lacoste",
+      "category": "Apparel",
+      "deal_value_estimate_m": 10.0,
+      "status": "Current"
+    },
+    {
+      "brand": "Asics",
+      "category": "Apparel",
+      "deal_value_estimate_m": 4.0,
+      "status": "Current"
+    },
+    {
+      "brand": "Head",
+      "category": "Apparel",
+      "deal_value_estimate_m": 2.5,
+      "status": "Current"
+    },
+    {
+      "brand": "Hublot",
+      "category": "Luxury",
+      "deal_value_estimate_m": 3.5,
+      "status": "Current"
+    },
+    {
+      "brand": "Peugeot",
+      "category": "Automotive",
+      "deal_value_estimate_m": 2.0,
+      "status": "Past"
+    }
+  ],
+  "brand_score": {
+    "overall_score": 78.6,
+    "tier": "Major Star",
+    "sub_scores": {
+      "social_reach": 68.5,
+      "engagement_quality": 90.2,
+      "search_trend": 87.0,
+      "sponsorship_strength": 94.0,
+      "athletic_market_value": 29.3
+    }
+  }
+}

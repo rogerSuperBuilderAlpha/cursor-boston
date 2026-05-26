@@ -1,0 +1,95 @@
+{
+  "name": "Antoine Griezmann",
+  "sport": "Soccer",
+  "rank": 12,
+  "team": "Atlético Madrid",
+  "position": "Forwardattacking midfielder",
+  "nationality": "France",
+  "age": 35,
+  "birth_date": "1991-03-21",
+  "bio": "Antoine Griezmann (French pronunciation: [ɑ̃twan ɡʁijɛzman]; born 21 March 1991) is a French professional footballer who plays as a forward or attacking midfielder and set to formally join Major League Soccer (MLS) club Orlando City SC as a Designated Player. Considered one of the best players of his generation, he is primarily known for his versatility, game intelligence, attacking output, and off-ball attributes. He will formally join Major League Soccer club Orlando City in July 2026. Griezmann began his senior club career with Spanish side Real Sociedad in 2009, where he had previously been a youth graduate, and won the Segunda División in his first season.",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/6/6e/FRA-ARG_%2810%29_%28cropped%29.jpg",
+  "wikipedia_url": "https://en.wikipedia.org/wiki/Antoine%20Griezmann",
+  "market_value_m": 80.3,
+  "social_metrics": {
+    "instagram": {
+      "followers": 24249417,
+      "engagement_rate": 1.6,
+      "post_frequency_per_week": 2.1,
+      "likes_per_post": 387990,
+      "comments_per_post": 3879
+    },
+    "facebook": {
+      "followers": 9699766,
+      "page_reach_monthly": 3685911,
+      "top_regions": "Brazil: 20%, UK: 15%, Nigeria: 10%"
+    },
+    "tiktok": {
+      "followers": 21339486,
+      "avg_views_millions": 2.9,
+      "viral_frequency": 0.15,
+      "total_likes": 128036916
+    },
+    "youtube": {
+      "subscribers": 2667435,
+      "avg_views_millions": 1.4,
+      "upload_frequency_per_month": 0.35
+    }
+  },
+  "google_trends": {
+    "score": 31,
+    "trajectory": "declining",
+    "interest_history": [
+      46,
+      40,
+      41,
+      36,
+      32,
+      32,
+      32,
+      28,
+      23,
+      23,
+      24,
+      19
+    ],
+    "status": "simulated"
+  },
+  "sponsorships": [
+    {
+      "brand": "New Balance",
+      "category": "Apparel",
+      "deal_value_estimate_m": 1.2,
+      "status": "Current"
+    },
+    {
+      "brand": "Apple",
+      "category": "Technology",
+      "deal_value_estimate_m": 2.7,
+      "status": "Current"
+    },
+    {
+      "brand": "Samsung",
+      "category": "Technology",
+      "deal_value_estimate_m": 1.0,
+      "status": "Current"
+    },
+    {
+      "brand": "State Farm",
+      "category": "Finance",
+      "deal_value_estimate_m": 2.1,
+      "status": "Current"
+    }
+  ],
+  "brand_score": {
+    "overall_score": 56.0,
+    "tier": "Rising Talent",
+    "sub_scores": {
+      "social_reach": 77.2,
+      "engagement_quality": 59.8,
+      "search_trend": 23.0,
+      "sponsorship_strength": 54.0,
+      "athletic_market_value": 61.1
+    }
+  }
+}

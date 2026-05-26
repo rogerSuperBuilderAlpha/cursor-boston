@@ -1,0 +1,95 @@
+{
+  "name": "Saquon Barkley",
+  "sport": "American Football",
+  "rank": 17,
+  "team": "TBD",
+  "position": "Running back",
+  "nationality": "Global",
+  "age": 29,
+  "birth_date": "1997-02-09",
+  "bio": "Saquon Rasul Quevis Barkley ( SAY-kwon; born February 9, 1997) is an American professional football running back for the Philadelphia Eagles of the National Football League (NFL). He played college football for the Penn State Nittany Lions, where he set several school records for his offensive production over three seasons before forgoing his senior year to enter the NFL. In 2017, Barkley finished fourth in Heisman Trophy voting with 304 votes, third in Maxwell Award voting, and received multiple national and Big Ten Conference awards and recognition. During his three-year collegiate career, Barkley set Penn State records for most all-purpose career yards (5,538), most career rushing touchdowns (43), most career receiving yards by a running back (1,157), most rushing yards by a freshman and sophomore, and most total yards in a single game.",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/7/7c/Saquon_Barkley_112024.jpg",
+  "wikipedia_url": "https://en.wikipedia.org/wiki/Saquon%20Barkley",
+  "market_value_m": 7.8,
+  "social_metrics": {
+    "instagram": {
+      "followers": 3954572,
+      "engagement_rate": 2.3,
+      "post_frequency_per_week": 1.3,
+      "likes_per_post": 90955,
+      "comments_per_post": 909
+    },
+    "facebook": {
+      "followers": 553640,
+      "page_reach_monthly": 199310,
+      "top_regions": "USA: 92%, Canada: 5%, Germany: 2%"
+    },
+    "tiktok": {
+      "followers": 1977286,
+      "avg_views_millions": 3.0,
+      "viral_frequency": 0.17,
+      "total_likes": 23727432
+    },
+    "youtube": {
+      "subscribers": 276820,
+      "avg_views_millions": 2.0,
+      "upload_frequency_per_month": 1.14
+    }
+  },
+  "google_trends": {
+    "score": 99,
+    "trajectory": "rising",
+    "interest_history": [
+      97,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      99
+    ],
+    "status": "simulated"
+  },
+  "sponsorships": [
+    {
+      "brand": "Under Armour",
+      "category": "Apparel",
+      "deal_value_estimate_m": 1.0,
+      "status": "Current"
+    },
+    {
+      "brand": "Sony PlayStation",
+      "category": "Technology",
+      "deal_value_estimate_m": 0.5,
+      "status": "Current"
+    },
+    {
+      "brand": "Ford",
+      "category": "Automotive",
+      "deal_value_estimate_m": 1.4,
+      "status": "Current"
+    },
+    {
+      "brand": "Richard Mille",
+      "category": "Luxury",
+      "deal_value_estimate_m": 1.9,
+      "status": "Current"
+    }
+  ],
+  "brand_score": {
+    "overall_score": 62.1,
+    "tier": "Rising Talent",
+    "sub_scores": {
+      "social_reach": 54.5,
+      "engagement_quality": 60.6,
+      "search_trend": 100.0,
+      "sponsorship_strength": 49.6,
+      "athletic_market_value": 28.5
+    }
+  }
+}

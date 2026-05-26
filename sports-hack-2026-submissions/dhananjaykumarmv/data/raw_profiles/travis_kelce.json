@@ -1,0 +1,101 @@
+{
+  "name": "Travis Kelce",
+  "sport": "American Football",
+  "rank": 2,
+  "team": "TBD",
+  "position": "Tight end",
+  "nationality": "Global",
+  "age": 36,
+  "birth_date": "1989-10-05",
+  "bio": "Travis Michael Kelce (  KEL-see; born October 5, 1989) is an American professional football tight end for the Kansas City Chiefs of the National Football League (NFL). He was selected by the Chiefs in the third round of the 2013 NFL draft and later won Super Bowls LIV, LVII, and LVIII with the team. He played college football for the Cincinnati Bearcats. He is considered one of the greatest tight ends in NFL history.",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/f/f5/Travis_Kelce_in_the_Oval_Office_of_the_White_House_on_June_5%2C_2023_-_P20230605AS-0902_%28cropped%29.jpg",
+  "wikipedia_url": "https://en.wikipedia.org/wiki/Travis%20Kelce",
+  "market_value_m": 19.8,
+  "social_metrics": {
+    "instagram": {
+      "followers": 3452897,
+      "engagement_rate": 2.1,
+      "post_frequency_per_week": 2.9,
+      "likes_per_post": 72510,
+      "comments_per_post": 725
+    },
+    "facebook": {
+      "followers": 1691919,
+      "page_reach_monthly": 1167424,
+      "top_regions": "USA: 92%, Canada: 5%, Germany: 2%"
+    },
+    "tiktok": {
+      "followers": 1968151,
+      "avg_views_millions": 4.2,
+      "viral_frequency": 0.13,
+      "total_likes": 13777057
+    },
+    "youtube": {
+      "subscribers": 138115,
+      "avg_views_millions": 0.2,
+      "upload_frequency_per_month": 0.5
+    }
+  },
+  "google_trends": {
+    "score": 89,
+    "trajectory": "rising",
+    "interest_history": [
+      74,
+      80,
+      82,
+      83,
+      88,
+      88,
+      90,
+      91,
+      97,
+      97,
+      99,
+      100
+    ],
+    "status": "simulated"
+  },
+  "sponsorships": [
+    {
+      "brand": "Nike",
+      "category": "Apparel",
+      "deal_value_estimate_m": 4.0,
+      "status": "Current"
+    },
+    {
+      "brand": "State Farm",
+      "category": "Finance",
+      "deal_value_estimate_m": 2.5,
+      "status": "Current"
+    },
+    {
+      "brand": "Pfizer",
+      "category": "Technology",
+      "deal_value_estimate_m": 3.0,
+      "status": "Current"
+    },
+    {
+      "brand": "Campbell's Soup",
+      "category": "Food and Beverage",
+      "deal_value_estimate_m": 1.0,
+      "status": "Current"
+    },
+    {
+      "brand": "Bud Light",
+      "category": "Food and Beverage",
+      "deal_value_estimate_m": 2.0,
+      "status": "Current"
+    }
+  ],
+  "brand_score": {
+    "overall_score": 63.9,
+    "tier": "Rising Talent",
+    "sub_scores": {
+      "social_reach": 55.3,
+      "engagement_quality": 53.4,
+      "search_trend": 97.0,
+      "sponsorship_strength": 75.0,
+      "athletic_market_value": 33.9
+    }
+  }
+}

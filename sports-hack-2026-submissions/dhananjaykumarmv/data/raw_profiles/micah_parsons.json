@@ -1,0 +1,95 @@
+{
+  "name": "Micah Parsons",
+  "sport": "American Football",
+  "rank": 13,
+  "team": "TBD",
+  "position": "Linebacker",
+  "nationality": "Global",
+  "age": 27,
+  "birth_date": "1999-05-26",
+  "bio": "Micah Aaron Parsons (born May 26, 1999) is an American professional football linebacker for the Green Bay Packers of the National Football League (NFL). Parsons played college football for the Penn State Nittany Lions, where he earned consensus All-American honors and was named the 2019 Big Ten Linebacker of the Year. Selected by the Dallas Cowboys in the first round of the 2021 NFL draft, Parsons was named Defensive Rookie of the Year and earned four Pro Bowl and three All-Pro selections in four seasons with the team. He was traded to the Packers in 2025 amid a contract holdout and signed a four-year, $188 million extension, making him the highest-paid non-quarterback in NFL history at the time.",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/f/f8/2025_Commanders_at_Packers_Micah_Parsons_%28cropped%29.jpg",
+  "wikipedia_url": "https://en.wikipedia.org/wiki/Micah%20Parsons",
+  "market_value_m": 18.2,
+  "social_metrics": {
+    "instagram": {
+      "followers": 6344668,
+      "engagement_rate": 5.4,
+      "post_frequency_per_week": 1.0,
+      "likes_per_post": 342612,
+      "comments_per_post": 3426
+    },
+    "facebook": {
+      "followers": 3235780,
+      "page_reach_monthly": 1812036,
+      "top_regions": "USA: 92%, Canada: 5%, Germany: 2%"
+    },
+    "tiktok": {
+      "followers": 2410973,
+      "avg_views_millions": 1.1,
+      "viral_frequency": 0.23,
+      "total_likes": 38575568
+    },
+    "youtube": {
+      "subscribers": 126893,
+      "avg_views_millions": 2.2,
+      "upload_frequency_per_month": 1.15
+    }
+  },
+  "google_trends": {
+    "score": 97,
+    "trajectory": "rising",
+    "interest_history": [
+      86,
+      93,
+      94,
+      95,
+      97,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100
+    ],
+    "status": "simulated"
+  },
+  "sponsorships": [
+    {
+      "brand": "Under Armour",
+      "category": "Apparel",
+      "deal_value_estimate_m": 3.9,
+      "status": "Current"
+    },
+    {
+      "brand": "Mercedes-Benz",
+      "category": "Automotive",
+      "deal_value_estimate_m": 3.0,
+      "status": "Current"
+    },
+    {
+      "brand": "Apple",
+      "category": "Technology",
+      "deal_value_estimate_m": 3.8,
+      "status": "Current"
+    },
+    {
+      "brand": "Bud Light",
+      "category": "Food and Beverage",
+      "deal_value_estimate_m": 1.3,
+      "status": "Current"
+    }
+  ],
+  "brand_score": {
+    "overall_score": 78.1,
+    "tier": "Major Star",
+    "sub_scores": {
+      "social_reach": 60.7,
+      "engagement_quality": 100.0,
+      "search_trend": 100.0,
+      "sponsorship_strength": 64.0,
+      "athletic_market_value": 33.2
+    }
+  }
+}

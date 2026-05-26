@@ -1,0 +1,95 @@
+{
+  "name": "Nikola Jokić",
+  "sport": "Basketball",
+  "rank": 5,
+  "team": "TBD",
+  "position": "Center",
+  "nationality": "Serbian",
+  "age": 31,
+  "birth_date": "1995-02-19",
+  "bio": "Nikola Jokić ( YOH-kitch; Serbian Cyrillic: Никола Јокић [nǐkola jôkitɕ] ; born February 19, 1995) is a Serbian professional basketball player who is a center for the Denver Nuggets of the National Basketball Association (NBA). Nicknamed \"Joker\", he is widely regarded as one of the greatest players and centers of all time, and is often considered the greatest draft steal in NBA history. An eight-time NBA All-Star, Jokić has been named to the All-NBA Team on eight occasions (including six first-team selections), and won the NBA Most Valuable Player Award for the 2020–21, 2021–22, and 2023–24 seasons. He represents the Serbian national team, with which he won a silver medal at the 2016 Summer Olympics, and a bronze medal at the 2024 Summer Olympics.",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/7/7e/Nikola_Jokic_free_throw_%28cropped%29.jpg",
+  "wikipedia_url": "https://en.wikipedia.org/wiki/Nikola%20Joki%C4%87",
+  "market_value_m": 43.5,
+  "social_metrics": {
+    "instagram": {
+      "followers": 2309829,
+      "engagement_rate": 3.2,
+      "post_frequency_per_week": 1.7,
+      "likes_per_post": 73914,
+      "comments_per_post": 739
+    },
+    "facebook": {
+      "followers": 600555,
+      "page_reach_monthly": 426394,
+      "top_regions": "USA: 60%, China: 15%, Philippines: 10%"
+    },
+    "tiktok": {
+      "followers": 600555,
+      "avg_views_millions": 2.2,
+      "viral_frequency": 0.18,
+      "total_likes": 3603330
+    },
+    "youtube": {
+      "subscribers": 230982,
+      "avg_views_millions": 1.7,
+      "upload_frequency_per_month": 0.81
+    }
+  },
+  "google_trends": {
+    "score": 42,
+    "trajectory": "stable",
+    "interest_history": [
+      46,
+      43,
+      43,
+      43,
+      43,
+      43,
+      41,
+      44,
+      43,
+      43,
+      40,
+      39
+    ],
+    "status": "simulated"
+  },
+  "sponsorships": [
+    {
+      "brand": "Nike",
+      "category": "Apparel",
+      "deal_value_estimate_m": 5.4,
+      "status": "Current"
+    },
+    {
+      "brand": "Monster Energy",
+      "category": "Food and Beverage",
+      "deal_value_estimate_m": 0.9,
+      "status": "Current"
+    },
+    {
+      "brand": "TAG Heuer",
+      "category": "Luxury",
+      "deal_value_estimate_m": 1.7,
+      "status": "Current"
+    },
+    {
+      "brand": "Gatorade",
+      "category": "Food and Beverage",
+      "deal_value_estimate_m": 2.0,
+      "status": "Current"
+    }
+  ],
+  "brand_score": {
+    "overall_score": 56.2,
+    "tier": "Rising Talent",
+    "sub_scores": {
+      "social_reach": 48.3,
+      "engagement_quality": 74.2,
+      "search_trend": 42.0,
+      "sponsorship_strength": 60.0,
+      "athletic_market_value": 44.6
+    }
+  }
+}

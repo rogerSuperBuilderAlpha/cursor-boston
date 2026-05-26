@@ -1,0 +1,89 @@
+{
+  "name": "Justin Jefferson",
+  "sport": "American Football",
+  "rank": 8,
+  "team": "TBD",
+  "position": "Wide receiver",
+  "nationality": "Global",
+  "age": 26,
+  "birth_date": "1999-06-16",
+  "bio": "Justin Jamal Jefferson (born June 16, 1999) is an American professional football wide receiver for the Minnesota Vikings of the National Football League (NFL). He played college football for the LSU Tigers, where he won the 2020 College Football Playoff National Championship as a junior before being drafted by the Vikings in the first round of the 2020 NFL draft. Jefferson has been named to the Pro Bowl and the All-Pro team in four of his first five seasons and has amassed the most receiving yards through a player's first five seasons in NFL history. In 2022, at 23 years old, he became the youngest player to lead the league in receptions (128) and receiving yards (1,809), earning Offensive Player of the Year honors.",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/2/24/Jefferson_2022.jpg",
+  "wikipedia_url": "https://en.wikipedia.org/wiki/Justin%20Jefferson",
+  "market_value_m": 32.7,
+  "social_metrics": {
+    "instagram": {
+      "followers": 4350979,
+      "engagement_rate": 5.1,
+      "post_frequency_per_week": 3.9,
+      "likes_per_post": 221899,
+      "comments_per_post": 2218
+    },
+    "facebook": {
+      "followers": 1174764,
+      "page_reach_monthly": 399419,
+      "top_regions": "USA: 92%, Canada: 5%, Germany: 2%"
+    },
+    "tiktok": {
+      "followers": 1609862,
+      "avg_views_millions": 0.8,
+      "viral_frequency": 0.13,
+      "total_likes": 12878896
+    },
+    "youtube": {
+      "subscribers": 609137,
+      "avg_views_millions": 0.8,
+      "upload_frequency_per_month": 0.19
+    }
+  },
+  "google_trends": {
+    "score": 77,
+    "trajectory": "stable",
+    "interest_history": [
+      75,
+      77,
+      77,
+      77,
+      78,
+      77,
+      78,
+      77,
+      77,
+      80,
+      81,
+      80
+    ],
+    "status": "simulated"
+  },
+  "sponsorships": [
+    {
+      "brand": "Under Armour",
+      "category": "Apparel",
+      "deal_value_estimate_m": 3.5,
+      "status": "Current"
+    },
+    {
+      "brand": "TAG Heuer",
+      "category": "Luxury",
+      "deal_value_estimate_m": 2.8,
+      "status": "Current"
+    },
+    {
+      "brand": "Porsche",
+      "category": "Automotive",
+      "deal_value_estimate_m": 1.7,
+      "status": "Current"
+    }
+  ],
+  "brand_score": {
+    "overall_score": 68.9,
+    "tier": "Rising Talent",
+    "sub_scores": {
+      "social_reach": 55.9,
+      "engagement_quality": 95.4,
+      "search_trend": 77.0,
+      "sponsorship_strength": 46.0,
+      "athletic_market_value": 39.7
+    }
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "name": "Jannik Sinner",
+  "sport": "Tennis",
+  "rank": 4,
+  "team": "TBD",
+  "position": "Player",
+  "nationality": "Global",
+  "age": 24,
+  "birth_date": "2001-08-16",
+  "bio": "Jannik Sinner (born 16 August 2001) is an Italian professional tennis player. He is currently ranked world No.1 by Association of Tennis Professionals (ATP), and was the year-end No. 1 in 2024. Sinner has won 29 ATP Tour–level singles titles, including four majors, ten Masters, and two ATP Finals titles.",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/6/64/Jannik_Sinner_2025_US_Open.jpg",
+  "wikipedia_url": "https://en.wikipedia.org/wiki/Jannik%20Sinner",
+  "market_value_m": 16.3,
+  "social_metrics": {
+    "instagram": {
+      "followers": 1015516,
+      "engagement_rate": 3.3,
+      "post_frequency_per_week": 3.2,
+      "likes_per_post": 33512,
+      "comments_per_post": 335
+    },
+    "facebook": {
+      "followers": 132017,
+      "page_reach_monthly": 104293,
+      "top_regions": "Europe: 40%, USA: 30%, Australia: 10%"
+    },
+    "tiktok": {
+      "followers": 548378,
+      "avg_views_millions": 3.6,
+      "viral_frequency": 0.12,
+      "total_likes": 5483780
+    },
+    "youtube": {
+      "subscribers": 40620,
+      "avg_views_millions": 0.1,
+      "upload_frequency_per_month": 0.18
+    }
+  },
+  "google_trends": {
+    "score": 90,
+    "trajectory": "stable",
+    "interest_history": [
+      91,
+      89,
+      89,
+      92,
+      92,
+      89,
+      89,
+      91,
+      92,
+      90,
+      91,
+      88
+    ],
+    "status": "simulated"
+  },
+  "sponsorships": [
+    {
+      "brand": "Adidas",
+      "category": "Apparel",
+      "deal_value_estimate_m": 3.0,
+      "status": "Current"
+    },
+    {
+      "brand": "Rolex",
+      "category": "Luxury",
+      "deal_value_estimate_m": 3.6,
+      "status": "Current"
+    },
+    {
+      "brand": "Pepsi",
+      "category": "Food and Beverage",
+      "deal_value_estimate_m": 2.6,
+      "status": "Current"
+    }
+  ],
+  "brand_score": {
+    "overall_score": 59.3,
+    "tier": "Rising Talent",
+    "sub_scores": {
+      "social_reach": 40.2,
+      "engagement_quality": 69.2,
+      "search_trend": 90.0,
+      "sponsorship_strength": 48.4,
+      "athletic_market_value": 32.3
+    }
+  }
+}

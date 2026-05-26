@@ -1,0 +1,95 @@
+{
+  "name": "Mohamed Salah",
+  "sport": "Soccer",
+  "rank": 7,
+  "team": "Liverpool",
+  "position": "Right winger",
+  "nationality": "Egypt",
+  "age": 33,
+  "birth_date": "1992-06-15",
+  "bio": "Mohamed Salah Hamed Mahrous Ghaly (born 15 June 1992) is an Egyptian professional footballer who plays as a right winger or right midfielder for Premier League club Liverpool and captains the Egypt national team. He is widely regarded as one of the best players of his generation and one of the greatest wingers of all time. Dubbed the \"Egyptian King\", he is the all-time top foreign goalscorer in the Premier League and the all-time top African goalscorer in the UEFA Champions League. Salah began his senior career in 2010 at Al-Mokawloon, departing in 2012 to join Basel, where he won two Swiss Super League titles.",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/4/4a/Mohamed_Salah_2018.jpg",
+  "wikipedia_url": "https://en.wikipedia.org/wiki/Mohamed%20Salah",
+  "market_value_m": 93.2,
+  "social_metrics": {
+    "instagram": {
+      "followers": 24593444,
+      "engagement_rate": 5.0,
+      "post_frequency_per_week": 3.3,
+      "likes_per_post": 1229672,
+      "comments_per_post": 12296
+    },
+    "facebook": {
+      "followers": 3197147,
+      "page_reach_monthly": 1950259,
+      "top_regions": "Brazil: 20%, UK: 15%, Nigeria: 10%"
+    },
+    "tiktok": {
+      "followers": 19674755,
+      "avg_views_millions": 4.6,
+      "viral_frequency": 0.16,
+      "total_likes": 255771815
+    },
+    "youtube": {
+      "subscribers": 1475606,
+      "avg_views_millions": 2.3,
+      "upload_frequency_per_month": 0.37
+    }
+  },
+  "google_trends": {
+    "score": 18,
+    "trajectory": "rising",
+    "interest_history": [
+      10,
+      8,
+      16,
+      14,
+      17,
+      14,
+      15,
+      44,
+      21,
+      15,
+      25,
+      22
+    ],
+    "status": "live"
+  },
+  "sponsorships": [
+    {
+      "brand": "Under Armour",
+      "category": "Apparel",
+      "deal_value_estimate_m": 0.8,
+      "status": "Current"
+    },
+    {
+      "brand": "Porsche",
+      "category": "Automotive",
+      "deal_value_estimate_m": 2.6,
+      "status": "Current"
+    },
+    {
+      "brand": "Ford",
+      "category": "Automotive",
+      "deal_value_estimate_m": 1.4,
+      "status": "Current"
+    },
+    {
+      "brand": "Chase",
+      "category": "Finance",
+      "deal_value_estimate_m": 3.5,
+      "status": "Current"
+    }
+  ],
+  "brand_score": {
+    "overall_score": 69.2,
+    "tier": "Rising Talent",
+    "sub_scores": {
+      "social_reach": 75.4,
+      "engagement_quality": 100.0,
+      "search_trend": 26.0,
+      "sponsorship_strength": 56.6,
+      "athletic_market_value": 66.9
+    }
+  }
+}

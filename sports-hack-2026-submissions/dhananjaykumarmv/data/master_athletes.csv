@@ -1,0 +1,101 @@
+name,sport,team,rank,wikipedia_query
+Kylian Mbappé,Soccer,Real Madrid,1,Kylian Mbappé
+Lionel Messi,Soccer,Inter Miami,2,Lionel Messi
+Cristiano Ronaldo,Soccer,Al Nassr,3,Cristiano Ronaldo
+Erling Haaland,Soccer,Manchester City,4,Erling Haaland
+Jude Bellingham,Soccer,Real Madrid,5,Jude Bellingham
+Vinícius Júnior,Soccer,Real Madrid,6,Vinícius Júnior
+Mohamed Salah,Soccer,Liverpool,7,Mohamed Salah
+Harry Kane,Soccer,Bayern Munich,8,Harry Kane
+Kevin De Bruyne,Soccer,Manchester City,9,Kevin De Bruyne
+Neymar Jr.,Soccer,Al Hilal,10,Neymar
+Bukayo Saka,Soccer,Arsenal,11,Bukayo Saka
+Antoine Griezmann,Soccer,Atlético Madrid,12,Antoine Griezmann
+Victor Osimhen,Soccer,Galatasaray,13,Victor Osimhen
+Son Heung-min,Soccer,Tottenham Hotspur,14,Son Heung-min
+Robert Lewandowski,Soccer,Barcelona,15,Robert Lewandowski
+Luka Modrić,Soccer,Real Madrid,16,Luka Modrić
+Marcus Rashford,Soccer,Manchester United,17,Marcus Rashford
+LeBron James,Basketball,Los Angeles Lakers,1,LeBron James
+Stephen Curry,Basketball,Golden State Warriors,2,Stephen Curry
+Kevin Durant,Basketball,Phoenix Suns,3,Kevin Durant
+Giannis Antetokounmpo,Basketball,Milwaukee Bucks,4,Giannis Antetokounmpo
+Nikola Jokić,Basketball,Denver Nuggets,5,Nikola Jokić
+Luka Dončić,Basketball,Dallas Mavericks,6,Luka Dončić
+Joel Embiid,Basketball,Philadelphia 76ers,7,Joel Embiid
+Jayson Tatum,Basketball,Boston Celtics,8,Jayson Tatum
+Jimmy Butler,Basketball,Miami Heat,9,Jimmy Butler
+Anthony Davis,Basketball,Los Angeles Lakers,10,Anthony Davis
+Ja Morant,Basketball,Memphis Grizzlies,11,Ja Morant
+Devin Booker,Basketball,Phoenix Suns,12,Devin Booker
+Damian Lillard,Basketball,Milwaukee Bucks,13,Damian Lillard
+Shai Gilgeous-Alexander,Basketball,Oklahoma City Thunder,14,Shai Gilgeous-Alexander
+Victor Wembanyama,Basketball,San Antonio Spurs,15,Victor Wembanyama
+Kyrie Irving,Basketball,Dallas Mavericks,16,Kyrie Irving
+Anthony Edwards,Basketball,Minnesota Timberwolves,17,Anthony Edwards
+Patrick Mahomes,American Football,Kansas City Chiefs,1,Patrick Mahomes
+Travis Kelce,American Football,Kansas City Chiefs,2,Travis Kelce
+Lamar Jackson,American Football,Baltimore Ravens,3,Lamar Jackson
+Aaron Rodgers,American Football,New York Jets,4,Aaron Rodgers
+Christian McCaffrey,American Football,San Francisco 49ers,5,Christian McCaffrey
+Josh Allen,American Football,Buffalo Bills,6,Josh Allen (quarterback)
+Joe Burrow,American Football,Cincinnati Bengals,7,Joe Burrow
+Justin Jefferson,American Football,Minnesota Vikings,8,Justin Jefferson
+Jalen Hurts,American Football,Philadelphia Eagles,9,Jalen Hurts
+Tyreek Hill,American Football,Miami Dolphins,10,Tyreek Hill
+Dak Prescott,American Football,Dallas Cowboys,11,Dak Prescott
+Brock Purdy,American Football,San Francisco 49ers,12,Brock Purdy
+Micah Parsons,American Football,Dallas Cowboys,13,Micah Parsons
+Nick Bosa,American Football,San Francisco 49ers,14,Nick Bosa
+T.J. Watt,American Football,Pittsburgh Steelers,15,T.J. Watt
+Davante Adams,American Football,New York Jets,16,Davante Adams
+Saquon Barkley,American Football,Philadelphia Eagles,17,Saquon Barkley
+Novak Djokovic,Tennis,Serbia (National),1,Novak Djokovic
+Rafael Nadal,Tennis,Spain (National),2,Rafael Nadal
+Carlos Alcaraz,Tennis,Spain (National),3,Carlos Alcaraz
+Jannik Sinner,Tennis,Italy (National),4,Jannik Sinner
+Daniil Medvedev,Tennis,Individual Neutral Athletes,5,Daniil Medvedev
+Alexander Zverev,Tennis,Germany (National),6,Alexander Zverev
+Iga Świątek,Tennis,Poland (National),7,Iga Świątek
+Aryna Sabalenka,Tennis,Individual Neutral Athletes,8,Aryna Sabalenka
+Coco Gauff,Tennis,United States (National),9,Coco Gauff
+Naomi Osaka,Tennis,Japan (National),10,Naomi Osaka
+Stefanos Tsitsipas,Tennis,Greece (National),11,Stefanos Tsitsipas
+Holger Rune,Tennis,Denmark (National),12,Holger Rune
+Ons Jabeur,Tennis,Tunisia (National),13,Ons Jabeur
+Elena Rybakina,Tennis,Kazakhstan (National),14,Elena Rybakina
+Jessica Pegula,Tennis,United States (National),15,Jessica Pegula
+Nick Kyrgios,Tennis,Australia (National),16,Nick Kyrgios
+Taylor Fritz,Tennis,United States (National),17,Taylor Fritz
+Lewis Hamilton,Formula 1,Ferrari,1,Lewis Hamilton
+Max Verstappen,Formula 1,Red Bull Racing,2,Max Verstappen
+Charles Leclerc,Formula 1,Ferrari,3,Charles Leclerc
+Lando Norris,Formula 1,McLaren,4,Lando Norris
+Fernando Alonso,Formula 1,Aston Martin,5,Fernando Alonso
+George Russell,Formula 1,Mercedes,6,George Russell
+Carlos Sainz Jr.,Formula 1,Williams,7,Carlos Sainz Jr.
+Sergio Pérez,Formula 1,Red Bull Racing,8,Sergio Pérez
+Oscar Piastri,Formula 1,McLaren,9,Oscar Piastri
+Pierre Gasly,Formula 1,Alpine,10,Pierre Gasly
+Daniel Ricciardo,Formula 1,RB Formula One Team,11,Daniel Ricciardo
+Alex Albon,Formula 1,Williams,12,Alex Albon
+Esteban Ocon,Formula 1,Haas,13,Esteban Ocon
+Yuki Tsunoda,Formula 1,RB Formula One Team,14,Yuki Tsunoda
+Valtteri Bottas,Formula 1,Kick Sauber,15,Valtteri Bottas
+Lance Stroll,Formula 1,Aston Martin,16,Lance Stroll
+Virat Kohli,Cricket,Royal Challengers Bengaluru,1,Virat Kohli
+Rohit Sharma,Cricket,Mumbai Indians,2,Rohit Sharma
+MS Dhoni,Cricket,Chennai Super Kings,3,MS Dhoni
+Babar Azam,Cricket,Peshawar Zalmi,4,Babar Azam
+Kane Williamson,Cricket,Gujarat Titans,5,Kane Williamson
+Steve Smith,Cricket,Sydney Sixers,6,Steve Smith (cricketer)
+Joe Root,Cricket,England (National),7,Joe Root
+Jasprit Bumrah,Cricket,Mumbai Indians,8,Jasprit Bumrah
+Hardik Pandya,Cricket,Mumbai Indians,9,Hardik Pandya
+Glenn Maxwell,Cricket,Royal Challengers Bengaluru,10,Glenn Maxwell
+Pat Cummins,Cricket,Sunrisers Hyderabad,11,Pat Cummins
+Mitchell Starc,Cricket,Kolkata Knight Riders,12,Mitchell Starc
+Rashid Khan,Cricket,Gujarat Titans,13,Rashid Khan
+KL Rahul,Cricket,Lucknow Super Giants,14,KL Rahul
+Shakib Al Hasan,Cricket,Bangladesh (National),15,Shakib Al Hasan
+Rishabh Pant,Cricket,Delhi Capitals,16,Rishabh Pant

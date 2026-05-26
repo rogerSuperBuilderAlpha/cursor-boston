@@ -1,0 +1,101 @@
+{
+  "name": "LeBron James",
+  "sport": "Basketball",
+  "rank": 1,
+  "team": "TBD",
+  "position": "Small forward / power forward",
+  "nationality": "Global",
+  "age": 41,
+  "birth_date": "1984-12-30",
+  "bio": "LeBron Raymone James ( lə-BRON; born December 30, 1984) is an American professional basketball player for the Los Angeles Lakers of the National Basketball Association (NBA). Nicknamed \"King James\", he is the NBA's all-time leading scorer and has won four NBA championships from 10 NBA Finals appearances, including eight consecutive appearances between 2011 and 2018. He has also won three Olympic gold medals as a member of the U.S. national team.",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/7/7a/LeBron_James_%2851959977144%29_%28cropped2%29.jpg",
+  "wikipedia_url": "https://en.wikipedia.org/wiki/LeBron%20James",
+  "market_value_m": 57.1,
+  "social_metrics": {
+    "instagram": {
+      "followers": 159000000,
+      "engagement_rate": 1.9,
+      "post_frequency_per_week": 3.5,
+      "likes_per_post": 3000000,
+      "comments_per_post": 15000
+    },
+    "facebook": {
+      "followers": 29000000,
+      "page_reach_monthly": 9500000,
+      "top_regions": "USA: 65%, Philippines: 10%, Canada: 5%"
+    },
+    "tiktok": {
+      "followers": 11000000,
+      "avg_views_millions": 5.4,
+      "viral_frequency": 0.18,
+      "total_likes": 65000000
+    },
+    "youtube": {
+      "subscribers": 500000,
+      "avg_views_millions": 1.1,
+      "upload_frequency_per_month": 0.1
+    }
+  },
+  "google_trends": {
+    "score": 69,
+    "trajectory": "stable",
+    "interest_history": [
+      72,
+      72,
+      71,
+      69,
+      67,
+      69,
+      70,
+      71,
+      68,
+      68,
+      67,
+      68
+    ],
+    "status": "simulated"
+  },
+  "sponsorships": [
+    {
+      "brand": "Nike",
+      "category": "Apparel",
+      "deal_value_estimate_m": 32.0,
+      "status": "Current"
+    },
+    {
+      "brand": "PepsiCo (Gatorade)",
+      "category": "Food and Beverage",
+      "deal_value_estimate_m": 8.0,
+      "status": "Current"
+    },
+    {
+      "brand": "AT&T",
+      "category": "Technology",
+      "deal_value_estimate_m": 5.0,
+      "status": "Current"
+    },
+    {
+      "brand": "Beats by Dre",
+      "category": "Technology",
+      "deal_value_estimate_m": 4.0,
+      "status": "Current"
+    },
+    {
+      "brand": "Audemars Piguet",
+      "category": "Luxury",
+      "deal_value_estimate_m": 3.5,
+      "status": "Current"
+    }
+  ],
+  "brand_score": {
+    "overall_score": 83.2,
+    "tier": "Elite Influencer",
+    "sub_scores": {
+      "social_reach": 90.3,
+      "engagement_quality": 89.3,
+      "search_trend": 69.0,
+      "sponsorship_strength": 100.0,
+      "athletic_market_value": 50.7
+    }
+  }
+}

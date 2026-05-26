@@ -1,0 +1,89 @@
+{
+  "name": "Stefanos Tsitsipas",
+  "sport": "Tennis",
+  "rank": 11,
+  "team": "TBD",
+  "position": "Player",
+  "nationality": "Global",
+  "age": 27,
+  "birth_date": "1998-08-12",
+  "bio": "Stefanos Tsitsipas (Greek: Στέφανος Τσιτσιπάς, pronounced [ˈstefanos t͡sit͡siˈpas]; born 12 August 1998) is a Greek professional tennis player. He has been ranked as high as world No. 3 in men's singles by the Association of Tennis Professionals (ATP), first achieved in August 2021 – making him the highest-ranked Greek men's tennis player. Tsitsipas has won twelve ATP Tour singles titles, including the 2019 ATP Finals and three Masters 1000 events.",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/a/a2/Tsitsipas_S._MCM22_%28cropped%29.jpg",
+  "wikipedia_url": "https://en.wikipedia.org/wiki/Stefanos%20Tsitsipas",
+  "market_value_m": 7.8,
+  "social_metrics": {
+    "instagram": {
+      "followers": 2551022,
+      "engagement_rate": 2.1,
+      "post_frequency_per_week": 3.4,
+      "likes_per_post": 53571,
+      "comments_per_post": 535
+    },
+    "facebook": {
+      "followers": 663265,
+      "page_reach_monthly": 397959,
+      "top_regions": "Europe: 40%, USA: 30%, Australia: 10%"
+    },
+    "tiktok": {
+      "followers": 663265,
+      "avg_views_millions": 3.0,
+      "viral_frequency": 0.17,
+      "total_likes": 9948975
+    },
+    "youtube": {
+      "subscribers": 280612,
+      "avg_views_millions": 1.0,
+      "upload_frequency_per_month": 0.55
+    }
+  },
+  "google_trends": {
+    "score": 75,
+    "trajectory": "declining",
+    "interest_history": [
+      87,
+      85,
+      82,
+      82,
+      78,
+      78,
+      74,
+      74,
+      71,
+      72,
+      65,
+      59
+    ],
+    "status": "simulated"
+  },
+  "sponsorships": [
+    {
+      "brand": "Adidas",
+      "category": "Apparel",
+      "deal_value_estimate_m": 2.1,
+      "status": "Current"
+    },
+    {
+      "brand": "Apple",
+      "category": "Technology",
+      "deal_value_estimate_m": 1.6,
+      "status": "Current"
+    },
+    {
+      "brand": "Audi",
+      "category": "Automotive",
+      "deal_value_estimate_m": 1.6,
+      "status": "Current"
+    }
+  ],
+  "brand_score": {
+    "overall_score": 52.0,
+    "tier": "Rising Talent",
+    "sub_scores": {
+      "social_reach": 49.4,
+      "engagement_quality": 57.8,
+      "search_trend": 67.0,
+      "sponsorship_strength": 40.6,
+      "athletic_market_value": 28.5
+    }
+  }
+}

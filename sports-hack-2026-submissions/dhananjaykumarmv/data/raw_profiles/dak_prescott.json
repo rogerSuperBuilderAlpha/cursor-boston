@@ -1,0 +1,101 @@
+{
+  "name": "Dak Prescott",
+  "sport": "American Football",
+  "rank": 11,
+  "team": "TBD",
+  "position": "Quarterback",
+  "nationality": "Global",
+  "age": 32,
+  "birth_date": "1993-07-29",
+  "bio": "Rayne Dakota Prescott (; born July 29, 1993) is an American professional football quarterback for the Dallas Cowboys of the National Football League (NFL). He played college football for the Mississippi State Bulldogs, twice earning first-team All-SEC honors, and was selected by the Cowboys in the fourth round of the 2016 NFL draft. Prescott ranks seventh all-time in completion percentage with at least 1,500 pass attempts, and he is eighth in the NFL's all-time regular season career passer rating. Intended to serve as a backup in his rookie season, Prescott became the Cowboys' starting quarterback after starter Tony Romo was injured in the preseason.",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/f/f9/Dak_Prescott_by_Gage_Skidmore.jpg",
+  "wikipedia_url": "https://en.wikipedia.org/wiki/Dak%20Prescott",
+  "market_value_m": 22.4,
+  "social_metrics": {
+    "instagram": {
+      "followers": 5946070,
+      "engagement_rate": 5.7,
+      "post_frequency_per_week": 2.8,
+      "likes_per_post": 338925,
+      "comments_per_post": 3389
+    },
+    "facebook": {
+      "followers": 2616270,
+      "page_reach_monthly": 2040690,
+      "top_regions": "USA: 92%, Canada: 5%, Germany: 2%"
+    },
+    "tiktok": {
+      "followers": 1248674,
+      "avg_views_millions": 1.4,
+      "viral_frequency": 0.08,
+      "total_likes": 22476132
+    },
+    "youtube": {
+      "subscribers": 594607,
+      "avg_views_millions": 2.4,
+      "upload_frequency_per_month": 1.12
+    }
+  },
+  "google_trends": {
+    "score": 66,
+    "trajectory": "stable",
+    "interest_history": [
+      57,
+      60,
+      63,
+      66,
+      66,
+      67,
+      67,
+      69,
+      69,
+      71,
+      69,
+      68
+    ],
+    "status": "simulated"
+  },
+  "sponsorships": [
+    {
+      "brand": "Puma",
+      "category": "Apparel",
+      "deal_value_estimate_m": 2.6,
+      "status": "Current"
+    },
+    {
+      "brand": "Pepsi",
+      "category": "Food and Beverage",
+      "deal_value_estimate_m": 0.7,
+      "status": "Current"
+    },
+    {
+      "brand": "BMW",
+      "category": "Automotive",
+      "deal_value_estimate_m": 0.6,
+      "status": "Current"
+    },
+    {
+      "brand": "Porsche",
+      "category": "Automotive",
+      "deal_value_estimate_m": 3.8,
+      "status": "Current"
+    },
+    {
+      "brand": "Hublot",
+      "category": "Luxury",
+      "deal_value_estimate_m": 2.0,
+      "status": "Current"
+    }
+  ],
+  "brand_score": {
+    "overall_score": 71.4,
+    "tier": "Major Star",
+    "sub_scores": {
+      "social_reach": 59.1,
+      "engagement_quality": 98.4,
+      "search_trend": 66.0,
+      "sponsorship_strength": 69.4,
+      "athletic_market_value": 35.1
+    }
+  }
+}

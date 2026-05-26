@@ -1,0 +1,95 @@
+{
+  "name": "Stephen Curry",
+  "sport": "Basketball",
+  "rank": 2,
+  "team": "TBD",
+  "position": "Point guard",
+  "nationality": "Global",
+  "age": 38,
+  "birth_date": "1988-03-14",
+  "bio": "Wardell Stephen Curry II ( STEF-ən; born March 14, 1988), also known as Steph Curry ( STEF), is an American professional basketball player for the Golden State Warriors of the National Basketball Association (NBA), where he plays as a point guard. Nicknamed \"Chef Curry\", he is widely regarded as the greatest shooter in basketball history and is credited with revolutionizing the game by popularizing the three-point shot across all levels of basketball. He is a four-time NBA champion, a two-time NBA Most Valuable Player (MVP), an NBA Finals MVP, and a two-time NBA All-Star Game MVP. He is also a two-time NBA scoring champion, a 12-time NBA All-Star, and an 11-time All-NBA Team selection (including four on the First Team).",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/5/52/Stephen_Curry%2C_Olympic_Games_2024_%28cropped%29.jpg",
+  "wikipedia_url": "https://en.wikipedia.org/wiki/Stephen%20Curry",
+  "market_value_m": 41.8,
+  "social_metrics": {
+    "instagram": {
+      "followers": 56000000,
+      "engagement_rate": 2.4,
+      "post_frequency_per_week": 2.0,
+      "likes_per_post": 1340000,
+      "comments_per_post": 8200
+    },
+    "facebook": {
+      "followers": 15000000,
+      "page_reach_monthly": 4200000,
+      "top_regions": "USA: 58%, Philippines: 12%, China: 8%"
+    },
+    "tiktok": {
+      "followers": 5800000,
+      "avg_views_millions": 3.8,
+      "viral_frequency": 0.15,
+      "total_likes": 28000000
+    },
+    "youtube": {
+      "subscribers": 1400000,
+      "avg_views_millions": 1.5,
+      "upload_frequency_per_month": 0.4
+    }
+  },
+  "google_trends": {
+    "score": 35,
+    "trajectory": "declining",
+    "interest_history": [
+      48,
+      43,
+      43,
+      42,
+      42,
+      37,
+      31,
+      30,
+      31,
+      26,
+      27,
+      28
+    ],
+    "status": "simulated"
+  },
+  "sponsorships": [
+    {
+      "brand": "Under Armour",
+      "category": "Apparel",
+      "deal_value_estimate_m": 21.0,
+      "status": "Current"
+    },
+    {
+      "brand": "Chase",
+      "category": "Finance",
+      "deal_value_estimate_m": 4.5,
+      "status": "Current"
+    },
+    {
+      "brand": "Callaway",
+      "category": "Luxury",
+      "deal_value_estimate_m": 1.5,
+      "status": "Current"
+    },
+    {
+      "brand": "Subway",
+      "category": "Food and Beverage",
+      "deal_value_estimate_m": 2.0,
+      "status": "Current"
+    }
+  ],
+  "brand_score": {
+    "overall_score": 74.6,
+    "tier": "Major Star",
+    "sub_scores": {
+      "social_reach": 80.4,
+      "engagement_quality": 100.0,
+      "search_trend": 27.0,
+      "sponsorship_strength": 98.0,
+      "athletic_market_value": 43.8
+    }
+  }
+}

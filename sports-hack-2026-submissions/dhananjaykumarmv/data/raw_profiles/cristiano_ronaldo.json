@@ -1,0 +1,101 @@
+{
+  "name": "Cristiano Ronaldo",
+  "sport": "Soccer",
+  "rank": 3,
+  "team": "Al-Nassr",
+  "position": "Forward",
+  "nationality": "Portugal",
+  "age": 41,
+  "birth_date": "1985-02-05",
+  "bio": "Cristiano Ronaldo dos Santos Aveiro (born 5 February 1985), nicknamed CR7, is a Portuguese professional footballer who plays as a forward for and captains both Saudi Pro League club Al-Nassr and the Portugal national team. Widely regarded as one of the greatest players in history, he has won numerous individual accolades throughout his career, including five Ballon d'Ors, a record three UEFA Men's Player of the Year Awards, and four European Golden Shoes. He was also named the world's best player five times by FIFA. He has won 35 trophies in his career, including five UEFA Champions Leagues and the UEFA European Championship.",
+  "image_url": "https://upload.wikimedia.org/wikipedia/commons/9/9c/President_Donald_Trump_meets_with_Cristiano_Ronaldo_in_the_Oval_Office_%2854933344262%29_%28cropped_and_rotated%29.jpg",
+  "wikipedia_url": "https://en.wikipedia.org/wiki/Cristiano%20Ronaldo",
+  "market_value_m": 152.6,
+  "social_metrics": {
+    "instagram": {
+      "followers": 625000000,
+      "engagement_rate": 2.1,
+      "post_frequency_per_week": 4.2,
+      "likes_per_post": 13100000,
+      "comments_per_post": 92000
+    },
+    "facebook": {
+      "followers": 168000000,
+      "page_reach_monthly": 62000000,
+      "top_regions": "Portugal: 10%, Brazil: 18%, India: 12%"
+    },
+    "tiktok": {
+      "followers": 22000000,
+      "avg_views_millions": 18.2,
+      "viral_frequency": 0.4,
+      "total_likes": 180000000
+    },
+    "youtube": {
+      "subscribers": 65000000,
+      "avg_views_millions": 12.4,
+      "upload_frequency_per_month": 4.0
+    }
+  },
+  "google_trends": {
+    "score": 45,
+    "trajectory": "declining",
+    "interest_history": [
+      71,
+      46,
+      51,
+      48,
+      39,
+      41,
+      47,
+      49,
+      36,
+      43,
+      37,
+      42
+    ],
+    "status": "live"
+  },
+  "sponsorships": [
+    {
+      "brand": "Nike",
+      "category": "Apparel",
+      "deal_value_estimate_m": 30.0,
+      "status": "Current"
+    },
+    {
+      "brand": "Binance",
+      "category": "Finance",
+      "deal_value_estimate_m": 10.0,
+      "status": "Current"
+    },
+    {
+      "brand": "Herbalife",
+      "category": "Food and Beverage",
+      "deal_value_estimate_m": 4.0,
+      "status": "Current"
+    },
+    {
+      "brand": "Clear Haircare",
+      "category": "Luxury",
+      "deal_value_estimate_m": 2.5,
+      "status": "Current"
+    },
+    {
+      "brand": "Tag Heuer",
+      "category": "Luxury",
+      "deal_value_estimate_m": 3.0,
+      "status": "Current"
+    }
+  ],
+  "brand_score": {
+    "overall_score": 86.8,
+    "tier": "Elite Influencer",
+    "sub_scores": {
+      "social_reach": 100.0,
+      "engagement_quality": 100.0,
+      "search_trend": 37.0,
+      "sponsorship_strength": 100.0,
+      "athletic_market_value": 93.7
+    }
+  }
+}
