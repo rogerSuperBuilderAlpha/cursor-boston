@@ -5,6 +5,5 @@
   "videoUrl": "https://www.loom.com/share/486cd61d7c4c4b61b735be978ab04a90",
   "repoUrl": "https://github.com/Paramjeet-singh-neu/Cornerman",
   "deployedUrl": "https://cornerman.streamlit.app/",
-  "tags": ["athletes-performance", "ai-tutor", "feedback-architecture", "boxing", "streamlit", "openai"],
-  "collaborators": []
+  "tags": ["athletes-performance", "ai-tutor", "feedback-architecture", "boxing", "streamlit", "openai"]
 }
