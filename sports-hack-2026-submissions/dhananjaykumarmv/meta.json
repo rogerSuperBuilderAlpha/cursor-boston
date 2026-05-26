@@ -1,0 +1,12 @@
+{
+    "title": "Sample Title",
+    "description": "Inital meta file for sports hack submission",
+    "displayName": "Dhananjaya Kumar Mittapalli",
+    "videoUrl": "",
+    "repoUrl": "",
+    "deployedUrl": "",
+    "tags": [],
+    "collaborators": [
+      { "displayName": "Saiteja Reddy Gajula", "githubHandle": "Saitej0211" }
+    ]
+  }
