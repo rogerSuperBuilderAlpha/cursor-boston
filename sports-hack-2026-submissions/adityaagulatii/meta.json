@@ -1,7 +1,7 @@
 {
   "title": "Apex AI — Vision-Only AI Race Engineer",
-  "description": "Apex AI analyzes motorsport and cycling race videos using Gemini 2.5 Flash to detect braking errors, racing line issues, and best moments with exact timestamps. Supports karting, motorcycle racing, and road cycling. No sensors or hardware needed — just video. Built with Streamlit, Groq LLaMA, and a custom interactive timeline. No live deploy — run locally from the repo: https://github.com/Adityaagulatii/cursor_hacker",
-  "displayName": "Apex AI",
+  "description": "Apex AI analyzes motorsport and cycling race videos using Gemini 2.5 Flash to detect braking errors, racing line issues, and best moments with exact timestamps. Supports karting, motorcycle racing, and road cycling. No sensors or hardware needed — just video. Built with Streamlit, Groq LLaMA, and a custom interactive timeline.",
+  "displayName": "Aditya Gulati",
   "videoUrl": "https://vimeo.com/1195726527",
   "repoUrl": "https://github.com/Adityaagulatii/cursor_hacker/tree/main",
   "deployedUrl": "https://cursorhacker-e8utohjjqvpdd3dbeek7mc.streamlit.app",
