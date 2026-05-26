@@ -1,0 +1,13 @@
+{
+  "title": "RepRef — AI Wall Ball Judge for HYROX",
+  "description": "RepRef uses on-device pose tracking to judge HYROX wall balls objectively — verifying squat depth and ball-to-target height in real time — replacing inconsistent human rep judging. The iOS version uses ARKit body tracking for true metric 3D; a web prototype runs in any browser.",
+  "displayName": "Jingren Ma & Shahza Saeed",
+  "videoUrl": "https://youtu.be/3tpXcDqynik",
+  "repoUrl": "https://github.com/KoMiChif/RepRef",
+  "deployedUrl": "",
+  "tags": ["hyrox", "computer-vision", "arkit", "sports-tech"],
+  "collaborators": [
+    { "displayName": "Jingren Ma", "githubHandle": "komichif" },
+    { "displayName": "Shahza Saeed" }
+  ]
+}
