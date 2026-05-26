@@ -1,0 +1,9 @@
+{
+  "ai": {
+    "score": 8,
+    "rationale": "Sharp, specific pitch: vision-only race-engineer coaching for karting/moto/cycling with timestamped braking and racing-line feedback — a real differentiator vs sensor-based products. Genuine multimodal AI leverage (Gemini 2.5 Flash for video + Groq LLaMA), all three URLs filled in (Vimeo + repo + Streamlit deploy). Loses a point because the demo is a single-flow Streamlit app rather than something with sample outputs or evaluation built in, but for a one-day build this is well-scoped and clearly shipped.",
+    "model": "claude-opus-4-7",
+    "scoredAt": "2026-05-26T18:48:00.000Z",
+    "scorerVersion": 2
+  }
+}
