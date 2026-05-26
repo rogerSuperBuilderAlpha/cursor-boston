@@ -1,0 +1,13 @@
+{
+  "title": "CoachCam AI - A free-throw form analyzer",
+  "description": "CoachCam AI helps beginner basketball players improve their free throw form by analyzing a short phone video and giving instant visual + coaching feedback.",
+  "displayName": "Shivu & Prathamesh",
+  "videoUrl": "https://northeastern.hosted.panopto.com/Panopto/Pages/Viewer.aspx?id=c8336990-28fe-41e5-b189-b456013142a8",
+  "repoUrl": "https://github.com/Shivz3232/free-throw-analyzer",
+  "deployedUrl": "https://free-throw-analyzer.vercel.app/",
+  "tags": ["backetball", "pose-estimation", "next.js"],
+  "collaborators": [
+    { "displayName": "Shivu", "githubHandle": "shivz3232" },
+    { "displayName": "Prathmesh", "githubHandle": "prathmeshb15" }
+  ]
+}
