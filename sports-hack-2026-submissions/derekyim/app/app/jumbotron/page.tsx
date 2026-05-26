@@ -175,13 +175,6 @@ export default function JumbotronPage() {
           </div>
         )}
 
-        {current.mode === "hype" && (
-          <div className="flex gap-4 text-xl font-bold text-white/70">
-            <span>ENERGY {fakeStats.composite}</span>
-            <span className="text-celtics-green text-3xl">&#9733;</span>
-          </div>
-        )}
-
         {(current.dunkinWinner || isAaron) && (
           <div className="bg-orange-500 rounded-2xl px-8 py-4 max-w-2xl animate-bounce">
             <p className="text-2xl font-black text-black text-center">
