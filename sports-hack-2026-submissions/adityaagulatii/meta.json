@@ -1,10 +1,9 @@
 {
-  "title": "ESMFold Athlete Recovery: AI-Powered Protein Structure Analysis for Sports Performance",
-  "description": "A machine learning pipeline using ESMFold to predict muscle recovery timelines based on protein structure analysis. Helps coaches and athletes optimize training cycles, reduce injury risk, and personalize recovery protocols using structural biology AI.",
-  "displayName": "Aditya Gulati",
-  "videoUrl": "https://www.loom.com/share/YOUR_LOOM_ID_HERE",
-  "repoUrl": "https://github.com/Adityaagulatii/Protein-Pipeline-ESMFold",
+  "title": "Apex AI — Vision-Only AI Race Engineer",
+  "description": "Apex AI analyzes motorsport and cycling race videos using Gemini 2.5 Flash to detect braking errors, racing line issues, and best moments with exact timestamps. Supports karting, motorcycle racing, and road cycling. No sensors or hardware needed — just video. Built with Streamlit, Groq LLaMA, and a custom interactive timeline.",
+  "displayName": "Apex AI",
+  "videoUrl": "https://github.com/Adityaagulatii/cursor_hacker",
+  "repoUrl": "https://github.com/Adityaagulatii/cursor_hacker",
   "deployedUrl": "",
-  "tags": ["esm", "protein-structure", "sports-science", "recovery", "ml", "python"],
-  "collaborators": []
+  "tags": ["karting", "cycling", "ai-coaching", "computer-vision", "streamlit", "gemini"]
 }
