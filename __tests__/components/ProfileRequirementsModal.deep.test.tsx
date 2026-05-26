@@ -322,7 +322,11 @@ describe("ProfileRequirementsModal deep", () => {
     ).toHaveAttribute("href", "/api/github/authorize");
     expect(screen.getByRole("link", { name: /Connect Discord/i })).toHaveAttribute(
       "href",
-      "/api/discord/authorize",
+      expect.stringContaining("/api/discord/authorize?returnTo="),
+    );
+    expect(screen.getByRole("link", { name: /Join Discord first/i })).toHaveAttribute(
+      "href",
+      "https://discord.gg/Wsncg8YYqc",
     );
   });
 

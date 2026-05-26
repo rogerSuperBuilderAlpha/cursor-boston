@@ -16,6 +16,11 @@ import { SportsHack2026EventNav } from "@/components/hackathons/SportsHack2026Ev
 import { trackEvent } from "@/lib/analytics";
 import { useGithubConnection } from "@/app/(auth)/profile/_hooks/useGithubConnection";
 import {
+  EventSignupDiscordConnectLink,
+  EventSignupDiscordJoinHint,
+  EventSignupDiscordMissingCopy,
+} from "@/components/events/EventSignupDiscordRequirement";
+import {
   SPORTS_HACK_2026_ATTENDANCE_LIMIT,
   SPORTS_HACK_2026_CAPACITY,
   SPORTS_HACK_2026_EVENT_ID,
@@ -23,6 +28,7 @@ import {
   getSportsHack2026RankTier,
   type SportsHack2026RankTone,
 } from "@/lib/sports-hack-2026";
+import { getHackathonEventSignupReturnTo } from "@/lib/event-signup-discord";
 
 const SPORTS_HACK_RETURN_TO = "/hackathons/sports-hack-2026/signup";
 
@@ -51,6 +57,8 @@ const TONE_BANNER_CLASS: Record<SportsHack2026RankTone, string> = {
 // pills are rendered only when present; the absence of a pill carries no
 // negative implication (vs the previous behavior of warning "Not on Luma
 // yet" which is no longer accurate).
+const SIGNUP_RETURN_TO = getHackathonEventSignupReturnTo(SPORTS_HACK_2026_EVENT_ID);
+
 function LumaPill({ registered }: { registered: boolean | undefined }) {
   if (!registered) return null;
   return (
@@ -1032,7 +1040,7 @@ function SportsHack2026SignupPageInner() {
                               </span>
                             </>
                           ) : (
-                            "Required so organizers can reach you"
+                            <EventSignupDiscordMissingCopy />
                           )}
                         </p>
                       </div>
@@ -1042,15 +1050,12 @@ function SportsHack2026SignupPageInner() {
                         <DiscordIcon size={16} />@{profile.discordUsername}
                       </span>
                     ) : (
-                      <a
-                        href="/api/discord/authorize"
-                        className="inline-flex items-center gap-2 rounded-lg bg-[#5865F2] px-4 py-2 text-sm font-medium text-white hover:bg-[#4752C4] transition-colors"
-                      >
-                        <DiscordIcon size={16} />
-                        Connect Discord
-                      </a>
+                      <EventSignupDiscordConnectLink returnTo={SIGNUP_RETURN_TO} />
                     )}
                   </div>
+                  {!profile.hasDiscord ? (
+                    <EventSignupDiscordJoinHint className="-mt-1 ml-12 text-xs text-neutral-500 dark:text-neutral-400" />
+                  ) : null}
 
                   {/* Show Discord on profile */}
                   <ShowDiscordRow

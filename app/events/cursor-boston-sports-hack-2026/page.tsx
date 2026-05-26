@@ -165,7 +165,7 @@ function Hero({ event }: { event: EventRecord | null }) {
             href={SIGNUP_URL}
             className="inline-flex items-center justify-center rounded-lg bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-400"
           >
-            Claim your participation spot →
+            View signup list and rank →
           </Link>
           <a
             href={SPORTS_HACK_2026_LUMA_URL}
@@ -198,18 +198,19 @@ function HowToWinCredits() {
         <ol className="grid gap-4 md:grid-cols-3">
           <Step
             num={1}
-            title="Claim your spot on the site"
+            title="Use the website signup list"
             body={
               <>
-                Sign up at{" "}
+                The list at{" "}
                 <Link
                   href={SIGNUP_URL}
                   className="text-emerald-600 hover:text-emerald-500 dark:text-emerald-400 underline"
                 >
                   /hackathons/sports-hack-2026/signup
                 </Link>
-                . Required even if you&apos;re already on Luma — this is the
-                list we rank from.
+                {" "}
+                is the ranking source for participants. It is separate from
+                Luma registration, which controls event admission.
               </>
             }
           />

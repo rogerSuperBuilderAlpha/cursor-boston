@@ -13,9 +13,15 @@ import { useAuth } from "@/contexts/AuthContext";
 import { GitHubIcon, DiscordIcon } from "@/components/icons";
 import { trackEvent } from "@/lib/analytics";
 import {
+  EventSignupDiscordConnectLink,
+  EventSignupDiscordJoinHint,
+  EventSignupDiscordMissingCopy,
+} from "@/components/events/EventSignupDiscordRequirement";
+import {
   CURSOR_CREDIT_TOP_N,
 } from "@/lib/hackathon-event-signup";
 import { HACK_A_SPRINT_2026_EVENT_ID } from "@/lib/hackathon-showcase";
+import { getHackathonEventSignupReturnTo } from "@/lib/event-signup-discord";
 
 type EntryStatus = "confirmed" | "waitlisted";
 
@@ -91,6 +97,7 @@ export default function HackASprint2026SignupPage() {
 
   const eventId = HACK_A_SPRINT_2026_EVENT_ID;
   const apiUrl = `/api/hackathons/events/${eventId}/signup`;
+  const signupReturnTo = getHackathonEventSignupReturnTo(eventId);
 
   const trackAuthCta = (cta: "sign_in" | "create_account") => {
     void trackEvent(
@@ -658,7 +665,7 @@ export default function HackASprint2026SignupPage() {
                         <p className="text-xs text-neutral-500 dark:text-neutral-400">
                           {profile.hasDiscord && profile.discordUsername
                             ? <>Connected as <span className="text-emerald-600 dark:text-emerald-400">@{profile.discordUsername}</span></>
-                            : "Required so organizers can reach you"}
+                            : <EventSignupDiscordMissingCopy />}
                         </p>
                       </div>
                     </div>
@@ -668,15 +675,12 @@ export default function HackASprint2026SignupPage() {
                         @{profile.discordUsername}
                       </span>
                     ) : (
-                      <a
-                        href="/api/discord/authorize"
-                        className="inline-flex items-center gap-2 rounded-lg bg-[#5865F2] px-4 py-2 text-sm font-medium text-white hover:bg-[#4752C4] transition-colors"
-                      >
-                        <DiscordIcon size={16} />
-                        Connect Discord
-                      </a>
+                      <EventSignupDiscordConnectLink returnTo={signupReturnTo} />
                     )}
                   </div>
+                  {!profile.hasDiscord ? (
+                    <EventSignupDiscordJoinHint className="-mt-1 ml-12 text-xs text-neutral-500 dark:text-neutral-400" />
+                  ) : null}
 
                   {/* Show Discord on profile */}
                   {(() => {

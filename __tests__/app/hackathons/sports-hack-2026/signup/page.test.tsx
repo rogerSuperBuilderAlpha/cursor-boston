@@ -386,7 +386,11 @@ describe("Sports Hack 2026 signup page", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Connect Discord/i })).toHaveAttribute(
       "href",
-      "/api/discord/authorize",
+      expect.stringContaining("/api/discord/authorize?returnTo="),
+    );
+    expect(screen.getByRole("link", { name: /Join Discord first/i })).toHaveAttribute(
+      "href",
+      "https://discord.gg/Wsncg8YYqc",
     );
     expect(screen.getByRole("button", { name: /Complete requirements/i })).toBeDisabled();
     // 1/4 requirements met (isPublic only)

@@ -13,6 +13,10 @@ import Link from "next/link";
 import Avatar from "@/components/Avatar";
 import { DiscordIcon, GitHubIcon } from "@/components/icons";
 import { Modal } from "@/components/ui/Modal";
+import {
+  EventSignupDiscordConnectLink,
+  EventSignupDiscordJoinHint,
+} from "@/components/events/EventSignupDiscordRequirement";
 
 export type RequirementType =
   | "isPublic"
@@ -76,6 +80,7 @@ interface ProfileRequirementsModalProps {
   requirements: RequirementType[];
   title?: string;
   description?: string;
+  returnTo?: string;
 }
 
 export default function ProfileRequirementsModal({
@@ -85,6 +90,7 @@ export default function ProfileRequirementsModal({
   requirements,
   title = "Complete Your Profile",
   description = "Please complete the following requirements to continue.",
+  returnTo,
 }: ProfileRequirementsModalProps) {
   const { user, refreshUserProfile } = useAuth();
   const [profile, setProfile] = useState<ProfileStatus | null>(null);
@@ -93,6 +99,11 @@ export default function ProfileRequirementsModal({
   const [displayNameInput, setDisplayNameInput] = useState("");
   const [editingDisplayName, setEditingDisplayName] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const discordReturnTo =
+    returnTo ??
+    (typeof window === "undefined"
+      ? undefined
+      : `${window.location.pathname}${window.location.search}`);
 
   const fetchProfile = useCallback(async () => {
     if (!user) return;
@@ -323,13 +334,10 @@ export default function ProfileRequirementsModal({
           );
         }
         return (
-          <a
-            href="/api/discord/authorize"
+          <EventSignupDiscordConnectLink
+            returnTo={discordReturnTo}
             className="px-4 py-2 bg-[#5865F2] hover:bg-[#4752C4] text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
-          >
-            <DiscordIcon size={16} />
-            Connect Discord
-          </a>
+          />
         );
 
       case "hasDisplayName":
@@ -466,39 +474,41 @@ export default function ProfileRequirementsModal({
                   {incompleteRequirements.map((req) => {
                     const config = REQUIREMENT_CONFIGS[req];
                     return (
-                      <div
-                        key={req}
-                        className="flex items-center justify-between p-4 bg-neutral-800/50 border border-neutral-700 rounded-xl"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-amber-500/10 rounded-full flex items-center justify-center">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="16"
-                              height="16"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              className="text-amber-400"
-                            >
-                              <circle cx="12" cy="12" r="10" />
-                              <line x1="12" y1="8" x2="12" y2="12" />
-                              <line x1="12" y1="16" x2="12.01" y2="16" />
-                            </svg>
+                      <div key={req} className="space-y-2">
+                        <div className="flex items-center justify-between p-4 bg-neutral-800/50 border border-neutral-700 rounded-xl">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-amber-500/10 rounded-full flex items-center justify-center">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="text-amber-400"
+                              >
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="12" y1="8" x2="12" y2="12" />
+                                <line x1="12" y1="16" x2="12.01" y2="16" />
+                              </svg>
+                            </div>
+                            <div>
+                              <p className="text-white font-medium text-sm">
+                                {config.label}
+                              </p>
+                              <p className="text-neutral-400 text-xs">
+                                {config.description}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-white font-medium text-sm">
-                              {config.label}
-                            </p>
-                            <p className="text-neutral-400 text-xs">
-                              {config.description}
-                            </p>
-                          </div>
+                          {renderRequirementAction(req)}
                         </div>
-                        {renderRequirementAction(req)}
+                        {req === "hasDiscord" ? (
+                          <EventSignupDiscordJoinHint className="px-4 text-xs text-neutral-400" />
+                        ) : null}
                       </div>
                     );
                   })}
