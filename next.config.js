@@ -92,6 +92,11 @@ const nextConfig = {
         hostname: 'avatars.githubusercontent.com',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'upload.wikimedia.org',
+        pathname: '/**',
+      },
     ],
   },
 
@@ -108,7 +113,7 @@ const nextConfig = {
               // unsafe-inline kept for Firebase Auth popup SDK; unsafe-eval removed (not needed in production builds).
               "script-src 'self' 'unsafe-inline' https://embed.lu.ma https://apis.google.com https://accounts.google.com https://www.googletagmanager.com",
               "style-src 'self' 'unsafe-inline' https://embed.lu.ma",
-              "img-src 'self' data: blob: https://firebasestorage.googleapis.com https://*.googleusercontent.com https://lh3.googleusercontent.com https://avatars.githubusercontent.com https://*.cartocdn.com https://unpkg.com",
+              "img-src 'self' data: blob: https://firebasestorage.googleapis.com https://*.googleusercontent.com https://lh3.googleusercontent.com https://avatars.githubusercontent.com https://upload.wikimedia.org https://*.cartocdn.com https://unpkg.com",
               "font-src 'self'",
               "connect-src 'self' https://*.firebaseio.com https://*.firebaseapp.com https://*.googleapis.com https://accounts.google.com https://www.google-analytics.com https://www.google.com https://*.cartocdn.com https://unpkg.com",
               "frame-src https://lu.ma https://luma.com https://accounts.google.com https://*.firebaseapp.com",
