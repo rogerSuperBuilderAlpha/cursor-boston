@@ -1,0 +1,10 @@
+{
+  "title": "Cornerman — a boxing tutor that asks the question instead of giving the answer",
+  "description": "Most AI tutors are answer machines that tell athletes what to fix. Cornerman is feedback architecture: the athlete states an intent, attempts on video, predicts what the AI will say, and only then sees a question pointing at one moment with the cited still-frame as evidence. Round 2 measures whether the focus flagged in round 1 was actually addressed. Built against all six principles of the Builder Playbook for AI-enhanced learning.",
+  "displayName": "Paramjeet Singh",
+  "videoUrl": "https://www.loom.com/share/486cd61d7c4c4b61b735be978ab04a90",
+  "repoUrl": "https://github.com/Paramjeet-singh-neu/Cornerman",
+  "deployedUrl": "https://cornerman.streamlit.app/",
+  "tags": ["athletes-performance", "ai-tutor", "feedback-architecture", "boxing", "streamlit", "openai"],
+  "collaborators": []
+}
