@@ -1,10 +1,17 @@
 {
-  "title": "BeatM ROAST MODE — AI Trash Talk Battle Cards for DFS Lineups",
-  "description": "Enter two DFS lineups, get AI-generated trash talk battle cards. Claude roasts both sides with stat context, crowd predictions, and shareable cards. Built for BeatM's social-first DFS thesis — because winning is sweeter when your crew knows about it.",
+  "title": "BeatM ROAST MODE - AI Trash Talk Battle Cards for DFS Lineups",
+  "description": "Enter two DFS lineups, get AI-generated trash talk battle cards. Claude roasts both sides with stat context, crowd predictions, and shareable cards. Built for BeatMs social-first DFS thesis.",
   "displayName": "Mike Williams",
   "videoUrl": "",
   "repoUrl": "https://github.com/hwillGIT/beatm-roast",
   "deployedUrl": "",
-  "tags": ["beatm", "dfs", "ai-roast", "social", "claude-ai", "next-js"],
+  "tags": [
+    "beatm",
+    "dfs",
+    "ai-roast",
+    "social",
+    "claude-ai",
+    "next-js"
+  ],
   "collaborators": []
 }
