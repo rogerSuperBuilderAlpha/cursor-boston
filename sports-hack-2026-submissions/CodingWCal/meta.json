@@ -1,0 +1,14 @@
+{
+  "title": "The Assist",
+  "description": "The Assist is a Celtics watch experience for first-time basketball viewers who feel lost during the game. A public Finals clip drives a synced overlay that explains what you are seeing on screen, what announcers mean, and rules in plain language, plus a live score strip, transcript rail, and confetti on big scores.",
+  "displayName": "Calvin V.",
+  "videoUrl": "https://www.loom.com/share/50d65da7bfd94ef5be42986185679e0b",
+  "repoUrl": "https://github.com/CodingWCal/the-assist",
+  "deployedUrl": "https://codingwcal.github.io/the-assist/",
+  "tags": ["basketball", "celtics", "fan-experience", "react", "vite", "rookie-mode"],
+  "collaborators": [
+    { "displayName": "Karlee Perpignant", "githubHandle": "kperpignant" },
+    { "displayName": "Emily Castillo", "githubHandle": "emilycastillox" },
+    { "displayName": "Calvin V.", "githubHandle": "CodingWCal" }
+  ]
+}
