@@ -1,0 +1,9 @@
+{
+  "title": "FanPulse FIFA AI",
+  "description": "FanPulse FIFA AI helps football fans rediscover past matches through personalized AI storytelling, top highlights, hidden insights, trivia, and shareable social content. The MVP uses a 3-agent pipeline and supports OpenAI with mock fallback; it is not deployed yet.",
+  "displayName": "Rahul Pothirendi",
+  "videoUrl": "https://www.loom.com/share/abc123",
+  "repoUrl": "https://github.com/Pothirendirahul/fanpulse-fifa",
+  "deployedUrl": "",
+  "tags": ["ai", "football", "fan-engagement", "sports", "fastapi", "openai"]
+}
