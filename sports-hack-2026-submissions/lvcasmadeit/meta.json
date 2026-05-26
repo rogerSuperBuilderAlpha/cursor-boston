@@ -1,0 +1,18 @@
+{
+  "title": "squadpulse",
+  "description": "affordable health tracking metrics with consumer hardware",
+  "displayName": "squadpulse",
+  "videoUrl": "https://youtu.be/ZD5nlVFTT00",
+  "repoUrl": "https://github.com/mohammed-aldulaimy/training-load-maxxing",
+  "deployedUrl": "https://squad-pulsee.vercel.app/",
+  "collaborators": [
+    {
+      "displayName": "lvcasmadeit",
+      "githubHandle": "lvcasmadeit"
+    },
+    {
+      "displayName": "sowndyjay",
+      "githubHandle": "sowndyjay"
+    }
+  ]
+}
