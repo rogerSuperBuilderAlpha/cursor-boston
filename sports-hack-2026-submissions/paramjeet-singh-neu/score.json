@@ -1,0 +1,9 @@
+{
+  "ai": {
+    "score": 9,
+    "rationale": "Exceptional submission. Contrarian pedagogical framing — \"AI tutors as question-asking architecture, not answer machines\" — backed by a concrete 2-round structure: athlete states intent, attempts on video, predicts AI feedback, then sees a Socratic question with a cited still-frame; round 2 measures whether round-1 focus was actually addressed. Sport-specific (boxing technique), all three URLs filled (Loom + repo + Streamlit deploy), explicit AI leverage (OpenAI + multimodal video reasoning), and grounded in a named learning-design framework. This is the kind of sharp, well-developed thinking that's hard to fake in one day.",
+    "model": "claude-opus-4-7",
+    "scoredAt": "2026-05-26T19:00:00.000Z",
+    "scorerVersion": 2
+  }
+}
