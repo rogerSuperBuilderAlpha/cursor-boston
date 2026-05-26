@@ -1,0 +1,13 @@
+{
+  "title": "Football IQ — train your game sense on real moments",
+  "description": "Football IQ is a mobile decision-training game built on real Champions League moments. Each clip auto-pauses at the decision point — pick what the player should do, then see what actually happened alongside a Veo-generated "alternate timeline" of how your wrong choice would have played out. Career mode filters scenarios by position, and you can upload your own clip to be analyzed and trained on.",
+  "displayName": "Yaman Bicer",
+  "videoUrl": "",
+  "repoUrl": "https://github.com/yamanbicer/EkitikE",
+  "deployedUrl": "",
+  "tags": ["soccer", "decision-training", "veo", "react", "vite"],
+  "collaborators": [
+    { "displayName": "Ahmet Sukru Kilic", "githubHandle": "AhmetSukruKilic" }
+  ]
+}
+
