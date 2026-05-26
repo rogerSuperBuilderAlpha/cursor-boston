@@ -1,0 +1,24 @@
+{
+  "title": "Rockie",
+  "description": "AI-powered rock climbing performance app that uses computer vision to analyze climbing technique, track progression, and deliver personalized coaching insights.",
+  "displayName": "n-star-dot",
+  "videoUrl": "https://www.youtube.com/shorts/aCP2i2hUhAY",
+  "repoUrl": "https://github.com/pn-le/rockie",
+  "deployedUrl": "https://rockie-production-438b.up.railway.app",
+  "tags": [
+    "computer-vision",
+    "react-native",
+    "expo"
+  ],
+  "collaborators": [
+    {
+      "displayName": "Philip"
+    },
+    {
+      "displayName": "Nghia"
+    },
+    {
+      "displayName": "Duc"
+    }
+  ]
+}
