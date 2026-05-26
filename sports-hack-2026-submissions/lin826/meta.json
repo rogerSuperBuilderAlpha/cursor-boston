@@ -1,0 +1,17 @@
+{
+  "title": "Heartbreak Weather: Boston Marathon Hill & Environmental Simulator",
+  "description": "An interactive pacing and physiological analysis platform that models the 26.2-mile elevation profile of the Boston Marathon against real-time weather conditions, including extreme temperature waves, humidity, and wind speed vectors.",
+  "displayName": "I-Ju Lin",
+  "videoUrl": "https://youtu.be/55fqEvNVoCw",
+  "repoUrl": "https://github.com/lin826/cursor-boston",
+  "deployedUrl": "https://lin826.github.io/boston-marathon/",
+  "feedbackLoopUrl": "https://lin826.github.io/boston-marathon/feedback_loop.html",
+  "tags": [
+    "boston-marathon",
+    "weather-model",
+    "pacing-strategy",
+    "gait-biomechanics",
+    "data-analytics"
+  ],
+  "collaborators": []
+}
