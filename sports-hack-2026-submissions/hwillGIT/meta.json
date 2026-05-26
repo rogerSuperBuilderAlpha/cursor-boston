@@ -1,10 +1,10 @@
 {
-  "title": "RTRevenue — Blockchain Revenue-Share Marketplace for Small Business Financing",
-  "description": "A blockchain-powered marketplace connecting small businesses with individual investors through revenue-share agreements. Businesses get fair financing; investors get 5-7% yield. Smart contracts automate distributions; real-time integrations verify revenue.",
+  "title": "BeatM ROAST MODE — AI Trash Talk Battle Cards for DFS Lineups",
+  "description": "Enter two DFS lineups, get AI-generated trash talk battle cards. Claude roasts both sides with stat context, crowd predictions, and shareable cards. Built for BeatM's social-first DFS thesis — because winning is sweeter when your crew knows about it.",
   "displayName": "Mike Williams",
   "videoUrl": "",
-  "repoUrl": "https://github.com/hwillGIT/rtrevenue-workspace",
+  "repoUrl": "https://github.com/hwillGIT/beatm-roast",
   "deployedUrl": "",
-  "tags": ["fintech", "revenue-sharing", "blockchain", "small-business", "investing", "reg-cf"],
+  "tags": ["beatm", "dfs", "ai-roast", "social", "claude-ai", "next-js"],
   "collaborators": []
 }
