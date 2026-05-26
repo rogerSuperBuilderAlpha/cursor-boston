@@ -1,0 +1,12 @@
+{
+    "title": "Short, specific project title",
+    "description": "1–3 sentences. What did you build? What problem does it solve?",
+    "displayName": "Dere Yimoyines",
+    "videoUrl": "https://www.loom.com/share/...",
+    "repoUrl": "https://github.com/derekyim/",
+    "deployedUrl": "https://your-project.vercel.app",
+    "tags": ["nba", "live-stats", "next.js"],
+    "collaborators": [
+      { "displayName": "Derek Yimoyines", "githubHandle": "derekyim" }
+    ]
+  }
