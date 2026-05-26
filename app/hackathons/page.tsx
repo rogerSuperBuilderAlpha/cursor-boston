@@ -328,14 +328,13 @@ export default function HackathonsPage() {
                     <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
                       Register on Luma
                     </p>
-                    <div className="overflow-hidden rounded-lg">
+                    <div className="overflow-hidden">
                       <iframe
                         src={featuredEmbedSrc}
                         title={`${featuredInPersonHackathon.title} — Luma`}
                         className="h-[min(440px,58vh)] w-full bg-white sm:h-[min(480px,62vh)]"
                         style={{
-                          border: "1px solid #bfcbda88",
-                          borderRadius: 4,
+                          border: "1px solid #bfcbda88"
                         }}
                         allow="fullscreen; payment"
                         frameBorder={0}
