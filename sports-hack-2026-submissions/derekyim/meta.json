@@ -1,12 +1,12 @@
 {
-    "title": "Short, specific project title",
-    "description": "1–3 sentences. What did you build? What problem does it solve?",
-    "displayName": "Dere Yimoyines",
-    "videoUrl": "https://www.loom.com/share/...",
-    "repoUrl": "https://github.com/derekyim/",
-    "deployedUrl": "https://your-project.vercel.app",
-    "tags": ["nba", "live-stats", "next.js"],
-    "collaborators": [
-      { "displayName": "Derek Yimoyines", "githubHandle": "derekyim" }
-    ]
-  }
+  "title": "Celtics Green or Mean — AI Fan Cam",
+  "description": "Fans scan a QR code, snap a selfie, and pick Green (Hype) or Mean (Roast). Claude Vision scores each photo for energy, Celtics spirit, and originality, then generates playful PA-announcer roast lines. An operator dashboard queues the best fans for the jumbotron. Presentation: https://docs.google.com/presentation/d/1RMdtYTSITz0C0YzBoQAEVWxwoYdjaHzV1Q_2e8DRmfA",
+  "displayName": "Derek Yimoyines",
+  "videoUrl": "https://www.loom.com/share/7757398d0bd94407be8c3474e8867720",
+  "repoUrl": "https://github.com/derekyim/cursor-boston-derekyim",
+  "deployedUrl": "https://green-or-mean.ngrok.app/",
+  "tags": ["nba", "celtics", "live-events", "next.js", "claude", "vision"],
+  "collaborators": [
+    { "displayName": "Derek Yimoyines", "githubHandle": "derekyim" }
+  ]
+}
