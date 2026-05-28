@@ -142,7 +142,6 @@ describe("SportsHackConfirmAttendanceModal", () => {
   });
 
   it("calls POST /confirm-attendance on Confirm click and hides modal on success", async () => {
-    jest.useRealTimers();
     setAuth(true);
     setSignupResponse(fetchMock, { signedUp: true, attendingConfirmed: false });
     fetchMock.mockImplementationOnce(async () => ({ ok: true, json: async () => ({ ok: true }) }));
@@ -152,7 +151,7 @@ describe("SportsHackConfirmAttendanceModal", () => {
       name: /Confirm I'll attend/i,
     });
 
-    const user = userEvent.setup();
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
     await user.click(confirmButton);
 
     await waitFor(() => {
@@ -166,14 +165,13 @@ describe("SportsHackConfirmAttendanceModal", () => {
   });
 
   it("dismisses + writes sessionStorage flag on X click", async () => {
-    jest.useRealTimers();
     setAuth(true);
     setSignupResponse(fetchMock, { signedUp: true, attendingConfirmed: false });
 
     render(<SportsHackConfirmAttendanceModal />);
     const dismissButton = await screen.findByRole("button", { name: /Dismiss/i });
 
-    const user = userEvent.setup();
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
     await act(async () => {
       await user.click(dismissButton);
     });
