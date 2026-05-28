@@ -167,10 +167,10 @@ export default async function ResearchPage({ searchParams }: ResearchPageProps) 
             <p className="mt-1.5 leading-relaxed">
               While the formal submission portal is being set up, the program
               committee is already accepting <strong>proposed-talk
-              submissions through this repository</strong>. Add one
+              submissions through the conference repository</strong>. Add one
               Markdown file at{" "}
               <code className="rounded bg-indigo-100 px-1.5 py-0.5 text-[11px] dark:bg-indigo-950/50">
-                content/research/cfp/algorithmacy-conference/submissions/&lt;your-handle&gt;.md
+                submissions/&lt;your-handle&gt;.md
               </code>{" "}
               including three things:
             </p>
@@ -183,7 +183,7 @@ export default async function ResearchPage({ searchParams }: ResearchPageProps) 
 
           <div className="mt-4 flex flex-wrap gap-2.5">
             <a
-              href="https://github.com/rogerSuperBuilderAlpha/cursor-boston/new/develop/content/research/cfp/algorithmacy-conference/submissions"
+              href="https://github.com/rogerSuperBuilderAlpha/algorithmacy-conference/new/main/submissions"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-500"
@@ -191,7 +191,7 @@ export default async function ResearchPage({ searchParams }: ResearchPageProps) 
               <GitPullRequest className="h-4 w-4" /> Start a submission PR
             </a>
             <a
-              href="https://github.com/rogerSuperBuilderAlpha/cursor-boston/blob/develop/content/research/cfp/algorithmacy-conference/submissions/TEMPLATE.md"
+              href="https://github.com/rogerSuperBuilderAlpha/algorithmacy-conference/blob/main/submissions/TEMPLATE.md"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-lg border border-indigo-300 bg-white px-4 py-2 text-sm font-semibold text-indigo-800 transition-colors hover:bg-indigo-50 dark:border-indigo-800 dark:bg-neutral-900 dark:text-indigo-200 dark:hover:bg-indigo-950/40"
@@ -199,7 +199,7 @@ export default async function ResearchPage({ searchParams }: ResearchPageProps) 
               <Info className="h-4 w-4" /> Submission template
             </a>
             <a
-              href="https://github.com/rogerSuperBuilderAlpha/cursor-boston/blob/develop/content/research/cfp/algorithmacy-conference/CFP.md"
+              href="https://github.com/rogerSuperBuilderAlpha/algorithmacy-conference"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-semibold text-neutral-700 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800"
