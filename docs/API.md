@@ -16,7 +16,7 @@
 
 All endpoints are under `/api/`. Authentication uses Firebase Auth ID tokens (Bearer) or session cookies. Spec: [`/openapi.json`](https://cursorboston.com/openapi.json) · interactive: [`/api/docs`](https://cursorboston.com/api/docs).
 
-**187 paths, 224 operations across 36 areas.**
+**186 paths, 223 operations across 35 areas.**
 
 ---
 
@@ -402,12 +402,6 @@ _Talk-submission moderation queue._
 |--------|----------|------|-------------|
 | GET | `/api/talks/submission/moderate` | Yes | Admin: list talk submissions (paginated by status, or three-bucket default) |
 | POST | `/api/talks/submission/moderate` | Yes | Admin: approve a talk submission or mark it delivered |
-
-## Commentary
-
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | `/api/commentary` | No | Generate live glaze/roast sports commentary |
 
 ## Cursor
 
