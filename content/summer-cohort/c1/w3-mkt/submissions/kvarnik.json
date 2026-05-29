@@ -1,0 +1,11 @@
+{
+  "githubHandle": "kvarnik",
+  "name": "Kristjan Varnik",
+  "photoUrl": "https://raw.githubusercontent.com/kvarnik/cursor-boston/submit-kvarnik-w3mkt/content/summer-cohort/c1/w3-mkt/submissions/kvarnik-preview.png",
+  "repoUrl": "https://github.com/kvarnik/cursor-boston/tree/submit-kvarnik-w3mkt/.cursor/skills/fist-my-bump",
+  "liveUrl": "https://github.com/kvarnik/cursor-boston/blob/submit-kvarnik-w3mkt/.cursor/skills/fist-my-bump/SKILL.md",
+  "loomUrl": "https://www.loom.com/share/d80abe5928004922a1d3a250b9c72267",
+  "pitch": "fist-my-bump: A cursor skill to generate a social media post of all the cohort submissions. Skill will validate urls and check the shareOnSocials flag(yes, no, link-only)",
+  "competeForWin": true,
+  "shareOnSocials":true
+}
