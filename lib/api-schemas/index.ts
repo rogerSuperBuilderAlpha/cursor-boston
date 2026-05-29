@@ -23,6 +23,7 @@ import { authContract } from "./auth";
 import { badgesContract } from "./badges";
 import { certificateContract } from "./certificate";
 import { cfpContract } from "./cfp";
+import { commentaryContract } from "./commentary";
 import { communityContract } from "./community";
 import { cookbookContract } from "./cookbook";
 import { cursorContract } from "./cursor";
@@ -62,6 +63,7 @@ export const apiContract = c.router({
   badges: badgesContract,
   certificate: certificateContract,
   cfp: cfpContract,
+  commentary: commentaryContract,
   community: communityContract,
   cookbook: cookbookContract,
   cursor: cursorContract,

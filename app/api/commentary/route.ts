@@ -7,14 +7,7 @@
 
 import { NextResponse } from "next/server";
 
-type CommentaryRequest = {
-  event?: string;
-  homeTeam?: string;
-  targetTeam?: string;
-  mode?: "glaze" | "roast" | string;
-  intensity?: string;
-  persona?: string;
-};
+import { CommentaryBody } from "@/lib/api-schemas/commentary";
 
 const glazeLines = [
   "Boston is playing with main character energy right now. That possession had receipts.",
@@ -29,7 +22,9 @@ const roastLines = [
 ];
 
 export async function POST(request: Request) {
-  const body = (await request.json().catch(() => ({}))) as CommentaryRequest;
+  const raw = await request.json().catch(() => ({}));
+  const parsed = CommentaryBody.safeParse(raw);
+  const body = parsed.success ? parsed.data : {};
   const isGlaze = body.mode === "glaze";
   const lines = isGlaze ? glazeLines : roastLines;
   const selected = lines[Math.floor(Math.random() * lines.length)];
