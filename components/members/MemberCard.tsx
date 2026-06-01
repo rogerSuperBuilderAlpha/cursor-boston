@@ -16,7 +16,7 @@ import { getBaseBadgeEligibilityInput } from "@/lib/badges/getBadgeEligibilityIn
 import { getEarnedBadgeIds } from "@/lib/badges/utils";
 import { BadgeGrid } from "@/components/badges/BadgeGrid";
 import { SHOWCASE_AWARD_LABEL } from "@/lib/hackathon-asprint-2026-awards";
-import { CLASS_GROUPS, TAILWIND_CLASS_NAMES as TW } from "@/lib/classname-constants";
+import { CLASS_GROUPS as CG, TAILWIND_CLASS_NAMES as TW } from "@/lib/classname-constants";
 import { cn } from "@/lib/utils";
 
 interface MemberCardProps {
@@ -62,16 +62,16 @@ export function MemberCard({ member }: MemberCardProps) {
   ].slice(0, 3);
 
   return (
-    <div className={cn(CLASS_GROUPS.card.neutral, TW.spacing.p6, CLASS_GROUPS.card.neutralHover, TW.motion.colors)}>
+    <div className={cn(CG.card.neutral, TW.spacing.p6, CG.card.neutralHover, TW.motion.colors)}>
       {/* Header */}
-      <div className="flex items-start gap-4 mb-4">
-        <div className="relative shrink-0">
+      <div className={cn(TW.layout.flex, TW.layout.itemsStart, TW.spacing.gap4, TW.spacing.mb4)}>
+        <div className={cn(TW.layout.relative, TW.layout.shrink0)}>
           {isAgent && !member.photoURL ? (
             <div
               role="img"
               aria-label={member.displayName || "Agent"}
-              className="w-14 h-14 rounded-full flex items-center justify-center text-foreground bg-purple-900/50"
-            >
+              className={cn(TW.sizing.item14, TW.radius.full, CG.general.flexMid, TW.layout.justifyCenter, TW.text.foreground, TW.surface.purpleSubtle)}
+            > {/*"w-14 h-14 rounded-full flex items-center justify-center text-foreground" */}
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                 <rect x="3" y="11" width="18" height="10" rx="2" />
                 <circle cx="12" cy="5" r="2" />
@@ -88,31 +88,31 @@ export function MemberCard({ member }: MemberCardProps) {
             />
           )}
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-0.5">
+        <div className={cn(CG.general.flexMid, TW.layout.minW0)}>
+          <div className={cn(CG.general.flexMid, TW.spacing.gap2, TW.spacing.mb0_5)}>
             <h3 className={cn(TW.text.foreground, TW.text.semibold, TW.text.lg, TW.layout.truncate)}>
               {member.displayName || "Anonymous"}
             </h3>
             {/* Member Type Tag */}
             <span
               className={cn(
-                CLASS_GROUPS.badge.basePill,
+                CG.badge.basePill,
                 isAgent
-                  ? "bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/30"
-                  : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
+                  ? `${TW.surface.purpleSoft} ${TW.text.purple1} ${TW.border.purpleSoft}`
+                  : `${TW.surface.emeraldSoft} ${TW.text.accentHover} ${TW.border.emeraldSoft2}`
               )}
             >
               {isAgent ? "Agent" : "Human"}
             </span>
           </div>
           {!isAgent && v?.showJobTitle && member.jobTitle && (
-            <p className={cn(CLASS_GROUPS.text.muted, TW.layout.truncate)}>{member.jobTitle}</p>
+            <p className={cn(CG.text.muted, TW.layout.truncate)}>{member.jobTitle}</p>
           )}
           {!isAgent && v?.showCompany && member.company && (
-            <p className={cn(CLASS_GROUPS.text.muted, TW.layout.truncate)}>{member.company}</p>
+            <p className={cn(CG.text.muted, TW.layout.truncate)}>{member.company}</p>
           )}
           {isAgent && member.owner?.displayName && v?.showOwner && (
-            <p className={cn(CLASS_GROUPS.text.muted, TW.layout.truncate)}>
+            <p className={cn(CG.text.muted, TW.layout.truncate)}>
               Owned by {member.owner.displayName}
             </p>
           )}
@@ -121,12 +121,12 @@ export function MemberCard({ member }: MemberCardProps) {
 
       {/* Bio */}
       {v?.showBio && member.bio && (
-        <p className={cn(CLASS_GROUPS.text.body, TW.spacing.mb4, "line-clamp-3")}>{member.bio}</p>
+        <p className={cn(CG.text.body, TW.spacing.mb4, TW.sizing.lineClamp3)}>{member.bio}</p>
       )}
 
       {/* Location */}
       {v?.showLocation && member.location && (
-        <div className={cn(TW.layout.flex, TW.layout.itemsCenter, TW.spacing.gap2, CLASS_GROUPS.text.muted, TW.spacing.mb4)}>
+        <div className={cn(TW.layout.flex, TW.layout.itemsCenter, TW.spacing.gap2, CG.text.muted, TW.spacing.mb4)}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="14"
@@ -147,53 +147,53 @@ export function MemberCard({ member }: MemberCardProps) {
       )}
 
       {/* Badges */}
-      <div className="flex flex-wrap gap-2 mb-4">
+      <div className={cn(TW.layout.flex, TW.layout.flexWrap, TW.spacing.gap2, TW.spacing.mb4)}>
         {v?.showDiscord && member.discord && (
-          <span className="px-2 py-1 bg-[#5865F2]/10 text-[#5865F2] text-xs rounded-full inline-flex items-center gap-1">
+          <span className={cn(CG.badge.spacing21, TW.surface.discord, TW.text.discord, CG.badge.small_round_center)}>
             <DiscordIcon size={12} />
             Discord
           </span>
         )}
         {v?.showGithubBadge && member.github && (
-          <span className="px-2 py-1 bg-neutral-100 text-neutral-900 dark:bg-neutral-800/50 dark:text-white text-xs rounded-full inline-flex items-center gap-1">
-            <GitHubIcon size={12} />
+          <span className={cn(CG.badge.spacing21, TW.surface.neutral2, TW.text.normal, CG.badge.small_round_center)}>
+            <GitHubIcon size={12} /> {/*bg-neutral-100 text-neutral-900 dark:bg-neutral-800/50 dark:text-white*/}
             GitHub
           </span>
         )}
         {v?.showEventsAttended && member.eventsAttended && member.eventsAttended > 0 && (
-          <span className={cn(TW.spacing.px2, TW.spacing.py1, TW.surface.emeraldSoft, TW.text.accent, TW.text.tiny, TW.radius.full)}>
+          <span className={cn(CG.badge.spacing21, TW.surface.emeraldSoft, TW.text.accent, TW.text.tiny, TW.radius.full)}>
             {member.eventsAttended} event{member.eventsAttended !== 1 ? "s" : ""} attended
           </span>
         )}
         {v?.showTalksGiven && member.talksGiven && member.talksGiven > 0 && (
-          <span className={cn(TW.spacing.px2, TW.spacing.py1, TW.surface.purpleSoft, "text-purple-600 dark:text-purple-400", TW.text.tiny, TW.radius.full)}>
-            {member.talksGiven} talk{member.talksGiven !== 1 ? "s" : ""} given
+          <span className={cn(CG.badge.spacing21, CG.badge.shade_purple, TW.text.tiny, TW.radius.full)}>
+            {member.talksGiven} talk{member.talksGiven !== 1 ? "s" : ""} given {/*"text-purple-600 dark:text-purple-400"*/}
           </span>
         )}
         {member.pullRequestsCount && member.pullRequestsCount > 0 && (
-          <span className={cn(TW.spacing.px2, TW.spacing.py1, "bg-blue-500/10 text-blue-600 dark:text-blue-400", TW.text.tiny, TW.radius.full)}>
-            {member.pullRequestsCount} PR{member.pullRequestsCount !== 1 ? "s" : ""}
+          <span className={cn(CG.badge.spacing21, CG.badge.shade_blue, TW.text.tiny, TW.radius.full)}>
+        {member.pullRequestsCount} PR{member.pullRequestsCount !== 1 ? "s" : ""} {/*"bg-blue-500/10 text-blue-600 dark:text-blue-400"*/}
           </span>
         )}
         {member.hackASprint2026ShowcaseBadge && (
-          <span className={cn(TW.spacing.px2, TW.spacing.py1, "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400", TW.text.tiny, TW.radius.full)}>
-            Hack-a-Sprint &apos;26
+          <span className={cn(CG.badge.spacing21, CG.badge.shade_cyan, TW.text.tiny, TW.radius.full)}>
+            Hack-a-Sprint &apos;26 {/*"bg-cyan-500/10 text-cyan-600 dark:text-cyan-400"*/}
           </span>
         )}
         {member.hackASprint2026ShowcaseAwards?.map((kind) => (
           <span
             key={kind}
-            className={cn(TW.spacing.px2, TW.spacing.py1, "bg-amber-500/15 text-amber-800 dark:text-amber-300", TW.text.tiny, TW.radius.full)}
+            className={cn(CG.badge.spacing21, CG.badge.shade_amber, TW.text.tiny, TW.radius.full)}
           >
-            {SHOWCASE_AWARD_LABEL[kind]}
+            {SHOWCASE_AWARD_LABEL[kind]} {/*"bg-amber-500/15 text-amber-800 dark:text-amber-300"*/}
           </span>
         ))}
       </div>
 
-      <div className="mb-4">
-        <p className="mb-2 text-xs text-neutral-500 dark:text-neutral-400">
+      <div className={cn(TW.spacing.mb4)}>
+        <p className={cn(TW.spacing.mb2, TW.text.tiny, TW.text.subtle)}>
           Preview only. Final badge status appears on profile.
-        </p>
+        </p> {/*  text-neutral-500 dark:text-neutral-400*/}
         <BadgeGrid
           definitions={previewDefinitions}
           eligibilityMap={badgeEligibilityMap}
@@ -204,14 +204,14 @@ export function MemberCard({ member }: MemberCardProps) {
       </div>
 
       {/* Social Links */}
-      <div className="flex items-center gap-1 pt-4 border-t border-neutral-200 dark:border-neutral-800 -ml-2">
+      <div className={cn(CG.general.flexMid, TW.spacing.gap1, TW.spacing.pt4, TW.border.topNeutral, TW.layout.margin_left2)}>
         {v?.showWebsite && member.socialLinks?.website && (
           <a
             href={member.socialLinks.website}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Website (opens in new tab)"
-            className={CLASS_GROUPS.button.iconLink}
+            className={CG.button.iconLink}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -237,7 +237,7 @@ export function MemberCard({ member }: MemberCardProps) {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="LinkedIn (opens in new tab)"
-            className={CLASS_GROUPS.button.iconLink}
+            className={CG.button.iconLink}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -257,7 +257,7 @@ export function MemberCard({ member }: MemberCardProps) {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="X/Twitter (opens in new tab)"
-            className={CLASS_GROUPS.button.iconLink}
+            className={CG.button.iconLink}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -277,7 +277,7 @@ export function MemberCard({ member }: MemberCardProps) {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="GitHub (opens in new tab)"
-            className={CLASS_GROUPS.button.iconLink}
+            className={CG.button.iconLink}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -297,7 +297,7 @@ export function MemberCard({ member }: MemberCardProps) {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Substack (opens in new tab)"
-            className={CLASS_GROUPS.button.iconLink}
+            className={CG.button.iconLink}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -312,7 +312,7 @@ export function MemberCard({ member }: MemberCardProps) {
           </a>
         )}
         {v?.showMemberSince && member.createdAt && typeof member.createdAt.toDate === "function" && (
-          <span className="text-neutral-400 text-xs ml-auto">
+          <span className={cn(TW.text.gray400, TW.text.tiny, TW.spacing.mlAuto)}>
             Member since{" "}
             {formatMonthYear(member.createdAt.toDate())}
           </span>
