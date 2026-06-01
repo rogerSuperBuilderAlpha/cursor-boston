@@ -120,6 +120,23 @@ const config = tseslint.config(
     },
   },
   {
+    files: ["components/members/MemberCard.tsx", "components/feed/MessageCard.tsx"],
+    "rules": {
+      "no-restricted-syntax": [
+        "error",
+        {
+          "selector": "JSXAttribute[name.name='className'][value.type='Literal']",
+          "message": "Tailwind classes must be variables. Raw string literals are not allowed in className."
+        },
+        // Catch strings inside cn(): className={cn(..., "text-sm")}
+        {
+          "selector": "JSXAttribute[name.name='className'] CallExpression[callee.name='cn'] > Literal",
+          "message": "Raw string literals are not allowed inside the cn() utility. Use a TW variable instead."
+        }
+      ]
+    }
+  },
+  {
     ignores: [
       ".next/**",
       "out/**",
