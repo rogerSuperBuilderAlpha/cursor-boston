@@ -262,7 +262,7 @@ export function OpportunityListings({
               </label>
 
               <label className="block">
-                <span className="sr-only">Filter by work mode</span>
+                <span className="sr-only">Filter by location</span>
                 <select
                   value={workMode}
                   onChange={(event) =>
@@ -270,7 +270,7 @@ export function OpportunityListings({
                   }
                   className="h-11 w-full rounded-lg border border-neutral-200 bg-white px-3 text-sm text-neutral-950 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-neutral-800 dark:bg-neutral-900 dark:text-white"
                 >
-                  <option value="all">All modes</option>
+                  <option value="all">All locations</option>
                   <option value="remote">Remote</option>
                   <option value="in-person">Boston area</option>
                 </select>

@@ -46,9 +46,15 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // Some mail clients / link scanners deliver the href with the literal HTML
+  // entity `&amp;` undecoded, so the second query param arrives named
+  // `amp;token` (and a forwarded/encoded link can yield `amp;email`). Fall
+  // back to those variants so a mangled separator doesn't break unsubscribe.
+  const sp = request.nextUrl.searchParams;
+  const param = (name: string) => sp.get(name) ?? sp.get(`amp;${name}`) ?? undefined;
   const parsedQuery = notificationsContract.unsubscribe.query.safeParse({
-    email: request.nextUrl.searchParams.get("email") ?? undefined,
-    token: request.nextUrl.searchParams.get("token") ?? undefined,
+    email: param("email"),
+    token: param("token"),
   });
   const email = parsedQuery.success
     ? parsedQuery.data.email?.toLowerCase().trim()

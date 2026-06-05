@@ -1,0 +1,10 @@
+{
+  "title": "PulseLens Live: AI Subtitle-to-Insight Companion for Sports Streams",
+  "description": "PulseLens Live turns real-time stream subtitles into instant scene understanding, breaking-news style summaries, explainable term highlights, and timeline-grounded Q&A. It helps solo online viewers quickly understand what is happening and why it matters.",
+  "displayName": "Hanpeng Yang",
+  "videoUrl": "",
+  "repoUrl": "https://github.com/AngeloHYang/cursor-boston/tree/develop/sports-hack-2026-submissions/AngeloHYang",
+  "deployedUrl": "https://cursor-boston-ihavkj4km-hanpeng-yang-s-projects.vercel.app/",
+  "tags": ["fan-experience", "live-subtitles", "sports-streaming", "ai-qa", "hackathon"],
+  "collaborators": []
+}

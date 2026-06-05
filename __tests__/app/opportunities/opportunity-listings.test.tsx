@@ -86,7 +86,7 @@ describe("OpportunityListings", () => {
   it("filters listings by work mode", () => {
     render(<OpportunityListings opportunities={opportunities} />);
 
-    fireEvent.change(screen.getByLabelText("Filter by work mode"), {
+    fireEvent.change(screen.getByLabelText("Filter by location"), {
       target: { value: "remote" },
     });
 
@@ -94,7 +94,7 @@ describe("OpportunityListings", () => {
     expect(screen.getByText("AI Product Engineer")).toBeInTheDocument();
     expect(screen.getByText("Showing 1 of 2 listings.")).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText("Filter by work mode"), {
+    fireEvent.change(screen.getByLabelText("Filter by location"), {
       target: { value: "in-person" },
     });
 

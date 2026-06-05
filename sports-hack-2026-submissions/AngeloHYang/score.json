@@ -1,0 +1,9 @@
+{
+  "ai": {
+    "score": 7,
+    "rationale": "PulseLens Live is a sharp, recognizably sports project: a real-time subtitle-to-insight companion for solo sports-stream viewers, with a concrete feature set (scene understanding, breaking-news summaries, explainable term highlights, and timeline-grounded Q&A). The strongest signal is its AI-native shape — subtitle summarization plus grounded Q&A is genuine LLM leverage, not a bolt-on — and it ships with both a public repo and a live deployed URL. The main weakness is the missing explainer video, which leaves the completeness picture short of the all-URLs bar; otherwise the pitch is well-scoped and ambitious for a 2-hour build.",
+    "model": "claude-opus-4-7",
+    "scoredAt": "2026-06-02T22:45:00.000Z",
+    "scorerVersion": 1
+  }
+}
