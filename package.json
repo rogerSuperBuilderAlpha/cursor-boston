@@ -76,7 +76,7 @@
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^7.3.0",
-    "@cursor/sdk": "^1.0.17",
+    "@cursor/sdk": "^1.0.18",
     "@react-three/drei": "^10.7.6",
     "@react-three/fiber": "^9.4.2",
     "@tailwindcss/postcss": "^4.3.0",
@@ -108,7 +108,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@anthropic-ai/sdk": "^0.100.1",
+    "@anthropic-ai/sdk": "^0.102.0",
     "@commitlint/cli": "^21.0.2",
     "@commitlint/config-conventional": "^21.0.2",
     "@eslint/compat": "^2.1.0",
@@ -136,7 +136,7 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-unused-imports": "^4.4.1",
-    "firebase-tools": "^15.19.0",
+    "firebase-tools": "^15.19.1",
     "globals": "^17.6.0",
     "husky": "^8.0.3",
     "jest": "^30.4.2",
