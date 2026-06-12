@@ -7,6 +7,7 @@ import importPlugin from "eslint-plugin-import";
 import nextPlugin from "@next/eslint-plugin-next";
 import globals from "globals";
 import unusedImports from "eslint-plugin-unused-imports";
+import tailwindcss from "eslint-plugin-tailwindcss";
 
 const config = tseslint.config(
   {
@@ -18,6 +19,7 @@ const config = tseslint.config(
       "jsx-a11y": fixupPluginRules(jsxA11yPlugin),
       "@next/next": nextPlugin,
       "unused-imports": unusedImports,
+      tailwindcss: tailwindcss,
     },
     languageOptions: {
       parser: tseslint.parser,
@@ -38,6 +40,9 @@ const config = tseslint.config(
       "import/resolver": {
         node: { extensions: [".js", ".jsx", ".ts", ".tsx"] },
         typescript: { alwaysTryTypes: true },
+      },
+      tailwindcss: {
+        cssConfigPath: "app/globals.css",
       },
     },
     rules: {
@@ -133,9 +138,41 @@ const config = tseslint.config(
           "selector": "JSXAttribute[name.name='className'] CallExpression[callee.name='cn'] > Literal",
           "message": "Raw string literals are not allowed inside the cn() utility. Use a TW variable instead."
         }
-      ]
+      ],
+      "tailwindcss/no-custom-classname": ["error", {
+        "whitelist": ["my-custom-class", "glides-.*"], // Accepts exact names or regular expressions
+      }]
     }
   },
+  // *************** ATTEMPT TO ADD ESLINT RULE FOR ONLY TAILWIND FOR CLASSNAME-CONSTANTS MAKES EVERYTHING AN ERROR ***************
+  // {
+  //   files: ["lib/classname-constants.ts"],
+  //   plugins: {
+  //     tailwindcss: tailwindcss, // Ensure your plugin import is assigned here
+  //   },
+  //   settings: {
+  //     tailwindcss: {
+  //       cssConfigPath: "src/globals.css", // Points to your v4 CSS entry point
+  //       variablePatterns: [".*"], 
+  //     },
+  //   },
+  //   rules: {
+  //     "tailwindcss/no-custom-classname": ["error"],
+
+  //     // 2. We use core ESLint to bypass the nesting limit and sweep the deep structure
+  //   "no-restricted-syntax": [
+  //       "error",
+  //       {
+  //         // Recursively targets ANY string literal value inside this file
+  //         "selector": [
+  //           "Property > Literal[value=/^(bg-|text-|p-|m-|flex|grid|border-|rounded-|justify-|items-|h-|w-|gap-|shadow-|absolute|relative|hidden|block|inline-block|font-|opacity-)/]",
+  //           "Property > TemplateLiteral[expressions.length=0]" // Also targets simple un-interpolated backticks,
+  //         ].join(", "),
+  //         "message": "Deep structural styles must consist strictly of valid Tailwind utilities."
+  //       }
+  //     ]
+  //   }
+  // },
   {
     ignores: [
       ".next/**",

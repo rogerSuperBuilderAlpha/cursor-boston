@@ -9,6 +9,9 @@ type ClassNameTree = {
   readonly [key: string]: string | ClassNameTree;
 };
 
+// 1. Create the dummy wrapper (it just passes the object straight through)
+// const tw = <T>(obj: T): T => obj;
+
 export const TAILWIND_CLASS_NAMES = {
   layout: {
     absolute: "absolute",
@@ -32,13 +35,13 @@ export const TAILWIND_CLASS_NAMES = {
     shrink0: "shrink-0",
     srOnly: "sr-only",
     truncate: "truncate",
-    wFull: "w-full",
+    wFull: "w-full not-a-class",
 
     // NEW
     margin_left2: "-ml-2"
   },
   spacing: {
-    gap1: "gap-1",
+    gap1: "gap-1 not-a-class",
     gap2: "gap-2",
     gap3: "gap-3",
     gap4: "gap-4",
@@ -91,7 +94,7 @@ export const TAILWIND_CLASS_NAMES = {
     purpleSoft: "border border-purple-500/30",
 
     // NEW ONES:
-    neutral12: "border-1-2 border-neutral-200 dark:border-neutral-800",
+    neutral_l2: "border-l-2 border-neutral-200 dark:border-neutral-800",
     topNeutral: "border-t border-neutral-200 dark:border-neutral-800",
     l4: "border-l-4",
     emerald500_50: "border-emerald-500/50",
@@ -119,14 +122,14 @@ export const TAILWIND_CLASS_NAMES = {
     emerald2: "bg-emerald-700",
     emerald3Hover: "hover:bg-emerald-800",
     hover80Trans: "hover:opacity-80 transition-opacity",
-    purpleSubtle: "purple-900/50",
+    purpleSubtle: "bg-purple-900/50",
     discord: "bg-[#5865F2]",
     discordSubtle: "bg-[#5865F2]/10",
   },
   text: {
     accent: "text-emerald-600 dark:text-emerald-400",
     accentHover: "hover:text-emerald-600 dark:hover:text-emerald-400",
-    accentSharpHover: "hover:text-emerald-700, dark:hover:text-emerald-400",
+    accentSharpHover: "hover:text-emerald-700 dark:hover:text-emerald-400",
     body: "text-neutral-700 dark:text-neutral-300",
     danger: "text-red-500",
     dangerSoft: "text-red-400",
@@ -232,7 +235,7 @@ export const CLASS_GROUPS = {
 
     // ADDED FEATURES
     size32: `${T.spacing.px3} ${T.spacing.py2}`,
-    positioning1: `${T.sizing.control44} ${T.layout.flex}, ${T.layout.itemsCenter}`
+    positioning1: `${T.sizing.control44} ${T.layout.flex} ${T.layout.itemsCenter}`
   },
   card: {
     neutral: `${T.surface.card} ${T.radius.xl} ${T.border.neutral}`,
@@ -269,169 +272,3 @@ export const CLASS_GROUPS = {
   },
 } as const satisfies ClassNameTree;
 
-export const COLORS = {
-  bg: {
-    emerald1: "bg-emerald-700",
-    emerald2: "bg-emerald-800",
-
-    purple: "bg-purple-900",
-    discord: "bg-[#5865F2]",
-
-    white: "bg-white",
-    black: "bg-neutral-900",
-
-    gray: "bg-neutral-100",
-
-    blue: "bg-blue-500",
-    cyan: "bg-cyan-500",
-    amber: "bg-amber-500",
-
-    shaded: {
-      emerald: "bg-emerald-500/10",
-      purple: "bg-purple-900/50",
-      purple2: "bg-purple-500/10",
-      discord: "bg-[#5865F2]/10",
-      gray_dark: "bg-neutral-800/50",
-      red: "bg-red-500/10",
-      blue: "bg-blue-500/10",
-      cyan: "bg-cyan-500/10",
-      amber: "bg-amber-500/15",
-    }
-  },
-  text: {
-    emerald1: "text-emerald-700",
-    emerald1_dark: "text-emerald-400",
-    emerald2: "text-emerald-800",
-    emerald2_dark: "text-emerald-300",
-    emerald3: "text-emerald-600",
-
-    discord: "text-[#5865F2]",
-
-    purple: "text-purple-600",
-    purple_dark: "text-purple-400",
-
-    blue: "text-blue-600",
-    cyan: "text-cyan-600",
-    amber: "text-amber-800",
-    blue_dark: "text-blue-400",
-    cyan_dark: "text-cyan-400",
-    amber_dark: "text-amber-300",
-
-    gray1: "text-neutral-600",
-    gray1_dark: "text-neutral-400",
-    gray2: "text-neutral-700",
-    gray2_dark: "test-neutral-300",
-    gray3: "text-neutral-500",
-
-    black: "text-neutral-900",
-    white: "text-white",
-
-    red1: "text-red-700",
-    red1_dark: "text-red-400",
-    red2: "text-red-800",
-    red2_dark: "text-red-300",
-  }
-} as const satisfies ClassNameTree;
-
-export const dark = "dark:" as const;
-export const hover = "hover:" as const;
-
-// export const COLORS = {
-//   membercard: {
-//     bg: {
-//       emerald: "bg-emerald-500",
-//       purple: "bg-purple-900",
-//       discord: "bg-[#5865F2]",
-//       gray: "bg-neutral-100",
-//       gray_dark: "bg-neutral-800",
-//       blue: "bg-blue-500",
-//       cyan: "bg-cyan-500",
-//       amber: "bg-amber-500",
-//     },
-//     text: {
-//       purple: "text-purple-600",
-//       emerald: "text-emerald-600",
-//       discord: "text-[#5865F2]",
-//       darkgray: "text-neutral-900",
-//       white: "text-white",
-//       blue: "text-blue-600",
-//       cyan: "text-cyan-600",
-//       amber: "text-amber-800",
-//       medgray: "text-neutral-500",
-//       medgraylighter: "text-neutral-400",
-//       purple_dark: "text-purple-400",
-//       emerald_dark: "text-emerald-400",
-//       blue_dark: "text-blue-400",
-//       cyan_dark: "text-cyan-400",
-//       amber_dark: "text-amber-300",
-//     }
-//   },
-//   messagecard: {
-//     bg: {
-//       emerald: "bg-emerald-500",
-//       emerald2: "bg-emerald-700",
-//       emerald2_hover: "bg-emerald-800",
-//       purple: "bg-purple-900",
-//       discord: "bg-[#5865F2]",
-//       plain_light: "bg-white",
-//       plain_dark: "bg-neutral-900",
-//       gray: "bg-neutral-100",
-//       gray_dark: "bg-neutral-800",
-//       red: "bg-red-500",
-//       blue: "bg-blue-500",
-//       cyan: "bg-cyan-500",
-//       amber: "bg-amber-500",
-//     },
-//     text: {
-//       purple: "text-purple-600",
-//       emerald_hover: "text-emerald-700",
-//       emerald_hover_dark: "text-emerald-400",
-//       discord: "text-[#5865F2]",
-//       plain_light: "text-neutral-900",
-//       plain_dark: "text-white",
-//       blue: "text-blue-600",
-//       cyan: "text-cyan-600",
-//       amber: "text-amber-800",
-//       gray: "text-neutral-600",
-//       gray_dark: "text-neutral-400",
-//       gray_hover: "text-neutral-900",
-//       gray_hover_dark: "text-white",
-//       gray_hover_dark2: "text-neutral-300",
-//       purple_dark: "text-purple-400",
-//       emerald_dark: "text-emerald-400",
-//       red: "text-red-700",
-//       red_dark: "text-red-400",
-//       red_hover: "text-red-800",
-//       red_hover_dark: "text-red-300",
-//       blue_dark: "text-blue-400",
-//       cyan_dark: "text-cyan-400",
-//       amber_dark: "text-amber-300",
-//       // Don't know if these colors should be so specified, or if the colors should be generalized
-//       comment: "text-neutral-700",
-//       comment_dark: "test-neutral-300",
-//       like: "text-emerald-700",
-//       like_dark: "text-emerald-400",
-//       dislike: "text-red-700",
-//       dislike_dark: "text-red-400",
-//       show_reply_input: "text-emerald-700",
-//       show_reply_input_dark: "text-emerald-400",
-//       other_reaction: "text-neutral-600",
-//       other_reaction_dark: "text-neutral-400",
-//       reply_input: "text-neutral-900",
-//       reply_input_dark: "text-white",
-//       reply_out_of_bounds: "text-red-700",
-//       reply_out_of_bounds_dark: "test-red-400",
-//       reply_in_bounds: "text-neutral-600",
-//       reply_in_bounds_dark: "text-neutral-400",
-//       cancel_reply: "text-neutral-600",
-//       cancel_reply_dark: "text-neutral-400",
-//       cancel_reply_hover: "text-neutral-900",
-//       cancel_reply_hover_dark: "text-white",
-//       reply: "text-white",
-//       view_replies: "text-emerald-700",
-//       view_replies_dark: "text-emerald-400",
-//       view_replies_hover: "text-emerald-800",
-//       view_replies_dark_hover: "text-emerald-300",
-//     }
-//   }
-// } as const satisfies ClassNameTree;

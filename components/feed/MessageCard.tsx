@@ -368,7 +368,7 @@ export function MessageCard({
 
           {/* Replies */}
           {showReplies && replies.length > 0 && (
-            <div className={cn(TW.spacing.mt3, TW.spacing.space_y3, TW.spacing.p_left4, TW.border.neutral12)}>
+            <div className={cn(TW.spacing.mt3, TW.spacing.space_y3, TW.spacing.p_left4, TW.border.neutral_l2)}>
               {replies.map((reply) => (
                 <ReplyCard
                   key={reply.id}

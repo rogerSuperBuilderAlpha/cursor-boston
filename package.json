@@ -135,6 +135,7 @@
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-tailwindcss": "^4.0.0-alpha.6",
     "eslint-plugin-unused-imports": "^4.4.1",
     "firebase-tools": "^15.19.1",
     "globals": "^17.6.0",
