@@ -136,7 +136,7 @@ export const SUMMER_COHORT_WEEKS: readonly SummerCohortWeek[] = [
     week: 5,
     title: "Your own startup",
     description:
-      "Build whatever you want — your own startup project for the week.",
+      "Turn your work into a real startup — ship a full production application real users can sign up for and use, plus a pitch deck telling the story. Submit both via PR.",
   },
   {
     week: 6,
@@ -486,9 +486,10 @@ export const SUMMER_COHORT_C1_WEEK_5 = {
   week: 5,
   title: "Your Own Startup",
   oneLiner:
-    "Build whatever YOU want this week — your own startup project. No vote, no submission template; bring it to the Friday call for show-and-tell.",
+    "Turn what you've built into a real startup: a pitch deck that tells the story and a full production application real users can sign up for and use today. Submit a PR with your deck and live-app link, then present at the Friday demo.",
   kickoffLabel: "Mon, Jun 8 · 6–7pm EST",
   showAndTellLabel: "Fri, Jun 12 · 6pm EST",
+  submissionBranch: "c1w5startup-submission",
 } as const;
 
 /** @internal */
@@ -617,6 +618,7 @@ export const SUMMER_COHORT_C2_WEEK_5 = {
   oneLiner: SUMMER_COHORT_C1_WEEK_5.oneLiner,
   kickoffLabel: "Mon, Jul 27 · 6–7pm EST",
   showAndTellLabel: "Fri, Jul 31 · 6pm EST",
+  submissionBranch: "c2w5startup-submission",
 } as const;
 
 /** @internal */
@@ -662,6 +664,8 @@ export interface SummerCohortWeek5 {
   readonly oneLiner: string;
   readonly kickoffLabel: string;
   readonly showAndTellLabel: string;
+  /** Submission branch contributors PR their deck + live-app link into. */
+  readonly submissionBranch: string;
 }
 
 export interface SummerCohortWeek6 {

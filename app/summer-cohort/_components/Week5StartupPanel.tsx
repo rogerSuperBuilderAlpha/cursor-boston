@@ -34,7 +34,7 @@ export function Week5StartupPanel({
         </span>
         <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
           <Rocket className="h-3 w-3" strokeWidth={2.25} aria-hidden="true" />
-          Open week — your call
+          Pitch deck + production app
         </span>
       </div>
       <h2 className="mt-3 text-xl font-semibold text-neutral-900 dark:text-neutral-100">
@@ -74,37 +74,56 @@ export function Week5StartupPanel({
         </a>
       </div>
 
-      {/* What this week is */}
+      {/* What you ship this week */}
       <div className="mt-6">
         <h3 className="text-sm font-semibold uppercase tracking-wider text-neutral-500">
-          What this week is
+          What you ship this week
         </h3>
         <ul className="mt-3 space-y-3 text-sm text-neutral-700 dark:text-neutral-300">
           <li className="flex gap-3">
             <span className="text-neutral-400" aria-hidden="true">•</span>
             <span>
-              <strong>Build whatever YOU want.</strong> Your own startup
-              project. The thing you&apos;d be working on if the cohort
-              didn&apos;t exist.
+              <strong>A pitch deck.</strong> The story: problem, solution, who
+              it&apos;s for, why now, and where it goes. Tight enough to present
+              in a few minutes.
             </span>
           </li>
           <li className="flex gap-3">
             <span className="text-neutral-400" aria-hidden="true">•</span>
             <span>
-              <strong>No vote. No template. No PR to this repo.</strong> The
-              cohort tools (PM, comms, marketing) are still running — use them
-              to ship faster.
+              <strong>A full production application.</strong> Not a prototype —
+              something real users can sign up for and actually use today. Use
+              the cohort tools (PM, comms, marketing) to ship faster.
             </span>
           </li>
           <li className="flex gap-3">
             <span className="text-neutral-400" aria-hidden="true">•</span>
             <span>
-              <strong>Friday show-and-tell at {week.showAndTellLabel}.</strong>{" "}
-              Each person gets ~3 minutes. No formal pitch — just &quot;here&apos;s
-              what I built and what I&apos;m doing next.&quot; Optional.
+              <strong>Friday demo at {week.showAndTellLabel}.</strong> Present
+              your deck and walk the live app — a few minutes each.
             </span>
           </li>
         </ul>
+      </div>
+
+      {/* Submission */}
+      <div className="mt-6 rounded-lg border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-950/40">
+        <div className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
+          How to submit
+        </div>
+        <p className="mt-2 text-sm text-neutral-700 dark:text-neutral-300">
+          Open a PR to cursorboston on the{" "}
+          <a
+            href={`https://github.com/rogerSuperBuilderAlpha/cursor-boston/tree/${week.submissionBranch}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-emerald-700 underline decoration-emerald-400 underline-offset-2 dark:text-emerald-400"
+          >
+            <code>{week.submissionBranch}</code>
+          </a>{" "}
+          branch with your pitch deck and a link to the live app, so it shows up
+          on the cohort page.
+        </p>
       </div>
 
       {/* What good looks like */}
@@ -113,16 +132,17 @@ export function Week5StartupPanel({
           What &quot;good&quot; looks like for this week
         </div>
         <p className="mt-2 text-sm text-emerald-900/90 dark:text-emerald-200/90">
-          End the week with something you can show — a working prototype, a
-          landing page with real signups, a public alpha. The bar is &quot;I
-          shipped something I&apos;m proud of,&quot; not &quot;I won a
-          vote.&quot;
+          A production-grade app real people can sign up for and use today,
+          paired with a deck you&apos;d be comfortable putting in front of an
+          investor. The bar is &quot;this is a real startup,&quot; not &quot;I
+          have a prototype.&quot;
         </p>
       </div>
 
       <p className="mt-5 border-t border-neutral-200 pt-4 text-xs text-neutral-600 dark:border-neutral-800 dark:text-neutral-400">
-        Stuck on what to build? Bring it to office hours or post in the cohort
-        channel. The cohort is a great free pair of eyes for this.
+        Stuck on scope, the deck, or going live? Bring it to office hours or
+        post in the cohort channel. The cohort is a great free pair of eyes for
+        this.
       </p>
     </section>
   );

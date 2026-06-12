@@ -154,6 +154,19 @@ Unsubscribe: ${unsubUrl}`;
 async function main() {
   const args = parseSendArgs();
 
+  // Optional: restrict to a specific admit cohort by the `admittedVia` tag
+  // (e.g. --admitted-via=bulk-cohort2-jun11) so a bulk send can target exactly
+  // one admission batch and skip unrelated stragglers / test docs.
+  const viaArg = process.argv
+    .slice(2)
+    .find((a) => a.startsWith("--admitted-via="));
+  const admittedViaFilter = viaArg
+    ? viaArg.slice("--admitted-via=".length).trim()
+    : null;
+  if (admittedViaFilter) {
+    console.log(`Filtering to admittedVia === "${admittedViaFilter}"`);
+  }
+
   await runEmailCampaign<Admit>({
     args,
     name: "Summer cohort admittance",
@@ -168,8 +181,13 @@ async function main() {
 
       const queue: Admit[] = [];
       let alreadyEmailed = 0;
+      let skippedVia = 0;
       for (const doc of snap.docs) {
         const data = doc.data();
+        if (admittedViaFilter && data.admittedVia !== admittedViaFilter) {
+          skippedVia++;
+          continue;
+        }
         if (!args.force && data.admittanceEmailedAt) {
           alreadyEmailed++;
           continue;
@@ -198,7 +216,10 @@ async function main() {
         });
       }
 
-      console.log(`To email now: ${queue.length} | Already emailed: ${alreadyEmailed}`);
+      console.log(
+        `To email now: ${queue.length} | Already emailed: ${alreadyEmailed}` +
+          (admittedViaFilter ? ` | Skipped (other admittedVia): ${skippedVia}` : "")
+      );
       return queue;
     },
     onSent: (a, { db }) =>

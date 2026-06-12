@@ -1,0 +1,9 @@
+{
+  "ai": {
+    "score": 6,
+    "rationale": "Advertisement Score Card is a recognizably sports-tech project — an athlete brand-value and sponsorship-intelligence platform pitched sharply at a clear audience (brand managers, agents, sponsors) with concrete outputs: social metrics, sponsorship history, brand-fit scoring, and a growth trajectory. The strongest signal is genuine AI leverage: the langchain/RAG/FastAPI stack points to real retrieval-augmented analysis rather than a bolt-on. The main weakness is completeness — only the repo URL is present, with no explainer video and no live deployed URL, which falls short of the brief's ship-it-live bar.",
+    "model": "claude-opus-4-8",
+    "scoredAt": "2026-06-06T11:35:00.000Z",
+    "scorerVersion": 1
+  }
+}

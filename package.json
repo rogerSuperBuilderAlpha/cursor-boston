@@ -108,7 +108,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@anthropic-ai/sdk": "^0.100.1",
+    "@anthropic-ai/sdk": "^0.102.0",
     "@commitlint/cli": "^21.0.2",
     "@commitlint/config-conventional": "^21.0.2",
     "@eslint/compat": "^2.1.0",
@@ -123,7 +123,7 @@
     "@testing-library/user-event": "^14.5.1",
     "@types/jest": "^30.0.0",
     "@types/leaflet": "^1.9.21",
-    "@types/node": "^25.9.1",
+    "@types/node": "^25.9.2",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@types/react-syntax-highlighter": "^15.5.13",
@@ -136,7 +136,7 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-unused-imports": "^4.4.1",
-    "firebase-tools": "^15.19.0",
+    "firebase-tools": "^15.19.1",
     "globals": "^17.6.0",
     "husky": "^8.0.3",
     "jest": "^30.4.2",
