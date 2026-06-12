@@ -35,7 +35,7 @@ export const TAILWIND_CLASS_NAMES = {
     shrink0: "shrink-0",
     srOnly: "sr-only",
     truncate: "truncate",
-    wFull: "w-full not-a-class",
+    wFull: "w-full",
 
     // NEW
     margin_left2: "-ml-2"
@@ -271,4 +271,3 @@ export const CLASS_GROUPS = {
     score: `${T.text.sm} ${T.text.semibold}`,
   },
 } as const satisfies ClassNameTree;
-
