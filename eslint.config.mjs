@@ -144,33 +144,49 @@ const config = tseslint.config(
       }]
     }
   },
-  // *************** ATTEMPT TO ADD ESLINT RULE FOR ONLY TAILWIND FOR CLASSNAME-CONSTANTS MAKES EVERYTHING AN ERROR ***************
+  // *************** ATTEMPT TO ADD ESLINT RULE FOR ONLY TAILWIND FOR CLASSNAME-CONSTANTS MAKES EITHER NOTHING OR EVERYTHING AN ERROR ***************
   // {
   //   files: ["lib/classname-constants.ts"],
   //   plugins: {
-  //     tailwindcss: tailwindcss, // Ensure your plugin import is assigned here
+  //     tailwindcss: tailwindcss,
+  //     local: {
+  //       rules: {
+  //         "deep-tailwind-validate": {
+  //           meta: {
+  //             type: "problem",
+  //             docs: { description: "Validates all atomic strings in the constants file against Tailwind rules." },
+  //             schema: [],
+  //           },
+  //           create(context) {
+  //             // Instantiate the native Tailwind class validator engine
+  //             const tailwindRule = tailwindcss.rules["no-custom-classname"];
+  //             const tailwindRuleInstance = tailwindRule.create(context);
+
+  //             return {
+  //               // 1. Catches standard standalone strings: "absolute", "flex"
+  //               Literal(node) {
+  //                 if (typeof node.value === "string") {
+  //                   tailwindRuleInstance.Literal(node);
+  //                 }
+  //               },
+  //               // 2. Catches raw text blocks inside backticks: `flex items-center`
+  //               TemplateElement(node) {
+  //                 // This safely evaluates only the text segments and skips ${expressions}
+  //                 tailwindRuleInstance.TemplateElement(node);
+  //               }
+  //             };
+  //           }
+  //         }
+  //       }
+  //     }
   //   },
   //   settings: {
   //     tailwindcss: {
-  //       cssConfigPath: "src/globals.css", // Points to your v4 CSS entry point
-  //       variablePatterns: [".*"], 
+  //       cssConfigPath: "app/globals.css", // Ensure this points exactly to your Tailwind CSS entry point
   //     },
   //   },
   //   rules: {
-  //     "tailwindcss/no-custom-classname": ["error"],
-
-  //     // 2. We use core ESLint to bypass the nesting limit and sweep the deep structure
-  //   "no-restricted-syntax": [
-  //       "error",
-  //       {
-  //         // Recursively targets ANY string literal value inside this file
-  //         "selector": [
-  //           "Property > Literal[value=/^(bg-|text-|p-|m-|flex|grid|border-|rounded-|justify-|items-|h-|w-|gap-|shadow-|absolute|relative|hidden|block|inline-block|font-|opacity-)/]",
-  //           "Property > TemplateLiteral[expressions.length=0]" // Also targets simple un-interpolated backticks,
-  //         ].join(", "),
-  //         "message": "Deep structural styles must consist strictly of valid Tailwind utilities."
-  //       }
-  //     ]
+  //     "local/deep-tailwind-validate": "error"
   //   }
   // },
   {

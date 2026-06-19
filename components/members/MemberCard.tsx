@@ -88,7 +88,7 @@ export function MemberCard({ member }: MemberCardProps) {
             />
           )}
         </div>
-        <div className={cn(CG.general.flexMid, TW.layout.minW0)}>
+        <div className={cn(TW.layout.flex1, TW.layout.minW0)}>
           <div className={cn(CG.general.flexMid, TW.spacing.gap2, TW.spacing.mb0_5)}>
             <h3 className={cn(TW.text.foreground, TW.text.semibold, TW.text.lg, TW.layout.truncate)}>
               {member.displayName || "Anonymous"}
