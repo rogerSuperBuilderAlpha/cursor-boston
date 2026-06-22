@@ -76,7 +76,7 @@
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^7.3.0",
-    "@cursor/sdk": "^1.0.17",
+    "@cursor/sdk": "^1.0.19",
     "@react-three/drei": "^10.7.6",
     "@react-three/fiber": "^9.4.2",
     "@tailwindcss/postcss": "^4.3.0",
@@ -200,8 +200,8 @@
     "basic-ftp": "^5.3.1",
     "uuid": "^11.1.1",
     "hono": "^4.12.16",
-    "tar": "^7.5.15",
-    "undici": "^6.25.0"
+    "tar": "^7.5.16",
+    "undici": "^6.27.0"
   },
   "lint-staged": {
     "**/*.{ts,tsx}": [
