@@ -885,6 +885,53 @@ function SummerCohortPageInner() {
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10 md:px-6 md:py-14">
+      {/* Hult transition banner — every cohort surface signals the launch. */}
+      <section className="mb-8 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-5 dark:bg-emerald-500/10">
+        <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+          Launching soon
+        </p>
+        <h2 className="mt-1 text-lg font-bold md:text-xl">
+          The Hult Cohort Developer Program
+        </h2>
+        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">
+          Cursor Boston has teamed up with{" "}
+          <span className="font-medium text-neutral-900 dark:text-neutral-100">
+            Hult International Business School
+          </span>
+          —Cohort 2 is becoming the inaugural pilot of the new Hult Cohort
+          Developer Program. We&rsquo;re putting the finishing touches on the new
+          platform; lots more info is coming over the next two weeks.
+        </p>
+        <p className="mt-3 inline-flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-sm font-semibold text-emerald-800 dark:text-emerald-200">
+          Be ready to start: Thursday, July 9
+        </p>
+        {application ? (
+          <p className="mt-3 flex items-start gap-2 text-sm font-medium text-emerald-700 dark:text-emerald-300">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="mt-0.5 shrink-0"
+              aria-hidden="true"
+            >
+              <path d="M20 6L9 17l-5-5" />
+            </svg>
+            You&rsquo;re registered — you&rsquo;ll receive all the email updates from
+            Cursor Boston as we finalize the details. Nothing else to do right now.
+          </p>
+        ) : (
+          <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-300">
+            Register for Cohort 2 below to lock in your spot in the pilot and get
+            every update by email.
+          </p>
+        )}
+      </section>
       {showTabs ? (
         <SetupReadinessModal
           cohortLabel={runtime.label}
