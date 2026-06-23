@@ -202,7 +202,8 @@
     "hono": "^4.12.16",
     "tar": "^7.5.16",
     "undici": "^6.27.0",
-    "protobufjs": "^7.6.4"
+    "protobufjs": "^7.6.4",
+    "ws": "^8.18.3"
   },
   "lint-staged": {
     "**/*.{ts,tsx}": [
