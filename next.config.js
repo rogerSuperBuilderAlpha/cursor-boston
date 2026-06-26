@@ -96,6 +96,18 @@ const nextConfig = {
   },
 
   async headers() {
+    const isDev = process.env.NODE_ENV === 'development'
+    const scriptSrc = [
+      "'self'",
+      "'unsafe-inline'",
+      // Webpack dev server and dynamic imports require eval in local development only.
+      ...(isDev ? ["'unsafe-eval'"] : []),
+      'https://embed.lu.ma',
+      'https://apis.google.com',
+      'https://accounts.google.com',
+      'https://www.googletagmanager.com',
+    ].join(' ')
+
     return [
       {
         source: '/(.*)',
@@ -105,8 +117,8 @@ const nextConfig = {
             value: [
               "default-src 'self'",
               // Firebase/Google OAuth popup flows load Google-hosted scripts.
-              // unsafe-inline kept for Firebase Auth popup SDK; unsafe-eval removed (not needed in production builds).
-              "script-src 'self' 'unsafe-inline' https://embed.lu.ma https://apis.google.com https://accounts.google.com https://www.googletagmanager.com",
+              // unsafe-eval is dev-only; production builds do not need it.
+              `script-src ${scriptSrc}`,
               "style-src 'self' 'unsafe-inline' https://embed.lu.ma",
               "img-src 'self' data: blob: https://firebasestorage.googleapis.com https://*.googleusercontent.com https://lh3.googleusercontent.com https://avatars.githubusercontent.com https://*.cartocdn.com https://unpkg.com",
               "font-src 'self'",

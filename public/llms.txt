@@ -47,6 +47,7 @@ Licensed GPL-3.0-only.
     /events/cursor-boston-pydata-2026/admin
     /events/cursor-boston-pydata-2026/register
     /events/cursor-boston-sports-hack-2026
+    /events/map
     /events/request
     /game
     /game/armageddon
