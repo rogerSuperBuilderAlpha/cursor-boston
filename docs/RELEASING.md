@@ -61,8 +61,7 @@ git config --local user.signingkey <your-gpg-keyid>
 git config --local commit.gpgsign true
 git config --local tag.gpgsign true
 ```
-
-Record the key fingerprint in [`.github/MAINTAINERS.md`](../.github/MAINTAINERS.md) so reporters can pin it.
+Record the key fingerprint in [`MAINTAINERS.md`](../MAINTAINERS.md) so reporters can pin it.
 
 ### Verifying any release tag
 

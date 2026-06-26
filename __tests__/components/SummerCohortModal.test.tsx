@@ -61,8 +61,20 @@ describe("SummerCohortModal", () => {
   it("auto-opens on first visit (no localStorage flag for today)", async () => {
     render(<SummerCohortModal />);
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
-    // Logged-out new visitor sees the cohort-targeted headline.
-    expect(screen.getByRole("heading", { name: /Join Cohort 2/i })).toBeInTheDocument();
+    // Every visitor sees the Hult launch headline.
+    expect(
+      screen.getByRole("heading", { name: /Hult Cohort Developer Program/i })
+    ).toBeInTheDocument();
+  });
+
+  it("surfaces the Hult launch message and July 9 start date", async () => {
+    render(<SummerCohortModal />);
+    await screen.findByRole("dialog");
+    expect(screen.getByText(/Launching soon/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Hult International Business School/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Thursday, July 9/i)).toBeInTheDocument();
   });
 
   it("does not auto-open if today's date is already stored", () => {
@@ -72,10 +84,10 @@ describe("SummerCohortModal", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
-  it("does not auto-open on suppressed pathnames (/summer-cohort)", () => {
+  it("now auto-opens on /summer-cohort (Hult transition surfaces it everywhere)", async () => {
     mockUsePathname.mockReturnValue("/summer-cohort");
     render(<SummerCohortModal />);
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
   });
 
   it("does not auto-open on /contribute/game-art", () => {
@@ -95,18 +107,10 @@ describe("SummerCohortModal", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
-  it("renders both cohort rows; cohort 1 marked Closed", async () => {
+  it("logged-out users get a Create-account-and-register primary CTA pointing to /signup with redirect", async () => {
     render(<SummerCohortModal />);
     await screen.findByRole("dialog");
-    expect(screen.getByText("Cohort 1")).toBeInTheDocument();
-    expect(screen.getByText("Cohort 2")).toBeInTheDocument();
-    expect(screen.getByText("Closed")).toBeInTheDocument();
-  });
-
-  it("logged-out users get a Create-account-and-apply primary CTA pointing to /signup with redirect", async () => {
-    render(<SummerCohortModal />);
-    await screen.findByRole("dialog");
-    const cta = screen.getByRole("link", { name: /create account.*apply/i });
+    const cta = screen.getByRole("link", { name: /create account.*register/i });
     expect(cta).toHaveAttribute(
       "href",
       "/signup?redirect=%2Fsummer-cohort"
@@ -123,26 +127,6 @@ describe("SummerCohortModal", () => {
     );
   });
 
-  it("includes the May 26 immersion link as an external link", async () => {
-    render(<SummerCohortModal />);
-    await screen.findByRole("dialog");
-    const link = screen.getByRole("link", {
-      name: /Hult \/ Cursor Boston immersion/i,
-    });
-    expect(link).toHaveAttribute("href", expect.stringContaining("luma.com"));
-    expect(link).toHaveAttribute("target", "_blank");
-    expect(link).toHaveAttribute("rel", "noopener noreferrer");
-  });
-
-  it("includes the designer-contribute internal link", async () => {
-    render(<SummerCohortModal />);
-    await screen.findByRole("dialog");
-    const link = screen.getByRole("link", {
-      name: /Contribute art to the game/i,
-    });
-    expect(link).toHaveAttribute("href", "/contribute/game-art");
-  });
-
   it("renders the explore-the-community footer chips (Discord, Events, PR Ideas)", async () => {
     render(<SummerCohortModal />);
     await screen.findByRole("dialog");
@@ -154,7 +138,7 @@ describe("SummerCohortModal", () => {
     expect(screen.getByRole("link", { name: /pr ideas/i })).toHaveAttribute("href", "/pr-ideas");
   });
 
-  it("logged-in user without an application gets a single Apply CTA (no Create-account button)", async () => {
+  it("logged-in user without an application gets a Register-for-Cohort-2 CTA (no Create-account button)", async () => {
     const fakeUser = {
       getIdToken: jest.fn().mockResolvedValue("fake-token"),
     } as unknown as {
@@ -171,19 +155,20 @@ describe("SummerCohortModal", () => {
 
     render(<SummerCohortModal />);
     await waitFor(() => {
-      expect(screen.getByRole("link", { name: /^apply/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole("link", { name: /register for cohort 2/i })
+      ).toBeInTheDocument();
     });
-    expect(screen.getByRole("link", { name: /^apply/i })).toHaveAttribute(
-      "href",
-      "/summer-cohort"
-    );
+    expect(
+      screen.getByRole("link", { name: /register for cohort 2/i })
+    ).toHaveAttribute("href", "/summer-cohort");
     // Logged-in path no longer surfaces the create-account fork.
     expect(
       screen.queryByRole("link", { name: /create account/i })
     ).not.toBeInTheDocument();
   });
 
-  it("swaps CTA to View-your-cohort when the user has already applied", async () => {
+  it("shows a registered confirmation (no register CTA) when the user has already applied", async () => {
     const fakeUser = {
       getIdToken: jest.fn().mockResolvedValue("fake-token"),
     } as unknown as {
@@ -200,13 +185,15 @@ describe("SummerCohortModal", () => {
 
     render(<SummerCohortModal />);
     await waitFor(() => {
+      // Match without the apostrophe (rendered as a curly &rsquo;).
       expect(
-        screen.getByRole("link", { name: /View your cohort/i })
+        screen.getByText(/registered for Cohort 2/i)
       ).toBeInTheDocument();
     });
+    // Registered users no longer see a register/apply CTA.
     expect(
-      screen.getByRole("link", { name: /View your cohort/i })
-    ).toHaveAttribute("href", "/summer-cohort");
+      screen.queryByRole("link", { name: /register for cohort 2/i })
+    ).not.toBeInTheDocument();
   });
 
   it("closes and writes today's date on close", async () => {
@@ -214,7 +201,7 @@ describe("SummerCohortModal", () => {
     render(<SummerCohortModal />);
     await screen.findByRole("dialog");
     await user.click(
-      screen.getByRole("button", { name: /close summer cohort/i })
+      screen.getByRole("button", { name: /close cohort announcement/i })
     );
     expect(localStorageMock.setItem).toHaveBeenCalledWith(
       SUMMER_COHORT_LOCALSTORAGE_KEY,
