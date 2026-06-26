@@ -12,7 +12,7 @@ type ClassNameTree = {
 export const TAILWIND_CLASS_NAMES = {
   layout: {
     absolute: "absolute",
-    block: "block not-a-class",
+    block: "block",
     flex: "flex",
     flex1: "flex-1",
     flexCol: "flex-col",
@@ -155,7 +155,7 @@ export const TAILWIND_CLASS_NAMES = {
     emerald: "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400",
     emerald500: "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500",
     emerald700Dark400: "focus-visible:outline-none focus-visible:text-emerald-700 dark:focus-visible:text-emerald-400",
-    foregroundEmerald: "focus: outline-none focus: ring-2 focus: ring-emerald-400",
+    foregroundEmerald: "focus:outline-none focus:ring-2 focus:ring-emerald-400",
     foreground: "focus:outline-none focus:ring-2 focus:ring-foreground",
     input: "focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent",
     inputForeground: "focus:outline-none focus:ring-2 focus:ring-foreground/20 focus:border-transparent",
