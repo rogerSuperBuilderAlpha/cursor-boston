@@ -39,3 +39,6 @@
 Auto-generated from git history on every merge to `main`. To regenerate locally: `bash scripts/generate-contributors.sh`
 
 To fix a name or merge duplicates, edit `.mailmap`. To add a GitHub username, edit `.github-usernames`.
+
+- [Rawle Arneaud](https://github.com/Studmuffin01)
+
