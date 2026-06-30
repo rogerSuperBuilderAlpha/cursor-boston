@@ -12,8 +12,7 @@ This roadmap is **mirrored at [`.github/ACTIVE_ISSUES.md`](.github/ACTIVE_ISSUES
 
 Work that's in flight on `develop` or being delivered to a submission branch.
 
-- **PyData × Cursor Boston (May 13, 2026)** — gated event hub at `/events/cursor-boston-pydata-2026`, hackathon submission flow on the `pydata-2026-submissions` branch ([details](pydata-2026-submissions/README.md))
-- **Summer Cohort 1 (weeks 1–6)** — weekly submission branches `c1w1pm-submission` through `c1w6oss-submission`; PM, comms, marketing, education, startup, and OSS tracks
+- **Summer Cohort 2 / Hult Cohort Developer Program (Jun 29 – Aug 7, 2026)** — vote-format weekly submissions on `c2w1pm-submission`, `c2w2comms-submission`, and `c2w3mkt-submission`; dashboard at `/summer-cohort` ([submission branches](docs/SUBMISSION_BRANCHES.md))
 - **Game mode** — ongoing improvements to combat, exploration, NPCs, world snapshot encoding, the zero-turn order queue layer; contributions land via the `game-contributions` branch. Contributor surface: [`docs/generals/`](docs/generals/README.md).
 - **OSS-readiness master-class lift** — closing the gaps surfaced in [`docs/OPENSOURCE_REVIEW.md`](docs/OPENSOURCE_REVIEW.md) Session 2 (2026-05-18) and [`docs/DOCUMENTATION_REVIEW.md`](docs/DOCUMENTATION_REVIEW.md). Phased plan in [`docs/REVIEW_ACTION_PLAN.md`](docs/REVIEW_ACTION_PLAN.md) Phase 5.
 
@@ -39,6 +38,8 @@ Directional, not yet scheduled.
 ## Released
 
 - **v0.1 — Initial Community Hub & Event Tracking** ✓ (CHANGELOG anchors this version; the corresponding Git tag is still pending — see [DOC-P0-4 in DOCUMENTATION_REVIEW.md](docs/DOCUMENTATION_REVIEW.md#p0--must-address-4-items)).
+- **Summer Cohort 1 (May 11 – Jun 19, 2026)** ✓ — six weekly submission branches (`c1w1pm-submission` through `c1w6oss-submission`); PM, comms, marketing, education, startup, and OSS tracks.
+- **PyData × Cursor Boston (May 13, 2026)** ✓ — gated event hub at `/events/cursor-boston-pydata-2026`; hackathon submissions on `pydata-2026-submissions`.
 
 ---
 
@@ -74,4 +75,4 @@ For large, self-contained features ready to build end-to-end, see issues [#78](h
 - [Architecture](docs/ARCHITECTURE.md) — how the platform is built
 - [Maintainers](MAINTAINERS.md) — current roster and how to apply for the role
 
-_This roadmap is reviewed and updated approximately monthly. Last review: 2026-05-18._
+_This roadmap is reviewed and updated approximately monthly. Last review: 2026-06-29._

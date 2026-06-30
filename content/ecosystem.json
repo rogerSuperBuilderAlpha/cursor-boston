@@ -161,6 +161,16 @@
       "tags": ["entrepreneurship", "business", "Babson"]
     },
     {
+      "id": "hult",
+      "name": "Hult",
+      "fullName": "Hult International Business School",
+      "category": "university",
+      "location": "Cambridge, MA",
+      "website": "https://www.hult.edu",
+      "description": "Global business school with a Cambridge campus — partner for Cursor Boston cohort programs and local builder events.",
+      "tags": ["business", "entrepreneurship", "Hult"]
+    },
+    {
       "id": "olin",
       "name": "Olin College",
       "fullName": "Olin College of Engineering",
