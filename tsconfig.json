@@ -49,6 +49,7 @@
     "**/*.spec.tsx",
     "sports-hack-2026-submissions/**",
     "pydata-2026-submissions/**",
-    "hack-a-sprint-2026-submissions/**"
+    "hack-a-sprint-2026-submissions/**",
+    "project management/**"
   ]
 }
