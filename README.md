@@ -281,7 +281,3 @@ Maintained by **[@rogerSuperBuilderAlpha](https://github.com/rogerSuperBuilderAl
   <strong>Made with ❤️ in Boston.</strong><br />
   Join us on <a href="https://discord.gg/Wsncg8YYqc">Discord</a> or <a href="https://lu.ma/cursor-boston">Luma</a>.
 </p>
-
-## Contributors
-
-- [Rawle Arneaud](https://github.com/Studmuffin01)
