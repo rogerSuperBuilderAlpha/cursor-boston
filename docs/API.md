@@ -190,7 +190,7 @@ _Strategy game endpoints (leaderboard, attacks, artifacts, turns)._
 | GET | `/api/game/world` | Yes | Fetch tiles for the world map (full or bbox) |
 | GET | `/api/game/world-3d` | No | Public 3D flyover world snapshot (daily, anonymous-accessible) |
 
-## Github
+## GitHub
 
 _GitHub OAuth + signed webhook receiver._
 

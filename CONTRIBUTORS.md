@@ -41,5 +41,10 @@ Auto-generated from git history on every merge to `main`. To regenerate locally:
 
 To fix a name or merge duplicates, edit `.mailmap`. To add a GitHub username, edit `.github-usernames`.
 
+## Acknowledgments
+
+The table above is generated from merged git history. Contributors who have opened a PR but are not yet in that table can add a line here — keep names alphabetized by last name:
+
+- [Kiara Caesar](https://github.com/kiaracaesar5627)
 - [Rawle Arneaud](https://github.com/Studmuffin01)
 
