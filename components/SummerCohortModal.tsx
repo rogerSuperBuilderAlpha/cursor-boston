@@ -20,8 +20,8 @@ import {
   SUMMER_COHORT_VIEW_TO,
 } from "@/lib/summer-cohort";
 
-// Tentative kickoff for the Hult Cohort Developer Program pilot (Cohort 2).
-const START_LABEL = "Thursday, July 9";
+// Kickoff for the Hult Cohort Developer Program pilot (Cohort 2).
+const START_LABEL = "Monday, July 13";
 
 function todayKey(): string {
   return new Date().toISOString().slice(0, 10);

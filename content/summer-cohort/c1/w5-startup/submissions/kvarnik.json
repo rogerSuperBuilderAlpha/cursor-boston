@@ -1,0 +1,10 @@
+{
+  "githubHandle": "kvarnik",
+  "name": "Kristjan Varnik",
+  "photoUrl": "https://lh3.googleusercontent.com/a/ACg8ocIro1Ic1ruV9VCukjLPwXQuDgn43ekifN-0xuJQHqfngHZxVg=s96-c",
+  "repoUrl": "https://github.com/shapechanging-oss/bean-counter",
+  "liveUrl": "https://bean-counter-gilt.vercel.app/",
+  "deckUrl": "https://bean-counter-gilt.vercel.app/deck",
+  "pitch": "BeanCounter: compare per-serving grocery costs for whole-food, plant-based NutritionFacts.org recipes across local stores — built from real CSV price data, fully static, live in production today.",
+  "competeForWin": false
+}
