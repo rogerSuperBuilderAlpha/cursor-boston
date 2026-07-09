@@ -903,7 +903,7 @@ function SummerCohortPageInner() {
           platform; lots more info is coming over the next two weeks.
         </p>
         <p className="mt-3 inline-flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-sm font-semibold text-emerald-800 dark:text-emerald-200">
-          Be ready to start: Thursday, July 9
+          Be ready to start: Monday, July 13
         </p>
         {application ? (
           <p className="mt-3 flex items-start gap-2 text-sm font-medium text-emerald-700 dark:text-emerald-300">

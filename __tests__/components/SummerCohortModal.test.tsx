@@ -67,14 +67,14 @@ describe("SummerCohortModal", () => {
     ).toBeInTheDocument();
   });
 
-  it("surfaces the Hult launch message and July 9 start date", async () => {
+  it("surfaces the Hult launch message and July 13 start date", async () => {
     render(<SummerCohortModal />);
     await screen.findByRole("dialog");
     expect(screen.getByText(/Launching soon/i)).toBeInTheDocument();
     expect(
       screen.getByText(/Hult International Business School/i)
     ).toBeInTheDocument();
-    expect(screen.getByText(/Thursday, July 9/i)).toBeInTheDocument();
+    expect(screen.getByText(/Monday, July 13/i)).toBeInTheDocument();
   });
 
   it("does not auto-open if today's date is already stored", () => {
