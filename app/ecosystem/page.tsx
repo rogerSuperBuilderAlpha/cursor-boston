@@ -10,6 +10,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import ecosystemData from "@/content/ecosystem.json";
+import EcosystemHeroDiagram from "./EcosystemHeroDiagram";
 
 type Category =
   | "university"
@@ -77,15 +78,21 @@ export default function EcosystemPage() {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="py-16 md:py-24 px-6 border-b border-neutral-200 dark:border-neutral-800">
+      <section className="py-12 md:py-16 px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
             Mass AI Ecosystem
           </h1>
-          <p className="text-xl text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">
-            Universities, accelerators, research labs, nonprofits, and venture
-            firms shaping AI and technology across Massachusetts.
+          <p className="text-lg md:text-xl text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">
+            How talent, research, capital, and community connect across
+            Massachusetts.
           </p>
+          <EcosystemHeroDiagram
+            counts={counts}
+            activeCategory={activeCategory}
+            total={counts.all}
+            onSelect={(cat) => setActiveCategory(cat)}
+          />
         </div>
       </section>
 
