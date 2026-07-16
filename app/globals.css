@@ -114,7 +114,11 @@ img {
   button {
     min-height: 44px;
   }
-  
+
+  /* Diagram nodes keep compact layout; aria labels remain clear */
+  .ecosystem-diagram button {
+    min-height: 0;
+  }
 }
 
 /* Prevent iOS zoom on input focus (requires 16px font) */
@@ -149,4 +153,51 @@ html {
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
   }
+}
+
+/* Ecosystem hero diagram */
+@keyframes eco-line-in {
+  from {
+    opacity: 0;
+    stroke-dashoffset: 24;
+  }
+  to {
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes eco-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes eco-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.08);
+  }
+}
+
+.ecosystem-diagram .eco-line {
+  animation: eco-line-in 0.7s ease-out both;
+}
+
+.ecosystem-diagram .eco-hub-ring {
+  transform-origin: 200px 150px;
+  animation: eco-pulse 3.2s ease-in-out 0.8s infinite;
+}
+
+.ecosystem-diagram .eco-hub-label,
+.ecosystem-diagram .eco-node {
+  animation: eco-fade-in 0.55s ease-out both;
 }
