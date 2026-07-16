@@ -105,10 +105,15 @@ out.push("");
 out.push("---");
 out.push("");
 
+// Tags whose naive first-letter capitalization doesn't match house style.
+const HEADING_OVERRIDES: Record<string, string> = {
+  github: "GitHub",
+};
+
 function tagToHeading(tag: string): string {
   return tag
     .split(/[-/]/)
-    .map((s) => (s.length ? s[0].toUpperCase() + s.slice(1) : s))
+    .map((s) => HEADING_OVERRIDES[s.toLowerCase()] ?? (s.length ? s[0].toUpperCase() + s.slice(1) : s))
     .join(" ");
 }
 

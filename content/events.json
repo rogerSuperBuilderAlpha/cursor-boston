@@ -11,7 +11,11 @@
       "venue": {
         "name": "Microsoft New England Research and Development Center",
         "address": "1 Memorial Dr, Cambridge, MA 02142",
-        "mapUrl": null
+        "mapUrl": null,
+        "coordinates": {
+          "lat": 42.361145,
+          "lng": -71.085301
+        }
       },
       "type": "hackathon",
       "description": "Drop-in hack day at Microsoft NERD in Kendall Square to close out Summer Cohort 1. Come for the full day or swing by for a few hours — bring a project, pick one up from the wall, or pair with a cohort member on their Week 6 build. Open to everyone, not just cohort 1.",
@@ -94,7 +98,11 @@
       "venue": {
         "name": "Moderna HQ",
         "address": "325 Binney St, Cambridge, MA 02142",
-        "mapUrl": null
+        "mapUrl": null,
+        "coordinates": {
+          "lat": 42.3659,
+          "lng": -71.0796
+        }
       },
       "type": "hackathon",
       "description": "Hands-on evening hackathon at Moderna HQ co-hosted by Cursor Boston and PyData Boston. A short talk from Eric Ma, then a focused build session on data-science workflows with Cursor. Pizza and Cursor credits. Wednesday May 13 in Cambridge — register on cursorboston.com for Moderna door access; Envoy NDA sign-in required before arrival.",
@@ -188,9 +196,13 @@
       "time": "10:00 AM \u2013 4:00 PM ET",
       "location": "Cambridge, MA",
       "venue": {
-        "name": "Hult International (exact address after approval)",
-        "address": "Register on Luma to see the venue address after you're approved.",
-        "mapUrl": null
+        "name": "Hult International Business School",
+        "address": "1 Education St, Cambridge, MA 02141",
+        "mapUrl": null,
+        "coordinates": {
+          "lat": 42.3735,
+          "lng": -71.0738
+        }
       },
       "type": "hackathon",
       "description": "Full-day Speakers & Workshop at Hult International (with AIC + Hult) to launch Boston Tech Week. Guest lecture from Antonio Mele (London School of Economics), lunch, a 2-hour hackathon sprint, AI-powered scoring, top-10 live presentations, and judges' analysis. $1,200 cash + prizes; $50 Cursor Credits + Red Bull merch for selected participants. Tuesday May 26 in Cambridge \u2014 register on Luma; approval required.",

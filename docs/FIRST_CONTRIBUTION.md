@@ -78,7 +78,8 @@ git checkout -b docs/fix-typo-in-readme    # use type/short-description
 ## Step 3: Make Your Change
 
 For a first PR, keep it small. Good examples:
-- Fix a typo in documentation
+- Fix a typo in documentation (for example, `Github` → `GitHub` in [`docs/API.md`](API.md))
+- Add your name and GitHub link to the [Acknowledgments section](../CONTRIBUTORS.md#acknowledgments) in `CONTRIBUTORS.md`
 - Add a missing `alt` text to an image
 - Improve an error message
 - Add a test for an untested function

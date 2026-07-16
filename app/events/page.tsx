@@ -185,6 +185,13 @@ export default async function EventsPage({
             Join us for workshops, meetups, hackathons, and more. All skill
             levels welcome.
           </p>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+          <Link
+            href="/events/map"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-neutral-300 dark:border-neutral-700 text-foreground rounded-lg text-sm font-semibold hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-black"
+          >
+            View event map
+          </Link>
           <a
             href="https://lu.ma/cursor-boston"
             target="_blank"
@@ -208,6 +215,7 @@ export default async function EventsPage({
               <path d="M7 17l9.2-9.2M17 17V7H7" />
             </svg>
           </a>
+          </div>
         </div>
       </section>
 
