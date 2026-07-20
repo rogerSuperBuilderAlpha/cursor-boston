@@ -34,6 +34,7 @@ async function contrastRatio(locator: Locator): Promise<number> {
     const parseColor = (color: string): BrowserRgba | null => {
       const parseAlpha = (value: string | undefined) => {
         if (!value) return 1;
+        if (value === "none") return 0;
         return value.endsWith("%") ? Number(value.slice(0, -1)) / 100 : Number(value);
       };
 
@@ -54,17 +55,24 @@ async function contrastRatio(locator: Locator): Promise<number> {
         }
       }
 
+      // CSS Color 4 allows the `none` keyword for any channel (meaning "no
+      // contribution") — e.g. achromatic grays render as `oklch(0.87 0 none)`.
+      // Accept it alongside numeric values and treat it as 0.
+      const channel = "([0-9.]+%?|none)";
       const oklchMatch = color.match(
-        /^oklch\(\s*([0-9.]+%?)\s+([0-9.]+)\s+([0-9.]+)(deg|rad|turn|grad)?(?:\s*\/\s*([0-9.]+%?))?\s*\)$/
+        new RegExp(
+          `^oklch\\(\\s*${channel}\\s+${channel}\\s+${channel}(deg|rad|turn|grad)?(?:\\s*/\\s*([0-9.]+%?|none))?\\s*\\)$`
+        )
       );
       if (!oklchMatch) return null;
 
+      const parseChannel = (value: string) => (value === "none" ? 0 : Number(value));
       const lightness = oklchMatch[1].endsWith("%")
         ? Number(oklchMatch[1].slice(0, -1)) / 100
-        : Number(oklchMatch[1]);
-      const chroma = Number(oklchMatch[2]);
+        : parseChannel(oklchMatch[1]);
+      const chroma = parseChannel(oklchMatch[2]);
       const hueUnit = oklchMatch[4] ?? "deg";
-      const hueValue = Number(oklchMatch[3]);
+      const hueValue = parseChannel(oklchMatch[3]);
       const hue =
         hueUnit === "rad"
           ? hueValue

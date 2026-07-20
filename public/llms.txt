@@ -265,7 +265,7 @@ Interactive Swagger UI: https://cursorboston.com/api/docs
     GET    /api/game/world [Yes] — Fetch tiles for the world map (full or bbox)
     GET    /api/game/world-3d — Public 3D flyover world snapshot (daily, anonymous-accessible)
 
-### Github
+### GitHub
 
     GET    /api/github/authorize — Begin GitHub OAuth — redirects to github.com
     GET    /api/github/callback — GitHub OAuth callback — finishes the link and redirects
