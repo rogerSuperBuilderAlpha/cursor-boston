@@ -12,7 +12,7 @@ import { DiscordIcon } from "@/components/icons";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "Learn about Cursor Boston, our mission, and how to get involved with the community.",
+    "Learn about Cursor Boston, our mission, and how to get involved in this Boston-based Cursor community.",
 };
 
 const ecosystemCardLinkClass =

@@ -1,45 +1,21 @@
-# <img src="public/cursor-boston-logo.png" alt="Cursor Boston logo" align="center" width="48" height="48" /> Cursor Boston
+# Cursor Boston
 
-<p align="center">
-  <strong>The hub for Boston's AI-powered development community.</strong><br />
-  Built by builders, for builders, using <a href="https://cursor.com">Cursor</a>.
-</p>
-
-<p align="center">
-  <a href="https://www.bestpractices.dev/projects/12883/2"><img src="https://www.bestpractices.dev/projects/12883/badge?v=gold-2026-05-20" alt="OpenSSF Best Practices Gold" height="28" /></a>
-</p>
-
-<p align="center">
-  <a href="https://github.com/rogerSuperBuilderAlpha/cursor-boston/actions/workflows/ci.yml"><img src="https://github.com/rogerSuperBuilderAlpha/cursor-boston/actions/workflows/ci.yml/badge.svg?branch=develop" alt="CI" /></a>
-  <a href="https://codecov.io/gh/rogerSuperBuilderAlpha/cursor-boston"><img src="https://codecov.io/gh/rogerSuperBuilderAlpha/cursor-boston/branch/develop/graph/badge.svg" alt="Codecov" /></a>
-  <a href="https://scorecard.dev/viewer/?uri=github.com/rogerSuperBuilderAlpha/cursor-boston"><img src="https://api.scorecard.dev/projects/github.com/rogerSuperBuilderAlpha/cursor-boston/badge" alt="OpenSSF Scorecard" /></a>
-  <a href="https://api.reuse.software/info/github.com/rogerSuperBuilderAlpha/cursor-boston"><img src="https://api.reuse.software/badge/github.com/rogerSuperBuilderAlpha/cursor-boston" alt="REUSE status" /></a>
-  <a href="https://github.com/rogerSuperBuilderAlpha/cursor-boston/releases/latest"><img src="https://img.shields.io/github/v/release/rogerSuperBuilderAlpha/cursor-boston?include_prereleases&sort=semver&label=release" alt="Latest release" /></a>
-  <a href="https://github.com/rogerSuperBuilderAlpha/cursor-boston/pulls"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome" /></a>
-  <a href="https://discord.gg/Wsncg8YYqc"><img src="https://img.shields.io/badge/Discord-Join%20Us-7289DA?logo=discord" alt="Discord" /></a>
-  <a href="https://lu.ma/cursor-boston"><img src="https://img.shields.io/badge/Luma-Events-emerald" alt="Luma Events" /></a>
-  <img src="https://img.shields.io/badge/node-%3E%3D22-brightgreen" alt="Node >= 22" />
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="License: GPL v3" /></a>
-</p>
+**The hub for Boston's AI-powered development community.**  
+Built by builders, for builders, utilsing [Cursor](https://cursor.com).
 
 ---
 
-<table>
-<tr>
-<td width="60" align="center">
-<h1>🚀</h1>
-</td>
-<td>
+
+|      |     |
+| ---- | --- |
+| # 🚀 |     |
+
 
 ### New here? Never coded before? Start here.
 
 **You don't need to know how to code.** AI tools like Cursor, Claude Code, and Codex can do the technical work for you. We wrote a step-by-step guide in plain, simple language — no jargon, no experience required.
 
 **[Read the Get Started Guide →](docs/GET_STARTED.md)**
-
-</td>
-</tr>
-</table>
 
 ---
 
@@ -51,12 +27,15 @@ Cursor Boston is a community-led platform designed to bring together the most am
 
 - **[Summer Cohort](https://cursorboston.com/summer-cohort)** — 5-week intensive fellowship; weekly submissions land in long-lived submission branches (`c1w*-submission`, `c2w*-submission`).
 - **[Hackathons](https://cursorboston.com/hackathons)** — monthly virtual + in-person events with team formation, submission gallery, and AI-judged scoring (Hack-a-Sprint, Sports Hack, PyData notebooks).
-- **[Generals](https://cursorboston.com/game)** — a persistent turn-based strategy MMO contributors can play and contribute to. Includes Heroes, Armageddon end-game, public profiles, pacts, prophecies, and a public-vote chronicle system. Game contribution docs live under [`docs/generals/`](docs/generals/README.md).
+- **[Generals](https://cursorboston.com/game)** — a persistent turn-based strategy MMO contributors can play and contribute to. Includes Heroes, Armageddon end-game, public profiles, pacts, prophecies, and a public-vote chronicle system. Game contribution docs live under `[docs/generals/](docs/generals/README.md)`.
 - **[Mentorship](https://cursorboston.com/mentorship)** & **[Pair Programming](https://cursorboston.com/pair)** — matchmaking between members.
 - **[Talks](https://cursorboston.com/talks)** & **[Showcase](https://cursorboston.com/showcase)** — community presentations + project gallery.
 - **[Questions](https://cursorboston.com/questions)** — community Q&A on Cursor workflows, prompting patterns, and engineering process.
 
+
+
 ### 🎯 Who is this for?
+
 - **🌱 Beginners & Students**: Pick up AI-assisted development from day one — no experience required.
 - **💼 Interns & Early-Career Devs**: Level up fast by building real features with real tools.
 - **💻 Working Developers**: Sharpen your workflow, contribute to open source, and connect with peers.
@@ -68,6 +47,8 @@ Whether you're writing your first line of code or your ten-thousandth — if you
 
 ---
 
+
+
 ## 🛠️ The Build Stack
 
 This platform is a living example of what you can build with Cursor and modern web tech:
@@ -77,6 +58,8 @@ This platform is a living example of what you can build with Cursor and modern w
 - **Integrations**: Discord/GitHub OAuth, Luma API, Framer Motion
 
 ---
+
+
 
 ## 🏗️ Architecture
 
@@ -120,49 +103,65 @@ graph TB
     UI --> Leaflet
 ```
 
+
+
 ---
+
+
 
 ## 🚀 Build Something
 
 Want to add a major feature to the platform? We have **6 open feature projects** ready for contributors to claim and build:
 
-| # | Feature | Issue |
-|---|---------|-------|
-| 1 | **Prompt & Rules Cookbook** — share and discover Cursor workflows | [#78](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/78) |
-| 2 | **Achievement Badge System** — gamified milestones for community activity | [#79](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/79) |
-| 3 | **AI Pair Programming Matchmaker** — find your coding partner | [#80](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/80) |
-| 4 | **Public Community Analytics Dashboard** — visualize community growth | [#81](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/81) |
-| 5 | **Interactive Community Event Map** — Boston venues on a live map | [#82](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/82) |
-| 6 | **Lightning Talk Timer & Speaker Queue** — real-time event tool | [#83](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/83) |
+
+| #   | Feature                                                                   | Issue                                                                    |
+| --- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| 1   | **Prompt & Rules Cookbook** — share and discover Cursor workflows         | [#78](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/78) |
+| 2   | **Achievement Badge System** — gamified milestones for community activity | [#79](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/79) |
+| 3   | **AI Pair Programming Matchmaker** — find your coding partner             | [#80](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/80) |
+| 4   | **Public Community Analytics Dashboard** — visualize community growth     | [#81](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/81) |
+| 5   | **Interactive Community Event Map** — Boston venues on a live map         | [#82](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/82) |
+| 6   | **Lightning Talk Timer & Speaker Queue** — real-time event tool           | [#83](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues/83) |
+
 
 Each feature is **fully isolated** — new routes, new Firestore collections, no entanglement with existing code. Pick one, comment to claim it, and ship it. See the [Contributing Guide](.github/CONTRIBUTING.md#claiming-an-issue) for how to get started.
 
-> **Looking for something smaller?** Browse [`good first issue`](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) for beginner-friendly tasks. Issues tagged **`maintainer:audit`** are internal maintainer review work — not for new contributors; you can safely ignore that label.
+> **Looking for something smaller?** Browse `[good first issue](https://github.com/rogerSuperBuilderAlpha/cursor-boston/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)` for beginner-friendly tasks. Issues tagged `maintainer:audit` are internal maintainer review work — not for new contributors; you can safely ignore that label.
 
-> **Where does my PR go?** Most contributions target **`develop`** (the default base). A few — PyData notebooks, summer cohort weekly submissions, game content, maintainer applications — target dedicated long-lived branches instead. See [docs/SUBMISSION_BRANCHES.md](docs/SUBMISSION_BRANCHES.md) for the routing table.
+> **Where does my PR go?** Most contributions target `develop` (the default base). A few — PyData notebooks, summer cohort weekly submissions, game content, maintainer applications — target dedicated long-lived branches instead. See [docs/SUBMISSION_BRANCHES.md](docs/SUBMISSION_BRANCHES.md) for the routing table.
 
 ---
+
+
 
 ## 🔌 API Reference
 
 - **Full endpoint list**: [docs/API.md](docs/API.md) — 215 operations across 32 areas
-- **Live Swagger UI**: [`/api/docs`](https://cursorboston.com/api/docs) (or `http://localhost:3000/api/docs` in dev)
+- **Live Swagger UI**: `[/api/docs](https://cursorboston.com/api/docs)` (or `http://localhost:3000/api/docs` in dev)
 - **OpenAPI 3.0 spec**: served at `/openapi.json`, regenerated by `npm run generate:openapi` on every build
-- **Per-area contracts** live in `lib/api-schemas/` and use [`@ts-rest/core`](https://ts-rest.com) + [`zod`](https://zod.dev). Each route validates its inputs against the same schema the spec is generated from, so docs and code can't drift.
+- **Per-area contracts** live in `lib/api-schemas/` and use `[@ts-rest/core](https://ts-rest.com)` + `[zod](https://zod.dev)`. Each route validates its inputs against the same schema the spec is generated from, so docs and code can't drift.
 - **Adding a new route**: define the contract in `lib/api-schemas/<area>.ts`, register it in `lib/api-schemas/index.ts`, then validate inputs via `contract.<route>.body.safeParse(...)` in your route handler. The CI gate (`npm run check:route-contracts`) blocks any new route under `app/api/` that doesn't import a contract.
 
 ---
 
+
+
 ## 📚 Community
+
+
 
 ### Which onboarding doc do I read?
 
-| If you… | Read this | Time |
-|---|---|---|
-| Have never coded before | [GET_STARTED.md](docs/GET_STARTED.md) — uses AI tools, plain language | ~30 min |
-| Know git, want the shortest path to a merged PR | [CONTRIBUTING.md § Your first PR in 5 minutes](.github/CONTRIBUTING.md#your-first-pr-in-5-minutes) | ~5 min |
-| Want a guided first-PR walkthrough with explanations | [FIRST_CONTRIBUTION.md](docs/FIRST_CONTRIBUTION.md) | ~30–45 min |
-| Want the full contribution policy (issue claiming, code style, review process) | [CONTRIBUTING.md](.github/CONTRIBUTING.md) | reference |
+
+| If you…                                                                        | Read this                                                                                          | Time       |
+| ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- | ---------- |
+| Have never coded before                                                        | [GET_STARTED.md](docs/GET_STARTED.md) — uses AI tools, plain language                              | ~30 min    |
+| Know git, want the shortest path to a merged PR                                | [CONTRIBUTING.md § Your first PR in 5 minutes](.github/CONTRIBUTING.md#your-first-pr-in-5-minutes) | ~5 min     |
+| Want a guided first-PR walkthrough with explanations                           | [FIRST_CONTRIBUTION.md](docs/FIRST_CONTRIBUTION.md)                                                | ~30–45 min |
+| Want the full contribution policy (issue claiming, code style, review process) | [CONTRIBUTING.md](.github/CONTRIBUTING.md)                                                         | reference  |
+
+
+
 
 ### Full documentation index
 
@@ -189,26 +188,29 @@ Each feature is **fully isolated** — new routes, new Firestore collections, no
 
 ---
 
+
+
 ## 🏃 Quick Start
 
 1. **Fork, then clone your fork**
-   ```bash
+  ```bash
    git clone https://github.com/your-username/cursor-boston.git
    cd cursor-boston
-   ```
-
+  ```
 2. **Install & run** (no Firebase account needed)
-   ```bash
+  ```bash
    npm install
    cp .env.local.demo .env.local    # zero-config demo mode
    npm run dev                       # open http://localhost:3000
-   ```
+  ```
 
 The site loads fully in demo mode — pages, layouts, and styling all work. Firebase features (auth, data) are disabled until you set up credentials.
 
 > **Want full functionality?** See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for Firebase setup, all npm scripts, troubleshooting, and more.
 >
 > **First time contributing?** See [docs/FIRST_CONTRIBUTION.md](docs/FIRST_CONTRIBUTION.md) for a step-by-step walkthrough.
+
+
 
 ## 🐳 Docker
 
@@ -237,7 +239,11 @@ The image uses Node 22 Alpine, runs as a non-root user, and includes a health ch
 
 ---
 
+
+
 ## 🧰 Operations
+
+
 
 ### Rate-limit cleanup (internal maintenance)
 
@@ -248,6 +254,7 @@ CRON_SECRET=your-secret npm run rate-limit-cleanup
 ```
 
 Optional environment variables:
+
 - `RATE_LIMIT_CLEANUP_BASE_URL` (default: `http://localhost:3000`)
 - `RATE_LIMIT_CLEANUP_DRY_RUN` (`true` for no-delete simulation)
 - `RATE_LIMIT_CLEANUP_BATCH_SIZE` (clamped to `1-500`)
@@ -265,19 +272,20 @@ CRON_SECRET=your-secret RATE_LIMIT_CLEANUP_BATCH_SIZE=200 RATE_LIMIT_CLEANUP_MAX
 
 ---
 
+
+
 ## 🗺️ Roadmap
+
 - [x] **v0.1**: Initial Community Hub & Event Tracking
 - [ ] **v0.2**: Enhanced Member Profiles & Social Integration
 - [ ] **v0.3**: Community Discussion Boards
 - [ ] **v0.4**: PWA & Mobile Optimization
 
-See the full roadmap — including active development, planned work, and where to find issues to pick up — in **[`.github/ACTIVE_ISSUES.md`](.github/ACTIVE_ISSUES.md)**.
+See the full roadmap — including active development, planned work, and where to find issues to pick up — in `[.github/ACTIVE_ISSUES.md](.github/ACTIVE_ISSUES.md)`.
 
 Maintained by **[@rogerSuperBuilderAlpha](https://github.com/rogerSuperBuilderAlpha)** (Project Lead), **[@bradAGI](https://github.com/bradAGI)** (Maintainer), **[@nebullii](https://github.com/nebullii)** (Maintainer), and **[@AaronGrace978](https://github.com/AaronGrace978)** (Community Maintainer) — see [MAINTAINERS.md](MAINTAINERS.md) for area ownership.
 
 ---
 
-<p align="center">
-  <strong>Made with ❤️ in Boston.</strong><br />
-  Join us on <a href="https://discord.gg/Wsncg8YYqc">Discord</a> or <a href="https://lu.ma/cursor-boston">Luma</a>.
-</p>
+**Made with ❤️ in Boston.**  
+Join us on [Discord](https://discord.gg/Wsncg8YYqc) or [Luma](https://lu.ma/cursor-boston).
