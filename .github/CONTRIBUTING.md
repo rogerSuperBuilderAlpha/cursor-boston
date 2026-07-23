@@ -31,6 +31,7 @@
 | <img src="https://github.com/DavidGamero.png?size=40" width="40" height="40" alt="@DavidGamero" /> | [David Gamero](https://github.com/DavidGamero) | 0 | 1 | 2026-02-16 |
 | <img src="https://github.com/randyjtorres.png?size=40" width="40" height="40" alt="@randyjtorres" /> | [Randy Torres](https://github.com/randyjtorres) | 0 | 1 | 2026-03-30 |
 | <img src="https://github.com/jayyyW34.png?size=40" width="40" height="40" alt="@jayyyW34" /> | [Jayden Phillip](https://github.com/jayyyW34) | 0 | 0 | 2026-07-02 |
+| <img src="https://github.com/abbymonicacharles-netizen.png?size=40" width="40" height="40" alt="@abbymonicacharles-netizen" /> | [Abygail Charles](https://github.com/abbymonicacharles-netizen) | 0 | 0 | 2026-07-23 |
 
 <!-- CONTRIBUTORS:END -->
 
