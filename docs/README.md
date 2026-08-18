@@ -15,6 +15,7 @@ Read docs in this order depending on your goal:
 | 9 | [VERCEL.md](VERCEL.md) | Why PRs do not deploy to Vercel; production-only settings |
 | 10 | [Architecture Decision Records](adr/README.md) | Why the project is built the way it is |
 | 11 | [STYLE_GUIDE.md](STYLE_GUIDE.md) and [A11Y_PATTERNS.md](A11Y_PATTERNS.md) | Contributors writing docs or client-side UI |
+| 12 | [COMPONENTS.md](COMPONENTS.md) | Reference for the shared `components/ui` primitives (`FormInput` / `FormTextarea` / `ToggleSwitch`, `Modal`, `Skeleton`, `ValidatedInput`) |
 
 **Site visitor map:** [USER_GUIDE.md](USER_GUIDE.md) lists every public section on cursorboston.com with one-line descriptions — start here when you're trying to find where something lives.
 
