@@ -85,6 +85,8 @@ export interface Event {
   venue?: Venue;
   longDescription?: string;
   capacity?: number;
+  /** Enable first-come on-site RSVP + waitlist (not used for PyData/hackathon door lists). */
+  onSiteRsvp?: boolean;
   perks?: string[];
   topics?: string[];
   agenda?: AgendaItem[];
