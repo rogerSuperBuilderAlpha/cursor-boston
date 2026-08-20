@@ -64,7 +64,8 @@ describe("SubmitTalkPage", () => {
   it("renders a loading skeleton while auth is loading", () => {
     setAuth({ loading: true });
     const { container } = render(<SubmitTalkPage />);
-    expect(container.querySelector(".animate-spin")).toBeTruthy();
+    expect(container.querySelector(".animate-spin")).toBeNull();
+    expect(container.querySelectorAll(".animate-pulse").length).toBeGreaterThan(0);
   });
 
   it("renders the sign-in gate when no user is present", () => {
