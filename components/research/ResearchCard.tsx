@@ -135,7 +135,7 @@ export function ResearchCard({ entry }: ResearchCardProps) {
       ) : null}
       <header className="mb-2 flex items-start justify-between gap-3">
         <TypeBadge entry={entry} />
-        <span className="text-xs text-neutral-500 dark:text-neutral-500">
+        <span className="text-xs text-neutral-500 dark:text-neutral-400">
           {formatShortDate(entry.updatedAt ?? entry.postedAt)}
           {entry.updatedAt ? " · updated" : ""}
         </span>
@@ -189,7 +189,7 @@ export function ResearchCard({ entry }: ResearchCardProps) {
             </span>
           ) : null}
           {sample ? (
-            <span className="inline-flex items-center gap-1 text-neutral-400 dark:text-neutral-600">
+            <span className="inline-flex items-center gap-1 text-neutral-500 dark:text-neutral-400">
               <FileText className="h-3.5 w-3.5" /> PDF
             </span>
           ) : (
@@ -287,12 +287,12 @@ export function ResearchCard({ entry }: ResearchCardProps) {
           </a>
         ) : null}
         {isCfp(entry) && sample ? (
-          <span className="inline-flex items-center gap-1 text-neutral-400 dark:text-neutral-600">
+          <span className="inline-flex items-center gap-1 text-neutral-500 dark:text-neutral-400">
             <Megaphone className="h-3 w-3" /> Conference site (sample)
           </span>
         ) : null}
         {sample ? (
-          <span className="inline-flex items-center gap-1 text-neutral-400 dark:text-neutral-600">
+          <span className="inline-flex items-center gap-1 text-neutral-500 dark:text-neutral-400">
             <ExternalLink className="h-3 w-3" /> Source repo (sample)
           </span>
         ) : (

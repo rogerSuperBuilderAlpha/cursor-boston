@@ -191,7 +191,7 @@ export function QuestionDetail({
       {/* Back link */}
       <Link
         href="/questions"
-        className="inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-foreground transition-colors mb-6"
+        className="inline-flex items-center gap-1 text-sm text-neutral-500 dark:text-neutral-400 hover:text-foreground transition-colors mb-6"
       >
         <ArrowLeft size={16} />
         Back to Q&A
@@ -210,7 +210,7 @@ export function QuestionDetail({
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500",
               userVotes[question.id] === "up"
                 ? "text-emerald-600 dark:text-emerald-400"
-                : "text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300",
+                : "text-neutral-500 dark:text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300",
               (!isLoggedIn || !!votingId) ? "opacity-50 cursor-not-allowed" : "",
             ].join(" ")}
           >
@@ -238,7 +238,7 @@ export function QuestionDetail({
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500",
               userVotes[question.id] === "down"
                 ? "text-red-500"
-                : "text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300",
+                : "text-neutral-500 dark:text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300",
               (!isLoggedIn || !!votingId) ? "opacity-50 cursor-not-allowed" : "",
             ].join(" ")}
           >
@@ -248,7 +248,7 @@ export function QuestionDetail({
 
         <div className="flex-1 min-w-0">
           <h1 className="text-2xl font-bold text-foreground">{question.title}</h1>
-          <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-neutral-500">
+          <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-neutral-500 dark:text-neutral-400">
             <span>Asked by {question.authorName}</span>
             <span>&middot;</span>
             <span>{timeAgo(question.createdAt)}</span>
@@ -309,7 +309,7 @@ export function QuestionDetail({
                 >
                   {entry.title}
                 </Link>
-                <p className="text-xs text-neutral-500 line-clamp-1">{entry.description}</p>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-1">{entry.description}</p>
               </li>
             ))}
           </ul>
