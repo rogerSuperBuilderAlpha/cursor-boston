@@ -12,6 +12,8 @@ import { notFound } from "next/navigation";
 import eventsData from "@/content/events.json";
 import type { EventsData } from "@/types/events";
 import CoworkingSlots from "@/components/events/CoworkingSlots";
+import { EventRsvpCard } from "@/components/events/EventRsvpCard";
+import { eventSupportsOnSiteRsvp } from "@/lib/event-rsvp-core";
 import {
   getLumaCheckoutEventId,
   getLumaCheckoutHref,
@@ -78,6 +80,7 @@ interface Event {
   lumaCheckoutEventId?: string;
   registrationRequired: boolean;
   capacity?: number;
+  onSiteRsvp?: boolean;
   perks?: string[];
   topics?: string[];
   agenda?: AgendaItem[];
@@ -425,6 +428,13 @@ export default async function EventPage({
                 </a>
               </div>
             )}
+            {eventSupportsOnSiteRsvp(event) && typeof event.capacity === "number" ? (
+              <EventRsvpCard
+                eventId={event.id}
+                eventSlug={event.slug}
+                capacity={event.capacity}
+              />
+            ) : null}
           </div>
         </div>
       </section>

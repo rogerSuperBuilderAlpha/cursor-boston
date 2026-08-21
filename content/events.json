@@ -26,6 +26,8 @@
       "lumaCheckoutEventId": "evt-I9VjCOaJrZx1wzk",
       "lumaEmbedSrc": "https://luma.com/embed/event/evt-I9VjCOaJrZx1wzk/simple",
       "registrationRequired": true,
+      "onSiteRsvp": true,
+      "capacity": 80,
       "perks": [
         "Lunch on us",
         "Cohort 1 demo crowd",
@@ -337,6 +339,7 @@
       "lumaUrl": "https://luma.com/u43ar9pi",
       "lumaEventId": "u43ar9pi",
       "registrationRequired": true,
+      "onSiteRsvp": true,
       "capacity": 50,
       "perks": [
         "Cursor Credits",
