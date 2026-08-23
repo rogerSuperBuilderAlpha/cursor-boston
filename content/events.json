@@ -1,6 +1,85 @@
 {
   "upcoming": [
     {
+      "id": "cursor-boston-hult-summer-hackathon-2026",
+      "slug": "cursor-boston-hult-summer-hackathon-2026",
+      "title": "Cursor Boston \u00d7 Hult Summer Hackathon",
+      "subtitle": "Pizza, a build afternoon, and Shiv from the Cursor team \u2014 close out summer at Hult",
+      "date": "2026-08-24",
+      "time": "1:00 PM \u2013 5:00 PM ET",
+      "location": "Cambridge, MA",
+      "venue": {
+        "name": "Hult International Business School",
+        "address": "1 Education St, Cambridge, MA 02141",
+        "mapUrl": null,
+        "coordinates": {
+          "lat": 42.3735,
+          "lng": -71.0738
+        }
+      },
+      "type": "hackathon",
+      "description": "Close out summer in person at Hult: pizza, an afternoon of building, presentations, and a conversation with Shiv Jethi from the Cursor team. Monday August 24, 1\u20135 PM ET. Free and open to the whole Cursor Boston community \u2014 RSVP on Luma.",
+      "longDescription": "This Monday we close out summer in person: the Cursor Boston \u00d7 Hult Summer Hackathon. Pizza, an afternoon of building, presentations, and a conversation with someone from the Cursor team.\n\nFormat\n\n1:00 PM \u2014 Kickoff. Arrive, grab pizza, start hacking. Bring an idea or jump into a challenge.\n2:30 PM \u2014 Special guest: Shiv Jethi from the Cursor team.\n3:00\u20134:30 PM \u2014 Networking + presentations. Share what you built; see what others shipped.\n4:30 PM \u2014 Wrap-up. Celebrate the end of summer and kick off fall.\n\nWho should come\n\nFree and open to the whole Cursor Boston community \u2014 not just people who did a summer cohort week.\n\nBring\n\nLaptop, charger, Cursor installed, and a project (or an open mind). Luma will ask for your GitHub profile.",
+      "image": "/cursor-boston-logo.png",
+      "lumaUrl": "https://luma.com/s5wuujzl",
+      "lumaEventId": "s5wuujzl",
+      "registrationRequired": true,
+      "perks": [
+        "Pizza",
+        "Shiv Jethi from the Cursor team",
+        "Afternoon workspace at Hult",
+        "Open to the whole community"
+      ],
+      "topics": [
+        "Summer close-out hackathon",
+        "In-person building at Hult",
+        "Presentations and networking"
+      ],
+      "agenda": [
+        {
+          "time": "1:00 PM",
+          "title": "Kickoff",
+          "description": "Arrive, grab pizza, start hacking. Bring an idea or jump into a challenge."
+        },
+        {
+          "time": "2:30 PM",
+          "title": "Special guest \u2014 Shiv Jethi",
+          "description": "Conversation with Shiv from the Cursor team"
+        },
+        {
+          "time": "3:00 PM",
+          "title": "Networking + presentations",
+          "description": "Share what you built; see what others shipped"
+        },
+        {
+          "time": "4:30 PM",
+          "title": "Wrap-up",
+          "description": "Celebrate the end of summer and kick off fall"
+        }
+      ],
+      "faq": [
+        {
+          "question": "Do I need to have done a summer cohort week?",
+          "answer": "No. Free and open to the whole Cursor Boston community."
+        },
+        {
+          "question": "Where do I RSVP?",
+          "answer": "On Luma (https://luma.com/s5wuujzl). They'll ask for your GitHub profile."
+        },
+        {
+          "question": "What should I bring?",
+          "answer": "Laptop, charger, Cursor installed. A project is ideal but not required."
+        }
+      ],
+      "whatToBring": [
+        "Laptop",
+        "Charger",
+        "Cursor installed",
+        "A project (or curiosity)"
+      ],
+      "featured": true
+    },
+    {
       "id": "cursor-boston-cohort1-end-hack-2026",
       "slug": "cursor-boston-cohort1-end-hack-2026",
       "title": "Cursor Boston — End of Cohort 1 Hack",
