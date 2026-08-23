@@ -111,6 +111,21 @@ const config = tseslint.config(
     },
   },
   {
+    // Issue #590 — keep explicit module-boundary return types on core utilities.
+    files: ["lib/utils.ts", "lib/sanitize.ts"],
+    rules: {
+      "@typescript-eslint/explicit-function-return-type": [
+        "error",
+        {
+          allowExpressions: true,
+          allowTypedFunctionExpressions: true,
+          allowHigherOrderFunctions: true,
+        },
+      ],
+      "@typescript-eslint/explicit-module-boundary-types": "error",
+    },
+  },
+  {
     // Test files use mock `next/image` shims that render a bare <img>;
     // alt-text and other a11y rules don't apply to test mocks. Keep
     // these as advisory in tests rather than blocking.

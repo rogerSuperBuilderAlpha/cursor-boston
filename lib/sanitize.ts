@@ -12,6 +12,18 @@
  * These functions should be used on all user-generated content before storage.
  */
 
+/** Normalized free-text safe for storage and JSX rendering. */
+export type SanitizedText = string;
+
+/** Normalized display name restricted to safe characters. */
+export type SanitizedName = string;
+
+/** Normalized http(s) URL, or null when invalid or disallowed. */
+export type SanitizedUrl = string | null;
+
+/** Valid Firestore document ID, or null when invalid. */
+export type SanitizedDocId = string | null;
+
 /**
  * Normalize free-text user input for storage.
  *
@@ -28,7 +40,7 @@
  * @param input - The raw string to normalize
  * @returns The normalized string, or an empty string if input is not a string
  */
-export function sanitizeText(input: string): string {
+export function sanitizeText(input: string): SanitizedText {
   if (typeof input !== "string") {
     return "";
   }
@@ -48,7 +60,7 @@ export function sanitizeText(input: string): string {
  * @param input - The raw display name to sanitize
  * @returns The sanitized name containing only alphanumeric characters, spaces, hyphens, underscores, and periods
  */
-export function sanitizeName(input: string): string {
+export function sanitizeName(input: string): SanitizedName {
   if (typeof input !== "string") {
     return "";
   }
@@ -68,7 +80,7 @@ export function sanitizeName(input: string): string {
  * @param input - The raw URL string to validate and sanitize
  * @returns The normalized URL string, or null if the URL is invalid or uses a dangerous protocol
  */
-export function sanitizeUrl(input: string): string | null {
+export function sanitizeUrl(input: string): SanitizedUrl {
   if (typeof input !== "string" || !input.trim()) {
     return null;
   }
@@ -96,7 +108,7 @@ export function sanitizeUrl(input: string): string | null {
  * @param input - The raw document ID to sanitize
  * @returns The sanitized document ID, or null if invalid or exceeds 1500 characters
  */
-export function sanitizeDocId(input: string): string | null {
+export function sanitizeDocId(input: string): SanitizedDocId {
   if (typeof input !== "string" || !input.trim()) {
     return null;
   }
