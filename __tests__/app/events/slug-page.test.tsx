@@ -75,6 +75,10 @@ jest.mock("@/components/events/CoworkingSlots", () => ({
   default: () => null,
 }));
 
+jest.mock("@/components/events/EventRsvpCard", () => ({
+  EventRsvpCard: () => null,
+}));
+
 import EventPage, {
   generateMetadata,
   generateStaticParams,

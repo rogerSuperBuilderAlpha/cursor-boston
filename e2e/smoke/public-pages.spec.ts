@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 
 const PUBLIC_PAGES = [
   { path: '/events', heading: /events/i },
+  { path: '/events/map', heading: /event map/i },
   { path: '/members', heading: /community/i },
   { path: '/about', heading: /about/i },
   { path: '/cookbook', heading: /cookbook/i },

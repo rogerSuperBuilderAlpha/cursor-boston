@@ -7,8 +7,9 @@
 
 /**
  * Events API contracts. Covers the per-event coworking flow
- * (eligibility / register / slots) and the PyData 2026 ticketing surface
- * (capacity, luma cross-check, registration, admin list).
+ * (eligibility / register / slots), on-site RSVP + waitlist, and the
+ * PyData 2026 ticketing surface (capacity, luma cross-check, registration,
+ * admin list).
  */
 
 import { initContract } from "@ts-rest/core";
@@ -87,6 +88,21 @@ const CoworkingDeleteResponse = z.object({
   success: z.literal(true),
   message: z.string(),
 });
+
+const EventRsvpBody = z.object({}).openapi("EventRsvpBody");
+
+const EventRsvpSnapshotResponse = z
+  .object({
+    success: z.literal(true),
+    configured: z.boolean(),
+    capacity: z.number().int().nonnegative(),
+    confirmedCount: z.number().int().nonnegative(),
+    waitlistCount: z.number().int().nonnegative(),
+    remaining: z.number().int().nonnegative(),
+    myStatus: z.enum(["none", "confirmed", "waitlisted"]),
+    waitlistPosition: z.number().int().positive().nullable(),
+  })
+  .openapi("EventRsvpSnapshotResponse");
 
 const PydataCapacityResponse = z.object({
   capacity: z.number().int().nonnegative(),
@@ -197,6 +213,61 @@ export const eventsContract = c.router(
       },
       metadata: {
         errorCodes: ["VALIDATION_ERROR", "RATE_LIMITED", "SERVER_ERROR"] as const,
+      },
+    },
+
+    rsvpGet: {
+      method: "GET",
+      path: "/api/events/:eventId/rsvp",
+      pathParams: EventIdParam,
+      summary: "Get on-site RSVP counts and the current user's status",
+      description:
+        "Authentication optional. Unauthenticated callers still receive capacity / waitlist counts.",
+      responses: {
+        200: EventRsvpSnapshotResponse,
+        400: ApiErrorSchema,
+        429: RateLimitedErrorSchema,
+        500: ApiErrorSchema,
+      },
+      metadata: {
+        errorCodes: ["VALIDATION_ERROR", "RATE_LIMITED", "SERVER_ERROR"] as const,
+      },
+    },
+    rsvpPost: {
+      method: "POST",
+      path: "/api/events/:eventId/rsvp",
+      pathParams: EventIdParam,
+      summary: "RSVP to an event (confirmed if under capacity, otherwise waitlisted)",
+      body: EventRsvpBody,
+      responses: {
+        200: EventRsvpSnapshotResponse,
+        ...writeErrors,
+      },
+      metadata: {
+        errorCodes: [
+          "UNAUTHORIZED",
+          "VALIDATION_ERROR",
+          "RATE_LIMITED",
+          "SERVER_ERROR",
+        ] as const,
+      },
+    },
+    rsvpDelete: {
+      method: "DELETE",
+      path: "/api/events/:eventId/rsvp",
+      pathParams: EventIdParam,
+      summary: "Cancel the current user's on-site RSVP (promotes the waitlist)",
+      responses: {
+        200: EventRsvpSnapshotResponse,
+        ...writeErrors,
+      },
+      metadata: {
+        errorCodes: [
+          "UNAUTHORIZED",
+          "VALIDATION_ERROR",
+          "RATE_LIMITED",
+          "SERVER_ERROR",
+        ] as const,
       },
     },
 

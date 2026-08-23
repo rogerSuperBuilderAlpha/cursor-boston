@@ -64,6 +64,7 @@ export function QuestionsListing() {
 
   useEffect(() => {
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- async fetch-on-mount; setLoading gates the request cycle
     setLoading(true);
     fetchQuestions()
       .then((data) => {
@@ -84,6 +85,7 @@ export function QuestionsListing() {
 
   // Fetch user votes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- clear votes when signed out; fetch runs async when signed in
     if (!user) { setUserVotes({}); return; }
     (async () => {
       try {
@@ -158,7 +160,7 @@ export function QuestionsListing() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Community Q&A</h1>
-          <p className="text-sm text-neutral-500 mt-1">
+          <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
             Ask questions about Cursor workflows, prompting patterns, and AI-assisted development
           </p>
         </div>
@@ -176,13 +178,13 @@ export function QuestionsListing() {
       {/* Search + Sort */}
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <div className="relative flex-1">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400" />
           <input
             type="text"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Search questions..."
-            className="w-full pl-9 pr-3 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-background text-sm text-foreground placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full pl-9 pr-3 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-background text-sm text-foreground placeholder:text-neutral-500 dark:placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>
         <select
@@ -209,11 +211,11 @@ export function QuestionsListing() {
         <div className="text-center py-16 px-4 border border-neutral-200 dark:border-neutral-800 rounded-xl border-dashed">
           {search || tag ? (
             <>
-              <div className="w-12 h-12 bg-neutral-100 dark:bg-neutral-800/50 text-neutral-400 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-12 h-12 bg-neutral-100 dark:bg-neutral-800/50 text-neutral-500 dark:text-neutral-400 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Search size={24} />
               </div>
               <h3 className="text-lg font-medium text-foreground mb-1">No matches found</h3>
-              <p className="text-neutral-500 mb-6">
+              <p className="text-neutral-500 dark:text-neutral-400 mb-6">
                 {`No results for '${[search, tag].filter(Boolean).join(" and ")}'.`}
               </p>
               <button
@@ -233,7 +235,7 @@ export function QuestionsListing() {
                 <Plus size={24} />
               </div>
               <h3 className="text-lg font-medium text-foreground mb-1">No questions yet.</h3>
-              <p className="text-neutral-500 mb-6">Be the first to ask!</p>
+              <p className="text-neutral-500 dark:text-neutral-400 mb-6">Be the first to ask!</p>
               {user ? (
                 <Link
                   href="/questions/ask"

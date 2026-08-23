@@ -34,6 +34,7 @@ export function TagFilter({
     <div className="flex flex-wrap gap-2">
       <button
         type="button"
+        aria-pressed={!activeTag}
         onClick={() => onTagChange("")}
         className={[
           "px-3 py-1.5 rounded-full text-xs font-medium transition-colors",
@@ -49,6 +50,7 @@ export function TagFilter({
         <button
           key={tag}
           type="button"
+          aria-pressed={tag === activeTag}
           onClick={() => onTagChange(tag === activeTag ? "" : tag)}
           className={[
             "px-3 py-1.5 rounded-full text-xs font-medium transition-colors",

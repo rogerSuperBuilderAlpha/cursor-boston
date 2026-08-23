@@ -52,7 +52,41 @@ const STEPS = [
   },
   {
     title: "Submit PR",
-    description: "Open a pull request and get feedback from maintainers.",
+    description:
+      "Open a pull request against develop (not main) and get feedback from maintainers.",
+  },
+] as const;
+
+/** Mirrors the routing table in .github/CONTRIBUTING.md (Where to PR). */
+const PR_TARGETS = [
+  {
+    when: "Standard code, bug fix, feature, or docs",
+    branch: "develop",
+  },
+  {
+    when: "PyData hackathon notebook",
+    branch: "pydata-2026-submissions",
+  },
+  {
+    when: "Hack-a-Sprint showcase project",
+    branch: "hack-a-sprint-2026-submissions",
+  },
+  {
+    when: "Summer cohort 1 week N submission",
+    branch:
+      "c1w1pm-submission / c1w2comms-submission / c1w3mkt-submission / c1w4edu-submission / c1w5startup-submission / c1w6oss-submission",
+  },
+  {
+    when: "Summer cohort 2 vote-format week N submission",
+    branch: "c2w1pm-submission / c2w2comms-submission / c2w3mkt-submission",
+  },
+  {
+    when: "Game-mode content (units, artifacts, lore)",
+    branch: "game-contributions",
+  },
+  {
+    when: "Maintainer application",
+    branch: "maintainer-application",
   },
 ] as const;
 
@@ -164,6 +198,74 @@ export default function OpenSourcePage() {
               </li>
             ))}
           </ol>
+
+          <div className="mt-10 overflow-x-auto rounded-lg border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
+            <h3 className="mb-2 text-center text-lg font-semibold text-neutral-950 dark:text-white">
+              Where to open your PR
+            </h3>
+            <p className="mb-4 text-center text-sm text-neutral-600 dark:text-neutral-400">
+              Most contributions target{" "}
+              <code className="rounded bg-neutral-100 px-1 py-0.5 text-xs dark:bg-neutral-800">
+                develop
+              </code>
+              . Change the base branch only for the submission targets below.
+              Do not open contributor PRs against{" "}
+              <code className="rounded bg-neutral-100 px-1 py-0.5 text-xs dark:bg-neutral-800">
+                main
+              </code>
+              .
+            </p>
+            <table className="w-full min-w-[36rem] border-collapse text-left text-sm">
+              <caption className="sr-only">
+                Pull request base branch for each kind of contribution
+              </caption>
+              <thead>
+                <tr className="border-b border-neutral-200 dark:border-neutral-800">
+                  <th
+                    scope="col"
+                    className="pb-2 pr-4 font-semibold text-neutral-950 dark:text-white"
+                  >
+                    If you&apos;re doing this
+                  </th>
+                  <th
+                    scope="col"
+                    className="pb-2 font-semibold text-neutral-950 dark:text-white"
+                  >
+                    Base branch
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {PR_TARGETS.map((row) => (
+                  <tr
+                    key={row.branch}
+                    className="border-b border-neutral-100 last:border-0 dark:border-neutral-800"
+                  >
+                    <td className="py-2 pr-4 text-neutral-600 dark:text-neutral-400">
+                      {row.when}
+                    </td>
+                    <td className="py-2">
+                      <code className="break-all text-xs text-emerald-800 dark:text-emerald-300">
+                        {row.branch}
+                      </code>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="mt-4 text-center text-sm text-neutral-600 dark:text-neutral-400">
+              Full routing notes:{" "}
+              <a
+                href="https://github.com/rogerSuperBuilderAlpha/cursor-boston/blob/develop/docs/SUBMISSION_BRANCHES.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-emerald-700 hover:text-emerald-600 dark:text-emerald-300"
+              >
+                submission branches
+              </a>
+              .
+            </p>
+          </div>
 
           <div className="mt-10 flex flex-wrap justify-center gap-4">
             <a

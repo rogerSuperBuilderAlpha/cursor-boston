@@ -77,4 +77,22 @@ const customJestConfig = {
 }
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
-module.exports = createJestConfig(customJestConfig)
+const baseJestConfig = createJestConfig(customJestConfig)
+
+// next/jest concatenates (rather than overrides) transformIgnorePatterns, and
+// Jest ignores a module if it matches ANY pattern in the array — so simply
+// appending a permissive entry doesn't help; Next's own broad default still
+// matches and wins. firebase-admin (14.x+) pulls in `jose` for JWT/JWK
+// handling, which ships pure ESM with no CJS entry point, so it needs to be
+// carved out explicitly. Replace the array post-hoc with a single pattern
+// that preserves Next's own exceptions (geist, next internals) plus `jose`.
+module.exports = async () => {
+  const config = await baseJestConfig()
+  return {
+    ...config,
+    transformIgnorePatterns: [
+      '/node_modules/(?!(geist|next/dist/client|next/dist/shared/lib|next/src/client|next/src/shared/lib|jose)/)',
+      '^.+\\.module\\.(css|sass|scss)$',
+    ],
+  }
+}

@@ -103,6 +103,7 @@ export const userOwnedCollections: ReadonlyArray<UserOwnedCollection> = [
   { collection: "hackathonJoinRequests", mode: "fieldEqualsUid", field: "fromUserId", behavior: { type: "delete" } },
   { collection: "agents", mode: "fieldEqualsUid", field: "ownerId", behavior: { type: "delete" } },
   { collection: "coworkingRegistrations", mode: "fieldEqualsUid", field: "userId", behavior: { type: "delete" } },
+  { collection: "eventRsvps", mode: "fieldEqualsUid", field: "userId", behavior: { type: "delete" } },
   { collection: "mentorship_check_ins", mode: "fieldEqualsUid", field: "authorId", behavior: { type: "delete" } },
   { collection: "cookbook_user_votes", mode: "fieldEqualsUid", field: "userId", behavior: { type: "delete" } },
   { collection: "question_votes", mode: "fieldEqualsUid", field: "userId", behavior: { type: "delete" } },

@@ -30,6 +30,7 @@
 | <img src="https://github.com/Kissprisonblock2018.png?size=40" width="40" height="40" alt="@Kissprisonblock2018" /> | [Kissprisonblock2018](https://github.com/Kissprisonblock2018) | 0 | 2 | 2026-02-19 |
 | <img src="https://github.com/DavidGamero.png?size=40" width="40" height="40" alt="@DavidGamero" /> | [David Gamero](https://github.com/DavidGamero) | 0 | 1 | 2026-02-16 |
 | <img src="https://github.com/randyjtorres.png?size=40" width="40" height="40" alt="@randyjtorres" /> | [Randy Torres](https://github.com/randyjtorres) | 0 | 1 | 2026-03-30 |
+| <img src="https://github.com/joes9987.png?size=40" width="40" height="40" alt="@joes9987" /> | [joes9987](https://github.com/joes9987) | 0 | 0 | 2026-06-25 |
 | <img src="https://github.com/jayyyW34.png?size=40" width="40" height="40" alt="@jayyyW34" /> | [Jayden Phillip](https://github.com/jayyyW34) | 0 | 0 | 2026-07-02 |
 
 <!-- CONTRIBUTORS:END -->

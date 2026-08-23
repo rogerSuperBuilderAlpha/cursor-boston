@@ -92,6 +92,10 @@ beforeEach(() => {
 });
 
 describe("EcosystemPage", () => {
+  const clickFilterChip = (label: RegExp) => {
+    fireEvent.click(screen.getByRole("button", { name: label }));
+  };
+
   it("renders all entries when category=all (default)", () => {
     render(<EcosystemPage />);
     expect(screen.getByText("MIT")).toBeInTheDocument();
@@ -101,46 +105,46 @@ describe("EcosystemPage", () => {
 
   it("filters to universities only", () => {
     render(<EcosystemPage />);
-    fireEvent.click(screen.getByRole("button", { name: /Universities/i }));
+    clickFilterChip(/^Universities \(/i);
     expect(screen.getByText("MIT")).toBeInTheDocument();
     expect(screen.queryByText("YC")).not.toBeInTheDocument();
   });
 
   it("filters to accelerators only", () => {
     render(<EcosystemPage />);
-    fireEvent.click(screen.getByRole("button", { name: /Accelerators/i }));
+    clickFilterChip(/^Accelerators \(/i);
     expect(screen.getByText("YC")).toBeInTheDocument();
     expect(screen.queryByText("MIT")).not.toBeInTheDocument();
   });
 
   it("filters to AI organizations only", () => {
     render(<EcosystemPage />);
-    fireEvent.click(screen.getByRole("button", { name: /AI organizations/i }));
+    clickFilterChip(/^AI organizations \(/i);
     expect(screen.getAllByText("OpenAI").length).toBeGreaterThan(0);
   });
 
   it("filters to venture capital only", () => {
     render(<EcosystemPage />);
-    fireEvent.click(screen.getByRole("button", { name: /Venture capital/i }));
+    clickFilterChip(/^Venture capital \(/i);
     expect(screen.getByText("Sequoia")).toBeInTheDocument();
   });
 
   it("filters to research labs only", () => {
     render(<EcosystemPage />);
-    fireEvent.click(screen.getByRole("button", { name: /Research labs/i }));
+    clickFilterChip(/^Research labs \(/i);
     expect(screen.getAllByText("DeepMind").length).toBeGreaterThan(0);
   });
 
   it("filters to nonprofits only", () => {
     render(<EcosystemPage />);
-    fireEvent.click(screen.getByRole("button", { name: /Nonprofits/i }));
+    clickFilterChip(/^Nonprofits \(/i);
     expect(screen.getByText("MAS")).toBeInTheDocument();
   });
 
   it("clicking All returns to showing every entry", () => {
     render(<EcosystemPage />);
-    fireEvent.click(screen.getByRole("button", { name: /Universities/i }));
-    fireEvent.click(screen.getByRole("button", { name: /^All/i }));
+    clickFilterChip(/^Universities \(/i);
+    clickFilterChip(/^All \(/i);
     expect(screen.getByText("MIT")).toBeInTheDocument();
     expect(screen.getByText("YC")).toBeInTheDocument();
   });
@@ -155,6 +159,17 @@ describe("EcosystemPage", () => {
   it("renders correctly when there are no entries", () => {
     mockEntries = [];
     render(<EcosystemPage />);
-    expect(screen.getByText(/Mass AI Ecosystem/)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /Mass AI Ecosystem/i })
+    ).toBeInTheDocument();
+  });
+
+  it("filters via hero diagram node click", () => {
+    render(<EcosystemPage />);
+    fireEvent.click(
+      screen.getByRole("button", { name: /Filter by Universities/i })
+    );
+    expect(screen.getByText("MIT")).toBeInTheDocument();
+    expect(screen.queryByText("YC")).not.toBeInTheDocument();
   });
 });
