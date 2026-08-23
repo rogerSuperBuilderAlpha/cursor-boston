@@ -14,7 +14,7 @@ export const SUMMER_COHORT_COLLECTION = "summerCohortApplications";
 export const SUMMER_COHORT_VOTES_COLLECTION = "summerCohortVotes";
 export const SUMMER_COHORT_NOTIFY_EMAIL = "roger@cursorboston.com";
 export const SUMMER_COHORT_LOCALSTORAGE_KEY =
-  "cursor-boston-summer-cohort-modal-shown-date";
+  "cursor-boston-hult-aug-24-modal-shown-date";
 export const SUMMER_COHORT_RETURN_TO = "/summer-cohort";
 /** CTA target for users who already submitted an application — same page,
  *  which surfaces their existing application status and cohort details. */
