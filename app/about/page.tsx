@@ -8,6 +8,7 @@
 import { Metadata } from "next";
 import Logo from "@/components/Logo";
 import { DiscordIcon } from "@/components/icons";
+import { HuntSourceComment } from "@/components/hunt/HuntSourceComment";
 
 export const metadata: Metadata = {
   title: "About",
@@ -77,6 +78,7 @@ const accelerators = [
 export default function AboutPage() {
   return (
     <main className="flex flex-col">
+      <HuntSourceComment text="Link hunt: Beantown wasn't built in a day." />
       {/* Hero */}
       <section className="py-16 md:py-24 px-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-4xl mx-auto text-center">

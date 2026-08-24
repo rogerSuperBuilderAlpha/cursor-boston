@@ -91,3 +91,13 @@ Notes:
 - `score.json` is **maintainer-authored**, not contributor-authored. Reject any PR that includes a `score.json` written by the contributor — they don't get to score themselves.
 - If `ANTHROPIC_API_KEY` isn't available locally, you can run the scorer against the merged folder later, but score every submission before announcing winners — the "Best Submission" prize is decided from these scores.
 - A PyData submission without `score.json` will still render on the event page (the badge just won't appear), but it is **ineligible for "Best Submission"** until scored.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
