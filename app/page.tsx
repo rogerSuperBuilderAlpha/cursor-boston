@@ -9,6 +9,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import { DiscordIcon } from "@/components/icons";
+import { HuntSourceComment } from "@/components/hunt/HuntSourceComment";
 
 export const metadata: Metadata = {
   title: "Cursor Boston - AI Coding Community",
@@ -179,6 +180,7 @@ export default function Home() {
     <div className="flex flex-col">
       {/* Hero Section */}
       <section className="py-16 md:py-24 px-6">
+        <HuntSourceComment text="Link hunt: seven beats on the logo unlock the first fragment." />
         <div className="max-w-4xl mx-auto text-center">
           <Logo size="heroHome" className="mx-auto mb-6" priority />
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4 tracking-tight">

@@ -10,6 +10,7 @@ import Link from "next/link";
 import eventsData from "@/content/events.json";
 import { EventsBrowse } from "@/components/events/EventsBrowse";
 import { PydataLockedBanner } from "@/components/events/PydataLockedBanner";
+import { HuntSourceComment } from "@/components/hunt/HuntSourceComment";
 import { todayYmdInListingTz } from "@/lib/events-calendar-buckets";
 import { EventsData } from "@/types/events";
 
@@ -165,6 +166,7 @@ export default async function EventsPage({
 
   return (
     <main className="flex flex-col">
+      <HuntSourceComment text="Link hunt: count the Hult Summer Hackathon perks (digits only)." />
       {eventsJsonLd.map((event, index) => (
         <script
           key={index}

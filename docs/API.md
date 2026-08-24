@@ -16,7 +16,7 @@
 
 All endpoints are under `/api/`. Authentication uses Firebase Auth ID tokens (Bearer) or session cookies. Spec: [`/openapi.json`](https://cursorboston.com/openapi.json) · interactive: [`/api/docs`](https://cursorboston.com/api/docs).
 
-**187 paths, 226 operations across 35 areas.**
+**189 paths, 228 operations across 35 areas.**
 
 ---
 
@@ -255,6 +255,8 @@ _Treasure hunt: oracle, paths, prize claim._
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
+| POST | `/api/hunt/link-fragment/assemble` | No | Assemble a referral URL from signed fragment tokens |
+| POST | `/api/hunt/link-fragment/verify` | No | Verify a link-fragment puzzle answer |
 | GET | `/api/hunt/oracle` | No | Daily oracle riddle + answer fingerprint |
 | GET | `/api/hunt/oracle/konami` | No | Daily Konami token (only revealed with X-Konami-Sequence header) |
 | POST | `/api/hunt/paths/{pathId}/submit` | Yes | Submit a candidate answer for a hunt path |
