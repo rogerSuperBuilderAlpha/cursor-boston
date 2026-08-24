@@ -205,4 +205,46 @@ describe("AppShell", () => {
     // and the expand navigation button should exist
     expect(screen.getByLabelText("Expand navigation")).toBeInTheDocument();
   });
+
+  it("names icon-only collapsed nav links for assistive tech", () => {
+    Storage.prototype.getItem = jest.fn(() => "1");
+    render(<AppShell>Content</AppShell>);
+
+    expect(screen.getByRole("link", { name: "Events" })).toHaveAttribute(
+      "href",
+      "/events",
+    );
+    expect(screen.getByRole("link", { name: "Research" })).toHaveAttribute(
+      "href",
+      "/research",
+    );
+  });
+
+  it("wires the mobile menu button to the sidebar and closes on Escape", () => {
+    render(<AppShell>Content</AppShell>);
+
+    const openMenu = screen.getByLabelText("Open menu");
+    expect(openMenu).toHaveAttribute("aria-controls", "site-navigation");
+    expect(openMenu).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByLabelText("Site navigation")).toHaveAttribute(
+      "id",
+      "site-navigation",
+    );
+
+    fireEvent.click(openMenu);
+    expect(openMenu).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByLabelText("Close sidebar")).toHaveFocus();
+
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(openMenu).toHaveAttribute("aria-expanded", "false");
+    expect(openMenu).toHaveFocus();
+  });
+
+  it("uses a slug id for nav groups that contain spaces", () => {
+    render(<AppShell>Content</AppShell>);
+
+    const needsWork = screen.getByRole("button", { name: "Needs Work" });
+    expect(needsWork).toHaveAttribute("aria-controls", "nav-group-needs-work");
+    expect(document.getElementById("nav-group-needs-work")).not.toBeNull();
+  });
 });

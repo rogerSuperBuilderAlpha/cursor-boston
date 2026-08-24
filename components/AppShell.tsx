@@ -58,6 +58,18 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { SUMMER_COHORT_OPEN_EVENT } from "@/lib/summer-cohort";
 
 const STORAGE_KEY = "cursor-boston-sidebar-collapsed";
+const SITE_NAV_ID = "site-navigation";
+const FOCUS_RING =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+
+function navGroupDomId(label: string): string {
+  return `nav-group-${label.toLowerCase().replace(/\s+/g, "-")}`;
+}
+
+function navItemName(item: NavItem): string {
+  if (typeof item.label === "string") return item.label;
+  return item.title ?? "Untitled";
+}
 
 interface NavItem {
   href: string;
@@ -198,6 +210,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
     NAV_GROUPS.filter((g) => g.items.length > 1).map((g) => g.label),
   );
   const prevPathRef = useRef(pathname);
+  const sidebarRef = useRef<HTMLElement>(null);
+  const openMenuButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     try {
@@ -207,6 +221,33 @@ export default function AppShell({ children }: { children: ReactNode }) {
       /* ignore */
     }
   }, []);
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const openMenuButton = openMenuButtonRef.current;
+    const closeBtn = sidebarRef.current?.querySelector<HTMLElement>(
+      'button[aria-label="Close sidebar"]',
+    );
+    closeBtn?.focus({ preventScroll: true });
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setMobileOpen(false);
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+      openMenuButton?.focus({ preventScroll: true });
+    };
+  }, [mobileOpen]);
 
   useEffect(() => {
     if (prevPathRef.current !== pathname) {
@@ -257,6 +298,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
       {/* Sidebar */}
       <aside
+        ref={sidebarRef}
+        id={SITE_NAV_ID}
         className={[
           "fixed inset-y-0 left-0 z-50 flex flex-col border-r border-neutral-200 bg-background/95 backdrop-blur-md transition-[transform,width] duration-200 ease-out dark:border-neutral-800 md:translate-x-0",
           expandedWidth ? "w-56" : "w-[4.25rem]",
@@ -300,7 +343,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
           <button
             type="button"
             onClick={() => setMobileOpen(false)}
-            className="rounded-lg p-2 text-neutral-500 hover:bg-neutral-100 hover:text-foreground md:hidden dark:hover:bg-neutral-800"
+            className={`rounded-lg p-2 text-neutral-500 hover:bg-neutral-100 hover:text-foreground md:hidden dark:hover:bg-neutral-800 ${FOCUS_RING}`}
             aria-label="Close sidebar"
           >
             <X className="h-5 w-5" strokeWidth={2} />
@@ -329,13 +372,14 @@ export default function AppShell({ children }: { children: ReactNode }) {
                           }}
                           className={navLinkClass(pathname, item.href, false, item.highlight)}
                         >
-                          <Icon className="h-[1.125rem] w-[1.125rem] shrink-0 opacity-90" strokeWidth={2} />
+                          <Icon className="h-[1.125rem] w-[1.125rem] shrink-0 opacity-90" strokeWidth={2} aria-hidden />
                           <span className="truncate">{item.label}</span>
                         </Link>
                       </li>
                     );
                   }
                   const sectionOpen = openNavSectionIds.has(group.label);
+                  const groupId = navGroupDomId(group.label);
                   return (
                     <li key={group.label} className="flex flex-col gap-0.5">
                       <button
@@ -343,13 +387,13 @@ export default function AppShell({ children }: { children: ReactNode }) {
                         onClick={() => toggleNavGroup(group.label)}
                         className={[
                           "flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider transition-colors",
-                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                          FOCUS_RING,
                           isGroupActive(group, pathname)
                             ? "text-emerald-700 dark:text-emerald-400"
                             : "text-neutral-500 hover:text-foreground dark:text-neutral-400 dark:hover:text-white",
                         ].join(" ")}
                         aria-expanded={sectionOpen}
-                        aria-controls={`nav-group-${group.label.toLowerCase()}`}
+                        aria-controls={groupId}
                       >
                         {group.label}
                         <ChevronDown
@@ -362,7 +406,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                         />
                       </button>
                       {sectionOpen ? (
-                        <ul id={`nav-group-${group.label.toLowerCase()}`} className="mb-1 flex flex-col gap-0.5 border-l border-neutral-200 pl-2 dark:border-neutral-800">
+                        <ul id={groupId} className="mb-1 flex flex-col gap-0.5 border-l border-neutral-200 pl-2 dark:border-neutral-800">
                           {group.items.map((item) => {
                             const Icon = item.icon;
                             return (
@@ -372,7 +416,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                                   onClick={() => setMobileOpen(false)}
                                   className={navLinkClass(pathname, item.href, false)}
                                 >
-                                  <Icon className="h-[1.125rem] w-[1.125rem] shrink-0 opacity-90" strokeWidth={2} />
+                                  <Icon className="h-[1.125rem] w-[1.125rem] shrink-0 opacity-90" strokeWidth={2} aria-hidden />
                                   <span className="truncate">{item.label}</span>
                                 </Link>
                               </li>
@@ -390,7 +434,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
                       <li key={item.href}>
                         <Link
                           href={item.href}
-                          title={item.title ?? (typeof item.label === "string" ? item.label : undefined)}
+                          aria-label={navItemName(item)}
+                          title={navItemName(item)}
                           onClick={() => {
                             setMobileOpen(false);
                             if (item.highlight) {
@@ -401,7 +446,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                           }}
                           className={navLinkClass(pathname, item.href, true, item.highlight)}
                         >
-                          <Icon className="h-[1.125rem] w-[1.125rem] shrink-0 opacity-90" strokeWidth={2} />
+                          <Icon className="h-[1.125rem] w-[1.125rem] shrink-0 opacity-90" strokeWidth={2} aria-hidden />
                         </Link>
                       </li>
                     );
@@ -427,7 +472,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
               type="button"
               onClick={toggleCollapsed}
               title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-              className="hidden rounded-lg border border-neutral-200 p-2 text-neutral-600 transition-colors hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800 md:flex"
+              className={`hidden rounded-lg border border-neutral-200 p-2 text-neutral-600 transition-colors hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800 md:flex ${FOCUS_RING}`}
               aria-expanded={!collapsed}
               aria-label={collapsed ? "Expand navigation" : "Collapse navigation"}
             >
@@ -448,8 +493,10 @@ export default function AppShell({ children }: { children: ReactNode }) {
                 onClick={() => setMobileOpen(false)}
                 className={[
                   "flex items-center gap-3 rounded-lg py-2 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800/80",
+                  FOCUS_RING,
                   expandedWidth ? "px-2" : "justify-center px-0",
                 ].join(" ")}
+                aria-label="Profile"
                 title={!expandedWidth ? "Profile" : undefined}
               >
                 <Avatar
@@ -477,6 +524,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                   aria-label="Sign in"
                   className={[
                     "inline-flex items-center justify-center gap-2 rounded-lg border border-neutral-200 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50 dark:border-neutral-600 dark:text-neutral-300 dark:hover:bg-neutral-800",
+                    FOCUS_RING,
                     expandedWidth ? "w-full px-3 py-2" : "h-10 w-10 p-0",
                   ].join(" ")}
                 >
@@ -488,6 +536,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                   aria-label="Get started"
                   className={[
                     "inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-500 text-sm font-semibold text-white transition-colors hover:bg-emerald-400",
+                    FOCUS_RING,
                     expandedWidth ? "w-full px-3 py-2" : "h-10 w-10 p-0",
                   ].join(" ")}
                 >
@@ -509,11 +558,13 @@ export default function AppShell({ children }: { children: ReactNode }) {
         {/* Mobile header */}
         <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b border-neutral-200 bg-background/90 px-4 backdrop-blur-md dark:border-neutral-800 md:hidden">
           <button
+            ref={openMenuButtonRef}
             type="button"
             onClick={() => setMobileOpen(true)}
-            className="rounded-lg p-2 text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800"
+            className={`rounded-lg p-2 text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800 ${FOCUS_RING}`}
             aria-label="Open menu"
             aria-expanded={mobileOpen}
+            aria-controls={SITE_NAV_ID}
           >
             <Menu className="h-6 w-6" strokeWidth={2} />
           </button>
@@ -540,7 +591,7 @@ function WorldMapFab() {
   return (
     <Link
       href="/game/world"
-      className="fixed bottom-6 right-6 z-40 inline-flex items-center gap-2 rounded-full bg-neutral-900/80 backdrop-blur border border-neutral-700/60 px-4 py-2.5 text-sm font-medium text-neutral-100 shadow-lg hover:bg-neutral-800 transition-colors"
+      className={`fixed bottom-6 right-6 z-40 inline-flex items-center gap-2 rounded-full bg-neutral-900/80 backdrop-blur border border-neutral-700/60 px-4 py-2.5 text-sm font-medium text-neutral-100 shadow-lg hover:bg-neutral-800 transition-colors ${FOCUS_RING}`}
       aria-label="Open game world map"
     >
       <span aria-hidden>🗺️</span>

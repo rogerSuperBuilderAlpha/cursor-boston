@@ -251,6 +251,13 @@ service cloud.firestore {
       allow write: if false; // Only server-side writes for data integrity
     }
 
+    // On-site event RSVPs — owners can read their row; writes are Admin SDK only
+    // so capacity / waitlist order cannot be spoofed from the client.
+    match /eventRsvps/{rsvpId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow write: if false;
+    }
+
     // Mentorship - Profiles: users can create/update their own profile, authenticated users can read active profiles
     match /mentorship_profiles/{userId} {
       allow read: if request.auth != null && (resource.data.isActive == true || request.auth.uid == userId);

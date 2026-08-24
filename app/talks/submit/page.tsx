@@ -9,6 +9,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { AuthFormSkeleton } from "@/components/skeletons/AuthFormSkeleton";
 import { submitTalkProposal, TalkSubmission } from "@/lib/submissions";
 import Link from "next/link";
 
@@ -126,11 +127,7 @@ export default function SubmitTalkPage() {
   };
 
   if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white"></div>
-      </div>
-    );
+    return <AuthFormSkeleton />;
   }
 
   if (!user) {
