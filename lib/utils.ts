@@ -7,6 +7,12 @@
 
 import { Timestamp } from "firebase/firestore";
 
+/** User fields used to derive a stable display label. */
+export type DisplayNameSource = {
+  name?: string | null;
+  email?: string | null;
+};
+
 /**
  * Merge class names, filtering out falsy values.
  */
@@ -33,10 +39,7 @@ export function getInitials(name: string | null | undefined): string {
  * Get a stable display name from a user record.
  * Falls back from name -> local-part of email -> "Anonymous".
  */
-export function getDisplayName(user: {
-  name?: string | null;
-  email?: string | null;
-}): string {
+export function getDisplayName(user: DisplayNameSource): string {
   const trimmedName = user.name?.trim();
   if (trimmedName) return trimmedName;
 
