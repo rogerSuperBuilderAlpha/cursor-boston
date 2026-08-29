@@ -29,7 +29,12 @@ const RTDB_ROOTS = {
 } as const;
 
 /** @internal */
-export function buildLiveSessionPaths(sessionId: string) {
+export function buildLiveSessionPaths(sessionId: string): {
+  audiencePath: string;
+  emceePath: string;
+  sessionRtdbPath: string;
+  queueRtdbPath: string;
+} {
   return {
     audiencePath: `/live/${sessionId}`,
     emceePath: `/live/${sessionId}/emcee`,
@@ -373,7 +378,15 @@ function setCurrentSpeakerFromEntry(
   };
 }
 
-export async function controlLiveSessionServer(input: ControlLiveSessionInput) {
+export async function controlLiveSessionServer(input: ControlLiveSessionInput): Promise<{
+  session: LiveSessionRealtimeRecord;
+  queue: {
+    order: string[];
+    items: Record<string, LiveQueueEntryRecord>;
+    updatedAtMs: number;
+  };
+  historyRecord: LiveSessionHistoryRecord | null;
+}> {
   const adminDb = getAdminDb();
   const adminRtdb = getAdminRtdb();
 
