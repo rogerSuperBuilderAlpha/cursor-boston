@@ -75,7 +75,7 @@
     "analyze": "ANALYZE=true next build"
   },
   "dependencies": {
-    "@asteasolutions/zod-to-openapi": "^7.3.0",
+    "@asteasolutions/zod-to-openapi": "^9.1.0",
     "@cursor/sdk": "^1.0.28",
     "@react-three/drei": "^10.7.8",
     "@react-three/fiber": "^9.7.0",
