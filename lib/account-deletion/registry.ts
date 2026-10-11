@@ -340,6 +340,25 @@ export const KNOWN_NON_USER_COLLECTIONS: ReadonlySet<string> = new Set([
   // Internal: report flow (admin-managed; reporter records survive deletion)
   "communityReports",
   "userBlocks",
+
+  // Algorithmacy Studio (algorithmacy.org). Office accounts for a paid
+  // engagement. Keyed by the office, not by a cohorts uid. Deleting a
+  // cohorts account must not delete a law firm's agents, meetings, or
+  // billing record. All of these are Admin-SDK-only (see firestore.rules).
+  "studio_accounts",
+  "studio_agents",
+  "studio_activity",
+  "studio_approvals",
+  "studio_requests",
+  "studio_meetings",
+  "studio_availability",
+  "studio_invites",
+  "studio_leads",
+  "studio_reports",
+  "studio_agent_keys",
+  "studio_slot_locks",
+  "studio_jobs",
+  "studio_stripe_events",
 ]);
 
 /**

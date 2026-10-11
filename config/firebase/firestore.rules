@@ -604,5 +604,52 @@ service cloud.firestore {
     match /accountDeletions/{uid} {
       allow read, write: if false;
     }
+
+    // Algorithmacy Studio (algorithmacy.org/portal). Written only by the
+    // Admin SDK from that site. A signed-in cohorts user must not read a
+    // law-office account, and deleting a cohorts account must not delete one.
+    match /studio_accounts/{accountId} {
+      allow read, write: if false;
+
+      match /studio_agents/{agentId} {
+        allow read, write: if false;
+      }
+      match /studio_activity/{eventId} {
+        allow read, write: if false;
+      }
+      match /studio_approvals/{approvalId} {
+        allow read, write: if false;
+      }
+      match /studio_requests/{requestId} {
+        allow read, write: if false;
+      }
+    }
+    match /studio_meetings/{meetingId} {
+      allow read, write: if false;
+    }
+    match /studio_availability/{engineerId} {
+      allow read, write: if false;
+    }
+    match /studio_invites/{token} {
+      allow read, write: if false;
+    }
+    match /studio_leads/{leadId} {
+      allow read, write: if false;
+    }
+    match /studio_reports/{reportId} {
+      allow read, write: if false;
+    }
+    match /studio_agent_keys/{keyHash} {
+      allow read, write: if false;
+    }
+    match /studio_slot_locks/{slotId} {
+      allow read, write: if false;
+    }
+    match /studio_jobs/{jobId} {
+      allow read, write: if false;
+    }
+    match /studio_stripe_events/{eventId} {
+      allow read, write: if false;
+    }
   }
 }
