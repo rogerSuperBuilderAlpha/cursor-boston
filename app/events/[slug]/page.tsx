@@ -19,6 +19,7 @@ import {
   getLumaCheckoutHref,
 } from "@/lib/luma-event";
 import { PYDATA_2026_EVENT_SLUG } from "@/lib/pydata-2026";
+import { HuntSourceComment } from "@/components/hunt/HuntSourceComment";
 
 // Type definitions for event data
 interface AgendaItem {
@@ -241,6 +242,9 @@ export default async function EventPage({
 
   return (
     <div className="flex flex-col">
+      {slug === "cursor-boston-hult-summer-hackathon-2026" && (
+        <HuntSourceComment text="Link hunt: who from Cursor joins at 2:30 PM? First and last name." />
+      )}
       {/* JSON-LD */}
       <script
         type="application/ld+json"

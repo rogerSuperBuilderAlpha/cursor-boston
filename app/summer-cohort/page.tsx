@@ -22,6 +22,7 @@ import { Sun } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { DiscordIcon, GitHubIcon } from "@/components/icons";
 import { SectionHelp } from "@/components/SectionHelp";
+import { HuntSourceComment } from "@/components/hunt/HuntSourceComment";
 import { useGithubConnection } from "@/app/(auth)/profile/_hooks/useGithubConnection";
 import { useDiscordConnection } from "@/app/(auth)/profile/_hooks/useDiscordConnection";
 import {
@@ -885,6 +886,7 @@ function SummerCohortPageInner() {
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10 md:px-6 md:py-14">
+      <HuntSourceComment text="Link hunt: the Cambridge school on 1 Education St (one word)." />
       {/* Hult transition banner — every cohort surface signals the launch. */}
       <section className="mb-8 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-5 dark:bg-emerald-500/10">
         <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">

@@ -11,6 +11,7 @@ import AppShell from "@/components/AppShell";
 import SummerCohortModal from "@/components/SummerCohortModal";
 import LumaCheckoutTracker from "@/components/LumaCheckoutTracker";
 import { KonamiListener } from "@/components/hunt/KonamiListener";
+import { LinkFragmentOrchestrator } from "@/components/hunt/LinkFragmentOrchestrator";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ToastProvider } from "@/components/Toast";
@@ -129,6 +130,7 @@ export default function RootLayout({
               <SummerCohortModal />
               <LumaCheckoutTracker />
               <KonamiListener />
+              <LinkFragmentOrchestrator />
             </ToastProvider>
           </AuthProvider>
         </ThemeProvider>

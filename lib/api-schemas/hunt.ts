@@ -28,6 +28,19 @@ const SubmitBody = z
   })
   .openapi("HuntPathSubmitBody");
 
+const LinkFragmentVerifyBody = z
+  .object({
+    puzzleId: z.string().min(1),
+    answer: z.string().min(1),
+  })
+  .openapi("HuntLinkFragmentVerifyBody");
+
+const LinkFragmentAssembleBody = z
+  .object({
+    tokens: z.record(z.string(), z.string()),
+  })
+  .openapi("HuntLinkFragmentAssembleBody");
+
 export const huntContract = c.router(
   {
     status: {
@@ -83,6 +96,42 @@ export const huntContract = c.router(
           "RATE_LIMITED",
           "SERVER_ERROR",
         ] as const,
+      },
+    },
+    linkFragmentVerify: {
+      method: "POST",
+      path: "/api/hunt/link-fragment/verify",
+      summary: "Verify a link-fragment puzzle answer",
+      body: LinkFragmentVerifyBody,
+      responses: {
+        200: PassthroughOk,
+        400: ApiErrorSchema,
+        403: ApiErrorSchema,
+        404: ApiErrorSchema,
+        500: ApiErrorSchema,
+      },
+      metadata: {
+        errorCodes: [
+          "VALIDATION_ERROR",
+          "FORBIDDEN",
+          "NOT_FOUND",
+          "SERVER_ERROR",
+        ] as const,
+      },
+    },
+    linkFragmentAssemble: {
+      method: "POST",
+      path: "/api/hunt/link-fragment/assemble",
+      summary: "Assemble a referral URL from signed fragment tokens",
+      body: LinkFragmentAssembleBody,
+      responses: {
+        200: PassthroughOk,
+        400: ApiErrorSchema,
+        403: ApiErrorSchema,
+        500: ApiErrorSchema,
+      },
+      metadata: {
+        errorCodes: ["VALIDATION_ERROR", "FORBIDDEN", "SERVER_ERROR"] as const,
       },
     },
   },
