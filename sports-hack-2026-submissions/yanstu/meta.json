@@ -1,0 +1,13 @@
+{
+  "title": "Live Scoring Analytics Dashboard",
+  "description": "A lightweight dashboard that ingests public sports play-by-play feeds and renders live win-probability, pace, and lineup efficiency panels. Built to explore streaming state updates with server components.",
+  "displayName": "yanstu",
+  "videoUrl": "https://www.loom.com/share/0f0f0f0f0f0f4f0f8f0f0f0f0f0f0f0f",
+  "repoUrl": "https://github.com/yanstu/cursor-boston",
+  "deployedUrl": "",
+  "tags": [
+    "next.js",
+    "streaming",
+    "analytics"
+  ]
+}
