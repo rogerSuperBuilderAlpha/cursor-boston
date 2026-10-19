@@ -113,7 +113,7 @@
     "@commitlint/config-conventional": "^21.0.2",
     "@eslint/compat": "^2.1.1",
     "@eslint/eslintrc": "^3.3.7",
-    "@firebase/rules-unit-testing": "^5.0.0",
+    "@firebase/rules-unit-testing": "^6.0.0",
     "@next/bundle-analyzer": "^16.4.0",
     "@next/eslint-plugin-next": "^16.4.0",
     "@playwright/test": "^1.64.0",
