@@ -37,7 +37,7 @@ const AiMessagesBody = z
       .array(
         z.object({
           role: z.enum(["user", "assistant"]),
-          content: z.unknown(),
+          content: z.unknown().optional(),
         })
       )
       .min(1),

@@ -16,6 +16,7 @@
 import {
   OpenAPIRegistry,
   OpenApiGeneratorV3,
+  zodToOpenAPIRegistry,
   type RouteConfig,
 } from "@asteasolutions/zod-to-openapi";
 import { isAppRoute, type AppRoute, type AppRouter } from "@ts-rest/core";
@@ -158,7 +159,59 @@ function registerRouter(registry: OpenAPIRegistry, router: AppRouter, history: s
   }
 }
 
+/**
+ * `.nullable()` / `.optional()` copy the `.openapi("Name")` refId onto the
+ * wrapper, and zod-to-openapi defines a component from whichever schema
+ * carrying that refId it meets first. If the first use is
+ * `GamePlayerSchema.nullable()`, the shared `GamePlayer` component itself
+ * becomes `nullable: true` for every operation. Register each named schema
+ * up front, unwrapped, so components describe the base schema and wrapped
+ * uses render as `allOf: [$ref] + nullable`. A named parent that contains
+ * a wrapped named child (CursorIdeaRun -> pr: CursorIdeaPrState.nullable())
+ * hits the same problem, hence the post-order walk.
+ */
+const WRAPPER_TYPES = new Set(["nullable", "optional", "default"]);
+
+function refIdOf(schema: z.ZodType): string | undefined {
+  const meta = zodToOpenAPIRegistry.get(schema) as
+    | { _internal?: { refId?: string } }
+    | undefined;
+  return meta?._internal?.refId;
+}
+
+function registerNamedSchemas(
+  registry: OpenAPIRegistry,
+  node: unknown,
+  registered: Map<string, z.ZodType>,
+  seen: Set<unknown>
+): void {
+  if (!node || typeof node !== "object" || seen.has(node)) return;
+  seen.add(node);
+  if (!(node instanceof z.ZodType)) {
+    for (const value of Object.values(node)) registerNamedSchemas(registry, value, registered, seen);
+    return;
+  }
+  const def = (node as unknown as { _zod: { def: Record<string, unknown> & { type: string } } })._zod.def;
+  for (const [key, value] of Object.entries(def)) {
+    if (value instanceof z.ZodType) {
+      registerNamedSchemas(registry, value, registered, seen);
+    } else if (Array.isArray(value)) {
+      for (const item of value) registerNamedSchemas(registry, item, registered, seen);
+    } else if (key === "shape" && value && typeof value === "object") {
+      for (const item of Object.values(value)) registerNamedSchemas(registry, item, registered, seen);
+    }
+  }
+  // Post-order: children first, so a parent component never meets a
+  // wrapped child before that child's own component is defined.
+  const refId = refIdOf(node);
+  if (refId && !WRAPPER_TYPES.has(def.type) && !registered.has(refId)) {
+    registered.set(refId, node);
+    registry.register(refId, node);
+  }
+}
+
 const registry = new OpenAPIRegistry();
+registerNamedSchemas(registry, apiContract, new Map(), new Set());
 registerRouter(registry, apiContract, []);
 
 const openApiDoc = new OpenApiGeneratorV3(registry.definitions).generateDocument({
