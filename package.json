@@ -202,7 +202,7 @@
     "hono": "^4.12.16",
     "tar": "^7.5.22",
     "undici": "^6.29.1",
-    "protobufjs": "^7.6.4",
+    "protobufjs": "^7.6.6",
     "ws": "^8.18.3",
     "brace-expansion@2.1.0": "2.1.7",
     "@ts-rest/core": {
