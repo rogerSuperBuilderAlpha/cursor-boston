@@ -282,7 +282,9 @@ describe("showcase page", () => {
           body: JSON.stringify({ submissionId: "sub-1", action: "approve" }),
         }),
       );
-      expect(screen.getByText(/Submission approved/i)).toBeInTheDocument();
+      // Exact match: the case-insensitive regex also matches proj-1's
+      // "Submission Approved" card button, so it could pass without the banner.
+      expect(screen.getByText("Submission approved.")).toBeInTheDocument();
     });
 
     await user.click(screen.getByRole("button", { name: /Mark Delivered/i }));
