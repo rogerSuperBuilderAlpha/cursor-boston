@@ -17,7 +17,7 @@ import { ApiErrorSchema } from "./common";
 
 const c = initContract();
 
-const PassthroughOk = z.object({}).passthrough();
+const PassthroughOk = z.object({}).loose();
 
 // All fields are accepted as `unknown` so the route's `trimOrEmpty`
 // helper can coerce non-string values (numbers, objects, arrays) into
@@ -32,10 +32,10 @@ const ApplyBody = z
     contactRole: z.unknown().optional(),
     rolesHiring: z.unknown().optional(),
     notes: z.unknown().optional(),
-    engineerExpectations: z.record(z.unknown()).optional(),
+    engineerExpectations: z.record(z.string(), z.unknown()).optional(),
     engineerRequirements: z.unknown().optional(),
   })
-  .passthrough()
+  .loose()
   .openapi("HiringPartnerApplyBody");
 
 export const hiringPartnersContract = c.router(

@@ -149,7 +149,7 @@ const ReportResponse = z.object({
 });
 
 const ModerateListResponse = z
-  .object({ reports: z.array(z.object({}).passthrough()) })
+  .object({ reports: z.array(z.object({}).loose()) })
   .merge(PaginationFieldsSchema);
 
 const ModerateActionResponse = z.object({

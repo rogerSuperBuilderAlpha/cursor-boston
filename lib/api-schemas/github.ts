@@ -19,7 +19,7 @@ import { ApiErrorSchema } from "./common";
 const c = initContract();
 
 const RedirectResponse = z.object({}).optional();
-const PassthroughOk = z.object({}).passthrough();
+const PassthroughOk = z.object({}).loose();
 
 const AuthorizeQuery = z.object({
   returnTo: z.string().optional(),

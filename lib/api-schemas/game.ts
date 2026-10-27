@@ -51,7 +51,7 @@ const UnitStackSchema = z.object({
 });
 
 // ──────────────────── Skeletal entity shapes ────────────────────
-// `passthrough()` so additional fields aren't a contract violation —
+// `loose()` so additional fields aren't a contract violation —
 // these schemas describe the *known* fields that callers depend on,
 // without pretending to be exhaustive Firestore document mirrors.
 
@@ -68,10 +68,10 @@ const GamePlayerSchema = z
         attacksWon: z.number().int().nonnegative(),
         attacksLost: z.number().int().nonnegative(),
       })
-      .passthrough()
+      .loose()
       .optional(),
   })
-  .passthrough()
+  .loose()
   .openapi("GamePlayer", {
     description:
       "Player document. Fields beyond those listed here exist (turn budget, spell inventory, etc.) — see `lib/game/types.ts` for the canonical interface.",
@@ -86,7 +86,7 @@ const GameTileSchema = z
     ownerId: z.string().nullable().optional(),
     units: UnitStackSchema.optional(),
   })
-  .passthrough()
+  .loose()
   .openapi("GameTile", {
     description:
       "Hex tile on the world map. `q`/`r` are axial coordinates. Additional fields (capacity, upgrades, armed defense spell, etc.) exist on the canonical type.",
@@ -109,7 +109,7 @@ const GameAttackSchema = z
     offenseSpellId: z.string().nullable(),
     defenseSpellId: z.string().nullable(),
   })
-  .passthrough()
+  .loose()
   .openapi("GameAttack");
 
 const GameArtifactSchema = z
@@ -122,12 +122,12 @@ const GameArtifactSchema = z
     foundAtTurn: z.number().int(),
     used: z.boolean(),
   })
-  .passthrough()
+  .loose()
   .openapi("GameArtifact");
 
 const TurnReportSchema = z
   .object({})
-  .passthrough()
+  .loose()
   .openapi("GameTurnReport", {
     description:
       "Per-action turn report. Shape varies by action type — see `lib/game/turn-report.ts` for the discriminated union.",
@@ -164,10 +164,10 @@ const CombatResultSchema = z
         weakFace: UnitTypeEnum.optional(),
         forgeScoutsBonusApplied: z.boolean().optional(),
       })
-      .passthrough()
+      .loose()
       .optional(),
   })
-  .passthrough()
+  .loose()
   .openapi("GameCombatResult");
 
 // ──────────────────── Common response wrappers ────────────────────
@@ -608,7 +608,7 @@ const CommunityEventSchema = z
     fromCaste: SetupCasteEnum.optional(),
     toCaste: SetupCasteEnum.optional(),
   })
-  .passthrough()
+  .loose()
   .openapi("GameCommunityEvent");
 
 const CommunityMessageSchema = z
@@ -620,7 +620,7 @@ const CommunityMessageSchema = z
     body: z.string(),
     deletedByAdmin: z.boolean().optional(),
   })
-  .passthrough()
+  .loose()
   .openapi("GameCommunityMessage");
 
 const WorldQuery = z
@@ -636,7 +636,7 @@ const WorldOk = z.object({
   success: z.literal(true),
   tiles: z.array(GameTileSchema),
   owners: z
-    .array(z.object({}).passthrough())
+    .array(z.object({}).loose())
     .optional()
     .describe("Legacy mode only — present when the request omits a bbox"),
 });
@@ -808,7 +808,7 @@ export const gameContract = c.router(
           success: z.literal(true),
           myTiles: z.array(GameTileSchema),
           borderTiles: z.array(GameTileSchema),
-          owners: z.array(z.object({}).passthrough()),
+          owners: z.array(z.object({}).loose()),
         }),
         ...baseErrorResponses,
       },
@@ -838,7 +838,7 @@ export const gameContract = c.router(
       responses: {
         200: z
           .object({ success: z.literal(true) })
-          .passthrough()
+          .loose()
           .openapi("GameEligibility", {
             description:
               "Eligibility flags (whether onboarding is complete, current week, allowed actions). Shape mirrors `lib/game/eligibility.ts`.",
@@ -908,7 +908,7 @@ export const gameContract = c.router(
       body: ExploreBody,
       responses: {
         200: ActionOkResponse.extend({
-          frontier: z.object({}).passthrough().optional(),
+          frontier: z.object({}).loose().optional(),
         }),
         ...baseErrorResponses,
       },
@@ -943,7 +943,7 @@ export const gameContract = c.router(
       }),
       responses: {
         200: ActionOkResponse.extend({
-          intelReport: z.object({}).passthrough(),
+          intelReport: z.object({}).loose(),
           detected: z.boolean(),
         }),
         ...actionErrorResponses,
@@ -959,7 +959,7 @@ export const gameContract = c.router(
       body: ExploreBulkBody,
       responses: {
         200: BulkActionOkResponse.extend({
-          frontiers: z.array(z.object({}).passthrough()),
+          frontiers: z.array(z.object({}).loose()),
         }),
         ...actionErrorResponses,
       },
@@ -1021,7 +1021,7 @@ export const gameContract = c.router(
           targetTile: GameTileSchema,
           report: TurnReportSchema,
           combat: CombatResultSchema.optional(),
-          intelReport: z.object({}).passthrough().optional(),
+          intelReport: z.object({}).loose().optional(),
         }),
         ...actionErrorResponses,
       },
@@ -1148,7 +1148,7 @@ export const gameContract = c.router(
         200: z.object({
           success: z.literal(true),
           artifact: GameArtifactSchema,
-          intelReport: z.object({}).passthrough().optional(),
+          intelReport: z.object({}).loose().optional(),
         }),
         ...actionErrorResponses,
       },
@@ -1245,7 +1245,7 @@ export const gameContract = c.router(
       responses: {
         200: z.object({
           success: z.literal(true),
-          summary: z.object({}).passthrough(),
+          summary: z.object({}).loose(),
         }),
         403: ApiErrorSchema.openapi({
           description: "Missing/invalid rollover secret",
@@ -1265,7 +1265,7 @@ export const gameContract = c.router(
       responses: {
         200: z.object({
           success: z.literal(true),
-          summary: z.object({}).passthrough(),
+          summary: z.object({}).loose(),
         }),
         403: ApiErrorSchema.openapi({
           description: "Missing/invalid rollover secret",

@@ -13,16 +13,21 @@
  * Swagger UI at `/api/docs` reads it at runtime.
  */
 
-import { generateOpenApi } from "@ts-rest/open-api";
+import {
+  OpenAPIRegistry,
+  OpenApiGeneratorV3,
+  type RouteConfig,
+} from "@asteasolutions/zod-to-openapi";
+import { isAppRoute, type AppRoute, type AppRouter } from "@ts-rest/core";
 import { writeFileSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { z } from "zod";
 
 import { apiContract, SECURITY_SCHEMES } from "../lib/api-schemas";
 
 const OUTPUT_PATH = join(__dirname, "..", "public", "openapi.json");
 
 const baseDocument = {
-  openapi: "3.0.3",
   info: {
     title: "Cursor Boston API",
     version: "0.1.0",
@@ -73,9 +78,92 @@ const baseDocument = {
   ],
 };
 
-const openApiDoc = generateOpenApi(apiContract, baseDocument, {
-  setOperationId: "concatenated-path",
-  jsonQuery: false,
+/**
+ * Walk the ts-rest router and register every route with zod-to-openapi.
+ *
+ * @ts-rest/open-api converted schemas through @anatine/zod-openapi, which
+ * only understands zod 3 and emits `{}` for zod 4 schemas. zod-to-openapi
+ * supports zod 4 and honours the `.openapi()` metadata on our schemas, so
+ * we build the paths here and let it convert the schemas. Path, tag and
+ * operationId conventions match the old `setOperationId: "concatenated-path"`
+ * output.
+ */
+const MUTATION_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+
+function isZodSchema(value: unknown): value is z.ZodType {
+  return value instanceof z.ZodType;
+}
+
+function pathParamsFor(openApiPath: string, schema: unknown): z.ZodObject | undefined {
+  const declared = schema instanceof z.ZodObject ? schema : undefined;
+  const names = (openApiPath.match(/{[^}]+}/g) ?? []).map((p) => p.slice(1, -1));
+  const missing = names.filter((name) => !declared || !(name in declared.shape));
+  if (!declared && missing.length === 0) return undefined;
+  const extra = Object.fromEntries(missing.map((name) => [name, z.string()]));
+  return declared ? declared.extend(extra) : z.object(extra);
+}
+
+function registerRoute(
+  registry: OpenAPIRegistry,
+  route: AppRoute,
+  id: string,
+  history: string[]
+): void {
+  const path = route.path.replace(/:(\w+)/g, "{$1}");
+  const request: NonNullable<RouteConfig["request"]> = {};
+
+  const params = pathParamsFor(path, route.pathParams);
+  if (params) request.params = params;
+  if (route.query instanceof z.ZodObject) request.query = route.query;
+  if (route.headers instanceof z.ZodObject) request.headers = route.headers;
+  if (MUTATION_METHODS.has(route.method) && "body" in route && isZodSchema(route.body)) {
+    const contentType =
+      "contentType" in route && route.contentType ? route.contentType : "application/json";
+    request.body = {
+      description: "Body",
+      content: { [contentType]: { schema: route.body } },
+    };
+  }
+
+  const responses: RouteConfig["responses"] = {};
+  for (const [status, response] of Object.entries(route.responses)) {
+    responses[status] = isZodSchema(response)
+      ? {
+          description: response.description ?? status,
+          content: { "application/json": { schema: response } },
+        }
+      : { description: status };
+  }
+
+  registry.registerPath({
+    method: route.method.toLowerCase() as RouteConfig["method"],
+    path,
+    tags: history,
+    operationId: [...history, id].join("."),
+    summary: route.summary,
+    description: route.description,
+    deprecated: route.deprecated,
+    request,
+    responses,
+  });
+}
+
+function registerRouter(registry: OpenAPIRegistry, router: AppRouter, history: string[]): void {
+  for (const [key, value] of Object.entries(router)) {
+    if (isAppRoute(value)) {
+      registerRoute(registry, value, key, history);
+    } else {
+      registerRouter(registry, value, [...history, key]);
+    }
+  }
+}
+
+const registry = new OpenAPIRegistry();
+registerRouter(registry, apiContract, []);
+
+const openApiDoc = new OpenApiGeneratorV3(registry.definitions).generateDocument({
+  openapi: "3.0.3",
+  ...baseDocument,
 });
 
 // Inject security schemes (zod-to-openapi/ts-rest doesn't carry these

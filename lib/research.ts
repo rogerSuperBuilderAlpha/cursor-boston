@@ -24,7 +24,7 @@ export const RESEARCH_REPO_README_URL =
 const AuthorSchema = z.object({
   name: z.string().min(1).max(120),
   affiliation: z.string().max(160).optional(),
-  url: z.string().url().optional(),
+  url: z.url().optional(),
 });
 
 const BaseSchema = z.object({
@@ -37,14 +37,14 @@ const BaseSchema = z.object({
     }),
   title: z.string().min(3).max(200),
   authors: z.array(AuthorSchema).min(1).max(20),
-  postedAt: z.string().datetime({ offset: true }),
-  updatedAt: z.string().datetime({ offset: true }).optional(),
+  postedAt: z.iso.datetime({ offset: true }),
+  updatedAt: z.iso.datetime({ offset: true }).optional(),
   disciplines: z.array(z.string().min(1).max(40)).min(1).max(8),
   summary: z.string().min(20).max(500),
   /** External GitHub repo that hosts the actual content / files / data. */
-  sourceRepoUrl: z.string().url(),
-  contactEmail: z.string().email().optional(),
-  contactUrl: z.string().url().optional(),
+  sourceRepoUrl: z.url(),
+  contactEmail: z.email().optional(),
+  contactUrl: z.url().optional(),
   /**
    * Placeholder / demo entry. Sample entries are hidden from the main feed
    * and from type-specific filters; they only appear under the dedicated
@@ -61,7 +61,7 @@ const BaseSchema = z.object({
  */
 const ActiveResearchSchema = BaseSchema.extend({
   type: z.literal("active-research"),
-  deadline: z.string().datetime({ offset: true }),
+  deadline: z.iso.datetime({ offset: true }),
   compensation: z.string().min(1).max(200),
   timeCommitment: z.string().min(1).max(120),
   location: z.enum(["remote", "in-person", "hybrid"]),
@@ -73,7 +73,7 @@ const ActiveResearchSchema = BaseSchema.extend({
       protocolNumber: z.string().min(1).max(60),
     })
     .optional(),
-  studyUrl: z.string().url().optional(),
+  studyUrl: z.url().optional(),
   status: z.enum(["open", "paused", "closed"]).default("open"),
 });
 
@@ -85,7 +85,7 @@ const WorkingPaperSchema = BaseSchema.extend({
   type: z.literal("working-paper"),
   version: z.string().min(1).max(20),
   license: z.string().min(1).max(60),
-  pdfUrl: z.string().url(),
+  pdfUrl: z.url(),
   doi: z.string().max(100).optional(),
   peerReviewStatus: z
     .enum(["awaiting", "approved", "approved-with-reservations", "rejected"])
@@ -128,7 +128,7 @@ const CollaborationSchema = BaseSchema.extend({
   seeking: z.string().min(1).max(400),
   timeCommitment: z.string().min(1).max(120),
   /** Optional deadline (grant deadline, conference target, etc.). */
-  deadline: z.string().datetime({ offset: true }).optional(),
+  deadline: z.iso.datetime({ offset: true }).optional(),
   status: z.enum(["open", "paused", "closed"]).default("open"),
 });
 
@@ -143,8 +143,8 @@ const CfpSchema = BaseSchema.extend({
   /** "City, Country" or "Virtual" or "Hybrid — City, Country". */
   location: z.string().min(1).max(120),
   /** Hard deadline for paper / abstract submission. */
-  submissionDeadline: z.string().datetime({ offset: true }),
-  conferenceUrl: z.string().url(),
+  submissionDeadline: z.iso.datetime({ offset: true }),
+  conferenceUrl: z.url(),
   organizingBody: z.string().min(1).max(200),
   submissionTypes: z.array(z.string().min(1).max(60)).min(1).max(8),
   status: z.enum(["open", "paused", "closed"]).default("open"),

@@ -60,7 +60,7 @@ const TalkSubmissionRow = z
     status: z.string(),
     createdAt: z.string().optional(),
   })
-  .passthrough();
+  .loose();
 
 const ModerateListResponse = z
   .object({
@@ -76,7 +76,7 @@ const ModerateActionResponse = z
     alreadyApproved: z.boolean().optional(),
     alreadyCompleted: z.boolean().optional(),
   })
-  .passthrough();
+  .loose();
 
 // ──────────────────── Contract router ────────────────────
 

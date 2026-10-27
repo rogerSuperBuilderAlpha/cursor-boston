@@ -17,35 +17,37 @@ import { ApiErrorSchema } from "./common";
 
 const c = initContract();
 
-const PassthroughOk = z.object({}).passthrough();
+const PassthroughOk = z.object({}).loose();
 
 const SessionTypeEnum = z.enum(
   ["teach-me", "build-together", "code-review", "explore-topic"],
-  { errorMap: () => ({ message: "Invalid session type" }) }
+  { error: "Invalid session type" }
 );
 
 const ProfilePostBody = z
   .object({
     skillsCanTeach: z
-      .array(z.string({ invalid_type_error: "Invalid array items" }).max(500), {
-        invalid_type_error: "Skills arrays must be present",
+      .array(z.string({ error: (issue) => (issue.input === undefined ? undefined : "Invalid array items") }).max(500), {
+        error: (issue) => (issue.input === undefined ? undefined : "Skills arrays must be present"),
       })
       .max(20, "Array exceeds max length of 20"),
     skillsWantToLearn: z
-      .array(z.string({ invalid_type_error: "Invalid array items" }).max(500), {
-        invalid_type_error: "Skills arrays must be present",
+      .array(z.string({ error: (issue) => (issue.input === undefined ? undefined : "Invalid array items") }).max(500), {
+        error: (issue) => (issue.input === undefined ? undefined : "Skills arrays must be present"),
       })
       .max(20, "Array exceeds max length of 20"),
     preferredLanguages: z
-      .array(z.string({ invalid_type_error: "Invalid array items" }).max(500))
+      .array(z.string({ error: (issue) => (issue.input === undefined ? undefined : "Invalid array items") }).max(500))
       .max(20, "Array exceeds max length of 20")
       .optional(),
     preferredFrameworks: z
-      .array(z.string({ invalid_type_error: "Invalid array items" }).max(500))
+      .array(z.string({ error: (issue) => (issue.input === undefined ? undefined : "Invalid array items") }).max(500))
       .max(20, "Array exceeds max length of 20")
       .optional(),
     timezone: z
-      .string({ required_error: "Timezone is required" })
+      .string({
+        error: (issue) => (issue.input === undefined ? "Timezone is required" : undefined),
+      })
       .min(1, "Timezone is required"),
     availability: z.array(z.unknown()).optional(),
     sessionTypes: z
@@ -54,7 +56,7 @@ const ProfilePostBody = z
     bio: z.string().max(1000, "Bio must be at most 1000 characters").optional(),
     isActive: z.boolean().optional(),
   })
-  .passthrough()
+  .loose()
   .openapi("PairProfileBody");
 
 const RequestQuery = z.object({
@@ -64,7 +66,9 @@ const RequestQuery = z.object({
 const RequestPostBody = z
   .object({
     toUserId: z
-      .string({ required_error: "toUserId is required" })
+      .string({
+        error: (issue) => (issue.input === undefined ? "toUserId is required" : undefined),
+      })
       .min(1, "toUserId is required"),
     sessionType: SessionTypeEnum,
     message: z.string().min(1).max(1000),
@@ -75,7 +79,9 @@ const RequestPostBody = z
 const RespondBody = z
   .object({
     requestId: z
-      .string({ required_error: "requestId is required" })
+      .string({
+        error: (issue) => (issue.input === undefined ? "requestId is required" : undefined),
+      })
       .min(1, "requestId is required"),
     action: z.enum(["accept", "decline"]),
   })

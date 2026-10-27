@@ -36,8 +36,7 @@ const ChangePrimaryEmailBody = z
   .object({
     newPrimaryEmail: z
       .string({
-        required_error: "New primary email is required",
-        invalid_type_error: "New primary email is required",
+        error: "New primary email is required",
       })
       .min(1, "New primary email is required"),
   })
@@ -47,8 +46,7 @@ const RemoveEmailBody = z
   .object({
     email: z
       .string({
-        required_error: "Email is required",
-        invalid_type_error: "Email is required",
+        error: "Email is required",
       })
       .min(1, "Email is required"),
   })
@@ -58,8 +56,7 @@ const SendEmailVerificationBody = z
   .object({
     email: z
       .string({
-        required_error: "Email is required",
-        invalid_type_error: "Email is required",
+        error: "Email is required",
       })
       .min(1, "Email is required"),
   })

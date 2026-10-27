@@ -33,8 +33,7 @@ const ProfileDataQuery = z
 const SubscriptionPatchBody = z
   .object({
     subscribed: z.boolean({
-      required_error: "subscribed must be a boolean",
-      invalid_type_error: "subscribed must be a boolean",
+      error: "subscribed must be a boolean",
     }),
   })
   .openapi("ProfileSubscriptionPatchBody");
@@ -48,7 +47,7 @@ const SocialLinksSchema = z
     substack: z.string().optional(),
   })
   .partial()
-  .passthrough();
+  .loose();
 
 const UpdateBody = z
   .object({
@@ -86,7 +85,7 @@ const VisibilityPatchBody = z
 
 const ProfileDataResponse = z
   .object({})
-  .passthrough()
+  .loose()
   .openapi("ProfileDataResponse", {
     description:
       "User profile data bundle. With `?format=portable`, wrapped as `{ schema, version, exportedAt, data }` for GDPR Article 20 portability.",
@@ -106,7 +105,7 @@ const SubscriptionGetResponse = z.object({
 
 const SubscriptionPatchResponse = z.object({ subscribed: z.boolean() });
 
-const VisibilityFlagsSchema = z.object({}).passthrough();
+const VisibilityFlagsSchema = z.object({}).loose();
 
 const VisibilityGetResponse = z.object({
   success: z.literal(true),
@@ -129,7 +128,7 @@ const UpdateResponse = z.object({
       jobTitle: z.string().optional(),
       socialLinks: SocialLinksSchema.optional(),
     })
-    .passthrough(),
+    .loose(),
 });
 
 // ──────────────────── Contract ────────────────────

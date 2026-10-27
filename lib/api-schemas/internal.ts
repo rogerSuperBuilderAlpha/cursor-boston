@@ -18,7 +18,7 @@ import { ApiErrorSchema } from "./common";
 
 const c = initContract();
 
-const PassthroughOk = z.object({}).passthrough();
+const PassthroughOk = z.object({}).loose();
 
 const CleanupQuery = z.object({
   batchSize: z.string().regex(/^\d+$/).optional(),

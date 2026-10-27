@@ -21,8 +21,8 @@ const CreateSubmissionBody = z
   .object({
     title: z.string().min(3).max(120),
     summary: z.string().min(20).max(500),
-    repositoryUrl: z.string().url().optional(),
-    demoUrl: z.string().url().optional(),
+    repositoryUrl: z.url().optional(),
+    demoUrl: z.url().optional(),
     writeup: z.string().min(50).max(4000),
     cursorWorkflow: z.string().min(20).max(2000),
     submitNow: z.boolean().optional(),

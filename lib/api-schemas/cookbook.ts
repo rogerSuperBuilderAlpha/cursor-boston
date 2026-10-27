@@ -8,7 +8,7 @@
 /**
  * Cookbook API contracts. The cookbook surface lets users submit prompts,
  * vote on them, and browse the paginated entry list with category /
- * worksWith filters. Heavy aggregate responses use `passthrough()`; inputs
+ * worksWith filters. Heavy aggregate responses use `loose()`; inputs
  * are strictly validated.
  */
 
@@ -81,7 +81,7 @@ const CookbookEntryRowSchema = z
     upCount: z.number().int().nonnegative(),
     downCount: z.number().int().nonnegative(),
   })
-  .passthrough()
+  .loose()
   .openapi("CookbookEntryRow");
 
 const EntriesListResponse = z

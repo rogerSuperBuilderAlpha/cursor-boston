@@ -78,9 +78,9 @@ const SessionControlResponse = z
     status: z.string(),
     timerStatus: z.string(),
     currentSpeaker: z.unknown().nullable().optional(),
-    historyRecord: z.object({}).passthrough().optional(),
+    historyRecord: z.object({}).loose().optional(),
   })
-  .passthrough();
+  .loose();
 
 const QueueJoinResponse = z.object({
   entryId: z.string(),
