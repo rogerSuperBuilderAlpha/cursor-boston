@@ -17,7 +17,7 @@ import { ApiErrorSchema, RateLimitedErrorSchema } from "./common";
 
 const c = initContract();
 
-const PassthroughOk = z.object({}).passthrough();
+const PassthroughOk = z.object({}).loose();
 
 /** @internal */
 export const certificateContract = c.router(

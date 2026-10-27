@@ -17,7 +17,7 @@ import { ApiErrorSchema, RateLimitedErrorSchema } from "./common";
 
 const c = initContract();
 
-const PassthroughOk = z.object({}).passthrough();
+const PassthroughOk = z.object({}).loose();
 
 const ProfilePostBody = z
   .object({
@@ -31,7 +31,7 @@ const ProfilePostBody = z
     maxMentees: z.number().int().min(1).max(10).optional(),
     isActive: z.boolean().optional(),
   })
-  .passthrough()
+  .loose()
   .openapi("MentorshipProfileBody");
 
 const RequestPostBody = z

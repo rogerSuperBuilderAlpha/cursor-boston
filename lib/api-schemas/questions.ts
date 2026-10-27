@@ -37,11 +37,11 @@ const writeErrors = {
 
 const SuccessTrue = z.object({ success: z.literal(true) });
 
-const QuestionShape = z.object({}).passthrough().openapi("Question", {
+const QuestionShape = z.object({}).loose().openapi("Question", {
   description:
     "Question document. Canonical type lives in `types/questions.ts`.",
 });
-const AnswerShape = z.object({}).passthrough().openapi("Answer");
+const AnswerShape = z.object({}).loose().openapi("Answer");
 
 const ListQuery = PaginationQuerySchema.extend({
   sort: z.string().optional(),
@@ -98,7 +98,7 @@ const QuestionsListResponse = z
 const QuestionDetailResponse = z.object({
   question: QuestionShape,
   answers: z.array(AnswerShape),
-  relatedCookbook: z.array(z.object({}).passthrough()).optional(),
+  relatedCookbook: z.array(z.object({}).loose()).optional(),
 });
 
 const VoteResultResponse = z.object({

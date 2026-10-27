@@ -18,7 +18,7 @@ import { ApiErrorSchema } from "./common";
 
 const c = initContract();
 
-const PassthroughOk = z.object({}).passthrough();
+const PassthroughOk = z.object({}).loose();
 const RedirectResponse = z.object({}).optional();
 
 const ConnectStartBody = z
@@ -37,14 +37,14 @@ const AiMessagesBody = z
       .array(
         z.object({
           role: z.enum(["user", "assistant"]),
-          content: z.unknown(),
+          content: z.unknown().optional(),
         })
       )
       .min(1),
     system: z.string().optional(),
     temperature: z.number().optional(),
   })
-  .passthrough()
+  .loose()
   .openapi("LudwittAiMessagesBody");
 
 export const ludwittContract = c.router(

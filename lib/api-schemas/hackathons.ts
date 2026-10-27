@@ -22,7 +22,7 @@ const c = initContract();
 
 // ──────────────────── Atom + reusable schemas ────────────────────
 
-const OkSchema = z.object({ ok: z.literal(true) }).passthrough();
+const OkSchema = z.object({ ok: z.literal(true) }).loose();
 
 const HackathonIdQuery = z.object({
   hackathonId: z.string().optional(),
@@ -30,7 +30,7 @@ const HackathonIdQuery = z.object({
 
 const PassthroughOk = z
   .object({})
-  .passthrough()
+  .loose()
   .describe(
     "Successful response — exact shape varies by helper. See the lib/hackathons module for the canonical type."
   );
@@ -58,7 +58,11 @@ const teamGuardedErrors = {
 
 const EventCheckinBody = z
   .object({
-    userId: z.string({ required_error: "userId required" }).min(1, "userId required"),
+    userId: z
+      .string({
+        error: (issue) => (issue.input === undefined ? "userId required" : undefined),
+      })
+      .min(1, "userId required"),
     checkedIn: z.boolean().optional(),
   })
   .openapi("HackathonEventCheckinBody");
@@ -74,7 +78,9 @@ const SignupPatchBody = z
 const InviteAcceptBody = z
   .object({
     inviteId: z
-      .string({ required_error: "Invalid inviteId format" })
+      .string({
+        error: (issue) => (issue.input === undefined ? "Invalid inviteId format" : undefined),
+      })
       .min(1, "Invalid inviteId format"),
   })
   .openapi("HackathonInviteAcceptBody");
@@ -86,7 +92,9 @@ const PoolJoinBody = z
 const RequestAcceptBody = z
   .object({
     requestId: z
-      .string({ required_error: "Invalid requestId format" })
+      .string({
+        error: (issue) => (issue.input === undefined ? "Invalid requestId format" : undefined),
+      })
       .min(1, "Invalid requestId format"),
   })
   .openapi("HackathonRequestAcceptBody");
@@ -109,7 +117,9 @@ const ScoreBody = z
 const SubmissionRegisterBody = z
   .object({
     repoUrl: z
-      .string({ required_error: "repoUrl required" })
+      .string({
+        error: (issue) => (issue.input === undefined ? "repoUrl required" : undefined),
+      })
       .min(1, "repoUrl required"),
     hackathonId: z.string().optional(),
   })
@@ -122,7 +132,9 @@ const SubmissionSubmitBody = z
 const TeamLeaveBody = z
   .object({
     teamId: z
-      .string({ required_error: "Invalid teamId" })
+      .string({
+        error: (issue) => (issue.input === undefined ? "Invalid teamId" : undefined),
+      })
       .min(1, "Invalid teamId"),
   })
   .openapi("HackathonTeamLeaveBody");
@@ -130,7 +142,9 @@ const TeamLeaveBody = z
 const TeamProfileBody = z
   .object({
     teamId: z
-      .string({ required_error: "Invalid teamId" })
+      .string({
+        error: (issue) => (issue.input === undefined ? "Invalid teamId" : undefined),
+      })
       .min(1, "Invalid teamId"),
     name: z.string().max(50, "Name must be at most 50 characters").optional(),
     logoUrl: z.string().optional(),

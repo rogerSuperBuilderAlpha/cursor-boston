@@ -68,21 +68,21 @@ const EligibilityResponse = z
     eligible: z.boolean(),
     reason: z.string().optional(),
   })
-  .passthrough();
+  .loose();
 
 const SlotsResponse = z.object({
   success: z.literal(true),
   eventId: z.string(),
-  sessions: z.array(z.object({}).passthrough()),
+  sessions: z.array(z.object({}).loose()),
 });
 
 const CoworkingRegisterResponse = z
   .object({
     success: z.literal(true),
     message: z.string(),
-    registration: z.object({}).passthrough().optional(),
+    registration: z.object({}).loose().optional(),
   })
-  .passthrough();
+  .loose();
 
 const CoworkingDeleteResponse = z.object({
   success: z.literal(true),
@@ -124,9 +124,9 @@ const PydataAccessResponse = z.object({
 const PydataRegistrationGetResponse = z
   .object({
     registered: z.boolean(),
-    registration: z.object({}).passthrough().nullable(),
+    registration: z.object({}).loose().nullable(),
   })
-  .passthrough();
+  .loose();
 
 const PydataRegistrationPostResponse = z.object({
   ok: z.literal(true),
@@ -140,9 +140,9 @@ const PydataAdminListResponse = z
     capacity: z.number().int().nonnegative(),
     inCapCount: z.number().int().nonnegative(),
     waitlistCount: z.number().int().nonnegative(),
-    registrations: z.array(z.object({}).passthrough()),
+    registrations: z.array(z.object({}).loose()),
   })
-  .passthrough();
+  .loose();
 
 // ──────────────────── Contract router ────────────────────
 

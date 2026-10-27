@@ -19,7 +19,7 @@ const c = initContract();
 
 const PassthroughOk = z
   .object({})
-  .passthrough()
+  .loose()
   .describe("AnalyticsSummary — see lib/analytics-snapshot-compute.ts");
 
 /** @internal */

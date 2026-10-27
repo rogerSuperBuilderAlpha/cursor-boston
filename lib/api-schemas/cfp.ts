@@ -17,7 +17,7 @@ import { ApiErrorSchema } from "./common";
 
 const c = initContract();
 
-const PassthroughOk = z.object({}).passthrough();
+const PassthroughOk = z.object({}).loose();
 
 const SendEduCodeBody = z
   .object({

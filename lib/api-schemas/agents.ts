@@ -28,7 +28,7 @@ const writeErrors = {
   429: RateLimitedErrorSchema.openapi({ description: "Rate limit exceeded" }),
 } as const;
 
-const PassthroughOk = z.object({}).passthrough();
+const PassthroughOk = z.object({}).loose();
 
 const NameField = z
   .string()
@@ -55,7 +55,7 @@ const MePatchBody = z
   .object({
     name: NameField.optional(),
     description: z.string().max(500).nullable().optional(),
-    avatarUrl: z.string().url().nullable().optional(),
+    avatarUrl: z.url().nullable().optional(),
     visibility: VisibilityPatch.optional(),
   })
   .openapi("AgentProfilePatchBody");

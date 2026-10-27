@@ -17,7 +17,7 @@ import { ApiErrorSchema } from "./common";
 
 const c = initContract();
 
-const PassthroughOk = z.object({}).passthrough();
+const PassthroughOk = z.object({}).loose();
 
 const ApplyBody = z
   .object({
@@ -27,12 +27,12 @@ const ApplyBody = z
     isLocal: z.boolean(),
     wantsToPresent: z.boolean(),
   })
-  .passthrough()
+  .loose()
   .openapi("SummerCohortApplyBody");
 
 const IntakeSurveyBody = z
   .object({})
-  .passthrough()
+  .loose()
   .openapi("SummerCohortIntakeSurveyBody");
 
 const WeekIdParam = z.object({ weekId: z.string().min(1) });

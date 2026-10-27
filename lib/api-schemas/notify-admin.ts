@@ -18,7 +18,7 @@ import { ApiErrorSchema } from "./common";
 
 const c = initContract();
 
-const PassthroughOk = z.object({}).passthrough();
+const PassthroughOk = z.object({}).loose();
 
 const CfpBody = z
   .object({
@@ -31,7 +31,7 @@ const CfpBody = z
     abstract: z.string().optional(),
     userId: z.string().optional(),
   })
-  .passthrough()
+  .loose()
   .openapi("NotifyAdminCfpBody");
 
 const EventBody = z
@@ -48,7 +48,7 @@ const EventBody = z
     additionalInfo: z.string().optional(),
     requestId: z.string().optional(),
   })
-  .passthrough()
+  .loose()
   .openapi("NotifyAdminEventBody");
 
 const TalkBody = z
@@ -66,7 +66,7 @@ const TalkBody = z
     previousTalks: z.string().optional(),
     submissionId: z.string().optional(),
   })
-  .passthrough()
+  .loose()
   .openapi("NotifyAdminTalkBody");
 
 const writeErrors = {

@@ -13,16 +13,22 @@
  * Swagger UI at `/api/docs` reads it at runtime.
  */
 
-import { generateOpenApi } from "@ts-rest/open-api";
+import {
+  OpenAPIRegistry,
+  OpenApiGeneratorV3,
+  zodToOpenAPIRegistry,
+  type RouteConfig,
+} from "@asteasolutions/zod-to-openapi";
+import { isAppRoute, type AppRoute, type AppRouter } from "@ts-rest/core";
 import { writeFileSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { z } from "zod";
 
 import { apiContract, SECURITY_SCHEMES } from "../lib/api-schemas";
 
 const OUTPUT_PATH = join(__dirname, "..", "public", "openapi.json");
 
 const baseDocument = {
-  openapi: "3.0.3",
   info: {
     title: "Cursor Boston API",
     version: "0.1.0",
@@ -73,9 +79,144 @@ const baseDocument = {
   ],
 };
 
-const openApiDoc = generateOpenApi(apiContract, baseDocument, {
-  setOperationId: "concatenated-path",
-  jsonQuery: false,
+/**
+ * Walk the ts-rest router and register every route with zod-to-openapi.
+ *
+ * @ts-rest/open-api converted schemas through @anatine/zod-openapi, which
+ * only understands zod 3 and emits `{}` for zod 4 schemas. zod-to-openapi
+ * supports zod 4 and honours the `.openapi()` metadata on our schemas, so
+ * we build the paths here and let it convert the schemas. Path, tag and
+ * operationId conventions match the old `setOperationId: "concatenated-path"`
+ * output.
+ */
+const MUTATION_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+
+function isZodSchema(value: unknown): value is z.ZodType {
+  return value instanceof z.ZodType;
+}
+
+function pathParamsFor(openApiPath: string, schema: unknown): z.ZodObject | undefined {
+  const declared = schema instanceof z.ZodObject ? schema : undefined;
+  const names = (openApiPath.match(/{[^}]+}/g) ?? []).map((p) => p.slice(1, -1));
+  const missing = names.filter((name) => !declared || !(name in declared.shape));
+  if (!declared && missing.length === 0) return undefined;
+  const extra = Object.fromEntries(missing.map((name) => [name, z.string()]));
+  return declared ? declared.extend(extra) : z.object(extra);
+}
+
+function registerRoute(
+  registry: OpenAPIRegistry,
+  route: AppRoute,
+  id: string,
+  history: string[]
+): void {
+  const path = route.path.replace(/:(\w+)/g, "{$1}");
+  const request: NonNullable<RouteConfig["request"]> = {};
+
+  const params = pathParamsFor(path, route.pathParams);
+  if (params) request.params = params;
+  if (route.query instanceof z.ZodObject) request.query = route.query;
+  if (route.headers instanceof z.ZodObject) request.headers = route.headers;
+  if (MUTATION_METHODS.has(route.method) && "body" in route && isZodSchema(route.body)) {
+    const contentType =
+      "contentType" in route && route.contentType ? route.contentType : "application/json";
+    request.body = {
+      description: "Body",
+      content: { [contentType]: { schema: route.body } },
+    };
+  }
+
+  const responses: RouteConfig["responses"] = {};
+  for (const [status, response] of Object.entries(route.responses)) {
+    responses[status] = isZodSchema(response)
+      ? {
+          description: response.description ?? status,
+          content: { "application/json": { schema: response } },
+        }
+      : { description: status };
+  }
+
+  registry.registerPath({
+    method: route.method.toLowerCase() as RouteConfig["method"],
+    path,
+    tags: history,
+    operationId: [...history, id].join("."),
+    summary: route.summary,
+    description: route.description,
+    deprecated: route.deprecated,
+    request,
+    responses,
+  });
+}
+
+function registerRouter(registry: OpenAPIRegistry, router: AppRouter, history: string[]): void {
+  for (const [key, value] of Object.entries(router)) {
+    if (isAppRoute(value)) {
+      registerRoute(registry, value, key, history);
+    } else {
+      registerRouter(registry, value, [...history, key]);
+    }
+  }
+}
+
+/**
+ * `.nullable()` / `.optional()` copy the `.openapi("Name")` refId onto the
+ * wrapper, and zod-to-openapi defines a component from whichever schema
+ * carrying that refId it meets first. If the first use is
+ * `GamePlayerSchema.nullable()`, the shared `GamePlayer` component itself
+ * becomes `nullable: true` for every operation. Register each named schema
+ * up front, unwrapped, so components describe the base schema and wrapped
+ * uses render as `allOf: [$ref] + nullable`. A named parent that contains
+ * a wrapped named child (CursorIdeaRun -> pr: CursorIdeaPrState.nullable())
+ * hits the same problem, hence the post-order walk.
+ */
+const WRAPPER_TYPES = new Set(["nullable", "optional", "default"]);
+
+function refIdOf(schema: z.ZodType): string | undefined {
+  const meta = zodToOpenAPIRegistry.get(schema) as
+    | { _internal?: { refId?: string } }
+    | undefined;
+  return meta?._internal?.refId;
+}
+
+function registerNamedSchemas(
+  registry: OpenAPIRegistry,
+  node: unknown,
+  registered: Map<string, z.ZodType>,
+  seen: Set<unknown>
+): void {
+  if (!node || typeof node !== "object" || seen.has(node)) return;
+  seen.add(node);
+  if (!(node instanceof z.ZodType)) {
+    for (const value of Object.values(node)) registerNamedSchemas(registry, value, registered, seen);
+    return;
+  }
+  const def = (node as unknown as { _zod: { def: Record<string, unknown> & { type: string } } })._zod.def;
+  for (const [key, value] of Object.entries(def)) {
+    if (value instanceof z.ZodType) {
+      registerNamedSchemas(registry, value, registered, seen);
+    } else if (Array.isArray(value)) {
+      for (const item of value) registerNamedSchemas(registry, item, registered, seen);
+    } else if (key === "shape" && value && typeof value === "object") {
+      for (const item of Object.values(value)) registerNamedSchemas(registry, item, registered, seen);
+    }
+  }
+  // Post-order: children first, so a parent component never meets a
+  // wrapped child before that child's own component is defined.
+  const refId = refIdOf(node);
+  if (refId && !WRAPPER_TYPES.has(def.type) && !registered.has(refId)) {
+    registered.set(refId, node);
+    registry.register(refId, node);
+  }
+}
+
+const registry = new OpenAPIRegistry();
+registerNamedSchemas(registry, apiContract, new Map(), new Set());
+registerRouter(registry, apiContract, []);
+
+const openApiDoc = new OpenApiGeneratorV3(registry.definitions).generateDocument({
+  openapi: "3.0.3",
+  ...baseDocument,
 });
 
 // Inject security schemes (zod-to-openapi/ts-rest doesn't carry these

@@ -85,7 +85,7 @@ const SubmissionCreateResponse = z
     projectId: z.string(),
     status: SubmissionStatusEnum,
   })
-  .passthrough();
+  .loose();
 
 const PendingSubmissionsResponse = z.object({
   pendingSubmissions: z.array(
@@ -97,7 +97,7 @@ const PendingSubmissionsResponse = z.object({
         createdAt: z.string().optional(),
         resubmittedAt: z.string().optional(),
       })
-      .passthrough()
+      .loose()
   ),
 });
 
@@ -109,7 +109,7 @@ const SubmissionApproveResponse = z
     submissionId: z.string(),
     status: z.string(),
   })
-  .passthrough();
+  .loose();
 
 const VoteResponse = z
   .object({

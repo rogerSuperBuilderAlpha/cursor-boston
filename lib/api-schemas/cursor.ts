@@ -67,7 +67,7 @@ const CursorIdeaRunInputsSchema = z
     issueNumber: z.string().max(20).optional(),
     issueTitle: z.string().max(500).optional(),
     issueBody: z.string().max(4000).optional(),
-    issueUrl: z.string().url().max(500).optional(),
+    issueUrl: z.url().max(500).optional(),
     issueLabels: z.string().max(500).optional(),
   })
   .openapi("CursorIdeaRunInputs");
@@ -76,7 +76,7 @@ const CursorGithubIssueSchema = z
   .object({
     number: z.number().int().positive(),
     title: z.string(),
-    url: z.string().url(),
+    url: z.url(),
     labels: z.array(z.string()),
     body: z.string().nullable(),
     comments: z.number().int().nonnegative(),
@@ -120,7 +120,7 @@ const CursorIdeaQuestionSchema = z
 const CursorIdeaPrStateSchema = z
   .object({
     status: z.enum(["not_started", "opening", "pr_open", "pr_commented_on", "pr_merged"]),
-    url: z.string().url().nullable().optional(),
+    url: z.url().nullable().optional(),
     number: z.number().int().positive().nullable().optional(),
     openedAt: z.string().nullable().optional(),
     lastCommentedAt: z.string().nullable().optional(),
@@ -135,7 +135,7 @@ const CursorIdeaRunSchema = z
     workflowStage: CursorIdeaWorkflowStageSchema.optional(),
     cursorAgentId: z.string().optional(),
     cursorRunId: z.string().optional(),
-    cursorAgentUrl: z.string().url().optional(),
+    cursorAgentUrl: z.url().optional(),
     questionRunId: z.string().optional(),
     planRunId: z.string().optional(),
     buildRunId: z.string().optional(),
@@ -199,7 +199,7 @@ const CursorIdeaRunQuestionsBody = z
 
 const CursorIdeaRunAnswersBody = z
   .object({
-    answers: z.record(z.string().max(2000)),
+    answers: z.record(z.string(), z.string().max(2000)),
   })
   .openapi("CursorIdeaRunAnswersBody");
 
